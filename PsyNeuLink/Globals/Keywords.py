@@ -23,36 +23,36 @@ class Keywords:
     ----------
 
     ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first mechanism of a process and/or system,
-        and that receives the input to the process or system when it is :ref:`executed or run <Run>`.  A process may
-        have only one `ORIGIN` mechanism, but a system may have many.  Note that the `ORIGIN`
-        mechanism of a process is not necessarily an `ORIGIN` of the system to which it belongs, as it may
-        receive projections from other processes in the system. The `ORIGIN` mechanisms of a process or
-        system are listed in its :keyword:`originMechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about `ORIGIN` mechanisms in processes, see
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`,
+        and that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may
+        have only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN`
+        Mechanism of a Process is not necessarily an `ORIGIN` of the System to which it belongs, as it may receiver
+        `Projections <Projection>` from other Processes in the System. The `ORIGIN` Mechanisms of a Process or
+        System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed using its :keyword:`show`
+        method.  For additional details about `ORIGIN` Mechanisms in Processes, see
         `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
-        and for systems see `System Mechanisms <System_Mechanisms>` and
+        and for Systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     INTERNAL
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` mechanism, and receives a projection
-        that closes a recurrent loop in a process and/or system.  If it is an `ORIGIN` mechanism, then it is simply
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection`
+        that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then it is simply
         designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
-        projection that closes a loop in a process or system, and that is not an `ORIGIN` mechanism (since in that
-        case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
-        mechanisms, that will be used to initialize the process or system when it is first run.  For additional
+        `Projection` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism (since in
+        that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
+        Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
         information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last mechanism of a process and/or system, and
-        that provides the output to the process or system when it is `executed or run <Run>`.  A process may
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
+        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
         have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
         mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
         as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
@@ -61,21 +61,18 @@ class Keywords:
         `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
 
     SINGLETON
-        A `ProcessingMechanism` that is the only mechanism in a process and/or system.  It can serve the functions
-        of an `ORIGIN` and/or a `TERMINAL` mechanism.
+        A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
+        functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
-    MONITORING
-        A `MonitoringMechanism <MonitoringMechanism>` configured for learning that is not a `TARGET`; that is, it
-        is associated with an `INTERNAL` rather than a `TERMINAL` ProcessingMechanism in the process and/or system to
-        which it belongs. For `backpropagation <Function.BackPropagation>` learning, it is a `WeightedErrorMechanism`.
-        See `MonitoringMechanisms <LearningProjection_MonitoringMechanism> for additional details.
+    LEARNING
+        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
 
     TARGET
-        A `ComparatorMechanism` of a process and/or system configured for learning that receives a target value from
-        its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
+        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
-        mechanism of the process or system. The `TARGET` mechanisms of a process or system are listed in its
-        :keyword:`targetMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
+        :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
         details, see `TARGET mechanisms <LearningProjection_Targets>` and specifying `target values <Run_Targets>`.
 
 
@@ -87,7 +84,7 @@ class Keywords:
         self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
         self.TERMINAL = TERMINAL
         self.SINGLETON = SINGLETON
-        self.MONITORING = MONITORING
+        self.LEARNING = LEARNING
         self.TARGET = TARGET
 
 
@@ -155,6 +152,7 @@ MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 # MATRIX_KEYWORD_VALUES = list(MATRIX_KEYWORDS.__dict__.values())
 # MATRIX_KEYWORD_NAMES = list(MATRIX_KEYWORDS.__dict__)
 
+
 # **********************************************************************************************************************
 # ******************************************    CONSTANTS  *************************************************************
 # **********************************************************************************************************************
@@ -192,6 +190,7 @@ SET_ATTRIBUTE = "SET ATTRIBUTE"
 kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
+ENABLED = 'ENABLED'
 
 
 #endregion
@@ -330,10 +329,9 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
-# MonitoringMechanisms:
+# ObjectiveMechanisms:
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
-MONITORING_MECHANISM = "MonitoringMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -412,7 +410,7 @@ PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
-LEARNING = 'learning'
+LEARNING = 'LEARNING'
 LEARNING_RATE = "learning_rate"
 CONTROL = 'control'
 GATING = 'gating'
@@ -428,7 +426,6 @@ MECHANISM = 'MECHANISM'
 kwMechanismName = "MECHANISM NAME"
 kwMechanismDefault = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-DEFAULT_MONITORING_MECHANISM = "DefaultMonitoringMechanism"
 kwProcessDefaultMechanism = "ProcessDefaultMechanism"
 kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
 kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
@@ -441,7 +438,6 @@ CYCLE = 'CYCLE'
 INITIALIZE_CYCLE = 'INITIALIZE_CYCLE'
 TERMINAL = 'TERMINAL'
 SINGLETON = 'ORIGIN AND TERMINAL'
-MONITORING = 'MONITORING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 

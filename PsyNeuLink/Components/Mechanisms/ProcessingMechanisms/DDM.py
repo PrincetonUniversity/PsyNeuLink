@@ -327,8 +327,9 @@ import logging
 
 # from numpy import sqrt, random, abs, tanh, exp
 import random
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
+
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, SEQUENTIAL
 
 logger = logging.getLogger(__name__)
@@ -830,7 +831,7 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented:
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
         time_step_size = 1.0
 
         if variable is None or np.isnan(variable):
@@ -840,7 +841,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
 
-            result = self.function(self.input_state.value, context=context)
+            result = self.function(self.variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
             if abs(result) >= self.threshold:

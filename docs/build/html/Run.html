@@ -34,8 +34,8 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="next" title="Component" href="Component.html"/>
-        <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
+        <link rel="next" title="Scheduler" href="Scheduler.html"/>
+        <link rel="prev" title="Process" href="Process.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,11 +85,15 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Run</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
@@ -111,8 +115,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 </ul>
 
             
@@ -204,7 +207,7 @@ runs only a single execution of the object;</li>
 execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>, the scope of execution is simply that mechanism.  For a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>,
 the scope of execution is all of the mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">system</span></a>,
 the scope of execution is all of the mechanisms in the processes specified in the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
+<code class="xref any docutils literal"><span class="pre">processes</span></code> attribute.</p>
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
@@ -231,8 +234,8 @@ internal numerical iteration or an analytic calculation). Execution of a <code c
 <p>The <strong>time_scale</strong> argument of an <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method determines the time scale for each
 round of execution: a <code class="xref any docutils literal"><span class="pre">time_step</span></code> or a <code class="xref any docutils literal"><span class="pre">trial</span></code>.  When a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> is run, each mechanism is executed in the
 order that it appears in the process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, once per round of execution.  When a <a class="reference internal" href="System.html"><span class="doc">system</span></a> is run,
-the order of execution is determined by the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.executionList" title="System.System_Base.executionList"><code class="xref any py py-attr docutils literal"><span class="pre">executionList</span></code></a> attribute, which is based on the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.graph" title="System.System_Base.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a> (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
+the order of execution is determined by the system&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> attribute, which is based on the system&#8217;s
+<code class="xref any docutils literal"><span class="pre">graph</span></code> (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
 system also depends on the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.phaseSpec" title="Mechanism.Mechanism_Base.phaseSpec"><code class="xref any py py-attr docutils literal"><span class="pre">phaseSpec</span></code></a> of each mechanism: this determines <em>when</em> in an execution sequence it should
 be executed. The <code class="xref any docutils literal"><span class="pre">CentralClock</span></code> is used to control timing, so executing a system
 requires that it be appropriately updated.</p>
@@ -290,7 +293,7 @@ number of nestings for a list, or lowest dimension of an ndarray).  It can be sp
 <p><em>(List[values] or ndarray)</em> &#8211; this uses a nested list or ndarray to fully specify the input for
 each round of execution in a sequence.  It is more complex than the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">mechanism format</span></a>,
 and for systems requires that the inputs for each mechanism be specified in the same order in which those mechanisms
-appear in the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">originMechanisms</span></code></a> attribute.  This is
+appear in the system&#8217;s <code class="xref any docutils literal"><span class="pre">originMechanisms</span></code> attribute.  This is
 generally the same order in which they are declared, and can be displayed using the system&#8217;s
 <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method). Although this is format is more demanding, it may be better suited to
 automated input generation, since it does not require that mechanisms be referenced explicitly (though it is
@@ -374,12 +377,12 @@ executions specified is completed.  If a function is used for the <code class="x
 a target for each round of execution.</p>
 <p>The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
 the function format, must equal the number of <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanisms for the process or system being run (see process
-<a class="reference internal" href="Process.html#Process.Process_Base.targetMechanisms" title="Process.Process_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanism</span></code></a> or
-system <a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanism</span></code></a> respectively), and the value of each target must
+<code class="xref any docutils literal"><span class="pre">targetMechanism</span></code> or
+system <code class="xref any docutils literal"><span class="pre">targetMechanism</span></code> respectively), and the value of each target must
 match (in number and type of elements) that  of the <code class="xref any docutils literal"><span class="pre">target</span></code>
 attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism for which it is intended.  Furthermore, if a range is specified for the output of
 the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism with which the target is compared (that is, the mechanism that provides the
-<code class="xref any docutils literal"><span class="pre">ComparatorMechanism's</span></code> <code class="xref any docutils literal"><span class="pre">sample</span></code>
+<a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism&#8217;s</span></a> <code class="xref any docutils literal"><span class="pre">sample</span></code>
 value, then the target must be within that range (for example, if the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism is a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, it&#8217;s <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is
 [0,1], so the target must be within that range).</p>
@@ -388,7 +391,7 @@ value, then the target must be within that range (for example, if the <a class="
 <p><em>(List[values] or ndarray):</em> &#8211; there are at most three levels of nesting (or dimensions) required for
 <code class="xref std std-keyword docutils literal"><span class="pre">targets</span></code>:  one for executions, one for mechanisms, and one for the elements of each input.  For a system
 with more than one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism, the targets must be specified in the same order as they appear in the system&#8217;s
-<a class="reference internal" href="System.html#System.System_Base.targetMechanisms" title="System.System_Base.targetMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">targetMechanisms</span></code></a> attribute.  This should be the same order in which
+<code class="xref any docutils literal"><span class="pre">targetMechanisms</span></code> attribute.  This should be the same order in which
 they are declared, and can be displayed using the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a> method). All
 other requirements are the same as the <a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">sequence format</span></a> for <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code>.</p>
 </div>
@@ -432,7 +435,7 @@ completed.</li>
 <li><strong>reset_clock</strong> (<em>bool : default True</em>) &#8211; if <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, resets <code class="xref any docutils literal"><span class="pre">CentralClock</span></code> to 0 before a sequence of executions.</li>
 <li><strong>initialize</strong> (<em>bool default False</em>) &#8211; calls the <a class="reference internal" href="System.html#System.System_Base.initialize" title="System.System_Base.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize</span></code></a> method of the system prior to a sequence of executions.</li>
 <li><strong>initial_values</strong> (<em>Dict[Mechanism, List[input] or np.ndarray(input)] : default None</em>) &#8211; the initial values assigned to mechanisms designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.INITIALIZE_CYCLE" title="Keywords.Keywords.INITIALIZE_CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code></a>.</li>
-<li><strong>targets</strong> (<em>List[input] or np.ndarray(input) : default None</em>) &#8211; the target values assigned to the <code class="xref any docutils literal"><span class="pre">MonitoringMechanism</span></code> for each execution (used for learning).
+<li><strong>targets</strong> (<em>List[input] or np.ndarray(input) : default None</em>) &#8211; the target values assigned to the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> for each execution (used for learning).
 The length must be equal to <code class="xref std std-keyword docutils literal"><span class="pre">inputs</span></code>.</li>
 <li><strong>learning</strong> (<em>bool :  default None</em>) &#8211; enables or disables learning during execution for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">process</span></a> or
 <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>.  If it is not specified, the current state of learning is left intact.
@@ -463,10 +466,10 @@ or of the outputStates of the <a class="reference internal" href="Keywords.html#
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Component.html" class="btn btn-neutral float-right" title="Component" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Scheduler.html" class="btn btn-neutral float-right" title="Scheduler" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GatingProjection.html" class="btn btn-neutral" title="GatingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Process.html" class="btn btn-neutral" title="Process" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -31,39 +31,39 @@
 Overview
 --------
 
-A system is a collection of `processes <Process>` that are executed together.  Executing a system executes all of the
-`mechanisms <Mechanism>` in its processes in a structured order.  `Projections <Projection>` between mechanisms in
-different processes within the system are permitted, as are recurrent projections, but projections from mechanisms
-in other systems are ignored (PsyNeuLink does not support ESP).  A system can include two types of mechanisms:
+A System is a collection of `Processes <Process>` that are executed together.  Executing a System executes all of the
+`Mechanisms <Mechanism>` in its Processes in a structured order.  `Projections <Projection>` between Mechanisms in
+different Processes within the System are permitted, as are recurrent Projections, but Projections from Mechanisms
+in other Systems are ignored (PsyNeuLink does not support ESP).  A System can include two types of Mechanisms:
 
 * `ProcessingMechanism`
-    These receive input from one or more projections, transform their input in some way,
+    These receive input from one or more `Projections <Projection>`, transform their input in some way,
     and assign the result as their output.
 
 * `AdpativeMechanism`
     These are used to adjust the operation of other components.  There are two types:
-    `LearningMechanisms <LearningMechanism>` that adjust projections, and `ControlMechanisms <ControlMechanism>`
-    that adjust the parameters of other mechanisms and/or their functions.
+    `LearningMechanisms <LearningMechanism>` that adjust Projections, and `ControlMechanisms <ControlMechanism>`
+    that adjust the parameters of other Mechanisms and/or their functions.
 
 .. _System_Creation:
 
 Creating a System
 -----------------
 
-Systems are created by calling :py:func:`system`.  If no arguments are provided, a system with a single process
-containing a single :ref:`default mechanism <LINK>` will be created.  More generally, a system is
-created from one or more `processes <Process>` that are specified in the **processes** argument of its constructor.
-Whenever a system is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
+Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
+containing a single :ref:`default Mechanism <LINK>` will be created.  More generally, a System is
+created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
+Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
-argument of the system's constructor, or specifying a class of ControlMechanism;  if none is specified,
+argument of the System's constructor, or specifying a class of ControlMechanism;  if none is specified,
 a `DefaultControlMechanism` is created.
 
 .. note::
-   At present, only `processes <Process>` can be assigned to a system; `mechanisms <Mechanism>` cannot be assigned
-   directly to a system.  They must be assigned to the `pathway <Process_Pathway>` of a process, and then that process
+   At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
+   directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
    must be
    included
-   in the **processes** argument of the constructor for the system.
+   in the **processes** argument of the constructor for the System.
 
 
 .. _System_Structure:
@@ -76,51 +76,56 @@ Structure
 Graph
 ~~~~~
 
-When a system is created, a graph is constructed that describes the projections (edges) among its mechanisms (nodes).
-The graph is assigned to the system's `graph` attribute.  A system's graph can be displayed using its `show_graph`
-method.  The graph is stored as a dictionary of dependencies, that can be passed to graph theoretical tools for
-analysis.  A system can have recurrent processing pathways, such as feedback loops, in which case the system will
-have a cyclic graph.  PsyNeuLink also uses the graph of a system to determine the order in which its mechanisms are
-executed.  In order to do so in an orderly manner, however, the graph must be acyclic.  So, for execution,
-PsyNeuLink constructs an `executionGraph` from the system's `graph`. If the  system is acyclic, these are the same.
-If the system is cyclic, then the `executionGraph` is a subset of the `graph` in which the dependencies (edges)
-associated with projections that close a loop have been removed. Note that this only impacts the order of execution;
-the projections themselves remain in effect, and will be fully functional during the execution of the affected
-mechanisms (see `System_Execution` below for a more detailed description).
+When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
+`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph` attribute.  A System's graph can be
+displayed using its `show_graph` method.  The graph is stored as a dictionary of dependencies, that can be passed to
+graph theoretical tools for analysis.  A System can have recurrent Processing pathways, such as feedback loops, in
+which case the System will have a cyclic graph.  PsyNeuLink also uses the graph of a System to determine the order
+in which its Mechanisms are executed.  In order to do so in an orderly manner, however, the graph must be acyclic.
+So, for execution, PsyNeuLink constructs an `executionGraph` from the System's `graph`. If the  System is acyclic,
+these are the same. If the System is cyclic, then the `executionGraph` is a subset of the `graph` in which the
+dependencies (edges) associated with Projections that close a loop have been removed. Note that this only impacts
+the order of execution; the Projections themselves remain in effect, and will be fully functional during the
+execution of the affected Mechanisms (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The mechanisms in a system are assigned designations based on the position they occupy in the `graph`
-and/or the role they play in a system:
+The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph`
+and/or the role they play in a System:
 
-    `ORIGIN`: receives input to the system, and does not receive projections from any other ProcessingMechanisms;
+    `ORIGIN`: receives input to the System, and does not receive a `Projection` from any other
+    `ProcessingMechanisms <ProcessingMechanism>`;
 
-    `TERMINAL`: provides output from the system, and does not send projections to any other ProcessingMechanisms;
+    `TERMINAL`: provides output from the System, and does not send Projections to any other ProcessingMechanisms;
 
-    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` mechanism;
+    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` Mechanism;
 
-    `INITIALIZE_CYCLE`: sends a projection that closes a recurrent loop;
+    `INITIALIZE_CYCLE`: sends a Projection that closes a recurrent loop;
     can be assigned an initial value;
 
-    `CYCLE`: receives a projection that closes a recurrent loop;
+    `CYCLE`: receives a Projection that closes a recurrent loop;
 
-    `CONTROL`: monitors the value of another mechanism for use in controlling parameter values;
+    `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values;
 
-    `MONITORING`: monitors the value of another mechanism for use in learning;
+<<<<<<< HEAD
+    `LEARNING`: monitors the value of another Mechanism for use in learning;
+=======
+    `LEARNING`: monitors the value of another mechanism for use in learning;
+>>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
-    `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` mechanism of a process
+    `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` Mechanism of a Process
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
-    .. note:: Any `ORIGIN` and `TERMINAL` mechanisms of a system must be, respectively,
-       the `ORIGIN` or `TERMINAL` of any process(es) to which they belong.  However, it is not
-       necessarily the case that the `ORIGIN` and/or `TERMINAL` mechanism of a process is also the
-       `ORIGIN` and/or `TERMINAL` of a system to which the process belongs (see the Chain example below).
+    .. note:: Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively,
+       the `ORIGIN` or `TERMINAL` of any Process(es) to which they belong.  However, it is not
+       necessarily the case that the `ORIGIN` and/or `TERMINAL` Mechanism of a Process is also the
+       `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see the Chain example below).
 
-    .. note: designations are stored in the mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
+    .. note: designations are stored in the Mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
 
 COMMENT:
@@ -132,7 +137,7 @@ COMMENT:
     Learning
     ~~~~~~~~
 
-    Based on process
+    Based on Process
 
 COMMENT
 
@@ -140,26 +145,26 @@ COMMENT
 
 **Components of a System**
 
-.. figure:: _static/System_full_fig.pdf
+.. figure:: _static/System_full_fig.svg
    :alt: Overview of major PsyNeuLink components
    :scale: 75 %
 
-   Two :doc:`processes <Process>` are shown, both belonging to the same :doc:`system <System>`.  Each process has a
+   Two `Processes <Process>` are shown, both belonging to the same System.  Each Process has a
    series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
    that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-   the system.  The `TERMINAL` mechanism for both processes projects to an `ObjectiveMechanism` that is used to
+   the System.  The `TERMINAL` Mechanism for both Processes projects to an `ObjectiveMechanism` that is used to
    drive `learning <LearningProjection>` in Process B. It also projects to a separate ObjectiveMechanism that is used
-   for control of ProcessingMechanisms in both Processes A and B.  Note that the mechanisms and
-   projections responsible for learning and control belong to the system and can monitor and/or control mechanisms
-   belonging to more than one process (as shown for control in this figure).
+   for control of ProcessingMechanisms in both Processes A and B.  Note that the Mechanisms and
+   Projections responsible for learning and control belong to the System and can monitor and/or control Mechanisms
+   belonging to more than one Process (as shown for control in this figure).
 
 .. _System_Execution:
 
 Execution
 ---------
 
-A system can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes each mechanism in the system once, whereas `run <System_Base.execute>`
+A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
+`execute <System_Base.execute>` executes each Mechanism in the System once, whereas `run <System_Base.execute>`
 allows a series of executions to be carried out.
 
 .. _System_Execution_Order:
@@ -167,81 +172,80 @@ allows a series of executions to be carried out.
 Order
 ~~~~~
 Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
-processes. When a mechanism is executed, it receives input from any other mechanisms that project to it within the
-system,  but not from mechanisms outside the system (PsyNeuLink does not support ESP).  The order of execution is
-determined by the system's `executionGraph` attribute, which is a subset of the system's `graph` that has been
+Processes. When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
+System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
+determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
 "pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
-projections in the system remain intact during execution and can be
+Projections in the System remain intact during execution and can be
 `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
 
 .. _System_Execution_Phase:
 
 Phase
 ~~~~~
-Execution occurs in passes through a system called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
-When executing a system in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
-execute a trial of every mechanism in the system.  During each phase of execution, only the mechanisms assigned to
-that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a
-`process <Process>`. When a mechanism is executed, it receives input from any other mechanisms that project to it
-within the system.
+Execution occurs in passes through a System called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
+When executing a System in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
+execute a trial of every Mechanism in the System.  During each phase of execution, only the Mechanisms assigned to
+that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a `Process`.
+When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the System.
 
 .. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a system is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
+The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
 `run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
-each of which is an appropriate input for the corresponding `ORIGIN` mechanism (listed in
+each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
 `originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
 input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
 can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
 one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
 initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-of execution, as input to mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the system's `TARGET` mechanisms
+of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
 (see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _System_Execution_Learning:
 
 Learning
 ~~~~~~~~
-The system will execute learning if it is specified for any process in the system.  The system's `learning` attribute
-indicates whether learning is enabled for the system. Learning is executed for any components (individual projections
-or processes) for which it is specified after all processing mechanisms in the
-system have been executed, but before the controller is executed (see below).  The learning components of a system
-can be displayed using the system's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
+The System will execute learning if it is specified for any `Process` in the System.  The System's `learning` attribute
+indicates whether learning is enabled for the System. Learning is executed for any components (individual Projections
+or Processes) for which it is specified after all `ProcessingMechanisms <ProcessingMechanism> in the
+System have been executed, but before the controller is executed (see below).  The learning components of a System
+can be displayed using the System's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
 The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
-sequence or mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` mechanism of the system (listed in its `originMechanisms
+sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
 <System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format,
-one target must be provided for each `TARGET` mechanism (listed in its
+one target must be provided for each `TARGET` Mechanism (listed in its
 `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
-`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the mechanism.
+`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a process is not necessarily a
-   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the system to which it belongs
+   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
+   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
    (see :ref:`LearningProjection_Targets`).
 
 .. _System_Execution_Control:
 
 Control
 ~~~~~~~
-Every system is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
-the outputState(s) of one or more mechanisms in the system (listed in its `monitored_output_states` attribute),
-and uses that information to set the value of parameters for those or other mechanisms in the system, or their functions
-(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which outputStates are
+Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
+the OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute),
+and uses that information to set the value of parameters for those or other Mechanisms in the System, or their functions
+(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are
 monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
-of a system can be displayed using the system's `show_graph` method with its **show_control** argument assigned
-:keyword:``True`. The controller is executed after all other mechanisms in the system are executed, and sets the
+of a System can be displayed using the System's `show_graph` method with its **show_control** argument assigned
+:keyword:``True`. The controller is executed after all other Mechanisms in the System are executed, and sets the
 values of any parameters that it controls, which then take effect in the next round of execution.
 
 COMMENT:
    Examples
    --------
    XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
-   .. note::  All of the example systems below use the following set of mechanisms.  However, in practice, they must be
-      created separately for each system;  using the same mechanisms and processes in multiple systems can produce
+   .. note::  All of the example Systems below use the following set of Mechanisms.  However, in practice, they must be
+      created separately for each System;  using the same Mechanisms and Processes in multiple Systems can produce
       confusing results.
 
    Module Contents
@@ -256,9 +260,9 @@ Class Reference
 
 """
 
+import logging
 import math
 import re
-import logging
 
 from collections import OrderedDict
 
@@ -273,7 +277,7 @@ from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -293,9 +297,9 @@ TERMINAL_MECHANISMS = 'terminal_mechanisms'
 OUTPUT_STATE_NAMES = 'output_state_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
-MONITORING_MECHANISMS = 'monitoring_mechanisms'
 TARGET_MECHANISMS = 'target_mechanisms'
 LEARNING_PROJECTION_RECEIVERS = 'learning_projection_receivers'
+LEARNING_MECHANISMS = 'learning_mechanisms'
 CONTROL_MECHANISMS = 'control_mechanisms'
 CONTROL_PROJECTION_RECEIVERS = 'control_projection_receivers'
 
@@ -320,9 +324,9 @@ class SystemError(Exception):
 # FIX:  NEED TO CREATE THE PROJECTIONS FROM THE PROCESS TO THE FIRST MECHANISM IN PROCESS FIRST SINCE,
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components import SystemDefaultControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Process import process
 
 # System factory method:
 @tc.typecheck
@@ -375,59 +379,59 @@ def system(default_input_value=None,
 
     Factory method for System: returns instance of System.
 
-    If called with no arguments, returns an instance of System with a single default process and mechanism;
+    If called with no arguments, returns an instance of System with a single default Process and Mechanism;
     if called with a name string, that is used as the name of the instance of System returned;
-    if a params dictionary is included, it is passed to the instantiated system.
+    if a params dictionary is included, it is passed to the instantiated System.
 
     See :class:`System_Base` for class description
 
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default input for `ORIGIN` mechanism of each Process
-        the input to the system if none is provided in a call to the `execute <System_Base.exeucte> or
-        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` mechanism
-        in the system.
+    default_input_value : list or ndarray of values : default default input for `ORIGIN` Mechanism of each Process
+        the input to the System if none is provided in a call to the `execute <System_Base.execute> or
+        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
+        in the System.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
         COMMENT
 
-    processes : list of process specifications : default list('DefaultProcess')
-        a list of the processes to include in the system.
-        Each process specification can be an instance, the class name (creates a default Process), or a specification
+    processes : list of Process specifications : default list('DefaultProcess')
+        a list of the Processes to include in the System.
+        Each Process specification can be an instance, the class name (creates a default Process), or a specification
         dictionary (see `Process` for details).
 
-    initial_values : dict of mechanism:value entries
-        a dictionary of values used to initialize mechanisms that close recurrent loops (designated as
-        `INITIALIZE_CYCLE`). The key for each entry is a mechanism object, and the value is a number,
-        list or 1d np.array that must be compatible with the format of the first item of the mechanism's value
-        (i.e., mechanism.value[0]).
+    initial_values : dict of Mechanism:value entries
+        a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
+        `INITIALIZE_CYCLE`). The key for each entry is a Mechanism object, and the value is a number,
+        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's value
+        (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism` used to monitor the value of the outputState(s) for mechanisms specified in
-        `monitor_for_control`, and that specify the value of `ControlProjections` in the system.
+        specifies the `ControlMechanism` used to monitor the value of the OutputState(s) for Mechanisms specified in
+        `monitor_for_control`, and that specify the value of `ControlProjections` in the System.
 
     enable_controller :  bool : default :keyword:`False`
-        specifies whether the `controller` is executed during system execution.
+        specifies whether the `controller` is executed during System execution.
 
     monitor_for_control : list of OutputState objects or specifications : default None
-        specifies the outputStates of the `TERMINAL` mechanisms in the system to be monitored by its `controller`
+        specifies the OutputStates of the `TERMINAL` Mechanisms in the System to be monitored by its `controller`
         (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
 
     COMMENT:
         learning : Optional[LearningProjection spec]
-            implements `learning <LearningProjection_CreationLearningSignal>` for all processes in the system.
+            implements `learning <LearningProjection_CreationLearningSignal>` for all Processes in the System.
     COMMENT
 
     learning_rate : float : None
-        set the learning rate for all mechanisms in the system (see `learning_rate` attribute for additional
+        set the learning rate for all Mechanisms in the System (see `learning_rate` attribute for additional
         information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
-        the values assigned to the TARGET input of each `TARGET` mechanism in the system (listed in its
+        the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
         `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
-        for each of the corresponding `TARGET` mechanism.
+        for each of the corresponding `TARGET` Mechanism.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -435,11 +439,11 @@ def system(default_input_value=None,
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default System-<index>
-        a string used for the name of the system
+        a string used for the name of the System
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names)
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the `PreferenceSet` for system (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
+        the `PreferenceSet` for System (see :doc:`ComponentPreferenceSet <LINK>` for specification of PreferenceSet)
 
     COMMENT:
     context : str : default None
@@ -484,7 +488,7 @@ class System_Base(System):
     enable_controller=:keyword:`False`,       \
     monitor_for_control=None,                 \
     control_signals=None,                     \
-    learning_rate=None,                       \ 
+    learning_rate=None,                       \
     targets=None,                             \
     params=None,                              \
     name=None,                                \
@@ -537,7 +541,7 @@ class System_Base(System):
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
         - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
-        - _assign_output_states():  assign outputStates of System (currently = terminalMechanisms)
+        - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
@@ -547,8 +551,8 @@ class System_Base(System):
          and a dictionary of those instances
 
         TBI: MAKE THESE convenience lists, akin to self.terminalMechanisms
-        + input (list): contains Process.input for each process in self.processes
-        + output (list): containts Process.ouput for each process in self.processes
+        + input (list): contains Process.input for each Process in self.processes
+        + output (list): containts Process.ouput for each Process in self.processes
         [TBI: + input (list): each item is the Process.input object for the corresponding Process in self.processes]
         [TBI: + outputs (list): each item is the Process.output object for the corresponding Process in self.processes]
     COMMENT
@@ -559,9 +563,9 @@ class System_Base(System):
     componentType : SYSTEM
 
     processes : list of Process objects
-        list of processes in the system specified by the `process` parameter.
+        list of Processes in the System specified by the **processes** argument of the construtor.
 
-        .. can be appended with prediction processes by EVCMechanism
+        .. can be appended with prediction Processes by EVCMechanism
            used with self.input to constsruct self.process_tuples
 
         .. _processList : ProcessList
@@ -570,164 +574,169 @@ class System_Base(System):
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the ControlMechanism used to monitor the value of the outputState(s) for mechanisms specified in
-        ``monitor_for_control`` argument, and specify the value of ControlProjections in the system.
+        the ControlMechanism used to monitor the value of the OutputState(s) for Mechanisms specified in
+        ``monitor_for_control`` argument, and specify the value of ControlProjections in the System.
 
     enable_controller :  bool : default :keyword:`False`
-        determines whether the `controller` is executed during system execution.
+        determines whether the `controller` is executed during System execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any processes
-        in the system or for the system itself.
+        indicates whether learning is being used;  is set to True if learning is specified for any Processes
+        in the System or for the System itself.
 
     learning_rate : float : default None
-        determines the learning rate for all mechanisms in the system.  This overrides any values set for the
-        function of individual LearningProjections, and persists for all subsequent runs of the system.  If it is
+        determines the learning rate for all Mechanisms in the System.  This overrides any values set for the
+        function of individual LearningProjections, and persists for all subsequent runs of the System.  If it is
         set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
-        (either directly, or following a run of any process or system to which the LearningProjection belongs and
+        (either directly, or following a run of any Process or System to which the LearningProjection belongs and
         for which a learning_rate was set).
 
     targets : 2d nparray : default zeroes
-        used as template for the values of the system's `targetInputStates`, and to represent the targets specified in
-        the :keyword:`targets` argument of system's `execute <System.execute>` and `run <System.run>` methods.
+        used as template for the values of the System's `target_input_states`, and to represent the targets specified in
+        the :keyword:`targets` argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
-        contains a graph of all of the mechanisms in the system.
+        contains a graph of all of the Mechanisms in the System.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
         The key of each entry is a receiver object_item, and
-        the value is a set of mechs that send projections to that receiver.
+        the value is a set of mechs that send Projections to that receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
-        contains an acyclic subset of the system's `graph`, hierarchically organized by a toposort.
-        Used to specify the order in which mechanisms are executed.
+        contains an acyclic subset of the System's `graph`, hierarchically organized by a toposort.
+        Used to specify the order in which Mechanisms are executed.
 
     execution_sets : list of sets
-        contains a list of mechanism sets.
-        Each set contains mechanism to be executed at the same time.
+        contains a list of Mechanism sets.
+        Each set contains Mechanisms to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
     executionList : list of Mechanism objects
-        contains a list of mechanisms in the order in which they are executed.
+        contains a list of Mechanisms in the order in which they are executed.
         The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
-        contains a list of all mechanisms in the system.
+        contains a list of all Mechanisms in the System.
 
         .. property that points to _allMechanisms.mechanisms (see below)
 
     mechanismsDict : Dict[Mechanism:Process]
-        contains a dictionary of all mechanisms in the system, listing the processes to which they belong.
-        The key of each entry is a `Mechanism` object, and the value of each entry is a list of `processes <Process>`.
+        contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong.
+        The key of each entry is a `Mechanism` object, and the value of each entry is a list of `Processes <Process>`.
 
-        .. Note: the following attributes use lists of tuples (mechanism, runtime_param, phaseSpec) and MechanismList
+        .. Note: the following attributes use lists of tuples (Mechanism, runtime_param, phaseSpec) and MechanismList
               xxx_mechs are lists of tuples defined in the Process pathways;
                   tuples are used because runtime_params and phaseSpec are attributes that need
-                  to be able to be specified differently for the same mechanism in different contexts
-                  and thus are not easily managed as mechanism attributes
+                  to be able to be specified differently for the same Mechanism in different contexts
+                  and thus are not easily managed as Mechanism attributes
               xxxMechanismLists point to MechanismList objects that provide access to information
-                  about the mechanism <type> listed in mechs (i.e., the mechanisms, names, etc.)
+                  about the Mechanism <type> listed in mechs (i.e., the Mechanisms, names, etc.)
 
-        .. _all_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all mechanisms in the system (serve as keys in self.graph).
+        .. _all_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all Mechanisms in the System (serve as keys in self.graph).
 
         .. _allMechanisms : MechanismList
-            Contains all mechanisms in the system (based on _all_mechs).
+            Contains all Mechanisms in the System (based on _all_mechs).
 
-        .. _origin_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all ORIGIN mechanisms in the system.
+        .. _origin_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all ORIGIN Mechanisms in the System.
 
-        .. _terminal_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all TERMINAL mechanisms in the system.
+        .. _terminal_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all TERMINAL Mechanisms in the System.
 
-        .. _monitoring_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all MonitoringMechanisms in the system (used for learning).
+        .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all LearningMechanisms in the System.
 
-        .. _target_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the system that are a `TERMINAL`
-            for at least on process to which it belongs and that process has learning enabled --  the criteria for
+        .. _target_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the System that are a `TERMINAL`
+            for at least one Process to which it belongs and that Process has learning enabled --  the criteria for
             being a target used in learning.
 
-        .. _learning_mechs : list of (mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanisms in the system (used for learning).
+        .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
+            Tuples for all LearningMechanisms in the System (used for learning).
 
-        .. _control_object_item : list of a single (mechanism, runtime_param, phaseSpec) tuple
-            Tuple for the controller in the system.
+        .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
+            Tuple for the controller in the System.
 
     originMechanisms : MechanismList
-        contains all `ORIGIN` mechanisms in the system (i.e., that don't receive projections from any other
-        mechanisms.
+        contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive Projections from any other
+        Mechanisms.
 
         .. based on _origin_mechs
-           system.input contains the input to each `ORIGIN` mechanism
+           System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
-        contains all `TERMINAL` mechanisms in the system (i.e., that don't project to any other ProcessingMechanisms).
+        contains all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other ProcessingMechanisms).
 
         .. based on _terminal_mechs
-           system.ouput contains the output of each TERMINAL mechanism
+           System.ouput contains the output of each TERMINAL Mechanism
 
     recurrentInitMechanisms : MechanismList
-        contains mechanisms with recurrent projections that are candidates for
+        contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
+<<<<<<< HEAD
+    learning_mechanisms : MechanismList)
+        contains all `LearningMechanism <LearningMechanism>` in the System.
+=======
     monitoringMechanisms : MechanismList)
-        contains all `MONITORING` mechanisms in the system (used for learning).
+        contains all `LEARNING` mechanisms in the system (used for learning).
+>>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
         COMMENT:
-            based on _monitoring_mechs)
+            based on _learning_mechs)
         COMMENT
 
-    targetMechanisms : MechanismList)
-        contains all `TARGET` mechanisms in the system (used for learning.
+    target_mechanisms : MechanismList)
+        contains all `TARGET` Mechanisms in the System (used for learning.
         COMMENT:
             based on _target_mechs)
         COMMENT
 
-    targetInputStates : List[SystemInputState]
-        one item for each `TARGET` mechanism in the system (listed in `targetMechanisms`).  Used to represent the
-        :keyword:`targets` specified in the system's `execute <System.execute>` and `run <System.run>` methods, and
-        provide their values to the the TARGET inputState of each `TARGET` mechanism during execution.
+    target_input_states : List[SystemInputState]
+        one item for each `TARGET` Mechanism in the System (listed in `targetMechanisms`).  Used to represent the
+        :keyword:`targets` specified in the System's `execute <System.execute>` and `run <System.run>` methods, and
+        provide their values to the the TARGET InputState of each `TARGET` Mechanism during execution.
 
-    controlMechanisms : MechanismList
-        contains `controller` of the system
+    control_mechanisms : MechanismList
+        contains `controller` of the System
         COMMENT:
-            ??and any other `ControlMechanisms <ControlMechanism>` in the system
+            ??and any other `ControlMechanisms <ControlMechanism>` in the System
             (based on _control_mechs).
         COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the `output_values `of a `TERMINAL` mechanism in the system.
+        contains an array of 2D arrays, each of which is the `output_values `of a `TERMINAL` Mechanism in the System.
 
         .. _phaseSpecMax : int
-            Maximum phase specified for any mechanism in system.  Determines the phase of the last (set of)
-            ProcessingMechanism(s) to be executed in the system.
+            Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
+            ProcessingMechanism(s) to be executed in the System.
 
     numPhases : int
-        number of phases for system (read-only).
+        number of phases for System (read-only).
 
         .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
-        values used to initialize mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
-        Must be the same length as the list of `INITIALIZE_CYCLE` mechanisms in the system contained in
+        values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
+        Must be the same length as the list of `INITIALIZE_CYCLE` Mechanisms in the System contained in
         `recurrentInitMechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
-        determines the default `TimeScale` value used by mechanisms in the system.
+        determines the default `TimeScale` value used by Mechanisms in the System.
 
-    results : List[outputState.value]
-        list of return values (outputState.value) from the sequence of executions.
+    results : List[OutputState.value]
+        list of return values (OutputState.value) from the sequence of executions.
 
     name : str : default System-<index>
-        the name of the system;
-        Specified in the **name** argument of the constructor for the system;
+        the name of the System;
+        Specified in the **name** argument of the constructor for the System;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
 
     prefs : PreferenceSet or specification dict : System.classPreferences
-        the `PreferenceSet` for system.
-        Specified in the **prefs** argument of the constructor for the system;  if it is not specified, a default is
+        the `PreferenceSet` for System.
+        Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :ref:`PreferenceSet <LINK>` for details).
 
@@ -757,7 +766,7 @@ class System_Base(System):
                                'stimulusInputStates': [],
                                'inputs': [],
                                'current_input': None,
-                               'targetInputStates': [],
+                               'target_input_states': [],
                                'targets': None,
                                'current_targets': None,
                                'learning': False
@@ -1009,7 +1018,7 @@ class System_Base(System):
             if input is None:
                 process = processes_spec[i].process
                 process_input = []
-                for process_input_state in process.processInputStates:
+                for process_input_state in process.process_input_states:
                     process_input.extend(process_input_state.value)
                 processes_spec[i] = ProcessTuple(process, process_input)
             # Input was provided on command line, so assign that to input item of tuple
@@ -1154,7 +1163,7 @@ class System_Base(System):
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
                     eliminate the dependent from the executionGraph, and designate it as CYCLE (unless it is an ORIGIN)
                     designate the sender as INITIALIZE_CYCLE (it can receive and initial_value specification)
-                if a mechanism doe not project to any other ProcessingMechanisms (ignore monitoring and control mechs):
+                if a mechanism doe not project to any other ProcessingMechanisms (ignore learning and control mechs):
                     assign as TERMINAL unless it is already an ORIGIN, in which case assign as SINGLETON
 
         Construct execution_sets and exeuction_list
@@ -1164,8 +1173,8 @@ class System_Base(System):
             originMechanisms
             terminalMechanisms
             recurrentInitMechanisms (INITIALIZE_CYCLE)
-            monitoringMechansims
-            controlMechanisms
+            learning_mechansims
+            control_mechanisms
 
         Validate initial_values
 
@@ -1183,9 +1192,9 @@ class System_Base(System):
 
             # If sender is an ObjectiveMechanism being used for learning or control,
             #     or a LearningMechanism or a ControlMechanism,
-            # Assign as MONITORING and move on
+            # Assign as LEARNING and move on
             if is_monitoring_mech(sender_mech):
-                sender_mech.systems[self] = MONITORING
+                sender_mech.systems[self] = LEARNING
                 return
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
@@ -1207,7 +1216,7 @@ class System_Base(System):
 
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - is not an Objective Mechanism used for Learning or Control and
-            #    - it is not a controlMechanism and
+            #    - it is not a ControlMechanism and
             #    - it has no outgoing projections or
             #          only ones to ObjectiveMechanism(s) used for Learning or Control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
@@ -1347,7 +1356,7 @@ class System_Base(System):
                             all(ORIGIN in first_mech.processes[proc]
                                 for proc in projection.sender.owner.processes
                                 if isinstance(projection.sender.owner,Mechanism))
-                        # For all the projections to each inputState
+                        # For all the projections to each InputState
                         for projection in input_state.path_afferents)
                     # For all input_states for the first_mech
                     for input_state in first_mech.input_states):
@@ -1432,7 +1441,7 @@ class System_Base(System):
         self.originMechanisms = MechanismList(self, self._origin_mechs)
         self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mechs)
-        self.controlMechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
+        self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
         try:
@@ -1532,7 +1541,7 @@ class System_Base(System):
 
 
     def _instantiate_learning_graph(self, context=None):
-        """Build graph of monitoringMechanisms and learningProjections for use in learning
+        """Build graph of LearningMechanisms and LearningProjections
         """
 
         self.learningGraph = OrderedDict()
@@ -1546,7 +1555,7 @@ class System_Base(System):
             if isinstance(sender_mech, MappingProjection):
                 return
 
-            # All other sender_mechs must be either a MonitoringMechanism or an ObjectiveMechanism with role=LEARNING
+            # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
                           (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
@@ -1758,7 +1767,7 @@ class System_Base(System):
                             self.learningExecutionGraph[receiver] = {sender_mech}
 
                     if not sender_mech.systems:
-                        sender_mech.systems[self] = MONITORING
+                        sender_mech.systems[self] = LEARNING
 
                     # Traverse list of mechanisms in process recursively
                     build_dependency_sets_by_traversing_projections(receiver, process)
@@ -1766,20 +1775,19 @@ class System_Base(System):
         # Sort for consistency of output
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
-        # This assumes that the first mechanism in process.monitoringMechanisms is the last in the learning sequence
+        # This assumes that the first mechanism in process.learning_mechanisms is the last in the learning sequence
         # (i.e., that the list is being traversed "backwards")
         for process in sorted_processes:
             if process.learning and process._learning_enabled:
-                build_dependency_sets_by_traversing_projections(process.monitoringMechanisms[0], process)
+                build_dependency_sets_by_traversing_projections(process.learning_mechanisms[0], process)
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
         self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
         # self.learningExecutionList = self._toposort_with_ordered_mechs(self.learningExecutionGraph)
 
-        # Construct monitoringMechanisms and targetMechanisms MechanismLists
+        # Construct learning_mechanisms and target_mechanisms MechanismLists
 
-        # MODIFIED 3/12/17 NEW: [MOVED FROM _instantiate_graph]
-        self._monitoring_mechs = []
+        self._learning_mechs = []
         self._target_mechs = []
 
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -1794,29 +1802,33 @@ class System_Base(System):
                         item.function_object.learning_rate is None):
                 item.function_object.learning_rate = self.learning_rate
 
-            # object_item = self._allMechanisms._get_tuple_for_mech(item)
-            if not item in self._monitoring_mechs:
-                self._monitoring_mechs.append(item)
+            if not item in self._learning_mechs:
+                self._learning_mechs.append(item)
             if isinstance(item, ObjectiveMechanism) and not item in self._target_mechs:
                 self._target_mechs.append(item)
-        self.monitoringMechanisms = MechanismList(self, self._monitoring_mechs)
-        self.targetMechanisms = MechanismList(self, self._target_mechs)
-        # MODIFIED 3/12/17 END
+        self.learning_mechanisms = MechanismList(self, self._learning_mechs)
+        self.target_mechanisms = MechanismList(self, self._target_mechs)
 
         # Instantiate TargetInputStates
-        self._instantiate_target_inputs()
+        self._instantiate_target_inputs(context=context)
 
     def _instantiate_target_inputs(self, context=None):
 
         if self.learning and self.targets is None:
-            if not self.targetMechanisms:
+            if not self.target_mechanisms:
                 raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
                                   format(self.name))
-            elif len(self.targetMechanisms)==1:
-                error_msg = "Learning has been specified for {} so a target must also be specified"
-            else:
-                error_msg = "Learning has been specified for {} but no targets have been specified."
-            raise SystemError(error_msg.format(self.name))
+            # # MODIFIED 6/25/17 OLD:
+            # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
+            #                   format(self.name))
+            # MODIFIED 6/25/17 NEW:
+            # target arg was not specified in System's constructor,
+            #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
+            self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
+            if self.verbosePref:
+                warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
+                              "default will be used ({})".format(self.name, self.targets))
+            # MODIFIED 6/25/17 END
 
         self.targets = np.atleast_2d(self.targets)
 
@@ -1824,7 +1836,7 @@ class System_Base(System):
         #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
-        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
 
             # Create ProcessInputState for each target and assign to targetMechanism's target inputState
             target_mech_TARGET_input_state = target_mech.input_states[TARGET]
@@ -1843,7 +1855,7 @@ class System_Base(System):
                                                         variable=target_mech_TARGET_input_state.variable,
                                                         prefs=self.prefs,
                                                         name="System Target {}".format(i))
-            self.targetInputStates.append(system_target_input_state)
+            self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
             from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -1924,6 +1936,11 @@ class System_Base(System):
             Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
 
         """
+        if self.scheduler_processing is None:
+            self.scheduler_processing = Scheduler(system=self)
+
+        if self.scheduler_learning is None:
+            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
@@ -2110,7 +2127,7 @@ class System_Base(System):
             i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
-        # Execute each monitoringMechanism as well as learning projections in self.learningExecutionList
+        # Execute each LearningMechanism as well as LearningProjections in self.learningExecutionList
 
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
@@ -2122,10 +2139,10 @@ class System_Base(System):
         if self.current_targets is None:
            raise SystemError("No targets were specified in the call to execute {} with learning".format(self.name))
 
-        for i, target_mech in zip(range(len(self.targetMechanisms)), self.targetMechanisms):
+        for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
         # Assign each item of targets to the value of the targetInputState for the TARGET mechanism
         #    and zero the value of all ProcessInputStates that project to the TARGET mechanism
-            self.targetInputStates[i].value = self.current_targets[i]
+            self.target_input_states[i].value = self.current_targets[i]
 
         # NEXT, execute all components involved in learning
         if self.scheduler_learning is None:
@@ -2154,7 +2171,7 @@ class System_Base(System):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub('[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 # Note:  DON'T include input arg, as that will be resolved by mechanism from its sender projections
                 component.execute(
@@ -2165,7 +2182,7 @@ class System_Base(System):
                     context=context_str
                 )
                 # # TEST PRINT:
-                # print ("EXECUTING MONITORING UPDATES: ", component.name)
+                # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
         # THEN update all MappingProjections
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
@@ -2190,7 +2207,7 @@ class System_Base(System):
                                   format(context,
                                          component_type,
                                          component.name,
-                                         re.sub('[\[,\],\n]','',str(process_names))))
+                                         re.sub(r'[\[,\],\n]','',str(process_names))))
 
                 component._parameter_states[MATRIX].update(time_scale=TimeScale.TRIAL, context=context_str)
 
@@ -2203,7 +2220,7 @@ class System_Base(System):
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
-            for target_mech in self.targetMechanisms:
+            for target_mech in self.target_mechanisms:
                 processes = list(target_mech.processes.keys())
                 process_keys_sorted = sorted(processes, key=lambda i : processes[processes.index(i)].name)
                 process_names = list(p.name for p in process_keys_sorted)
@@ -2211,7 +2228,7 @@ class System_Base(System):
                 print("- error for target ({}): {}".
                       # format(append_type_to_name(target_mech),
                       format(target_mech.name,
-                             re.sub('[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
+                             re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
                                                          for i in target_mech.output_state.value])),
                              ))
                              # process_names))
@@ -2252,7 +2269,7 @@ class System_Base(System):
             sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the MonitoringMechanisms of the system for each execution (used for learning).
+            the target values for the LearningMechanisms of the system for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2274,13 +2291,13 @@ class System_Base(System):
             called after each time_step of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether mechanisms are executed for a single time step or a trial.
+            specifies whether Mechanisms are executed for a single time step or a trial.
 
         Returns
         -------
 
         <system>.results : List[Mechanism.OutputValue]
-            list of the OutputValue for each `TERMINAL` mechanism of the system returned for each execution.
+            list of the OutputValue for each `TERMINAL` Mechanism of the system returned for each execution.
 
         """
         if self.scheduler_processing is None:
@@ -2354,7 +2371,7 @@ class System_Base(System):
         if self.learning:
             from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
                 import MSE
-            for mech in self.targetMechanisms:
+            for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue
                 print("\n- MSE: {:0.3}".
@@ -2392,8 +2409,8 @@ class System_Base(System):
     #     """"""
 
     def show(self, options=None):
-        """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` mechanisms,
-        `TARGET` mechahinsms, ``outputs`` and their labels for the system.
+        """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` Mechanisms,
+        `TARGET` Mechahinsms, ``outputs`` and their labels for the System.
 
         Arguments
         ---------
@@ -2482,40 +2499,45 @@ class System_Base(System):
 
         Diciontary contains entries for the following attributes and values:
 
-            PROCESSES: list of processes in system
+            PROCESSES: list of `Processes <Process>` in system
 
-            MECHANISMS: list of all mechanisms in the system
+            MECHANISMS: list of all `Mechanisms <Mechanism>` in the system
 
-            ORIGIN_MECHANISMS: list of ORIGIN mechanisms
+            ORIGIN_MECHANISMS: list of `ORIGIN` Mechanisms
 
-            INPUT_ARRAY: ndarray of the inputs to the ORIGIN mechanisms
+            INPUT_ARRAY: ndarray of the inputs to the `ORIGIN` Mechanisms
 
-            RECURRENT_MECHANISMS:  list of INITALIZE_CYCLE mechanisms
+            RECURRENT_MECHANISMS:  list of `INITALIZE_CYCLE` Mechanisms
 
             RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            TERMINAL_MECHANISMS:list of TERMINAL mechanisms
+            TERMINAL_MECHANISMS:list of `TERMINAL` Mechanisms
 
-            OUTPUT_STATE_NAMES: list of outputState names corrresponding to 1D arrays in output_value_array
+            OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array
 
-            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of outputStates for all
-            `TERMINAL` mechs
+            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
+            Mechanisms
 
-            NUM_PHASES_PER_TRIAL:number of phases required to execute all mechanisms in the system
+            NUM_PHASES_PER_TRIAL:number of phases required to execute all Mechanisms in the system
 
-            MONITORING_MECHANISMS:list of MONITORING mechanisms
+<<<<<<< HEAD
+            LEARNING_MECHANISMS:list of `LearningMechanisms <LearningMechanism>`
+=======
+            LEARNING_MECHANISMS:list of LEARNING mechanisms
+>>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
-            TARGET:list of TARGET mechanisms
+            TARGET:list of `TARGET` Mechanisms
 
-            LEARNING_PROJECTION_RECEIVERS:list of MappingProjections that receive learning projections
+            LEARNING_PROJECTION_RECEIVERS:list of `MappingProjections <MappingProjection>` that receive learning
+            projections
 
-            CONTROL_MECHANISMS:list of CONTROL mechanisms
+            CONTROL_MECHANISMS:list of `ControlMechanisms <ControlMechanism>`
 
-            CONTROL_PROJECTION_RECEIVERS:list of parameterStates that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS:list of `ParameterStates <ParameterState>` that receive learning projections
 
         Returns
         -------
-        Dictionary of system attributes and values : dict
+        Dictionary of System attributes and values : dict
 
         """
 
@@ -2570,10 +2592,10 @@ class System_Base(System):
             OUTPUT_STATE_NAMES: output_state_names,
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,
-            MONITORING_MECHANISMS: self.monitoringMechanisms,
-            TARGET_MECHANISMS: self.targetMechanisms,
+            LEARNING_MECHANISMS: self.learning_mechanisms,
+            TARGET_MECHANISMS: self.target_mechanisms,
             LEARNING_PROJECTION_RECEIVERS: learning_projections,
-            CONTROL_MECHANISMS: self.controlMechanism,
+            CONTROL_MECHANISMS: self.control_mechanism,
             CONTROL_PROJECTION_RECEIVERS: controlled_parameters,
         }
 
@@ -2682,12 +2704,12 @@ class System_Base(System):
         """Generate a display of the graph structure of mechanisms and projections in the system.
 
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
-        in the `system's graph <System.graph>` are displayed.  However, the **show_learning** and
+        in the `System's graph <System.graph>` are displayed.  However, the **show_learning** and
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
         `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always
         displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless
         **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection`
-        are displayed as diamond-shaped nodes. The numbers in parentheses within a mechanism node indicate its
+        are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism node indicate its
         dimensionality.
 
         Arguments
@@ -2699,7 +2721,7 @@ class System_Base(System):
         show_learning : bool : default False
             determines whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
-            projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
+            Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
         show_control :  bool : default False
             determines whether or not to show the control components of the system;
@@ -2709,12 +2731,12 @@ class System_Base(System):
             determines the color in which the learning components are displayed
 
         control_color : keyword : default `blue`
-            determines the color in which the learning components are displayed (note: if the system's
+            determines the color in which the learning components are displayed (note: if the System's
             `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
-            `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
-            `ORIGIN` mechanisms of the system, to indicate that although no projection are created for these,
-            the prediction mechanisms determine the input to the `ORIGIN` mechanisms when the EVCMechanism
-            `simulates execution <EVCMechanism_Execution>` of the system.
+            `prediction Mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
+            `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
+            the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCMechanism
+            `simulates execution <EVCMechanism_Execution>` of the System.
 
         output_fmt : keyword : default 'pdf'
             'pdf': generate and open a pdf with the visualization;

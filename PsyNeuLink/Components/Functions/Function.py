@@ -212,15 +212,8 @@ def is_function_type(x):
 
 ADDITIVE_PARAM = 'additive_param'
 MULTIPLICATIVE_PARAM = 'multiplicative_param'
-OVERRIDE = 'OVERRIDE'
-DISABLE = 'DISABLE'
-
-
-class AdditiveParam():
-    attrib_name = ADDITIVE_PARAM
-    name = 'ADDITIVE_PARAM'
-    init_val = 0
-    reduce = lambda x : np.sum(np.array(x), axis=0)
+OVERRIDE_PARAM = 'OVERRIDE'
+DISABLE_PARAM = 'DISABLE'
 
 
 class MultiplicativeParam():
@@ -230,11 +223,66 @@ class MultiplicativeParam():
     reduce = lambda x : np.product(np.array(x), axis=0)
 
 
+class AdditiveParam():
+    attrib_name = ADDITIVE_PARAM
+    name = 'ADDITIVE_PARAM'
+    init_val = 0
+    reduce = lambda x : np.sum(np.array(x), axis=0)
+
+# IMPLEMENTATION NOTE:  USING A namedtuple DOESN'T WORK, AS CAN'T COPY PARAM IN Component._validate_param
+# ModulationType = namedtuple('ModulationType', 'attrib_name, name, init_val, reduce')
+
+
 class ModulationParam():
-    ADDITIVE = AdditiveParam
+    """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
+
+    COMMENT:
+        Each term specifies a different type of modulation used by a `ModulatorySignal`.  The first two refer to classes
+        that define the following terms:
+            * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
+              to use for modulation;
+            * name (str): name of the meta-parameter
+            * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
+              specified
+            * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
+              `ParameterState` receives more than one `ModulatoryProjection` of that type.
+    COMMENT
+
+    Attributes
+    ----------
+
+    MULTIPLICATIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
+        of the State's `function <State.function>`;
+
+    ADDITIVE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
+        of the State's `function <State.function>`;
+
+    OVERRIDE
+        assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
+        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+
+    DISABLE
+        ignore the ModulatorySignal when calculating the State's `value <State.value>`.
+    """
     MULTIPLICATIVE = MultiplicativeParam
-    OVERRIDE = OVERRIDE
-    DISABLE = DISABLE
+    # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
+    #                                 'MULTIPLICATIVE',
+    #                                 1,
+    #                                 lambda x : np.product(np.array(x), axis=0))
+    ADDITIVE = AdditiveParam
+    # ADDITIVE = ModulationType(ADDITIVE_PARAM,
+    #                           'ADDITIVE_PARAM',
+    #                           0,
+    #                           lambda x : np.sum(np.array(x), axis=0))
+    OVERRIDE = OVERRIDE_PARAM
+    DISABLE = DISABLE_PARAM
+
+MULTIPLICATIVE = ModulationParam.MULTIPLICATIVE
+ADDITIVE = ModulationParam.ADDITIVE
+OVERRIDE = ModulationParam.OVERRIDE
+DISABLE = ModulationParam.DISABLE
 
 
 def _is_modulation_param(val):
@@ -286,9 +334,12 @@ def get_param_value_for_keyword(owner, keyword):
     try:
         return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
     except FunctionError as e:
+        # assert(False)
         if owner.prefs.verbosePref:
             print("{} of {}".format(e, owner.name))
-        return None
+        # return None
+        else:
+            raise FunctionError(e)
     except AttributeError:
         if owner.prefs.verbosePref:
             print("Keyword ({}) not recognized for {}".format(keyword, owner.name))
@@ -2378,8 +2429,8 @@ class SoftMax(
             COMMENT:
                 D[j]/S[i] = S[i](d[i,j] - S[j]) where d[i,j]=1 if i==j; d[i,j]=0 if i!=j.
             COMMENT
-            D\ :sub:`j`\ S\ :sub:`i` = S\ :sub:`i`\ (𝜹\ :sub:`i,j` - S\ :sub:`j`),
-            where 𝜹\ :sub:`i,j`\ =1 if i=j and 𝜹\ :sub:`i,j`\ =0 if i≠j.
+            D\\ :sub:`j`\\ S\\ :sub:`i` = S\\ :sub:`i`\\ (𝜹\\ :sub:`i,j` - S\\ :sub:`j`),
+            where 𝜹\\ :sub:`i,j`\\ =1 if i=j and 𝜹\\ :sub:`i,j`\\ =0 if i≠j.
         If OUTPUT_TYPE is MAX_VAL or MAX_INDICATOR, return 1d array of the derivatives of the maximum
         value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, raise an exception
         (since it is ambiguous as to which element would have been chosen by the SoftMax function)
@@ -2905,13 +2956,13 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     if specification is IDENTITY_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return np.identity(rows)
 
     if specification is HOLLOW_MATRIX:
         if rows != cols:
-            raise FunctionError("Sender length ({0}) must equal receiver length ({1}) to use {}".
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
 
@@ -5003,15 +5054,15 @@ class BogaczEtAl(
         Calculate the derivative of 1/(reward rate) with respect to the threshold (**output** arg)
         and drift_rate (**input** arg).  Reward rate (RR) is assumed to be:
 
-            RR = (delay\ :sub:`ITI` + Z/A + ED);
+            RR = (delay\\ :sub:`ITI` + Z/A + ED);
 
         the derivative of 1/RR with respect to the `threshold <BogaczEtAl.threshold>` is:
 
-            1/A - E/A - (2A/c\ :sup:`2`\ )ED;
+            1/A - E/A - (2A/c\\ :sup:`2`\\ )ED;
 
         and the derivative of 1/RR with respect to the `drift_rate <BogaczEtAl.drift_rate>` is:
 
-            -Z/A\ :sup:`2` + (Z/A\ :sup:`2`\ )E - (2Z/c\ :sup:`2`\ )ED
+            -Z/A\\ :sup:`2` + (Z/A\\ :sup:`2`\\ )E - (2Z/c\\ :sup:`2`\\ )ED
 
         where:
 
@@ -5021,11 +5072,11 @@ class BogaczEtAl(
 
             c = `noise <BogaczEtAl.noise>`,
 
-            E = exp(-2ZA/\ c\ :sup:`2`\ ), and
+            E = exp(-2ZA/\\ c\\ :sup:`2`\\ ), and
 
-            D = delay\ :sub:`ITI` + delay\ :sub:`penalty` - Z/A
+            D = delay\\ :sub:`ITI` + delay\\ :sub:`penalty` - Z/A
 
-            delay\ :sub:`ITI` is the intertrial interval and delay\ :sub:`penalty` is a penalty delay.
+            delay\\ :sub:`ITI` is the intertrial interval and delay\\ :sub:`penalty` is a penalty delay.
 
 
         Returns

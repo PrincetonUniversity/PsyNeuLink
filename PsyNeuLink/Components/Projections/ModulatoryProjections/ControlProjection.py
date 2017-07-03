@@ -14,12 +14,11 @@
 Overview
 --------
 
-A ControlProjection is a subclass of `Projection` that projects to the `parameterState <ParameterState>`
-of a `ProcessingMechanism`. It takes the value of an `outputState <OutputState> of another mechanism (e.g., usually a
-`ControlMechanism <ControlMechanism>`), and uses it to  modify the value of the parameter associated with the
-parameterState to which it projects.  All of the ControlProjections in a system, along with its other 
-`control components <ControlMechanism>`, can be displayed using the system's `show_graph` method with its 
-**show_control** argument assigned :keyword:`True`.
+A ControlProjection is a subclass of `ModulatoryProjection` that projects to the `parameterState <ParameterState>` of
+a `ProcessingMechanism`. It takes the value of a `ControlSignal` of a `ControlMechanism`, and uses it to  modify the
+value of the parameter associated with the ParameterState to which it projects.  All of the ControlProjections in a
+system, along with its other `control components <ControlMechanism>`, can be displayed using the system's `show_graph`
+method with its **show_control** argument assigned as :keyword:`True`.
 
 .. _ControlProjection_Creation:
 
@@ -27,41 +26,56 @@ Creating a ControlProjection
 ----------------------------
 
 A ControlProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
-or by including it in the `specification of a parameter <ParameterState_Specifying_Parameters>` for a mechanism,
-MappingProjection, or the :keyword:`function` of either of these.  If a ControlProjection is created using its
-constructor on its own, the `receiver <ControlProjection.receiver>` argument must be specified.  If it is included in a
-parameter specification, the parameterState for the parameter being specified will be assigned as the
+or by including it in a tuple that `specifies a parameter <ParameterState_Specifying_Parameters>` for a `Mechanism`,
+`MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection is created
+using its constructor on its own, the `receiver <ControlProjection.receiver>` argument must be specified.  If it is
+included in a parameter specification, the ParameterState for the parameter being specified will be assigned as the
 ControlProjection's `receiver <ControlProjection.receiver>`.  If its `sender <ControlProjection.sender>` is not
 specified, its assignment depends on the `receiver <ControlProjection.receiver>`.  If the receiver belongs to a
-mechanism that is part of a system, then the ControlProjection's `sender <ControlProjection.sender>` is assigned to an
-outputState of the system's `controller`. Otherwise, the `sender <ControlProjection.sender>` is assigned to
-the outputState of a `DefaultControlMechanism`.
+Mechanism that is part of a System, then the ControlProjection's `sender <ControlProjection.sender>` is assigned to a
+`ControlSignal` of the System's `controller`.
+
+.. _ControlProjection_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+`sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+a ControlProjection to be created before its `sender` (and/or `receiver`) have been created (e.g., before them in a
+script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
+ControlProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
+not necessary if the parameter(s) to be controlled are specified in the **control_signals** argument of a `System`, or
+in a tuple specifying the parameter of a `Mechanism` (or its `function <Mechanism.function`) that is part of a System
+-- in those cases, deferred initialization is completed automatically.
 
 .. _ControlProjection_Structure:
 
 Structure
 ---------
 
-A ControlProjection has the same structure as a `Projection`.  Its `sender <ControlProjection.sender>`
-can be the outputState of any mechanism, but is generally a `ControlMechanism <ControlMechanism>` and commonly the
-`ControlSignal` of an `EVCMechanism`.  Its `receiver <ControlProjection.receiver>` is always the `parameterState
-<ParameterState>` of a mechanism or `MappingProjection`, that is associated with a parameter of either the
-parameterState's owner or it owner's :keyword:`function`.  The `function <ControlProjection.function>` of a
-ControlProjection is, by default, the identity function;  that is, it uses the :keyword:`value` of its `sender
-<ControlProjection.sender>` to modify the value of the parameter that it controls.
+The `sender <ControlProjection.sender>` of a ControlProjection is a `ControlSignal` of a `ControlMechanism`.  Its
+`receiver <ControlProjection.receiver>` is the `ParameterState` of a `Mechanism` or `MappingProjection`, that is
+associated with a parameter of the ParameterState's owner or its owner's `function <Component.function>`.  The
+`function <ControlProjection.function>` of a ControlProjection is, by default, the identity function;  that is,
+it conveys the `value <ControlSignal.value>` of its `sender <ControlProjection.sender>` to
+its `receiver <ControlProjection.receiver>`, for use in modifying the value of the parameter that it controls.
 
 .. _ControlProjection_Execution:
 
 Execution
 ---------
 
-A ControlProjection uses its `function <ControlProjection.function>` to assign its `value <ControlProjection.value>`
-from the one received  from its `sender <ControlProjection.sender>`.  This is used by the paramaterState to which the
-ControlProjection projects to modify the corresponding parameter of its owner or owner's :keyword:`function`.
+A ControlProjection cannot be executed directly.  It is executed when the `ParameterState` to which it projects is
+updated.  Note that this only occurs when the ProcessingMechanism to which the `ParameterState` belongs is executed
+(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
+`function <ControlProjection.function>` assigns the value of the `ControlSignal` from which it projects as its own
+`value <ControlProjection.value>`. This is used by the `ParameterState` to which the ControlProjection projects to
+modify the parameter for which it is responsible.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-   mechanism that receives the projection are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy"
+   Mechanism that receives the projection are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy"
    updating).
 
 .. _ControlProjection_Class_Reference:

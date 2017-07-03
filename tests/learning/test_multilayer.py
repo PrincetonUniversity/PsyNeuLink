@@ -101,7 +101,7 @@ def test_multilayer():
 
     def show_target():
         i = s.input
-        t = s.targetInputStates[0].value
+        t = s.target_input_states[0].value
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.matrix)
         print('- Middle Weights: \n', Middle_Weights.matrix)

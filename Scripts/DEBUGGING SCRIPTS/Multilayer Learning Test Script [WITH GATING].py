@@ -1,10 +1,10 @@
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.scheduling.condition import AfterNCalls
 from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
@@ -160,7 +160,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nOLD WEIGHTS: \n')
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)

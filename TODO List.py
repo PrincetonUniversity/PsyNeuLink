@@ -229,6 +229,7 @@
 #                 # @property
 #                 # def base_value(self):
 
+# IMPLEMENT:  ASSIGN ParameterState.variable TO BACKING FIELD OF PARAMETER (ParameterState.owner._<param_name>)
 # IMPLEMENT:  FUNCTION ENTRIES OF STATE SPECIFICATION DICTIONARY - SHOULD NOW BE FUNCTIONAL (6/13/17)
 #             TEST BY ASSIGNING INTEGRATION FUNCTION TO InputState and/or OutputState
 # IMPLEMENT:  USE STATE_SPECIFICATION_DICT TO OVERRIDE MODULATION META PARAMS (BY REASSIGNING THEM TO OTHER FCT PARAMS)
@@ -387,6 +388,8 @@
 # DOCUMENTATION: can instantiate LearningSignal w/o LearningProjections:
 #                    creates a default LearningSignal, along with ERROR output_state
 
+# IMPLEMENT: control_signal property for ControlProjection (assign to self.variable, as for LearningProjection)
+#            gating_signal property for GatingProjection (assign to self.variable, as for LearningProjection)
 # IMPLEMENT / FIX:  CHANGE LearningProjection BACK TO TRANSMISSIVE PROJECTION (OR A NEW CATEGORY?)
 #                   - Reassign class specification
 #                   - Check for anyplace it is assigned to mod_afferents and move to trans_afferents 
@@ -933,7 +936,7 @@
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
 #                    ARE DISCUSSED.
-# DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+# DOCUMENTATION: ControlMechanism -> control_mechanism or control mechanism (in appropriate places)
 # DOCUMENTATION: Call subclass -> "Constructor"
 
 #  DOCUMENTATION: Learning -> LearningProjection (name of doc)
@@ -1192,7 +1195,7 @@
 #
 # NEED FOR EVC MODEL:
 # - Sequential adjust effects:
-#   "Reactive":  simple controlMechanism that maps input values into ControlProjection intensities
+#   "Reactive":  simple ControlMechanism that maps input values into ControlProjection intensities
 #   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
 #   "Feature-based model learning" (Falk & Tom)
 #   "Exhaustive Search + learning":
@@ -1620,12 +1623,13 @@
 #                    - this is so Mechanism base class can do housekeeping before and after subclass._execute)
 #                    - if a subclass does not implement _execute, calling it will call .function directly
 #                    -  if INITIALIZING is in context for call to execute, initMethod is checked to determine whether:
-#                        only subclass._execute is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
-#                        only subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                        subclass._execute (but NOT Mechanism.execute) is run (initMethod = INIT__EXECUTE__METHOD_ONLY)
+#                        ONLY subclass.function is run (initMethod = INIT_FUNCTION_METHOD_ONLY)
+#                              (EXAMPLE: EVCMechanism -- don't want to run full simulation during init)
 #                        full subclass._execute and Mechanism.execute method are run
 #                States use .execute only to call .function (during init);  they are updated using <state>.update()
 #            .function is the "business end" of the object:
-#                - generally it is a Function Function
+#                - generally it is a Function object
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
@@ -2356,7 +2360,7 @@
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy _is_mechanism_spec in validation contexts generally
 #
-# CONFIRM: Assignment of processInputStates when mechanism belongs to more than one process
+# CONFIRM: Assignment of process_input_states when mechanism belongs to more than one process
 # TEST (line 1442):
     # if params:
     #     projection.matrix = params

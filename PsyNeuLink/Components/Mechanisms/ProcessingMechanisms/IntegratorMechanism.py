@@ -186,6 +186,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({
         # TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
+
     })
 
     # Set default input_value to default bias for SigmoidLayer
@@ -210,6 +211,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             default_input_value = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        # self.variableClassDefault = default_input_value or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
