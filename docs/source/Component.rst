@@ -10,3 +10,4 @@ Component
    Function
 
 .. automodule:: Component
+   :members: ResetMode
