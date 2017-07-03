@@ -431,6 +431,14 @@ class Composition(object):
             # this input
             MappingProjection(sender=new_input_mech, receiver=mech)
 
+    def assign_execution_ids(self, execution_id, input_mechanisms):
+        # Traverse processing graph and assign one uuid to all of its mechanisms
+        self._execution_id = execution_id or self._get_unique_id()
+        for v in self._graph_processing.vertices:
+            v.component._execution_id = self._execution_id
+        for k in input_mechanisms.keys():
+            input_mechanisms[k]._execution_id = self._execution_id
+
 
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
         # all origin mechanisms
@@ -444,18 +452,13 @@ class Composition(object):
             len_inputs = 1
 
         input_indices = range(len_inputs)
+
         input_mechanisms = {}
         self.create_input_mechanisms(inputs, input_mechanisms)
 
+        self.assign_execution_ids(execution_id, input_mechanisms)
 
-        # Traverse processing graph and assign one uuid to all of its mechanisms
-        self._execution_id = execution_id or self._get_unique_id()
-        for v in self._graph_processing.vertices:
-            v.component._execution_id = self._execution_id
-        for k in input_mechanisms.keys():
-            input_mechanisms[k]._execution_id = self._execution_id
-
-        # TBI: Do the same for learning graph?
+        # TBI: Handle learning graph
 
         # TBI: Handle runtime params?
 
@@ -465,9 +468,14 @@ class Composition(object):
             # reset scheduler counts at the TRIAL level
             self.sched._reset_counts_total(time_scale=TimeScale.TRIAL)
 
+            # loop over all mechanisms that receive inputs from the outside world
             for mech in has_inputs:
+                # grab the input value for this mechanism on this trial
                 input_val = inputs[mech][input_index]
+                # find the input mechanism corresponding to this mechanism
                 input_mechanism = input_mechanisms[mech]
+                # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
+                # recieved the value from the MappingProjection when execution of the actual composition begins
                 input_mechanism.execute(input=input_val, context=EXECUTING)
 
             # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
