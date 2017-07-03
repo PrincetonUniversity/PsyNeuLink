@@ -5,8 +5,11 @@ from enum import Enum
 
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Globals.Keywords import EXECUTING, CENTRAL_CLOCK
 from PsyNeuLink.Globals.TimeScale import TimeScale, CurrentTime, CentralClock
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _add_projection_from
 import uuid
 
@@ -415,6 +418,20 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
+    def create_input_mechanisms(self, inputs, input_mechanisms):
+        # create an input mechanism corresponding to each of the mechanisms in composition which receives an input
+        # value from the outside world (from the user)
+
+        # build a dict of key-value pairs where key = mechanism and value = plain transfer mechanism w/ identity fn
+        for mech in inputs.keys():
+            # create plain mechanism with identity fn
+            new_input_mech = TransferMechanism(function=Linear(slope=1, intercept=0.0))
+            input_mechanisms[mech] = new_input_mech
+            # create a mapping projection from the "input mechanism" to the mechanism in the composition which needs
+            # this input
+            MappingProjection(sender=new_input_mech, receiver=mech)
+
+
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
         # all origin mechanisms
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
@@ -427,31 +444,31 @@ class Composition(object):
             len_inputs = 1
 
         input_indices = range(len_inputs)
+        input_mechanisms = {}
+        self.create_input_mechanisms(inputs, input_mechanisms)
 
-        # if inputs:
-        #      self.validate_feed_dict(inputs, is_origin, "Inputs")
-        # if targets:
-        #     self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
-        # if recurrent_init:
-        #     self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
 
         # Traverse processing graph and assign one uuid to all of its mechanisms
         self._execution_id = execution_id or self._get_unique_id()
         for v in self._graph_processing.vertices:
             v.component._execution_id = self._execution_id
+        for k in input_mechanisms.keys():
+            input_mechanisms[k]._execution_id = self._execution_id
 
         # TBI: Do the same for learning graph?
 
         # TBI: Handle runtime params?
 
+        # loop over the length of the list of inputs (# of trials)
         for input_index in input_indices:
-            # print("TRIAL ", TimeScale.TRIAL)
-            # print("RUN ", TimeScale.RUN)
-            # print("TIME_STEP", TimeScale.TIME_STEP)
 
-            # reset inputs to each mechanism, variables, previous values, etc.
+            # reset scheduler counts at the TRIAL level
             self.sched._reset_counts_total(time_scale=TimeScale.TRIAL)
-            # self.sched._reset_time(TimeScale.RUN)
+
+            for mech in has_inputs:
+                input_val = inputs[mech][input_index]
+                input_mechanism = input_mechanisms[mech]
+                input_mechanism.execute(input=input_val, context=EXECUTING)
 
             # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
             for next_execution_set in scheduler.run():
@@ -460,22 +477,22 @@ class Composition(object):
                 for mechanism in next_execution_set:
                     if isinstance(mechanism, Mechanism):
 
-                        # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
-                        if (mechanism in is_origin) and (mechanism in has_inputs):
-                            print()
-                            num = mechanism.execute(input=inputs[mechanism][input_index], context=EXECUTING + "composition")
-                            print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                            print("result = ", num)
-                            print()
-                            print()
-
-                        # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
-                        else:
-                            num = mechanism.execute(context=EXECUTING+ "composition")
-                            print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                            print("result = ", num)
-                            print()
-                            print()
+                        # # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
+                        # if (mechanism in is_origin) and (mechanism in has_inputs):
+                        #     print()
+                        #     num = mechanism.execute(input=inputs[mechanism][input_index], context=EXECUTING + "composition")
+                        #     print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                        #     print("result = ", num)
+                        #     print()
+                        #     print()
+                        #
+                        # # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
+                        # else:
+                        num = mechanism.execute(context=EXECUTING+ "composition")
+                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                        print("result = ", num)
+                        print()
+                        print()
 
         # return the output of the LAST mechanism executed in the composition
         return num
