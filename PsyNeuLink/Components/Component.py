@@ -1248,6 +1248,9 @@ class Component(object):
         # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
 
         # If size has been specified, make sure it doesn't conflict with variable arg or param specification
+        print("hasattr ?", hasattr(self, 'size'))
+        print(self.name)
+        print("---")
         if hasattr(self, 'size'):
 
             size = self.size
@@ -1367,13 +1370,18 @@ class Component(object):
             # IMPLEMENTATION NOTE: if variable and size are both specified as arguments, they should/will be checked
             # against each other in Component.py, during _instantiate_defaults().
             # endregion
-
+            print("\nsize before assignment: ", size)
+            print("self.size before assignment: ", self.size)
             self.size = size
+            print("self.size after assignment: ", self.size)
+            print("size should have been assigned")
 
             # MODIFIED 6/28/17 (CW): Because self.size was changed to always be a 1D array, the check below was changed
             # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
-            if variable is not None:
+            if variable is not None:  # try tossing this "if" check
+                print("self.size: ", self.size)
+                print("variable: ", variable)
                 # If they conflict, raise exception, otherwise use variable (it specifies both size and content).
                 for i in range(len(self.size)):
                     if self.size[i] != len(variable[i]):

@@ -234,51 +234,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         # Let mechanism itself do validation of the input
         pass
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        """ Validate SIZE param """
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        print("target_set: ", target_set)
-        # Validate SIZE
-        if SIZE in target_set and target_set[SIZE] is not None:
-            mech_size = target_set[SIZE].copy()
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise ProcessingMechanismError("An element ({}) in size ({}) is not a number.".
-                                                   format(x, target_set[SIZE]))
-                if x < 1:
-                    raise ProcessingMechanismError("An element ({}) in size ({}) is not a positive number.".
-                                                   format(x, target_set[SIZE]))
-                if type(x) == float and not x.is_integer():
-                    raise ProcessingMechanismError("An element ({}) in size is a non-integer float.".format(x))
-                try:
-                    y = int(x)
-                except:
-                    raise ProcessingMechanismError(
-                        "Failed to convert an element ({}) in size argument ({}) to an integer. size "
-                        "should be a number, or iterable of numbers, which are integers or "
-                        "can be converted to integers.".format(x, target_set[SIZE]))
-                return int(x)
-            try:
-                if mech_size is not None:
-                    mech_size = np.atleast_1d(mech_size)
-                    if len(np.shape(mech_size)) > 1:  # number of dimensions of size > 1
-                        raise ProcessingMechanismError("size ({}) should either be a number,"
-                                                       " 1D array, or list".format(target_set[SIZE]))
-            except:
-                raise ProcessingMechanismError("Failed to convert size input ({})"
-                                               " to a 1D array.".format(target_set[SIZE]))
-
-            # try:
-            if mech_size is not None:
-                # convert all elements of mech_size to int, check that they are valid values (e.g. positive)
-                list(map(checkAndCastInt, mech_size))
-            # except:
-            #     raise ProcessingMechanismError("Failed to convert an element in size argument ({}) to an integer. size "
-            #                                    "should be a number, or iterable of numbers, which are integers or "
-            #                                    "can be converted to integers.".format(target_set[SIZE]))
-
     def _instantiate_attributes_before_function(self, context=None):
 
         super()._instantiate_attributes_before_function(context=context)
