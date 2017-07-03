@@ -271,7 +271,7 @@ dictionary where the GatingSignal is specified, as described <a class="reference
 executed.  When this occurs, the GatingMechanism provides the GatingSignal with a value that is used by its
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to modulate the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the states to which they project. Those
 states use the value of the GatingProjection they receive to modify a parameter of their function.  How the modulation
-is executed is determined by the GatingSignal&#8217;s <a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute
+is executed is determined by the GatingSignal&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute
 (see <a href="#id1"><span class="problematic" id="id2">`</span></a>ModulatoryProjections_Modulation_Operation).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -353,7 +353,7 @@ GatingSignals, respectively.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the GatingSignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the GatingSignal.</li>
 <li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the value of the GatingSignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 </ul>
