@@ -209,12 +209,11 @@ class Composition(object):
             self.validate_projection(sender, projection, receiver)
 
     def validate_projection(self, sender, projection, receiver):
-        print(projection.sender.owner)
-        print(projection.receiver.owner)
-        print(sender)
-        print(receiver)
+
 
         if hasattr(projection, "sender") and hasattr(projection, "receiver"):
+            # the sender and receiver were passed directly to the Projection object AND to compositions'
+            # add_projection() method -- confirm that these are consistent
 
             if projection.sender.owner != sender:
                 raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
@@ -224,10 +223,11 @@ class Composition(object):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "components in their composition.".format(projection, receiver))
         else:
-            print("REASSIGNED")
-            projection.sender = sender
-            projection.receiver = receiver
-            projection._deferred_init(context="deferred init")
+            # sender and receiver were NOT passed directly to the Projection object
+            # assign them based on the sender and receiver passed into add_projection()
+            projection.init_args['sender'] = sender
+            projection.init_args['receiver'] = receiver
+            projection._deferred_init(context =" INITIALIZING ")
 
         if projection.sender.owner != sender:
             raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
