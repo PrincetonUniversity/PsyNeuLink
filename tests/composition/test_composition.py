@@ -722,6 +722,44 @@ class TestRun:
         )
         assert 125 == output[0][0]
 
+    def test_projection_assignment_mistake_swap(self):
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_mechanism(C)
+        comp.add_mechanism(D)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(B, MappingProjection(sender=B, receiver=D), C)
+
+        assert "is incompatible with the positions of these components in their composition" in str(error_text.value)
+
+    def test_projection_assignment_mistake_swap2(self):
+        # A ----> C --
+        #              ==> E
+        # B ----> D --
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_mechanism(C)
+        comp.add_mechanism(D)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=C), C)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_projection(B, MappingProjection(sender=B, receiver=C), D)
+
+        assert "is incompatible with the positions of these components in their composition" in str(error_text.value)
+
     def test_run_5_mechanisms_2_origins_1_terminal(self):
         # A ----> C --
         #              ==> E
@@ -800,14 +838,13 @@ class TestRun:
         assert 50.0 == output[0][0]
 
     def test_run_2_mechanisms_with_multiple_trials_of_input_values(self):
-        print("FINAL TEST")
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.add_projection(A, MappingProjection(), B)
         comp.analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
