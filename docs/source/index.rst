@@ -7,7 +7,7 @@ PsyNeuLink Documentation
 ========================
 
 * `Purpose`
-* `Overview`
+* `Overview and Sampler`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
 * `Conventions and Definitions <ConventionsAndDefinitions>`
 * `Installation`
@@ -106,16 +106,25 @@ PsyNeuLink models are made of `Components <Component>` and `Compositions <Compos
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
 For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
-"links".  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
-Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses Projections
-to link Mechanisms together into pathways that can execute a process, and processes can be combined to form networks or
-circuits that make up a systems-level model.
+"links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+other Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses
+Projections to link Mechanisms together into pathways that can execute a process, and processes can be combined to
+form networks or circuits that make up a systems-level model.  A `Scheduler` coordinates the execution of Mechanisms
+in a Composition, each of which can be assigned one or more pre-specified or customized `Conditions <Condition>`.
 
 Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
 taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
+
+Since Mechanisms can implement any function, Projections insure that they can "communicate" with
+each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
+Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
+and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
+modelers the flexibility to commit each Component of their model to a form of processing and/or level of analysis
+that is appropriate for that Component, while providing the opportunity to test and explore how they interact with one
+another in a single system.
 
 
 .. _Index_Simple_Configurations:

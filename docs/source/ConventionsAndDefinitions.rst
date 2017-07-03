@@ -83,7 +83,6 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
           Modifies the value of one or more `InputStates <InputState>` and/or `OutputStates <OutputStates>`
           of other Mechanisms.
 
-
 * `Projections <Projection>`.
    A Projection takes the output of a Mechanism, and transforms it as necessary to provide it
    as the input to another Component. There are two types of Projections, that correspond to the two types of
@@ -112,58 +111,60 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
             Takes a GatingSignal from a `GatingMechanism` and uses it to modulate the input or output of a
             ProcessingMechanism
 
-
 * `States <State>`
-   A State is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
-   of its function, or its output(s).   There are three types of States, one for each type of representation,
-   each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
-   (see `ModulatorySignal_Anatomy_Figure`):
+   A State is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)
+   of its function, or its output(s).   There are three types of States, one for each type of representation
+   (see `Mechanism_Figure`), each of which can receive and/or send `PathwayProjections <PathwayProjection>` and/or
+   `ModulatoryProjections <ModulatoryProjection>` (see `ModulatorySignal_Anatomy_Figure`):
 
    + `InputState`
        Represents a set of inputs to the Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
        `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's
-       `variable <Mechanism.variable>`.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       `variable <Mechanism.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`, that
+        modify the parameter(s) of the State's function, and thereby the State's `value <State.value>`.
 
    + `ParameterState`
        Represents a parameter of the Mechanism's `function <Mechanism.function>`.  Takes the assigned value of the
        parameter as the `variable <State.variable>` for the State's `function <State.function>`, and assigns the result
-       as the value of the parameter of the Mechanism's `function <Mechanism.function>` that is used when the Mechanism
-       executes.  It can also receive one or more modulatory `ControlProjections <ControlProjection>`,
-       that modify the parameter(s) of the State's function, and thereby the value of the parameter of the Mechanism's
+       as the value of the parameter used by the Mechanism's `function <Mechanism.function>` when the Mechanism
+       executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify parameter(s)
+       of the State's function, and thereby the value of the parameters used by the Mechanism's
        `function <Mechanism.function>`.
 
    + `OutputState`
        Represents an output of the Mechanism.
        Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
        `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
-       to one or more efferent PathwayProjections.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
+       to one or more efferent PathwayProjections.  It can also receive one or more
+       `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
        State's `value <State.value>`.
 
 * `Functions <Function>` - the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
-  object, that wraps an executable function together with a definition of its parameters, and modularizes it so that
-  it can be swapped out for another (compatible) one, or replaced with a customized one.  PsyNeuLink provides a
-  library of standard Functions (e.g. for linear, non-linear, and matrix transformation; integration, and evaluation and
-  comparison), as well as a standard Application Programmers Interface (API) that can be used to "wrap" any function
-  that can be written in or called from Python.
+  object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
+  This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
+  to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
+  or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
+  non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
+  Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
+  called from Python.
 
 .. _Definitions_Compositions:
 
 Compositions
 ~~~~~~~~~~~~
 
-Compositions are combinations of Components that make up a PsyNeuLink model.  There are two types of Compositions:
-Processes and Systems.
+Compositions are combinations of Components that make up a PsyNeuLink model.  There are two primary types of
+Compositions:
 
-`Processes <Process>`.  A Process is the simplest type of Composition: a linear chain of Mechanisms connected by
-Projections.  A Process may have recurrent Projections, but it does not have any branches.
+   + `Processes <Process>`
+       One or more `Mechanisms <Mechanism>` connected in a linear chain by `Projections <Projection>`.  A Process can
+       have recurrent Projections, but it cannot have any branches.
 
-`System`.  A system is a collection of Processes that can have any configuration, and is represented by a graph in
-which each node is a `Mechanism` and each edge is a `Projection`.  Systems are generally constructed from Processes,
-but they can also be constructed directly from Mechanisms and Projections.
+   + `System`
+       A collection of Processes that can have any configuration, and is represented by a graph in which each node is
+        a `Mechanism` and each edge is a `Projection`.  Systems are generally constructed from Processes, but they
+        can also be constructed directly from Mechanisms and Projections.
 
 
 .. _Definitions_Compositions__Figure:
@@ -186,17 +187,11 @@ Execution
 ~~~~~~~~~
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is run.  Compositions are run iteratively in `rounds of execution`, in which each Mechanism in the
-composition is given an opportunity to execute.  By default, each Mechanism in a Composition executes exactly once
-per round of execution.  However, a `Scheduler` can be used to specify one or more conditions for each Mechanism
-that determine whether it runs in a given round of execution.  This can be used to determine when a Mechanism begins
-and/or ends executing, how many times it executes or the frequency with which it exeuctes relative to other
-Mechanisms, as well as dependencies among Mechanisms (e.g., that one begins only when another has completed).
-
-Since Mechanisms can implement any function, Projections insure that they can "communicate" with
-each other seamlessly, and a Scheduler can be used to specify any pattern of execution among Mechanisms in a
-Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis, and/or time
-scales of operation, composing heterogeneous Components into a single integrated system.  This affords modelers the
-flexibility to commit each Component of their model to a form of processing and/or level of analysis that is
-appropriate for that Component, while providing the opportunity to test and explore how they interact with one
-another in a single system.
+they belong is run.  Compositions are run iteratively in rounds of execution referred to as `PASS` \es, in which each
+Mechanism in the composition is given an opportunity to execute.  By default, each Mechanism in a Composition
+executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify one or more `Conditions <Condition>`
+for each Mechanism that determine whether it runs in a given `PASS`.  This can be used to determine when
+a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
+to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
+in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-speciffied <Condition_Pre_Specified>` and
+`custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.

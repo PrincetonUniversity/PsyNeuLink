@@ -89,6 +89,8 @@
 # DOCUMENTATION: Revise docstrings for Integrator mechanisms and RecurrentTransferMechanisms
 #                    using formatting template from TransferMechanism and DDM
 #                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
+# DOCUMENTATION: What to call ConventionsAndDefinitions
+#
 # IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
 #            (??multimple inheritance, as RTM as also a TM?)
 #            Integrate <mechanism>.previous_value with stateful and is_finished
