@@ -85,10 +85,28 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Composition.html">Composition</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Process</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-process">Creating a Process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pathway">Pathway</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mechanisms">Mechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#projections">Projections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#process-input-and-output">Process input and output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#learning">Learning</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -460,9 +478,9 @@ in a round of executions.</li>
 </ul>
 </div></blockquote>
 </li>
-<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
+<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the Process.</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_rate" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned as the TARGET input for the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the
 Process projects (and assigned as its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism; used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).

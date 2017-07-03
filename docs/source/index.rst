@@ -88,7 +88,7 @@ developing simpler models, or taking complex or highly detailed models that have
 or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
 to integration, documentation, and dissemination.
 
-.. _Overview:
+.. _Overview_and_Sampler:
 
 Overview and "Sampler"
 ----------------------
@@ -367,7 +367,7 @@ with substantial and greatly appreciated assistance from:
 .. toctree::
    :hidden:
 
-   ConventionsAndDefinitions
+   QuickReference
    Component
    Composition
    Scheduling
