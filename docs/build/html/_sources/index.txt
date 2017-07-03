@@ -7,9 +7,8 @@ PsyNeuLink Documentation
 ========================
 
 * `Purpose`
-* `Overview and Sampler`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
-* `Conventions and Definitions <ConventionsAndDefinitions>`
+* `Overview_and_Sampler`
 * `Installation`
 * `Contributors`
 * `Indices_and_Tables`
@@ -90,8 +89,8 @@ to integration, documentation, and dissemination.
 
 .. _Overview_and_Sampler:
 
-Overview and "Sampler"
-----------------------
+Overview and Sampler
+--------------------
 
 PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
