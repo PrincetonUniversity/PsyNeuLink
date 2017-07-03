@@ -687,7 +687,6 @@ def test_transfer_mech_size_int_inputs_ints():
         size=4
     )
     val = T.execute([10, 10, 10, 10]).tolist()
-    print("\n\n\n\n\n\n\nval is: ", val)
     assert val == [[10.0, 10.0, 10.0, 10.0]]
 
 # ------------------------------------------------------------------------------------------------
