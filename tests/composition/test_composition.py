@@ -844,6 +844,24 @@ class TestRun:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender = A, receiver= B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [1, 2, 3, 4]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched
+        )
+
+        assert 40.0 == output[0][0]
+
+    def test__sender_receiver_not_specified(self):
+        comp = Composition()
+
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
         comp.analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
