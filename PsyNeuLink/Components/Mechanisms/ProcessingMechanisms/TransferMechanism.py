@@ -60,8 +60,8 @@ used as the `variable <TransferMechanism.variable>` for its `function <TransferM
 list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
 only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the value of its
 `primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
-assigned using the TransferMechanism's `standard OutputStates <TRANSFER_OUTPUT>` (see `OutputState_Standard`) or by
-creating `custom OutputStates <OutputState_Customization>`.
+assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
+(see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
 
 .. _Transfer_Execution:
 
@@ -115,7 +115,10 @@ Transfer_DEFAULT_OFFSET = 0
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class TRANSFER_OUTPUT():
-    """`Standard OutputStates <OutputState_Standard>` for `TransferMechanism`:
+    """
+    .. _TransferMechanism_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `TransferMechanism`: \n
 
     *RESULT* : 1d np.array
       result of `function <TransferMechanism.function>` (same as `output_state.value`).
@@ -317,7 +320,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     output_states : ContentAddressableList[OutputState]
         contains list of Mechanism's OutputStates.  By default there is a single OutputState named *RESULT* that
         contains the result of a call to the Mechanism's `function <TransferMechanism.function>`;  additional
-        `standard <TRANSFER_OUTPUT>` and/or custom OutputStates may be listed, if they have been
+        `standard <TransferMechanism_Standard_OutputStates>` and/or custom OutputStates may be listed, if they have been
         :ref:`specified <LINK>`.
 
     output_values : List[array(float64), float, float]

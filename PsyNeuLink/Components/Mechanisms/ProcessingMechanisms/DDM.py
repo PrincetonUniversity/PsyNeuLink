@@ -209,16 +209,8 @@ possible parameters. See individual functions for more details.
 DDM Results
 ~~~~~~~~~~~
 
-****
-MOVE MOST OF THIS TO STANDARD OUTPUT STATES, AND THEN SAY THAT ITS FUNCTION RETURENS THE VALUES DESCTIBED THERE,
-UNDER THE FOLLOWING CONDITIONS, AND WITH THE FOLLOWING ASSIGNMENTS:
-****
-
-The DDM's `function <DDM.function>` always returns the following two quantities, that are assigned as the first two
-items of it `value <DDM.value>` attribute:
-
 COMMENT:
-[TBI - MULTIPROCESS DDM - REPLACE ABOVE]
+[TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
 or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
@@ -241,6 +233,31 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
+
+****
+MOVE MOST OF THIS TO STANDARD OUTPUT STATES, AND THEN SAY THAT ITS FUNCTION RETURENS THE VALUES DESCTIBED THERE,
+UNDER THE FOLLOWING CONDITIONS, AND WITH THE FOLLOWING ASSIGNMENTS:
+****
+
+By default, the `value <DDM.value>` has two items, and two corresponding `OutputStates <OutputState>` assigned to its
+`output_states <DDM.output_states>` attribute, that represent to the two results always returned by its
+`function <DDM.function>`:  *DECISION_VARIABLE* and *RESPONSE_TIME*.  These, and the other values that can be returned
+by the DDM's `function <DDM.function>`, are described under `DDM_Execution` and `DDM_Standard_OutputStates`.
+
+.. _DDM_Execution:
+
+Execution
+---------
+
+When a DDM mechanism is executed, it computes the decision process either analytically (in `TRIAL` mode) or by
+step-wise integration using the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ (in `TIME_STEP` mode).
+It `function <DDM>function>` always returns its *DECISION_VARIABLE* and *RESPONSE_TIME* results
+(see `DDM_Standard_OutputStates`), and assigns these as the first two items of its `value <DDM.value>` attribute.
+If it is executed in `TRIAL` mode, it also returns its *PROBABILITY_UPPER_THRESHOLD* and *PROBABILITY_LOWER_THRESHOLD*
+results and assigns these as the third and fourth items of its `value <DDM.value>` attribute.  If it is executed
+in `TRIAL` mode using `NavarroAndFuss` as its `function <DDM.function>`, it also returns its *RT_CORRECT_MEAN* and
+*RT_CORRECT_VARIANCE* results and assigns these as the fifth and sixth items of its `value <DDM.value>` attribute.
+
 
 * *DECISION_VARIABLE (float)*: In `TRIAL` mode, this is the value of the threshold crossed by the decision variable
   on the current `TRIAL` (which is either the value of the Mechanism's `threshold <DDM.threshold>` attribute or its
@@ -304,20 +321,6 @@ The following quantities are returned only if the `NavarroAndFuss` function is u
   Mechanism's `value <DDM.value>` attribute, and as the value of its *RT_CORRECT_VARIANCE*
   `standard OutputState <DDM_OUTPUT>`.
 
-.. _DDM_Execution:
-
-Execution
----------
-
-When a DDM mechanism is executed, it computes the decision process, either analytically (in `TRIAL` mode) or by
-step-wise integration (in `TIME_STEP` mode) using the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_.
-It `function <DDM>function>` always computes and returns its *DECISION_VARIABLE* and *RESPONSE_TIME* results
-(see `above <DDM_Results>`), and assigns these as the first two items of its `value <DDM.value>` attribute.
-If it is executed in `TRIAL` mode, it also returns its *PROBABILITY_UPPER_THRESHOLD* and *PROBABILITY_LOWER_THRESHOLD*
-results and assigns these as the third and fourth items of its `value <DDM.value>` attribute.  If it is executed
-in `TRIAL` mode using `NavarroAndFuss` as its `function <DDM.function>`, it also returns its *RT_CORRECT_MEAN* and
-*RT_CORRECT_VARIANCE* results and assigns these as the fifth and sixth items of its `value <DDM.value>` attribute.
-
 
 .. _DDM_Class_Reference:
 
@@ -351,7 +354,10 @@ DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or l
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
-    """`Standard OutputStates <OutputState_Standard>` for `DDM`:
+    """
+    .. _DDM_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `DDM`: \n
 
     *DECISION_VARIABLE* : float
       in `TRIAL` mode, the positive or negative value of `threshold <DDM.threshold>` in `TRIAL` mode;\n

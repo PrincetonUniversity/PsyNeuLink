@@ -240,7 +240,7 @@ can be omitted from a MechanismTuple (if the phase is omitted, the default value
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Irrespective of the format in which a Mechanism is specified in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, it&#8217;s entry is
-converted internally to a MechanismTuple, and listed in the Process&#8217; <a class="reference internal" href="System.html#System.System_Base.mechanisms" title="System.System_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
+converted internally to a MechanismTuple, and listed in the Process&#8217; <a class="reference internal" href="#Process.Process_Base.mechanisms" title="Process.Process_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
 </div>
 <p>The same Mechanism can appear more than once in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, as one means of generating a recurrent processing loop
 (another is to specify this in the projections &#8211; see below).</p>
@@ -478,7 +478,7 @@ in a round of executions.</li>
 </ul>
 </div></blockquote>
 </li>
-<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
+<li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="Function.html#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the Process.</li>
 <li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="Function.html#Function.BackPropagation.learning_rate" title="Function.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
