@@ -441,8 +441,6 @@ class Composition(object):
 
 
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
-        # all origin mechanisms
-        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         # all mechanisms with inputs specified in the inputs dictionary
         has_inputs = inputs.keys()
 
@@ -454,6 +452,10 @@ class Composition(object):
         input_indices = range(len_inputs)
 
         input_mechanisms = {}
+
+        # create "input mechanisms" so that origin mechanisms (or any other mechanisms receiving inputs directly from
+        # the outside world can be fed these values through projections)
+        # [one "input mechanism" per mechanism receiving input] 
         self.create_input_mechanisms(inputs, input_mechanisms)
 
         self.assign_execution_ids(execution_id, input_mechanisms)
@@ -484,18 +486,6 @@ class Composition(object):
                 # execute each mechanism with context = EXECUTING and the appropriate input
                 for mechanism in next_execution_set:
                     if isinstance(mechanism, Mechanism):
-
-                        # # if mechanism is_origin and is featured in the inputs dictionary -- use specified input
-                        # if (mechanism in is_origin) and (mechanism in has_inputs):
-                        #     print()
-                        #     num = mechanism.execute(input=inputs[mechanism][input_index], context=EXECUTING + "composition")
-                        #     print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                        #     print("result = ", num)
-                        #     print()
-                        #     print()
-                        #
-                        # # otherwise, mechanism will use its default input OR whatever it received from its projection(s)
-                        # else:
                         num = mechanism.execute(context=EXECUTING+ "composition")
                         print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
                         print("result = ", num)
