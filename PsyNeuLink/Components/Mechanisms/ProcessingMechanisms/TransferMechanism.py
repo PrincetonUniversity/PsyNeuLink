@@ -37,9 +37,9 @@ Creating a TransferMechanism
 -----------------------------
 
 A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
-function and specifying *TRANSFER_MECHANISM* as its **mech_spec** argument.  Its function is specified in the
-**function** argument, which can be simply the name of the class (first example below), or a call to its
-constructor which can include arguments specifying the function's parameters (second example)::
+function and specifying *TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.funtion>`
+is specified in the **function** argument, which can be simply the name of the class (first example below),
+or a call to its constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
@@ -58,7 +58,7 @@ used as the `variable <TransferMechanism.variable>` for its `function <TransferM
 `function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
 `Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
 list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
-only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the value of its
+only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
 `primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
 assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
 (see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
@@ -82,10 +82,10 @@ the following parameters (in addition to any specified for the `function <Transf
 
 .. _Transfer_OutputState:
 
-After each execution of the mechanism the result of `function <TransferMechanism.function>` is assigned as the
-only item of the Mechanism's `value <TransferMechanism.value>` attribute, the :keyword:`value` of its `output_state`,
-(same as the output_states[RESULT] OutputState if it has been assigned), and to the 1st item of the Mechanism's
-`output_values <TransferMechanism.output_values>` attribute;
+After each execution of the Mechanism the result of `function <TransferMechanism.function>` is assigned as the
+only item of the Mechanism's `value <TransferMechanism.value>`, the `value <OutputState.value>` of its
+`primary OutputState <OutputState_Primary>`, (same as the output_states[RESULT] OutputState if it has been assigned),
+and to the 1st item of the Mechanism's `output_values <TransferMechanism.output_values>` attribute;
 
 .. _Transfer_Class_Reference:
 
