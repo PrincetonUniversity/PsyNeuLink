@@ -195,3 +195,34 @@ a Mechanism begins and/or ends executing, how many times it executes or the freq
 to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
 in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-speciffied <Condition_Pre_Specified>` and
 `custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
+
+
+.. _Definitions_Logging:
+
+Logging
+~~~~~~~
+
+PsyNeuLink supports logging of any attribute of any Component or Composition at any `TimeScale` of execution.
+Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
+the attribute, and its value is a record of the attribute's value recorded at the frequency specified by the
+`TimeScale` parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
+`TIME_STEP` of the `RUN`), and the second is the value of the attribute at that `TIME_STEP`.
+
+.. _Graphic_Displays:
+
+Graphic Displays
+~~~~~~~~~~~~~~~~
+
+At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
+using its `show_graph` method.  This can be used to display just the processing components (i.e.,
+`ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`, or to include
+`learning <LearningMechanism>` and/or control <ControlMechanism>` components.  A future release may include
+a more complete graphical user interface.
+
+
+.. _Definitions_Logging:
+
+Preferences
+~~~~~~~~~~~
+
+PsyNeuLink supports a hierarchical system of preferences for all Components and Compositions.
