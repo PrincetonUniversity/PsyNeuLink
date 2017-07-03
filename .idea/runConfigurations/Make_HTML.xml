@@ -3,12 +3,12 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs />
-    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
+    <option name="SDK_HOME" value="/anaconda/envs/python35/bin/python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/docs" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink (Dropbox)" />
+    <module name="PsyNeuLink" />
     <option name="docutils_input_file" value="$PROJECT_DIR$/docs/source" />
     <option name="docutils_output_file" value="$PROJECT_DIR$/docs/build/html" />
     <option name="docutils_params" value="-aE" />

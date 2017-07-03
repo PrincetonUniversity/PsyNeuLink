@@ -120,17 +120,27 @@ class TRANSFER_OUTPUT():
 
     `Standard OutputStates <OutputState_Standard>` for `TransferMechanism`: \n
 
+    .. _TRANSFER_MECHANISM_RESULT:
+
     *RESULT* : 1d np.array
-      result of `function <TransferMechanism.function>` (same as `output_state.value`).
+      result of `function <TransferMechanism.function>` (same as `value <TransferMechanism.value>`).
+
+    .. _TRANSFER_MECHANISM_MEAN:
 
     *MEAN* : float
-      mean of `output_state.value`.
+      mean of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_MEDIAN:
 
     *MEDIAN* : float
-      median of `output_state.value`.
+      median of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_STD_DEV:
 
     *STANDARD_DEVIATION* : float
-      standard deviation of `output_state.value`.
+      standard deviation of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_VARIANCE:
 
     *VARIANCE* : float
       variance of `output_state.value`.
@@ -306,8 +316,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         the value of the `variable <TransferMechanism.variable>` on the previous `round of execution <LINK>`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `output_values <TransferMechanism.output_values>`.
+        result of executing `function <TransferMechanism.function>`.
 
     previous_value : float
         the `value <TransferMechanism.value>` on the previous `round of execution <LINK>`.
@@ -316,18 +325,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         the change in `value <TransferMechanism.value>` from the previous `round of execution <LINK>`
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
+    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
+        contains list of Mechanism's OutputStates.  By default there is a single OutputState
+        (`RESULT <TRANSFER_MECHANISM_RESULT>` that contains the result of a call to the Mechanism's
+        `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
+        and/or custom OutputStates may be listed, if they have been :ref:`specified <LINK>`.
 
-    output_states : ContentAddressableList[OutputState]
-        contains list of Mechanism's OutputStates.  By default there is a single OutputState named *RESULT* that
-        contains the result of a call to the Mechanism's `function <TransferMechanism.function>`;  additional
-        `standard <TransferMechanism_Standard_OutputStates>` and/or custom OutputStates may be listed, if they have been
-        :ref:`specified <LINK>`.
-
-    output_values : List[array(float64), float, float]
-        a list with the following items:
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState)
+    output_values : List[array(float64),array(float64),array(float64),array(float64)]
+        each item is the value of the corresponding OutputState in `output_states <TransferMechanism.output_states>`.
 
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
