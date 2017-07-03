@@ -31,10 +31,11 @@
 Overview
 --------
 
-A System is a collection of `Processes <Process>` that are executed together.  Executing a System executes all of the
-`Mechanisms <Mechanism>` in its Processes in a structured order.  `Projections <Projection>` between Mechanisms in
-different Processes within the System are permitted, as are recurrent Projections, but Projections from Mechanisms
-in other Systems are ignored (PsyNeuLink does not support ESP).  A System can include two types of Mechanisms:
+A System is a `Composition` that is a collection of `Processes <Process>` all of which are executed together.
+Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
+`Projections <Projection>` between Mechanisms in different Processes within the System are permitted,
+as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
+support ESP).  A System can include two types of Mechanisms:
 
 * `ProcessingMechanism`
     These receive input from one or more `Projections <Projection>`, transform their input in some way,

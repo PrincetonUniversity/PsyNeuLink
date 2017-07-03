@@ -31,16 +31,16 @@
 Overview
 --------
 
-A Process is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`. Executing a Process
-executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:  a list of
-Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a Process,
-including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or many-to-one
-projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms in other
-Processes, but these will only have an effect if all of the Processes involved are members of the same `System`.
-Projections between Mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to them.
-Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in the
-Process will be trained. Processes can be constructed and executed on their own.  More commonly, however, they are used
-to construct a `System`.
+A Process is `Composition` that is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`.
+Executing a Process executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:
+a list of Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a
+Process, including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or
+many-to-one projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms
+in other Processes, but these will only have an effect if all of the Processes involved are members of the same
+`System`. Projections between Mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to
+them. Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in
+the Process will be trained. Processes can be constructed and executed on their own.  More commonly, however,
+they are used to construct a `System`.
 
 .. _Process_Creation:
 
