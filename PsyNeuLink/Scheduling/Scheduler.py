@@ -17,7 +17,7 @@ A Scheduler is used to generate the order in which the `Mechanisms <Mechanism>` 
 By default, Mechanisms are executed in an order determined by the pattern of `Projections <Projection>` among them
 in the `Composition`, with each Mechanism executed once per `PASS` through the Composition.
 For example, in a `System` in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
-then A will execute first followed by B, and then C in each `PASS` through the System.  However, a Scheduler can be
+A will execute first followed by B, and then C in each `PASS` through the System.  However, a Scheduler can be
 used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that determine when and
 how many times individual Mechanisms execute, and whether and how this depends on the execution of other Mechanisms.
 Conditions can be combined in arbitrary ways to generate any pattern of execution of the Mechanisms in a `System`
@@ -81,8 +81,8 @@ Pseudocode::
             do:
                 cur_consideration_set_has_changed <- False
                 for cur_node in cur_consideration_set:
-                    if  cur_node not in cur_time_step:
-                        and TimeScale.TRIAL termination conditions are not satisfied:
+                    if  cur_node not in cur_time_step
+                        and cur_node`s Condition is satisfied:
 
                         cur_consideration_set_has_changed <- True
                         add cur_node to cur_time_step
@@ -109,7 +109,7 @@ been met. Any Mechanism that does not have a `Condition` explicitly specified is
 that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
 are allowed to execute comprise a `TIME_STEP` of execution. These Mechanisms are
 considered as executing simultaneously. The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary
-(and is irrelevant, as there are no sequential dependencies among Mechanisms within the same `consideration_set`).
+(and is irrelevant, as there are no graph dependencies among Mechanisms within the same `consideration_set`).
 However, the execution of a Mechanism within a `time_step` may trigger the execution of another Mechanism within its
 `consideration_set`, as in the example below::
 
@@ -120,7 +120,7 @@ However, the execution of a Mechanism within a `time_step` may trigger the execu
     scheduler.add_condition(B, EveryNCalls(A, 2))
     scheduler.add_condition(C, EveryNCalls(B, 1))
 
-    time steps: [{A}, {A, B}, {C}]
+    time steps: [{A}, {A, B}, {C}, ...]
 
 Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
 `A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
@@ -135,11 +135,12 @@ it returns the set of Mechanisms that should be executed in the current `TIME_ST
 every Mechanism in the Composition has been considered for execution. Subsequent calls to the `run <Scheduler.run>`
 method cycle back through the `consideration_queue`, evaluating the `consideration_sets <consideration_set>` in the
 same order as previously, though possibly assigning for execution different Mechanisms within the same
-`consideration_set` on different `PASS`es (since different Conditions may be satisfied).  The Scheduler continues to
-make `PASS`es through the `consideration_queue` until a termination Condition is satisfied. If no termination
+`consideration_set` on different `PASS`\ es (since different Conditions may be satisfied).  The Scheduler continues to
+make `PASS`\ es through the `consideration_queue` until a termination Condition is satisfied. If no termination
 Conditions are specified, the Scheduler terminates a `TRIAL` when every Mechanism has been specified for execution
 at least once (corresponding to the `AllHaveRun` Condition).  However, other termination Conditions can be specified,
-that may cause the Scheduler to terminate a `TRIAL` earlier (e.g., when the  Condition for a particular Mechanism or
+that may cause the Scheduler to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular
+Mechanism or
 set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`, the `Composition` begins processing the next
 input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of
 processing associated with a given input to the Composition.
@@ -158,7 +159,7 @@ by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Conditi
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
 or its **termination_learning** argument to terminate the execution of learning::
 
-    sys.run(
+    system.run(
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
@@ -290,15 +291,17 @@ class Scheduler(object):
         JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
              OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A system IS SUFFICIENT TO GENERATE A SCHEDULE,
              MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE system.
+        K: it's not that they're implicit, it's that we just set defaults to match the behavior of the
+            naive scheduler
     COMMENT
 
     condition_set  : ConditionSet
         set of `Conditions <Condition>` that specify when individual Mechanisms in **system**
-        execute and any dependencies among them, that complements any that are implicit in the System,
-        and supercede those where they are in conflict.
+        execute and any dependencies among them
 
-    graph : Dict[Mechanism: Mechanism or Set[Mechanism]
-        one or a set of `Mechanisms <Mechanism>` to be ordered for execution
+    graph : dict{Mechanism: set(Mechanism)}
+        a graph specification dictionary - each entry of the dictionary must be a Mechanism,
+        and the value of each entry must be a set of zero or more Mechanisms that project directly to the key.
 
     Attributes
     ----------
@@ -312,7 +315,7 @@ class Scheduler(object):
     consideration_queue: list
         a list form of the Scheduler's toposort ordering of its nodes
 
-    termination_conds : dict[TimeScale:Condition]
+    termination_conds : dict{TimeScale: Condition}
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
     """
@@ -361,7 +364,8 @@ class Scheduler(object):
         # counts_useable is a dictionary intended to store the number of available "instances" of a certain node that
         # are available to expend in order to satisfy conditions such as "run B every two times A runs"
         # specifically, counts_useable[a][b] = n indicates that there are n uses of a that are available for b to expend
-        # so, in the previous example B would check to see if counts_useable[A][B] is 2, in which case B can run
+        # so, in the previous example B would check to see if counts_useable[A][B] >= 2, in which case B can run
+        # then, counts_useable[a][b] would be reset to 0, even if it was greater than 2
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
 
         for ts in TimeScale:
@@ -397,15 +401,15 @@ class Scheduler(object):
 
     def add_condition(self, owner, condition):
         '''
-        :param owner: the `Component` that is dependent on the `conditions`
+        :param owner: the `Component` that is dependent on the `condition`
         :param conditions: a `Condition` (including All or Any)
         '''
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
         '''
-        :param conditions: a :keyword:`dict` mapping `Component` s to `Condition` s,
-               can be added later with `add_condition`
+        :param conditions: a `dict` mapping `Component`\ s to `Condition`\ s,
+               which can be added later with `add_condition`
         '''
         self.condition_set.add_condition_set(conditions)
 
@@ -447,8 +451,8 @@ class Scheduler(object):
 
     def run(self, termination_conds=None):
         '''
-        :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met
-               terminate the execution of the specified :keyword:`TimeScale`
+        :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
+               terminate the execution of the specified `TimeScale`
         '''
         self.termination_conds = termination_conds
         self._validate_run_state()
