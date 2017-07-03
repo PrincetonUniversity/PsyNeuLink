@@ -197,7 +197,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size:tc.optional(int)=None,
+                 size=None,
                  function=AdaptiveIntegrator(rate=0.5),
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -207,6 +207,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
+        if default_input_value is None and size is None:
+            default_input_value = self.variableClassDefault
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         # self.variableClassDefault = default_input_value or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
@@ -215,13 +218,14 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         # if default_input_value is NotImplemented:
         #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
 
-        self.size = size
+        # self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
-                                  params=params,
-                                  name=name,
-                                  prefs=prefs,
-                                  context=self)
+                                                  params=params,
+                                                  name=name,
+                                                  prefs=prefs,
+                                                  size=size,
+                                                  context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 

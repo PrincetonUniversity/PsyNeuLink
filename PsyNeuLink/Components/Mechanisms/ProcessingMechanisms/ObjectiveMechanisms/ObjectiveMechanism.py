@@ -425,6 +425,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
+                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -457,12 +458,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """Validate that if default_input_value is specified the number of values matches the number of monitored_values
 
         """
+        # NOTE 6/29/17: (CW)
+        # This is a very questionable check. The problem is that TransferMechanism (if default_input_value is passed as
+        # None) expects variable to be initialized to variableClassDefault ([[0]]) while ObjectiveMechanism expects
+        # variable to be initialized to variableClassDefault ([[0]]) AFTER this check has occurred. The problem is,
+        # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
+        # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
+        # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
+        # to always set variable to variableClassDefault if variable and size are both None.
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
             raise ObjectiveMechanismError("The number of items specified for the default_input_value arg ({}) of {} "
                                           "must match the number of items specified for its monitored_values arg ({})".
                                           format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
+        # MODIFIED 6/29/17 END
 
         super()._validate_variable(variable=variable, context=context)
 

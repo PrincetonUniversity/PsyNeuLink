@@ -3,6 +3,7 @@ import pytest
 
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
 from PsyNeuLink.Components.Functions.Function import Exponential, ConstantIntegrator, Linear, Logistic, Reduce, Reinforcement, SoftMax
@@ -63,6 +64,30 @@ def test_transfer_mech_inputs_list_of_fns():
     )
     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
     assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# variable = 3D array
+
+def test_transfer_mech_variable_3D_array():
+
+    T = TransferMechanism(
+        name='T',
+        default_input_value=[[[0, 0, 0, 0]],[[1,1,1,1]]],
+        time_scale=TimeScale.TIME_STEP
+    )
+    assert len(T.variable) == 1 and len(T.variable[0]) == 4 and (T.variable[0] == 0).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+# variable = none and size = none; this should yield variable = [[0]]
+
+def test_transfer_mech_variable_none_size_none():
+
+    T = TransferMechanism(
+        name='T'
+    )
+    assert len(T.variable) == 1 and len(T.variable[0]) == 1 and T.variable[0][0] == 0
 
 # ------------------------------------------------------------------------------------------------
 
@@ -633,3 +658,272 @@ def test_transfer_mech_time_constant_0():
     )
 
 # ------------------------------------------------------------------------------------------------
+
+
+# ======================================= SIZE_INITIALIZATION TESTS ============================================
+
+# VALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# size = int, check if variable is an array of zeros
+
+
+def test_transfer_mech_size_int_check_var():
+    T = TransferMechanism(
+        name='T',
+        size=4
+    )
+    assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# size = int, variable = list of ints
+
+
+def test_transfer_mech_size_int_inputs_ints():
+    T = TransferMechanism(
+        name='T',
+        size=4
+    )
+    val = T.execute([10, 10, 10, 10]).tolist()
+    print("\n\n\n\n\n\n\nval is: ", val)
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# size = int, variable = list of floats
+
+
+def test_transfer_mech_size_int_inputs_floats():
+    T = TransferMechanism(
+        name='T',
+        size=4
+    )
+    val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# size = int, variable = list of functions
+
+
+def test_transfer_mech_size_int_inputs_fns():
+    T = TransferMechanism(
+        name='T',
+        size=4,
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+# size = float, check if variable is an array of zeros
+
+
+def test_transfer_mech_size_float_inputs_check_var():
+    T = TransferMechanism(
+        name='T',
+        size=4.0,
+    )
+    assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 6
+# size = float, variable = list of ints
+
+
+def test_transfer_mech_size_float_inputs_ints():
+    T = TransferMechanism(
+        name='T',
+        size=4.0
+    )
+    val = T.execute([10, 10, 10, 10]).tolist()
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 7
+# size = float, variable = list of floats
+
+
+def test_transfer_mech_size_float_inputs_floats():
+    T = TransferMechanism(
+        name='T',
+        size=4.0
+    )
+    val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 8
+# size = float, variable = list of functions
+
+
+def test_transfer_mech_size_float_inputs_fns():
+    T = TransferMechanism(
+        name='T',
+        size=4.0,
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
+    assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 9
+# size = list of ints, check that variable is correct
+
+
+def test_transfer_mech_size_list_of_ints():
+    T = TransferMechanism(
+        name='T',
+        size=[2, 3, 4]
+    )
+    assert len(T.variable) == 3 and len(T.variable[0]) == 2 and len(T.variable[1]) == 3 and len(T.variable[2]) == 4
+
+# ------------------------------------------------------------------------------------------------
+# TEST 10
+# size = list of floats, check that variable is correct
+
+
+def test_transfer_mech_size_list_of_floats():
+    T = TransferMechanism(
+        name='T',
+        size=[2., 3., 4.]
+    )
+    print("\n\ntest_transfer_mech_size_list_of_floats variable: {}\n\n".format(T.variable))
+    assert len(T.variable) == 3 and len(T.variable[0]) == 2 and len(T.variable[1]) == 3 and len(T.variable[2]) == 4
+
+# ------------------------------------------------------------------------------------------------
+# TEST 11
+# size = list of floats, variable = a compatible 2D array: check that variable is correct
+# note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
+# is for possible user-defined functions.
+
+def test_transfer_mech_size_var_both_lists():
+    T = TransferMechanism(
+        name='T',
+        size=[2., 3.],
+        default_input_value=[[1, 2], [3, 4, 5]]
+    )
+    assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 12
+# size = int, variable = a compatible 2D array: check that variable is correct
+
+def test_transfer_mech_size_var_both_lists():
+    T = TransferMechanism(
+        name='T',
+        size=2,
+        default_input_value=[[1, 2], [3, 4]]
+    )
+    assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 13
+# variable = a 2D array: check that variable is correct
+
+def test_transfer_mech_size_var_both_lists():
+    T = TransferMechanism(
+        name='T',
+        default_input_value=[[1, 2], [3, 4]]
+    )
+    assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
+
+# ------------------------------------------------------------------------------------------------
+
+# INVALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# size = 0, check less-than-one error
+
+
+def test_transfer_mech_size_zero():
+    with pytest.raises(ProcessingMechanismError) as error_text:
+        T = TransferMechanism(
+            name='T',
+            size=0,
+        )
+    assert "is not a positive number" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# size = -1.0, check less-than-one error
+
+
+def test_transfer_mech_size_negative_one():
+    with pytest.raises(ProcessingMechanismError) as error_text:
+        T = TransferMechanism(
+            name='T',
+            size=-1.0,
+        )
+    assert "is not a positive number" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# size = non-integer float, check integer-cast value-change warning
+# this test and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
+# warnings to be no longer fatal. At the time of writing (6/30/17, CW), warnings are always fatal.
+
+# the test commented out here is similar to what we'd want if we got warnings to be non-fatal
+# and error_text was correctly representing the warning. For now, the warning is hidden under
+# a verbosity preference
+# def test_transfer_mech_size_bad_float():
+#     with pytest.raises(UserWarning) as error_text:
+#         T = TransferMechanism(
+#             name='T',
+#             size=3.5,
+#         )
+#     assert "cast to integer, its value changed" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# size = 2D array, check too-many-dimensions warning
+
+# def test_transfer_mech_size_2d():
+#     with pytest.raises(UserWarning) as error_text:
+#         T = TransferMechanism(
+#             name='T',
+#             size=[[2]],
+#         )
+#     assert "had more than one dimension" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+# size = 2D array, check variable is correctly instantiated
+
+# for now, since the test above doesn't work, we use this test. 6/30/17 (CW)
+def test_transfer_mech_size_2d():
+    T = TransferMechanism(
+        name='T',
+        size=[[2]],
+    )
+    assert len(T.variable) == 1 and len(T.variable[0]) == 2
+
+# ------------------------------------------------------------------------------------------------
+# TEST 6
+# size = int, variable = incompatible array, check error
+
+def test_transfer_mech_size_var_incompatible1():
+    with pytest.raises(ComponentError) as error_text:
+        T = TransferMechanism(
+            name='T',
+            size=2,
+            default_input_value=[[1, 2], [3, 4, 5]]
+        )
+    assert " conflicts with the length of " in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 7
+# size = int list, variable = incompatible array, check error
+
+def test_transfer_mech_size_var_incompatible2():
+    with pytest.raises(ComponentError) as error_text:
+        T = TransferMechanism(
+            name='T',
+            size=[3, 2],
+            default_input_value=[[1, 2], [3, 4, 5]]
+        )
+    assert " conflicts with the length of " in str(error_text.value)
