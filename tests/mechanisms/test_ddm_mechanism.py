@@ -2,7 +2,7 @@ import pytest
 import typecheck
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanismError
+from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError, DIFFUSION
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, NormalDist
 from PsyNeuLink.Components.Functions.Function import FunctionError
@@ -458,7 +458,7 @@ def test_DDM_size_int_inputs_():
 
 
 def test_DDM_mech_size_zero():
-    with pytest.raises(ProcessingMechanismError) as error_text:
+    with pytest.raises(ComponentError) as error_text:
         T = DDM(
             name='DDM',
             size=0,
@@ -477,7 +477,7 @@ def test_DDM_mech_size_zero():
 
 
 def test_DDM_mech_size_negative_one():
-    with pytest.raises(ProcessingMechanismError) as error_text:
+    with pytest.raises(ComponentError) as error_text:
         T = DDM(
             name='DDM',
             size=-1.0,

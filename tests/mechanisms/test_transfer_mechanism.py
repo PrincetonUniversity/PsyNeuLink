@@ -3,7 +3,6 @@ import pytest
 
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
 from PsyNeuLink.Components.Functions.Function import Exponential, ConstantIntegrator, Linear, Logistic, Reduce, Reinforcement, SoftMax
@@ -840,7 +839,7 @@ def test_transfer_mech_size_var_both_lists():
 
 
 def test_transfer_mech_size_zero():
-    with pytest.raises(ProcessingMechanismError) as error_text:
+    with pytest.raises(ComponentError) as error_text:
         T = TransferMechanism(
             name='T',
             size=0,
@@ -853,7 +852,7 @@ def test_transfer_mech_size_zero():
 
 
 def test_transfer_mech_size_negative_one():
-    with pytest.raises(ProcessingMechanismError) as error_text:
+    with pytest.raises(ComponentError) as error_text:
         T = TransferMechanism(
             name='T',
             size=-1.0,
