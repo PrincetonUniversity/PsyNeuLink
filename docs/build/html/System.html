@@ -34,6 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Composition" href="Composition.html"/> 
 
@@ -84,36 +85,11 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-system">Creating a System</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#graph">Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#mechanisms">Mechanisms</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#order">Order</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#phase">Phase</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#input-and-initialization">Input and Initialization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#learning">Learning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#control">Control</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -143,6 +119,8 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Composition.html">Composition</a> &raquo;</li>
       
     <li>System</li>
       <li class="wy-breadcrumbs-aside">
@@ -185,10 +163,11 @@
 </div>
 <span class="target" id="module-System"></span><div class="section" id="overview">
 <span id="system-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A System is a collection of <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> that are executed together.  Executing a System executes all of the
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its Processes in a structured order.  <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between Mechanisms in
-different Processes within the System are permitted, as are recurrent Projections, but Projections from Mechanisms
-in other Systems are ignored (PsyNeuLink does not support ESP).  A System can include two types of Mechanisms:</p>
+<p>A System is a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that is a collection of <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> all of which are executed together.
+Executing a System executes all of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its Processes in a structured order.
+<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between Mechanisms in different Processes within the System are permitted,
+as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
+support ESP).  A System can include two types of Mechanisms:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
@@ -383,7 +362,7 @@ list or 1d np.array that must be compatible with the format of the first item of
 <li><strong>enable_controller</strong> (bool : default <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>) &#8211; specifies whether the <code class="xref any docutils literal"><span class="pre">controller</span></code> is executed during System execution.</li>
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects or specifications : default None</em>) &#8211; specifies the OutputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms in the System to be monitored by its <code class="xref any docutils literal"><span class="pre">controller</span></code>
 (see <code class="xref any docutils literal"><span class="pre">ControlMechanism_Monitored_OutputStates</span></code> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the System (see <a class="reference internal" href="Process.html#Process.Process_Base.learning_rate" title="Process.Process_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the System (see <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_rate" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>targets</strong> (<em>Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes</em>) &#8211; the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the System (listed in its
 <code class="xref any docutils literal"><span class="pre">targetMechanisms</span></code> attribute).  There must be the same number of items as there are <code class="xref any docutils literal"><span class="pre">targetMechanisms</span></code>,
@@ -410,7 +389,7 @@ override any assigned to those parameters in arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="System.System_Base">
-<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitor_for_control=None</em>, <em>control_signals=None</em>, <em>learning_rate=None</em>, <em>targets=None</em>, <em>params=None</em>, <em>name=None</em>, <em>scheduler=None</em>, <em>prefs: &lt;function is_pref_set at 0x10bb6bae8&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">System.</code><code class="descname">System_Base</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>processes=None</em>, <em>initial_values=None</em>, <em>controller=&lt;class 'PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism.DefaultControlMechanism'&gt;</em>, <em>enable_controller=False</em>, <em>monitor_for_control=None</em>, <em>control_signals=None</em>, <em>learning_rate=None</em>, <em>targets=None</em>, <em>params=None</em>, <em>name=None</em>, <em>scheduler=None</em>, <em>prefs: &lt;function is_pref_set at 0x106bb90d0&gt; = None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.System_Base" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>System_Base(                                  default_input_value=None,                     processes=None,                               initial_values=None,                          controller=SystemDefaultControlMechanism,     enable_controller=:keyword:<code class="xref any docutils literal"><span class="pre">False</span></code>,           monitor_for_control=None,                     control_signals=None,                         learning_rate=None,                           targets=None,                                 params=None,                                  name=None,                                    prefs=None)</p>
 <p>Abstract class for System.</p>

@@ -369,16 +369,8 @@ with substantial and greatly appreciated assistance from:
 
    ConventionsAndDefinitions
    Component
-   Mechanism
-   Projection
-   State
-   Function
    Composition
-   System
-   Process
-   Run
-   Scheduler
-
+   Scheduling
 
 .. _Indices_and_Tables:
 
