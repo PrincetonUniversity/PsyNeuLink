@@ -1,12 +1,14 @@
-Conventions and Definitions
-===========================
+Quick Reference
+===============
 
 * `Conventions`
-* `Definitions`
-    * `Components <Definitions_Components>`
-    * `Compositions <Definitions_Compositions>`
-    * `Execution  <Definitions_Execution>`
-* `Component_Hierarchy <Definitions_Component_Hierarchy>`
+* `PsyNeuLink_Classes`
+    * `Quick_Reference_Components`
+    * `Quick_Reference_Compositions`
+* `Quick_Reference_Execution`
+* `Quick_Reference_Logging`
+* `Quick_Reference_Graphic_Displays`
+* `Quick_Reference_Preferences`
 
 
 .. _Conventions:
@@ -32,18 +34,18 @@ The following conventions are used for the names of PsyNeuLink objects and their
           Appears in boxed inset.
 
 
-.. _Definitions:
+.. _PsyNeuLink_Classes:
 
-Definitions
------------
+PsyNeuLink Classes
+------------------
 
 The two primary types of objects in PsyNeuLink are Components (basic building blocks)
 and Compositions (combinations of Components that implement a model).
 
-.. _Definitions_Components:
+.. _Quick_Reference_Components:
 
-`Components <Component>`
-~~~~~~~~~~~
+Components
+~~~~~~~~~~
 
 Components are objects that perform a specific function. Every Component has a:
 
@@ -149,7 +151,7 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
   Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
   called from Python.
 
-.. _Definitions_Compositions:
+.. _Quick_Reference_Compositions:
 
 Compositions
 ~~~~~~~~~~~~
@@ -167,7 +169,7 @@ Compositions:
         can also be constructed directly from Mechanisms and Projections.
 
 
-.. _Definitions_Compositions__Figure:
+.. _Quick_Reference_Compositions__Figure:
 
 **PsyNeuLink Compositions**
 
@@ -181,10 +183,10 @@ Compositions:
    complete example, that includes Components responsible for learning, control and gating).
 
 
-.. _Definitions_Execution:
+.. _Quick_Reference_Execution:
 
 Execution
-~~~~~~~~~
+---------
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
 they belong is run.  Compositions are run iteratively in rounds of execution referred to as `PASS` \es, in which each
@@ -197,10 +199,10 @@ in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-speciffied <Condit
 `custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
 
 
-.. _Definitions_Logging:
+.. _Quick_Reference_Logging:
 
 Logging
-~~~~~~~
+-------
 
 PsyNeuLink supports logging of any attribute of any Component or Composition at any `TimeScale` of execution.
 Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
@@ -208,10 +210,10 @@ the attribute, and its value is a record of the attribute's value recorded at th
 `TimeScale` parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
 `TIME_STEP` of the `RUN`), and the second is the value of the attribute at that `TIME_STEP`.
 
-.. _Graphic_Displays:
+.. _Quick_Reference_Graphic_Displays:
 
 Graphic Displays
-~~~~~~~~~~~~~~~~
+----------------
 
 At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
 using its `show_graph` method.  This can be used to display just the processing components (i.e.,
@@ -220,10 +222,10 @@ using its `show_graph` method.  This can be used to display just the processing 
 a more complete graphical user interface.
 
 
-.. _Definitions_Logging:
+.. _Quick_Reference_Preferences:
 
 Preferences
-~~~~~~~~~~~
+-----------
 
 PsyNeuLink supports a hierarchical system of `Preferences` for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
