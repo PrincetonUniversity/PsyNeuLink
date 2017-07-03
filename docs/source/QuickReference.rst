@@ -2,7 +2,7 @@ Quick Reference
 ===============
 
 * `Conventions`
-* `PsyNeuLink_Classes`
+* `PsyNeuLink_Objects`
     * `Quick_Reference_Components`
     * `Quick_Reference_Compositions`
 * `Quick_Reference_Execution`
@@ -34,9 +34,9 @@ The following conventions are used for the names of PsyNeuLink objects and their
           Appears in boxed inset.
 
 
-.. _PsyNeuLink_Classes:
+.. _PsyNeuLink_Objects:
 
-PsyNeuLink Classes
+PsyNeuLink Objects
 ------------------
 
 The two primary types of objects in PsyNeuLink are Components (basic building blocks)
@@ -60,46 +60,50 @@ Components are objects that perform a specific function. Every Component has a:
 
 * `name <Component.name>` - string label that uniquely identifies the Component.
 
-Two types of Components are the basic building blocks of PsyNeuLink models, Mechanisms and Projections:
+There are four types of Components in PsyNeuLink:  Mechanisms, Projections, States and Functions, as described below:
 
-* `Mechanisms <Mechanism>` - takes one or more inputs received from its afferent `Projections <Projection>`,
-  uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
-  available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-  ProcessingMechansms and AdapativeMechanisms:
+* `Mechanisms <Mechanism>`
+     A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
+     uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
+     available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
+     ProcessingMechansms and AdapativeMechanisms:
 
-  + `ProcessingMechanism`
-      Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
-      and provides the result as output to its efferent Projections.
+     + `ProcessingMechanism`
+         Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
+         and provides the result as output to its efferent Projections.
 
-  + `AdaptiveMechanism`
-      Uses the input it receives from other Mechanisms to modify the parameters of one or more other
-      PsyNeuLink Components.  There are three primary types:
+     + `AdaptiveMechanism`
+         Uses the input it receives from other Mechanisms to modify the parameters of one or more other
+         PsyNeuLink Components.  There are three primary types:
 
-      + `LearningMechanism`
-          Modifies the matrix of a `MappingProjection`.
+         + `LearningMechanism`
+             Modifies the matrix of a `MappingProjection`.
 
-      + `ControlMechanism`
-          Modifies one or more parameters of other Mechanisms.
+         + `ControlMechanism`
+             Modifies one or more parameters of other Mechanisms.
 
-      + `GatingMechanism`
-          Modifies the value of one or more `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-          of other Mechanisms.
+         + `GatingMechanism`
+             Modifies the value of one or more `InputStates <InputState>` and/or `OutputStates <OutputStates>`
+             of other Mechanisms.
 
-* `Projections <Projection>`.
+* `Projections <Projection>`
    A Projection takes the output of a Mechanism, and transforms it as necessary to provide it
    as the input to another Component. There are two types of Projections, that correspond to the two types of
    Mechanisms:
 
    + `PathwayProjection`
-       Used in conjunction with ProcessingMechanisms to convey information along processing pathway.
-       The primary type of PathwayProjection is a `MappingProjection`, that provides the output of one
-       ProcessingMechanism as the input to another.
+       Used in conjunction with ProcessingMechanisms to convey information along a processing pathway.
+       There is currently one on type of PathwayProjection:
+
+       + `MappingProjection`
+         Takses the value of the `OutputState` of one Mechanism, and converts it as necessary to provide it as
+         the variable for the `InputState` of another Mechanism.
 
    + `ModulatoryProjection`
        Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
        Takes the output of an `AdaptiveMechanism` and uses it to modify the input, output or parameter of
        another Component.  There are three types of ModulatoryProjections, corresponding to the three
-       types of AdaptiveMechanisms:
+       types of AdaptiveMechanisms (see `figure <ModulatorySignal_Anatomy_Figure>`):
 
        + `LearningProjection`
             Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
@@ -116,8 +120,8 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
 * `States <State>`
    A State is a Component that belongs to a `Mechanism` and is used to represent it input(s), the parameter(s)
    of its function, or its output(s).   There are three types of States, one for each type of representation
-   (see `Mechanism_Figure`), each of which can receive and/or send `PathwayProjections <PathwayProjection>` and/or
-   `ModulatoryProjections <ModulatoryProjection>` (see `ModulatorySignal_Anatomy_Figure`):
+   (see `figure <Mechanism_Figure>`), each of which can receive and/or send `PathwayProjections <PathwayProjection>`
+   and/or `ModulatoryProjections <ModulatoryProjection>` (see `figure <ModulatorySignal_Anatomy_Figure>`):
 
    + `InputState`
        Represents a set of inputs to the Mechanism.
@@ -142,14 +146,15 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
        `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
        State's `value <State.value>`.
 
-* `Functions <Function>` - the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
-  object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
-  This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
-  to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
-  or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
-  non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
-  Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
-  called from Python.
+* `Functions <Function>`
+   A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
+   object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
+   This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
+   to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
+   or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
+   non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
+   Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
+   called from Python.
 
 .. _Quick_Reference_Compositions:
 

@@ -183,7 +183,7 @@ needed to transmit that information to the <a class="reference internal" href="I
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
 <dd><p class="first last">These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
-the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter, and transmit the result as
+the Projection&#8217;s <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter, and transmit the result as
 input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
 </dd>
@@ -206,7 +206,7 @@ in the context of a <a class="reference internal" href="System.html"><span class
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
 <dd><p class="first last">These take the value of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmit this to the
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> which uses this to modify its
-<code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter. LearningProjections are used when
+<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. LearningProjections are used when
 learning has been specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</p>
 </dd>
 </dl>
@@ -254,7 +254,7 @@ Any of the following can be used to specify a Projection in context:</p>
 </div>
 <ul class="simple">
 <li>LEARNING_PROJECTION &#8211; a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  At present, this can only be used together with the
-specification of a MappingProjection (see <code class="xref any docutils literal"><span class="pre">tuple</span></code> format).  If the
+specification of a MappingProjection (see <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">tuple</span></a> format).  If the
 <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code> of the MappingProjection projects to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>,
 the latter will be used as the <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code> for the LearningProjection.  Otherwise,
 a LearningMechanism will be created for it
