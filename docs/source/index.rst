@@ -298,8 +298,8 @@ Instead, you can clone the github repo (https://github.com/PrincetonUniversity/P
 Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
-Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
-Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
+repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
 
 PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.
