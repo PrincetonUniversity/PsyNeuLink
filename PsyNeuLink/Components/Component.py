@@ -1330,8 +1330,8 @@ class Component(object):
             # endregion
 
             # region If variable is None, make it a 2D array of zeros each with length=size[i]
-            # implementation note: for good coding practices, perhaps add setting to enable
-            # easy change of variable's default value, which is an array of zeros at the moment
+            # implementation note: for good coding practices, perhaps add setting to enable easy change
+            # of variable's default value (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
                 try:
                     variable = []
@@ -1371,6 +1371,7 @@ class Component(object):
             # IMPLEMENTATION NOTE: if variable and size are both specified as arguments, they should/will be checked
             # against each other in Component.py, during _instantiate_defaults().
             # endregion
+
             print("\nsize before assignment: ", size)
             print("self.size before assignment: ", self.size)
             self.size = size
