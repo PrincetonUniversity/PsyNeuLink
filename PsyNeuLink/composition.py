@@ -7,6 +7,7 @@ from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Globals.Keywords import EXECUTING, CENTRAL_CLOCK
 from PsyNeuLink.Globals.TimeScale import TimeScale, CurrentTime, CentralClock
+from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _add_projection_from
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -205,6 +206,37 @@ class Composition(object):
             self.graph.connect_components(projection, receiver)
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+            self.validate_projection(sender, projection, receiver)
+
+    def validate_projection(self, sender, projection, receiver):
+        print(projection.sender.owner)
+        print(projection.receiver.owner)
+        print(sender)
+        print(receiver)
+
+        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
+
+            if projection.sender.owner != sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "components in their composition.".format(projection, sender))
+
+            if projection.receiver.owner != receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "components in their composition.".format(projection, receiver))
+        else:
+            print("REASSIGNED")
+            projection.sender = sender
+            projection.receiver = receiver
+            projection._deferred_init(context="deferred init")
+
+        if projection.sender.owner != sender:
+            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                   "components in the composition.".format(projection, sender))
+        if projection.receiver.owner != receiver:
+            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                   "components in the composition.".format(projection, receiver))
+
+
 
     def analyze_graph(self, graph=None):
         ########
