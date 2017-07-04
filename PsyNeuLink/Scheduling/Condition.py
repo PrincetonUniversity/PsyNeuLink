@@ -15,14 +15,22 @@
 Overview
 --------
 
-`Conditions <Condition>` are used to specify when `Mechanisms <Mechanism>` are allowed to execute.  Conditions
-can be used to specify a variety of required conditions for execution, including the state of the Mechanism
+`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
+can be used to specify a variety of required conditions for execution, including the state of the Component
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
 Composition (e.g., how many `TIME_STEP`\ s have occurred in the current `TRIAL`), or the state of other
-Mechanisms in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
-`pre-specified Conditions <Condition_Structure>` that can be parametrized (e.g., how many times a Mechanism should
-be executed), but functions can also be assigned to Conditions, to implement custom conditions that can reference any
-Component or its attributes in PsyNeuLink.
+Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
+`pre-specified Conditions <Condition_Pre_Specified>` that can be parametrized (e.g., how many times a Component should
+be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
+can reference any Component or its attributes in PsyNeuLink, thus providing considerable flexibility for scheduling.
+
+.. note::
+    Any Component that is part of a collection `specified to a Scheduler for execution <Scheduler_Creation>` can be
+    associated with a Condition.  Most commonly, these are `Mechanisms <Mechanism>`.  However, in some circumstances
+    `Projections <Projection>` can be included in the specification to a Scheduler (e.g., for
+    `learning <Process_Learning>`) in which case these can also be assigned Conditions.
+
+
 
 .. _Condition_Creation:
 
@@ -34,14 +42,14 @@ Creating Conditions
 Pre-specified Conditions
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Pre-specified Conditions <Condition_Structure>` can be instantiated and added to a `Scheduler` at any time, and take
-effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more  arguments that
-must be specified to achieve the desired behavior. Many Conditions are also associated with an `owner <Condition.owner>`
-(a `Mechanism` to which the Condition belongs) attribute, and a `scheduler <Condition.scheduler>` attribute (that
-maintains data used to test for satisfaction of the Condition).  When pre-specified Conditions are instantiated
-within a call to a `Scheduler`\ 's or `ConditionSet`\ 's add methods, the Condition's `owner <Condition.owner>` and
-`scheduler <Condition.scheduler>` attributes are determined through context and assigned automatically, as in the
-following example::
+`Pre-specified Conditions <Condition_Pre-Specified_List>` can be instantiated and added to a `Scheduler` at any time,
+and take effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more
+arguments that must be specified to achieve the desired behavior. Many Conditions are also associated with an
+`owner <Condition.owner>` attribute (a `Component` to which the Condition belongs), and a
+`scheduler <Condition.scheduler>` attribute (that maintains data used to test for satisfaction of the Condition).
+When pre-specified Conditions are instantiated within a call to the `add` method of a `Scheduler` or `ConditionSet`,
+the Condition's `owner <Condition.owner>` and `scheduler <Condition.scheduler>` attributes are determined through
+context and assigned automatically, as in the following example::
 
     my_scheduler.add_condition(A, EveryNPasses(1))
     my_scheduler.add_condition(B, EveryNCalls(A, 2))
@@ -54,8 +62,6 @@ Here, ``EveryNCalls(A, 2)`` for example, is assigned the `owner` ``B``, and the 
 Custom Conditions
 ~~~~~~~~~~~~~~~~~
 
-In addition to the set of `pre-specified Conditions <Condition_Structure>`, arbitrary `Conditions <Condition>` can
-be created using either the base `Condition` class or one of the `generic classes of Condition <Conditions_Generic>`.
 COMMENT:
     K: Thinking about it I kind of like making basic wrappers While and Until, where While is exactly the same as
         base Condition, but perhaps more friendly sounding? It evals to the output of the function exactly
@@ -76,55 +82,60 @@ COMMENT:
                     SEEMS LIKE WE SHOULD DISCUSS (AT LEAST SO I CAN UNDERSTAND BETTER)
 COMMENT
 
-A custom Condition is created by calling the constructor for the base class (``Condition()``) or one of the
-`generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any an arguments it
-requires to the **args** (for formal arguments) and/or **kwargs** (for keyword arguments) arguments. The function
+Custom Conditions can be created by calling the constructor for the base class (``Condition()``) or one of the
+`generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any arguments it
+requires to the **args** and/or **kwargs** arguments (for formal or keyword arguments, respectively). The function
 is called with **args** and **kwargs** by the `Scheduler` on each `PASS` through its `consideration_queue`, and the result is
-used to determine whether the associated Mechanism is allowed to execute on that `PASS`. Custom Conditions allow
-arbitrary schedules to be created, in which the execution of each Mechanisms can depend on one or more attribute of
-any other Mechanisms in the Composition.  For example, consider a case in which a Mechanism ``B`` should wait to
-execute until a `RecurrentTransferMechanism` ``A`` has "converged" (that is, settled to the point that none of its
-elements has changed in value more than a specified amount ``epsilon`` since the previous `TIME_STEP`).  This can be
-specified using the generic `Condition` to reference the `delta <TransferMechanism.delta>` attribute of
-integrative `TransferMechanisms <TransferMechanism>`, as follows::
+used to determine whether the associated Component is allowed to execute on that `PASS`. Custom Conditions allow
+arbitrary schedules to be created, in which the execution of each Component can depend on one or more attributes of
+any other Components in the Composition.
+
+For example, the following script fragment creates a custom Condition in which ``mech_A`` is scheduled to wait to
+execute until a `RecurrentTransferMechanism` ``mech_B`` has "converged" (that is, settled to the point that none of
+its elements has changed in value more than a specified amount since the previous `TIME_STEP`)::
 
     def converge(mech, thresh):
         for val in mech.delta:
             if abs(val) >= thresh:
                 return False
         return True
+    epsilon = 0.01
+    my_scheduler.add_condition(mech_A, Condition(converge, mech_B, epsilon))
 
-    my_scheduler.add_condition(B, Condition(converge, A, epsilon))
-
-COMMENT:
-    JDC:  I ASSUME CONDITIONS CAN BE ASSIGNED TO VARIABLES, SO THAT THE ABOVE COULD BE RE-WRITTEN AS:
-             A_converged = When(converge, A, epsilon)
-             my_scheduler.add_condition(B, A_converged)
-          ALLOWING OTHER MECHANISMS TO USE THE SAME CONDITION??
-    K: it would work in this case, but not necessarily in general, because some conditions may have the owner
-        or scheduler attribute set, and that would conflict. But as long as there is nothing like that you
-        can reuse the condition.
-COMMENT
+In the example, a function ``converge`` is defined that references the `delta <TransferMechanism.delta>` attribute of
+a `TransferMechanism` (which reports the change in its `value <TransferMechanism.value>`). The function is assigned to
+the `generic Condition <Conditions_Generic>` `NWhen` (which is satisfied the first N times after its condition becomes
+true), with ``mech_B`` and ``epsilon`` as its arguments. The Condition is assigned to ``mech_A``, thus scheduling it to
+execute one time (the default for `NWhen`) when all of the elements of ``mech_B`` have  changed less than ``epsilon``.
 
 .. _Condition_Structure:
 
 Structure
 ---------
 
-The Scheduler associates every Mechanism with a Condition.  If a Condition has not been explicitly specified for a
-Mechanism, the Mechanism is assigned the Condition `Always`, which allows it to be executed whenever it is
-`under consideration <Scheduler_Algorithm>`.  As described `above <Condition_Creation>`, there are pre-specified
-subclasses (listed below) that implement standard conditions and simply require the specification of a parameter
-or two to be implemented, while the generic Condition can be used to implement custom conditions by passing it a
-function and associated arguments.  Following is a list of pre-specified Conditions and the parameters they require
-(described in greater detail under `Condition_Class_Reference`):
+The `Scheduler` associates every Component with a Condition.  If a Component has not been explicitly assigned a
+Condition, it is assigned the Condition `Always` that causes it to be executed whenever it is
+`under consideration <Scheduler_Algorithm>`.  Condition subclasses (`listed below <Condition_Pre-Specified_List>`)
+provide a standard set of Conditions that can be implemented simply by specifying their parameter(s). There are
+five types:
+
+  * `Generic <Conditions_Generic>` - satisfied when a `user-specified function and set of arguments <Condition_Custom>`
+    evaluates to `True`;
+  * `Static <Conditions_Static>` - satisfied either always or never;
+  * `Composite <Conditions_Composite>` - satisfied based on one or more other Conditions;
+  * `Time-based <Conditions_Time_Based>` - satisfied based on the current count of units of time at a specified
+    `TimeScale`;
+  * `Component-based <Conditions_Component_Based>` - based on the execution or state of other Components.
+
+.. _Condition_Pre-Specified_List:
+
+List of Pre-specified Conditions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
     The optional `TimeScale` argument in many `Conditions <Condition>` specifies the unit of time over which the
     Condition operates;  the default value is `TRIAL` for all Conditions except those with "Trial" in their name,
     for which it is `RUN`.
-
-.. _Conditions_Generic:
 
 COMMENT:
     JDC: ADDED THESE PROVISIONAL ON IMPLEMENTING THE SUGGESTION ABOVE
@@ -136,10 +147,6 @@ COMMENT:
         where n can be specified without the explicit n=
 COMMENT
 
-
-
-.. _Conditions_Static:
-
 COMMENT:
     K: I don't think we need to comment on how Always causes execution in its description,
     because it's mentioned right above
@@ -150,7 +157,7 @@ COMMENT
 
 .. _Conditions_Generic:
 
-**Generic Conditions** (used to construct custom Conditions):
+**Generic Conditions** (used to construct `custom Conditions <Condition_Custom>`):
 
     * `While`\ (func, *args, **kwargs)
       \
@@ -164,9 +171,9 @@ COMMENT
 
     * `NWhen`\ (Condition, int)
       \
-      satisfied the first N times the specified Condition is satisfied.
+      satisfied the first N times the specified function evaluates to `True`.
 
-
+.. _Conditions_Static:
 
 **Static Conditions** (independent of other Conditions, Components or time):
 
@@ -181,7 +188,7 @@ COMMENT
 
 .. _Conditions_Composite:
 
-**Composite Conditions** (based on other Conditions):
+**Composite Conditions** (based on one or more other Conditions):
 
     * `All`\ (*Conditions)
       \
@@ -198,7 +205,7 @@ COMMENT
 
 .. _Conditions_Time_Based:
 
-**Time-Based Conditions** (based on time at a specified `TimeScale`):
+**Time-Based Conditions** (based on the count of units of time at a specified `TimeScale`):
 
 
     * `BeforePass`\ (int[, TimeScale])
@@ -296,10 +303,10 @@ Execution
 ---------
 
 When the `Scheduler` `runs <Schedule_Execution>`, it makes a sequential `PASS` through its `consideration_queue`,
-evaluating each `consideration_set` in the queue to determine which Mechanisms should be assigned to execute.
-It evaluates the Mechanisms in each set by calling the `is_satisfied` method of the Condition associated with each
-of those Mechanisms.  If it returns `True`, then the Mechanism is assigned to the execution set for the `TIME_STEP`
-of execution generated by that `PASS`.  Otherwise, the Mechanism is not executed.
+evaluating each `consideration_set` in the queue to determine which Components should be assigned to execute.
+It evaluates the Components in each set by calling the `is_satisfied` method of the Condition associated with each
+of those Components.  If it returns `True`, then the Component is assigned to the execution set for the `TIME_STEP`
+of execution generated by that `PASS`.  Otherwise, the Component is not executed.
 
 .. _Condition_Class_Reference:
 
@@ -408,7 +415,7 @@ class ConditionSet(object):
 
 class Condition(object):
     """
-    Used in conjunction with a `Scheduler` to specify the condition under which a `Mechanism` should be
+    Used in conjunction with a `Scheduler` to specify the condition under which a `Component` should be
     allowed to execute.
 
     Arguments

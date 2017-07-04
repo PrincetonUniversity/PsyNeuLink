@@ -13,37 +13,50 @@
 Overview
 --------
 
-A Scheduler is used to generate the order in which the `Mechanisms <Mechanism>` of a `Composition` are executed.
-By default, Mechanisms are executed in an order determined by the pattern of `Projections <Projection>` among them
-in the `Composition`, with each Mechanism executed once per `PASS` through the Composition.
-For example, in a `System` in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
+A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition` are executed.
+By default, a Scheduler executes Components in an order determined by the pattern of `Projections <Projection>`
+among the `Mechanisms <Mechanism>` in the `Composition`, with each Mechanism executed once per `PASS` through the
+Composition. For example, in a `System` in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
 A will execute first followed by B, and then C in each `PASS` through the System.  However, a Scheduler can be
 used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that determine when and
-how many times individual Mechanisms execute, and whether and how this depends on the execution of other Mechanisms.
-Conditions can be combined in arbitrary ways to generate any pattern of execution of the Mechanisms in a `System`
-that is logically possible.
+how many times individual Components execute, and whether and how this depends on the execution of other Components.
+Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined in arbitrary
+ways to generate any pattern of execution of the Components in a Composition that is logically possible.
+
+.. note::
+   In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
+   Conditions, and assigned to a Scheduler for execution.  However, in some circumstances, `Projections <Projection>`
+   can also be assigned for execution (e.g., during `learning <Process_Learning>` to insure that
+   `MappingProjections <MappingProjection>` are updated in the proper order).
+
+.. _Scheduler_Creation:
 
 Creating a Scheduler
 --------------------
 
 A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
-for a `System` when the System is created.  When creating a Scheduler explicitly, the set of `Mechanisms <Mechanism>`
+for a `Composition` when it is created.  When creating a Scheduler explicitly, the set of `Components <Component>`
 to be executed and their order must be specified in the Scheduler's constructor using one the following:
 
+COMMENT:
+   JDC: WE MAY WANT TO CHANGE THE NAME OF THE ARGUMENT TO 'COMPOSITION` ONCE THAT IS IMPLEMENTED, TO BE FULLY GENERAL
+COMMENT
+
 * a `System` in the **system** argument - if a System is specified,
-  the schedule is created using the Mechanisms in the System's `executionList <System.exeuctionList>` and an order
-  of execution specified by the dependencies among the Mechanisms in its `executionGraph <System.executionGraph>`.
+  the schedule is created using the Components in the System's `executionList <System.exeuctionList>` and an order
+  of execution specified by the dependencies among the Components in its `executionGraph <System.executionGraph>`.
 
 * a *graph specification dictionary* in the **graph** argument -
-  each entry of the dictionary must be a Mechanism, and the value of each entry must be a set of zero or more
-  Mechanisms that project directly to the key.  The graph must be acyclic; an error is generated if any cycles
-  (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is used as
-  the default order of executions, subject to any `Conditions` that have been specified (see below).
+  each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
+  zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
+  cycles (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is
+  used as the default order of executions, subject to any `Conditions` that have been specified
+  (see `below <Scheduler_Algorithm>`).
 
 If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
 
 Conditions can be added to a Scheduler when it is created by specifying a `ConditionSet` (a set of
-`Condition <Condition>`) in the **condition_set** argument of its constructor.  Individual Conditions and/or
+`Conditions <Condition>`) in the **condition_set** argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its `add_condition` and
 `add_condition_set` methods, respectively.
 
@@ -53,16 +66,16 @@ Algorithm
 ---------
 
 When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
-that defines the order in which Mechanisms are eligible to be executed.  This is based on the pattern of projections
+that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
 among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
-was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Mechanisms that are eligible to
+was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Components that are eligible to
 execute at the same time (i.e., that appear at the same "depth" in a sequence of dependencies, and
 among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
-The second consists of all Mechanisms that receive `Projections <Projection>` from Mechanisms in the first
-`consideration_set`. The third consists of Mechanisms that receive Projections from Mechanisms in the first two
+The second consists of all Components that receive `Projections <Projection>` from the Mechanisms in the first
+`consideration_set`. The third consists of Components that receive Projections from Components in the first two
 `consideration_sets <consideration_set>`, and so forth.  When the Scheduler is run, it uses the
-`consideration_queue` to determine which Mechanisms are eligible to execute in each `TIME_STEP` of a `PASS`, and then
-evaluates the `Condition <Condition>` associated with each Mechanism in the current `consideration_set`
+`consideration_queue` to determine which Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then
+evaluates the `Condition <Condition>` associated with each Component in the current `consideration_set`
 to determine which should actually be assigned for execution.
 
 Pseudocode::
@@ -100,50 +113,54 @@ Pseudocode::
 Execution
 ---------
 
-When a Scheduler is run, it provides a set of Mechanisms that should be run next, based on their dependencies in the
+When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
 System or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
 For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
-which Mechanisms in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
-been met. Any Mechanism that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
-that allows it to execute any time it is under consideration. All of the Mechanisms within a `consideration_set` that
-are allowed to execute comprise a `TIME_STEP` of execution. These Mechanisms are
-considered as executing simultaneously. The ordering of the  Mechanisms specified within a `TIME_STEP` is arbitrary
-(and is irrelevant, as there are no graph dependencies among Mechanisms within the same `consideration_set`).
-However, the execution of a Mechanism within a `time_step` may trigger the execution of another Mechanism within its
-`consideration_set`, as in the example below::
+which Components in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
+been met. Any Component that does not have a `Condition` explicitly specified is assigned the Condition `Always`,
+that allows it to execute any time it is under consideration. All of the Components within a `consideration_set` that
+are allowed to execute comprise a `TIME_STEP` of execution. These Components are
+considered as executing simultaneously.
 
-        C
-      ↗ ↖
-     A     B
+.. note::
+    The ordering of the Components specified within a `TIME_STEP` is arbitrary
+    (and is irrelevant, as there are no graph dependencies among Components within the same `consideration_set`).
+    However, the execution of a Component within a `time_step` may trigger the execution of another Component within its
+    `consideration_set`, as in the example below::
 
-    scheduler.add_condition(B, EveryNCalls(A, 2))
-    scheduler.add_condition(C, EveryNCalls(B, 1))
+            C
+          ↗ ↖
+         A     B
 
-    time steps: [{A}, {A, B}, {C}, ...]
+        scheduler.add_condition(B, EveryNCalls(A, 2))
+        scheduler.add_condition(C, EveryNCalls(B, 1))
 
-Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
-`A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
-`A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
-than waiting for the next `PASS`.
+        time steps: [{A}, {A, B}, {C}, ...]
+
+    Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
+    `A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
+    `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
+    than waiting for the next `PASS`.
 
 For each `TIME_STEP`, the Scheduler evaluates  whether any specified
 `termination Conditions <Scheduler_Termination_Conditions>` have been met, and terminates if so.  Otherwise,
-it returns the set of Mechanisms that should be executed in the current `TIME_STEP`. Each subsequent call to the
-`run <Scheduler.run>` method returns the set of Mechanisms in the following `TIME_STEP`. Processing of all of the
-`consideration_sets <consideration_set>` in the `consideration_queue` constitutes a `PASS` of execution, over which
-every Mechanism in the Composition has been considered for execution. Subsequent calls to the `run <Scheduler.run>`
-method cycle back through the `consideration_queue`, evaluating the `consideration_sets <consideration_set>` in the
-same order as previously, though possibly assigning for execution different Mechanisms within the same
-`consideration_set` on different `PASS`\ es (since different Conditions may be satisfied).  The Scheduler continues to
-make `PASS`\ es through the `consideration_queue` until a termination Condition is satisfied. If no termination
-Conditions are specified, the Scheduler terminates a `TRIAL` when every Mechanism has been specified for execution
-at least once (corresponding to the `AllHaveRun` Condition).  However, other termination Conditions can be specified,
-that may cause the Scheduler to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular
-Mechanism or
-set of Mechanisms is met).  When the Scheduler terminates a `TRIAL`, the `Composition` begins processing the next
-input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of
-processing associated with a given input to the Composition.
+it returns the set of Components that should be executed in the current `TIME_STEP`. Each subsequent call to the
+`run <Scheduler.run>` method returns the set of Components in the following `TIME_STEP`.
+
+Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes a `PASS` of
+execution, over which every Component in the Composition has been considered for execution. Subsequent calls to the
+`run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
+`consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
+same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
+
+The Scheduler continues to make `PASS`\ es through the `consideration_queue` until a termination
+Condition is satisfied. If no termination Conditions are specified, the Scheduler terminates a `TRIAL` when every
+Component has been specified for execution at least once (corresponding to the `AllHaveRun` Condition).  However,
+other termination Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier  or later
+(e.g., when the  Condition for a particular Component or set of Components is met).  When the Scheduler terminates a
+`TRIAL`, the `Composition` begins processing the next input specified in the call to its `run <Composition.run>`
+method.  Thus, a `TRIAL` is defined as the scope of processing associated with a given input to the Composition.
 
 
 .. _Scheduler_Termination_Conditions:
@@ -153,7 +170,7 @@ Termination Conditions
 
 Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
 and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is `True`
-when all Mechanisms have run at least once within the trial, and the termination condition for a `RUN` is
+when all Components have run at least once within the trial, and the termination condition for a `RUN` is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
@@ -275,14 +292,14 @@ class SchedulerError(Exception):
 
 
 class Scheduler(object):
-    """Generates an order of execution for `Mechanisms <Mechanism>` in a `Composition` or graph specification
+    """Generates an order of execution for `Components <Component>` in a `Composition` or graph specification
     dictionary, possibly determined by a set of `Conditions <Condition>`.
 
     Arguments
     ---------
 
     system : System
-        specifies the Mechanisms to be ordered for execution, and any dependencies among them, based on the
+        specifies the Components to be ordered for execution, and any dependencies among them, based on the
         System's `executionGraph <System.executionGraph>` and `executionList <System.executionList>`.
 
     COMMENT:
@@ -296,12 +313,12 @@ class Scheduler(object):
     COMMENT
 
     condition_set  : ConditionSet
-        set of `Conditions <Condition>` that specify when individual Mechanisms in **system**
+        set of `Conditions <Condition>` that specify when individual Components in **system**
         execute and any dependencies among them
 
-    graph : dict{Mechanism: set(Mechanism)}
-        a graph specification dictionary - each entry of the dictionary must be a Mechanism,
-        and the value of each entry must be a set of zero or more Mechanisms that project directly to the key.
+    graph : dict{Component: set(Component)}
+        a graph specification dictionary - each entry of the dictionary must be a Component,
+        and the value of each entry must be a set of zero or more Components that project directly to the key.
 
     Attributes
     ----------
@@ -338,7 +355,7 @@ class Scheduler(object):
             self.consideration_queue = list(toposort_ordering)
         else:
             raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system), '
-                                 'or a list of Mechanisms (kwarg nodes) and a toposort ordering over them '
+                                 'or a list of Components (kwarg nodes) and a toposort ordering over them '
                                  '(kwarg toposort_ordering)')
 
         self._init_counts()
