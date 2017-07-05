@@ -543,7 +543,12 @@ class Component(object):
     #                      insuring that assignment by one instance will not affect the value of others.
     name = None
 
-
+    def cSize(self, line):
+        if self.name == 'T':
+            if hasattr(self, 'size'):
+                print('self.size is {} and we are at line {}'.format(self.size, line))
+            else:
+                print(self.name, 'does not have attribute "size"')
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
@@ -576,11 +581,11 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
-
+        self.cSize(584)
         # These insure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
-
+        self.cSize(588)
         self._auto_dependent = False
         self._role = None
 
@@ -597,7 +602,7 @@ class Component(object):
             except AttributeError:
                 raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
-
+        self.cSize(605)
         # ASSIGN PREFS
 
         # If a PreferenceSet was provided, assign to instance
@@ -607,7 +612,7 @@ class Component(object):
         # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
         else:
             self.prefs = ComponentPreferenceSet(owner=self, prefs=prefs, context=context)
-
+        self.cSize(615)
         # ASSIGN LOG
 
         self.log = Log(owner=self)
@@ -626,7 +631,7 @@ class Component(object):
         except AttributeError:
             raise ComponentError("variableClassDefault must be defined for {} or its base class".
                                 format(self.componentName))
-
+        self.cSize(634)
         # CHECK FOR REQUIRED PARAMS
 
         # All subclasses must implement, in their paramClassDefaults, params of types specified in
@@ -662,6 +667,7 @@ class Component(object):
             except TypeError:
                 pass
 
+        self.cSize(670)
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
@@ -674,34 +680,35 @@ class Component(object):
                default_set=self.paramClassDefaults,   # source set from which missing params are assigned
                context=context)
 
+        self.cSize(681)
         # SET CURRENT VALUES OF VARIABLE AND PARAMS
 
         self.variable = self.variableInstanceDefault
         # self.variable = self.variableInstanceDefault.copy()
-
+        self.cSize(686)
         # self.paramsCurrent = self.paramInstanceDefaults
         self.paramsCurrent = self.paramInstanceDefaults.copy()
-
+        self.cSize(689)
         self.runtime_params_in_use = False
 
         # VALIDATE FUNCTION (self.function and/or self.params[function, FUNCTION_PARAMS])
         self._validate_function(context=context)
-
+        self.cSize(694)
         # INSTANTIATE ATTRIBUTES BEFORE FUNCTION
         # Stub for methods that need to be executed before instantiating function
         #    (e.g., _instantiate_sender and _instantiate_receiver in Projection)
         self._instantiate_attributes_before_function(context=context)
-
+        self.cSize(699)
         # INSTANTIATE FUNCTION
         #    - assign initial function parameter values from ParameterStates,
         #    - assign function's output to self.value (based on call of self.execute)
         self._instantiate_function(context=context)
-
+        self.cSize(704)
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
         # Stub for methods that need to be executed after instantiating function
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
-
+        self.cSize(709)
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -1048,6 +1055,13 @@ class Component(object):
                                           if not any(hasattr(parent_class, item[0])
                                                      for parent_class in self.__class__.mro()))
         self._create_attributes_for_params(make_as_properties=False, **params_class_defaults_only)
+        s = "<class 'PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism.TransferMechanism'>"
+        if str(type(self)) == s:
+            print('hi! hasattr(self, "size") is ', hasattr(self, 'size'))
+        if hasattr(self, 'size') and str(type(self)) == s:
+            print("self.size after _create_attributes_for_params: ", self.size)
+        if hasattr(self, '_size') and str(type(self)) == s:
+            print("self._size after _create_attributes_for_params: ", self._size)
 
         # Return params only for args:
         return params
@@ -1248,10 +1262,10 @@ class Component(object):
         # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
 
         # If size has been specified, make sure it doesn't conflict with variable arg or param specification
-        if hasattr(self, 'size'):
-
+        if hasattr(self, 'size') and INITIALIZING in context:
+            # "INITIALIZING in context" may be unnecessary! it is here for safety. (7/5/17 CW)
             size = self.size
-            print(size)
+
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.variableClassDefault
@@ -1367,31 +1381,20 @@ class Component(object):
             # IMPLEMENTATION NOTE: if variable and size are both specified as arguments, they should/will be checked
             # against each other in Component.py, during _instantiate_defaults().
             # endregion
-            print("\nsize before assignment: ", size)
-            print("self.size before assignment: ", self.size)
+
             self.size = size
-            print("self.size after assignment: ", self.size)
+            request_set['size'] = size  # potentially buggy in the future if request_set['size'] isn't guaranteed
 
             # MODIFIED 6/28/17 (CW): Because self.size was changed to always be a 1D array, the check below was changed
             # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
             if variable is not None:  # try tossing this "if" check
-                print("self.size: ", self.size)
-                print("variable: ", variable)
                 # If they conflict, raise exception, otherwise use variable (it specifies both size and content).
                 for i in range(len(self.size)):
                     if self.size[i] != len(variable[i]):
                         raise ComponentError("The size arg of {} ({}) conflicts with the length "
                                              "of its variable arg ({}) at element {}".
                                              format(self.name, self.size[i], variable[i], i))
-            # Variable is not specified, so set to a 2D array of zeros with (the length of row i) = size[i]
-            # MODIFIED 6/29/17 (CW): if uncommented, the else statement below will write to variable, but
-            # variable is overwritten later regardless. so the else statement below seems harmless but unnecessary now.
-            # else:
-            #     variable = []
-            #     for s in self.size:
-            #         variable.append(np.zeros(int(s)))  # casting s for safety
-            #     variable = np.array(variable)
 
         elif hasattr(self, 'shape') and self.shape is not None:
             # IMPLEMENTATION NOTE 6/23/17 (CW): this test is currently unused by all components. To confirm this, we
@@ -1800,7 +1803,6 @@ class Component(object):
         :param dict (target_set) - repository of params that have been validated:
         :return none:
         """
-        print('hi')
         for param_name, param_value in request_set.items():
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)

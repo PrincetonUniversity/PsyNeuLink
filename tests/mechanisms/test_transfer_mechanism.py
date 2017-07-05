@@ -899,6 +899,7 @@ def test_transfer_mech_size_2d():
         size=[[2]],
     )
     assert len(T.variable) == 1 and len(T.variable[0]) == 2
+    assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
 # ------------------------------------------------------------------------------------------------
 # TEST 6
