@@ -519,9 +519,11 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def create_input_mechanisms(self, inputs, input_mechanisms):
-        # create an input mechanism corresponding to each of the mechanisms in composition which receives an input
-        # value from the outside world (from the user)
+    def _create_input_mechanisms(self, inputs, input_mechanisms):
+        '''
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each of the mechanisms in the composition
+            that receives an input value from the outside world (from the user) has a corresponding InputMechanism
+        '''
 
         # build a dict of key-value pairs where key = mechanism and value = plain transfer mechanism w/ identity fn
         for mech in inputs.keys():
@@ -532,11 +534,18 @@ class Composition(object):
             # this input
             MappingProjection(sender=new_input_mech, receiver=mech)
 
-    def assign_execution_ids(self, execution_id, input_mechanisms):
+    def _assign_execution_ids(self, execution_id, input_mechanisms):
+        '''
+            assigns the same uuid to each mechanism in the composition's processing graph as well as all input
+            mechanisms for this composition. The uuid is either specified in the user's call to run(), or generated
+            randomly at run time.
+        '''
+
         # Traverse processing graph and assign one uuid to all of its mechanisms
         self._execution_id = execution_id or self._get_unique_id()
         for v in self._graph_processing.vertices:
             v.component._execution_id = self._execution_id
+        # Assign the uuid to all input mechanisms
         for k in input_mechanisms.keys():
             input_mechanisms[k]._execution_id = self._execution_id
 
@@ -601,9 +610,9 @@ class Composition(object):
         # create "input mechanisms" so that origin mechanisms (or any other mechanisms receiving inputs directly from
         # the outside world can be fed these values through projections)
         # [one "input mechanism" per mechanism receiving input]
-        self.create_input_mechanisms(inputs, input_mechanisms)
+        self._create_input_mechanisms(inputs, input_mechanisms)
 
-        self.assign_execution_ids(execution_id, input_mechanisms)
+        self._assign_execution_ids(execution_id, input_mechanisms)
 
         # TBI: Handle learning graph
 
