@@ -317,7 +317,7 @@ Class Reference
 
 import logging
 
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 

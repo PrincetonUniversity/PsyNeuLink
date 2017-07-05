@@ -9,9 +9,9 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import SIMPLE
-from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
 class TestInit:

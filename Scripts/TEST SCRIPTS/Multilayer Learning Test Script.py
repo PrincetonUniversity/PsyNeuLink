@@ -6,8 +6,8 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 

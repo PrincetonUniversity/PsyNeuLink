@@ -277,8 +277,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOpti
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
