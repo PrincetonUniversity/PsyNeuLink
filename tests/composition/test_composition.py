@@ -855,7 +855,7 @@ class TestRun:
 
         assert 40.0 == output[0][0]
 
-    def test__sender_receiver_not_specified(self):
+    def test_sender_receiver_not_specified(self):
         comp = Composition()
 
         A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
@@ -872,3 +872,56 @@ class TestRun:
         )
 
         assert 40.0 == output[0][0]
+
+    def test_run_2_mechanisms_reuse_input(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [5]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched,
+            num_trials= 5
+        )
+        assert 125 == output[0][0]
+
+    def test_run_2_mechanisms_incorrect_trial_spec(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [[5], [4] ,[3]]}
+        sched = Scheduler(composition=comp)
+        with pytest.raises(CompositionError) as error_text:
+            output = comp.run(
+                inputs=inputs_dict,
+                scheduler=sched,
+                num_trials=5
+            )
+        assert "number of trials" in str(error_text.value) and "does not match the length" in str(error_text.value)
+
+
+    def test_run_2_mechanisms_double_trial_specs(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp.analyze_graph()
+        inputs_dict = {A: [[5], [4] ,[3]]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler=sched,
+            num_trials=3
+        )
+        assert 75 == output[0][0]
