@@ -15,7 +15,7 @@
 Overview
 --------
 
-`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
+`Condition <Condition>`\ s are used to specify when `Component <Component>`\ s are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Component
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
 Composition (e.g., how many `TIME_STEP`\ s have occurred in the current `TRIAL`), or the state of other
@@ -55,7 +55,7 @@ context and assigned automatically, as in the following example::
     my_scheduler.add_condition(B, EveryNCalls(A, 2))
     my_scheduler.add_condition(C, EveryNCalls(B, 2))
 
-Here, ``EveryNCalls(A, 2)`` for example, is assigned the `owner` ``B``, and the scheduler ``my_scheduler``.
+Here, `EveryNCalls(A, 2)` for example, is assigned the `owner` `B`, and the scheduler `my_scheduler`.
 
 .. _Condition_Custom:
 
@@ -82,7 +82,7 @@ COMMENT:
                     SEEMS LIKE WE SHOULD DISCUSS (AT LEAST SO I CAN UNDERSTAND BETTER)
 COMMENT
 
-Custom Conditions can be created by calling the constructor for the base class (``Condition()``) or one of the
+Custom Conditions can be created by calling the constructor for the base class (`Condition()`) or one of the
 `generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any arguments it
 requires to the **args** and/or **kwargs** arguments (for formal or keyword arguments, respectively). The function
 is called with **args** and **kwargs** by the `Scheduler` on each `PASS` through its `consideration_queue`, and the result is
@@ -90,8 +90,8 @@ used to determine whether the associated Component is allowed to execute on that
 arbitrary schedules to be created, in which the execution of each Component can depend on one or more attributes of
 any other Components in the Composition.
 
-For example, the following script fragment creates a custom Condition in which ``mech_A`` is scheduled to wait to
-execute until a `RecurrentTransferMechanism` ``mech_B`` has "converged" (that is, settled to the point that none of
+For example, the following script fragment creates a custom Condition in which `mech_A` is scheduled to wait to
+execute until a `RecurrentTransferMechanism` `mech_B` has "converged" (that is, settled to the point that none of
 its elements has changed in value more than a specified amount since the previous `TIME_STEP`)::
 
     def converge(mech, thresh):
@@ -100,13 +100,13 @@ its elements has changed in value more than a specified amount since the previou
                 return False
         return True
     epsilon = 0.01
-    my_scheduler.add_condition(mech_A, Condition(converge, mech_B, epsilon))
+    my_scheduler.add_condition(mech_B, NWhen(Condition(converge, mech_A, epsilon), 1))
 
-In the example, a function ``converge`` is defined that references the `delta <TransferMechanism.delta>` attribute of
+In the example, a function `converge` is defined that references the `delta <TransferMechanism.delta>` attribute of
 a `TransferMechanism` (which reports the change in its `value <TransferMechanism.value>`). The function is assigned to
-the `generic Condition <Conditions_Generic>` `NWhen` (which is satisfied the first N times after its condition becomes
-true), with ``mech_B`` and ``epsilon`` as its arguments. The Condition is assigned to ``mech_A``, thus scheduling it to
-execute one time (the default for `NWhen`) when all of the elements of ``mech_B`` have  changed less than ``epsilon``.
+the standard `Condition()` with `mech_A` and `epsilon` as its arguments, and `composite Condition <Conditions_Composite>`
+`NWhen` (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to `mech_B`,
+thus scheduling it to execute one time when all of the elements of `mech_A` have changed by less than `epsilon`.
 
 .. _Condition_Structure:
 
@@ -162,16 +162,12 @@ COMMENT
     * `While`\ (func, *args, **kwargs)
       \
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `True`. \
-      Equivalent to `Condition`\ (func, *args, **kwargs)
+      Equivalent to `Condition(func, *args, **kwargs)`
 
     * `Until`\ (func, *args, **kwargs)
       \
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `False`. \
-      Equivalent to `Not`\ (`Condition`\ (func, *args, **kwargs))
-
-    * `NWhen`\ (Condition, int)
-      \
-      satisfied the first N times the specified function evaluates to `True`.
+      Equivalent to `Not(Condition(func, *args, **kwargs))`
 
 .. _Conditions_Static:
 
@@ -201,6 +197,10 @@ COMMENT
     * `Not`\ (Condition)
       \
       satisfied whenever the specified Condition is not satisfied.
+
+    * `NWhen`\ (Condition, int)
+      \
+      satisfied the first specified number of times the specified Condition is satisfied.
 
 
 .. _Conditions_Time_Based:
@@ -273,7 +273,7 @@ COMMENT
 
     * `EveryNCalls`\ (Component, int[, TimeScale])
       \
-      satisfied when the specified Component has executed the specified number of times since the
+      satisfied when the specified Component has executed the specified number of times since the \
       last time `owner` has run.
 
     * `JustRan`\ (Component)
@@ -469,6 +469,14 @@ class Condition(object):
         self._owner = value
 
     def is_satisfied(self):
+        '''
+        the function called to determine satisfaction of this Condition.
+
+        Returns
+        -------
+            True - if the Condition is satisfied
+            False - if the Condition is not satisfied
+        '''
         logger.debug('Condition ({0}) using scheduler {1}'.format(type(self).__name__, self.scheduler))
         has_args = len(self.args) > 0
         has_kwargs = len(self.kwargs) > 0
@@ -669,7 +677,7 @@ class BeforePass(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.);
-          so, ``BeforePass(2)`` is satisfied at `PASS` 0 and `PASS` 1.
+          so, `BeforePass(2)` is satisfied at `PASS` 0 and `PASS` 1.
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -697,7 +705,7 @@ class AtPass(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first 'PASS' is pass 0, the second 'PASS' is 1, etc.);
-          so, ``AtPass(1)`` is satisfied when a single `PASS` (`PASS` 0) has occurred, and ``AtPass(2) is satisfied
+          so, `AtPass(1)` is satisfied when a single `PASS` (`PASS` 0) has occurred, and `AtPass(2) is satisfied
           when two `PASS`\ es have occurred (`PASS` 0 and `PASS` 1), etc..
 
     """
@@ -730,7 +738,7 @@ class AfterPass(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `PASS` is 0, the second `PASS` is 1, etc.); so,
-          ``AfterPass(1)`` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\ es 2, 3, 4, etc.).
+          `AfterPass(1)` is satisfied after `PASS` 1 has occurred and thereafter (i.e., in `PASS`\ es 2, 3, 4, etc.).
 
     """
     def __init__(self, n, time_scale=TimeScale.TRIAL):
@@ -808,7 +816,7 @@ class BeforeTrial(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
-          so, ``BeforeTrial(2)`` is satisfied at `TRIAL` 0 and `TRIAL` 1.
+          so, `BeforeTrial(2)` is satisfied at `TRIAL` 0 and `TRIAL` 1.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -840,7 +848,7 @@ class AtTrial(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
-          so, ``AtTrial(1)`` is satisfied when one `TRIAL` (`TRIAL` 0) has already occurred.
+          so, `AtTrial(1)` is satisfied when one `TRIAL` (`TRIAL` 0) has already occurred.
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
@@ -872,7 +880,7 @@ class AfterTrial(Condition):
     Notes:
 
         - Counts of TimeScales are zero-indexed (that is, the first `TRIAL` is 0, the second `TRIAL` is 1, etc.);
-          so,  ``AfterPass(1)`` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`\ s 2, 3, 4,
+          so,  `AfterPass(1)` is satisfied after `TRIAL` 1 has occurred and thereafter (i.e., in `TRIAL`\ s 2, 3, 4,
           etc.).
 
     """

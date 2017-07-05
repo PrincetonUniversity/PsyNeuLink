@@ -43,14 +43,14 @@ COMMENT:
 COMMENT
 
 * a `System` in the **system** argument - if a System is specified,
-  the schedule is created using the Components in the System's `executionList <System.exeuctionList>` and an order
+  the Scheduler is created using the Components in the System's `executionList <System.executionList>` and an order
   of execution specified by the dependencies among the Components in its `executionGraph <System.executionGraph>`.
 
 * a *graph specification dictionary* in the **graph** argument -
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
   zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
   cycles (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is
-  used as the default order of executions, subject to any `Conditions` that have been specified
+  used as the default order of executions, subject to any `Condition`\ s that have been specified
   (see `below <Scheduler_Algorithm>`).
 
 If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
@@ -69,7 +69,7 @@ When a Scheduler is created, it constructs a `consideration_queue`:  a list of `
 that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
 among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
 was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Components that are eligible to
-execute at the same time (i.e., that appear at the same "depth" in a sequence of dependencies, and
+execute at the same time/`TIME_STEP` (i.e., that appear at the same "depth" in a sequence of dependencies, and
 among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
 The second consists of all Components that receive `Projections <Projection>` from the Mechanisms in the first
 `consideration_set`. The third consists of Components that receive Projections from Components in the first two
@@ -169,7 +169,7 @@ Termination Conditions
 ~~~~~~~~~~~~~~~~~~~~~~
 
 Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
-and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is `True`
+and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is satisfied
 when all Components have run at least once within the trial, and the termination condition for a `RUN` is
 when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
 by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
@@ -335,6 +335,11 @@ class Scheduler(object):
     termination_conds : dict{TimeScale: Condition}
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
+
+    times: dict{TimeScale: dict{TimeScale: int}}
+        a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
+        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\ es that have occurred in the
+        current `RUN` that the Scheduler is scheduling at the time it is accessed
     """
 
     def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
@@ -468,6 +473,9 @@ class Scheduler(object):
 
     def run(self, termination_conds=None):
         '''
+        run is a python generator, that when iterated over provides the next `TIME_STEP` of
+        executions at each iteration
+
         :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
                terminate the execution of the specified `TimeScale`
         '''
