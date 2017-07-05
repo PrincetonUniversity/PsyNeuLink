@@ -207,7 +207,7 @@ identified by its `input_state <Mechanism_Base.input_state>`, attribute.  Howeve
 more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its `sample` and another for its
 `target` input. If a Mechanism has more than one InputState, they are identified in a ContentAddressableList in the 
 Mechanism's `input_states <Mechanism_Base.input_states>` attribute (note the plural).  A specific InputState in the
-list can be accessed by using its name as the index for the list (e.g.,` my_mechanism['InputState name']`.
+list can be accessed by using its name as the index for the list (e.g., ``my_mechanism['InputState name']``).
 
 COMMENT:
 [TBI:]
@@ -264,14 +264,14 @@ OutputState is automatically created and assigned to its `OutputState <Mechanism
 attribute (note the singular), and also to the first entry of the Mechanism's `outputStates 
 <Mechanism.Mechanism_Base.outputStates>` attribute (note the plural).  The `value <OutputState.value>` of the primary 
 OutputState is assigned as the first (and often only) item of the Mechanism's 
-`output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the Mechanism`s 
+`output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the Mechanism's
 `function <Mechanism.Mechanism_Base.function>`.  Additional outputStates can be assigned to represent values derived 
 from the result of the Mechanism's `function <Mechanism.function>`.  Standard outputStates are available for each 
 type of Mechanism, and custom ones can also be configured (see `OutputState Specification <OutputState_Specification>`.
 These can be assigned in the **output_states** argument of the Mechanism's constructor.  All of the outputStates of a 
 Mechanism (including the primary one) are represented in its `output_states <Mechanism_Base.outputStates>` attribute 
 (note the plural), that contains a ContentAddressableList of the outputStates.  A specific OutputState in the list can 
-be accessed by using its name as the index for the list (e.g., my_mechanism['OutputState name'].  This can also be
+be accessed by using its name as the index for the list (e.g., ``my_mechanism['OutputState name']``).  This can also be
 used to assign additional outputStates to the Mechanism after it has been created.
 
 .. _Mechanism_Parameters:
@@ -357,12 +357,12 @@ COMMENT
 Role in Processes and Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of one or more processes are assigned designations that indicate the
-`role <Process_Mechanisms>` they play in those processes, and similarly for `role <System_Mechanisms>` they play in
+Mechanisms that are part of one or more Processes are assigned designations that indicate the
+`role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
 any systems to which they belong. These designations are listed in the Mechanism's `processes` and `systems`
 attributes, respectively.  Any Mechanism designated as `ORIGIN` receives a Projection to its
 `primary InputState <Mechanism_InputStates>` from the Process(es) to which it belongs.  Accordingly, when the Process 
-(or System of which the Process is a part) is executed, those mechanisms receive the input provided to the Process
+(or System of which the Process is a part) is executed, those Mechanisms receive the input provided to the Process
 (or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` 
 Mechanism for a Process is assigned as the `output` of that Process, and similarly for systems to which it belongs.
 
@@ -710,7 +710,7 @@ class Mechanism_Base(Mechanism):
         output of the Mechanism's `function <Mechanism_Base.function>`.
         Note: this is not necessarily the same as the Mechanism's `output_values <Mechanism_Base.output_values>` attribute,
         which lists the values of its `outputStates <Mechanism_Base.outputStates>`.
-        The keyword:`value` is `None` until the Mechanism has been executed at least once.
+        The :keyword:`value` is `None` until the Mechanism has been executed at least once.
 
         .. _value_template : 2d np.array : default None
                set equal to the value attribute when the Mechanism is first initialized;
@@ -1836,7 +1836,7 @@ class Mechanism_Base(Mechanism):
 
     def plot(self,x_range = None):
         """
-        Generate a plot of the mechanism's function using the specified parameter values. See (see
+        Generate a plot of the Mechanism's function using the specified parameter values. See (see
         `DDM.plot <DDM.plot>` for details of the animated DDM plot).
 
         Arguments

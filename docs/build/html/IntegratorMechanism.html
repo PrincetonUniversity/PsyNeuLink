@@ -276,20 +276,20 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default</em> – the input to mechanism’s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<dd><p><em>value: default</em> – the input to Mechanism’s <code class="docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : defaultTimeScale.TRIAL</em> – specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.</p>
+<dd><p><em>TimeScale : defaultTimeScale.TRIAL</em> – specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> – the name of the mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the mechanism;
+<dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> – the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Mechanism;
 if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -297,9 +297,9 @@ if not is specified, a default is assigned by <code class="xref any docutils lit
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
@@ -356,11 +356,13 @@ if it has more than one element, each element is applied to the corresponding el
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
-<p><strong>Note:</strong>
-In order to generate random noise, we recommend selecting a probability distribution function
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order to generate random noise, we recommend selecting a probability distribution function
 (see <code class="xref any docutils literal"><span class="pre">Distribution</span> <span class="pre">Functions</span></code> for details), which will generate a new noise value from
 its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
 the noise will simply be an offset that remains the same across all executions.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
