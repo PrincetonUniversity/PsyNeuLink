@@ -17,6 +17,67 @@ logger = logging.getLogger(__name__)
 
 
 class MechanismRole(Enum):
+    """
+
+    - ORIGIN
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`,
+        and that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may
+        have only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN`
+        Mechanism of a Process is not necessarily an `ORIGIN` of the System to which it belongs, as it may receiver
+        `Projections <Projection>` from other Processes in the System. The `ORIGIN` Mechanisms of a Process or
+        System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed using its :keyword:`show`
+        method.  For additional details about `ORIGIN` Mechanisms in Processes, see
+        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
+        and for Systems see `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    - INTERNAL
+        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+
+    - CYCLE
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection`
+        that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then it is simply
+        designated as such (since it will be assigned input and therefore be initialized in any event).
+
+    - INITIALIZE_CYCLE
+        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
+        `Projection` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism (since in
+        that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
+        Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
+        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+
+    - TERMINAL
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
+        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
+        have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
+        mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
+        as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
+        or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
+        `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
+
+    - SINGLETON
+        A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
+        functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
+
+    - MONITORED
+
+    - LEARNING
+        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
+
+    - TARGET
+        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
+        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
+        Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
+        :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
+        details, see `TARGET mechanisms <LearningProjection_Targets>` and specifying `target values <Run_Targets>`.
+
+    - RECURRENT_INIT
+
+
+    """
     ORIGIN = 0
     INTERNAL = 1
     CYCLE = 2
@@ -24,8 +85,9 @@ class MechanismRole(Enum):
     TERMINAL = 4
     SINGLETON = 5
     MONITORED = 6
-    TARGET = 7
-    RECURRENT_INIT = 8
+    LEARNING = 7
+    TARGET = 8
+    RECURRENT_INIT = 9
 
 
 class CompositionError(Exception):
@@ -129,7 +191,15 @@ class Graph(object):
 
 
 class Composition(object):
+    '''
+        Composition
 
+        Arguments
+        ---------
+
+        Attributes
+        ----------
+    '''
     def __init__(self):
         ########
         # Constructor for Compositions.
@@ -172,6 +242,10 @@ class Composition(object):
 
     @property
     def graph_processing(self):
+        '''
+            Returns the Composition's processing graph. Builds the graph if it needs updating
+            since the last access.
+        '''
         if self.needs_update_graph_processing or self._graph_processing is None:
             self._update_processing_graph()
 
@@ -181,10 +255,15 @@ class Composition(object):
         return uuid.uuid4()
 
     def add_mechanism(self, mech):
-        ########
-        # Adds a new Mechanism to the Composition.
-        # If the mechanism has already been added, passes.
-        ########
+        '''
+            Adds a mechanism to the Composition, if it is not already added
+
+            Arguments
+            ---------
+
+            mech : Mechanism
+                the mechanism to add
+        '''
         if mech not in [vertex.component for vertex in self.graph.vertices]:  # Only add if it doesn't already exist in graph
             mech.is_processing = True
             self.graph.add_component(mech)  # Set incoming edge list of mech to empty
@@ -195,10 +274,18 @@ class Composition(object):
             self.needs_update_graph_processing = True
 
     def add_projection(self, sender, projection, receiver):
-        ########
-        # Adds a new Projection to the Composition.
-        # If the projection has already been added, passes.
-        ########
+        '''
+            Adds a projection to the Composition, if it is not already added
+
+            Arguments
+            ---------
+
+            sender : Mechanism
+
+
+            projection : Projection
+                the projection to add
+        '''
         if projection not in [vertex.component for vertex in self.graph.vertices]:
             projection.is_processing = False
             projection.name = '{0} to {1}'.format(sender, receiver)
@@ -241,7 +328,7 @@ class Composition(object):
 
 
 
-    def analyze_graph(self, graph=None):
+    def _analyze_graph(self, graph=None):
         ########
         # Determines identity of significant nodes of the graph
         # Each node falls into one or more of the following categories
@@ -360,6 +447,20 @@ class Composition(object):
         self.needs_update_graph_processing = False
 
     def get_mechanisms_by_role(self, role):
+        '''
+            Returns a set of mechanisms in this Composition that have the role `role`
+
+            Arguments
+            _________
+
+            role : MechanismRole
+                the set of mechanisms having this role to return
+
+            Returns
+            -------
+
+            set of Mechanisms with `MechanismRole` `role`
+        '''
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
