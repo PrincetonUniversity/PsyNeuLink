@@ -139,13 +139,13 @@ class TestAnalyzeGraph:
 
     def test_empty_call(self):
         comp = Composition()
-        comp.analyze_graph()
+        comp._analyze_graph()
 
     def test_singleton(self):
         comp = Composition()
         A = TransferMechanism(name='A')
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
 
@@ -155,7 +155,7 @@ class TestAnalyzeGraph:
         B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -168,7 +168,7 @@ class TestAnalyzeGraph:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A not in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -183,7 +183,7 @@ class TestAnalyzeGraph:
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A not in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -206,7 +206,7 @@ class TestAnalyzeGraph:
         comp.add_projection(C, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
         comp.add_projection(D, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert D in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B in comp.get_mechanisms_by_role(MechanismRole.CYCLE)
@@ -222,7 +222,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {}
         feed_dict_terminal = {}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -235,7 +235,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -248,7 +248,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
@@ -261,7 +261,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
@@ -277,7 +277,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(C)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -293,7 +293,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(C)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -306,7 +306,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -319,7 +319,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -332,7 +332,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -345,7 +345,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         with pytest.raises(ValueError):
             comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -357,7 +357,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -370,7 +370,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A:  [0, 1, 2]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(TypeError):
@@ -383,7 +383,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {}
         comp.validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
@@ -395,7 +395,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -405,7 +405,7 @@ class TestValidateFeedDict:
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -414,7 +414,7 @@ class TestValidateFeedDict:
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
@@ -426,7 +426,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -439,7 +439,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
