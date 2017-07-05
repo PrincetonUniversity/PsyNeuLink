@@ -104,11 +104,9 @@ class ProcessingMechanism_Base(Mechanism_Base):
         self.system = None
 
         self.variableClassDefault = variable  # should this line be here? Ask Kristin
-        print("hasattr(self, 'size') before: ", hasattr(self, 'size'))
-        print("hasattr(self, 'name'): ", hasattr(self, 'name'))
+
         params = self._assign_args_to_param_dicts(params=params,
                                                   size=size)
-        print("hasattr(self, 'size') after: ", hasattr(self, 'size'))
 
         super().__init__(variable=variable,
                          input_states=input_states,
