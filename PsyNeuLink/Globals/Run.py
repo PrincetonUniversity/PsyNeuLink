@@ -15,21 +15,15 @@ Overview
 
 .. _Run_Overview:
 
-The :keyword:`run` function is used for executing a mechanism, process or system.  It can be called directly, however
-it is typically invoked by calling the :keyword:`run` method of the object to be run.  It  executes an object by
-calling the object's :keyword:`execute` method.  While an object's :keyword:`execute` method can be called directly,
-using its :keyword:`run` method is much easier because it:
+The :keyword:`run` function is used for executing a Mechanism, Process or System.  It can be called directly, however
+it is typically invoked by calling the :keyword:`run` method of the Component to be run.  It  executes a Component by
+calling the Component's :keyword:`execute` method.  While a Component's :keyword:`execute` method can be called
+directly, using its :keyword:`run` method is easier because it:
 
-    * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of an object
+    * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of a Component
       runs only a single execution of the object;
     ..
     * uses simpler formats for specifying `inputs <Run_Inputs>` and `targets <Run_Targets>`;
-    ..
-COMMENT:
-    *** THIS WILL NEED TO BE UPDATED ONCE SCHEDULER IS IMPLEMENTED
-COMMENT
-    * manages timing factors (such as updating the `CentralClock <TimeScale.CentralClock>` and presenting
-    inputs in the correct `phase of execution <System_Execution_Phase>` of a system.
     ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
@@ -39,17 +33,18 @@ Note:: The ``run`` function uses the ``construct_input`` function to convert the
 COMMENT
 
 Understanding a few basic concepts about how the :keyword:`run` function operates will make it easier to use the
-:keyword:`execute` and :keyword:`run` methods of PsyNeuLink objects.  These are discussed below.
+:keyword:`execute` and :keyword:`run` methods of PsyNeuLink Components.  These are discussed below.
 
+
+.. _Run_Scope_of_Execution:
 
 Scope of Execution
 ~~~~~~~~~~~~~~~~~~
 
-When the :keyword:`run` method of an object is called, it executes that object and all others within its scope of
-execution.  For a `mechanism <Mechanism>`, the scope of execution is simply that mechanism.  For a `process <Process>`,
-the scope of execution is all of the mechanisms specified in its `pathway` attribute.  For a `system <System>`,
-the scope of execution is all of the mechanisms in the processes specified in the system's
-`processes <System.System_Base.processes>` attribute.
+When the :keyword:`run` method of a Component is called, it executes that Component and all others within its scope of
+execution.  For a `Mechanism`, the scope of execution is simply the Mechanism itself.  For a `Process`, the scope of
+execution is all of the Mechanisms specified in its `pathway` attribute.  For a `System`, the scope of execution is
+all of the Mechanisms in the Processes specified in the System's `Processes <System.System_Base.processes>` attribute.
 
 .. _Run_Timing:
 
@@ -59,6 +54,10 @@ Timing
 COMMENT:
     *** THIS WILL NEED TO BE UPDATED ONCE SCHEDULER IS IMPLEMENTED
 COMMENT
+When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
+`input (or set of inputs) <Run_Inputs>` specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
+execution.  For each `TRIAL`, the Component calls its `Scheduler` to get a list of Components within its
+`scope of execution <Run_Scope_of_Execution>` that should be executed in that `TRIAL`.
 
 PsyNeuLink supports two time scales for executing objects: `TIME_STEP <TimeScale.TimeScale.TIME_STEP>` and
 `TRIAL <TimeScale.TimeScale.TRIAL>`.  Every mechanism defines how it is executed at one or both of these time
