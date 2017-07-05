@@ -99,8 +99,7 @@
 #           Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
 # FIX: show_graph()
 # FIX: DDM: In `TIME_STEP` mode it should return DECISION_TIME (# of steps that have elapsed)
-
-
+# FIX: CentralClock (IMPLEMENT IT IN SCHEDULER, ADD pass, AND GET RID OF block AND task
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism

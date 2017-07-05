@@ -28,7 +28,8 @@ class TimeScale(Enum):
 
     PASS
         a full iteration through all of the `consideration_sets <consideration_set>` in a `Scheduler's <Scheduler>`
-        `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`.
+        `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`, over which every `Component`
+        `specified to Scheduler <Scheduler_Creation>` is considered for execution at least once.
 
     TRIAL
         an open-ended unit of time consisting of all TIME_STEPs occurring within the scope of a single input to a
@@ -52,12 +53,18 @@ class TimeScale(Enum):
 
 
 class Clock:
-    """Clock object used by all systems, processes, mechanisms, and projections
+    """Clock object used by a `Components <Component>` and `Compositions <Composition>` to reference the current
+    state of their assigned `Scheduler`.
     """
     def __init__(self, name):
         self.name = name
         self.time_step = 0
+        # FIX: WHY ISN'T THE FOLLOWING ASSIGNMENT OK?
+        # self.pass = 0
         self.trial = 0
+        self.run = 0
+        self.life = 0
+        # FIX: THE FOLLOWING TWO PRESUMABLY DEFUNCT ITEMS STILL SEEM TO BE GETTING REFERENCED SOMEWHERE:
         self.block = 0
         self.task = 0
 
