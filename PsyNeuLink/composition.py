@@ -440,14 +440,29 @@ class Composition(object):
             input_mechanisms[k]._execution_id = self._execution_id
 
 
-    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None):
+    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None, num_trials = None):
+        reuse_inputs = False
+
         # all mechanisms with inputs specified in the inputs dictionary
         has_inputs = inputs.keys()
 
+        len_inputs = 1
+        # update len_inputs to match the num trials specified by the input dict
         if inputs != {}:
             len_inputs = len(list(inputs.values())[0])
-        else:
-            len_inputs = 1
+        # check whether the num trials given in the input dict matches the num_trials param
+        if num_trials:
+            if len_inputs != num_trials:
+                # if one set of inputs was provided for many trials, set 'reuse_inputs' flag
+                if len_inputs == 1:
+                    reuse_inputs = True
+                # otherwise, warn user that there is something wrong with their input specification
+                else:
+                    raise CompositionError("The number of trials [{}] specified for the composition [{}] does not match the "
+                                           "length [{}] of the inputs specified in the inputs dictionary [{}]. "
+                                           .format(num_trials, self, len_inputs, inputs))
+
+
 
         input_indices = range(len_inputs)
 
@@ -455,7 +470,7 @@ class Composition(object):
 
         # create "input mechanisms" so that origin mechanisms (or any other mechanisms receiving inputs directly from
         # the outside world can be fed these values through projections)
-        # [one "input mechanism" per mechanism receiving input] 
+        # [one "input mechanism" per mechanism receiving input]
         self.create_input_mechanisms(inputs, input_mechanisms)
 
         self.assign_execution_ids(execution_id, input_mechanisms)
@@ -473,7 +488,7 @@ class Composition(object):
             # loop over all mechanisms that receive inputs from the outside world
             for mech in has_inputs:
                 # grab the input value for this mechanism on this trial
-                input_val = inputs[mech][input_index]
+                input_val = inputs[mech][0 if reuse_inputs else input_index]
                 # find the input mechanism corresponding to this mechanism
                 input_mechanism = input_mechanisms[mech]
                 # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
