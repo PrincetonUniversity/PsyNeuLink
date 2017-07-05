@@ -441,6 +441,35 @@ class Composition(object):
 
 
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None, num_trials = None):
+        '''
+            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
+            to receive and execute sets of mechanisms that are elligible to run until termination conditions are met.
+
+            Arguments
+            ---------
+            scheduler : Scheduler
+                the scheduler object which owns the conditions that will instruct the execution of this composition
+
+            inputs: { Mechanism : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
+
+            targets (?)
+
+            recurrent_init (?)
+
+            execution_id : UUID
+                execution_id will typically be set to none and assigned randomly at runtime
+
+            num_trials : int
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            Returns
+            ---------
+            output value of the final mechanism executed in the composition
+        '''
         reuse_inputs = False
 
         # all mechanisms with inputs specified in the inputs dictionary
