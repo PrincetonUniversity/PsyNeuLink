@@ -3,6 +3,7 @@ import logging
 from timeit import timeit
 
 import pytest
+import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
@@ -12,6 +13,8 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.scheduling.Scheduler import Scheduler
 from PsyNeuLink.scheduling.condition import EveryNCalls
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING_PROJECTION
 
 logger = logging.getLogger(__name__)
 
@@ -142,13 +145,13 @@ class TestAnalyzeGraph:
 
     def test_empty_call(self):
         comp = Composition()
-        comp.analyze_graph()
+        comp._analyze_graph()
 
     def test_singleton(self):
         comp = Composition()
         A = TransferMechanism(name='A')
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
 
@@ -158,7 +161,7 @@ class TestAnalyzeGraph:
         B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -171,7 +174,7 @@ class TestAnalyzeGraph:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A not in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -186,7 +189,7 @@ class TestAnalyzeGraph:
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B not in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert A not in comp.get_mechanisms_by_role(MechanismRole.TERMINAL)
@@ -209,7 +212,7 @@ class TestAnalyzeGraph:
         comp.add_projection(C, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
         comp.add_projection(D, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         assert A in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert D in comp.get_mechanisms_by_role(MechanismRole.ORIGIN)
         assert B in comp.get_mechanisms_by_role(MechanismRole.CYCLE)
@@ -225,7 +228,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {}
         feed_dict_terminal = {}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -238,7 +241,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -251,7 +254,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
@@ -264,7 +267,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
@@ -280,7 +283,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(C)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -296,7 +299,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(C)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -309,7 +312,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -322,7 +325,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -335,7 +338,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -348,7 +351,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         with pytest.raises(ValueError):
             comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -360,7 +363,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -373,7 +376,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A:  [0, 1, 2]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(TypeError):
@@ -386,7 +389,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {}
         comp.validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
@@ -398,7 +401,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {B: [[0]]}
         with pytest.raises(ValueError):
@@ -408,7 +411,7 @@ class TestValidateFeedDict:
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -417,7 +420,7 @@ class TestValidateFeedDict:
         comp = Composition()
         A = TransferMechanism(default_input_value=[0])
         comp.add_mechanism(A)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
@@ -429,7 +432,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -442,7 +445,7 @@ class TestValidateFeedDict:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
         feed_dict_terminal = {B: [[0]]}
         comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
@@ -699,7 +702,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = comp.run(
             scheduler=sched
@@ -713,7 +716,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -784,7 +787,7 @@ class TestRun:
         comp.add_mechanism(E)
         comp.add_projection(C, MappingProjection(sender=C, receiver=E), E)
         comp.add_projection(D, MappingProjection(sender=D, receiver=E), E)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [5],
                        B: [5]}
         sched = Scheduler(composition=comp)
@@ -805,7 +808,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -827,7 +830,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -845,7 +848,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender = A, receiver= B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -863,7 +866,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -880,7 +883,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [5]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -897,8 +900,8 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
-        inputs_dict = {A: [[5], [4] ,[3]]}
+        comp._analyze_graph()
+        inputs_dict = {A: [[5], [4],[3]]}
         sched = Scheduler(composition=comp)
         with pytest.raises(CompositionError) as error_text:
             output = comp.run(
@@ -916,7 +919,7 @@ class TestRun:
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-        comp.analyze_graph()
+        comp._analyze_graph()
         inputs_dict = {A: [[5], [4] ,[3]]}
         sched = Scheduler(composition=comp)
         output = comp.run(
@@ -925,3 +928,87 @@ class TestRun:
             num_trials=3
         )
         assert 75 == output[0][0]
+
+    # def test_multilayer_no_learning(self):
+    #     Input_Layer = TransferMechanism(
+    #         name='Input Layer',
+    #         function=Logistic,
+    #         default_input_value=np.zeros((2,)),
+    #     )
+    #
+    #     Hidden_Layer_1 = TransferMechanism(
+    #         name='Hidden Layer_1',
+    #         function=Logistic(),
+    #         default_input_value=np.zeros((5,)),
+    #     )
+    #
+    #     Hidden_Layer_2 = TransferMechanism(
+    #         name='Hidden Layer_2',
+    #         function=Logistic(),
+    #         default_input_value=[0, 0, 0, 0],
+    #     )
+    #
+    #     Output_Layer = TransferMechanism(
+    #         name='Output Layer',
+    #         function=Logistic,
+    #         default_input_value=[0, 0, 0],
+    #     )
+    #
+    #     Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+    #
+    #     Input_Weights = MappingProjection(
+    #         name='Input Weights',
+    #         matrix=Input_Weights_matrix,
+    #     )
+    #
+    #     comp = Composition()
+    #     comp.add_mechanism(Input_Layer)
+    #     comp.add_mechanism(Hidden_Layer_1)
+    #     comp.add_mechanism(Hidden_Layer_2)
+    #     comp.add_mechanism(Output_Layer)
+    #
+    #     comp.add_projection(Input_Layer, Input_Weights, Hidden_Layer_1)
+    #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
+    #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
+    #
+    #     comp._analyze_graph()
+    #     stim_list = {Input_Layer: [[-1, 30]]}
+    #     sched = Scheduler(composition=comp)
+    #     output = comp.run(
+    #         inputs=stim_list,
+    #         scheduler=sched,
+    #         num_trials=10
+    #     )
+    #
+    #     # p = process(
+    #     #     default_input_value=[0, 0],
+    #     #     pathway=[
+    #     #         Input_Layer,
+    #     #         # The following reference to Input_Weights is needed to use it in the pathway
+    #     #         #    since it's sender and receiver args are not specified in its declaration above
+    #     #         Input_Weights,
+    #     #         Hidden_Layer_1,
+    #     #         # No projection specification is needed here since the sender arg for Middle_Weights
+    #     #         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
+    #     #         # Middle_Weights,
+    #     #         Hidden_Layer_2,
+    #     #         # Output_Weights does not need to be listed for the same reason as Middle_Weights
+    #     #         # If Middle_Weights and/or Output_Weights is not declared above, then the process
+    #     #         #    will assign a default for missing projection
+    #     #         # Output_Weights,
+    #     #         Output_Layer
+    #     #     ],
+    #     #     clamp_input=SOFT_CLAMP,
+    #     #     target=[0, 0, 1]
+    #     #
+    #     #
+    #     # )
+    #     #
+    #     # s.run(
+    #     #     num_executions=10,
+    #     #     inputs=stim_list,
+    #     # )
+    #
+    #     expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
+    #
+    #     np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
