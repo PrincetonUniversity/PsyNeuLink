@@ -152,21 +152,21 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
     variable : value: default
-        the input to mechanism's ``function``.
+        the input to Mechanism's ``function``.
 
     time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
+        specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default IntegratorMechanism-<index>
-        the name of the mechanism.
-        Specified in the **name** argument of the constructor for the mechanism;
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
