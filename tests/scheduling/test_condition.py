@@ -5,10 +5,10 @@ from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.Condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny
+from PsyNeuLink.Scheduling.Condition import ConditionError, ConditionSet
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.composition import Composition
-from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny
-from PsyNeuLink.scheduling.condition import ConditionError, ConditionSet
 
 logger = logging.getLogger(__name__)
 

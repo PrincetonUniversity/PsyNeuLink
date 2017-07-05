@@ -3,7 +3,7 @@ import logging
 from collections import Iterable, OrderedDict
 from enum import Enum
 
-from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism

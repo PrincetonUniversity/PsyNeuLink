@@ -1,14 +1,14 @@
 import logging
 
-from PsyNeuLink.Components.System import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Functions.Function import Integrator, Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Functions.Function import Linear, Integrator
-from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import Any, AfterNCalls, AtPass, WhenFinished
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import DIFFUSION
 from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.Condition import AfterNCalls, Any, AtPass, WhenFinished
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 

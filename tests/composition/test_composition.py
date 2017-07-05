@@ -2,19 +2,19 @@ import logging
 
 from timeit import timeit
 
-import pytest
 import numpy as np
+import pytest
 
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
-from PsyNeuLink.scheduling.Scheduler import Scheduler
-from PsyNeuLink.scheduling.condition import EveryNCalls
-from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING_PROJECTION
+from PsyNeuLink.Scheduling.Condition import EveryNCalls
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 
 logger = logging.getLogger(__name__)
 
