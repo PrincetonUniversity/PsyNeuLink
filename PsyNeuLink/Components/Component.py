@@ -1248,13 +1248,10 @@ class Component(object):
         # ASSIGN SIZE OR SHAPE TO VARIABLE if specified
 
         # If size has been specified, make sure it doesn't conflict with variable arg or param specification
-        print("hasattr ?", hasattr(self, 'size'))
-        print(self.name)
-        print("---")
         if hasattr(self, 'size'):
 
             size = self.size
-
+            print(size)
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.variableClassDefault
@@ -1370,12 +1367,10 @@ class Component(object):
             # IMPLEMENTATION NOTE: if variable and size are both specified as arguments, they should/will be checked
             # against each other in Component.py, during _instantiate_defaults().
             # endregion
-
             print("\nsize before assignment: ", size)
             print("self.size before assignment: ", self.size)
             self.size = size
             print("self.size after assignment: ", self.size)
-            print("size should have been assigned")
 
             # MODIFIED 6/28/17 (CW): Because self.size was changed to always be a 1D array, the check below was changed
             # to a for loop iterating over each element of variable and size
@@ -1805,7 +1800,7 @@ class Component(object):
         :param dict (target_set) - repository of params that have been validated:
         :return none:
         """
-
+        print('hi')
         for param_name, param_value in request_set.items():
 
             # Check that param is in paramClassDefaults (if not, it is assumed to be invalid for this object)
