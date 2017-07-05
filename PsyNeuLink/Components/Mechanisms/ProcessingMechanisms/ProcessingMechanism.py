@@ -103,124 +103,12 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        # # region Fill in and infer variable and size if they aren't specified in args
-        # # if variable is None and size is None:
-        # #     variable = self.variableClassDefault
-        # # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
-        # # expected behavior when variable is None and size is None.
-        #
-        # def checkAndCastInt(x):
-        #     if not isinstance(x, numbers.Number):
-        #         raise ProcessingMechanismError("An element ({}) in size is not a number.".format(x))
-        #     if x < 1:
-        #         raise ProcessingMechanismError("An element ({}) in size is not a positive number.".format(x))
-        #     try:
-        #         int_x = int(x)
-        #     except:
-        #         raise ProcessingMechanismError(
-        #             "Failed to convert an element ({}) in size argument to an integer. size "
-        #             "should be a number, or iterable of numbers, which are integers or "
-        #             "can be converted to integers.".format(x))
-        #     if int_x != x:
-        #         if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-        #             warnings.warn("When an element ({}) in the size argument was cast to "
-        #                           "integer, its value changed to {}.".format(x, int_x))
-        #     return int_x
-        #
-        # # region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
-        # try:
-        #     if variable is not None:
-        #         variable = np.atleast_2d(variable)
-        #         if len(np.shape(variable)) > 2:  # number of dimensions of variable > 2
-        #             if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-        #                 warnings.warn("variable had more than two dimensions (had {} dimensions) "
-        #                               "so only the first element of its second-highest-numbered axis will be"
-        #                               " used".format(len(np.shape(variable))))
-        #             while len(np.shape(variable)) > 2:  # reduce the dimensions of variable
-        #                 variable = variable[0]
-        #
-        #         # 6/30/17 (CW): Previously, using variable or default_input_value to create input states of differing
-        #         # lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]]) caused a bug. The if statement below
-        #         # fixes this bug. This solution is ugly, though.
-        #         if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
-        #             allLists = True
-        #             for i in range(len(variable[0])):
-        #                 if isinstance(variable[0][i], list) or isinstance(variable[0][i], np.ndarray):
-        #                     variable[0][i] = np.array(variable[0][i])
-        #                 else:
-        #                     allLists = False
-        #                     break
-        #             if allLists:
-        #                 variable = variable[0]
-        # except:
-        #     raise ProcessingMechanismError("Failed to convert variable (of type {})"
-        #                                    " to a 2D array".format(type(variable)))
-        #
-        # try:
-        #     if size is not None:
-        #         size = np.atleast_1d(size)
-        #         if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-        #             if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-        #                 warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
-        #                               "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-        #             while len(np.shape(size)) > 1:  # reduce the dimensions of size
-        #                 size = size[0]
-        # except:
-        #     raise ProcessingMechanismError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-        #
-        # if size is not None:
-        #     size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-        # # except:
-        # #     raise ProcessingMechanismError("Failed to convert an element in size to an integer. (This "
-        # #                                    "should have been caught in _validate_params rather than in __init__")
-        # # endregion
-        #
-        # # region If variable is None, make it a 2D array of zeros each with length=size[i]
-        # # implementation note: for good coding practices, perhaps add setting to enable
-        # # easy change of variable's default value, which is an array of zeros at the moment
-        # if variable is None and size is not None:
-        #     try:
-        #         variable = []
-        #         for s in size:
-        #             variable.append(np.zeros(s))
-        #         variable = np.array(variable)
-        #     except:
-        #         raise ProcessingMechanismError("variable was not specified, but PsyNeuLink was unable to "
-        #                             "infer variable from the size argument, {}. size should be"
-        #                             " an integer or an array or list of integers. Either size or "
-        #                             "variable must be specified.".format(size))
-        # # endregion
-        #
-        # # region If size is None, then make it a 1D array of scalars with size[i] = length(variable[i])
-        # if size is None and variable is not None:
-        #     size = []
-        #     try:
-        #         for input_vector in variable:
-        #             size.append(len(input_vector))
-        #         size = np.array(size)
-        #     except:
-        #         raise ProcessingMechanismError("size was not specified, but PsyNeuLink was unable to infer size from "
-        #                             "the variable argument, {}. variable can be an array,"
-        #                             " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-        #                             " variable must be specified.".format(variable))
-        # # endregion
-        #
-        # # region If length(size) = 1 and variable is not None, then expand size to length(variable)
-        # if size is not None and variable is not None:
-        #     if len(size) == 1 and len(variable) > 1:
-        #         new_size = np.empty(len(variable))
-        #         new_size.fill(size[0])
-        #         size = new_size
-        # # endregion
-        #
-        # # IMPLEMENTATION NOTE: if variable and size are both specified as arguments, they should/will be checked
-        # # against each other in Component.py, during _instantiate_defaults().
-        # # endregion
-
         self.variableClassDefault = variable  # should this line be here? Ask Kristin
-
+        print("hasattr(self, 'size') before: ", hasattr(self, 'size'))
+        print("hasattr(self, 'name'): ", hasattr(self, 'name'))
         params = self._assign_args_to_param_dicts(params=params,
                                                   size=size)
+        print("hasattr(self, 'size') after: ", hasattr(self, 'size'))
 
         super().__init__(variable=variable,
                          input_states=input_states,

@@ -254,7 +254,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         or a python function that takes a 2d array with two items and returns a 1d array of the same length
         as the two input items.
 
-\    value : 1d np.array
+    value : 1d np.array
         the result of the comparison carried out by the `function <ComparatorMechanism.function>`.
 
     output_state : OutputState

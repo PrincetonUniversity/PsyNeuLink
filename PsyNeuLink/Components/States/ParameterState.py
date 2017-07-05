@@ -526,6 +526,8 @@ def _instantiate_parameter_states(owner, context=None):
 
     # TBI / IMPLEMENT: use specs to implement parameterStates below
 
+    print("INSTANTIATING PARAM STATES")
+
     owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
     # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
@@ -542,7 +544,9 @@ def _instantiate_parameter_states(owner, context=None):
         owner.user_params
     except AttributeError:
         return
-
+    if hasattr(owner, 'size'):
+        print("owner {} has size {} at line 546".format(owner, owner.size))
+    print("user_params_for_instantiation: ", owner.user_params_for_instantiation.items())
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
