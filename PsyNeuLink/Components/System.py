@@ -189,26 +189,6 @@ assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning b
 details of formatting input specifications).
 
 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-FROM PROCESS -- INTEGRATE INTO INPUT AND INITIALIZATION (ABOVE) AND/OR PROCESSING (BELOW)
-By default, the  input value is presented only once.  If the `ORIGIN` Mechanism is
-executed again in the same `PASS` of execution (e.g., if it appears again in the pathway, or receives recurrent
-projections), the input is not presented again. However, the input can be "clamped" on using the **clamp_input**
-argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed,
-each subsequent Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a
-`MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
-executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
-(last one in the pathway) is assigned as the output of the Process.  If `learning <Process_Learning>` has been
-specified for the Process or any of the projections in its `pathway`, then the relevant
-`LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to the corresponding
-Projections.
-.. note::
-   The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
-   projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
 .. _System_Execution_Processing:
 
 Processing
@@ -232,35 +212,38 @@ see `example <Condition_Recurrent_Example>`).
 Learning
 ~~~~~~~~
 The System will execute learning if it is specified for any `Process` in the System.  The System's `learning` attribute
-indicates whether learning is enabled for the System. Learning is executed for any components (individual Projections
-or Processes) for which it is specified after all `ProcessingMechanisms <ProcessingMechanism> in the
-System have been executed, but before the controller is executed (see below).  The learning components of a System
-can be displayed using the System's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
-sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+indicates whether learning is enabled for the System. `Learning <Process_Learning>` is executed for any components
+(individual Projections or Processes) for which it is specified after the `processing <System_Execution_Processing>` of
+each `TRIAL` has completed, but before the `controller is executed <System_Execution_Control>`.  The learning components
+of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
+:keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
+Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
 formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
-<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format,
-one target must be provided for each `TARGET` Mechanism (listed in its
-`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
-`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
+<System_Base.originMechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
+in its `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a `function
+format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
-   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
-   (see :ref:`LearningProjection_Targets`).
+   A `targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
+   `targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
+   (see `LearningProjection_Targets`).  Also, the changes to a System induced by learning are not applied until the
+   Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
+   of "lazy" updating).
+
 
 .. _System_Execution_Control:
 
 Control
 ~~~~~~~
-Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
-the OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute),
-and uses that information to set the value of parameters for those or other Mechanisms in the System, or their functions
-(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
-of a System can be displayed using the System's `show_graph` method with its **show_control** argument assigned
-:keyword:``True`. The controller is executed after all other Mechanisms in the System are executed, and sets the
-values of any parameters that it controls, which then take effect in the next round of execution.
+Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor the
+OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute), and uses
+that information to set the value of parameters for those or other Mechanisms in the System, or their functions (see
+`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored, and
+`ControlProjection_Creation` for specifying parameters to be controlled).  The control components of a System can be
+displayed using the System's `show_graph` method with its **show_control** argument assigned `True`.  The `controller`
+is executed after `processing <System_Execution_Processing>` and `learning <System_Execution_Learning>` have completed
+for a `TRIAL`, and sets the values of any parameters that it controls, which then take effect in the next `TRIAL`.
 
 COMMENT:
    Examples

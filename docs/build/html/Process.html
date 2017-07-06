@@ -164,10 +164,10 @@
 Executing a Process executes all of its Mechanisms in the order in which they are listed in its <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute:
 a list of Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a
 Process, including to themselves.  However, a Process cannot involve any &#8220;branching&#8221; (that is, one-to-many or
-many-to-one projections); that must be done using a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. Mechanisms in a Process can also project to Mechanisms
+many-to-one Projections); that must be done using a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. Mechanisms in a Process can also project to Mechanisms
 in other Processes, but these will only have an effect if all of the Processes involved are members of the same
 <a class="reference internal" href="System.html"><span class="doc">System</span></a>. Projections between Mechanisms can be trained, by assigning <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to
-them. Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in
+them. Learning can also be specified for the entire Process, in which case all of the Projections among Mechanisms in
 the Process will be trained. Processes can be constructed and executed on their own.  More commonly, however,
 they are used to construct a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
 </div>
@@ -192,12 +192,10 @@ patterns;  that requires the use of a  <a class="reference internal" href="Syste
 <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>) to the input of another Mechanism (the Projection&#8217;s
 <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>). Specification of a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> requires, at the least, a list
 of Mechanisms.  These can be specified directly, or in a <strong>tuple</strong> that also contains a set of
-<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> and/or a <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase</span></a> specification (see
-<a class="reference internal" href="#process-mechanism-specification"><span class="std std-ref">below</span></a>). Projections between a pair of Mechanisms can be specified by
-interposing
-them in the list between the pair.  When no Projection appears between two adjacent Mechanisms in the pathway, and
-there is no otherwise specified Projection between them, PsyNeuLink assigns a default Projection. Specifying the
-components of a pathway is described in detail below.</p>
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> (see <a class="reference internal" href="#process-mechanism-specification"><span class="std std-ref">below</span></a>). Projections
+between a pair of Mechanisms can be specified by interposing them in the list between the pair.  When no Projection
+appears between two adjacent Mechanisms in the pathway, and there is no otherwise specified Projection between them,
+PsyNeuLink assigns a default Projection. Specifying the components of a pathway is described in detail below.</p>
 </div>
 <div class="section" id="mechanisms">
 <span id="process-mechanisms"></span><h3>Mechanisms<a class="headerlink" href="#mechanisms" title="Permalink to this headline">¶</a></h3>
@@ -213,20 +211,13 @@ of the <a class="reference internal" href="System.html#system-mechanisms"><span 
 to which it belongs are listed in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">Processes</span></code></a> attribute.</p>
 </div>
 <p id="process-mechanism-specification">Mechanisms can be specified in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> argument of <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a> in one of two ways:  directly or
-in a <em>MechanismTuple</em>.  Direct  specification can use any supported format for <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">specifying a Mechanism</span></a>. Alternatively, Mechanisms can be specified using a MechanismTuple, the first item of which
-is the Mechanism, and the second and third (optional) items are a set of
-<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> and a <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase</span></a> specification. Runtime
-parameters are used for that Mechanism when the Process (or a System to which it belongs) is executed; otherwise
-they do not remain associated with the Mechanism.  The phase is used when the Mechanism is executed as part of a
-System, to specify when within the trial the Mechanism should be executed.  Either the runtime parameters or the phase
-can be omitted from a MechanismTuple (if the phase is omitted, the default value of 0 will be assigned).</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Irrespective of the format in which a Mechanism is specified in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, it&#8217;s entry is
-converted internally to a MechanismTuple, and listed in the Process&#8217; <a class="reference internal" href="System.html#System.System_Base.mechanisms" title="System.System_Base.mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">mechanisms</span></code></a> attribute.</p>
-</div>
-<p>The same Mechanism can appear more than once in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, as one means of generating a recurrent processing loop
-(another is to specify this in the projections &#8211; see below).</p>
+in a <em>MechanismTuple</em>.  Direct  specification can use any supported format for
+<a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">specifying a Mechanism</span></a>. Alternatively, Mechanisms can be specified using a MechanismTuple,
+the first item of which is the Mechanism, and the second is a set of
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a>. Runtime parameters are used for that Mechanism when the Process
+(or a System to which it belongs) is executed; otherwise they do not remain associated with the Mechanism. The same
+Mechanism can appear more than once in a <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, as one means of generating a recurrent processing loop (another
+is to specify this in the Projections &#8211; see below).</p>
 </div>
 <div class="section" id="projections">
 <span id="process-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
@@ -354,20 +345,28 @@ each layer.</span></p>
 </div>
 <div class="section" id="execution">
 <span id="process-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A Process can be executed as part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or on its own.  On its own, it can be executed by calling
-either its <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.  When a Process is
-executed, its <a class="reference internal" href="#Process.Process_Base.input" title="Process.Process_Base.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> is conveyed to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (first Mechanism in the pathway).  By default,
-the the input value is presented only once.  If the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism is executed again in the same <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> of execution
-(e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
-However, the input can be &#8220;clamped&#8221; on using the <a class="reference internal" href="#Process.Process_Base.clamp_input" title="Process.Process_Base.clamp_input"><code class="xref any py py-attr docutils literal"><span class="pre">clamp_input</span></code></a> argument of <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
-<a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.  After the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism is executed, each subsequent Mechanism in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> is
-executed in sequence.  If a Mechanism is specified in the pathway in a
+<p>A Process can be executed as part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> or on its own.  On its own, it is executed by calling
+either its <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  <code class="xref any docutils literal"><span class="pre">execute</span></code>
+executes the Process once (that is, it executes a single <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>);  <code class="xref any docutils literal"><span class="pre">run</span></code> allows a series of
+<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s to be executed. When a Process is executed, its <a class="reference internal" href="#Process.Process_Base.input" title="Process.Process_Base.input"><code class="xref any py py-attr docutils literal"><span class="pre">input</span></code></a> is conveyed to the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (first
+Mechanism in the pathway).  By default, the the input is presented only once.  If the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism is
+executed again in the same <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> of execution (e.g., if it appears again in the pathway, or receives recurrent
+projections), the input is not presented again. However, the input can be &#8220;clamped&#8221; on using the <strong>clamp_input</strong>
+argument of <a class="reference internal" href="#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.  After the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism is executed,
+each subsequent Mechanism in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> is executed in sequence.  If a Mechanism is specified in the pathway in a
 <a class="reference internal" href="#process-mechanism-specification"><span class="std std-ref">MechanismTuple</span></a>, then the runtime parameters are applied and the Mechanism is
 executed using them (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for parameter specification).  Finally the output of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism
-(last one in the pathway) is assigned as the output of the Process.  If <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a> has been
-specified for the Process or any of the projections in its <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, then the relevant
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are executed. These calculate changes that will be made to the corresponding
-Projections.</p>
+(last one in the pathway) is assigned as the output of the Process.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Processes do not use a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>; each Mechanism is executed once, in the order listed in the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.
+To more precisely control the order of and/or any dependencies in the sequence of executions, the Process
+should be used to construct as <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and the System&#8217;s <code class="xref any docutils literal"><span class="pre">Scheduler</span></code> together with
+<code class="xref any docutils literal"><span class="pre">Conditions</span></code> used to construt a custom schedule.</p>
+</div>
+<p>If <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a> has been specified for the Process or any of the projections in its <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>,
+then the relevant <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are executed. These calculate changes that will be made to
+the corresponding Projections.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
@@ -376,8 +375,7 @@ projections are next executed; see <span class="xref std std-ref">Lazy Evaluatio
 <p class="rubric">Examples</p>
 <p><em>Specification of Mechanisms in a pathway:</em>  The first Mechanism is specified as a reference to an instance,
 the second as a default instance of a Mechanism type, and the third in MechanismTuple format (specifying a reference
-to a Mechanism that should receive some_params at runtime; note: the phase is omitted and so will be assigned the
-default value of 0):</p>
+to a Mechanism that should receive some_params at runtime:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">mechanism_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="n">mechanism_2</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
 <span class="n">some_params</span> <span class="o">=</span> <span class="p">{</span><span class="n">PARAMETER_STATE_PARAMS</span><span class="p">:{</span><span class="n">THRESHOLD</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span><span class="n">NOISE</span><span class="p">:</span><span class="mf">0.1</span><span class="p">}}</span>
@@ -463,7 +461,7 @@ in a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.Tim
 </li>
 <li><strong>default_projection_matrix</strong> (<em>keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,</em>) &#8211; the type of matrix used for default projections (see <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>).</li>
 <li><strong>learning</strong> (<em>Optional[LearningProjection spec]</em>) &#8211; implements <code class="xref any docutils literal"><span class="pre">learning</span></code> for all eligible projections in the Process.</li>
-<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_rate" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
+<li><strong>learning_rate</strong> (<em>float : None</em>) &#8211; set the learning rate for all Mechanisms in the Process (see <a class="reference internal" href="Function.html#Function.Reinforcement.learning_rate" title="Function.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional
 information).</li>
 <li><strong>target</strong> (<em>List or ndarray : default ndarray of zeroes</em>) &#8211; the value assigned as the TARGET input for the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to which the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the
 Process projects (and assigned as its <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism; used for <a class="reference internal" href="#process-learning"><span class="std std-ref">learning</span></a>).
@@ -507,13 +505,10 @@ They should be instantiated using the <a class="reference internal" href="#Proce
 <code class="descname">pathway</code><a class="headerlink" href="#Process.Process_Base.pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[(Mechanism, dict, int), (Projection, LearningProjection spec, None), (Mechanism, dict, int)...]</em> &#8211; specifies the list of Mechanisms that are executed (in the order specified) when the Process executes.
 Entries are alternating tuples specifying Mechanisms and projections.  For Mechanism tuples, the dict specifies
-a set of <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> to use for execution of the Mechanism,
-and the int specifies the <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase</span></a> in which the Mechanism should be executed when the
-Process to which it belongs is executed by a System. For Projection tuples, the LearningProjection
-specification can be a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> object, the class or the <code class="xref any docutils literal"><span class="pre">LEARNING_PROJECTION</span></code> keyword (which
-specifies a default instance) or the constructor for a LearningProjection (including parameters).  The second
-and third items of Mechanism tuples, and the second item of Projection tuples are optional and therefore may
-be <code class="xref any docutils literal"><span class="pre">None</span></code>. The third item of Projection tuples is currently not used and is always <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+a set of <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">runtime parameters</span></a> to use for execution of the Mechanism. For
+Projection tuples, the LearningProjection specification can be a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> object, the class or the
+<code class="xref any docutils literal"><span class="pre">LEARNING_PROJECTION</span></code> keyword (which specifies a default instance) or the constructor for a LearningProjection
+(including parameters).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The value of this attribute is constructed from the <a class="reference internal" href="#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> argument of the <a class="reference internal" href="#Process.process" title="Process.process"><code class="xref py py-func docutils literal"><span class="pre">process()</span></code></a>
@@ -651,12 +646,6 @@ methods that are also used for Systems.</p>
 <dt id="Process.Process_Base.systems">
 <code class="descname">systems</code><a class="headerlink" href="#Process.Process_Base.systems" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>List[System]</em> &#8211;   a list of the Systems to which the Process belongs.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Process.Process_Base.numPhases">
-<code class="descname">numPhases</code><a class="headerlink" href="#Process.Process_Base.numPhases" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : default 1</em> &#8211;   the number of ref:<a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phases</span></a> for the Process.</p>
 </dd></dl>
 
 <dl class="attribute">
