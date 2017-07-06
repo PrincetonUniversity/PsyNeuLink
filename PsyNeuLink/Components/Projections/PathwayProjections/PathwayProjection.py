@@ -14,15 +14,10 @@
 Overview
 --------
 
-ModulatoryProjections allow information to be passed between mechanisms.  A projection takes its input from the
-`outputState <OutputState>` of one mechanism (its `sender <Projection.sender>`), and does whatever conversion is
-needed to transmit that information to the `inputState <InputState>` of another mechanism (its
-`receiver <Projection.receiver>`).  There are three types of projections that serve difference purposes:
-
-* `MappingProjection`
-    XXXX.
-..
-
+PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
+`OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is needed to transmit
+that information to the `InputState` of another Mechanism (its `receiver <Projection.receiver>`).  The primary
+type of PathwayProjection is a `MappingProjection`.
 
 .. _Projection_Creation:
 

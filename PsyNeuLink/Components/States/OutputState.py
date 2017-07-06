@@ -130,7 +130,7 @@ Most types of mechanisms have a `standard_output_states` class attribute, that c
 outputStates relevant to that type of mechanism (for example, the TransferMechanism class has outputStates for 
 calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as 
 attributes of a class with the name <ABBREVIATED_CLASS_NAME>_OUTPUT>.  For example, the TransferMechanism class 
-defines `TRANSFER_OUTPUT`, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_DEV that are the names of 
+defines `TRANSFER_OUTPUT`, with attributes MEAN, MEDIAN, VARIANCE and STANDARD_DEVIATION that are the names of
 predefined outputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of outputStates specified for a TransferMechanism object, as in the example below:: 
 
@@ -297,7 +297,7 @@ SEQUENTIAL = 'SEQUENTIAL'
 # OUTPUT_MEDIAN = {NAME:MEDIAN,
 #                    CALCULATE:lambda x: np.median(x)}
 #
-# OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEV,
+# OUTPUT_STAND_DEVIATION = {NAME:STANDARD_DEVIATION,
 #                           CALCULATE:lambda x: np.std(x)}
 #
 # OUTPUT_VARIANCE = {NAME:VARIANCE,
@@ -309,7 +309,7 @@ class OUTPUTS():
     RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
-    STANDARD_DEV=STANDARD_DEV
+    STANDARD_DEVIATION=STANDARD_DEVIATION
     VARIANCE=VARIANCE
 
 standard_output_states = [{NAME: RESULT},
@@ -317,7 +317,7 @@ standard_output_states = [{NAME: RESULT},
                            CALCULATE:lambda x: np.mean(x)},
                           {NAME:MEDIAN,
                            CALCULATE:lambda x: np.median(x)},
-                          {NAME:STANDARD_DEV,
+                          {NAME:STANDARD_DEVIATION,
                            CALCULATE:lambda x: np.std(x)},
                           {NAME:VARIANCE,
                            CALCULATE:lambda x: np.var(x)}]

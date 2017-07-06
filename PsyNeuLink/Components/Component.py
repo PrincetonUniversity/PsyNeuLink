@@ -227,30 +227,26 @@ COMMENT
 
 .. _Component_Assign_Params:
 
-* **assign_params** - the `assign_params` method is used to assign the value of one or more parameters of a
-  Component.  Each parameter is specified as an entry in a dict in the **request_set** argument;
-  parameters for the Component's function are specified as entries in a FUNCTION_PARAMS dict within
-  **request_set** dict.
-
-* **reset_params** - the `reset_params` method is used to reset the value of all user_params to their default
-  (paramClass
-execute
-
+* **assign_params** - assign the value of one or more parameters of a Component.  Each parameter is specified
+  as an entry in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` in the **request_set**
+  argument;  parameters for the Component's `function <Component.function>` are specified as entries in a
+  *FUNCTION_PARAMS* dict within **request_set** dict.
+..
+* **reset_params** - reset the value of all user_params to a set of default values as specified in its **mode**
+  argument, using a value of `ResetMode <Component_ResetMode>`.
 
 .. _Component_Execution:
 
 Execution
-~~~~~~~~~
+---------
 
 Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
 
-COMMENT:
-   INCLUDE IN DEVELOPERS' MANUAL
-    .. _Component_Class_Reference:
 
-    Class Reference
-    ---------------
-COMMENT
+.. _Component_Class_Reference:
+
+Class Reference
+---------------
 
 COMMENT:
 
@@ -281,6 +277,28 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 class ResetMode(Enum):
+    """
+
+    .. _Component_ResetMode:
+
+    ResetModes used for **reset_params**:
+
+    .. _CURRENT_TO_INSTANCE_DEFAULTS:
+
+    *CURRENT_TO_INSTANCE_DEFAULTS*
+      • resets all paramsCurrent values to paramInstanceDefaults values.
+
+    .. _INSTANCE_TO_CLASS:
+
+    *INSTANCE_TO_CLASS*
+      • resets all paramInstanceDefaults values to paramClassDefaults values.
+
+    .. _ALL_TO_CLASS_DEFAULTS:
+
+    *ALL_TO_CLASS_DEFAULTS*
+      • resets all paramsCurrent and paramInstanceDefaults values to paramClassDefafults values
+
+    """
     CURRENT_TO_INSTANCE_DEFAULTS = 0
     INSTANCE_TO_CLASS = 1
     ALL_TO_CLASS_DEFAULTS = 2
@@ -614,6 +632,7 @@ class Component(object):
         self.recording = False
         # Used by run to store return value of execute
         self.results = []
+
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 

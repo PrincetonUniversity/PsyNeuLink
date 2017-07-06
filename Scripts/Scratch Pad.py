@@ -42,30 +42,33 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 import numpy as np
 
-# SIMPLE NN EXAMPLE:
+#region SIMPLE NN EXAMPLE:
 
-# input_layer = TransferMechanism(size=5)
-# hidden_layer = TransferMechanism(size=2, function=Logistic)
-# output_layer = TransferMechanism(size=5, function=Logistic)
-input_layer = TransferMechanism(default_input_value=[0,0,0,0,0])
-hidden_layer = TransferMechanism(default_input_value=[0,0], function=Logistic)
-output_layer = TransferMechanism(default_input_value=[0,0,0,0,0], function=Logistic)
-# my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
-my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+# print("SIMPLE NN EXAMPLE")
+# # input_layer = TransferMechanism(size=5)
+# # hidden_layer = TransferMechanism(size=2, function=Logistic)
+# # output_layer = TransferMechanism(size=5, function=Logistic)
+# input_layer = TransferMechanism(default_input_value=[0,0,0,0,0])
+# hidden_layer = TransferMechanism(default_input_value=[0,0], function=Logistic)
+# output_layer = TransferMechanism(default_input_value=[0,0,0,0,0], function=Logistic)
+# # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+# my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+#
+# # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
+# my_system = system(processes=[my_process])
+# my_system.show_graph(show_learning=True, direction='TB')
+# # MappingProjection(sender=output_layer,
+# #                   receiver=hidden_layer,
+# #                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
+# # print(output_layer.execute([2,2,2,2,2]))
+#
+# # print(process.execute([2,2,2,2,2]))
 
-# my_system = system(processes=[my_process], targets=[0,0,0,0,0])
-my_system = system(processes=[my_process])
-my_system.show_graph(show_learning=True, direction='TB')
-# MappingProjection(sender=output_layer,
-#                   receiver=hidden_layer,
-#                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
-# print(output_layer.execute([2,2,2,2,2]))
+#endregion
 
-# print(process.execute([2,2,2,2,2]))
+#region SIMPLE STROOP EXAMPLE:
 
-
-# # SIMPLE STROOP EXAMPLE:
-
+# print("SIMPLE NN EXAMPLE")
 # VERSION 1
 # colors_input_layer = TransferMechanism(default_input_value=[0,0],
 #                                        function=Logistic,
@@ -103,8 +106,8 @@ my_system.show_graph(show_learning=True, direction='TB')
 # my_simple_Stroop.show_graph(direction='LR')
 # print(my_simple_Stroop.run(inputs=[-1, 1], targets=[-1, 1]))
 
+#endregion
 
-#f
 #region TEST whether function attribute assignment is used and "sticks"
 
 # my_mech = IntegratorMechanism()
@@ -763,15 +766,16 @@ my_system.show_graph(show_learning=True, direction='TB')
 
 # region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# # print("TEST RecurrentTransferMechanism / LCA")
-# # my_auto = LCA(
-# #         size=3,
-# #         output_states=[LCA_OUTPUT.RESULT,
-# #                        LCA_OUTPUT.ENTROPY,
-# #                        LCA_OUTPUT.ENERGY,
-# #                        LCA_OUTPUT.MAX_VS_AVG]
-# #         # inhibition
-# # )
+# print("TEST RecurrentTransferMechanism / LCA")
+#
+# my_auto = LCA(
+#         size=3,
+#         output_states=[LCA_OUTPUT.RESULT,
+#                        LCA_OUTPUT.ENTROPY,
+#                        LCA_OUTPUT.ENERGY,
+#                        LCA_OUTPUT.MAX_VS_AVG]
+#         # inhibition
+# )
 #
 # # my_auto = RecurrentTransferMechanism(
 # #         default_input_value=[0,0,0],

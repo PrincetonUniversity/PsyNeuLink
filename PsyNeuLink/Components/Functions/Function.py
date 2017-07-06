@@ -3318,7 +3318,8 @@ class SimpleIntegrator(
 
     Integrate current value of `variable <SimpleIntegrator.variable>` with its prior value:
 
-    `previous_value <SimpleIntegrator.previous_value>` + `rate <SimpleIntegrator.rate>` *`variable <variable.SimpleIntegrator.variable>` +
+    `previous_value <SimpleIntegrator.previous_value>` + \
+    `rate <SimpleIntegrator.rate>` *`variable <variable.SimpleIntegrator.variable>` + \
     `noise <SimpleIntegrator.noise>`;
 
     Arguments
@@ -5410,7 +5411,7 @@ class NormalDist(DistributionFunction):
         self._check_args(variable=variable, params=params, context=context)
 
         mean = self.paramsCurrent[DIST_MEAN]
-        standard_dev = self.paramsCurrent[STANDARD_DEV]
+        standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
 
         result = standard_dev * np.random.normal() + mean
 

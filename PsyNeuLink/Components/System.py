@@ -31,10 +31,11 @@
 Overview
 --------
 
-A System is a collection of `Processes <Process>` that are executed together.  Executing a System executes all of the
-`Mechanisms <Mechanism>` in its Processes in a structured order.  `Projections <Projection>` between Mechanisms in
-different Processes within the System are permitted, as are recurrent Projections, but Projections from Mechanisms
-in other Systems are ignored (PsyNeuLink does not support ESP).  A System can include two types of Mechanisms:
+A System is a `Composition` that is a collection of `Processes <Process>` all of which are executed together.
+Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
+`Projections <Projection>` between Mechanisms in different Processes within the System are permitted,
+as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
+support ESP).  A System can include two types of Mechanisms:
 
 * `ProcessingMechanism`
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
@@ -110,11 +111,7 @@ and/or the role they play in a System:
 
     `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values;
 
-<<<<<<< HEAD
     `LEARNING`: monitors the value of another Mechanism for use in learning;
-=======
-    `LEARNING`: monitors the value of another mechanism for use in learning;
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
     `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` Mechanism of a Process
 
@@ -276,8 +273,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOpti
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -677,13 +674,9 @@ class System_Base(System):
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-<<<<<<< HEAD
     learning_mechanisms : MechanismList)
         contains all `LearningMechanism <LearningMechanism>` in the System.
-=======
-    monitoringMechanisms : MechanismList)
-        contains all `LEARNING` mechanisms in the system (used for learning).
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
+
         COMMENT:
             based on _learning_mechs)
         COMMENT
@@ -830,6 +823,7 @@ class System_Base(System):
                          name=self.name,
                          prefs=prefs,
                          context=context)
+
         self._execution_id = None
 
         # Get/assign controller
@@ -2524,11 +2518,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL:number of phases required to execute all Mechanisms in the system
 
-<<<<<<< HEAD
             LEARNING_MECHANISMS:list of `LearningMechanisms <LearningMechanism>`
-=======
-            LEARNING_MECHANISMS:list of LEARNING mechanisms
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
             TARGET:list of `TARGET` Mechanisms
 

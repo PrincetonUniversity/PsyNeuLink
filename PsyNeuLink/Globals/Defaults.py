@@ -12,10 +12,11 @@
 This is an attempt to show the value of defaultControlAllocation:  :py:print:`Defaults.defaultControlAllocation`
 """
 
-from enum import Enum
 import numpy as np
 
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from enum import Enum
+
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 MPI_IMPLEMENTATION = False
 

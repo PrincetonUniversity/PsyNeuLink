@@ -1,4 +1,5 @@
 import numpy as np
+
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Logistic
@@ -8,7 +9,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.TimeScale import CentralClock
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 
 def test_gating():

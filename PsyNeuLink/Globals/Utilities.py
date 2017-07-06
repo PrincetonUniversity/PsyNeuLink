@@ -74,17 +74,18 @@ import warnings
 # THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
 warnings.filterwarnings("error")
 
+import inspect
 import numbers
 import numpy as np
+import typecheck as tc
+
 from enum import EnumMeta
 from enum import IntEnum
-import typecheck as tc
-import inspect
 
 from PsyNeuLink.Globals.Defaults import *
 from PsyNeuLink.Globals.Keywords import *
 
-from PsyNeuLink.Globals.TimeScale import *
+from PsyNeuLink.Scheduling.TimeScale import *
 
 
 class UtilitiesError(Exception):
@@ -637,7 +638,7 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import UserDict, OrderedDict
+from collections import OrderedDict, UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__
@@ -668,7 +669,7 @@ from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
-    
+
     Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
 
     Supports:
