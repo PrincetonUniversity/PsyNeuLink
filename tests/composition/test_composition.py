@@ -925,6 +925,41 @@ class TestRun:
         )
         assert 75 == output[0][0]
 
+    def test_execute_composition(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp._analyze_graph()
+        inputs_dict = {A: 3}
+        sched = Scheduler(composition=comp)
+        output = comp.execute(
+            inputs=inputs_dict,
+            scheduler_processing=sched
+        )
+        assert 75 == output[0][0]
+
+
+
+
+            # when self.sched is ready:
+    # def test_run_default_scheduler(self):
+    #     comp = Composition()
+    #     A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+    #     B = TransferMechanism(function=Linear(slope=5.0))
+    #     comp.add_mechanism(A)
+    #     comp.add_mechanism(B)
+    #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+    #     comp._analyze_graph()
+    #     inputs_dict = {A: [[5], [4], [3]]}
+    #     output = comp.run(
+    #         inputs=inputs_dict,
+    #         num_trials=3
+    #     )
+    #     assert 75 == output[0][0]
+
     # def test_multilayer_no_learning(self):
     #     Input_Layer = TransferMechanism(
     #         name='Input Layer',
