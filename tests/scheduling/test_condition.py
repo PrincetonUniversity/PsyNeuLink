@@ -674,9 +674,6 @@ class TestConditionSet:
         s1 = Scheduler(comp)
         s2 = Scheduler(comp)
 
-        print(s1)
-        print(s2)
-
         cs = ConditionSet(s1)
         cs.add_condition(A, Always())
         cs.add_condition(B, Always())
@@ -690,9 +687,3 @@ class TestConditionSet:
         assert cs.scheduler is s2
         for owner, cond in cs.conditions.items():
             assert cond.scheduler is s2
-
-    def test_copy(self):
-        pass
-
-    def test_deepcopy(self):
-        pass
