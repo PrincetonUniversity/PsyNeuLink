@@ -2,6 +2,9 @@ Composition
 ===========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
+
+   System
+   Process
 
 .. automodule:: Composition

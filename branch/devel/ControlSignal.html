@@ -85,18 +85,28 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ControlSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -127,6 +137,8 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
           <li><a href="State.html">State</a> &raquo;</li>
       
           <li><a href="ModulatorySignal.html">ModulatorySignal</a> &raquo;</li>
@@ -145,290 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-ModulatorySignals.ControlSignal">
-<span id="controlsignal"></span><h1>ControlSignal<a class="headerlink" href="#module-ModulatorySignals.ControlSignal" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>, specialized for use with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> and a
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>, to modify the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <code class="xref any docutils literal"><span class="pre">function</span></code>, that in turn
-controls the <code class="xref any docutils literal"><span class="pre">value</span></code> of that Mechanism. A ControlSignal receives an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the
-ControlMechanism to which it belongs, and uses that to compute an <code class="xref any docutils literal"><span class="pre">intensity</span></code> that is assigned as the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ControlProjection.  The ControlProjection conveys its value to
-the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <code class="xref any docutils literal"><span class="pre">function</span></code>, which uses that value
-to <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">control</span></a> the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
-calculates a <code class="xref any docutils literal"><span class="pre">cost</span></code>, based on its <code class="xref any docutils literal"><span class="pre">intensity</span></code> and/or its time course, that is used by the ControlMechanism to adapt
-its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
-</div>
-<div class="section" id="creating-a-controlsignal">
-<span id="controlsignal-creation"></span><h2>Creating a ControlSignal<a class="headerlink" href="#creating-a-controlsignal" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
-is <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified for control</span></a> and the mechanism belongs to a system for which
-an <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> is the <code class="xref any docutils literal"><span class="pre">controller</span></code>.  ControlSignals can also be specified in the <strong>control_signals</strong>
-argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>.  Although a ControlSignal can be created directly using its
-constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an outputState</span></a>), this is neither
-necessary nor advisable, as a ControlSignal has dedicated components and requirements for configuration that must be
-met for it to function properly.</p>
-<div class="section" id="specifying-controlsignals">
-<span id="controlsignal-specification"></span><h3>Specifying ControlSignals<a class="headerlink" href="#specifying-controlsignals" title="Permalink to this headline">¶</a></h3>
-<p>When a ControlSignal is specified in context (e.g., the <strong>control_signals</strong> argument of the constructor for a
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, the specification can take any of the following forms:</p>
-<blockquote>
-<div><ul class="simple">
-<li>a <em>ParameterState</em> of the Mechanism to which the parameter belongs;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li>a <em>tuple</em>, with the <em>name</em> of the parameter as its 1st item. and the <em>mechanism</em> to which it belongs as the 2nd;
-note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-but precludes specification of any <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">parameters</span></a> for the ControlSignal.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
-<li><p class="first">a <em>specification dictionary</em>, that must contain at least the following two entries:
-* <em>NAME</em>:str - a string that is the name of the parameter to be controlled;
-* <em>MECHANISM</em>:Mechanism - the Mechanism to which the parameter belongs;</p>
-<blockquote>
-<div><p>(note: the Mechanism itself should be specified even if the parameter belongs to its function).</p>
-</div></blockquote>
-<p>The dictionary can also contain entries for any other ControlSignal attributes to be specified
-(e.g., a MODULATION and/or an ALLOCATION_SAMPLES entry; see <a class="reference internal" href="#controlsignal-structure"><span class="std std-ref">below</span></a> for a
-description of ControlSignal attributes).</p>
-</li>
-</ul>
-</div></blockquote>
-</div>
-</div>
-<div class="section" id="structure">
-<span id="controlsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is owned by an <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, and associated with a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> that projects to the
-<a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> associated with the parameter to be controlled.  A ControlSignal has the following
-primary attributes:</p>
-<ul class="simple" id="controlsignal-modulation">
-<li><code class="xref any docutils literal"><span class="pre">modulation</span></code> : determines how the ControlProjection is used by the ParameterState to
-which it projects to modify its value (see <code class="xref any docutils literal"><span class="pre">ModulatorySignals</span></code> for an
-explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
-is set to the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of the ControlMechanism to which the
-ControlSignal belongs;  this the is same for all of the ControlSignals belonging to that ControlMechanism.
-However, the <code class="xref any docutils literal"><span class="pre">modulation</span></code> can be specified individually for a ControlSignal using a
-specification dictionary where the ControlSignal is specified, as described <a class="reference internal" href="#controlsignal-specification"><span class="std std-ref">above</span></a>.
-The <code class="xref any docutils literal"><span class="pre">modulation</span></code> value of a ControlSignal is used by all of the
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> that project from that ControlSignal.</li>
-</ul>
-<ul class="simple" id="controlsignal-allocation">
-<li><a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>: assigned to the ControlSignal by the ControlMechanism to which it belongs, and converted to its
-<code class="xref any docutils literal"><span class="pre">intensity</span></code> by its <code class="xref any docutils literal"><span class="pre">function</span></code>. Its value corresponds to the current round of execution of
-the ControlMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be
-accessed using the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">last_allocation</span></code> attribute.</li>
-</ul>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">allocation_samples</span></code>:  list of the allocation values to be sampled if the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which the
-ControlSignal belongs determines its <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> by sampling.</li>
-</ul>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">function</span></code>: converts the ControlSignal&#8217;s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> to its <code class="xref any docutils literal"><span class="pre">intensity</span></code>.  By default this
-is an identity function (<code class="xref std std-keyword docutils literal"><span class="pre">Linear(slope=1,</span> <span class="pre">intercept=0))</span></code>), that simpy uses the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> as the
-<code class="xref any docutils literal"><span class="pre">intensity</span></code>.  However, <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> can be assigned another <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any other function that
-takes and returns a scalar value or 1d array.</li>
-</ul>
-<ul class="simple" id="controlsignal-intensity">
-<li><code class="xref any docutils literal"><span class="pre">intensity</span></code>:  the result of the ControlSignal`s <code class="xref any docutils literal"><span class="pre">function</span></code> applied to its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>,
-and used to modify the value of the parameter for which the ControlSignal is responsible.  Its value corresponds
-to the current round of execution of the ControlMechanism to which the ControlSignal belongs.  The value in the
-previous round of execution can be accessed using the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">lastIntensity</span></code> attribute.</li>
-</ul>
-<ul id="controlsignal-costs">
-<li><p class="first"><em>Costs</em>. A ControlSignal has three <strong>cost attributes</strong>, the values of which are calculated from its <code class="xref any docutils literal"><span class="pre">intensity</span></code> to
-determine the total cost.  Each of these is calculated using a corresponding <strong>cost function</strong>.  Each of these
-functions can be customized, and the first three can be <a class="reference internal" href="#controlsignal-toggle-costs"><span class="std std-ref">enabled or disabled</span></a>:</p>
-<blockquote>
-<div><ul class="simple" id="controlsignal-cost-functions">
-<li><code class="xref any docutils literal"><span class="pre">intensity_cost</span></code>, calculated by the <code class="xref any docutils literal"><span class="pre">intensity_cost_function</span></code> based on the current <code class="xref any docutils literal"><span class="pre">intensity</span></code> of the
-ControlSignal.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">adjustment_cost</span></code>, calculated by the <code class="xref any docutils literal"><span class="pre">adjustment_cost_function</span></code> based on a change in the ControlSignal&#8217;s
-<code class="xref any docutils literal"><span class="pre">intensity</span></code> from its last value.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">duration_cost</span></code>, calculated by the <code class="xref any docutils literal"><span class="pre">duration_cost_function</span></code> based on an integral of the the ControlSignal&#8217;s
-<code class="xref any docutils literal"><span class="pre">cost</span></code>.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">cost</span></code>, calculated by the <code class="xref any docutils literal"><span class="pre">cost_combination_function</span></code> that combines the results of any cost functions that are
-enabled (as described in the following section).</li>
-</ul>
-<p id="controlsignal-toggle-costs"><em>Enabling and Disabling Cost Functions</em>.  Any of the cost functions (except the <code class="xref any docutils literal"><span class="pre">cost_combination_function</span></code>) can
-be enabled or disabled using the <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function" title="ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function"><code class="xref any py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a> method to turn it <code class="xref any docutils literal"><span class="pre">ON</span></code> or <a class="reference internal" href="Log.html#Log.LogLevel.OFF" title="Log.LogLevel.OFF"><code class="xref any py py-attr docutils literal"><span class="pre">OFF</span></code></a>. If it is disabled, that
-component of the cost is not included in the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">cost</span></code> attribute.  A cost function  can  also be
-permanently disabled for the ControlSignal by assigning it&#8217;s attribute <code class="xref any docutils literal"><span class="pre">None</span></code>.  If a cost function is permanently
-disabled for a ControlSignal, it cannot be re-enabled using <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function" title="ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function"><code class="xref any py py-meth docutils literal"><span class="pre">toggle_cost_function</span></code></a>.</p>
-</div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The <a class="reference internal" href="OutputState.html#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref any py py-attr docutils literal"><span class="pre">index</span></code></a> and <a class="reference internal" href="OutputState.html#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a>
-attributes of a ControlSignal are automatically assigned and should not be modified.</p>
-</div>
-</li>
-</ul>
-</div>
-<div class="section" id="execution">
-<span id="controlsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED</dt>
-<dd>REFERENCE DISCUSSION IN ParameterState</dd>
-</dl>
-<p>A ControlSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which it belongs is
-executed.  When this occurs, the ControlMechanism provides the ControlSignal with an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>, that is used by its
-<code class="xref any docutils literal"><span class="pre">function</span></code> to compute its <code class="xref any docutils literal"><span class="pre">intensity</span></code> for that round of execution.  The <code class="xref any docutils literal"><span class="pre">intensity</span></code> is used
-by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> to which it
-projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
-being controlled.  The ControlSignal&#8217;s <a class="reference internal" href="#controlsignal-cost-functions"><span class="std std-ref">intensity`is also used by its `cost functions</span></a>
-to compute its <code class="xref any docutils literal"><span class="pre">cost</span></code> attribute. That is used, along with its <code class="xref any docutils literal"><span class="pre">allocation_samples</span></code> attribute, by the ControlMechanism
-to evaluate the current <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code>, and (possibly) adjust the
-ControlSignal&#8217;s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the next round of execution.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The changes in a parameter in response to the execution of a ControlMechanism are not applied until the mechanism
-with the parameter being controlled is next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of
-&#8220;lazy&#8221; updating).</p>
-</div>
-<p class="rubric" id="controlsignal-examples">Examples</p>
-<p><em>Modulate the parameter of a Mechanism&#8217;s &lt;function &lt;Mechanism.function&gt;</em>.  The following example assigns a
-ControlSignal to the <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter of the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function used by a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">)))</span>
-</pre></div>
-</div>
-<p>Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
-with a ControlProjection that projects to the TransferMechanism&#8217;s <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>
-parameter of its <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function.  The default value of a ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">modulation</span></code>
-attribute is Modulation.MULTIPLICATIVE, so that it will multiply</p>
-<p>of the Control
-When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
-gain parameter.</p>
-<p><em>Specify attributes of a ControlSignal</em>.  Ordinarily, ControlSignals modify the <em>MULTIPLICATIVE_PARAM</em> of a
-ParameterState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to modulate the parameter&#8217;s value.
-In the example below, this is changed by specifying the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of a
-<a class="reference internal" href="#"><span class="doc">ControlSignal</span></a> for the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.  It is changed so that the value of the
-ControlSignal adds to, rather than multiplies, the value of the <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the Logistic
-function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
-</pre></div>
-</div>
-<p>Note that the <a class="reference internal" href="Function.html#Function.ModulationParam" title="Function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a> specified for the <a class="reference internal" href="#"><span class="doc">ControlSignal</span></a> pertains to the function of a <em>ParameterState</em>
-for the <em>Logistic</em> Function (in this case, its <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter), and <em>not</em> the Logistic function
-itself &#8211; that is, the value of the ControlSignal is added to the <em>gain parameter</em> of the Logistic function,
-<em>not</em> its <a class="reference internal" href="Function.html#Function.Logistic.variable" title="Function.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).</p>
-<p><em>Modulate the parameters of several Mechanisms in a System</em>.  This shows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">My_Mech_A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">My_Mech_B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">,</span>
-                             <span class="n">output_states</span><span class="o">=</span><span class="p">[</span><span class="n">RESULT</span><span class="p">,</span> <span class="n">MEAN</span><span class="p">])</span>
-<span class="n">Process_A</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_A</span><span class="p">])</span>
-<span class="n">Process_B</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_B</span><span class="p">])</span>
-
-<span class="n">My_System</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">Process_A</span><span class="p">,</span> <span class="n">Process_B</span><span class="p">],</span>
-                                <span class="n">monitor_for_control</span><span class="o">=</span><span class="p">[</span><span class="n">My_Mech_A</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESULT</span><span class="p">],</span>
-                                                     <span class="n">My_Mech_B</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">MEAN</span><span class="p">]],</span>
-                                <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">My_Mech_A</span><span class="p">),</span>
-                                                 <span class="p">{</span><span class="n">NAME</span><span class="p">:</span> <span class="n">INTERCEPT</span><span class="p">,</span>
-                                                  <span class="n">MECHANISM</span><span class="p">:</span> <span class="n">My_Mech_B</span><span class="p">,</span>
-                                                  <span class="n">MODULATION</span><span class="p">:</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">}],</span>
-                   <span class="n">name</span><span class="o">=</span><span class="s1">&#39;My Test System&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="class-reference">
-<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="ModulatorySignals.ControlSignal.ControlSignalCostOptions">
-<em class="property">class </em><code class="descclassname">ModulatorySignals.ControlSignal.</code><code class="descname">ControlSignalCostOptions</code><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignalCostOptions" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="ModulatorySignals.ControlSignal.ControlSignal">
-<em class="property">class </em><code class="descclassname">ModulatorySignals.ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>A subclass of OutputState that represents the ControlSignal of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> provided to a
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="ControlMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.ControlMechanism" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism"><em>ControlMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which to assign the ControlSignal.</li>
-<li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the <code class="xref any docutils literal"><span class="pre">intensity</span></code> of the ControlSignal from its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</li>
-<li><strong>intensity_cost_function</strong> (<em>Optional[TransferFunction] : default Exponential</em>) &#8211; specifies the function used to calculate the contribution of the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">intensity</span></code> to its <code class="xref any docutils literal"><span class="pre">cost</span></code>.</li>
-<li><strong>adjustment_cost_function</strong> (<em>Optional[TransferFunction] : default Linear</em>) &#8211; specifies the function used to calculate the contribution of the change in the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">intensity</span></code>
-(from its <code class="xref any docutils literal"><span class="pre">lastIntensity</span></code> value) to its <code class="xref any docutils literal"><span class="pre">cost</span></code>.</li>
-<li><strong>duration_cost_function</strong> (<em>Optional[IntegratorFunction] : default Integrator</em>) &#8211; specifies the function used to calculate the contribution of the ControlSignal&#8217;s duration to its <code class="xref any docutils literal"><span class="pre">cost</span></code>.</li>
-<li><strong>cost_combination_function</strong> (function : default <a class="reference internal" href="Function.html#Function.Reduce" title="Function.Reduce"><code class="xref py py-class docutils literal"><span class="pre">Reduce(operation=SUM)</span></code></a>) &#8211; speciies the function used to combine the results of any cost functions that are enabled, the result of
-whihc is assigned as the ControlSignal&#8217;s <code class="xref any docutils literal"><span class="pre">cost</span></code>.</li>
-<li><strong>allocation_samples</strong> (<em>list : default range(0.1, 1, 0.1)</em>) &#8211; specifies the values used by <code class="xref any docutils literal"><span class="pre">ControlSignal's</span> <span class="pre">`ControlSignal.owner</span></code> to determine its
-<code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> (see <a class="reference internal" href="GatingSignal.html#controlsignal-execution"><span class="std std-ref">Execution</span></a>).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="ModulatorySignals.ControlSignal.ControlSignal.update">
-<code class="descname">update</code><span class="sig-paren">(</span><em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal.update" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adjust the control signal, based on the allocation value passed to it</p>
-<p>Computes new intensity and cost attributes from allocation</p>
-<dl class="docutils">
-<dt>Use self.function to assign intensity</dt>
-<dd><ul class="first last">
-<li><dl class="first docutils">
-<dt>if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):</dt>
-<dd><p class="first last">ignore self.function
-pass allocation (input to control_signal) along as its output</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-</dl>
-<p>Update cost
-Assign intensity to value of ControlSignal (done in setter property for value)</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>allocation</strong> &#8211; (single item list, [0-1])</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">(intensity)</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function">
-<code class="descname">toggle_cost_function</code><span class="sig-paren">(</span><em>cost_function_name</em>, <em>assignment=True</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal.toggle_cost_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Enables/disables use of a cost function.</p>
-<p><code class="docutils literal"><span class="pre">cost_function_name</span></code> should be a keyword (list under <a class="reference internal" href="ControlProjection.html#controlprojection-structure"><span class="std std-ref">Structure</span></a>).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="ModulatorySignals.ControlSignal.ControlSignal.get_costs">
-<code class="descname">get_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal.get_costs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return three-element list with the values of <code class="docutils literal"><span class="pre">intensity_cost</span></code>, <code class="docutils literal"><span class="pre">adjustment_cost</span></code> and <code class="docutils literal"><span class="pre">duration_cost</span></code></p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
+  <div class="section" id="controlsignal">
+<h1>ControlSignal<a class="headerlink" href="#controlsignal" title="Permalink to this headline">¶</a></h1>
 </div>
 
 

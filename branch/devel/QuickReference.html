@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -33,7 +33,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="next" title="Component" href="Component.html"/>
+        <link rel="prev" title="PsyNeuLink Documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -82,8 +84,20 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#conventions">Conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#psyneulink-objects">PsyNeuLink Objects</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#components">Components</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compositions">Compositions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging">Logging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#graphic-displays">Graphic Displays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preferences">Preferences</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
@@ -117,11 +131,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Conventions and Definitions</li>
+    <li>Quick Reference</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/ConventionsAndDefinitions.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/QuickReference.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -131,22 +145,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="conventions-and-definitions">
-<h1>Conventions and Definitions<a class="headerlink" href="#conventions-and-definitions" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="quick-reference">
+<h1>Quick Reference<a class="headerlink" href="#quick-reference" title="Permalink to this headline">¶</a></h1>
 <ul>
-<li><p class="first"><a class="reference internal" href="QuickReference.html#conventions"><span class="std std-ref">Conventions</span></a></p>
+<li><p class="first"><a class="reference internal" href="#conventions"><span class="std std-ref">Conventions</span></a></p>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="#definitions"><span class="std std-ref">Definitions</span></a></dt>
+<dt><a class="reference internal" href="#psyneulink-objects"><span class="std std-ref">PsyNeuLink Objects</span></a></dt>
 <dd><ul class="first last simple">
-<li><a class="reference internal" href="#definitions-components"><span class="std std-ref">Components</span></a></li>
-<li><a class="reference internal" href="#definitions-compositions"><span class="std std-ref">Compositions</span></a></li>
-<li><a class="reference internal" href="#definitions-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#quick-reference-components"><span class="std std-ref">Components</span></a></li>
+<li><a class="reference internal" href="#quick-reference-compositions"><span class="std std-ref">Compositions</span></a></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p class="first"><code class="xref any docutils literal"><span class="pre">Component_Hierarchy</span></code></p>
+<li><p class="first"><a class="reference internal" href="#quick-reference-execution"><span class="std std-ref">Execution</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#quick-reference-logging"><span class="std std-ref">Logging</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#quick-reference-graphic-displays"><span class="std std-ref">Graphic Displays</span></a></p>
+</li>
+<li><p class="first"><a class="reference internal" href="#quick-reference-preferences"><span class="std std-ref">Preferences</span></a></p>
 </li>
 </ul>
 <div class="section" id="conventions">
@@ -177,12 +196,12 @@ appear in a <code class="xref any docutils literal"><span class="pre">small</spa
 </ul>
 </div></blockquote>
 </div>
-<div class="section" id="definitions">
-<span id="id2"></span><h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="psyneulink-objects">
+<span id="id2"></span><h2>PsyNeuLink Objects<a class="headerlink" href="#psyneulink-objects" title="Permalink to this headline">¶</a></h2>
 <p>The two primary types of objects in PsyNeuLink are Components (basic building blocks)
 and Compositions (combinations of Components that implement a model).</p>
 <div class="section" id="components">
-<span id="definitions-components"></span><h3><a class="reference internal" href="Component.html"><span class="doc">Components</span></a><a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
+<span id="quick-reference-components"></span><h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <p>Components are objects that perform a specific function. Every Component has a:</p>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">function</span></code> - performs the core computation of the Component;</li>
@@ -192,13 +211,15 @@ and Compositions (combinations of Components that implement a model).</p>
 <li><code class="xref any docutils literal"><span class="pre">value</span></code> - represents the result of the Component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>;</li>
 <li><code class="xref any docutils literal"><span class="pre">name</span></code> - string label that uniquely identifies the Component.</li>
 </ul>
-<p>Two types of Components are the basic building blocks of PsyNeuLink models, Mechanisms and Projections:</p>
+<p>There are four types of Components in PsyNeuLink:  Mechanisms, Projections, States and Functions, as described below:</p>
 <ul>
-<li><p class="first"><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> - takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a></dt>
+<dd><p class="first">A Mechanism takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
 uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to combine and/or transform these in some way, and makes the output
 available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
 ProcessingMechansms and AdapativeMechanisms:</p>
-<ul>
+<ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
 <dd><p class="first last">Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
@@ -235,18 +256,24 @@ of other Mechanisms.</p>
 </dl>
 </li>
 </ul>
+</dd>
+</dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.</dt>
+<dt><a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a></dt>
 <dd><p class="first">A Projection takes the output of a Mechanism, and transforms it as necessary to provide it
 as the input to another Component. There are two types of Projections, that correspond to the two types of
 Mechanisms:</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a></dt>
-<dd><p class="first last">Used in conjunction with ProcessingMechanisms to convey information along processing pathway.
-The primary type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, that provides the output of one
-ProcessingMechanism as the input to another.</p>
+<dd><p class="first">Used in conjunction with ProcessingMechanisms to convey information along a processing pathway.
+There is currently one on type of PathwayProjection:</p>
+<ul class="last simple">
+<li><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
+Takses the value of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of one Mechanism, and converts it as necessary to provide it as
+the variable for the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another Mechanism.</li>
+</ul>
 </dd>
 </dl>
 </li>
@@ -255,7 +282,7 @@ ProcessingMechanism as the input to another.</p>
 <dd><p class="first">Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
 Takes the output of an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> and uses it to modify the input, output or parameter of
 another Component.  There are three types of ModulatoryProjections, corresponding to the three
-types of AdaptiveMechanisms:</p>
+types of AdaptiveMechanisms (see <code class="xref any docutils literal"><span class="pre">figure</span></code>):</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
@@ -288,19 +315,20 @@ ProcessingMechanism</p>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="State.html"><span class="doc">States</span></a></dt>
-<dd><p class="first">A State is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
-of its function, or its output(s).   There are three types of States, one for each type of representation,
-each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
-(see <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Anatomy_Figure</span></code>):</p>
+<dd><p class="first">A State is a Component that belongs to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> and is used to represent it input(s), the parameter(s)
+of its function, or its output(s).   There are three types of States, one for each type of representation
+(see <code class="xref any docutils literal"><span class="pre">figure</span></code>), each of which can receive and/or send <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a>
+and/or <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (see <code class="xref any docutils literal"><span class="pre">figure</span></code>):</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></dt>
-<dd><p class="first last">Represents a set of inputs to the Mechanism.
+<dd><p class="first">Represents a set of inputs to the Mechanism.
 Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result (its <code class="xref any docutils literal"><span class="pre">value</span></code>)as an item of the Mechanism&#8217;s
-<code class="xref any docutils literal"><span class="pre">variable</span></code>.  It can also receive one or more modulatory
-<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State&#8217;s function, and thereby the
-State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+<code class="xref any docutils literal"><span class="pre">variable</span></code>.  It can also receive one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that</p>
+<blockquote class="last">
+<div><p>modify the parameter(s) of the State&#8217;s function, and thereby the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+</div></blockquote>
 </dd>
 </dl>
 </li>
@@ -308,9 +336,9 @@ State&#8217;s <code class="xref any docutils literal"><span class="pre">value</s
 <dt><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></dt>
 <dd><p class="first last">Represents a parameter of the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  Takes the assigned value of the
 parameter as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result
-as the value of the parameter of the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> that is used when the Mechanism
-executes.  It can also receive one or more modulatory <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>,
-that modify the parameter(s) of the State&#8217;s function, and thereby the value of the parameter of the Mechanism&#8217;s
+as the value of the parameter used by the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> when the Mechanism
+executes.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> that modify parameter(s)
+of the State&#8217;s function, and thereby the value of the parameters used by the Mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </dd>
 </dl>
@@ -320,8 +348,8 @@ that modify the parameter(s) of the State&#8217;s function, and thereby the valu
 <dd><p class="first last">Represents an output of the Mechanism.
 Takes an item of the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for the State&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code>, assigns the result as the State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>, and provides that
-to one or more efferent PathwayProjections.  It can also receive one or more modulatory
-<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the State&#8217;s function, and thereby the
+to one or more efferent PathwayProjections.  It can also receive one or more
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify parameter(s) of the State&#8217;s function, and thereby the
 State&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
 </dd>
 </dl>
@@ -330,25 +358,48 @@ State&#8217;s <code class="xref any docutils literal"><span class="pre">value</s
 </dd>
 </dl>
 </li>
-<li><p class="first"><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> - the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> has a Function
-object, that wraps an executable function together with a definition of its parameters, and modularizes it so that
-it can be swapped out for another (compatible) one, or replaced with a customized one.  PsyNeuLink provides a
-library of standard Functions (e.g. for linear, non-linear, and matrix transformation; integration, and evaluation and
-comparison), as well as a standard Application Programmers Interface (API) that can be used to &#8220;wrap&#8221; any function
-that can be written in or called from Python.</p>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a></dt>
+<dd><p class="first last">A Function is the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> has a Function
+object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
+This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
+to modulation by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, and for Functions to be swapped out for one another
+or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
+non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
+Interface (API) or creating new Functions that can be used to &#8220;wrap&#8221; any callable object that can be written in or
+called from Python.</p>
+</dd>
+</dl>
 </li>
 </ul>
 </div>
 <div class="section" id="compositions">
-<span id="definitions-compositions"></span><h3>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h3>
-<p>Compositions are combinations of Components that make up a PsyNeuLink model.  There are two types of Compositions:
-Processes and Systems.</p>
-<p><a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.  A Process is the simplest type of Composition: a linear chain of Mechanisms connected by
-Projections.  A Process may have recurrent Projections, but it does not have any branches.</p>
-<p><a class="reference internal" href="System.html"><span class="doc">System</span></a>.  A system is a collection of Processes that can have any configuration, and is represented by a graph in
-which each node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.  Systems are generally constructed from Processes,
-but they can also be constructed directly from Mechanisms and Projections.</p>
-<p id="definitions-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
+<span id="quick-reference-compositions"></span><h3>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h3>
+<p>Compositions are combinations of Components that make up a PsyNeuLink model.  There are two primary types of
+Compositions:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="Process.html"><span class="doc">Processes</span></a></dt>
+<dd><p class="first last">One or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> connected in a linear chain by <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.  A Process can
+have recurrent Projections, but it cannot have any branches.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="System.html"><span class="doc">System</span></a></dt>
+<dd><dl class="first last docutils">
+<dt>A collection of Processes that can have any configuration, and is represented by a graph in which each node is</dt>
+<dd><p class="first last">a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.  Systems are generally constructed from Processes, but they
+can also be constructed directly from Mechanisms and Projections.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p id="quick-reference-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
 <div class="figure" id="id3">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a
@@ -357,23 +408,44 @@ that converge on a common final ProcessingMechanism (see <code class="xref any d
 complete example, that includes Components responsible for learning, control and gating).</span></p>
 </div>
 </div>
-<div class="section" id="execution">
-<span id="definitions-execution"></span><h3>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h3>
-<p>PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is run.  Compositions are run iteratively in <code class="xref any docutils literal"><span class="pre">rounds</span> <span class="pre">of</span> <span class="pre">execution</span></code>, in which each Mechanism in the
-composition is given an opportunity to execute.  By default, each Mechanism in a Composition executes exactly once
-per round of execution.  However, a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to specify one or more conditions for each Mechanism
-that determine whether it runs in a given round of execution.  This can be used to determine when a Mechanism begins
-and/or ends executing, how many times it executes or the frequency with which it exeuctes relative to other
-Mechanisms, as well as dependencies among Mechanisms (e.g., that one begins only when another has completed).</p>
-<p>Since Mechanisms can implement any function, Projections insure that they can &#8220;communicate&#8221; with
-each other seamlessly, and a Scheduler can be used to specify any pattern of execution among Mechanisms in a
-Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis, and/or time
-scales of operation, composing heterogeneous Components into a single integrated system.  This affords modelers the
-flexibility to commit each Component of their model to a form of processing and/or level of analysis that is
-appropriate for that Component, while providing the opportunity to test and explore how they interact with one
-another in a single system.</p>
 </div>
+<div class="section" id="execution">
+<span id="quick-reference-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
+they belong is run.  Compositions are run iteratively in rounds of execution referred to as <code class="xref any docutils literal"><span class="pre">PASS</span></code> es, in which each
+Mechanism in the composition is given an opportunity to execute.  By default, each Mechanism in a Composition
+executes exactly once per <code class="xref any docutils literal"><span class="pre">PASS</span></code>.  However, a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to specify one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>
+for each Mechanism that determine whether it runs in a given <code class="xref any docutils literal"><span class="pre">PASS</span></code>.  This can be used to determine when
+a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
+to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
+in PsyNeuLink.  Using a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> and a combination of <code class="xref any docutils literal"><span class="pre">pre-speciffied</span></code> and
+<code class="xref any docutils literal"><span class="pre">custom</span></code> Conditions, any pattern of execution can be configured that is logically possible.</p>
+</div>
+<div class="section" id="logging">
+<span id="quick-reference-logging"></span><h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink supports logging of any attribute of any Component or Composition at any <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> of execution.
+Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
+the attribute, and its value is a record of the attribute&#8217;s value recorded at the frequency specified by the
+<a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
+<code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> of the <code class="xref any docutils literal"><span class="pre">RUN</span></code>), and the second is the value of the attribute at that <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code>.</p>
+</div>
+<div class="section" id="graphic-displays">
+<span id="quick-reference-graphic-displays"></span><h2>Graphic Displays<a class="headerlink" href="#graphic-displays" title="Permalink to this headline">¶</a></h2>
+<p>At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> can be displayed
+using its <code class="xref any docutils literal"><span class="pre">show_graph</span></code> method.  This can be used to display just the processing components (i.e.,
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, or to include
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and/or control &lt;ControlMechanism&gt;` components.  A future release may include
+a more complete graphical user interface.</p>
+</div>
+<div class="section" id="preferences">
+<span id="quick-reference-preferences"></span><h2>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h2>
+<p>PsyNeuLink supports a hierarchical system of <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for all Components and Compositions.  Every object has its
+own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
+to default to the value of any of its parent classes for that preference (e.g., an instance of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> can be assigned
+its own preference for reporting, or use the default value for all`ProcessingMechanisms &lt;ProcessingMechanism&gt;`,
+all <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, or all <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  There are preferences for reporting to the
+console during execution, logging, warnings, and validation (useful for debugging, but suppressable for efficiency of
+execution).</p>
 </div>
 </div>
 
@@ -381,6 +453,15 @@ another in a single system.</p>
            </div>
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Component.html" class="btn btn-neutral float-right" title="Component" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="PsyNeuLink Documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

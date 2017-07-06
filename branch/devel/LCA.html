@@ -86,42 +86,29 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">LCA</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-an-lca">Creating an LCA</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">LCA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -152,6 +139,8 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
           <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
       
           <li><a href="ProcessingMechanism.html">Processing Mechanism</a> &raquo;</li>
@@ -173,269 +162,6 @@
   <div class="section" id="lca">
 <h1>LCA<a class="headerlink" href="#lca" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-</div>
-<span class="target" id="module-ProcessingMechanisms.LCA"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>An LCA is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layered leaky competitive accumulator
-network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
-inhibitory weights have the same value, specified by its <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.inhibition" title="ProcessingMechanisms.LCA.LCA.inhibition"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition</span></code></a> parameter.  In the case that
-it has two elements, the value of its <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.inhibition" title="ProcessingMechanisms.LCA.LCA.inhibition"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition</span></code></a> parameter is equal to its <a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> parameter, and the two are of sufficient magnitude, it implements a close
-approximation of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> mechanism
-(see <a class="reference external" href="http://psycnet.apa.org/?&amp;fa=main.doiLanding&amp;doi=10.1037/0033-295X.108.3.550">Usher &amp; McClelland, 2001;</a> and
-<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>).</p>
-</div>
-<div class="section" id="creating-an-lca">
-<span id="recurrent-transfer-creation"></span><h2>Creating an LCA<a class="headerlink" href="#creating-an-lca" title="Permalink to this headline">¶</a></h2>
-<p>An LCA can be created directly by calling its constructor, or using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function
-and specifying LCA as its <strong>mech_spec</strong> argument.  The set of mutually inhibitory connections are implemented as a
-recurrent <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> with a <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of uniform negative weights specified by
-the <strong>inhibition</strong> argument of the LCA&#8217;s constructor.  The default format of its <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.variable" title="ProcessingMechanisms.LCA.LCA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and default
-values of its <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.inhibition" title="ProcessingMechanisms.LCA.LCA.inhibition"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition</span></code></a>, <a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> and
-<a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.noise" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameters implement an approximation of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>.</p>
-</div>
-<div class="section" id="structure">
-<span id="lca-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The distinguishing feature of an LCA is its <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of uniform negative weights.  It also has, in
-addition to its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> (which contains the current value of the elements of the
-LCA) and the outputStates of a RecurrentTransferMechanism, it has two additional outputStates: MAX_VS_NEXT and
-MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with the currently highest value relative
-to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the
-LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG
-contains the index of the LCA element with the greatest value, and the difference between its value and the average
-of all the others.  For an LCA with only two elements, MAX_VS_NEXT implements a close approximation of the
-<code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>
-(see <a class="reference external" href="http://psycnet.apa.org/?&amp;fa=main.doiLanding&amp;doi=10.1037/0033-295X.108.3.550">Usher &amp; McClelland, 2001;</a> and
-<a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>).
-For an LCA with more than two elements, MAX_VS_NEXT and
-MAX_VS_AVERAGE implement threshold approximations with different properties
-(see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249605000891">McMillen &amp; Holmes, 2006</a>).</p>
-</div>
-<div class="section" id="execution">
-<span id="lca-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>The execution of an LCA is identical to that of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
-</div>
-<div class="section" id="class-reference">
-<span id="lca-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="ProcessingMechanisms.LCA.LCA">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.LCA.</code><code class="descname">LCA</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Logistic</em>, <em>initial_value=None</em>, <em>decay=1.0</em>, <em>inhibition=1.0</em>, <em>noise=0.1</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TIME_STEP</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements LCA subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_input_value</strong> (<em>number, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the input to the mechanism to use if none is provided in a call to its
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
-also serves as a template to specify the length of <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
-<a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
-of the mechanism.</li>
-<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
-or a custom function.</li>
-<li><strong>inhibition</strong> (<em>number : default 1.0</em>) &#8211; specifies the magnitude of the (uniform) negative weights used for the
-<a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.recurrent_projection" title="ProcessingMechanisms.LCA.LCA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</li>
-<li><strong>decay</strong> (<em>number : default 1.0</em>) &#8211; specifies the amount by which to decrement its <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.previous_input" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a>
-in each round of execution.</li>
-<li><strong>initial_value</strong> (<em>value, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the starting value for time-averaged input (only relevant if
-<a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is not 1.0).
-<code class="xref py py-data docutils literal"><span class="pre">Transfer_DEFAULT_BIAS</span></code></li>
-<li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; a stochastically-sampled value added to the result of the <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
-if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-if it is a function, it must return a scalar value.</li>
-<li><strong>time_constant</strong> (<em>float : default 1.0</em>) &#8211; <p>the time constant for exponential time averaging of input when the mechanism is executed with <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.time_scale" title="ProcessingMechanisms.LCA.LCA.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
-set to <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
-</pre></div>
-</div>
-</li>
-<li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; specifies the allowable range for the result of <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
-the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
-any element of the result that exceeds the specified minimum or maximum value is set to the value of
-<a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed using the <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref any docutils literal"><span class="pre">TRIAL</span></code> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
-This must be set to <code class="xref any docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code> for the <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>
-parameter to have an effect.</li>
-<li><strong>name</strong> (<em>str : default TransferMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</li>
-<li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
-<dt>context</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &#8216;&#8217;None&#8217;&#8216;</span><dd>string used for contextualization of instantiation, hierarchical calls, executions, etc.</dd>
-</dl>
-</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.variable">
-<code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value</em> &#8211; the input to mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.function" title="ProcessingMechanisms.LCA.LCA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.function">
-<code class="descname">function</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function</em> &#8211; the function used to transform the input.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; the <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.recurrent_projection" title="ProcessingMechanisms.LCA.LCA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the mechanism,
-with a uniform set of negative weights, the magnitude of which are determined by the
-<a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.inhibition" title="ProcessingMechanisms.LCA.LCA.inhibition"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition</span></code></a> attribute.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.recurrent_projection">
-<code class="descname">recurrent_projection</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.recurrent_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MappingProjection</em> &#8211; a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects from the mechanism&#8217;s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
-back to it <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.inhibition">
-<code class="descname">inhibition</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.inhibition" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number : default 1.0</em> &#8211; determines the magnitude of the (uniform) negative weights for the <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter
-of the <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.recurrent_projection" title="ProcessingMechanisms.LCA.LCA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.decay">
-<code class="descname">decay</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.decay" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default 1.0</em> &#8211; determines the amount by which to multiply the <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.previous_input" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> value
-in each round of execution (acts, in effect like the weight on a self-connection).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.initial_value">
-<code class="descname">initial_value</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.initial_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value, list or np.ndarray : Transfer_DEFAULT_BIAS</em> &#8211; determines the starting value for time-averaged input
-(only relevant if <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> parameter is not 1.0).
-<code class="xref py py-data docutils literal"><span class="pre">Transfer_DEFAULT_BIAS</span></code></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.noise">
-<code class="descname">noise</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or function : default 0.0</em> &#8211; a stochastically-sampled value added to the output of the <code class="xref any docutils literal"><span class="pre">function</span></code>:
-if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
-if it is a function, it must return a scalar value.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.time_constant">
-<code class="descname">time_constant</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.time_constant" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; the time constant for exponential time averaging of input
-when the mechanism is executed using the <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.range">
-<code class="descname">range</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.range" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Tuple[float, float]</em> &#8211; determines the allowable range of the result: the first value specifies the minimum allowable value
-and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-is set to the value of <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> it exceeds.  If <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-is <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is set by default to (0,1).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.previous_input">
-<code class="descname">previous_input</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.previous_input" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array of floats</em> &#8211; the value of the input on the previous round of execution, including the value of <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.recurrent_projection" title="ProcessingMechanisms.LCA.LCA.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.value">
-<code class="descname">value</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array [array(float64)]</em> &#8211; result of executing <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same value as fist item of
-<a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.output_values" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.outputStates">
-<code class="descname">outputStates</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.outputStates" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[str, OutputState]</em> &#8211; an OrderedDict with the following <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a>:
-* <code class="xref any docutils literal"><span class="pre">TRANSFER_RESULT</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the <strong>result</strong> of <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;
-* <code class="xref any docutils literal"><span class="pre">TRANSFER_MEAN</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the mean of the result;
-* <code class="xref any docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the variance of the result;
-* <code class="xref any docutils literal"><span class="pre">ENERGY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the energy of the result,</p>
-<blockquote>
-<div>calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENERGY metric;</div></blockquote>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">ENTROPY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the entropy of the result,
-calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENTROPY metric;
-note:  this is only present if the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
-(e.g., the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function);</li>
-<li><code class="xref any docutils literal"><span class="pre">MAX_VS_NEXT</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is a two element array: the first is the
-index of the element of RESULT with the highest value, and the second the difference between that
-and the next highest one in RESULT;</li>
-<li><code class="xref any docutils literal"><span class="pre">MAX_VS_AVG</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is a two element array: the first is the
-index of the element of RESULT with the highest value, and the second the difference between that
-and the average of the value of all its other elements;</li>
-</ul>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.output_values">
-<code class="descname">output_values</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64), float, float]</em> &#8211; a list with the following items:
-* <strong>result</strong> of the <a class="reference internal" href="#ProcessingMechanisms.LCA.LCA.function" title="ProcessingMechanisms.LCA.LCA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> calculation (value of TRANSFER_RESULT outputState);
-* <strong>mean</strong> of the result (<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of TRANSFER_MEAN outputState)
-* <strong>variance</strong> of the result (<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of TRANSFER_VARIANCE outputState);
-* <strong>energy</strong> of the result (<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of ENERGY outputState);
-* <strong>entropy</strong> of the result (if the ENTROPY outputState is present);
-* <strong>max_vs_next</strong> of the result (<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of MAX_VS_NEXT outputState);
-* <strong>max_vs_avg</strong> of the result (<code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of MAX_VS_AVG outputState).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.time_scale">
-<code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale</em> &#8211; specifies whether the mechanism is executed using the <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code> or <code class="xref any docutils literal"><span class="pre">TRIAL</span></code> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.name">
-<code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default TransferMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the projection;
-if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.LCA.LCA.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.LCA.LCA.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</p>
-</dd></dl>
-
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of LCA</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#ProcessingMechanisms.LCA.LCA" title="ProcessingMechanisms.LCA.LCA">LCA</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 </div>
 

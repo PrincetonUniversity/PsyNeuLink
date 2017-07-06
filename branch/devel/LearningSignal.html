@@ -86,45 +86,27 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">State</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">LearningSignal</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-learningsignal">Creating a LearningSignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">LearningSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#creating-a-modulatorysignal">Creating a ModulatorySignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -155,6 +137,8 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
           <li><a href="State.html">State</a> &raquo;</li>
       
           <li><a href="ModulatorySignal.html">ModulatorySignal</a> &raquo;</li>
@@ -173,155 +157,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-ModulatorySignals.LearningSignal">
-<span id="learningsignal"></span><h1>LearningSignal<a class="headerlink" href="#module-ModulatorySignals.LearningSignal" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A LearningSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>, that is specialized for use with a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> and a
-<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, to modify the parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  A LearningSignal receives an error signal
-from the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which it belongs, and uses that to compute a <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is assigned as the
-<a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.value" title="ModulatoryProjections.LearningProjection.LearningProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>. The LearningProjection conveys its value to a
-<a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of the projection being learned, which in turns uses that to modify the corresponding parameter.
-By default, the projection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the parameter is its &#8216;matrix &lt;MappingProjection.matrix&gt;`
-parameter, and the <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> is a matrix of weight changes that are added to MappingProjection&#8217;s
-<a class="reference internal" href="Function.html#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</p>
-</div>
-<div class="section" id="creating-a-learningsignal">
-<span id="learningsignal-creation"></span><h2>Creating a LearningSignal<a class="headerlink" href="#creating-a-learningsignal" title="Permalink to this headline">¶</a></h2>
-<p>A LearningSignal is created automatically whenever a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is
-<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">specified for learning</span></a> and the projection belongs to the same system as the
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.  LearningSignals can also be specified in the <strong>learning_signals</strong>
-argument of the constructor for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.  Although a LearningSignal can be created directly using its
-constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an `OutputState</span></a>), this is neither
-necessary nor advisable, as a LearningSignal has dedicated components and requirements for configuration that must be
-met for it to function properly.</p>
-<div class="section" id="specifying-learningsignals">
-<span id="learningsignal-specification"></span><h3>Specifying LearningSignals<a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
-<p>When a LearningSignal is specified in context (e.g., the <strong>learning_signals</strong> argument of the constructor for a
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, the specification can take any of the following forms:</p>
-<blockquote>
-<div><ul class="simple">
-<li>a <em>ParameterState</em> of the Projection to which the parameter belongs;</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li>a <em>Projection</em>, which must be either a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, or a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which the
-LearingSignal should send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  In both cases, it is assumed that the LearningProjection
-projects to the <em>MATRIX</em> ParameterState of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul class="simple">
-<li>a <em>tuple</em>, with the <em>name</em> of the parameter as its 1st item. and the <em>projection</em> to which it belongs as the 2nd;
-note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
-but precludes specification of any <a class="reference internal" href="#learningsignal-structure"><span class="std std-ref">parameters</span></a> for the LearningSignal.</li>
-</ul>
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<ul>
-<li><p class="first">a <em>specification dictionary</em>, that must contain at least the following two entries:
-* <em>NAME</em>:str - a string that is the name of the parameter to be controlled;
-* <em>PROJECTION</em>:Projection - the Projection to which the parameter belongs;</p>
-<blockquote>
-<div><p>(note: the Projection itself should be specified even if the parameter belongs to its function).</p>
-</div></blockquote>
-<p>The dictionary can also contain entries for any other LearningSignal attributes to be specified
-(e.g., a LEARNING_RATE entry; see <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">below</span></a> for a description of LearningSignal attributes).</p>
-</li>
-</ul>
-</div></blockquote>
-</div>
-</div>
-<div class="section" id="structure">
-<span id="learningsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A LearningSignal is owned by an <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and associated with one or more
-<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that project(s) to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterStates</span></a> associated with
-the parameter(s) to be learned.  A LearningSignal has the following primary attributes:</p>
-<ul class="simple" id="learningsignal-modulation">
-<li><code class="xref any docutils literal"><span class="pre">modulation</span></code> : determines how the LearningSignal&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> is
-used by the ParameterState(s) to which it projects to modify their value (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for an
-explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
-is set to the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of the LearningMechanism to which
-the LearningSignal belongs;  this the is same for all of the LearningSignals belonging to that LearningMechanism.
-However, the <code class="xref any docutils literal"><span class="pre">modulation</span></code> can be specified individually for a LearningSignal using a
-specification dictionary where the LearningSignal is specified, as described <code class="xref any docutils literal"><span class="pre">above</span></code>.
-The <code class="xref any docutils literal"><span class="pre">modulation</span></code> value of a LearningSignal is used by all of the
-<a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that project from that LearningSignal.</li>
-</ul>
-<ul id="learningsignal-learning-rate">
-<li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">learning_rate</span></code>:</dt>
-<dd><p class="first last">the learning rate for the LearningMechanism (used to specify the <code class="xref std std-keyword docutils literal"><span class="pre">learning_rate</span></code> parameter for its
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Specifiying this (or the learning_rate parameter of the
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> directly) supercedes any specification of a learning_rate for
-any <code class="xref any docutils literal"><span class="pre">process</span></code> and/or <code class="xref any docutils literal"><span class="pre">system</span></code> to which
-the LearningMechanism belongs.  The default is <code class="xref any docutils literal"><span class="pre">None</span></code>, in which case the LearingMechanism (and its
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) inherit the specification of the <code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for the process in which the LearningMechanism is being executed.
-If that is <code class="xref any docutils literal"><span class="pre">None</span></code>, then it inherits it from the system in which it is being executed.  If that is also <code class="xref any docutils literal"><span class="pre">None</span></code>,
-then it uses the default value assigned by its <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd>
-</dl>
-</li>
-</ul>
-<ul id="learningsignal-function">
-<li><p class="first"><code class="xref any docutils literal"><span class="pre">function</span></code>: converts the <code class="xref any docutils literal"><span class="pre">learning_signal</span></code> it receives
-from the LearningMechanism to which it belongs to its <code class="xref any docutils literal"><span class="pre">value</span></code>. By default this is an identity
-function (<code class="xref std std-keyword docutils literal"><span class="pre">Linear(slope=1,</span> <span class="pre">intercept=0))</span></code>), that simply uses the <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> as its
-<code class="xref any docutils literal"><span class="pre">value</span></code>.  However, <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> can be assigned another <code class="xref any docutils literal"><span class="pre">TransferFunction</span></code>, or any
-other function that takes a 2d array or matrix and returns a similar value.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The <a class="reference internal" href="OutputState.html#OutputState.OutputState.index" title="OutputState.OutputState.index"><code class="xref any py py-attr docutils literal"><span class="pre">index</span></code></a> and <a class="reference internal" href="OutputState.html#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a>
-attributes of a LearningSignal are automatically assigned and should not be modified.</p>
-</div>
-</li>
-</ul>
-</div>
-<div class="section" id="execution">
-<span id="learningsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A LearningSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which it belongs is
-executed.  When this occurs, the LearningMechanism provides the LearningSignal with an <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a>, that is used
-by its <code class="xref any docutils literal"><span class="pre">function</span></code> to compute its <code class="xref any docutils literal"><span class="pre">value</span></code> for that round of execution.  The <code class="xref any docutils literal"><span class="pre">intensity</span></code>
-That is used by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> to which it
-to which it projects. The paramemterState uses that value, in turn, to modify the value of the parameter of the
-projection or its function being learned.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The changes in a parameter in response to the execution of a LearningMechanism are not applied until the mechanism
-with the parameter being learned is next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of
-&#8220;lazy&#8221; updating).</p>
-</div>
-</div>
-<div class="section" id="class-reference">
-<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="ModulatorySignals.LearningSignal.LearningSignal">
-<em class="property">class </em><code class="descclassname">ModulatorySignals.LearningSignal.</code><code class="descname">LearningSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                learning_rate=None                                       params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.LearningSignal.LearningSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>A subclass of OutputState that represents the ControlSignal of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> provided to a
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="ControlMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.ControlMechanism" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism"><em>ControlMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which to assign the ControlSignal.</li>
-<li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the <code class="xref any docutils literal"><span class="pre">intensity</span></code> of the ControlSignal from its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</li>
-<li><strong>learning_rate</strong> (<em>float or None : default None</em>) &#8211; specifies the learning_rate for the LearningSignal&#8217;s <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>
-(see <code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for details).  If it is not specified, the
-<a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> of the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the LearningSignal
-belongs will be used.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
+  <div class="section" id="learningsignal">
+<h1>LearningSignal<a class="headerlink" href="#learningsignal" title="Permalink to this headline">¶</a></h1>
 </div>
 
 

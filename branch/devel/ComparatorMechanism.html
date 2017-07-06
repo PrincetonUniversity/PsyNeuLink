@@ -86,42 +86,29 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="DDM.html">DDM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="LCA.html">LCA</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ComparatorMechanism</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-comparatormechanism">Creating a ComparatorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
+<li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="LCA.html">LCA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ComparatorMechanism</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -152,6 +139,8 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
           <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
       
           <li><a href="ProcessingMechanism.html">Processing Mechanism</a> &raquo;</li>
@@ -173,174 +162,6 @@
   <div class="section" id="comparatormechanism">
 <h1>ComparatorMechanism<a class="headerlink" href="#comparatormechanism" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-</div>
-<span class="target" id="module-ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ComparatorMechanism is a subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that receives two inputs (a sample and a target), compares
-them using its <code class="xref any docutils literal"><span class="pre">function</span></code>, and generates as its output an
-<code class="xref any docutils literal"><span class="pre">error_signal</span></code> that is the discrepancy between them.</p>
-</div>
-<div class="section" id="creating-a-comparatormechanism">
-<span id="comparatormechanism-creation"></span><h2>Creating a ComparatorMechanism<a class="headerlink" href="#creating-a-comparatormechanism" title="Permalink to this headline">¶</a></h2>
-<p>ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
-<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a>.  A ComparatorMechanism can also be created directly by calling
-its constructor.  Its <strong>sample</strong> and <strong>target</strong> arguments are used to specify the outputStates that provide the
-sample and target inputs, respectively (see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_States</span></code> for details concerning their
-specification, which are special versions of an ObjectiveMechanism&#8217;s <strong>monitored_values</strong> argument).  When the
-ComparatorMechanism is created, two inputStates are created, one each for its sample and target inputs (and named,
-by default, <em>SAMPLE</em> and <em>TARGET</em>). Each is assigned a MappingProjection from the corresponding outputState specified
-in the <strong>sample</strong> and <strong>target</strong> arguments.</p>
-<p>It is important to recognize that the value of the <em>SAMPLE</em> and <em>TARGET</em> inputStates must have the same length and type,
-so that they can be compared using the ComparatorMechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  By default,
-they use the format of the outputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively,
-and the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to each uses an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.  Therefore, for the default configuration, the
-outputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments must have values of the same length and type.
-If these differ, the <strong>input_states</strong> argument can be used to explicitly specify the format of the ComparatorMechanism&#8217;s
-<em>SAMPLE</em> and <em>TARGET</em> inputStates, to insure they are compatible with one another (as well as to customize their
-names, if desired).  If the <strong>input_states</strong> argument is used, <em>both</em> the sample and target inputStates must be
-specified.  Any of the formats for <code class="xref any docutils literal"><span class="pre">specifying</span> <span class="pre">inputStates</span></code> can be used in the argument.
-If values are assigned for the inputStates, they must be of equal length and type.  Their types must be
-also be compatible with the value of the outputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments.  However,
-the length specified for an inputState can differ from its corresponding OutputState;  in that case, by default, the
-MappingProjection created uses a <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY</span></code> matrix.  Thus, outputStates of differing lengths can be mapped
-to the sample and target inputStates of a ComparatorMechanism (see the <a class="reference internal" href="#comparatormechanism-example"><span class="std std-ref">example</span></a> below),
-so long as the latter are of the same length.  If a projection other than a <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY</span></code> matrix is needed,
-this can be specified using the <em>PROJECTION</em> entry of a <code class="xref any docutils literal"><span class="pre">state</span> <span class="pre">specification</span> <span class="pre">dictionary</span></code>
-for the inputState in the <strong>input_states</strong> argument.</p>
-</div>
-<div class="section" id="structure">
-<span id="comparatormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ComparatorMechanism has two <code class="xref any docutils literal"><span class="pre">inputStates</span></code>, each of which receives a
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from a corresponding outputState specified in the <strong>sample</strong> and <strong>target</strong>
-arguments of its constructor.  The inputStates are listed in the mechanism&#8217;s
-<code class="xref any docutils literal"><span class="pre">input_states</span></code> attribute.  The outputStates from which they receive their
-projections (specified in the <strong>sample</strong> and <strong>target</strong> arguments) are listed in the mechanism&#8217;s
-<code class="xref any docutils literal"><span class="pre">sample</span></code> and <code class="xref any docutils literal"><span class="pre">target</span></code> attributes as well as in its <code class="xref any docutils literal"><span class="pre">monitored_values</span></code> attribute.
-The ComparatorMechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> compares the value of the sample and target
-inputStates.  By default, it uses a <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, assigning the sample inputState a
-<code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>1</em>, so that the
-sample is subtracted from the target.  However, the <code class="xref any docutils literal"><span class="pre">function</span></code> can be customized, so
-long as it is replaced with one that takes two arrays with the same format as its inputs, and generates a similar
-array as its result.  The result is assigned as the value of the Comparator mechanism&#8217;s <em>ERROR_SIGNAL</em>
-(<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) outputState.</p>
-</div>
-<div class="section" id="execution">
-<span id="comparatormechanism-function"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>When an ComparatorMechanism is executed, it updates its input_states with the values of the outputStates specified
-in its <strong>sample</strong> and <strong>target</strong> arguments, and then uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to
-compare these.  By default, the result is assigned as to the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <em>ERROR_SIGNAL</em>
-<code class="xref any docutils literal"><span class="pre">output_state</span></code>, and as the first item of the mechanism&#8217;s
-<code class="xref any docutils literal"><span class="pre">output_value</span></code> attribute.</p>
-<p class="rubric" id="comparatormechanism-example">Example</p>
-<p id="comparatormechanism-default-input-value-example"><em>Formatting inputState values</em></p>
-<p>The <strong>input_states</strong> argument can be used to specify a particular format for the SAMPLE and/or TARGET inputStates
-of a ComparatorMechanism.  This can be useful when one or both of these must be different than the format of the
-outputState(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For example, for <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, a ComparatorMechanism is used to monitor an action selection mechanism (the sample), and compare
-this with a reinforcement signal (the target).  In the example below, the action selection mechanism is a
-<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="Function.html#Function.SoftMax" title="Function.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a> function (and the <code class="xref any docutils literal"><span class="pre">PROB</span></code> as its output format) to select
-an action.  This generates a vector with a single non-zero value (the selected action). Because the output is a vector,
-specifying it as the ComparatorMechanism&#8217;s <strong>sample</strong> argument will generate a corresponding inputState with a vector
-as its value.  This will not match the reward signal specified in the ComparatorMechanism&#8217;s <strong>target</strong> argument, the
-value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
-TARGET inputStates in the <strong>input_states</strong> argument of the ComparatorMechanism&#8217;s constructor, as follows:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>my_action_selection_mech = TransferMechanism(size=5,</dt>
-<dd>function=SoftMax(output=PROB))</dd>
-</dl>
-<p>my_reward_mech = TransferMechanism(default_input_value = [0])</p>
-<dl class="docutils">
-<dt>my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,</dt>
-<dd>target=my_reward_mech,
-input_states = [[0],[0]])</dd>
-</dl>
-</div></blockquote>
-<p>Note that <code class="docutils literal"><span class="pre">my_action_selection_mechanism</span></code> is specified to take an array of length 5 as its input, and therefore
-generate one of the same length as its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary output</span></a>.  Since it is assigned as the <strong>sample</strong>
-of the ComparatorMechanism, by default this will create a <em>SAMPLE</em> inputState of length 5, that will not match the
-length of the <em>TARGET</em> inputState (which is 1).  This is taken care of, by specifying the <strong>input_states</strong> argument
-as an array with two single-value arrays (corresponding to the <em>SAMPLE</em> and <em>TARGET</em> inputStates). (In this
-example, the <strong>sample</strong> and <strong>target</strong> arguments are specified as mechanisms since, by default, each has only a single
-(<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) outputState, that will be used;  if either had more than one outputState, and
-one of those was desired, it would have had to be specified explicitly in the <strong>sample</strong> or <strong>target</strong> argument).</p>
-</div>
-<div class="section" id="class-reference">
-<span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>sample: &lt;typecheck.framework.optional object at 0x109de0b70&gt; = None, target: &lt;typecheck.framework.optional object at 0x109de0d30&gt; = None, input_states=['SAMPLE', 'TARGET'], function=(LinearCombination LinearCombination Function-7), output_states: &lt;typecheck.framework.optional object at 0x109de0eb8&gt; = ['error_signal', 'MSE'], size=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x109936048&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>ComparatorMechanism(                                        sample,                                                 target,                                                 input_states=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          input_states=[ERROR_SIGNAL]                             params=None,                                            name=None,                                              prefs=None)</p>
-<p>Implements the ComparatorMechanism subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.</p>
-<dl class="docutils">
-<dt>sample</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState, Mechanism, value, or string</span><dd>specifies the value to compare with the <code class="xref any docutils literal"><span class="pre">target</span></code> by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>target</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState, Mechanism, value, or string</span><dd>specifies the value with which the <code class="xref any docutils literal"><span class="pre">sample</span></code> is compared by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>input_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">List[InputState, value, str or dict] or Dict[]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default [SAMPLE, TARGET]</span><dd>specifies the names and/or formats to use for the values of the sample and target inputStates;
-by default they are named <em>SAMPLE</em> and <em>TARGET</em>, and their formats are match the value of the outputStates
-specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively.</dd>
-<dt>function: Function, function or method</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">default Distance(metric=DIFFERENCE)</span><dd>specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <code class="xref any docutils literal"><span class="pre">sample</span></code> with the <code class="xref any docutils literal"><span class="pre">target</span></code>.</dd>
-<dt>output_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">List[OutputState, value, str or dict] or Dict[]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default [ERROR_SIGNAL]</span><dd>specifies the outputStates for the mechanism;</dd>
-<dt>params</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Optional[Dict[param keyword, param value]]</span><dd>a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
-the dictionary override any assigned to those parameters in arguments of the
-constructor.</dd>
-<dt>name</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ComparatorMechanism-&lt;index&gt;</span><dd>a string used for the name of the mechanism.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</dd>
-<dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Optional[PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism.classPreferences]</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</dd>
-</dl>
-<dl class="docutils">
-<dt>sample</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>determines the value to compare with the <code class="xref any docutils literal"><span class="pre">target</span></code> by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>target</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>determines the value with which <code class="xref any docutils literal"><span class="pre">sample</span></code> is compared by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>input_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">ContentAddressableList[InputState, InputState]</span><dd>contains the two inputStates named, by default, <em>SAMPLE</em> and <em>TARGET</em>, each of which receives a
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the outputStates referenced by the <code class="xref any docutils literal"><span class="pre">sample</span></code> and <code class="xref any docutils literal"><span class="pre">target</span></code> attributes.</dd>
-<dt>function</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">CombinationFunction, function or method</span><dd>used to compare the <code class="xref any docutils literal"><span class="pre">sample</span></code> with the <code class="xref any docutils literal"><span class="pre">target</span></code>.  It can be any PsyNeuLink <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>,
-or a python function that takes a 2d array with two items and returns a 1d array of the same length
-as the two input items.</dd>
-</dl>
-</div></blockquote>
-<dl class="docutils">
-<dt>\    value</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span><dd><blockquote class="first">
-<div>the result of the comparison carried out by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</div></blockquote>
-<dl class="last docutils">
-<dt>output_state</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>contains the &#8216;primary &lt;OutputState_Primary&gt;` outputState of the ComparatorMechanism; the default is
-its <em>ERROR_SIGNAL</em> outputState, the value of which is equal to the <code class="xref any docutils literal"><span class="pre">value</span></code>
-attribute of the ComparatorMechanism.</dd>
-<dt>output_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">ContentAddressableList[OutputState]</span><dd>contains, by default, only the <em>ERROR_SIGNAL</em> (primary) outputState of the ComparatorMechanism.</dd>
-<dt>output_values</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">2d np.array</span><dd>contains one item that is the value of the <em>ERROR_SIGNAL</em> outputState.</dd>
-<dt>name</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ComparatorMechanism-&lt;index&gt;</span><dd>the name of the mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the mechanism;
-if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</dd>
-<dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 </div>
 

@@ -2,6 +2,12 @@ Component
 =========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
+
+   Mechanism
+   Projection
+   State
+   Function
 
 .. automodule:: Component
+   :members: ResetMode
