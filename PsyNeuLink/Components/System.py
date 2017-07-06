@@ -111,11 +111,7 @@ and/or the role they play in a System:
 
     `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values;
 
-<<<<<<< HEAD
     `LEARNING`: monitors the value of another Mechanism for use in learning;
-=======
-    `LEARNING`: monitors the value of another mechanism for use in learning;
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
     `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` Mechanism of a Process
 
@@ -676,13 +672,9 @@ class System_Base(System):
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-<<<<<<< HEAD
     learning_mechanisms : MechanismList)
         contains all `LearningMechanism <LearningMechanism>` in the System.
-=======
-    monitoringMechanisms : MechanismList)
-        contains all `LEARNING` mechanisms in the system (used for learning).
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
+
         COMMENT:
             based on _learning_mechs)
         COMMENT
@@ -2522,11 +2514,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL:number of phases required to execute all Mechanisms in the system
 
-<<<<<<< HEAD
             LEARNING_MECHANISMS:list of `LearningMechanisms <LearningMechanism>`
-=======
-            LEARNING_MECHANISMS:list of LEARNING mechanisms
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
 
             TARGET:list of `TARGET` Mechanisms
 
