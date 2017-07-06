@@ -446,7 +446,6 @@ def test_DDM_size_int_inputs_():
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([.4]).tolist()
-    print(val)
     assert val == [[-2.0], [0.0], [0.0], [0.0]]
 
 # ------------------------------------------------------------------------------------------------
