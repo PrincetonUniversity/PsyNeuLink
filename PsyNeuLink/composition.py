@@ -240,8 +240,7 @@ class Composition(object):
         self.all_output_mechanisms = []
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
 
-        # NOTE: self.sched is not the scheduler that the user creates -- should any scheduler assigned to a composition
-        # become an attribute of that composition?
+        # TBI: update self.sched whenever something is added to the composition
         self.sched = Scheduler(composition=self)
 
     @property
@@ -564,7 +563,7 @@ class Composition(object):
     def execute(
             self,
             inputs,
-            scheduler,
+            scheduler_processing=None,
             execution_id = None):
 
             input_mechanisms = {}
@@ -572,7 +571,9 @@ class Composition(object):
             self._execute_input_mechanisms(inputs, input_mechanisms)
             self._assign_execution_ids(execution_id, input_mechanisms)
             # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
-            for next_execution_set in scheduler.run():
+            # when self.sched is ready: execution_scheduler = scheduler_processing or self.sched
+            execution_scheduler = scheduler_processing
+            for next_execution_set in execution_scheduler.run():
 
                 # execute each mechanism with EXECUTING in context and the appropriate input
                 for mechanism in next_execution_set:
@@ -596,7 +597,7 @@ class Composition(object):
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
-            to receive and execute sets of mechanisms that are elligible to run until termination conditions are met.
+            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
 
             Arguments
             ---------
@@ -665,6 +666,8 @@ class Composition(object):
             for mech in has_inputs:
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
+            # when default scheduler (self.sched) is ready:
+            # num = self.execute(execution_inputs, scheduler_processing or self.sched, execution_id)
             num = self.execute(execution_inputs, scheduler_processing, execution_id)
 
         # return the output of the LAST mechanism executed in the composition
