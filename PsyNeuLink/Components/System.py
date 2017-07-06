@@ -111,12 +111,8 @@ and/or the role they play in a System:
 
     `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values;
 
-<<<<<<< HEAD
     `LEARNING`: monitors the value of another Mechanism for use in learning;
-=======
-    `LEARNING`: monitors the value of another mechanism for use in learning;
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
-
+d
     `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` Mechanism of a Process
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
@@ -165,8 +161,76 @@ Execution
 ---------
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes the System once, whereas `run <System_Base.execute>` allows a series of
-executions to be carried out.
+`execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
+`run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
+of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of `calls to the `run <Scheduler.run>`
+method of the `Scheduler` specified in its `scheduler <System_Base.scheduler>` attribute.  After each call,
+it executes the Components returned by Scheduler (constituting a `TIME_STEP` of execution), until every Component in
+the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
+met.
+
+Three phases of execution:
+Processing vs. Learning vs Control
+
+
+By default, Mechanisms are executed in the order they are listed in the Processes used to construct the
+System.  When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
+System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
+determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
+"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
+Projections in the System remain intact during execution and can be
+`initialized <System_Execution_Input_And_Initialization>` at the start of execution.  The order in which Components
+are executed can be customized, using the System's Scheduler in combination with `Condition` specifications for
+individual Components to execute different Components at different time scales.
+
+
+That carries
+out a single `TRIAL` of execution.  By
+
+
+
+
+
+** FROM PROCESS *************************
+
+A Process can be executed as part of a `System <System>` or on its own.  On its own, it can be executed by calling
+either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  `execute <System_Base.execute>`
+executes the System once; that is, it executes a single `TRIAL`;  `run <System_Base.execute>` allows a series of
+`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `ORIGIN` Mechanism (first
+Mechanism in the pathway).  By default, the the input value is presented only once.  If the `ORIGIN` Mechanism is
+executed again in the same `PASS` of execution (e.g., if it appears again in the pathway, or receives recurrent
+projections), the input is not presented again. However, the input can be "clamped" on using the **clamp_input**
+argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed,
+each subsequent Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a
+`MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
+executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
+(last one in the pathway) is assigned as the output of the Process.  If `learning <Process_Learning>` has been
+specified for the Process or any of the projections in its `pathway`, then the relevant
+`LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to the corresponding
+Projections.
+
+.. note::
+   The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
+   projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+
+
+**********************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .. _System_Execution_Order:
 
@@ -179,16 +243,6 @@ determined by the System's `executionGraph` attribute, which is a subset of the 
 "pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
 Projections in the System remain intact during execution and can be
 `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
-
-.. _System_Execution_Phase:
-
-Timing
-~~~~~~
-When a System is executed, it calls the `run <Scheduler.run>` of the `Scheduler` specified in its `scheduler
-<System.scheduler>` attribute.  That carries out a single `TRIAL` of execution.  By default, every Mechanism in the
-System is executed, in the order
-The order and number of times each
-of the Mechanisms in the System are executed in a `TRIAL` is determined
 
 
 .. _System_Execution_Input_And_Initialization:

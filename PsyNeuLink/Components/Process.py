@@ -221,14 +221,15 @@ must be provided (along with the `inputs <input>`) as an argument to the Process
 Execution
 ---------
 
-A Process can be executed as part of a `System <System>` or on its own.  On its own, it can be executed by calling
-either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  When a Process is
-executed, its `input` is conveyed to the `ORIGIN` Mechanism (first Mechanism in the pathway).  By default,
-the the input value is presented only once.  If the `ORIGIN` Mechanism is executed again in the same `PASS` of execution
-(e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
-However, the input can be "clamped" on using the `clamp_input` argument of `execute <Process_Base.execute>` or
-`run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed, each subsequent Mechanism in the `pathway` is
-executed in sequence.  If a Mechanism is specified in the pathway in a
+A Process can be executed as part of a `System <System>` or on its own.  On its own, it is executed by calling
+either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>`
+executes the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of
+`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `ORIGIN` Mechanism (first
+Mechanism in the pathway).  By default, the the input is presented only once.  If the `ORIGIN` Mechanism is
+executed again in the same `PASS` of execution (e.g., if it appears again in the pathway, or receives recurrent
+projections), the input is not presented again. However, the input can be "clamped" on using the **clamp_input**
+argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed,
+each subsequent Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a
 `MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
 executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
 (last one in the pathway) is assigned as the output of the Process.  If `learning <Process_Learning>` has been
