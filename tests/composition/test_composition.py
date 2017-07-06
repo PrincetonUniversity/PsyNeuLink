@@ -228,8 +228,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {}
         feed_dict_terminal = {}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_origin_and_terminal_with_mapping(self):
         comp = Composition()
@@ -241,8 +241,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {B: [[0]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_origin_and_terminal_with_swapped_feed_dicts_1(self):
         comp = Composition()
@@ -255,7 +255,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_origin_and_terminal_with_swapped_feed_dicts_2(self):
         comp = Composition()
@@ -268,7 +268,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {A: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+            comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_multiple_origin_mechs(self):
         comp = Composition()
@@ -283,8 +283,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_multiple_origin_mechs_only_one_in_feed_dict(self):
         comp = Composition()
@@ -299,8 +299,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {B: [[0]]}
         feed_dict_terminal = {C: [[0]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_input_state_len_3(self):
         comp = Composition()
@@ -312,8 +312,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_input_state_len_3_feed_dict_len_2(self):
         comp = Composition()
@@ -326,7 +326,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {A: [[0, 1]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_input_state_len_2_feed_dict_len_3(self):
         comp = Composition()
@@ -339,7 +339,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {A: [[0, 1, 2]]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
         comp = Composition()
@@ -351,7 +351,7 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]], B: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_input_state_len_3_brackets_extra_1(self):
         comp = Composition()
@@ -363,8 +363,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]]]}
         feed_dict_terminal = {B: [[[0, 1, 2]]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_input_state_len_3_brackets_missing_1(self):
         comp = Composition()
@@ -377,7 +377,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {A:  [0, 1, 2]}
         feed_dict_terminal = {B: [[0]]}
         with pytest.raises(TypeError):
-            comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+            comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_empty_feed_dict_for_empty_type(self):
         comp = Composition()
@@ -389,7 +389,7 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {}
-        comp.validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
+        comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
 
     def test_mech_in_feed_dict_for_empty_type(self):
         comp = Composition()
@@ -402,7 +402,7 @@ class TestValidateFeedDict:
         feed_dict_origin = {A: [[0]]}
         feed_dict_monitored = {B: [[0]]}
         with pytest.raises(ValueError):
-            comp.validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
+            comp._validate_feed_dict(feed_dict_monitored, comp.get_mechanisms_by_role(MechanismRole.MONITORED), "monitored")
 
     def test_one_mech_1(self):
         comp = Composition()
@@ -411,7 +411,7 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
 
     def test_one_mech_2(self):
         comp = Composition()
@@ -420,7 +420,7 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
         feed_dict_terminal = {A: [[0]]}
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_multiple_time_steps_1(self):
         comp = Composition()
@@ -432,8 +432,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[0, 1, 2], [0, 1, 2]]}
         feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
     def test_multiple_time_steps_2(self):
         comp = Composition()
@@ -445,8 +445,8 @@ class TestValidateFeedDict:
         comp._analyze_graph()
         feed_dict_origin = {A: [[[0, 1, 2]], [[0, 1, 2]]]}
         feed_dict_terminal = {B: [[0, 1, 2]]}
-        comp.validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
-        comp.validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
+        comp._validate_feed_dict(feed_dict_origin, comp.get_mechanisms_by_role(MechanismRole.ORIGIN), "origin")
+        comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
 
 class TestGetMechanismsByRole:
@@ -459,10 +459,10 @@ class TestGetMechanismsByRole:
         for mech in mechs:
             comp.add_mechanism(mech)
 
-        comp.add_mechanism_role(mechs[0], MechanismRole.ORIGIN)
-        comp.add_mechanism_role(mechs[1], MechanismRole.INTERNAL)
-        comp.add_mechanism_role(mechs[2], MechanismRole.INTERNAL)
-        comp.add_mechanism_role(mechs[3], MechanismRole.CYCLE)
+        comp._add_mechanism_role(mechs[0], MechanismRole.ORIGIN)
+        comp._add_mechanism_role(mechs[1], MechanismRole.INTERNAL)
+        comp._add_mechanism_role(mechs[2], MechanismRole.INTERNAL)
+        comp._add_mechanism_role(mechs[3], MechanismRole.CYCLE)
 
         for role in list(MechanismRole):
             if role is MechanismRole.ORIGIN:
@@ -941,10 +941,7 @@ class TestRun:
         )
         assert 75 == output[0][0]
 
-
-
-
-            # when self.sched is ready:
+    # when self.sched is ready:
     # def test_run_default_scheduler(self):
     #     comp = Composition()
     #     A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))

@@ -373,9 +373,9 @@ class Composition(object):
             self.graph.connect_components(projection, receiver)
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
-            self.validate_projection(sender, projection, receiver)
+            self._validate_projection(sender, projection, receiver)
 
-    def validate_projection(self, sender, projection, receiver):
+    def _validate_projection(self, sender, projection, receiver):
 
         if hasattr(projection, "sender") and hasattr(projection, "receiver"):
             # the sender and receiver were passed directly to the Projection object AND to compositions'
@@ -437,10 +437,10 @@ class Composition(object):
         # Identify Origin mechanisms
         for mech in self.mechanisms:
             if graph.get_parents_from_component(mech) == []:
-                self.add_mechanism_role(mech, MechanismRole.ORIGIN)
+                self._add_mechanism_role(mech, MechanismRole.ORIGIN)
         # Identify Terminal mechanisms
             if graph.get_children_from_component(mech) == []:
-                self.add_mechanism_role(mech, MechanismRole.TERMINAL)
+                self._add_mechanism_role(mech, MechanismRole.TERMINAL)
         # Identify Recurrent_init and Cycle mechanisms
         visited = []  # Keep track of all mechanisms that have been visited
         for origin_mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):  # Cycle through origin mechanisms first
@@ -454,8 +454,8 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        self.add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
-                        self.add_mechanism_role(child, MechanismRole.CYCLE)
+                        self._add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
+                        self._add_mechanism_role(child, MechanismRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
         for mech in self.mechanisms:
@@ -469,8 +469,8 @@ class Composition(object):
                     children = [vertex.component for vertex in graph.get_children_from_component(remaining_mech)]
                     for child in children:
                         if child in visited_current_path:
-                            self.add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
-                            self.add_mechanism_role(child, MechanismRole.CYCLE)
+                            self._add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
+                            self._add_mechanism_role(child, MechanismRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
@@ -543,22 +543,22 @@ class Composition(object):
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
-    def set_mechanism_roles(self, mech, roles):
+    def _set_mechanism_roles(self, mech, roles):
         self.clear_mechanism_role(mech)
         for role in roles:
-            self.add_mechanism_role(role)
+            self._add_mechanism_role(role)
 
-    def clear_mechanism_roles(self, mech):
+    def _clear_mechanism_roles(self, mech):
         if mech in self.mechanisms_to_roles:
             self.mechanisms_to_roles[mech] = set()
 
-    def add_mechanism_role(self, mech, role):
+    def _add_mechanism_role(self, mech, role):
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
         self.mechanisms_to_roles[mech].add(role)
 
-    def remove_mechanism_role(self, mech, role):
+    def _remove_mechanism_role(self, mech, role):
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
@@ -566,7 +566,7 @@ class Composition(object):
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
-    def validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
+    def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
         for mech in feed_dict.keys():  # For each mechanism given an input
             if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
                 if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
