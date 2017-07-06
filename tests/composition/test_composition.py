@@ -2,16 +2,13 @@ import logging
 
 from timeit import timeit
 
-import numpy as np
 import pytest
 
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
-from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, LEARNING_PROJECTION
 from PsyNeuLink.Scheduling.Condition import EveryNCalls
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
@@ -320,7 +317,7 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_feed_dict_len_2(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1, 2], name = 'A')
+        A = TransferMechanism(default_input_value=[0, 1, 2], name='A')
         B = TransferMechanism(default_input_value=[0, 1, 2], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -333,7 +330,7 @@ class TestValidateFeedDict:
 
     def test_input_state_len_2_feed_dict_len_3(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1], name = 'A')
+        A = TransferMechanism(default_input_value=[0, 1], name='A')
         B = TransferMechanism(default_input_value=[0, 1], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -427,7 +424,7 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_1(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[[0, 1, 2]], name ='A')
+        A = TransferMechanism(default_input_value=[[0, 1, 2]], name='A')
         B = TransferMechanism(default_input_value=[[0, 1, 2]], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -440,7 +437,7 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_2(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[[0, 1, 2]], name ='A')
+        A = TransferMechanism(default_input_value=[[0, 1, 2]], name='A')
         B = TransferMechanism(default_input_value=[[0, 1, 2]], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -705,7 +702,7 @@ class TestRun:
         comp._analyze_graph()
         sched = Scheduler(composition=comp)
         output = comp.run(
-            scheduler=sched
+            scheduler_processing=sched
         )
         assert 25 == output[0][0]
 
@@ -721,7 +718,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
         assert 125 == output[0][0]
 
@@ -793,7 +790,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
         assert 250 == output[0][0]
 
@@ -814,7 +811,7 @@ class TestRun:
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
         assert 50.0 == output[0][0]
 
@@ -836,7 +833,7 @@ class TestRun:
         sched.add_condition(B, EveryNCalls(A, 2))
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
         assert 50.0 == output[0][0]
 
@@ -847,13 +844,13 @@ class TestRun:
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
-        comp.add_projection(A, MappingProjection(sender = A, receiver= B), B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
 
         assert 40.0 == output[0][0]
@@ -871,7 +868,7 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched
+            scheduler_processing=sched
         )
 
         assert 40.0 == output[0][0]
@@ -888,8 +885,8 @@ class TestRun:
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched,
-            num_trials= 5
+            scheduler_processing=sched,
+            num_trials=5
         )
         assert 125 == output[0][0]
 
@@ -901,16 +898,15 @@ class TestRun:
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
         comp._analyze_graph()
-        inputs_dict = {A: [[5], [4],[3]]}
+        inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
         with pytest.raises(CompositionError) as error_text:
-            output = comp.run(
+            comp.run(
                 inputs=inputs_dict,
-                scheduler=sched,
+                scheduler_processing=sched,
                 num_trials=5
             )
         assert "number of trials" in str(error_text.value) and "does not match the length" in str(error_text.value)
-
 
     def test_run_2_mechanisms_double_trial_specs(self):
         comp = Composition()
@@ -920,11 +916,11 @@ class TestRun:
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
         comp._analyze_graph()
-        inputs_dict = {A: [[5], [4] ,[3]]}
+        inputs_dict = {A: [[5], [4], [3]]}
         sched = Scheduler(composition=comp)
         output = comp.run(
             inputs=inputs_dict,
-            scheduler=sched,
+            scheduler_processing=sched,
             num_trials=3
         )
         assert 75 == output[0][0]
@@ -976,7 +972,7 @@ class TestRun:
     #     sched = Scheduler(composition=comp)
     #     output = comp.run(
     #         inputs=stim_list,
-    #         scheduler=sched,
+    #         scheduler_processing=sched,
     #         num_trials=10
     #     )
     #

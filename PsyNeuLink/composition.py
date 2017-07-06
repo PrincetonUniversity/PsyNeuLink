@@ -3,15 +3,15 @@ import logging
 from collections import Iterable, OrderedDict
 from enum import Enum
 
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Globals.Keywords import EXECUTING, CENTRAL_CLOCK
-from PsyNeuLink.Globals.TimeScale import TimeScale, CurrentTime, CentralClock
-from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _add_projection_from
 import uuid
+
+from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +200,7 @@ class Composition(object):
         Attributes
         ----------
     '''
+
     def __init__(self):
         ########
         # Constructor for Compositions.
@@ -303,7 +304,6 @@ class Composition(object):
 
     def validate_projection(self, sender, projection, receiver):
 
-
         if hasattr(projection, "sender") and hasattr(projection, "receiver"):
             # the sender and receiver were passed directly to the Projection object AND to compositions'
             # add_projection() method -- confirm that these are consistent
@@ -320,7 +320,7 @@ class Composition(object):
             # assign them based on the sender and receiver passed into add_projection()
             projection.init_args['sender'] = sender
             projection.init_args['receiver'] = receiver
-            projection._deferred_init(context =" INITIALIZING ")
+            projection._deferred_init(context=" INITIALIZING ")
 
         if projection.sender.owner != sender:
             raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
@@ -328,8 +328,6 @@ class Composition(object):
         if projection.receiver.owner != receiver:
             raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                    "components in the composition.".format(projection, receiver))
-
-
 
     def _analyze_graph(self, graph=None):
         ########
@@ -563,7 +561,11 @@ class Composition(object):
             input_mechanisms[k]._execution_id = self._execution_id
 
 
-    def execute(self, inputs, scheduler, execution_id = None):
+    def execute(
+            self,
+            inputs,
+            scheduler,
+            execution_id = None):
 
             input_mechanisms = {}
             self._create_input_mechanisms(inputs, input_mechanisms)
@@ -582,15 +584,29 @@ class Composition(object):
                         print()
             return num
 
-    def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None, num_trials = None):
+    def run(
+        self,
+        scheduler_processing=None,
+        scheduler_learning=None,
+        inputs=None,
+        targets=None,
+        recurrent_init=None,
+        execution_id=None,
+        num_trials=None
+    ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
             to receive and execute sets of mechanisms that are elligible to run until termination conditions are met.
 
             Arguments
             ---------
-            scheduler : Scheduler
-                the scheduler object which owns the conditions that will instruct the execution of this composition
+            scheduler_processing : Scheduler
+                the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            scheduler_learning : Scheduler
+                the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
 
             inputs: { Mechanism : list }
                 a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
@@ -613,6 +629,8 @@ class Composition(object):
             output value of the final mechanism executed in the composition
         '''
         reuse_inputs = False
+        if inputs is None:
+            inputs = {}
 
         # all mechanisms with inputs specified in the inputs dictionary
         has_inputs = inputs.keys()
@@ -647,7 +665,7 @@ class Composition(object):
             for mech in has_inputs:
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            num = self.execute(execution_inputs, scheduler, execution_id)
+            num = self.execute(execution_inputs, scheduler_processing, execution_id)
 
         # return the output of the LAST mechanism executed in the composition
         return num
