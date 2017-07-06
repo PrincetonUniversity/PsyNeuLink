@@ -195,7 +195,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         (see `control_signals <ControlMechanism.control_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation to be used by the ControlMechanism's ControlSignals, 
+        specifies the default form of modulation used by the ControlMechanism's ControlSignals,
         unless they are `individually specified <ControlSignal_Specification>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)

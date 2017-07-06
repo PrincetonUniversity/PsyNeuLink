@@ -176,7 +176,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation to be used by the GatingMechanism's GatingSignals, unless
+        specifies the default form of modulation used by the GatingMechanism's GatingSignals, unless
         they are `individually specified <GatingSignal_Specification>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)

@@ -204,11 +204,12 @@ components being learned and/or its operation:
 
 * `learning_rate <LearningMechanism.learning_rate>` - the learning rate for the LearningMechanism.  This is used to
   specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
-  `learning_rate <LearningMechanism.learning_rate>` multiplies the weights changes provided by the LearningMechanism to
-  its function before conveying these to the `LearningProjection` used to modify the MappingProjection's matrix
-  parameter. Specifiying the `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the
-  :keyword:`learning_rate` parameter of its `function <LearningMechanism.function>` directly) supercedes any
-  specification of the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
+  `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
+  its `function <LearningMechanism.function>` before conveying these to the `LearningProjection` used to modify the
+  MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifiying the
+  `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
+  of its `function <LearningMechanism.function>` directly) supercedes any specification of the
+  :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
   `System <System.System_Base.learning_rate>` to which the LearningMechanism belongs.  The default value for a
   LearningMechanism's `learning_rate <LearningMechanism>` attribute is `None`, in which case the LearningMechanism
   (and its `function <LearningMechanism.function>`) inherit the specification of the
@@ -519,7 +520,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `learning_signals <LearningMechanism.learning_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.ADDITIVE
-        specifies the default form of modulation to be used by the LearningMechanism's LearningSignals, 
+        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
     function : LearningFunction or function

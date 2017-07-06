@@ -349,9 +349,9 @@ class ControlSignal(ModulatorySignal):
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
-    COMMENT: [NEEDS DOCUMENTATION]
-    COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
+        the parameter(s) that it controls.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -435,8 +435,8 @@ class ControlSignal(ModulatorySignal):
         combined result of all cost functions that are enabled.
 
     modulation : ModulationParam
-        specifies the way in which the output of the ControlSignal is used to modulate the value of the parameter
-        it's `ControlProjection` controls.
+        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
+        the parameter(s) that it controls.
 
     efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.

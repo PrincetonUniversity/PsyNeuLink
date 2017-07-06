@@ -200,7 +200,7 @@ executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify
 for each Mechanism that determine whether it runs in a given `PASS`.  This can be used to determine when
 a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
 to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
-in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-speciffied <Condition_Pre_Specified>` and
+in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and
 `custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
 
 

@@ -409,12 +409,13 @@ def system(default_input_value=None,
     initial_values : dict of Mechanism:value entries
         a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
         `INITIALIZE_CYCLE`). The key for each entry is a Mechanism object, and the value is a number,
-        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's value
-        (i.e., Mechanism.value[0]).
+        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
+        `value <Mechanism.value>` (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism` used to monitor the value of the OutputState(s) for Mechanisms specified in
-        `monitor_for_control`, and that specify the value of `ControlProjections` in the System.
+        specifies the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for
+        Mechanisms specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the `controller` is executed during System execution.
@@ -429,14 +430,14 @@ def system(default_input_value=None,
     COMMENT
 
     learning_rate : float : None
-        set the learning rate for all Mechanisms in the System (see `learning_rate` attribute for additional
-        information).
+        set the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System
+        (see `learning_rate` attribute for additional information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
         `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
-        for each of the corresponding `TARGET` Mechanism.
+        for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -579,45 +580,46 @@ class System_Base(System):
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the ControlMechanism used to monitor the value of the OutputState(s) for Mechanisms specified in
-        ``monitor_for_control`` argument, and specify the value of ControlProjections in the System.
+        the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for Mechanisms
+        specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         determines whether the `controller` is executed during System execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any Processes
+        indicates whether learning is being used;  is set to `True` if learning is specified for any Processes
         in the System or for the System itself.
 
     learning_rate : float : default None
-        determines the learning rate for all Mechanisms in the System.  This overrides any values set for the
-        function of individual LearningProjections, and persists for all subsequent runs of the System.  If it is
-        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
-        (either directly, or following a run of any Process or System to which the LearningProjection belongs and
-        for which a learning_rate was set).
+        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
+        for all subsequent executions of the System.  If it is set to `None`, then the learning_rate is determined by
+        last value assigned to each LearningMechanism (either directly, or following the execution of any Process or
+        System to which the LearningMechanism belongs and for which a learning_rate was set).
 
     targets : 2d nparray : default zeroes
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the :keyword:`targets` argument of System's `execute <System.execute>` and `run <System.run>` methods.
+        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
-        contains a graph of all of the Mechanisms in the System.
+        contains a graph of all of the Components in the System.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
-        The key of each entry is a receiver object_item, and
-        the value is a set of mechs that send Projections to that receiver.
+        The key of each entry is a receiver Component, and
+        the value is a set of Mechanisms that send Projections to that receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
         contains an acyclic subset of the System's `graph`, hierarchically organized by a toposort.
-        Used to specify the order in which Mechanisms are executed.
+        Used to specify the order in which Components are executed.
 
     execution_sets : list of sets
-        contains a list of Mechanism sets.
-        Each set contains Mechanisms to be executed at the same time.
+        contains a list of Component sets.
+        Each set contains Components to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
-    executionList : list of Mechanism objects
-        contains a list of Mechanisms in the order in which they are executed.
+    executionList : list of Mechanisms and/or Projections
+        contains a list of Components in the order in which they are executed.
         The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
@@ -680,19 +682,11 @@ class System_Base(System):
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-<<<<<<< HEAD
     learning_mechanisms : MechanismList)
         contains all `LearningMechanism <LearningMechanism>` in the System.
-=======
-    monitoringMechanisms : MechanismList)
-        contains all `LEARNING` mechanisms in the system (used for learning).
->>>>>>> 9e5c74f1c4c4be31b90288217f127e56905cd160
-        COMMENT:
-            based on _learning_mechs)
-        COMMENT
 
     target_mechanisms : MechanismList)
-        contains all `TARGET` Mechanisms in the System (used for learning.
+        contains all `TARGET` Mechanisms in the System (used for learning).
         COMMENT:
             based on _target_mechs)
         COMMENT

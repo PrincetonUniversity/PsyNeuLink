@@ -238,9 +238,9 @@ class GatingSignal(ModulatorySignal):
         specifies the function used to determine the value of the GatingSignal from the value of its 
         `owner <GatingMechanism.owner>`.
 
-    COMMENT: [NEEDS DOCUMENTATION]
-    COMMENT
-    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE 
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the way in which the `value <GatingSignal.value>` the GatingSignal is used to modify the `value
+        <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -275,8 +275,8 @@ class GatingSignal(ModulatorySignal):
         result of `function <GatingSignal.function>`.
     
     modulation : ModulationParam
-        determines how the output of the GatingSignal is used to modulate the value of the state(s)
-        to which its GatingProjection(s) project(s).
+        determines the way in the which `value <GatingSignal.value>` the GatingSignal is used to modify the `value
+        <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
 
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to the GatingSignal.
