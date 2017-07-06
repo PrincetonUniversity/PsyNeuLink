@@ -232,10 +232,17 @@ argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After
 each subsequent Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a
 `MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
 executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
-(last one in the pathway) is assigned as the output of the Process.  If `learning <Process_Learning>` has been
-specified for the Process or any of the projections in its `pathway`, then the relevant
-`LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to the corresponding
-Projections.
+(last one in the pathway) is assigned as the output of the Process.
+
+.. note::
+   Processes do not use a `Scheduler`; each Mechanism is executed once, in the order listed in the `pathway`.
+   To more precisely control the order of and/or any dependencies in the sequence of executions, the Process
+   should be used to construct as `System`, and the System's `Scheduler <System.schedler>` together with
+   `Conditions <Conditons>` used to construt a custom schedule.
+
+If `learning <Process_Learning>` has been specified for the Process or any of the projections in its `pathway`,
+then the relevant `LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to
+the corresponding Projections.
 
 .. note::
    The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
