@@ -238,6 +238,9 @@ class Composition(object):
         self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
         self.all_output_mechanisms = []
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
+
+        # NOTE: self.sched is not the scheduler that the user creates -- should any scheduler assigned to a composition
+        # become an attribute of that composition?
         self.sched = Scheduler(composition=self)
 
     @property
@@ -534,6 +537,16 @@ class Composition(object):
             # this input
             MappingProjection(sender=new_input_mech, receiver=mech)
 
+    def _execute_input_mechanisms(self, inputs, input_mechanisms):
+        for mech in inputs.keys():
+            # grab the input value for this mechanism on this trial
+            input_val = inputs[mech]
+            # find the input mechanism corresponding to this mechanism
+            input_mechanism = input_mechanisms[mech]
+            # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
+            # received the value from the MappingProjection when execution of the actual composition begins
+            input_mechanism.execute(input=input_val, context=EXECUTING)
+
     def _assign_execution_ids(self, execution_id, input_mechanisms):
         '''
             assigns the same uuid to each mechanism in the composition's processing graph as well as all input
@@ -549,6 +562,25 @@ class Composition(object):
         for k in input_mechanisms.keys():
             input_mechanisms[k]._execution_id = self._execution_id
 
+
+    def execute(self, inputs, scheduler, execution_id = None):
+
+            input_mechanisms = {}
+            self._create_input_mechanisms(inputs, input_mechanisms)
+            self._execute_input_mechanisms(inputs, input_mechanisms)
+            self._assign_execution_ids(execution_id, input_mechanisms)
+            # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
+            for next_execution_set in scheduler.run():
+
+                # execute each mechanism with EXECUTING in context and the appropriate input
+                for mechanism in next_execution_set:
+                    if isinstance(mechanism, Mechanism):
+                        num = mechanism.execute(context=EXECUTING + "composition")
+                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                        print("result = ", num)
+                        print()
+                        print()
+            return num
 
     def run(self, scheduler, inputs={}, targets=None, recurrent_init=None, execution_id = None, num_trials = None):
         '''
@@ -601,18 +633,7 @@ class Composition(object):
                                            "length [{}] of the inputs specified in the inputs dictionary [{}]. "
                                            .format(num_trials, self, len_inputs, inputs))
 
-
-
         input_indices = range(len_inputs)
-
-        input_mechanisms = {}
-
-        # create "input mechanisms" so that origin mechanisms (or any other mechanisms receiving inputs directly from
-        # the outside world can be fed these values through projections)
-        # [one "input mechanism" per mechanism receiving input]
-        self._create_input_mechanisms(inputs, input_mechanisms)
-
-        self._assign_execution_ids(execution_id, input_mechanisms)
 
         # TBI: Handle learning graph
 
@@ -620,31 +641,13 @@ class Composition(object):
 
         # loop over the length of the list of inputs (# of trials)
         for input_index in input_indices:
-
-            # reset scheduler counts at the TRIAL level
-            self.sched._reset_counts_total(time_scale=TimeScale.TRIAL)
+            execution_inputs = {}
 
             # loop over all mechanisms that receive inputs from the outside world
             for mech in has_inputs:
-                # grab the input value for this mechanism on this trial
-                input_val = inputs[mech][0 if reuse_inputs else input_index]
-                # find the input mechanism corresponding to this mechanism
-                input_mechanism = input_mechanisms[mech]
-                # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
-                # recieved the value from the MappingProjection when execution of the actual composition begins
-                input_mechanism.execute(input=input_val, context=EXECUTING)
+                execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
-            for next_execution_set in scheduler.run():
-
-                # execute each mechanism with context = EXECUTING and the appropriate input
-                for mechanism in next_execution_set:
-                    if isinstance(mechanism, Mechanism):
-                        num = mechanism.execute(context=EXECUTING+ "composition")
-                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                        print("result = ", num)
-                        print()
-                        print()
+            num = self.execute(execution_inputs, scheduler, execution_id)
 
         # return the output of the LAST mechanism executed in the composition
         return num
