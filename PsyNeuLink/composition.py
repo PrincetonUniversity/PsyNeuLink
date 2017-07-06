@@ -551,7 +551,7 @@ class Composition(object):
         self,
         scheduler_processing=None,
         scheduler_learning=None,
-        inputs={},
+        inputs=None,
         targets=None,
         recurrent_init=None,
         execution_id=None,
@@ -592,6 +592,8 @@ class Composition(object):
             output value of the final mechanism executed in the composition
         '''
         reuse_inputs = False
+        if inputs is None:
+            inputs = {}
 
         # all mechanisms with inputs specified in the inputs dictionary
         has_inputs = inputs.keys()
