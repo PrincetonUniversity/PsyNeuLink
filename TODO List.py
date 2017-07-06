@@ -70,6 +70,7 @@
 #  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
 #  4) IMPLEMENT ABC
 # 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
+# 4b) IMPROVE API FOR MECHANISMS
 #  5) IMPLEMENT Compilation / paralleliztion of execution
 #  6) IMPLEMENT Recurrent layer / KWTA??
 # 13) IMPLEMENT MSPRT / KWTA
@@ -80,6 +81,25 @@
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
 # 14) IMPLEMENT Model fitting
+
+
+# PNL TEAM:
+# =========
+# DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
+# DOCUMENTATION: Revise docstrings for Integrator mechanisms and RecurrentTransferMechanisms
+#                    using formatting template from TransferMechanism and DDM
+#                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
+# DOCUMENTATION: What to call ConventionsAndDefinitions:  Structural Overivew?  Outline?
+#
+# IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
+#            (??multimple inheritance, as RTM as also a TM?)
+#            Integrate <mechanism>.previous_value with stateful and is_finished
+#            `delta` property that returns value - previous_value (done on TransferMechanism as example)
+# QUESTION: SHOULDN'T DDM BE A SUBCLASS OF IntegratorMechanism?
+#           Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
+# FIX: show_graph()
+# FIX: DDM: In `TIME_STEP` mode it should return DECISION_TIME (# of steps that have elapsed)
+# FIX: CentralClock (IMPLEMENT IT IN SCHEDULER, ADD pass, AND GET RID OF block AND task
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism

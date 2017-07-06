@@ -12,6 +12,6 @@ Processing Mechanism
    ObjectiveMechanism
    ComparatorMechanism
 
-.. automodule:: ProcessingMechansms.ProcessingMechanism
+.. automodule:: ProcessingMechanisms.ProcessingMechanism
    :members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random

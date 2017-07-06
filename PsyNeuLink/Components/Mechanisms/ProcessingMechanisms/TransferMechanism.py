@@ -26,9 +26,9 @@
 Overview
 --------
 
-A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar
-value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
-of PsyNeuLink Functions (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
+A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
+or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set of PsyNeuLink
+`Functions <Function>` (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
 
 
 .. _Transfer_Creation:
@@ -37,15 +37,15 @@ Creating a TransferMechanism
 -----------------------------
 
 A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
-function and specifying TRANSFER_MECHANISM as its **mech_spec** argument.  Its function is specified in the
-**function** argument, which can be simply the name of the class (first example below), or a call to its
-constructor which can include arguments specifying the function's parameters (second example)::
+function and specifying *TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.funtion>`
+is specified in the **function** argument, which can be simply the name of the class (first example below),
+or a call to its constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
-In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant <TransferMechanism.time_constant>`
-parameters can be specified (see `Execution` below).
+In addition to function-specific parameters, `noise <TransferMechanism.noise>` and
+`time_constant <TransferMechanism.time_constant>` parameters can be specified (see `Execution` below).
 
 
 .. _Transfer_Structure:
@@ -53,21 +53,23 @@ parameters can be specified (see `Execution` below).
 Structure
 ---------
 
-A TransferMechanism has a single `inputState <InputState>`, the `value <InputState.InputState.value>` of which is
+A TransferMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
 used as the `variable <TransferMechanism.variable>` for its `function <TransferMechanism.function>`. The
-:keyword:`function` can be selected from one of three standard PsyNeuLink `Function <Functions>`: `Linear`,
-`Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
-list or np.ndarray of numeric values.  A TransferMechanism has three `outputStates <OutputStates>, described under
-`Execution` below.
-
+`function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
+`Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
+list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
+only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
+`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
+assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
+(see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
 
 .. _Transfer_Execution:
 
 Execution
 ---------
 
-When a TransferMechanism is executed, it transforms its input using the specified function and the following
-parameters (in addition to those specified for the function):
+When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
+the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
@@ -78,21 +80,12 @@ parameters (in addition to those specified for the function):
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
 
-After each execution of the mechanism:
+.. _Transfer_OutputState:
 
-.. _Transfer_Results:
-
-    * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
-      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
-      and to the 1st item of the mechanism's `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
-      and to the 2nd item of its `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
-      and to the 3rd item of its `output_values <TransferMechanism.output_values>` attribute.
-
-COMMENT
+After each execution of the Mechanism the result of `function <TransferMechanism.function>` is assigned as the
+only item of the Mechanism's `value <TransferMechanism.value>`, the `value <OutputState.value>` of its
+`primary OutputState <OutputState_Primary>`, (same as the output_states[RESULT] OutputState if it has been assigned),
+and to the 1st item of the Mechanism's `output_values <TransferMechanism.output_values>` attribute;
 
 .. _Transfer_Class_Reference:
 
@@ -123,12 +116,43 @@ Transfer_DEFAULT_OFFSET = 0
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class TRANSFER_OUTPUT():
-        RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEV=STANDARD_DEV
-        VARIANCE=VARIANCE
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+    """
+    .. _TransferMechanism_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `TransferMechanism`: \n
+
+    .. _TRANSFER_MECHANISM_RESULT:
+
+    *RESULT* : 1d np.array
+      result of `function <TransferMechanism.function>` (same as `value <TransferMechanism.value>`).
+
+    .. _TRANSFER_MECHANISM_MEAN:
+
+    *MEAN* : float
+      mean of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_MEDIAN:
+
+    *MEDIAN* : float
+      median of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_STD_DEV:
+
+    *STANDARD_DEVIATION* : float
+      standard deviation of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_VARIANCE:
+
+    *VARIANCE* : float
+      variance of `output_state.value`.
+
+    """
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEVIATION=STANDARD_DEVIATION
+    VARIANCE=VARIANCE
+# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
@@ -290,30 +314,26 @@ class TransferMechanism(ProcessingMechanism_Base):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the `previous round of execution <LINK>`.
+        the value of the `variable <TransferMechanism.variable>` on the previous `round of execution <LINK>`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `output_values <TransferMechanism.output_values>`.
+        result of executing `function <TransferMechanism.function>`.
 
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``output_values``.
-    COMMENT
+    previous_value : float
+        the `value <TransferMechanism.value>` on the previous `round of execution <LINK>`.
 
-    outputStates : Dict[str, OutputState]
-        an OrderedDict with three `outputStates <OutputState>`:
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
-        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
+    delta : float
+        the change in `value <TransferMechanism.value>` from the previous `round of execution <LINK>`
+        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
-    output_values : List[array(float64), float, float]
-        a list with the following items:
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState)
+    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
+        contains list of Mechanism's OutputStates.  By default there is a single OutputState
+        (`RESULT <TRANSFER_MECHANISM_RESULT>` that contains the result of a call to the Mechanism's
+        `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
+        and/or custom OutputStates may be listed, if they have been :ref:`specified <LINK>`.
+
+    output_values : List[array(float64),array(float64),array(float64),array(float64)]
+        each item is the value of the corresponding OutputState in `output_states <TransferMechanism.output_states>`.
 
     time_scale :  TimeScale : defaul tTimeScale.TRIAL
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
@@ -704,3 +724,15 @@ class TransferMechanism(ProcessingMechanism_Base):
     def time_constant(self, value):
         self._time_constant = value
     # # MODIFIED 4/17/17 END
+
+    @property
+    def previous_value(self):
+        if self.integrator_function:
+            return self.integrator_function.previous_value
+        return None
+
+    @property
+    def delta(self):
+        if self.integrator_function:
+            return self.value - self.integrator_function.previous_value
+        return None

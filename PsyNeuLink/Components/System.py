@@ -31,10 +31,11 @@
 Overview
 --------
 
-A System is a collection of `Processes <Process>` that are executed together.  Executing a System executes all of the
-`Mechanisms <Mechanism>` in its Processes in a structured order.  `Projections <Projection>` between Mechanisms in
-different Processes within the System are permitted, as are recurrent Projections, but Projections from Mechanisms
-in other Systems are ignored (PsyNeuLink does not support ESP).  A System can include two types of Mechanisms:
+A System is a `Composition` that is a collection of `Processes <Process>` all of which are executed together.
+Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
+`Projections <Projection>` between Mechanisms in different Processes within the System are permitted,
+as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
+support ESP).  A System can include two types of Mechanisms:
 
 * `ProcessingMechanism`
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
@@ -276,8 +277,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOpti
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -826,6 +827,7 @@ class System_Base(System):
                          name=self.name,
                          prefs=prefs,
                          context=context)
+
         self._execution_id = None
 
         # Get/assign controller

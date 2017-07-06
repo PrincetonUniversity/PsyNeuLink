@@ -31,16 +31,16 @@
 Overview
 --------
 
-A Process is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`. Executing a Process
-executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:  a list of
-Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a Process,
-including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or many-to-one
-projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms in other
-Processes, but these will only have an effect if all of the Processes involved are members of the same `System`.
-Projections between Mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to them.
-Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in the
-Process will be trained. Processes can be constructed and executed on their own.  More commonly, however, they are used
-to construct a `System`.
+A Process is `Composition` that is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`.
+Executing a Process executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:
+a list of Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a
+Process, including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or
+many-to-one projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms
+in other Processes, but these will only have an effect if all of the Processes involved are members of the same
+`System`. Projections between Mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to
+them. Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in
+the Process will be trained. Processes can be constructed and executed on their own.  More commonly, however,
+they are used to construct a `System`.
 
 .. _Process_Creation:
 
@@ -234,11 +234,11 @@ Execution
 A Process can be executed as part of a `System <System>` or on its own.  On its own, it can be executed by calling
 either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  When a Process is
 executed, its `input` is conveyed to the `ORIGIN` Mechanism (first Mechanism in the pathway).  By default,
-the the input value is presented only once.  If the `ORIGIN` Mechanism is executed again in the same round of execution
+the the input value is presented only once.  If the `ORIGIN` Mechanism is executed again in the same `PASS` of execution
 (e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
 However, the input can be "clamped" on using the `clamp_input` argument of `execute <Process_Base.execute>` or
 `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed, each subsequent Mechanism in the `pathway` is
-executed in sequence (irrespective of any `phase` specification).  If a Mechanism is specified in the pathway in a
+executed in sequence.  If a Mechanism is specified in the pathway in a
 `MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
 executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
 (last one in the pathway) is assigned as the output of the Process.  If `learning <Process_Learning>` has been
@@ -445,13 +445,13 @@ def process(process_spec=None,
         its initial execution.  The following keywords can be used:
         ..
             * `None`: Process input is used only for the first execution of the `ORIGIN` Mechanism
-              in a round of executions.
+              in a `PASS` of executions.
 
             * SOFT_CLAMP: combines the Process' input with input from any other projections to the
-              `ORIGIN` Mechanism every time it is executed in a round of executions.
+              `ORIGIN` Mechanism every time it is executed in a `PASS` of executions.
 
             * HARD_CLAMP: applies the Process' input in place of any other sources of input to the
-              `ORIGIN` Mechanism every time it is executed in a round of executions.
+              `ORIGIN` Mechanism every time it is executed in a `PASS` of executions.
 
     default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
         the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
@@ -637,7 +637,7 @@ class Process_Base(Process):
         `ORIGIN` Mechanism.
 
     input :  Optional[List[value] or ndarray]
-        input to the Process on each round of execution;  it is assigned the value of the :keyword:`input` argument
+        input to the Process for each `TRIAL` of executions;  it is assigned the value of the :keyword:`input` argument
         in a call to the Process` `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
         assigned as the value of the corresponding ProcessInputStates in `process_input_states`, and must match the
         format of the `variable <Mechanism.Mechanism_Base.variable>` for the Process' `ORIGIN` Mechanism.
@@ -646,7 +646,7 @@ class Process_Base(Process):
                   Process. It's value is assigned to the `variable <Mechanism.Mechanism_Base.variable>` attribute of
                   the `ORIGIN` Mechanism at the start of execution.  After that, by default, that Mechanism's
                   :keyword:`variable` attribute is zeroed. This is so that if the `ORIGIN` Mechanism is executed
-                  again in the same round of execution (e.g., if it is part of a recurrent loop) it does not continue
+                  again in the same `PASS` of executions (e.g., if it is part of a recurrent loop) it does not continue
                   to receive the initial input to the Process.  However, this behavior can be modified with the Process'
                   `clamp_input` attribute.
 
