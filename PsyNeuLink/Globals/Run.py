@@ -27,11 +27,6 @@ directly, using its :keyword:`run` method is easier because it:
     ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
-COMMENT:
-Note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
-``execute`` methods.
-COMMENT
-
 Understanding a few basic concepts about how the :keyword:`run` function operates will make it easier to use the
 :keyword:`execute` and :keyword:`run` methods of PsyNeuLink Components.  These are discussed below.
 
@@ -51,48 +46,29 @@ all of the Mechanisms in the Processes specified in the System's `Processes <Sys
 Timing
 ~~~~~~
 
-COMMENT:
-    *** THIS WILL NEED TO BE UPDATED ONCE SCHEDULER IS IMPLEMENTED
-COMMENT
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
-`input (or set of inputs) <Run_Inputs>` specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
-execution.  For each `TRIAL`, the Component calls its `Scheduler` to get a list of Components within its
-`scope of execution <Run_Scope_of_Execution>` that should be executed in that `TRIAL`.
+`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
+execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
+executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
+another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
+with `Condition` specifications for individual Components to execute different Components at different time scales.
 
-PsyNeuLink supports two time scales for executing objects: `TIME_STEP <TimeScale.TimeScale.TIME_STEP>` and
-`TRIAL <TimeScale.TimeScale.TRIAL>`.  Every mechanism defines how it is executed at one or both of these time
-scales, and its current mode of execution is determined by its `timeScale <Mechanism.Mechanism_Base.timeScale>`
-attribute.
+.. note::
+   The **time_scale** argument of :keyword:`run`, described below, is currently not fully implemented,
+   but will be in a subsequent version.
 
-.. _Run_TIME_STEP:
+.. _Run_Time_Scale::
 
-* `TIME_STEP <TimeScale.TimeScale.TIME_STEP>`:  this mode of execution is a mechanism's closest approximation
-  to continuous, or "real time" processing.  Execution of a `time_step` is defined as a single execution of all objects
-  in the scope of execution at their `time_step` time scale.  Mechanisms called upon to execute a `time_step` that do
-  not support that time scale of execution have the option of generating an exception, being ignored, or providing
-  their trial mode response, either on the first `time_step`, every `time_step`, or the last `time_step` in the sequence
-  being run.
-
-.. _Run_TRIAL:
-
-* `TRIAL <TimeScale.TimeScale.TIME_TRIAL>`: this mode of execution is the "ballistic" execution of a
-  mechanism to a state that would have been achieved with `time_step` execution to a specified criterion.  The
-  criterion can be specified in terms of the number of `time_steps`, or a condition to be met by the mechanism's
-  output.  It is up to the mechanism how it implements its `trial` mode of execution (e.g., whether this is done by
-  internal numerical iteration or an analytic calculation). Execution of a `trial` is defined as the execution of a
-  `trial` of all of the objects in the scope of execution.
-
-The **time_scale** argument of an :keyword:`execute` or :keyword:`run` method determines the time scale for each
-round of execution: a `time_step` or a `trial`.  When a `process <Process>` is run, each mechanism is executed in the
-order that it appears in the process' `pathway`, once per round of execution.  When a `system <System>` is run,
-the order of execution is determined by the system's `executionList` attribute, which is based on the system's
-`graph` (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
-system also depends on the `phaseSpec` of each mechanism: this determines *when* in an execution sequence it should
-be executed. The `CentralClock <TimeScale.CentralClock>` is used to control timing, so executing a system
-requires that it be appropriately updated.
-
-The :keyword:`run` function handles all of the above factors automatically.
-
+The :keyword:`run` function also has a **time_scale** argument, that can be used to globally specify the time_scale
+parameter for those Components that make use of it.  Any value of `TimeScale` can be specified; how it is interpreted
+is determined by the Component. For example, some Mechanisms that perform integration (such as the `DDM`) offer the
+option of using an analytic solution (that computes the integral in a single `TIME_STEP`), or a numerical method
+(that carries out one step of integration per `TIME_STEP`).  If `TimeScale.TIME_STEP` is assigned as the value of the
+**time_scale** argument in a call to :keyword:`run`, those Mechanisms will use their numerical integration method,
+whereas if `TimeScale.TRIAL` is assigned they will use their analytic solution.  Similarly, for `TimeScale.TIME_STEP`,
+`TransferMechanisms <TransferMechanism>` integrate their input prior to applying the transfer function (sometimes
+referred to as "time averaging" or "cascade mode"), whereas for `TimeScale.TRIAL` they apply it to their current input
+(i.e., execute their transfer an "instantaneously").
 
 .. _Run_Inputs:
 

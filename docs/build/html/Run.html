@@ -155,66 +155,54 @@
 </div>
 <span class="target" id="module-Run"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p id="run-overview">The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function is used for executing a mechanism, process or system.  It can be called directly, however
-it is typically invoked by calling the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of the object to be run.  It  executes an object by
-calling the object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method.  While an object&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method can be called directly,
-using its <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method is much easier because it:</p>
+<p id="run-overview">The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function is used for executing a Mechanism, Process or System.  It can be called directly, however
+it is typically invoked by calling the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of the Component to be run.  It  executes a Component by
+calling the Component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method.  While a Component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method can be called
+directly, using its <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method is easier because it:</p>
 <blockquote>
 <div><ul class="simple">
-<li>allows multiple rounds of execution to be run in sequence, whereas the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method of an object
+<li>allows multiple rounds of execution to be run in sequence, whereas the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method of a Component
 runs only a single execution of the object;</li>
 </ul>
 <ul class="simple">
 <li>uses simpler formats for specifying <a class="reference internal" href="#run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
 </ul>
 <ul class="simple">
-<li>manages timing factors (such as updating the <code class="xref any docutils literal"><span class="pre">CentralClock</span></code> and presenting</li>
+<li>automatically aggregates results across executions and stores them in the results attribute of the object.</li>
 </ul>
-<p>inputs in the correct <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">phase of execution</span></a> of a system.
-..
-* automatically aggregates results across executions and stores them in the results attribute of the object.</p>
 </div></blockquote>
 <p>Understanding a few basic concepts about how the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function operates will make it easier to use the
-<code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> methods of PsyNeuLink objects.  These are discussed below.</p>
+<code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> methods of PsyNeuLink Components.  These are discussed below.</p>
 <div class="section" id="scope-of-execution">
-<h3>Scope of Execution<a class="headerlink" href="#scope-of-execution" title="Permalink to this headline">¶</a></h3>
-<p>When the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of an object is called, it executes that object and all others within its scope of
-execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">mechanism</span></a>, the scope of execution is simply that mechanism.  For a <a class="reference internal" href="Process.html"><span class="doc">process</span></a>,
-the scope of execution is all of the mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">system</span></a>,
-the scope of execution is all of the mechanisms in the processes specified in the system&#8217;s
-<code class="xref any docutils literal"><span class="pre">processes</span></code> attribute.</p>
+<span id="run-scope-of-execution"></span><h3>Scope of Execution<a class="headerlink" href="#scope-of-execution" title="Permalink to this headline">¶</a></h3>
+<p>When the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of a Component is called, it executes that Component and all others within its scope of
+execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, the scope of
+execution is all of the Mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the scope of execution is
+all of the Mechanisms in the Processes specified in the System&#8217;s <code class="xref any docutils literal"><span class="pre">Processes</span></code> attribute.</p>
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
-<p>PsyNeuLink supports two time scales for executing objects: <a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> and
-<a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TRIAL" title="TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  Every mechanism defines how it is executed at one or both of these time
-scales, and its current mode of execution is determined by its <code class="xref any docutils literal"><span class="pre">timeScale</span></code>
-attribute.</p>
-<ul class="simple" id="run-time-step">
-<li><a class="reference internal" href="TimeScale.html#TimeScale.TimeScale.TIME_STEP" title="TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>:  this mode of execution is a mechanism&#8217;s closest approximation
-to continuous, or &#8220;real time&#8221; processing.  Execution of a <code class="xref any docutils literal"><span class="pre">time_step</span></code> is defined as a single execution of all objects
-in the scope of execution at their <code class="xref any docutils literal"><span class="pre">time_step</span></code> time scale.  Mechanisms called upon to execute a <code class="xref any docutils literal"><span class="pre">time_step</span></code> that do
-not support that time scale of execution have the option of generating an exception, being ignored, or providing
-their trial mode response, either on the first <code class="xref any docutils literal"><span class="pre">time_step</span></code>, every <code class="xref any docutils literal"><span class="pre">time_step</span></code>, or the last <code class="xref any docutils literal"><span class="pre">time_step</span></code> in the sequence
-being run.</li>
-</ul>
-<ul class="simple" id="run-trial">
-<li><code class="xref any docutils literal"><span class="pre">TRIAL</span></code>: this mode of execution is the &#8220;ballistic&#8221; execution of a
-mechanism to a state that would have been achieved with <code class="xref any docutils literal"><span class="pre">time_step</span></code> execution to a specified criterion.  The
-criterion can be specified in terms of the number of <code class="xref any docutils literal"><span class="pre">time_steps</span></code>, or a condition to be met by the mechanism&#8217;s
-output.  It is up to the mechanism how it implements its <code class="xref any docutils literal"><span class="pre">trial</span></code> mode of execution (e.g., whether this is done by
-internal numerical iteration or an analytic calculation). Execution of a <code class="xref any docutils literal"><span class="pre">trial</span></code> is defined as the execution of a
-<code class="xref any docutils literal"><span class="pre">trial</span></code> of all of the objects in the scope of execution.</li>
-</ul>
-<p>The <strong>time_scale</strong> argument of an <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method determines the time scale for each
-round of execution: a <code class="xref any docutils literal"><span class="pre">time_step</span></code> or a <code class="xref any docutils literal"><span class="pre">trial</span></code>.  When a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> is run, each mechanism is executed in the
-order that it appears in the process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>, once per round of execution.  When a <a class="reference internal" href="System.html"><span class="doc">system</span></a> is run,
-the order of execution is determined by the system&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> attribute, which is based on the system&#8217;s
-<code class="xref any docutils literal"><span class="pre">graph</span></code> (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
-system also depends on the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.phaseSpec" title="Mechanism.Mechanism_Base.phaseSpec"><code class="xref any py py-attr docutils literal"><span class="pre">phaseSpec</span></code></a> of each mechanism: this determines <em>when</em> in an execution sequence it should
-be executed. The <code class="xref any docutils literal"><span class="pre">CentralClock</span></code> is used to control timing, so executing a system
-requires that it be appropriately updated.</p>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function handles all of the above factors automatically.</p>
+<p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Component, it calls that Component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
+<a class="reference internal" href="#run-inputs"><span class="std std-ref">input (or set of inputs)</span></a> specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+execution.  For each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
+executing the Components it specifies in each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
+another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
+with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <strong>time_scale</strong> argument of <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, described below, is currently not fully implemented,
+but will be in a subsequent version.</p>
+</div>
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function also has a <strong>time_scale</strong> argument, that can be used to globally specify the time_scale
+parameter for those Components that make use of it.  Any value of <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> can be specified; how it is interpreted
+is determined by the Component. For example, some Mechanisms that perform integration (such as the <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>) offer the
+option of using an analytic solution (that computes the integral in a single <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>), or a numerical method
+(that carries out one step of integration per <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>).  If <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> is assigned as the value of the
+<strong>time_scale</strong> argument in a call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, those Mechanisms will use their numerical integration method,
+whereas if <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> is assigned they will use their analytic solution.  Similarly, for <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>,
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> integrate their input prior to applying the transfer function (sometimes
+referred to as &#8220;time averaging&#8221; or &#8220;cascade mode&#8221;), whereas for <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> they apply it to their current input
+(i.e., execute their transfer an &#8220;instantaneously&#8221;).</p>
 </div>
 <div class="section" id="inputs">
 <span id="run-inputs"></span><h3>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h3>
