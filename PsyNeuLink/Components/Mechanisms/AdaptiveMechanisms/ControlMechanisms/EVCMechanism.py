@@ -702,6 +702,7 @@ class EVCMechanism(ControlMechanism_Base):
     def __init__(self,
                  system=None,
                  # default_input_value=None,
+                 # size=None,
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
@@ -739,6 +740,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                   params=params)
 
         super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
+                                           # size=size,
                                            monitor_for_control=monitor_for_control,
                                            control_signals=control_signals,
                                            function=function,

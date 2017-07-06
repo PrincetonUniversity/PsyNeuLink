@@ -331,6 +331,7 @@ from PsyNeuLink.Components.Process import process
 # System factory method:
 @tc.typecheck
 def system(default_input_value=None,
+           size=None,
            processes:list=[],
            scheduler=None,
            initial_values:dict={},
@@ -462,6 +463,7 @@ def system(default_input_value=None,
         processes = [process()]
 
     return System_Base(default_input_value=default_input_value,
+                       size=size,
                        processes=processes,
                        controller=controller,
                        scheduler=scheduler,
@@ -776,6 +778,7 @@ class System_Base(System):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size=None,
                  processes=None,
                  initial_values=None,
                  controller=SystemDefaultControlMechanism,
@@ -822,6 +825,7 @@ class System_Base(System):
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         super().__init__(variable_default=default_input_value,
+                         size=size,
                          param_defaults=params,
                          name=self.name,
                          prefs=prefs,

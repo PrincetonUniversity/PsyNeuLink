@@ -730,11 +730,6 @@ class DDM(ProcessingMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator}
 
-        # this size validation assumes that one of the super()._validate_params calls already checked
-        # that size is  6/30/17 (CW)
-        if SIZE in target_set:
-            print("\ntarget_set[SIZE]: ", target_set[SIZE])
-
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
