@@ -293,11 +293,15 @@ class Composition(object):
         self._graph_processing = None
         self.mechanisms = []
 
+        self._scheduler_processing = None
+        self._scheduler_learning = None
+
         # status attributes
-        # Needs to be created still| self.scheduler = Scheduler()
+        self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
         self.needs_update_graph = True   # Tracks if the Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True   # Tracks if the processing graph is current with the full graph
-        self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
+        self.needs_update_scheduler_processing = True  # Tracks if the processing scheduler needs to be regenerated
+        self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
         # helper attributes
         self.mechanisms_to_roles = OrderedDict()
@@ -324,6 +328,30 @@ class Composition(object):
             self._update_processing_graph()
 
         return self._graph_processing
+
+    @property
+    def scheduler_processing(self):
+        '''
+            Returns the Composition's processing scheduler. Builds the scheduler if it needs updating
+            since the last access.
+        '''
+        if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+            self._scheduler_processing = Scheduler(graph=self.graph_processing)
+            self.needs_update_scheduler_processing = False
+
+        return self._scheduler_processing
+
+    @property
+    def scheduler_learning(self):
+        '''
+            Returns the Composition's learning scheduler. Builds the scheduler if it needs updating
+            since the last access.
+        '''
+        if self.needs_update_scheduler_learning or self._scheduler_learning is None:
+            self._scheduler_learning = Scheduler(graph=self.graph)
+            self.needs_update_scheduler_learning = False
+
+        return self._scheduler_learning
 
     def _get_unique_id(self):
         return uuid.uuid4()
@@ -371,9 +399,10 @@ class Composition(object):
             # Add connections between mechanisms and the projection
             self.graph.connect_components(sender, projection)
             self.graph.connect_components(projection, receiver)
+            self._validate_projection(sender, projection, receiver)
+
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
-            self._validate_projection(sender, projection, receiver)
 
     def _validate_projection(self, sender, projection, receiver):
 
@@ -702,6 +731,12 @@ class Composition(object):
         reuse_inputs = False
         if inputs is None:
             inputs = {}
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        if scheduler_learning is None:
+            scheduler_learning = self.scheduler_learning
 
         # all mechanisms with inputs specified in the inputs dictionary
         has_inputs = inputs.keys()
