@@ -164,10 +164,37 @@ A System can be executed by calling either its `execute <System_Base.execute>` o
 `execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
 `run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
 of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of `calls to the `run <Scheduler.run>`
-method of the `Scheduler` specified in its `scheduler <System_Base.scheduler>` attribute.  After each call,
-it executes the Components returned by Scheduler (constituting a `TIME_STEP` of execution), until every Component in
-the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
-met.
+method of the `Scheduler` specified in its `scheduler <System_Base.scheduler>` attribute.  After each call, it executes
+the Components returned by Scheduler (constituting a `TIME_STEP` of execution), until every Component in the System
+has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is met.  The
+execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
+`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`,
+and `control <System_Execution_Control>`, each of which is described below.
+
+
+.. _System_Execution_Input_And_Initialization:
+
+Input and Initialization
+~~~~~~~~~~~~~~~~~~~~~~~~
+The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
+`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
+input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
+can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
+one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
+initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
+of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
+`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
+(see learning below;  also, see `Run` for additional details of formatting input specifications).
+
+
+.. _System_Execution_Processing:
+
+Processing
+~~~~~~~~~~
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 Three phases of execution:
 Processing vs. Learning vs Control
@@ -221,17 +248,6 @@ Projections.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 .. _System_Execution_Order:
 
 Order
@@ -245,21 +261,11 @@ Projections in the System remain intact during execution and can be
 `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
 
 
-.. _System_Execution_Input_And_Initialization:
 
-Input and Initialization
-~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
-each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
-input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
-can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
-one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
-initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
-(see learning below;  also, see `Run` for additional details of formatting input specifications).
+
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 .. _System_Execution_Learning:
 
