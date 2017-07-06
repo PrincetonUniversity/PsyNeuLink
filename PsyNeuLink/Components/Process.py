@@ -63,9 +63,9 @@ Pathway
 ~~~~~~~
 
 A Process is defined primarily by its `pathway` attribute, which is a list of `Mechanisms <Mechanism>` and
-`projections <Projection>`.  The list defines an array of Mechanisms that will executed in the order specified. Each
+`Projections <Projection>`.  The list defines an array of Mechanisms that will executed in the order specified. Each
 Mechanism in the pathway must project at least to the next one in the pathway, though it can project to others and
-also receive recurrent (feedback) projections from them.  However, pathways cannot be used to construct branching
+also receive recurrent (feedback) Projections from them.  However, pathways cannot be used to construct branching
 patterns;  that requires the use of a  `System`.  The Mechanisms specified in the `pathway` for a Process are generally
 `ProcessingMechanisms <ProcessingMechanism>`.  The projections between Mechanisms in a Process must be
 `MappingProjections <MappingProjection>`.  These transmit the output of a Mechanism (the Projection's
@@ -90,8 +90,8 @@ of the Process when it is executed.
 
 .. note::
    The `ORIGIN` and `TERMINAL` Mechanisms of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms
-   of the `System <System_Mechanisms>` to which it belongs.  The designations of a Mechanism's status in the Process(es)
-   to which it belongs are listed in its `Processes <Mechanism.Mechanism_Base.processes>` attribute.
+   of the `System(s) <System_Mechanisms>` to which it belongs.  The designations of a Mechanism's status in the
+   Process(es) to which it belongs are listed in its `Processes <Mechanism.Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 
@@ -115,22 +115,22 @@ Projections
 * Inline specification
     Projection specifications can be interposed between any two Mechanisms in the `pathway` list.  This creates a
     Projection from the preceding Mechanism in the list to the one that follows it.  The Projection specification can
-    be an instance of a `MappingProjection`, the class name :keyword:`MappingProjection`, a
-    `matrix keyword <Matrix_Keywords>` for a type of MappingProjection (`IDENTITY_MATRIX`, `FULL_CONNECTIVITY_MATRIX`,
-    or `RANDOM_CONNECTIVITY_MATRIX`), or a dictionary with `specifications for the Projection <Projection_Creation>`.
+    be an instance of a `MappingProjection`, the class name "MappingProjection", a
+    `matrix keyword <Matrix_Keywords>` for a type of MappingProjection, or a dictionary with
+    `specifications for the Projection <Projection_Creation>`.
 
 * Stand-alone Projection
-    When a Projection is created on its own, it can be assigned :ref:`sender <MappingProjection_Sender>`
-    and :ref:`receiver <MappingProjection_Receiver>` Mechanisms. If both are in the Process, then that
+    When a Projection is created on its own, it can be assigned a `sender <MappingProjection_Sender>`
+    and/or a `receiver <MappingProjection_Receiver>` Mechanism. If both are in the Process, then that
     Projection will be used when creating the Process.  Stand-alone specification of a Projection between two
     Mechanisms in a Process takes precedence over default or inline specification; that is, the stand-alone
-    Projection will be used in place of any that is specified in the pathway. Stand-alone specification is required
+    Projection will be used in place of any that is specified in the `pathway`. Stand-alone specification is required
     to implement projections between Mechanisms that are not adjacent to one another in the `pathway` list.
 
 * Default assignment
     For any Mechanism that does not receive a Projection from another Mechanism in the Process (specified using one of
     the methods above), a `MappingProjection` is automatically created from the Mechanism that precedes it in the
-    `pathway`.  If the format of the preceding Mechanism's output matches that of the next Mechanism, then
+    `pathway`.  If the format of the preceding Mechanism's output matches that of the next Mechanism, then an
     `IDENTITY_MATRIX` is used for the Projection;  if the formats do not match, or
     `learning has been specified <Process_Learning>` either for the Projection or the Process,
     then a `FULL_CONNECTIVITY_MATRIX` is used. If the Mechanism is the `ORIGIN` Mechanism (i.e., first in the
@@ -144,22 +144,22 @@ Process input and output
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The input to a Process is a list or 2d np.array provided as an argument in its `execute <Process_Base.execute>`
-or `run <Process_Base.run>` methods, and assigned to its :py:data:`input <Process_Base.input>` attribute.
-When a Process is created, a set of `ProcessInputStates <process_input_states>` and `MappingProjections
-<MappingProjection>` are automatically generated to transmit the Process' input to its `ORIGIN` Mechanism, as follows:
+or `run <Process_Base.run>` methods, and assigned to its `input <Process_Base.input>` attribute. When a Process is
+created, a set of `ProcessInputStates <process_input_states>` and `MappingProjections <MappingProjection>` are
+automatically created to transmit the Process' input to its `ORIGIN` Mechanism, as follows:
 
-* if the number of items in the `input` is the same as the number of `ORIGIN` input_states:
+* if the number of items in the **input** is the same as the number of `ORIGIN` InputStates:
     a MappingProjection is created for each value of the input to an `InputState` of the `ORIGIN` Mechanism;
 
-* if the `input` has only one item but the `ORIGIN` Mechanism has more than one InputState:
-    a single ProcessInputState is created with projections to each of the `ORIGIN` Mechanism input_states;
+* if the **input** has only one item but the `ORIGIN` Mechanism has more than one InputState:
+    a single ProcessInputState is created with Projections to each of the `ORIGIN` Mechanism InputStates;
 
-* if the `input` has more than one item but the `ORIGIN` Mechanism has only one InputState:
+* if the **input** has more than one item but the `ORIGIN` Mechanism has only one InputState:
     a ProcessInputState is created for each input item, and all project to the `ORIGIN` Mechanism's InputState;
 
-* otherwise, if both the `input` and `ORIGIN` Mechanism have more than one InputState, but the numbers are not equal:
-    an error message is generated indicating that the there is an ambiguous mapping from the Process'
-    input value to `ORIGIN` Mechanism's input_states.
+* otherwise, if the **input** has more than one item and the `ORIGIN` Mechanism has more than one InputState,
+  but the numbers are not equal, an error message is generated indicating that the there is an ambiguous mapping from
+  the Process' **input** value to `ORIGIN` Mechanism's InputStates.
 
 The output of a Process is a 2d np.array containing the values of its `TERMINAL` Mechanism's OutputStates.
 
@@ -168,23 +168,24 @@ The output of a Process is a 2d np.array containing the values of its `TERMINAL`
 Learning
 ~~~~~~~~
 
-Learning modifies projections between Mechanisms in a Process's `pathway`, so that the input to each Projection`s
+Learning modifies Projections between Mechanisms in a Process's `pathway`, so that the input to each Projection`s
 `sender <MappingProjection_Sender>` produces the desired ("target") output from its
 `receiver <MappingProjection_Receiver>`.  Learning occurs when a Projection or Process for which learning has been
-specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire
-Process. It is specified for a particular Projection by including a `LearningProjection specification
-<LearningProjection_Creation>` in the specification for the Projection.  It is specified for the entire Process by
-assigning either a `LearningProjection` specification, or the keyword *ENABLED* to the `learning` argument of the
-Process` constructor.  Specifying learning for a Process will implement it for all eligible projections in the
-Process (i.e., all `MappingProjections <MappingProjection>`, excluding projections from
-the Process' InputState to its `ORIGIN` Mechanism, and projections from the `TERMINAL` Mechanism to
-the Process' OutputState). When learning is specified for the Process, all projections in the Process will be trained
-so that input to the Process (i.e., its `ORIGIN` Mechanism) will generate the specified target value as its
-output (i.e., the output of the `TERMINAL` Mechanism). In either case, all Mechanisms that receive projections for
-which learning has been specified must be `compatible with learning <LearningProjection>`).
+specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire Process.
+It is specified for a particular Projection by including a `learning specification <LearningSignal_Specification>`
+in the specification for the Projection.  It is specified for the entire Process by assigning either a
+`LearningProjection` or `LearningSignal` specification, or the keyword *ENABLED* to the **learning** argument of the
+Process` constructor.  Specifying learning for a Process will implement it for all eligible Projections in the
+Process (i.e., all `MappingProjections <MappingProjection>`, excluding Projections from the Process' InputState to
+its `ORIGIN` Mechanism, and projections from the `TERMINAL` Mechanism to the Process' OutputState). When learning is
+specified for the Process, all Projections in the Process will be trained so that input to the Process (i.e., its
+`ORIGIN` Mechanism) will generate the specified target value as its output (i.e., the output of the `TERMINAL`
+Mechanism). In either case, all Mechanisms that receive Projections for which learning has been specified must be
+`compatible with learning <LearningProjection>`).
 
-When learning is specified , the following objects are automatically created for each Projection involved (see figure
-below):
+When learning is specified , the following Components are automatically created for each Projection involved (
+see figure below):
+
     * a `ComparatorMechanism` used to evaluate the output of the Projection's `receiver <MappingProjection_Receiver>`          against a target value;
     ..
     * a `MappingProjection` from the Projection's `receiver <MappingProjection_Receiver>` to the ComparatorMechanism;
@@ -200,11 +201,11 @@ below):
 
 Different learning algorithms can be specified (e.g., `Reinforcement` or `BackPropagation`), that implement the
 Mechanisms and LearningSignals required for the specified type of learning. However,  as noted above,
-all Mechanisms that receive projections being learned must be compatible with learning.
+all Mechanisms that receive Projections being learned must be compatible with learning.
 
-When a Process or any of its projections is specified for learning, a set of `target values <Run_Targets>`
-must be provided (along with the `inputs <input>`) as an argument to the Process' `execute <Process_Base.execute>` or
-`run <Process_Base.run>` method.
+When a Process or any of its Projections is specified for learning, a set of `target values <Run_Targets>`
+must be provided (along with the **inputs**) in the **targets** argument to the Process' `execute
+<Process_Base.execute>` or `run <Process_Base.run>` method.
 
 .. _Process_Learning_Figure:
 
@@ -285,7 +286,7 @@ a default Projection will be created between ``mechanism_2`` and ``mechanism_3``
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-*Process that implements learning:*  This `pathway` implements a series of Mechanisms with projections between them,
+*Process that implements learning:*  This `pathway` implements a series of Mechanisms with Projections between them,
 all of which will be learned using `BackPropagation` (the default learning algorithm).  Note that it uses the `Logistic`
 function, which is compatible with BackPropagation::
 
@@ -301,7 +302,7 @@ function, which is compatible with BackPropagation::
                          target=[0])
 
 .. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
-   *Process with individual projections that implement learning:*
+   *Process with individual Projections that implement learning:*
 
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
@@ -627,7 +628,7 @@ class Process_Base(Process):
 
     process_input_states : Optional[List[ProcessInputState]]
         used to represent the input to the Process, and transmit this to the InputState(s) of its `ORIGIN`
-        Mechanism.  Each ProcessInputState sends a MappingProjection to one or more input_states of the
+        Mechanism.  Each ProcessInputState sends a MappingProjection to one or more InputStates of the
         `ORIGIN` Mechanism.
 
     input :  Optional[List[value] or ndarray]
