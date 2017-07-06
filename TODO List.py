@@ -200,6 +200,8 @@
 #                       no properties are created for them
 #                       they are not validated when assigned
 
+# FIX: targetMechanisms -> target_mechanisms, originMechanisms -> origin_mechanisms
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??

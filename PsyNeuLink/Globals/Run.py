@@ -255,44 +255,36 @@ Sequence Format
 ^^^^^^^^^^^^^^^
 
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-:keyword:`targets`:  one for executions, one for mechanisms, and one for the elements of each input.  For a system
-with more than one `TARGET` mechanism, the targets must be specified in the same order as they appear in the system's
+targets:  one for `TRIAL` \s, one for Mechanisms, and one for the elements of each input.  For a System
+with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
 `targetMechanisms <System.System_Base.targetMechanisms>` attribute.  This should be the same order in which
-they are declared, and can be displayed using the system's `show <System.System_Base.show>` method). All
-other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for :keyword:`inputs`.
+they are declared, and can be displayed using the System's `show <System.System_Base.show>` method). All
+other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
 
 .. _Run_Targets_Mechanism_Format:
 
 Mechanism Format
 ^^^^^^^^^^^^^^^^
 *(Dict[mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
-mechanisms in the process or system being run, though the entries can be specified in any order.  For this reason,
-this format may be easier (and safer) to use. The value of each entry is a list or ndarray of the target values for
-that mechanism, one for each round of execution. There are at most two levels of nesting (or dimensions)
-required for each entry: one for the execution, and the other for the elements of each input.  In all other respects,
-the format is the same as the `Mechanism format <Run_Inputs_Mechanism_Format>` for :keyword:`inputs`.
+Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
+easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
+`TRIAL`.  There are at most two levels of nesting (or dimensions) required for each entry: one for the `TRIAL`,
+and the other for the elements of each input.  In all other respects, the format is the same as the
+`Mechanism format <Run_Inputs_Mechanism_Format>` for **inputs**.
 
 .. _Run_Targets_Function_Format:
 
 Function Format
 ^^^^^^^^^^^^^^^
 
-*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` mechanisms
-for the process  or system being run, each of which must match (in number and type of elements) the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` mechanism for which it is
-intended. This format allows targets to be constructed programmatically, in response to computations made during the
-run.
+*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` Mechanisms
+for the Process or System being run, each of which must match (in number and type of elements) the
+`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` Mechanism for which it is intended.
+This format allows targets to be constructed programmatically, in response to computations made during the run.
 
 COMMENT:
     ADD EXAMPLE HERE
 COMMENT
-
-COMMENT:
-   Module Contents
-       system() factory method:  instantiate system
-       System_Base: class definition
-COMMENT
-
 
 .. _Run_Class_Reference:
 
@@ -405,55 +397,55 @@ def run(object,
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-        the input for each execution in a sequence (see `Run_Inputs` for detailed description of formatting
+    inputs : List[input] or ndarray(input) : default default_input_value for a single `TRIAL`
+        the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
         requirements and options).
 
     num_executions : int : default None
-        the number of executions to carry out.  If it is `None` (the default), then a number of executions will be
-        carried out equal to the number of :keyword:`inputs`.  If :keyword:`num_executions` exceeds the number of
-        :keyword:`inputs`, then the :keyword:`inputs` will be cycled until the number of executions specified is
-        completed.
+        the number of `TRIAL` \s to run.  If it is `None` (the default), then a number of `TRIAL` \s run will be equal
+        equal to the number of items specified in the **inputs** argument.  If **num_executions** exceeds the number of
+        inputs, then the inputs will be cycled until the number of `TRIAL` \s specified have been run.
 
     reset_clock : bool : default True
-        if :keyword:`True`, resets `CentralClock` to 0 before a sequence of executions.
+        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \s.
 
     initialize : bool default False
-        calls the `initialize <System.System_Base.initialize>` method of the system prior to a sequence of executions.
+        calls the `initialize <System.System_Base.initialize>` method of the System prior to the first `TRIAL`.
 
     initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
-        the initial values assigned to mechanisms designated as `INITIALIZE_CYCLE`.
+        the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : List[input] or np.ndarray(input) : default None
-        the target values assigned to the `ComparatorMechanism` for each execution (used for learning).
-        The length must be equal to :keyword:`inputs`.
+        the target values assigned to the `ComparatorMechanism` for each `TRIAL` (used for learning).
+        The length must be equal to **inputs**.
 
     learning : bool :  default None
-        enables or disables learning during execution for a `process <Process_Learning>` or
-        `system <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
-        If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
+        enables or disables learning during execution for a `Process <Process_Learning>` or
+        `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
+        If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
     call_before_trial : Function : default= `None`
-        called before each `trial` in the sequence is executed.
+        called before each `TRIAL` in the sequence is run.
 
     call_after_trial : Function : default= `None`
-        called after each `trial` in the sequence is executed.
+        called after each `TRIAL` in the sequence is run.
 
     call_before_time_step : Function : default= ``None`
-        called before each `time_step` is executed.
+        called before each `TIME_STEP` is executed.
 
     call_after_time_step : Function : default= `None`
-        called after each `time_step` is executed.
+        called after each `TIME_STEP` is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL
-        specifies whether mechanisms are executed for a single time_step or a trial
+        specifies time scale for Components that implement different forms of execution for different values of
+        `TimeScale`.
 
     Returns
     -------
 
-    <object>.results : List[outputState.value]
-        list of the values, for each execution, of the outputStates for a mechanism run directly,
-        or of the outputStates of the `TERMINAL` mechanisms for the process or system run
+    <object>.results : List[OutputState.value]
+        list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
+        or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
     inputs = _construct_stimulus_sets(object, inputs)
