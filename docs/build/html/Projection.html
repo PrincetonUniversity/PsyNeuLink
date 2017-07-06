@@ -34,7 +34,6 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="Component" href="Component.html"/>
         <link rel="next" title="PathwayProjection" href="PathwayProjection.html"/>
         <link rel="prev" title="Gating Mechanism" href="GatingMechanism.html"/> 
 
@@ -86,37 +85,33 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Projection</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#in-context-specification">In Context Specification</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#automatic-creation">Automatic creation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Projection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-projection">Creating a Projection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#in-context-specification">In Context Specification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-creation">Automatic creation</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#sender">Sender</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#receiver">Receiver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#sender">Sender</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#receiver">Receiver</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
 </ul>
 
             
@@ -146,8 +141,6 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
-      
-          <li><a href="Component.html">Component</a> &raquo;</li>
       
     <li>Projection</li>
       <li class="wy-breadcrumbs-aside">
@@ -183,7 +176,7 @@ needed to transmit that information to the <a class="reference internal" href="I
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
 <dd><p class="first last">These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
-the Projection&#8217;s <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter, and transmit the result as
+the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter, and transmit the result as
 input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
 </dd>
@@ -206,7 +199,7 @@ in the context of a <a class="reference internal" href="System.html"><span class
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
 <dd><p class="first last">These take the value of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmit this to the
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> which uses this to modify its
-<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. LearningProjections are used when
+<code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter. LearningProjections are used when
 learning has been specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</p>
 </dd>
 </dl>
@@ -254,7 +247,7 @@ Any of the following can be used to specify a Projection in context:</p>
 </div>
 <ul class="simple">
 <li>LEARNING_PROJECTION &#8211; a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.  At present, this can only be used together with the
-specification of a MappingProjection (see <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">tuple</span></a> format).  If the
+specification of a MappingProjection (see <code class="xref any docutils literal"><span class="pre">tuple</span></code> format).  If the
 <code class="xref std std-keyword docutils literal"><span class="pre">receiver</span></code> of the MappingProjection projects to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>,
 the latter will be used as the <code class="xref std std-keyword docutils literal"><span class="pre">sender</span></code> for the LearningProjection.  Otherwise,
 a LearningMechanism will be created for it

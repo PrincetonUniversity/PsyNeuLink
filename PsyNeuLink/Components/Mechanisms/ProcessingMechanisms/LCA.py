@@ -18,47 +18,47 @@
 Overview
 --------
 
-An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator 
+An LCA is a subclass of `RecurrentTransferMechanism` that implements a single-layered leaky competitive accumulator
 network, in which each element is connected to every other element with mutually inhibitory weights.  All of the
-inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that 
-it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay 
-<RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close 
-approximation of a `DDM` mechanism 
-(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
+inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that
+it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay
+<RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close
+approximation of a `DDM` mechanism
+(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
-  
+
 .. _Recurrent_Transfer_Creation:
 
 Creating an LCA
 ---------------
 
-An LCA can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function 
-and specifying LCA as its **mech_spec** argument.  The set of mutually inhibitory connections are implemented as a 
-recurrent `MappingProjection` with a `matrix <LCA.matrix>` of uniform negative weights specified by 
-the **inhibition** argument of the LCA's constructor.  The default format of its `variable <LCA.variable>`, and default 
-values of its `inhibition <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and 
-`noise <TransferMechanism.noise>` parameters implement an approximation of a `DDM`. 
+An LCA can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function
+and specifying LCA as its **mech_spec** argument.  The set of mutually inhibitory connections are implemented as a
+recurrent `MappingProjection` with a `matrix <LCA.matrix>` of uniform negative weights specified by
+the **inhibition** argument of the LCA's constructor.  The default format of its `variable <LCA.variable>`, and default
+values of its `inhibition <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and
+`noise <TransferMechanism.noise>` parameters implement an approximation of a `DDM`.
 
 .. _LCA_Structure:
 
 Structure
 ---------
 
-The distinguishing feature of an LCA is its `matrix <LCA.matrix>` of uniform negative weights.  It also has, in 
+The distinguishing feature of an LCA is its `matrix <LCA.matrix>` of uniform negative weights.  It also has, in
 addition to its `primary outputState <OutputState_Primary>` (which contains the current value of the elements of the
-LCA) and the outputStates of a RecurrentTransferMechanism, it has two additional outputStates: MAX_VS_NEXT and 
-MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with the currently highest value relative 
-to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the 
-LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG 
-contains the index of the LCA element with the greatest value, and the difference between its value and the average 
-of all the others.  For an LCA with only two elements, MAX_VS_NEXT implements a close approximation of the 
-`threshold <DDM.threshold>` parameter of a `DDM`  
-(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and 
+LCA) and the outputStates of a RecurrentTransferMechanism, it has two additional outputStates: MAX_VS_NEXT and
+MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with the currently highest value relative
+to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the
+LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG
+contains the index of the LCA element with the greatest value, and the difference between its value and the average
+of all the others.  For an LCA with only two elements, MAX_VS_NEXT implements a close approximation of the
+`threshold <DDM.threshold>` parameter of a `DDM`
+(see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
-For an LCA with more than two elements, MAX_VS_NEXT and 
-MAX_VS_AVERAGE implement threshold approximations with different properties 
+For an LCA with more than two elements, MAX_VS_NEXT and
+MAX_VS_AVERAGE implement threshold approximations with different properties
 (see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
- 
+
 .. _LCA_Execution:
 
 Execution
@@ -78,6 +78,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
+import warnings
 
 
 class LCAError(Exception):
@@ -133,10 +134,10 @@ class LCA(RecurrentTransferMechanism):
     COMMENT:
         Description
         -----------
-            LCA is a Subtype of the RecurrentTransferMechanism Subtype of the TransferMechanism 
+            LCA is a Subtype of the RecurrentTransferMechanism Subtype of the TransferMechanism
             Subtype of the ProcessingMechanisms Type of the Mechanism Category of the Component class.
             It implements a RecurrentTransferMechanism with a set of uniform recurrent inhibitory weights.
-            In all other respects, it is identical to a RecurrentTransferMechanism. 
+            In all other respects, it is identical to a RecurrentTransferMechanism.
     COMMENT
 
     Arguments
@@ -154,8 +155,8 @@ class LCA(RecurrentTransferMechanism):
         or a custom function.
 
     inhibition : number : default 1.0
-        specifies the magnitude of the (uniform) negative weights used for the 
-        `matrix <LCA.matrix>` parameter of the `recurrent_projection <LCA.recurrent_projection>`. 
+        specifies the magnitude of the (uniform) negative weights used for the
+        `matrix <LCA.matrix>` parameter of the `recurrent_projection <LCA.recurrent_projection>`.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -218,16 +219,16 @@ class LCA(RecurrentTransferMechanism):
 
     matrix : 2d np.array
         the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism,
-        with a uniform set of negative weights, the magnitude of which are determined by the 
-        `inhibition <LCA.inhibition>` attribute.  
+        with a uniform set of negative weights, the magnitude of which are determined by the
+        `inhibition <LCA.inhibition>` attribute.
 
     recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>` 
+        a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>`
         back to it `primary inputState <Mechanism_InputStates>`.
 
     inhibition : number : default 1.0
         determines the magnitude of the (uniform) negative weights for the `matrix <LCA.matrix>` parameter
-        of the `recurrent_projection <LCA.recurrent_projection>`. 
+        of the `recurrent_projection <LCA.recurrent_projection>`.
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
@@ -259,16 +260,16 @@ class LCA(RecurrentTransferMechanism):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
-        the value of the input on the previous round of execution, including the value of `recurrent_projection`. 
+        the value of the input on the previous round of execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `output_values <TransferMechanism.output_values>`.    
+        `output_values <TransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT 
+            the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT
             outputState and the first item of :keyword:`output_values`.
     COMMENT
 
@@ -277,16 +278,16 @@ class LCA(RecurrentTransferMechanism):
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `ENERGY`, the :keyword:`value` of which is the energy of the result, 
+        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
           calculated using the `Stability` Function with the ENERGY metric;
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric; 
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
+          calculated using the `Stability` Function with the ENTROPY metric;
+          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function);
-        * `MAX_VS_NEXT`, the :keyword:`value` of which is a two element array: the first is the 
+        * `MAX_VS_NEXT`, the :keyword:`value` of which is a two element array: the first is the
           index of the element of RESULT with the highest value, and the second the difference between that
           and the next highest one in RESULT;
-        * `MAX_VS_AVG`, the :keyword:`value` of which is a two element array: the first is the 
+        * `MAX_VS_AVG`, the :keyword:`value` of which is a two element array: the first is the
           index of the element of RESULT with the highest value, and the second the difference between that
           and the average of the value of all its other elements;
 
@@ -324,6 +325,8 @@ class LCA(RecurrentTransferMechanism):
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
+    variableClassDefault = [[0]]
+
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
@@ -335,14 +338,14 @@ class LCA(RecurrentTransferMechanism):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size:tc.optional(int)=None,
+                 size:tc.optional(tc.any(int, list, np.array))=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
                  inhibition:tc.optional(tc.any(int, float))=1.0,
-                 noise:is_numeric_or_none=0.1,
+                 noise:is_numeric_or_none=0.0,
                  time_constant:is_numeric_or_none=1.0,
                  range=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
@@ -354,10 +357,92 @@ class LCA(RecurrentTransferMechanism):
         """Instantiate LCA
         """
 
+        # this may be problematic
+        # IMPLEMENTATION NOTE: parts of this region may be redundant with code in ProcessingMechanism.__init__()
+        # region Fill in and infer default_input_value and size if they aren't specified in args
+        if default_input_value is None and size is None:
+            default_input_value = self.variableClassDefault
+            size = [1]
+
+        # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
+        # default_input_value are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
+        # region Convert default_input_value (if given) to a 2D array, and size (if given) to a 1D integer array
+
+        try:
+            if default_input_value is not None:
+                default_input_value = np.atleast_2d(default_input_value)
+                if len(np.shape(default_input_value)) > 2:  # number of dimensions of default_input_value > 2
+                    warnings.warn("default_input_value had more than two dimensions (had {} dimensions) "
+                                  "so only the first element of its second-highest-numbered axis will be"
+                                  " used".format(len(np.shape(default_input_value))))
+                    while len(np.shape(default_input_value)) > 2:  # reduce the dimensions of default_input_value
+                        default_input_value = default_input_value[0]
+        except:
+            raise TransferError("Failed to convert default_input_value (of type {})"
+                                " to a 2D array".format(type(default_input_value)))
+
+        try:
+            if size is not None:
+                size = np.atleast_1d(size)
+                if len(np.shape(size)) > 1:  # number of dimensions of size > 1
+                    warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
+                                  "element of its highest-numbered axis will be used".format(len(np.shape(size))))
+                    while len(np.shape(size)) > 1:  # reduce the dimensions of size
+                        size = size[0]
+        except:
+            raise TransferError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
+
+        try:
+            if size is not None:
+                map(lambda x: int(x), size)  # convert all elements of size to int
+        except:
+            raise TransferError("Failed to convert an element in size to an integer.")
+        # endregion
+
+        # region If default_input_value is None, make it a 2D array of zeros each with length=size[i]
+        # IMPLEMENTATION NOTE: perhaps add setting to enable user to change
+        # default_input_value's default value, which is an array of zeros at the moment
+        if default_input_value is None and size is not None:
+            try:
+                default_input_value = []
+                for s in size:
+                    default_input_value.append(np.zeros(s))
+                default_input_value = np.array(default_input_value)
+            except:
+                raise TransferError("default_input_value was not specified, but PsyNeuLink was unable to "
+                                    "infer default_input_value from the size argument, {}. size should be"
+                                    " an integer or an array or list of integers. Either size or "
+                                    "default_input_value must be specified.".format(size))
+        # endregion
+
+        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_input_value[i])
+        if size is None:
+            size = []
+            try:
+                for input_vector in default_input_value:
+                    size.append(len(input_vector))
+                size = np.array(size)
+            except:
+                raise TransferError("size was not specified, but PsyNeuLink was unable to infer size from "
+                                    "the default_input_value argument, {}. default_input_value can be an array,"
+                                    " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
+                                    " default_input_value must be specified.".format(default_input_value))
+        # endregion
+
+        # region If length(size) = 1 and default_input_value is not None, then expand size to length(default_input_value)
+        if len(size) == 1 and len(default_input_value) > 1:
+            new_size = np.empty(len(default_input_value))
+            new_size.fill(size[0])
+            size = new_size
+        # endregion
+
+        # IMPLEMENTATION NOTE: if default_input_value and size are both specified as arguments, they will be checked
+        # against each other in Component.py, during _instantiate_defaults().
+        # endregion
+
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
-        size = size or len(self.variableClassDefault)
-        matrix = np.full((size, size), -inhibition) * get_matrix(HOLLOW_MATRIX,size,size)
+        matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,

@@ -566,7 +566,7 @@ class DDM(ProcessingMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size:tc.optional(int)=None,
+                 size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
@@ -591,7 +591,9 @@ class DDM(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
-        if default_input_value is None:
+        # IMPLEMENTATION NOTE: this manner of setting default_input_value works but is idiosyncratic
+        # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
+        if default_input_value is None and size is None:
             try:
                 default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
             except:
@@ -609,6 +611,7 @@ class DDM(ProcessingMechanism_Base):
                                   params=params,
                                   name=name,
                                   prefs=prefs,
+                                  size=size,
                                   # context=context)
                                   context=self)
 
@@ -717,10 +720,17 @@ class DDM(ProcessingMechanism_Base):
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
-        """Insures that input to DDM is a single value.
+        """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
         """
-        if not isinstance(variable, numbers.Number) and len(variable) > 1:
+        # this test may become obsolete when size is moved to Component.py
+        if len(variable) > 1:
+            raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
+                           "input states, which is currently not supported in DDM, but may be supported"
+                           " in the future under a multi-process DDM. Please use a single numeric "
+                           "item as the default_input_value, or use size = 1.".format(variable))
+        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
+        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
         super()._validate_variable(variable=variable, context=context)
 
@@ -731,6 +741,11 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator}
+
+        # this size validation assumes that one of the super()._validate_params calls already checked
+        # that size is  6/30/17 (CW)
+        if SIZE in target_set:
+            print("\ntarget_set[SIZE]: ", target_set[SIZE])
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),

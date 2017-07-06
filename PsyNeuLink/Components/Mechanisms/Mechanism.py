@@ -1540,7 +1540,7 @@ class Mechanism_Base(Mechanism):
             if context is NO_CONTEXT:
                 context = EXECUTING + ' ' + append_type_to_name(self)
             if input is None:
-                input = self.variableClassDefault
+                input = self.variableInstanceDefault
             self._assign_input(input)
 
         #endregion

@@ -488,14 +488,15 @@ class Projection_Base(Projection):
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
-
+        # MODIFIED 6/27/17 NEW: commented this out because this is throwing an error as follows: -Changyan
+        # AttributeError: 'MappingProjection' object has no attribute '_prefs'
         # MODIFIED 4/21/17 NEW: [MOVED FROM MappingProjection._instantiate_receiver]
         # Assume that if receiver was specified as a Mechanism, it should be assigned to its (primary) InputState
         if isinstance(self.receiver, Mechanism):
-            if (len(self.receiver.input_states) > 1 and
-                    (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-                print("{0} has more than one InputState; {1} was assigned to the first one".
-                      format(self.receiver.owner.name, self.name))
+            # if (len(self.receiver.input_states) > 1 and
+            #         (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
+            #     print("{0} has more than one inputState; {1} was assigned to the first one".
+            #           format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
 

@@ -270,6 +270,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
      self.variable is sometimes yoked/aliased to other attributes (for semantic reasons);  for example:
          variable -> value (for States)
                   -> input or default_input_value (for Mechanism and Process)
+		    -> TBI: size or shape (for Mechanism, Projection, and State)
      param values can, in some cases, be specified as numbers, but will be converted to a single-item list
              as the "lingua-franca" for variables
              (which they are, for the receiver's inputState function)
@@ -439,7 +440,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
          3) Assign log
          4) Enforce implementation of variableClassDefault
          5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
-         5) assign_defaults
+         6) assign_defaults
              a) _validate_variable
                  - get value from ParamValueProjection tuple
                  - resolve function object or reference to current value
