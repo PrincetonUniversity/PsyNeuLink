@@ -165,8 +165,8 @@ Execution
 ---------
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes each Mechanism in the System once, whereas `run <System_Base.execute>`
-allows a series of executions to be carried out.
+`execute <System_Base.execute>` executes the System once, whereas `run <System_Base.execute>` allows a series of
+executions to be carried out.
 
 .. _System_Execution_Order:
 
@@ -182,13 +182,14 @@ Projections in the System remain intact during execution and can be
 
 .. _System_Execution_Phase:
 
-Phase
-~~~~~
-Execution occurs in passes through a System called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
-When executing a System in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
-execute a trial of every Mechanism in the System.  During each phase of execution, only the Mechanisms assigned to
-that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a `Process`.
-When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the System.
+Timing
+~~~~~~
+When a System is executed, it calls the `run <Scheduler.run>` of the `Scheduler` specified in its `scheduler
+<System.scheduler>` attribute.  That carries out a single `TRIAL` of execution.  By default, every Mechanism in the
+System is executed, in the order
+The order and number of times each
+of the Mechanisms in the System are executed in a `TRIAL` is determined
+
 
 .. _System_Execution_Input_And_Initialization:
 
@@ -712,10 +713,10 @@ class System_Base(System):
             Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
             ProcessingMechanism(s) to be executed in the System.
 
-    numPhases : int
-        number of phases for System (read-only).
+        .. numPhases : int
+            number of phases for System (read-only).
 
-        .. implemented as an @property attribute; = _phaseSpecMax + 1
+            .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
