@@ -176,55 +176,23 @@ and `control <System_Execution_Control>`, each of which is described below.
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
-input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
-can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
-one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
-initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
-(see learning below;  also, see `Run` for additional details of formatting input specifications).
+`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used, input for
+only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
+used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
+cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
+of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
+recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrentInitMechanisms`), and target values are
+assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
+details of formatting input specifications).
 
-
-.. _System_Execution_Processing:
-
-Processing
-~~~~~~~~~~
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-Three phases of execution:
-Processing vs. Learning vs Control
-
-
-By default, Mechanisms are executed in the order they are listed in the Processes used to construct the
-System.  When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
-System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
-determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
-"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
-Projections in the System remain intact during execution and can be
-`initialized <System_Execution_Input_And_Initialization>` at the start of execution.  The order in which Components
-are executed can be customized, using the System's Scheduler in combination with `Condition` specifications for
-individual Components to execute different Components at different time scales.
-
-
-That carries
-out a single `TRIAL` of execution.  By
-
-
-
-
-
-** FROM PROCESS *************************
-
-A Process can be executed as part of a `System <System>` or on its own.  On its own, it can be executed by calling
-either its `execute <Process_Base.execute>` or `run <Process_Base.run>` methods.  `execute <System_Base.execute>`
-executes the System once; that is, it executes a single `TRIAL`;  `run <System_Base.execute>` allows a series of
-`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `ORIGIN` Mechanism (first
-Mechanism in the pathway).  By default, the the input value is presented only once.  If the `ORIGIN` Mechanism is
+FROM PROCESS -- INTEGRATE INTO INPUT AND INITIALIZATION (ABOVE) AND/OR PROCESSING (BELOW)
+By default, the  input value is presented only once.  If the `ORIGIN` Mechanism is
 executed again in the same `PASS` of execution (e.g., if it appears again in the pathway, or receives recurrent
 projections), the input is not presented again. However, the input can be "clamped" on using the **clamp_input**
 argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed,
@@ -235,36 +203,28 @@ executed using them (see `Mechanism` for parameter specification).  Finally the 
 specified for the Process or any of the projections in its `pathway`, then the relevant
 `LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to the corresponding
 Projections.
-
 .. note::
    The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
    projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
-
-**********************
-
-
-
-
-
-
-.. _System_Execution_Order:
-
-Order
-~~~~~
-Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
-Processes. When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
-System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
-determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
-"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
-Projections in the System remain intact during execution and can be
-`initialized <System_Execution_Input_And_Initialization>` at the start of execution.
-
-
-
-
-
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+.. _System_Execution_Processing:
+
+Processing
+~~~~~~~~~~
+
+Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are
+executed in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is
+executed, it receives input from any other Mechanisms that project to it within the System,  but not from Mechanisms
+outside the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's
+`executionGraph` attribute, which is a subset of the System's `graph` that has been "pruned" to be acyclic (i.e.,
+devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent Projections in the System remain
+intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
+The order in which Components are executed can also be customized, using the System's Scheduler in combination with
+`Condition` specifications for individual Components, to execute different Components at different time scales, or to
+introduce dependencies among them (e.g., require that a recurrent mechanism settle before another one execute --
+see `example <Condition_Recurrent_Example>`).
 
 
 .. _System_Execution_Learning:
