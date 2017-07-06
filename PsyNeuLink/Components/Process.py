@@ -35,10 +35,10 @@ A Process is `Composition` that is a sequence of `Mechanisms <Mechanism>` linked
 Executing a Process executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:
 a list of Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a
 Process, including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or
-many-to-one projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms
+many-to-one Projections); that must be done using a `System`. Mechanisms in a Process can also project to Mechanisms
 in other Processes, but these will only have an effect if all of the Processes involved are members of the same
 `System`. Projections between Mechanisms can be trained, by assigning `LearningProjections <LearningProjection>` to
-them. Learning can also be specified for the entire Process, in which case all of the projections among Mechanisms in
+them. Learning can also be specified for the entire Process, in which case all of the Projections among Mechanisms in
 the Process will be trained. Processes can be constructed and executed on their own.  More commonly, however,
 they are used to construct a `System`.
 
@@ -72,12 +72,10 @@ patterns;  that requires the use of a  `System`.  The Mechanisms specified in th
 `sender <MappingProjection.MappingProjection.sender>`) to the input of another Mechanism (the Projection's
 `receiver <MappingProjection.MappingProjection.receiver>`). Specification of a `pathway` requires, at the least, a list
 of Mechanisms.  These can be specified directly, or in a **tuple** that also contains a set of
-`runtime parameters <Mechanism_Runtime_Parameters>` and/or a `phase <System_Execution_Phase>` specification (see
-`below <Process_Mechanism_Specification>`). Projections between a pair of Mechanisms can be specified by
-interposing
-them in the list between the pair.  When no Projection appears between two adjacent Mechanisms in the pathway, and
-there is no otherwise specified Projection between them, PsyNeuLink assigns a default Projection. Specifying the
-components of a pathway is described in detail below.
+`runtime parameters <Mechanism_Runtime_Parameters>` (see `below <Process_Mechanism_Specification>`). Projections
+between a pair of Mechanisms can be specified by interposing them in the list between the pair.  When no Projection
+appears between two adjacent Mechanisms in the pathway, and there is no otherwise specified Projection between them,
+PsyNeuLink assigns a default Projection. Specifying the components of a pathway is described in detail below.
 
 .. _Process_Mechanisms:
 
@@ -98,21 +96,13 @@ of the Process when it is executed.
 .. _Process_Mechanism_Specification:
 
 Mechanisms can be specified in the `pathway` argument of :py:func:`process` in one of two ways:  directly or
-in a *MechanismTuple*.  Direct  specification can use any supported format for `specifying a Mechanism
-<Mechanism_Creation>`. Alternatively, Mechanisms can be specified using a MechanismTuple, the first item of which
-is the Mechanism, and the second and third (optional) items are a set of
-`runtime parameters <Mechanism_Runtime_Parameters>` and a `phase <System_Execution_Phase>` specification. Runtime
-parameters are used for that Mechanism when the Process (or a System to which it belongs) is executed; otherwise
-they do not remain associated with the Mechanism.  The phase is used when the Mechanism is executed as part of a
-System, to specify when within the trial the Mechanism should be executed.  Either the runtime parameters or the phase
-can be omitted from a MechanismTuple (if the phase is omitted, the default value of 0 will be assigned).
-
-.. note::
-   Irrespective of the format in which a Mechanism is specified in a `pathway`, it's entry is
-   converted internally to a MechanismTuple, and listed in the Process' `mechanisms` attribute.
-
-The same Mechanism can appear more than once in a `pathway`, as one means of generating a recurrent processing loop
-(another is to specify this in the projections -- see below).
+in a *MechanismTuple*.  Direct  specification can use any supported format for
+`specifying a Mechanism <Mechanism_Creation>`. Alternatively, Mechanisms can be specified using a MechanismTuple,
+the first item of which is the Mechanism, and the second is a set of
+`runtime parameters <Mechanism_Runtime_Parameters>`. Runtime parameters are used for that Mechanism when the Process
+(or a System to which it belongs) is executed; otherwise they do not remain associated with the Mechanism. The same
+Mechanism can appear more than once in a `pathway`, as one means of generating a recurrent processing loop (another
+is to specify this in the Projections -- see below).
 
 
 .. _Process_Projections:
@@ -255,8 +245,7 @@ Examples
 
 *Specification of Mechanisms in a pathway:*  The first Mechanism is specified as a reference to an instance,
 the second as a default instance of a Mechanism type, and the third in MechanismTuple format (specifying a reference
-to a Mechanism that should receive some_params at runtime; note: the phase is omitted and so will be assigned the
-default value of 0)::
+to a Mechanism that should receive some_params at runtime::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
@@ -614,13 +603,10 @@ class Process_Base(Process):
     pathway : List[(Mechanism, dict, int), (Projection, LearningProjection spec, None), (Mechanism, dict, int)...]
         specifies the list of Mechanisms that are executed (in the order specified) when the Process executes.
         Entries are alternating tuples specifying Mechanisms and projections.  For Mechanism tuples, the dict specifies
-        a set of `runtime parameters <Mechanism_Runtime_Parameters>` to use for execution of the Mechanism,
-        and the int specifies the `phase <System_Execution_Phase>` in which the Mechanism should be executed when the
-        Process to which it belongs is executed by a System. For Projection tuples, the LearningProjection
-        specification can be a `LearningProjection` object, the class or the `LEARNING_PROJECTION` keyword (which
-        specifies a default instance) or the constructor for a LearningProjection (including parameters).  The second
-        and third items of Mechanism tuples, and the second item of Projection tuples are optional and therefore may
-        be `None`. The third item of Projection tuples is currently not used and is always `None`.
+        a set of `runtime parameters <Mechanism_Runtime_Parameters>` to use for execution of the Mechanism. For
+        Projection tuples, the LearningProjection specification can be a `LearningProjection` object, the class or the
+        `LEARNING_PROJECTION` keyword (which specifies a default instance) or the constructor for a LearningProjection
+        (including parameters).
 
         .. note::
              The value of this attribute is constructed from the `pathway` argument of the :py:func:`process`
@@ -758,8 +744,8 @@ class Process_Base(Process):
              phase of last (set of) ProcessingMechanism(s) to be executed in the Process.
              It is assigned to the ``phaseSpec`` for the Mechanism in the pathway with the largest ``phaseSpec`` value.
 
-    numPhases : int : default 1
-        the number of ref:`phases <System_Execution_Phase>` for the Process.
+      .. numPhases : int : default 1
+            the number of ref:`phases <System_Execution_Phase>` for the Process.
 
         COMMENT:
             It is assigned as ``_phaseSpecMax + 1``.
