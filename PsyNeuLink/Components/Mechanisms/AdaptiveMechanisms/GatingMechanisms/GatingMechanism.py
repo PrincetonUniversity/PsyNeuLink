@@ -243,6 +243,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_gating_policy=None,
+                 size=None,
                  function = Linear(slope=1, intercept=0),
                  gating_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -259,6 +260,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                   params=params)
 
         super().__init__(variable=default_gating_policy,
+                         size=size,
                          modulation=modulation,
                          params=params,
                          name=name,

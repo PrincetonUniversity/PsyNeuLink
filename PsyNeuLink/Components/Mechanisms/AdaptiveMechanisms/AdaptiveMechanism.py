@@ -90,12 +90,13 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     variableClassDefault = defaultControlAllocation
 
     def __init__(self,
-                 variable,
-                 modulation,
-                 params,
-                 name,
-                 prefs,
-                 context):
+                 variable=None,
+                 size=None,
+                 modulation=None,
+                 params=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
         """Abstract class for AdaptiveMechanism
         """
 
@@ -108,6 +109,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
 
         super().__init__(variable=variable,
+                         size=size,
                          params=params,
                          name=name,
                          prefs=prefs,

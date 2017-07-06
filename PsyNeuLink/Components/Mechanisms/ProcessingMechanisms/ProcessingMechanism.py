@@ -103,12 +103,10 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        self.variableClassDefault = variable  # should this line be here? Ask Kristin
-
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  size=size)
+        self.variableClassDefault = variable  # should this line be here? (7/5/17 CW)
 
         super().__init__(variable=variable,
+                         size=size,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,
