@@ -34,6 +34,7 @@ from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import Projection
 from PsyNeuLink.Globals.Keywords import EXECUTING, RESULT
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
@@ -409,6 +410,41 @@ class Composition(object):
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
 
+    def add_linear_processing_pathway(self, pathway):
+        if isinstance(pathway[0], Mechanism):
+            self.add_mechanism(pathway[0])
+        else:
+            raise CompositionError("{} is not a mechanism. The first item in a linear processing pathway must be a "
+                                   "mechanism.".format(pathway[0]))
+
+        for c in range(1, len(pathway)):
+            # if the current item is a mechanism
+            if isinstance(pathway[c], Mechanism):
+                self.add_mechanism(pathway[c]) # add the mechanism
+                if isinstance(pathway[c-1], Mechanism):
+                    # if the previous item was also a mechanism, add a mapping projection between them
+                    self.add_projection(pathway[c-1],
+                                        MappingProjection(sender=pathway[c-1],
+                                                          receiver=pathway[c]),
+                                        pathway[c])
+            # if the current item is a projection
+            elif isinstance(pathway[c], Projection):
+                if c == len(pathway) - 1:
+                    raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
+                                           " a linear processing pathway.".format(pathway[c]))
+                # confirm that it is between two mechanisms, then add the projection
+                if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c+1], Mechanism):
+                    self.add_projection(pathway[c-1], pathway[c], pathway[c+1])
+                else:
+                    raise CompositionError(
+                        "{} is not between two mechanisms. A projection in a linear processing pathway must be preceded"
+                        " by a mechanism and followed by a mechanism".format(pathway[c]))
+            else:
+                raise CompositionError("{} is not a projection or mechanism. A linear processing pathway must be made "
+                                       "up of projections and mechanisms.".format(pathway[c]))
+
+
+
     def _validate_projection(self, sender, projection, receiver):
 
         if hasattr(projection, "sender") and hasattr(projection, "receiver"):
@@ -509,35 +545,6 @@ class Composition(object):
                             next_visit_stack.append(child)
 
         self.needs_update_graph = False
-
-    def _create_input_mechanisms(self):
-        '''
-            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
-            InputMechanism
-        '''
-        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        has_input_mechanism = self.input_mechanisms.keys()
-
-        # consider all of the mechanisms that are only origins OR have input mechanisms
-        for mech in is_origin.difference(has_input_mechanism):
-
-            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
-            if mech not in has_input_mechanism:
-                new_input_mech = TransferMechanism()
-                self.input_mechanisms[mech] = new_input_mech
-                MappingProjection(sender=new_input_mech, receiver=mech)
-
-            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
-            else:
-                del self.input_mechanisms[mech]
-
-    def _assign_values_to_input_mechanisms(self, input_dict):
-        for mech in self.input_mechanisms.keys():
-            if mech in input_dict.keys():
-                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
-            else:
-                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
-
 
     def _update_processing_graph(self):
         '''
@@ -656,19 +663,38 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    # def _execute_input_mechanisms(self, inputs, input_mechanisms):
-    #     '''
-    #         executes all input mechanisms with the inputs specified by the user. The mapping projections then update and
-    #         deliver the input values to the appropriate mechanisms in the composition.
-    #     '''
-    #     for mech in inputs.keys():
-    #         # grab the input value for this mechanism on this trial
-    #         input_val = inputs[mech]
-    #         # find the input mechanism corresponding to this mechanism
-    #         input_mechanism = input_mechanisms[mech]
-    #         # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
-    #         # received the value from the MappingProjection when execution of the actual composition begins
-    #         input_mechanism.execute(input=input_val, context=EXECUTING)
+    def _create_input_mechanisms(self):
+        '''
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
+            InputMechanism
+        '''
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        has_input_mechanism = self.input_mechanisms.keys()
+
+        # consider all of the mechanisms that are only origins OR have input mechanisms
+        for mech in is_origin.difference(has_input_mechanism):
+
+            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
+            if mech not in has_input_mechanism:
+                new_input_mech = TransferMechanism()
+                self.input_mechanisms[mech] = new_input_mech
+                MappingProjection(sender=new_input_mech, receiver=mech)
+
+            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+            else:
+                del self.input_mechanisms[mech]
+
+    def _assign_values_to_input_mechanisms(self, input_dict):
+        '''
+            loops over the input values in the inputs dictionary and assigns each value directly to the output state of
+            its corresponding input mechanism
+        '''
+        for mech in self.input_mechanisms.keys():
+            if mech in input_dict.keys():
+                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
+            else:
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
+
 
     def _assign_execution_ids(self, execution_id):
         '''
