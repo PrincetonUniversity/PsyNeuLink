@@ -269,7 +269,15 @@ class Scheduler(object):
             a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met
             terminate the execution of the specified :keyword:`TimeScale`
     """
-    def __init__(self, composition=None, graph=None, condition_set=None, nodes=None, toposort_ordering=None):
+    def __init__(
+        self,
+        composition=None,
+        graph=None,
+        condition_set=None,
+        nodes=None,
+        toposort_ordering=None,
+        termination_conds=None,
+    ):
         '''
         :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
