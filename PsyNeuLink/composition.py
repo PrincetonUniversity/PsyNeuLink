@@ -25,17 +25,16 @@ Overview
 import logging
 import uuid
 
-from collections import Iterable, OrderedDict
-from enum import Enum
-import uuid
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import Linear
+from collections import Iterable, OrderedDict
+from enum import Enum
+
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import EXECUTING
 from PsyNeuLink.Components.Projections.Projection import Projection
-from PsyNeuLink.Globals.Keywords import EXECUTING, RESULT
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
@@ -553,6 +552,34 @@ class Composition(object):
 
         self.needs_update_graph = False
 
+    def _create_input_mechanisms(self):
+        '''
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
+            InputMechanism
+        '''
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        has_input_mechanism = self.input_mechanisms.keys()
+
+        # consider all of the mechanisms that are only origins OR have input mechanisms
+        for mech in is_origin.difference(has_input_mechanism):
+
+            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
+            if mech not in has_input_mechanism:
+                new_input_mech = TransferMechanism()
+                self.input_mechanisms[mech] = new_input_mech
+                MappingProjection(sender=new_input_mech, receiver=mech)
+
+            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+            else:
+                del self.input_mechanisms[mech]
+
+    def _assign_values_to_input_mechanisms(self, input_dict):
+        for mech in self.input_mechanisms.keys():
+            if mech in input_dict.keys():
+                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
+            else:
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
+
     def _update_processing_graph(self):
         '''
         Constructs the processing graph (the graph that contains only non-learning mechanisms as vertices)
@@ -762,6 +789,7 @@ class Composition(object):
 
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
+        num = None
         for next_execution_set in execution_scheduler.run():
 
             # execute each mechanism with EXECUTING in context
@@ -778,6 +806,8 @@ class Composition(object):
         self,
         scheduler_processing=None,
         scheduler_learning=None,
+        termination_processing=None,
+        termination_learning=None,
         inputs=None,
         execution_id=None,
         num_trials=None
@@ -822,6 +852,10 @@ class Composition(object):
 
         if scheduler_learning is None:
             scheduler_learning = self.scheduler_learning
+
+        scheduler_processing.update_termination_conditions(termination_processing)
+        scheduler_learning.update_termination_conditions(termination_learning)
+
         if inputs is None:
             inputs = {}
             len_inputs = 1
@@ -830,7 +864,7 @@ class Composition(object):
             len_inputs = len(list(inputs.values())[0])
 
         # check whether the num trials given in the input dict matches the num_trials param
-        if num_trials:
+        if num_trials is not None:
             if len_inputs != num_trials:
                 # if one set of inputs was provided for many trials, set 'reuse_inputs' flag
                 if len_inputs == 1:
@@ -843,12 +877,19 @@ class Composition(object):
 
         input_indices = range(len_inputs)
 
+        scheduler_processing._reset_counts_total(TimeScale.RUN)
+        scheduler_processing._reset_time(TimeScale.RUN)
+
         # TBI: Handle learning graph
 
         # TBI: Handle runtime params?
+        result = None
 
         # loop over the length of the list of inputs (# of trials)
         for input_index in input_indices:
+            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied():
+                break
+
             execution_inputs = {}
 
             # loop over all mechanisms that receive inputs from the outside world
@@ -856,6 +897,10 @@ class Composition(object):
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
             num = self.execute(execution_inputs, scheduler_processing, execution_id)
+            if num is not None:
+                result = num
+
+        scheduler_processing._increment_time(TimeScale.RUN)
 
         # return the output of the LAST mechanism executed in the composition
-        return num
+        return result
