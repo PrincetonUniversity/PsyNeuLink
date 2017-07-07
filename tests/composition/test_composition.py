@@ -12,6 +12,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Scheduling.Condition import EveryNCalls
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
+from PsyNeuLink.Globals.TimeScale import TimeScale, CurrentTime, CentralClock
 
 logger = logging.getLogger(__name__)
 
@@ -1054,8 +1055,35 @@ class TestRun:
         )
         assert 250 == output[0][0]
 
+class TestCallBeforeTimescale:
+
+    def test_call_before_timestep(self):
 
 
+        comp = Composition()
+
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp._analyze_graph()
+        inputs_dict = {A: [1, 2, 3, 4]}
+        sched = Scheduler(composition=comp)
+        def cb_timestep(scheduler):
+            def print_timestep():
+                print("Time Step # = ", scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
+            return print_timestep
+        def cb_trial(scheduler):
+            def print_trial():
+                print("Trial # = ", scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
+            return print_trial
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_timestep=cb_timestep(sched),
+            call_before_trial=cb_trial(sched)
+        )
 
 
                         # when self.sched is ready:

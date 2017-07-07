@@ -723,6 +723,8 @@ class Composition(object):
             inputs,
             scheduler_processing=None,
             scheduler_learning=None,
+            call_before_pass=None,
+            call_before_timestep=None,
             execution_id = None):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -763,7 +765,8 @@ class Composition(object):
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
         for next_execution_set in execution_scheduler.run():
-
+            if call_before_timestep:
+                call_before_timestep()
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
                 if isinstance(mechanism, Mechanism):
@@ -780,7 +783,10 @@ class Composition(object):
         scheduler_learning=None,
         inputs=None,
         execution_id=None,
-        num_trials=None
+        num_trials=None,
+        call_before_trial = None,
+        call_before_pass = None,
+        call_before_timestep = None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -849,13 +855,17 @@ class Composition(object):
 
         # loop over the length of the list of inputs (# of trials)
         for input_index in input_indices:
+
+            if call_before_trial:
+                call_before_trial()
+
             execution_inputs = {}
 
             # loop over all mechanisms that receive inputs from the outside world
             for mech in inputs.keys():
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            num = self.execute(execution_inputs, scheduler_processing, execution_id)
+            num = self.execute(execution_inputs, scheduler_processing, execution_id, call_before_timestep, call_before_pass)
 
         # return the output of the LAST mechanism executed in the composition
         return num
