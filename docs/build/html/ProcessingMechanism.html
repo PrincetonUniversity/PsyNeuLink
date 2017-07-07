@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing Mechanism &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>Processing Mechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="Mechanism" href="Mechanism.html"/>
         <link rel="next" title="TransferMechanism" href="TransferMechanism.html"/>
         <link rel="prev" title="Mechanism" href="Mechanism.html"/> 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -189,16 +189,15 @@
 <p>A ProcessingMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that transforms its input in some way.  A
 ProcessingMechanism always receives its input either from another ProcessingMechanism, or from the input to a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> or <a class="reference internal" href="System.html"><span class="doc">system</span></a> when it is executed.  Similarly, its output is generally conveyed to another
 ProcessingMechanism or used as the ouput for a process or system.  However, the output of a ProcessingMechanism may
-also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modify the parameters of other components (or its own).
-ProcessingMechanisms are always executed before all AdpativeMechanisms in the process and/or system to which they
-belong, so that any modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next
-round of execution.</p>
+also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modify the parameters of other components (or its own). ProcessingMechanisms
+are always executed before all AdaptiveMechanisms in the Process and/or System to which they belong, so that any
+modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism can be created by using the standard Python method of calling the constructor for the desired
 type. Some types of ProcessingMechanism (for example, <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanisms</span></a>) are also created
-when a system or process is created, if <code class="xref any docutils literal"><span class="pre">learning</span></code> and/or <code class="xref any docutils literal"><span class="pre">control</span></code> have been specified for it.</p>
+when a System or Process is created, if <code class="xref any docutils literal"><span class="pre">learning</span></code> and/or <code class="xref any docutils literal"><span class="pre">control</span></code> have been specified for it.</p>
 </div>
 <div class="section" id="structure">
 <span id="adaptivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -253,7 +252,7 @@ system to which it belongs.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
