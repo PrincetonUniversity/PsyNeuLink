@@ -100,7 +100,7 @@ stim_list_dict = {colors:[[1, 1]],
 
 target_list_dict = {response:[[1, 1]]}
 
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
             call_before_trial=print_header,

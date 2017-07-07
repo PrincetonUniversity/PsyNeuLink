@@ -1964,7 +1964,7 @@
 
 #     def run(self,
 #             inputs,
-#             num_executions=None,
+#             num_trials=None,
 #             reset_clock=True,
 #             initialize=False,
 #             targets=None,

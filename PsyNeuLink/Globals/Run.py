@@ -341,7 +341,7 @@ class RunError(Exception):
 @tc.typecheck
 def run(object,
         inputs,
-        num_executions:tc.optional(int)=None,
+        num_trials:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
@@ -358,7 +358,7 @@ def run(object,
         context=None):
     """run(                         \
     inputs,                      \
-    num_executions=None,         \
+    num_trials=None,         \
     reset_clock=True,            \
     initialize=False,            \
     intial_values=None,          \
@@ -387,10 +387,10 @@ def run(object,
             * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
-                Note: num_input_sets need not equal num_executions (the number of executions to actually run)
-                      if num_executions > num_input_sets:
+                Note: num_input_sets need not equal num_trials (the number of executions to actually run)
+                      if num_trials > num_input_sets:
                           executions will cycle through input_sets, with the final one being only a partial cycle
-                      if num_executions < num_input_sets:
+                      if num_trials < num_input_sets:
                           the executions will only partially sample the input sets
     COMMENT
 
@@ -401,9 +401,9 @@ def run(object,
         the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
         requirements and options).
 
-    num_executions : int : default None
+    num_trials : int : default None
         the number of `TRIAL` \s to run.  If it is `None` (the default), then a number of `TRIAL` \s run will be equal
-        equal to the number of items specified in the **inputs** argument.  If **num_executions** exceeds the number of
+        equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
         inputs, then the inputs will be cycled until the number of `TRIAL` \s specified have been run.
 
     reset_clock : bool : default True
@@ -477,11 +477,11 @@ def run(object,
 
     time_scale = time_scale or TimeScale.TRIAL
 
-    # num_executions = num_executions or len(inputs)
-    # num_executions = num_executions or np.size(inputs,(inputs.ndim-1))
-    # num_executions = num_executions or np.size(inputs, 0)
-    # num_executions = num_executions or np.size(inputs, inputs.ndim-3)
-    num_executions = num_executions or np.size(inputs, EXECUTION_SET_DIM)
+    # num_trials = num_trials or len(inputs)
+    # num_trials = num_trials or np.size(inputs,(inputs.ndim-1))
+    # num_trials = num_trials or np.size(inputs, 0)
+    # num_trials = num_trials or np.size(inputs, inputs.ndim-3)
+    num_trials = num_trials or np.size(inputs, EXECUTION_SET_DIM)
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -553,7 +553,7 @@ def run(object,
         time_steps = object.numPhases
 
     # EXECUTE
-    for execution in range(num_executions):
+    for execution in range(num_trials):
 
         execution_id = _get_unique_id()
 

@@ -53,7 +53,7 @@ def show_weights():
            format(np.nonzero(action_selection.output_state.value)[0][0],
            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]))
 
-p.run(num_executions=10,
+p.run(num_trials=10,
       inputs=[[[1, 1, 1]]],
       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
       # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
@@ -68,7 +68,7 @@ s = system(processes=[p],
            # learning_rate=0.05,
            targets=[0])
 
-s.run(num_executions=10,
+s.run(num_trials=10,
       # inputs=[[1, 1, 1]],
       # inputs=[[1, 1, 1],[.2, 1, .2 ]],
       # inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],

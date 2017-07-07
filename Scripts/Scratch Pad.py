@@ -519,14 +519,14 @@ import numpy as np
 #                                                                             #        Modulation.OVERRIDE
 #                                                                                       }}))
 # # print(transfer_mechanism_3.run(inputs=[1.0],
-# #                                num_executions=3))
+# #                                num_trials=3))
 #
 # my_process = process(pathway=[transfer_mechanism_1,
 #                                # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
 #                               transfer_mechanism_3])
 #
 # print("My Process: \n", my_process.run(inputs=[[1.0]],
-#                                        num_executions=3))
+#                                        num_trials=3))
 # # print("My Process: \n", my_process.execute(input=[[1.0]]))
 # # print("My Process: \n", my_process.execute(input=[1.0]))
 #
@@ -816,14 +816,14 @@ import numpy as np
 # input_list = {my_auto:[1,1,1]}
 # target_list = {my_auto:[0,0,0]}
 #
-# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+# # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
 #
 # my_system = system(processes=[my_process],
 #                    targets=[0,0,0])
 #
 # print(my_system.run(inputs=input_list,
 #                     targets=target_list,
-#                     num_executions=5))
+#                     num_trials=5))
 
 #endregion
 

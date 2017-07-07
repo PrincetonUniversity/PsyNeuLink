@@ -1632,7 +1632,7 @@ class Mechanism_Base(Mechanism):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             call_before_execution=None,
             call_after_execution=None,
             time_scale=None):
@@ -1669,7 +1669,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    call_before_trial=call_before_execution,
                    call_after_trial=call_after_execution,
                    time_scale=time_scale)

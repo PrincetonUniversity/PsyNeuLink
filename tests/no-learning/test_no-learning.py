@@ -86,7 +86,7 @@ class TestNoLearning:
         stim_list = {Input_Layer: [[-1, 30]]}
 
         s.run(
-            num_executions=10,
+            num_trials=10,
             inputs=stim_list,
         )
 

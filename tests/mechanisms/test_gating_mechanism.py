@@ -154,7 +154,7 @@ def test_gating():
     # s.show_graph(show_learning=True)
 
     results = s.run(
-        num_executions=10,
+        num_trials=10,
         inputs=stim_list,
         targets=target_list,
         call_before_trial=print_header,

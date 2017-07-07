@@ -65,7 +65,7 @@ if COMPOSITION is PROCESS:
     composition = my_process
 
     # PROCESS VERSION:
-    my_process.run(num_executions=10,
+    my_process.run(num_trials=10,
                    # inputs=[[-1, 30],[2, 10]],
                    # targets=[[0, 0, 1],[0, 0, 1]],
                    inputs=stim_list,
@@ -83,7 +83,7 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph_with_learning()
-    run_output = x.run(num_executions=10,
+    run_output = x.run(num_trials=10,
                        inputs=stim_list,
                        targets=target_list,
                        call_before_trial=print_header,

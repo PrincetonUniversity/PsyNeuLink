@@ -2214,7 +2214,7 @@ class Process_Base(Process):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             reset_clock=True,
             initialize=False,
             targets=None,
@@ -2280,7 +2280,7 @@ class Process_Base(Process):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    reset_clock=reset_clock,
                    initialize=initialize,
                    targets=targets,
