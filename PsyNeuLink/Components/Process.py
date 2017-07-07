@@ -710,7 +710,7 @@ class Process_Base(Process):
     mechanisms : List[Mechanism]
         a list of the Mechanisms in the Process.
 
-    originMechanisms : MechanismList
+    origin_mechanisms : MechanismList
         a list with the `ORIGIN` Mechanism of the Process.
 
         .. note:: A Process can have only one `ORIGIN` Mechanism; the use of a list is for compatibility with
@@ -1001,7 +1001,7 @@ class Process_Base(Process):
         self.firstMechanism = pathway[0]
         self.firstMechanism.processes[self] = ORIGIN
         self._origin_mechs = [pathway[0]]
-        self.originMechanisms = MechanismList(self, self._origin_mechs)
+        self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
         # Assign last mechanism in pathwway to lastMechanism attribute
         i = -1
@@ -2381,7 +2381,7 @@ class Process_Base(Process):
 
 
         print ("\n\tOrigin mechanism: ".format(self.name))
-        for object_item in self.originMechanisms.mechs_sorted:
+        for object_item in self.origin_mechanisms.mechs_sorted:
             print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))

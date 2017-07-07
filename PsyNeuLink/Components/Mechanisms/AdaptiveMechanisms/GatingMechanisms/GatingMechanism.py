@@ -556,6 +556,6 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
                         # if not any(state.path_afferents for state in owner.input_states):
-                        #     system.originMechanisms.mechs.append(owner)
+                        #     system.origin_mechanisms.mechs.append(owner)
 
 

@@ -200,7 +200,7 @@
 #                       no properties are created for them
 #                       they are not validated when assigned
 
-# FIX: originMechanisms -> origin_mechanisms
+# FIX: origin_mechanisms -> origin_mechanisms
 
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value

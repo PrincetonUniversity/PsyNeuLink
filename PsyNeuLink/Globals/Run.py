@@ -141,7 +141,7 @@ Sequence Format
 *(List[values] or ndarray)* -- this uses a nested list or ndarray to fully specify the input for
 each `TRIAL` in a sequence.  It is more complex than the `Mechanism format <Run_Inputs_Mechanism_Format>`,
 and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System's `origin_Mechanisms <System.System_Base.originMechanisms>` attribute.  This is generally the 
+appear in the System's `origin_Mechanisms <System.System_Base.origin_mechanisms>` attribute.  This is generally the
 same order in which they are declared, and can be displayed using the System's `show <System.System_Base.show>` 
 method). Although this format is more complex, it may be better suited to automated input generation, since it does 
 not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of 
@@ -650,7 +650,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     DIMENSIONS:
        axis 0: num_input_sets
        axis 1: object._phaseSpecMax
-       axis 2: len(object.originMechanisms)
+       axis 2: len(object.origin_mechanisms)
        axis 3: len(mech.input_states)
        axis 4: items of input_states
 
@@ -693,12 +693,12 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     if isinstance(stimuli[0],Iterable) and any(isinstance(header, Mechanism) for header in stimuli[0]):
         headers = stimuli[0]
         del stimuli[0]
-        for mech in object.originMechanisms:
+        for mech in object.origin_mechanisms:
             if not mech in headers:
                 raise RunError("Header is missing for origin mechanism {} in stimulus list".
                                   format(mech.name, object.name))
         for mech in headers:
-            if not mech in object.originMechanisms.mechanisms:
+            if not mech in object.origin_mechanisms.mechanisms:
                 raise RunError("{} in header for stimulus list is not an origin mechanism in {}".
                                   format(mech.name, object.name))
 
@@ -725,8 +725,8 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     if object_type in {MECHANISM, PROCESS} or is_target:
         return inputs
 
-    mechs = list(object.originMechanisms)
-    num_mechs = len(object.originMechanisms)
+    mechs = list(object.origin_mechanisms)
+    num_mechs = len(object.origin_mechanisms)
     inputs_flattened = np.hstack(inputs)
     # inputs_flattened = np.concatenate(inputs)
     input_elem = 0    # Used for indexing w/o headers
@@ -745,7 +745,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         for phase in range(object.numPhases):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
-                mech = list(object.originMechanisms.mechs)[mech_num]
+                mech = list(object.origin_mechanisms.mechs)[mech_num]
                 mech_len = np.size(mechs[mech_num].variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
@@ -774,11 +774,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     if not is_target:
         # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
         for mech in stimuli.keys():
-            if not mech in object.originMechanisms.mechanisms:
+            if not mech in object.origin_mechanisms.mechanisms:
                 raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
                                format(mech.name, object.name))
         # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
-        for mech in object.originMechanisms:
+        for mech in object.origin_mechanisms:
             if not mech in stimuli:
                 raise RunError("ORIGIN mechanism {} is missing from the inputs dict for ".
                                format(mech.name, object.name))
@@ -898,9 +898,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stimuli_in_execution = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
-                # Only assign inputs to originMechanisms
-                #    and assign them in the order they appear in originMechanisms and fill out each phase
-                for mech in object.originMechanisms.mechs:
+                # Only assign inputs to origin_mechanisms
+                #    and assign them in the order they appear in origin_mechanisms and fill out each phase
+                for mech in object.origin_mechanisms.mechs:
                     # Assign input elements to stimulus if phase is correct one for mech
 
                     # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
@@ -990,12 +990,12 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         elif inputs.dtype is np.dtype('O'):
             input_homogenity = HETEROGENOUS
             # Determine whether the number of states/mech is homogenous
-            num_states_in_first_mech = len(object.originMechanisms[0].input_states)
-            if any(len(mech.input_states) != num_states_in_first_mech for mech in object.originMechanisms):
+            num_states_in_first_mech = len(object.origin_mechanisms[0].input_states)
+            if any(len(mech.input_states) != num_states_in_first_mech for mech in object.origin_mechanisms):
                 states_per_mech_heterog = True
             # Determine whether the size of all states is homogenous
-            size_of_first_state = len(object.originMechanisms[0].input_states[0].value)
-            for origin_mech in object.originMechanisms:
+            size_of_first_state = len(object.origin_mechanisms[0].input_states[0].value)
+            for origin_mech in object.origin_mechanisms:
                 if any(len(state.value) != size_of_first_state for state in origin_mech.input_states):
                     size_of_states_heterog = True
         else:
@@ -1026,18 +1026,18 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
                               format(object.name, expected_dim))
 
-        if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
+        if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
             raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
                               "does not match the number of processes in the system ({})".
                               format(np.size(inputs,PROCESSES_DIM),
                                      object.name,
-                                     len(object.originMechanisms)))
+                                     len(object.origin_mechanisms)))
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:
             mechs = list(object.target_mechanisms)
         else:
-            mechs = list(object.originMechanisms)
+            mechs = list(object.origin_mechanisms)
         num_mechs = len(mechs)
         inputs_array = np.array(inputs)
         num_execution_sets = inputs_array.shape[EXECUTION_SET_DIM]
@@ -1170,7 +1170,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                                          # np.size(targets,PROCESSES_DIM),
                                          num_targets_per_set,
                                          object.name,
-                                         len(object.originMechanisms)))
+                                         len(object.origin_mechanisms)))
 
             # MODIFIED 12/23/16 NEW:
             # Validate that each target is compatible with its corresponding targetMechanism

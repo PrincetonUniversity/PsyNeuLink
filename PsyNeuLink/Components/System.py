@@ -179,7 +179,7 @@ Input and Initialization
 The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
 `run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used, input for
+`origin_mechanisms <System_Base.origin_mechanisms>`). If the `execute <System_Base.execute>` method is used, input for
 only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
 used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
@@ -218,8 +218,8 @@ each `TRIAL` has completed, but before the `controller is executed <System_Execu
 of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
 :keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
 Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
-<System_Base.originMechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
+<System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
 in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
 format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
@@ -546,7 +546,7 @@ class System_Base(System):
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
-        - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
+        - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
@@ -665,7 +665,7 @@ class System_Base(System):
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
 
-    originMechanisms : MechanismList
+    origin_mechanisms : MechanismList
         contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive Projections from any other
         Mechanisms.
 
@@ -988,9 +988,9 @@ class System_Base(System):
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
-        if input is not None and len(input) != len(self.originMechanisms):
+        if input is not None and len(input) != len(self.origin_mechanisms):
             raise SystemError("Number of items in input ({}) must equal number of processes ({}) in {} ".
-                              format(len(input), len(self.originMechanisms),self.name))
+                              format(len(input), len(self.origin_mechanisms),self.name))
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
@@ -1001,7 +1001,7 @@ class System_Base(System):
             # MODIFIED 2/8/17 NEW:
             # Get list of origin mechanisms for processes that have already been converted
             #   (for use below in assigning input)
-            orig_mechs_already_processed = list(p[0].originMechanisms[0] for
+            orig_mechs_already_processed = list(p[0].origin_mechanisms[0] for
                                                 p in processes_spec if isinstance(p,ProcessTuple))
             # MODIFIED 2/8/17 END
 
@@ -1034,7 +1034,7 @@ class System_Base(System):
                     #        if it is, use that one (and don't increment index for input
                     #        otherwise, assign input and increment input_index
                     try:
-                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].originMechanisms[0])
+                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].origin_mechanisms[0])
                     except ValueError:
                         input_index += 1
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
@@ -1170,7 +1170,7 @@ class System_Base(System):
 
         Assign MechanismLists:
             allMechanisms
-            originMechanisms
+            origin_mechanisms
             terminalMechanisms
             recurrentInitMechanisms (INITIALIZE_CYCLE)
             learning_mechansims
@@ -1438,7 +1438,7 @@ class System_Base(System):
                 if not object_item in self._control_object_item:
                     self._control_object_item.append(object_item)
 
-        self.originMechanisms = MechanismList(self, self._origin_mechs)
+        self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
         self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
@@ -1468,7 +1468,7 @@ class System_Base(System):
         # MODIFIED 2/8/17 NEW:
         # Construct self.variable from inputs to ORIGIN mechanisms
         self.variable = []
-        for mech in self.originMechanisms:
+        for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
@@ -1503,9 +1503,9 @@ class System_Base(System):
 # FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
 # FIX: RENAME SystemInputState -> SystemInputState
 
-        # Create SystemInputState for each ORIGIN mechanism in originMechanisms and
+        # Create SystemInputState for each ORIGIN mechanism in origin_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
-        for i, origin_mech in zip(range(len(self.originMechanisms)), self.originMechanisms):
+        for i, origin_mech in zip(range(len(self.origin_mechanisms)), self.origin_mechanisms):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
@@ -1969,7 +1969,7 @@ class System_Base(System):
         # FIX: MOVE TO RUN??
         #region ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
-        num_origin_mechs = len(list(self.originMechanisms))
+        num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
             if (self.prefs.verbosePref and
@@ -1977,7 +1977,7 @@ class System_Base(System):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
-                input[i] = self.originMechanisms[i].variableInstanceDefault
+                input[i] = self.origin_mechanisms[i].variableInstanceDefault
 
         else:
             num_inputs = np.size(input,0)
@@ -1994,7 +1994,7 @@ class System_Base(System):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
+            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
                 # For each inputState of the ORIGIN mechansim
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
@@ -2476,7 +2476,7 @@ class System_Base(System):
         #     print ("\t\t\t{}".format(object_item.mechanism.name))
         #
         # print ("\n\tOrigin mechanisms: ".format(self.name))
-        # for object_item in self.originMechanisms.mechs_sorted:
+        # for object_item in self.origin_mechanisms.mechs_sorted:
         #     print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n\tTerminal mechanisms: ".format(self.name))
@@ -2538,7 +2538,7 @@ class System_Base(System):
         """
 
         input_array = []
-        for mech in list(self.originMechanisms.mechanisms):
+        for mech in list(self.origin_mechanisms.mechanisms):
             input_array.append(mech.value)
         input_array = np.array(input_array)
 
@@ -2580,7 +2580,7 @@ class System_Base(System):
         inspect_dict = {
             PROCESSES: self.processes,
             MECHANISMS: self.mechanisms,
-            ORIGIN_MECHANISMS: self.originMechanisms.mechanisms,
+            ORIGIN_MECHANISMS: self.origin_mechanisms.mechanisms,
             INPUT_ARRAY: input_array,
             RECURRENT_MECHANISMS: self.recurrentInitMechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
