@@ -1143,10 +1143,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_attributes_after_function(self, context=None):
 
-        super()._instantiate_attributes_after_function(context=context)
-
         if self._learning_rate is not None:
             self.learning_rate = self._learning_rate
+
+        super()._instantiate_attributes_after_function(context=context)
 
     def _execute(self,
                 variable=None,
