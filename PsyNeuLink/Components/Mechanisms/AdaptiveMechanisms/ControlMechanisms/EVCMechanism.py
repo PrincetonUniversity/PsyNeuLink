@@ -25,7 +25,7 @@ ControlSignal is associated with a `ControlProjection`.  The ControlProjection r
 it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
 particular combination of ControlSignal intensities is called an `allocation_policy`. When a system is executed,
 it concludes by executing the EVCMechanism, which determines the `allocation_policy` (i.e., the ControlSignal
-intensities, and thereby the values of the parameters being controlled) in the next round of execution.
+intensities, and thereby the values of the parameters being controlled) in the next `TRIAL`.
 
 .. _EVCMechanism_EVC:
 
@@ -35,7 +35,7 @@ possible `allocation_policy`, and chooses the best one. It does this by simulati
 `allocation_policy`, and evaluating the expected value of control (EVC): a cost-benefit analysis that weighs
 the cost of the ControlSignals against the outcome of performance for the given policy.  The EVCMechanism then
 selects the `allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the
-next round of execution. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
+next `TRIAL`. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
 custom functions to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
 
 .. _EVCMechanism_Creation:
@@ -805,7 +805,7 @@ class EVCMechanism(ControlMechanism_Base):
             prediction_mechanism_params = {}
 
 
-        for origin_mech in self.system.originMechanisms.mechanisms:
+        for origin_mech in self.system.origin_mechanisms.mechanisms:
 
             # # IMPLEMENT THE FOLLOWING ONCE INPUT_STATES CAN BE SPECIFIED IN CONSTRUCTION OF ALL MECHANISMS
             # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
@@ -857,9 +857,9 @@ class EVCMechanism(ControlMechanism_Base):
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
         self.predictedInput = {}
-        for i, origin_mech in zip(range(len(self.system.originMechanisms)), self.system.originMechanisms):
-            # self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].input_value
-            self.predictedInput[origin_mech] = self.system.processes[i].originMechanisms[0].variable
+        for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
+            # self.predictedInput[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
+            self.predictedInput[origin_mech] = self.system.processes[i].origin_mechanisms[0].variable
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     # FIX: MOVE THIS TO ControlMechanism??
@@ -1342,13 +1342,13 @@ class EVCMechanism(ControlMechanism_Base):
         # Assign predictedInput for each process in system.processes
 
         # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
-        num_origin_mechs = len(self.system.originMechanisms)
+        num_origin_mechs = len(self.system.origin_mechanisms)
         num_prediction_mechs = len(self.origin_prediction_mechanisms)
         if num_origin_mechs != num_prediction_mechs:
             raise EVCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
                            "the number of prediction_predictions mechanisms ({}) for {}".
                            format(num_origin_mechs, num_prediction_mechs, self.system.name))
-        for origin_mech in self.system.originMechanisms:
+        for origin_mech in self.system.origin_mechanisms:
             # Get origin mechanism for each process
             # Assign value of predictionMechanism to the entry of predictedInput for the corresponding ORIGIN mechanism
             self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value

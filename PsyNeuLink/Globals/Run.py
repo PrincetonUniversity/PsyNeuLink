@@ -15,158 +15,116 @@ Overview
 
 .. _Run_Overview:
 
-The :keyword:`run` function is used for executing a mechanism, process or system.  It can be called directly, however
-it is typically invoked by calling the :keyword:`run` method of the object to be run.  It  executes an object by
-calling the object's :keyword:`execute` method.  While an object's :keyword:`execute` method can be called directly,
-using its :keyword:`run` method is much easier because it:
+The :keyword:`run` function is used for executing a Mechanism, Process or System.  It can be called directly, however
+it is typically invoked by calling the :keyword:`run` method of the Component to be run.  It  executes a Component by
+calling the Component's :keyword:`execute` method.  While a Component's :keyword:`execute` method can be called
+directly, using its :keyword:`run` method is easier because it:
 
-    * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of an object
+    * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of a Component
       runs only a single execution of the object;
     ..
     * uses simpler formats for specifying `inputs <Run_Inputs>` and `targets <Run_Targets>`;
     ..
-COMMENT:
-    *** THIS WILL NEED TO BE UPDATED ONCE SCHEDULER IS IMPLEMENTED
-COMMENT
-    * manages timing factors (such as updating the `CentralClock <TimeScale.CentralClock>` and presenting
-    inputs in the correct `phase of execution <System_Execution_Phase>` of a system.
-    ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
-COMMENT:
-Note:: The ``run`` function uses the ``construct_input`` function to convert the input into the format required by
-``execute`` methods.
-COMMENT
-
 Understanding a few basic concepts about how the :keyword:`run` function operates will make it easier to use the
-:keyword:`execute` and :keyword:`run` methods of PsyNeuLink objects.  These are discussed below.
+:keyword:`execute` and :keyword:`run` methods of PsyNeuLink Components.  These are discussed below.
 
+
+.. _Run_Scope_of_Execution:
 
 Scope of Execution
 ~~~~~~~~~~~~~~~~~~
 
-When the :keyword:`run` method of an object is called, it executes that object and all others within its scope of
-execution.  For a `mechanism <Mechanism>`, the scope of execution is simply that mechanism.  For a `process <Process>`,
-the scope of execution is all of the mechanisms specified in its `pathway` attribute.  For a `system <System>`,
-the scope of execution is all of the mechanisms in the processes specified in the system's
-`processes <System.System_Base.processes>` attribute.
+When the :keyword:`run` method of a Component is called, it executes that Component and all others within its scope of
+execution.  For a `Mechanism`, the scope of execution is simply the Mechanism itself.  For a `Process`, the scope of
+execution is all of the Mechanisms specified in its `pathway` attribute.  For a `System`, the scope of execution is
+all of the Mechanisms in the Processes specified in the System's `Processes <System.System_Base.processes>` attribute.
 
 .. _Run_Timing:
 
 Timing
 ~~~~~~
 
-COMMENT:
-    *** THIS WILL NEED TO BE UPDATED ONCE SCHEDULER IS IMPLEMENTED
-COMMENT
+When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
+`input <Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
+execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
+executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
+another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
+with `Condition` specifications for individual Components to execute different Components at different time scales.
 
-PsyNeuLink supports two time scales for executing objects: `TIME_STEP <TimeScale.TimeScale.TIME_STEP>` and
-`TRIAL <TimeScale.TimeScale.TRIAL>`.  Every mechanism defines how it is executed at one or both of these time
-scales, and its current mode of execution is determined by its `timeScale <Mechanism.Mechanism_Base.timeScale>`
-attribute.
+.. note::
+   The **time_scale** argument of :keyword:`run`, described below, is currently not fully implemented,
+   but will be in a subsequent version.
 
-.. _Run_TIME_STEP:
+.. _Run_Time_Scale::
 
-* `TIME_STEP <TimeScale.TimeScale.TIME_STEP>`:  this mode of execution is a mechanism's closest approximation
-  to continuous, or "real time" processing.  Execution of a `time_step` is defined as a single execution of all objects
-  in the scope of execution at their `time_step` time scale.  Mechanisms called upon to execute a `time_step` that do
-  not support that time scale of execution have the option of generating an exception, being ignored, or providing
-  their trial mode response, either on the first `time_step`, every `time_step`, or the last `time_step` in the sequence
-  being run.
-
-.. _Run_TRIAL:
-
-* `TRIAL <TimeScale.TimeScale.TIME_TRIAL>`: this mode of execution is the "ballistic" execution of a
-  mechanism to a state that would have been achieved with `time_step` execution to a specified criterion.  The
-  criterion can be specified in terms of the number of `time_steps`, or a condition to be met by the mechanism's
-  output.  It is up to the mechanism how it implements its `trial` mode of execution (e.g., whether this is done by
-  internal numerical iteration or an analytic calculation). Execution of a `trial` is defined as the execution of a
-  `trial` of all of the objects in the scope of execution.
-
-The **time_scale** argument of an :keyword:`execute` or :keyword:`run` method determines the time scale for each
-round of execution: a `time_step` or a `trial`.  When a `process <Process>` is run, each mechanism is executed in the
-order that it appears in the process' `pathway`, once per round of execution.  When a `system <System>` is run,
-the order of execution is determined by the system's `executionList` attribute, which is based on the system's
-`graph` (a list of the dependencies among all of the mechanisms in the system).  Execution of the mechanisms in a
-system also depends on the `phaseSpec` of each mechanism: this determines *when* in an execution sequence it should
-be executed. The `CentralClock <TimeScale.CentralClock>` is used to control timing, so executing a system
-requires that it be appropriately updated.
-
-The :keyword:`run` function handles all of the above factors automatically.
-
+The :keyword:`run` function also has a **time_scale** argument, that can be used to globally specify the time_scale
+parameter for those Components that make use of it.  Any value of `TimeScale` can be specified; how it is interpreted
+is determined by the Component. For example, some Mechanisms that perform integration (such as the `DDM`) offer the
+option of using an analytic solution (that computes the integral in a single `TIME_STEP`), or a numerical method
+(that carries out one step of integration per `TIME_STEP`).  If `TimeScale.TIME_STEP` is assigned as the value of the
+**time_scale** argument in a call to :keyword:`run`, those Mechanisms will use their numerical integration method,
+whereas if `TimeScale.TRIAL` is assigned they will use their analytic solution.  Similarly, for `TimeScale.TIME_STEP`,
+`TransferMechanisms <TransferMechanism>` integrate their input prior to applying the transfer function (sometimes
+referred to as "time averaging" or "cascade mode"), whereas for `TimeScale.TRIAL` they apply it to their current input
+(i.e., execute their transfer an "instantaneously").
 
 .. _Run_Inputs:
 
 Inputs
 ~~~~~~
 
-COMMENT:
-    OUT-TAKES
-    The inputs for a single execution must contain a value for each :doc:`inputState <InputState> of each
-    :py:data:`ORIGIN` <Keywords.Keywords.ORIGIN>` mechanism in the process or system, using the same format
-    used for the format of the input for the execute method of a process or system.  This can be specified as a
-    nested set of lists, or an ndarray.  The exact structure is determined by a number of factors, as described below.
-    the number of `ORIGIN` mechanisms involved (a process has only one, but a system can have several), the
-    number of input_states for each `ORIGIN` mechanism, and whether the input to those input_states is
-    single-element (such as scalars), multi-element (such as vectors) or a mix.  For the run method, the structure is
-    further determined by whether only a single execution or multiple executions is specified.  Rather than specifying a
-    single format structure that must be used for all purposes (which would necessarily be the most complex one),
-    PsyNeuLink is designed to be flexible, allowing use of the simplest structure necessary to describe the input for a
-    particular process or input, which can vary according to circumstance.  Examples are provided below.  In all cases,
-    either nested lists or ndarrays can be used, in which the innermost level (highest axis of an ndarray) is used to
-    specify the input values for a given inputState (if any are multi-element), the next nested level (second highest
-    axis) is used to specify the different input_states of a given mechanism (if any have more than one), the level
-    (axis) after that is used to specify the different `ORIGIN` mechanisms (if there is more than one), and
-    finally the outermost level (lowest axis) is used to specify different trials (if there is more than one to be run).
+The :keyword:`run` function presents the inputs for each `TRIAL` to the input_states of the relevant Mechanisms in
+the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
+:keyword:`execute` or :keyword:`run` method. For a Mechanism, they comprise the `variable <InputState.variable>` for
+each of the Mechanism's `InputStates <InputState>`.  For a Process or System, they comprise the
+`variable <InputState.variable>` for the InputState(s) of the `ORIGIN` Mechanism(s).  Inputs can be specified in one
+of two ways: `Sequence format <Run_Inputs_Sequence_Format>` and `Mechanism format <Run_Dict_format>`.
+Sequence format is more complex, but does not require the specification of Mechanisms by name, and thus may better
+suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to Mechanisms by
+name, but is easier to use (as the order in which the inputs are specified does not matter, so long as they are paired
+with their Mechanisms).  Both formats require that inputs be specified as nested lists or ndarrays, that define the
+number of trials, mechanisms, InputStates and elements for each input.  These factors determine the levels of nesting
+required for a list, or the dimensionality (number of axes) for an ndarray.  They are described below, followed by a
+description of the two formats.
 
-    PsyNeuLink affords flexibility of input format that PsyNeuLink allows, the structure of the input can vary
-    (i.e., the levels of nesting of the list, or dimensionality and shape of the ndarray used to specify it).
-    The run function handles all of these formats seamlessly, so that whathever notation is simplest and easiest
-    for a given purpose can be used (though, as noted above, it is best to consistently specify the input value of
-    an inputstae as a list or array (axis of an ndarray).
-COMMENT
+.. note::
+   The descriptions below are for completeness, and are intended as a technical reference;  or most uses of
+   of :keyword:`run` methods, it is only necessary to understand the relatively simple Mechanism formate
+   described `below <Run_Inputs_Mechanism_Format>`.
 
-The :keyword:`run` function presents the inputs for each round of execution to the input_states of the relevant
-mechanisms. These are specified in the **inputs** argument of the :keyword:`execute` or :keyword:`run` method.
-For a mechanism, they comprise the input value for each of the mechanism's `input_states <InputState>`.  For a process
-or system, they comprise the input values for the inputState(s) of the `ORIGIN` mechanism(s).  Input values can be
-specified in one of two ways: `sequence format <Run_Inputs_Sequence_Format>` and `mechanism format <Run_Dict_format>`.
-Sequence format is more complex, but does not require the specification of mechanisms by name, and thus may better
-suited for automated means of generating inputs.  Mechanism format requires that inputs be assigned to mechanisms by
-name, but is easier to use (as the order in which the mechanisms are specified does not matter).  Both formats require
-that inputs be specified as nested lists or ndarrays, that define the number of executions, mechanisms, input_states
-and elements of each input value.  These factors determine the levels of nesting required for a list, or
-the dimensionality (number of axes) for an ndarray.  They are described below, followed by a description of the two
-formats.
+.. _Run_Nesting_Factors:
 
-* **Number of rounds of execution**.  If the :keyword:`inputs` argument contains the input for more than one round of
-  execution (i.e., multiple time_steps and/or trials), then the outermost level of the list, or axis 0 of the ndarray,
-  is used for the rounds of execution, each item of which contains the set inputs for a given round.  Otherwise, it is
-  used for the next relevant factor in the list below.  If the number of inputs specified is less than the number of
-  executions, then the input list is cycled until the full number of executions is completed.
+* **Number of TRIALS**.  If the **inputs** argument contains the input for more than one `TRIAL`, then the outermost
+  level of the list, or axis 0 of the ndarray, is used for the `TRIAL` \s, each item of which contains the
+  set inputs for a given `TRIAL`.  Otherwise, it is used for the next relevant factor in the list below.  If the
+  number of inputs specified is less than the number of `TRIAL` \s, then the input list is cycled until the full
+  number of `TRIAL` \s is completed.
 ..
-* **Number of mechanisms.** If :keyword:`run` is used for a system, and it has more than one `ORIGIN` mechanism, then
-  the next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` mechanisms, with
-  each item containing the inputs for a given `ORIGIN` mechanism within a round.  This factor is not relevant
-  when run is used for a single mechanism, a process (which only ever has one `ORIGIN` mechanism), or a system that
-  has only one `ORIGIN` mechanism.  It is also not relevant for the `mechanism format <Run_Inputs_Mechanism_Format>`,
-  since that separates the inputs for each mechanism into separate entries of a dictionary.
+* **Number of Mechanisms.** If :keyword:`run` is used for a System, and it has more than one `ORIGIN` Mechanism, then
+  the next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` Mechanisms, with
+  each item containing the inputs for a given `ORIGIN` Mechanism within a `TRIAL`.  This factor is not relevant
+  when :keyword:`run` is used for a single Mechanism, a Process (which only ever has one `ORIGIN` Mechanism),
+  or a System that has only one `ORIGIN` Mechanism.  It is also not relevant for the
+  `Mechanism format <Run_Inputs_Mechanism_Format>`, since that separates the inputs for each Mechanism into individual
+  entries of a dictionary.
 ..
-* **Number of input_states.** In general, mechanisms have a single ("primary") inputState; however, some types of
-  mechanisms can have more than one (see `Mechanism_InputStates`).  If any `ORIGIN` mechanism in a process or
-  system has more than one inputState, then the next level of nesting of a list, or next higher axis of an ndarray,
-  is used for the set of input_states for each mechanism.
+* **Number of InputStates.** In general, Mechanisms have only a single (`primary <Mechanism_InputStates>`) InputState;
+  however, some types of Mechanisms can have more than one.  If any `ORIGIN` Mechanism in a Pocess or System has more
+  than one InputState, then the next level of nesting of a list, or next higher axis of an ndarray, is used for the
+  set of InputStates for each Mechanism.
 ..
-* **Number of elements for the value of an inputState.** The input for an inputState can be a single element (e.g.,
-  a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an inputState is only a
-  single element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to
-  the latter).  PsyNeuLink can usually parse single-element inputs specified as a stand-alone value (e.g., as a number
+* **Number of elements for the value of an InputState.** The input for an InputState can be a single element (e.g.,
+  a scalar) or have multiple elements (e.g., a vector).  By convention, even if the input to an InputState is a single
+  element, it should nevertheless always be specified as a list or a 1d np.array (it is internally converted to the
+  latter).  PsyNeuLink can usually parse single-element inputs specified as a stand-alone value (e.g., as a number
   not in a list or ndarray).  Nevertheless, it is best to embed such inputs in a single-element list or a 1d array,
   both for clarity and to insure consistent treatment of nested lists and ndarrays.  If this convention is followed,
   then the number of elements for a given input should not affect nesting of lists or dimensionality (number of axes)
-  of ndarrays of an :keyword:`inputs` argument.
+  of ndarrays of an **inputs** argument.
 
-With these factors in mind, the :keyword:`inputs` argument can be specified in the simplest form possible (least
+With these factors in mind, the **inputs** argument can be specified in the simplest form possible (least
 number of nestings for a list, or lowest dimension of an ndarray).  It can be specified using one of two formats:
 
 .. _Run_Inputs_Sequence_Format:
@@ -174,63 +132,69 @@ number of nestings for a list, or lowest dimension of an ndarray).  It can be sp
 Sequence Format
 ^^^^^^^^^^^^^^^
 
+.. note::
+   This format is included for backward compatability, but may not be supported in the future.  It is **strongly**
+   recommended that the `Mechanism format <Run_Inputs_Mechanism_Format>` be used instead.  That said, please feel
+   free to convey any strong preference for this format to the development team, so that an informed decision can
+   be made about future inclusion of this format.
+
 *(List[values] or ndarray)* -- this uses a nested list or ndarray to fully specify the input for
-each round of execution in a sequence.  It is more complex than the `mechanism format <Run_Inputs_Mechanism_Format>`,
-and for systems requires that the inputs for each mechanism be specified in the same order in which those mechanisms
-appear in the system's `originMechanisms <System.System_Base.originMechanisms>` attribute.  This is
-generally the same order in which they are declared, and can be displayed using the system's
-`show <System.System_Base.show>` method). Although this is format is more demanding, it may be better suited to
-automated input generation, since it does not require that mechanisms be referenced explicitly (though it is
-allowed). The following provides a description of the sequence format for all of the combinations of factors listed
-above.  The `figure <Run_Sequence_Format_Fig>` below shows examples.
+each `TRIAL` in a sequence.  It is more complex than the `Mechanism format <Run_Inputs_Mechanism_Format>`,
+and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
+appear in the System's `origin_Mechanisms <System.System_Base.origin_mechanisms>` attribute.  This is generally the
+same order in which they are declared, and can be displayed using the System's `show <System.System_Base.show>` 
+method). Although this format is more complex, it may be better suited to automated input generation, since it does 
+not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of 
+the Sequence format for all of the combinations of factors describe `above <Run_Inputs_Mechanism_Format>`.  
+The `figure <Run_Sequence_Format_Fig>` below shows examples.
 
-    *Lists:* if there is more than one round, then the outermost level of the list is used for the sequence of
-    executions.  If there is only one `ORIGIN` mechanism and it has only one inputState (the most common
-    case), then a single sublist is used for the input of each round.  If the `ORIGIN` mechanism has more
-    than one inputState, then the entry for each round is a sublist of the input_states, each entry of which is a
-    sublist containing the input for that inputState.  If there is more than one mechanism, but none have more than
-    one inputState, then a sublist is used for each mechanism in each round, within which a sublist is used for the
-    input for that mechanism.  If there is more than one mechanism, and any have more than one inputState,
-    then a sublist is used for each mechanism for each round, within which a sublist is used for each
-    inputState of the corresponding mechanism, and inside that a sublist is used for the input for each inputState.
+    *Lists:* if there is more than one `TRIAL`, then the outermost level of the list is used for the sequence of
+    `TRIALS`.  If there is only one `ORIGIN` Mechanism and it has only one InputState (the most common
+    case), then a single sublist is used for the input of each `TRIAL`.  If the `ORIGIN` Mechanism has more
+    than one InputState, then the entry for each `TRIAL` is a sublist of the InputStates, each entry of which is a
+    sublist containing the input for that InputState.  If there is more than one Mechanism, but none have more than
+    one InputState, then a sublist is used for each Mechanism in each `TRIAL`, within which a sublist is used for the
+    input for that Mechanism.  If there is more than one Mechanism, and any have more than one InputState,
+    then a sublist is used for each Mechanism for each `TRIAL`, within which a sublist is used for each
+    InputState of the corresponding Mechanism, and inside that a sublist is used for the input for each InputState.
 
-    *ndarray:*  axis 0 is used for the first factor (round, mechanism, inputState or input) for which there is only one
-    item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there is
-    more than one round, only one `ORIGIN` mechanism, and that has only one inputState (the most common case),
-    then axis 0 is used for round, and axis 1 for inputs per round.  In the extreme, if there are multiple rounds,
-    more than one `ORIGIN` mechanism, and more than one inputState for one or more of the `ORIGIN` mechanisms,
-    then axis 0 is used for rounds, axis 1 for mechanisms within round, axis 2 for input_states of each mechanism, and
-    axis 3 for the input to each inputState of a mechanism.  Note that if *any* mechanism being run (directly, or as
-    one of the `ORIGIN` mechanisms of a process or system) has more than one inputState, then an axis must be
-    committed to input_states, and the input to every inputState of every mechanism must be specified in that axis
-    (i.e., even for those mechanisms that have a single inputState).
+    *ndarray:*  axis 0 is used for the first factor (`TRIAL`, Mechanism, InputState or input) for which there is only 
+    one item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there
+    is more than one `TRIAL`, only one `ORIGIN` Mechanism, and that has only one InputState (the most common case),
+    then axis 0 is used for `TRIAL`, and axis 1 for inputs per `TRIAL`.  At the other extreme, if there are multiple 
+    `TRIALS`, more than one `ORIGIN` Mechanism, and more than one InputState for one or more of the `ORIGIN` Mechanisms,
+    then axis 0 is used for `TRIAL` `s, axis 1 for Mechanisms within `TRIAL`, axis 2 for InputStates of each Mechanism, 
+    and axis 3 for the input to each InputState of a Mechanism.  Note that if *any* Mechanism being run (directly, or as
+    one of the `ORIGIN` Mechanisms of a Process or System) has more than one InputState, then an axis must be
+    committed to InputStates, and the input to every InputState of every Mechanism must be specified in that axis
+    (i.e., even for those Mechanisms that have a single InputState).
 
     .. _Run_Sequence_Format_Fig:
 
     .. figure:: _static/Sequence_format_input_specs_fig.*
-       :alt: Example input specifications in sequence format
+       :alt: Example input specifications in Sequence format
        :scale: 75 %
        :align: center
 
-       Example input specifications in sequence format
+       Example input specifications in Sequence format
 
 .. _Run_Inputs_Mechanism_Format:
 
 Mechanism Format
 ^^^^^^^^^^^^^^^^
 
-*(Dict[mechanism, List[values] or ndarray])* -- this provides a simpler format for specifying :keyword:`inputs` than
-the sequence format, and does not require that the inputs for each mechanism be specified in a particular order.
-However, it requires that each mechanism that receives inputs be referenced explicitly (instead of by order),
+*(Dict[Mechanism, List[values] or ndarray])* -- this provides a simpler format for specifying :keyword:`inputs` than
+the Sequence format, and does not require that the inputs for each Mechanism be specified in a particular order.
+However, it requires that each Mechanism that receives inputs be referenced explicitly (instead of by order),
 which may be less suitable for automated forms of input generation.  It uses a dictionary, each entry of which is the
-sequence of inputs for an `ORIGIN` mechanism;  there must be one such entry for each of the `ORIGIN` mechanisms of the
-process or system being run.  The key for each entry is the `ORIGIN` mechanism, and the value contains either a list
-or ndarray specifying the sequence of inputs for that mechanism, one for each round of execution.  If a list is used,
-and the mechanism has more than one inputState, then a sublist is used in each item of the list to specify the inputs
-for each of the mechanism's input_states for that round.  If an ndarray is used, axis 0 is used for the sequence of
-rounds. If the mechanism has a single inputState, then axis 1 is used for the input for each round.  If the mechanism
-has multiple input_states, then axis 1 is used for the input_states, and axis 2 is used for the input to each
-inputState for each round.
+sequence of inputs for an `ORIGIN` Mechanism;  there must be one such entry for each of the `ORIGIN` Mechanisms of the
+Process or System being run.  The key for each entry is the `ORIGIN` Mechanism, and the value contains either a list
+or ndarray specifying the sequence of inputs for that Mechanism, one for each `TRIAL` to be run.  If a list is used,
+and the Mechanism has more than one InputState, then a sublist is used in each item of the list to specify the inputs
+for each of the Mechanism's InputStates for that `TRIAL`.  If an ndarray is used, axis 0 is used for the sequence of
+`TRIAL` \s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
+Mechanism has multiple InputStates, then axis 1 is used for the InputStates, and axis 2 is used for the input to each
+InputState for each `TRIAL`.
 
     .. figure:: _static/Mechanism_format_input_specs_fig.*
        :alt: Mechanism format input specification
@@ -243,46 +207,45 @@ inputState for each round.
 Initial Values
 ~~~~~~~~~~~~~~
 
-Any mechanism that is the `sender <Projection.Projection.sender>` of a projection that closes a loop in a process or
-system, and that is not an `ORIGIN` mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
-to such mechanisms, that will be used to initialize the process or system when it is first run.  These values are
-specified in the :keyword:`initial_values` argument of :keyword:`run`, as a dictionary. The key for each entry must
-be a mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the mechanism to be used as its initial
+Any Mechanism that is the `sender <Projection.Projection.sender>` of a Projection that closes a loop in a Process or
+System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
+to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
+specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
+be a Mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the Mechanism to be used as its initial
 value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
-must equal the number of input_states of the mechanism, and the size of each value must match (in number and type of
-elements) that of the `variable <InputState.InputState.variable>` for the corresponding inputState.
+must equal the number of InputStates of the Mechanism, and the size of each value must match (in number and type of
+elements) that of the `variable <InputState.InputState.variable>` for the corresponding InputState.
 
 .. _Run_Targets:
 
 Targets
 ~~~~~~~
 
-If learning is specified for a `process <Process_Learning>` or `system <System_Execution_Learning>`, then target values
-for each round of execution must be provided for each `TARGET` mechanism in the process or system being run.  These
-are specified in the :keyword:`targets` argument of the :keyword:`execute` or :keyword:`run` method, which can be in
-any of three formats.  The two formats used for :keyword:`inputs` (`sequence <Run_Inputs_Sequence_Format>` and
-`mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
-ndarrays is simpler, since each `TARGET` mechanism is assigned only a single target value, so there is never the need
-for the extra level of nesting (or dimension of ndarray) used for input_states in the specification of :keyword:`inputs`.
-Details concerning the use of the `sequence <Run_Targets_Sequence_Format>`  and
-`mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
+If learning is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`, then target values
+for each `TRIAL` must be provided for each `TARGET` mechanism in the Process or System being run.  These
+are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
+any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
+`Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
+ndarrays is simpler, since each `TARGET` Mechanism is assigned only a single target value, so there is never the need
+for the extra level of nesting (or dimension of ndarray) used for InputStates in the specification of **inputs**.
+Details concerning the use of the `Sequence <Run_Targets_Sequence_Format>`  and
+`Mechanism <Run_Targets_Mechanism_Format>` formats for targets is described below. Targets can also be specified
 as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
 
-If either the sequence or mechanism format is used, then the number of targets specified for each mechanism must
-equal the number specified for the :keyword:`inputs` argument;  as with :keyword:`inputs`, if the number of executions
-specified is greater than the number of inputs (and targets), then the list will be cycled until the number of
-executions specified is completed.  If a function is used for the :keyword:`targets`, then it will be used to generate
-a target for each round of execution.
+If either the Sequence or Mechanism format is used, then the number of targets specified for each Mechanism must equal
+the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \s specified is greater
+than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \s specified is
+completed.  If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
 
-The number of targets specified in the sequence or mechanism formats for each round of execution, or generated using
-the function format, must equal the number of `TARGET` mechanisms for the process or system being run (see process
-`targetMechanism <Process.Process_Base.targetMechanisms>` or
-system `targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
+The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
+the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
+`target_mechanism <Process.Process_Base.target_mechanism>` or
+System `targetMechanism <System.System_Base.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
-attribute of the `TARGET` mechanism for which it is intended.  Furthermore, if a range is specified for the output of
-the `TERMINAL` mechanism with which the target is compared (that is, the mechanism that provides the
+attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
+the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
 `ComparatorMechanism's <ComparatorMechanism>` `sample <ComparatorMechanism.ComparatorMechanism.sample>`
-value, then the target must be within that range (for example, if the `TERMINAL` mechanism is a
+value, then the target must be within that range (for example, if the `TERMINAL` Mechanism is a
 `TransferMechanism` that uses a `Logistic` function, it's `range <TransferMechanism.TransferMechanism.range>` is
 [0,1], so the target must be within that range).
 
@@ -292,44 +255,36 @@ Sequence Format
 ^^^^^^^^^^^^^^^
 
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-:keyword:`targets`:  one for executions, one for mechanisms, and one for the elements of each input.  For a system
-with more than one `TARGET` mechanism, the targets must be specified in the same order as they appear in the system's
-`targetMechanisms <System.System_Base.targetMechanisms>` attribute.  This should be the same order in which
-they are declared, and can be displayed using the system's `show <System.System_Base.show>` method). All
-other requirements are the same as the `sequence format <Run_Inputs_Sequence_Format>` for :keyword:`inputs`.
+targets:  one for `TRIAL` \s, one for Mechanisms, and one for the elements of each input.  For a System
+with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
+`target_mechanisms <System.System_Base.target_mechanisms>` attribute.  This should be the same order in which
+they are declared, and can be displayed using the System's `show <System.System_Base.show>` method). All
+other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
 
 .. _Run_Targets_Mechanism_Format:
 
 Mechanism Format
 ^^^^^^^^^^^^^^^^
 *(Dict[mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
-mechanisms in the process or system being run, though the entries can be specified in any order.  For this reason,
-this format may be easier (and safer) to use. The value of each entry is a list or ndarray of the target values for
-that mechanism, one for each round of execution. There are at most two levels of nesting (or dimensions)
-required for each entry: one for the execution, and the other for the elements of each input.  In all other respects,
-the format is the same as the `mechanism format <Run_Inputs_Mechanism_Format>` for :keyword:`inputs`.
+Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
+easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
+`TRIAL`.  There are at most two levels of nesting (or dimensions) required for each entry: one for the `TRIAL`,
+and the other for the elements of each input.  In all other respects, the format is the same as the
+`Mechanism format <Run_Inputs_Mechanism_Format>` for **inputs**.
 
 .. _Run_Targets_Function_Format:
 
 Function Format
 ^^^^^^^^^^^^^^^
 
-*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` mechanisms
-for the process  or system being run, each of which must match (in number and type of elements) the
-`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` mechanism for which it is
-intended. This format allows targets to be constructed programmatically, in response to computations made during the
-run.
+*[Function]:* -- the function must return an array with a number of items equal to the number of `TARGET` Mechanisms
+for the Process or System being run, each of which must match (in number and type of elements) the
+`target <ComparatorMechanism.ComparatorMechanism.target>` attribute of the `TARGET` Mechanism for which it is intended.
+This format allows targets to be constructed programmatically, in response to computations made during the run.
 
 COMMENT:
     ADD EXAMPLE HERE
 COMMENT
-
-COMMENT:
-   Module Contents
-       system() factory method:  instantiate system
-       System_Base: class definition
-COMMENT
-
 
 .. _Run_Class_Reference:
 
@@ -386,7 +341,7 @@ class RunError(Exception):
 @tc.typecheck
 def run(object,
         inputs,
-        num_executions:tc.optional(int)=None,
+        num_trials:tc.optional(int)=None,
         reset_clock:bool=True,
         initialize:bool=False,
         intial_values:tc.optional(tc.any(list, np.ndarray))=None,
@@ -403,7 +358,7 @@ def run(object,
         context=None):
     """run(                         \
     inputs,                      \
-    num_executions=None,         \
+    num_trials=None,         \
     reset_clock=True,            \
     initialize=False,            \
     intial_values=None,          \
@@ -419,7 +374,7 @@ def run(object,
     Run a sequence of executions for a `process <Process>` or `system <System>`.
 
     COMMENT:
-        First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:
+        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL`:
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
@@ -430,67 +385,67 @@ def run(object,
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
             * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
-            * for mechanism format, the length of the value of all entries must be equal (== number of executions);
+            * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
-                Note: num_input_sets need not equal num_executions (the number of executions to actually run)
-                      if num_executions > num_input_sets:
+                Note: num_input_sets need not equal num_trials (the number of executions to actually run)
+                      if num_trials > num_input_sets:
                           executions will cycle through input_sets, with the final one being only a partial cycle
-                      if num_executions < num_input_sets:
+                      if num_trials < num_input_sets:
                           the executions will only partially sample the input sets
     COMMENT
 
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_input_value for a single execution
-        the input for each execution in a sequence (see `Run_Inputs` for detailed description of formatting
+    inputs : List[input] or ndarray(input) : default default_input_value for a single `TRIAL`
+        the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
         requirements and options).
 
-    num_executions : int : default None
-        the number of executions to carry out.  If it is `None` (the default), then a number of executions will be
-        carried out equal to the number of :keyword:`inputs`.  If :keyword:`num_executions` exceeds the number of
-        :keyword:`inputs`, then the :keyword:`inputs` will be cycled until the number of executions specified is
-        completed.
+    num_trials : int : default None
+        the number of `TRIAL` \s to run.  If it is `None` (the default), then a number of `TRIAL` \s run will be equal
+        equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
+        inputs, then the inputs will be cycled until the number of `TRIAL` \s specified have been run.
 
     reset_clock : bool : default True
-        if :keyword:`True`, resets `CentralClock` to 0 before a sequence of executions.
+        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \s.
 
     initialize : bool default False
-        calls the `initialize <System.System_Base.initialize>` method of the system prior to a sequence of executions.
+        calls the `initialize <System.System_Base.initialize>` method of the System prior to the first `TRIAL`.
 
     initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
-        the initial values assigned to mechanisms designated as `INITIALIZE_CYCLE`.
+        the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : List[input] or np.ndarray(input) : default None
-        the target values assigned to the `ComparatorMechanism` for each execution (used for learning).
-        The length must be equal to :keyword:`inputs`.
+        the target values assigned to the `ComparatorMechanism` for each `TRIAL` (used for learning).
+        The length must be equal to **inputs**.
 
     learning : bool :  default None
-        enables or disables learning during execution for a `process <Process_Learning>` or
-        `system <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
-        If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
+        enables or disables learning during execution for a `Process <Process_Learning>` or
+        `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
+        If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
     call_before_trial : Function : default= `None`
-        called before each `trial` in the sequence is executed.
+        called before each `TRIAL` in the sequence is run.
 
     call_after_trial : Function : default= `None`
-        called after each `trial` in the sequence is executed.
+        called after each `TRIAL` in the sequence is run.
 
     call_before_time_step : Function : default= ``None`
-        called before each `time_step` is executed.
+        called before each `TIME_STEP` is executed.
 
     call_after_time_step : Function : default= `None`
-        called after each `time_step` is executed.
+        called after each `TIME_STEP` is executed.
 
     time_scale : TimeScale :  default TimeScale.TRIAL
-        specifies whether mechanisms are executed for a single time_step or a trial
+        specifies time scale for Components that implement different forms of execution for different values of
+        `TimeScale`.
 
     Returns
     -------
 
-    <object>.results : List[outputState.value]
-        list of the values, for each execution, of the outputStates for a mechanism run directly,
-        or of the outputStates of the `TERMINAL` mechanisms for the process or system run
+    <object>.results : List[OutputState.value]
+        list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,
+        or of the OutputStates of the `TERMINAL` Mechanisms for the Process or System run.
     """
 
     inputs = _construct_stimulus_sets(object, inputs)
@@ -522,11 +477,11 @@ def run(object,
 
     time_scale = time_scale or TimeScale.TRIAL
 
-    # num_executions = num_executions or len(inputs)
-    # num_executions = num_executions or np.size(inputs,(inputs.ndim-1))
-    # num_executions = num_executions or np.size(inputs, 0)
-    # num_executions = num_executions or np.size(inputs, inputs.ndim-3)
-    num_executions = num_executions or np.size(inputs, EXECUTION_SET_DIM)
+    # num_trials = num_trials or len(inputs)
+    # num_trials = num_trials or np.size(inputs,(inputs.ndim-1))
+    # num_trials = num_trials or np.size(inputs, 0)
+    # num_trials = num_trials or np.size(inputs, inputs.ndim-3)
+    num_trials = num_trials or np.size(inputs, EXECUTION_SET_DIM)
 
     # SET LEARNING (if relevant)
     # FIX: THIS NEEDS TO BE DONE FOR EACH PROCESS IF THIS CALL TO run() IS FOR SYSTEM
@@ -598,7 +553,7 @@ def run(object,
         time_steps = object.numPhases
 
     # EXECUTE
-    for execution in range(num_executions):
+    for execution in range(num_trials):
 
         execution_id = _get_unique_id()
 
@@ -695,7 +650,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     DIMENSIONS:
        axis 0: num_input_sets
        axis 1: object._phaseSpecMax
-       axis 2: len(object.originMechanisms)
+       axis 2: len(object.origin_mechanisms)
        axis 3: len(mech.input_states)
        axis 4: items of input_states
 
@@ -708,11 +663,11 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     object_type = _get_obect_type(object)
 
-    # Stimuli in sequence format
+    # Stimuli in Sequence format
     if isinstance(stimuli, (list, np.ndarray)):
         stim_list = _construct_from_stimulus_list(object, stimuli, is_target=is_target)
 
-    # Stimuli in mechanism format
+    # Stimuli in Mechanism format
     elif isinstance(stimuli, dict):
         stim_list = _construct_from_stimulus_dict(object, stimuli, is_target=is_target)
 
@@ -738,12 +693,12 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     if isinstance(stimuli[0],Iterable) and any(isinstance(header, Mechanism) for header in stimuli[0]):
         headers = stimuli[0]
         del stimuli[0]
-        for mech in object.originMechanisms:
+        for mech in object.origin_mechanisms:
             if not mech in headers:
                 raise RunError("Header is missing for origin mechanism {} in stimulus list".
                                   format(mech.name, object.name))
         for mech in headers:
-            if not mech in object.originMechanisms.mechanisms:
+            if not mech in object.origin_mechanisms.mechanisms:
                 raise RunError("{} in header for stimulus list is not an origin mechanism in {}".
                                   format(mech.name, object.name))
 
@@ -770,8 +725,8 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
     if object_type in {MECHANISM, PROCESS} or is_target:
         return inputs
 
-    mechs = list(object.originMechanisms)
-    num_mechs = len(object.originMechanisms)
+    mechs = list(object.origin_mechanisms)
+    num_mechs = len(object.origin_mechanisms)
     inputs_flattened = np.hstack(inputs)
     # inputs_flattened = np.concatenate(inputs)
     input_elem = 0    # Used for indexing w/o headers
@@ -790,7 +745,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         for phase in range(object.numPhases):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
-                mech = list(object.originMechanisms.mechs)[mech_num]
+                mech = list(object.origin_mechanisms.mechs)[mech_num]
                 mech_len = np.size(mechs[mech_num].variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
@@ -819,11 +774,11 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
     if not is_target:
         # Check that all of the mechanisms listed in the inputs dict are ORIGIN mechanisms in the object
         for mech in stimuli.keys():
-            if not mech in object.originMechanisms.mechanisms:
+            if not mech in object.origin_mechanisms.mechanisms:
                 raise RunError("{} in inputs dict for {} is not one of its ORIGIN mechanisms".
                                format(mech.name, object.name))
         # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
-        for mech in object.originMechanisms:
+        for mech in object.origin_mechanisms:
             if not mech in stimuli:
                 raise RunError("ORIGIN mechanism {} is missing from the inputs dict for ".
                                format(mech.name, object.name))
@@ -833,7 +788,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
     # Stimuli are targets:
     #    - validate that there is a one-to-one mapping of target entries to target mechanisms in the process or system;
-    #    - insure that order of target stimuli in dict parallels order of target mechanisms in targetMechanisms list
+    #    - insure that order of target stimuli in dict parallels order of target mechanisms in target_mechanisms list
     else:
         # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
         # FIX: TRY USING compare METHOD OF DICT OR LIST?
@@ -863,7 +818,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
         # Insure that target lists in dict are accessed in the same order as the
-        #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
+        #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
         from collections import OrderedDict
         ordered_targets = OrderedDict()
         for target in object.target_mechanisms:
@@ -874,7 +829,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
-                               "supposed to be in targetMechanisms for {}".
+                               "supposed to be in target_mechanism for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
             terminal_mech = process.terminalMechanisms[0]
@@ -943,9 +898,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stimuli_in_execution = []
             for phase in range(object.numPhases):
                 stimuli_in_phase = []
-                # Only assign inputs to originMechanisms
-                #    and assign them in the order they appear in originMechanisms and fill out each phase
-                for mech in object.originMechanisms.mechs:
+                # Only assign inputs to origin_mechanisms
+                #    and assign them in the order they appear in origin_mechanisms and fill out each phase
+                for mech in object.origin_mechanisms.mechs:
                     # Assign input elements to stimulus if phase is correct one for mech
 
                     # Get stimulus for mech for current execution, and enforce 2d to accomodate input_states per mech
@@ -1035,12 +990,12 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         elif inputs.dtype is np.dtype('O'):
             input_homogenity = HETEROGENOUS
             # Determine whether the number of states/mech is homogenous
-            num_states_in_first_mech = len(object.originMechanisms[0].input_states)
-            if any(len(mech.input_states) != num_states_in_first_mech for mech in object.originMechanisms):
+            num_states_in_first_mech = len(object.origin_mechanisms[0].input_states)
+            if any(len(mech.input_states) != num_states_in_first_mech for mech in object.origin_mechanisms):
                 states_per_mech_heterog = True
             # Determine whether the size of all states is homogenous
-            size_of_first_state = len(object.originMechanisms[0].input_states[0].value)
-            for origin_mech in object.originMechanisms:
+            size_of_first_state = len(object.origin_mechanisms[0].input_states[0].value)
+            for origin_mech in object.origin_mechanisms:
                 if any(len(state.value) != size_of_first_state for state in origin_mech.input_states):
                     size_of_states_heterog = True
         else:
@@ -1071,18 +1026,18 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
             raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
                               format(object.name, expected_dim))
 
-        if np.size(inputs,PROCESSES_DIM) != len(object.originMechanisms):
+        if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
             raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
                               "does not match the number of processes in the system ({})".
                               format(np.size(inputs,PROCESSES_DIM),
                                      object.name,
-                                     len(object.originMechanisms)))
+                                     len(object.origin_mechanisms)))
 
         # Check that length of each input matches length of corresponding origin mechanism over all executions and phases
         if is_target:
             mechs = list(object.target_mechanisms)
         else:
-            mechs = list(object.originMechanisms)
+            mechs = list(object.origin_mechanisms)
         num_mechs = len(mechs)
         inputs_array = np.array(inputs)
         num_execution_sets = inputs_array.shape[EXECUTION_SET_DIM]
@@ -1144,7 +1099,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.targetMechanism.target)))
+                                          np.size(object.target_mechanism.target)))
         return
 
     if object_type is PROCESS:
@@ -1155,7 +1110,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.targetMechanism.input_states[TARGET].variable):
+            if target_len != np.size(object.target_mechanism.input_states[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1163,7 +1118,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.targetMechanism.target)))
+                                          np.size(object.target_mechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1215,12 +1170,12 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                                          # np.size(targets,PROCESSES_DIM),
                                          num_targets_per_set,
                                          object.name,
-                                         len(object.originMechanisms)))
+                                         len(object.origin_mechanisms)))
 
             # MODIFIED 12/23/16 NEW:
             # Validate that each target is compatible with its corresponding targetMechanism
             # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
-            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.targetMechanisms
+            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.target_mechanisms
             target_array = np.atleast_2d(targets)
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):

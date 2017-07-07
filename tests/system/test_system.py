@@ -125,7 +125,7 @@ class TestGraphAndInput:
         inputs = {a: [2, 2]}
         s.run(inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
         assert set([c, d]) == set(s.terminalMechanisms.mechanisms)
 
         assert a.systems[s] == ORIGIN
@@ -151,7 +151,7 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2], [0, 0]]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
         assert [d] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
@@ -178,7 +178,7 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2, 2], [0, 0, 0]]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
         assert [e] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
@@ -207,7 +207,7 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2]], c: [[0]]}
         s.run(inputs=inputs)
 
-        assert set([a, c]) == set(s.originMechanisms.mechanisms)
+        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
         assert [e] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
@@ -231,7 +231,7 @@ class TestGraphAndInput:
         inputs = {a: [1, 1]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
         assert [] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
@@ -254,7 +254,7 @@ class TestGraphAndInput:
         inputs = {a: [1, 1]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
         assert [] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
@@ -281,7 +281,7 @@ class TestGraphAndInput:
         inputs = {a: [2, 2], e: [0]}
         s.run(inputs=inputs)
 
-        assert set([a, c]) == set(s.originMechanisms.mechanisms)
+        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
         assert [d] == s.terminalMechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN

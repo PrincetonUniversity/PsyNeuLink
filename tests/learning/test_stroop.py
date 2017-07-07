@@ -84,7 +84,7 @@ class TestStroop:
         # }
 
         # results = s.run(
-        #     num_executions=10,
+        #     num_trials=10,
         #     inputs=stim_dict,
         #     targets=target_dict,
         # )
@@ -218,7 +218,7 @@ class TestStroop:
         target_list_dict = {response: [[1, 1]]}
 
         results = s.run(
-            num_executions=2,
+            num_trials=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
             call_after_trial=show_target,

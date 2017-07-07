@@ -99,7 +99,7 @@ my_system.reportOutputPref = True
 # my_system.show_graph(direction='LR')
 my_system.show_graph_with_learning(direction='LR')
 
-results = my_system.run(num_executions=10,
+results = my_system.run(num_trials=10,
                         inputs=stim_list,
                         targets=target_list,
                         # call_before_trial=print_header,

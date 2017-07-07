@@ -72,7 +72,7 @@ def show_target():
     # print(hidden_output_weights.matrix)
     
 
-xor_system.run(num_executions=3000,
+xor_system.run(num_trials=3000,
                   inputs=input_list,
                   targets=target_list,
                   # call_before_trial=print_header,

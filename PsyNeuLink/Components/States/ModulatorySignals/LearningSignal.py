@@ -82,19 +82,10 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
     
 .. _LearningSignal_Learning_Rate:
 
-* `learning_rate <LearningSignal.learning_rate>`:
-   COMMENT:
-      FROM LearningMechanism DOCSTRING:  ADD DESCRIPTION OF HOW IT AFFECTS ParameterState's function
-   COMMENT
-   the learning rate for the LearningMechanism (used to specify the :keyword:`learning_rate` parameter for its
-   `function <LearningMechanism.function>`.  Specifiying this (or the learning_rate parameter of the
-   `function <LearningMechanism.function>` directly) supercedes any specification of a learning_rate for
-   any `process <Process.Process_Base.learning_rate>` and/or `system <System.System_Base.learning_rate>` to which
-   the LearningMechanism belongs.  The default is `None`, in which case the LearingMechanism (and its
-   `function <LearningMechanism.function>`) inherit the specification of the `learning_rate
-   <Process.Process_Base.learning_rate>` for the process in which the LearningMechanism is being executed.
-   If that is `None`, then it inherits it from the system in which it is being executed.  If that is also `None`,
-   then it uses the default value assigned by its `function <LearningMechanism.function>`.
+* `learning_rate <LearningSignal.learning_rate>`: the learning_rate for a LearningSignal is used to specify the
+  `learning_rate <LearningProjection.learning_rate>` parameter for the `LearningProjection(s) <LearningProjection>`
+  that project from that LearningSignal.  If it is not specified, the `learning_rate <LearningMechanism.learning_rate>`
+  of the `LearningMechanism` to which the LearningSignal belongs is used.
 
 .. _LearningSignal_Function:
 
@@ -114,15 +105,14 @@ Execution
 ---------
 
 A LearningSignal cannot be executed directly.  It is executed whenever the `LearningMechanism` to which it belongs is
-executed.  When this occurs, the LearningMechanism provides the LearningSignal with an `learning_signal`, that is used 
-by its `function <LearningSignal.function>` to compute its `value <LearningSignal.value>` for that round of execution.  The `intensity` 
-That is used by its associated `ControlProjection` to set the :keyword:`value` of the `parameterState <ParameterState>` to which it
-to which it projects. The paramemterState uses that value, in turn, to modify the value of the parameter of the 
-projection or its function being learned.
+executed.  When this occurs, the LearningMechanism provides the LearningSignal with a `learning_signal`, that is used
+by its `function <LearningSignal.function>` to compute its `value <LearningSignal.value>` for that `TRIAL`.
+That is used by its associated `LearningProjection` to modify the :keyword:`value` of the `matrix
+<MappingProjection.matrix>` parameter of the `MappingProjection` being learned.
 
 .. note::
-   The changes in a parameter in response to the execution of a LearningMechanism are not applied until the mechanism
-   with the parameter being learned is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
+   The changes in a MappingProjection's matrix parameter in response to the execution of a LearningMechanism are not
+   applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
 Class Reference
@@ -199,11 +189,11 @@ class LearningSignal(ModulatorySignal):
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).  If it is not specified, the
         `learning_rate <LearningMechanism.learning_rate>` of the `LearningMechanism` to which the LearningSignal
-        belongs will be used.
+        belongs is used.
 
-    COMMENT: [NEEDS DOCUMENTATION]
-    COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value          of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the LearningSignal's
+        `LearningProjection(s) <LearningProjection>` project.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -244,8 +234,9 @@ class LearningSignal(ModulatorySignal):
         for additional details).
 
     modulation : ModulationParam
-        specifies the way in which the output of the ControlSignal is used to modulate the value of the parameter
-        it's `ControlProjection` controls.
+        determines the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the
+        value of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the
+        LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
     efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.

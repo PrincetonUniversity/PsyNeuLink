@@ -451,7 +451,7 @@ def test_EVC_gratton():
     ]
 
     mySystem.run(
-        num_executions=nTrials,
+        num_trials=nTrials,
         inputs=stim_list_dict,
     )
 

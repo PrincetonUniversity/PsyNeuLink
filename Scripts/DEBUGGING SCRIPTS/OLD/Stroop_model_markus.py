@@ -97,7 +97,7 @@ stroop_mode = system(processes=[StimulusResponseProcess, TaskHiddenProcess],
                   prefs=system_prefs)
 
 # multitaskingModel.show_graph()
-stroop_mode.run(num_executions=1,
+stroop_mode.run(num_trials=1,
             inputs=stim_list_dict,
             targets=target_list_dict)
 

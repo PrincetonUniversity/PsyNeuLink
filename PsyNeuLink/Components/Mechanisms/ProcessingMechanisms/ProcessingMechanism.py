@@ -17,10 +17,9 @@ A ProcessingMechanism is a type of `Mechanism <Mechanism>` that transforms its i
 ProcessingMechanism always receives its input either from another ProcessingMechanism, or from the input to a `process
 <Process>` or `system <System>` when it is executed.  Similarly, its output is generally conveyed to another
 ProcessingMechanism or used as the ouput for a process or system.  However, the output of a ProcessingMechanism may
-also be used by an `AdaptiveMechanism` to modify the parameters of other components (or its own).
-ProcessingMechanisms are always executed before all AdpativeMechanisms in the process and/or system to which they
-belong, so that any modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next
-round of execution.
+also be used by an `AdaptiveMechanism` to modify the parameters of other components (or its own). ProcessingMechanisms
+are always executed before all AdaptiveMechanisms in the Process and/or System to which they belong, so that any
+modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next `TRIAL`.
 
 .. _ProcessingMechanism_Creation:
 
@@ -29,7 +28,7 @@ Creating a ProcessingMechanism
 
 A ProcessingMechanism can be created by using the standard Python method of calling the constructor for the desired
 type. Some types of ProcessingMechanism (for example, `ObjectiveMechanisms <ObjectiveMechanism>`) are also created
-when a system or process is created, if `learning <LINK>` and/or `control <LINK>` have been specified for it.
+when a System or Process is created, if `learning <LINK>` and/or `control <LINK>` have been specified for it.
 
 .. _AdaptiveMechanism_Structure:
 

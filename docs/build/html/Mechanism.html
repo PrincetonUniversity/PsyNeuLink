@@ -34,6 +34,7 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Component" href="Component.html"/>
         <link rel="next" title="Processing Mechanism" href="ProcessingMechanism.html"/>
         <link rel="prev" title="Component" href="Component.html"/> 
 
@@ -85,40 +86,39 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Mechanism</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#function">Function</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#states">States</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#inputstates">InputStates</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#parameterstates">ParameterStates</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#outputstates">OutputStates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Mechanism</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#function">Function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#states">States</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mechanism-parameters">Mechanism Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#role-in-processes-and-systems">Role in Processes and Systems</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#mechanism-parameters">Mechanism Parameters</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#role-in-processes-and-systems">Role in Processes and Systems</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#runtime-parameters">Runtime Parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#runtime-parameters">Runtime Parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -148,6 +148,8 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Component.html">Component</a> &raquo;</li>
       
     <li>Mechanism</li>
       <li class="wy-breadcrumbs-aside">
@@ -225,9 +227,9 @@ and/or entries specifying the value of parameters used to instantiate it.
 These should take the following form:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">MECHANISM_TYPE: &lt;name of a Mechanism type&gt;</p>
+<li><p class="first"><em>MECHANISM_TYPE</em>: &lt;name of a Mechanism type&gt;</p>
 <blockquote>
-<div><p>if this entry is absent, a <code class="xref any docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code> will be created.</p>
+<div><p>if this entry is absent, a <a class="reference internal" href="#Mechanism.Mechanism_Base.defaultMechanism" title="Mechanism.Mechanism_Base.defaultMechanism"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code></a> will be created.</p>
 </div></blockquote>
 </li>
 <li><p class="first">&lt;name of parameter&gt;:&lt;value&gt;</p>
@@ -276,21 +278,21 @@ TransferMechanism with a default InputState named &#8220;MY_INPUT&#8221; and thr
 specified by the Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Every type of Mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, the <code class="xref any docutils literal"><span class="pre">EVCMechanism</span></code>).
 Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class.  Most Mechanisms allow their function to be
-specified, using the <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.function" title="ModulatoryProjections.LearningProjection.LearningProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument of the Mechanism&#8217;s contructor.  The function can be specified using the name of
+specified, using the <a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> argument of the Mechanism&#8217;s contructor.  The function can be specified using the name of
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> class, or its constructor (including arguments that specify its parameters).  For example, the
 <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> can be specified to be the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#Function.BogaczEtAl.bias" title="Function.BogaczEtAl.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
+<p>Notice that the parameters of the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> (in this case, <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> and <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a>) can be specified by including
 them in its constructor.  Some Mechanisms support only a single function.  In that case, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>
 argument is not available in the Mechanism&#8217;s constructor, but it does include arguments for the function&#8217;s
 parameters.  For example, the <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
 so its constructor does not have a <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> argument.  However, it does have a <code class="xref any docutils literal"><span class="pre">comparison_operation</span></code>
-argument, that is used to set the LinearCombination function&#8217;s <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> parameter.</p>
+argument, that is used to set the LinearCombination function&#8217;s <a class="reference internal" href="Function.html#Function.Reduce.operation" title="Function.Reduce.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> parameter.</p>
 <p>For Mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
 parameters can also be specified as entries in a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a>
-used for the <a class="reference internal" href="Function.html#Function.ExponentialDist.params" title="Function.ExponentialDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of the Mechanism&#8217;s constructor;  in such cases, values specified in the parameter
+used for the <a class="reference internal" href="Function.html#Function.Stability.params" title="Function.Stability.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of the Mechanism&#8217;s constructor;  in such cases, values specified in the parameter
 dictionary will override any specified within the constructor for the function itself (see <a class="reference internal" href="DDM.html#ddm-parameters"><span class="std std-ref">DDM Parameters</span></a> for an
 example). The parameters of a Mechanism&#8217;s primary function (i.e., assigned to is <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 attribute) are assigned to a dictionary in the Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.function_params" title="Mechanism.Mechanism_Base.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a>
@@ -320,9 +322,12 @@ which is then used by its outputStates to assign items to its <a class="referenc
 <div class="section" id="states">
 <span id="mechanism-states"></span><h3>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h3>
 <p>Every Mechanism has three types of States (shown schematically in the figure below):</p>
-<div class="figure align-center" id="id6">
+<div class="figure align-left" id="id6">
 <span id="mechanism-figure"></span><a class="reference internal image-reference" href="_images/Mechanism_States_fig.svg"><img alt="Mechanism States" src="_images/Mechanism_States_fig.svg" /></a>
-<p class="caption"><span class="caption-text">Schematic of a Mechanism showing its three types of States (input, parameter and output).</span></p>
+<p class="caption"><span class="caption-text"><strong>Schematic of a Mechanism showing its three types of States</strong> (input, parameter and output). Every Mechanism has at
+least one InputState (its <a class="reference internal" href="#mechanism-inputstates"><span class="std std-ref">primary InputState</span></a> ) and one OutputState
+(its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>), and can have additional ones of each.  It also has one
+<a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for each of its parameters and the parameters of its <code class="xref any docutils literal"><span class="pre">function</span></code>.</span></p>
 </div>
 <div class="section" id="inputstates">
 <span id="mechanism-inputstates"></span><h4>InputStates<a class="headerlink" href="#inputstates" title="Permalink to this headline">¶</a></h4>
@@ -380,19 +385,19 @@ used to assign additional outputStates to the Mechanism after it has been create
 <span id="id3"></span><h3>Mechanism Parameters<a class="headerlink" href="#mechanism-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Most Mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
 attribute of the Mechanisms (e.g., myMechanism.attribute), in a
-<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> assigned to <a class="reference internal" href="Function.html#Function.ExponentialDist.params" title="Function.ExponentialDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the Mechanism&#8217;s
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> assigned to <a class="reference internal" href="Function.html#Function.Stability.params" title="Function.Stability.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument in the Mechanism&#8217;s
 constructor, or with the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">assign_params</span></code> method, using the following keywords:</p>
 <blockquote>
 <div><ul class="simple">
-<li>INPUT_STATES - specifies specialized input_states required by a Mechanism subclass
+<li><em>INPUT_STATES</em> - specifies specialized input_states required by a Mechanism subclass
 (see <a class="reference internal" href="InputState.html#inputstate-creation"><span class="std std-ref">InputState specification</span></a> for details of specification).</li>
 </ul>
 <ul class="simple">
-<li>FUNCTION - specifies the <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the Mechanism;  can be one of several
+<li><em>FUNCTION</em> - specifies the <a class="reference internal" href="#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for the Mechanism;  can be one of several
 functions pre-specified by the subclass or a user-defined <a class="reference internal" href="#mechanism-custom-function"><span class="std std-ref">custom function</span></a>.</li>
 </ul>
 <ul>
-<li><p class="first">FUNCTION_PARAMS - a specification dictionary of parameters for the Mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>;
+<li><p class="first"><em>FUNCTION_PARAMS</em> - a specification dictionary of parameters for the Mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>;
 the key for each entry must be the name of one of the function&#8217;s parameters;  its value can be any of the
 following (see <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">Specifying Parameters</span></a> for details):</p>
 <ul class="simple">
@@ -429,16 +434,16 @@ Any values specified in the <code class="xref any docutils literal"><span class=
 over values assigned to parameter-specific arguments in its (or its function&#8217;s) constructor.</p>
 </div>
 </li>
-<li><p class="first">OUTPUT_STATES - specifies specialized outputStates required by a Mechanism subclass
+<li><p class="first"><em>OUTPUT_STATES</em> - specifies specialized outputStates required by a Mechanism subclass
 (see <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">Creating an OutputState</span></a> for details of specification).</p>
 </li>
 </ul>
 <ul class="simple">
-<li>MONITOR_FOR_CONTROL - specifies which of the Mechanism&#8217;s outputStates is monitored by the <code class="xref any docutils literal"><span class="pre">controller</span></code>
+<li><em>MONITOR_FOR_CONTROL</em> - specifies which of the Mechanism&#8217;s outputStates is monitored by the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 for the System to which the Mechanism belongs (see <span class="xref std std-ref">specifying monitored outputStates</span> for details of specification).</li>
 </ul>
 <ul class="simple">
-<li>MONITOR_FOR_LEARNING - specifies which of the Mechanism&#8217;s outputStates is used for learning
+<li><em>MONITOR_FOR_LEARNING</em> - specifies which of the Mechanism&#8217;s outputStates is used for learning
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-activation-output"><span class="std std-ref">Learning</span></a> for details of specification).</li>
 </ul>
 </div></blockquote>
@@ -451,10 +456,10 @@ for the System to which the Mechanism belongs (see <span class="xref std std-ref
 <span id="mechanism-role-in-processes-and-systems"></span><h3>Role in Processes and Systems<a class="headerlink" href="#role-in-processes-and-systems" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms that are part of one or more processes are assigned designations that indicate the
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">role</span></a> they play in those processes, and similarly for <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> they play in
-any systems to which they belong. These designations are listed in the Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.processes" title="Mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="Process.html#Process.Process_Base.systems" title="Process.Process_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
+any systems to which they belong. These designations are listed in the Mechanism&#8217;s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="Process.html#Process.Process_Base.systems" title="Process.Process_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a>
 attributes, respectively.  Any Mechanism designated as <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> receives a Projection to its
 <a class="reference internal" href="#mechanism-inputstates"><span class="std std-ref">primary InputState</span></a> from the Process(es) to which it belongs.  Accordingly, when the Process
-(or System of which the Process is a part) is executed, those mechainsms receive the input provided to the Process
+(or System of which the Process is a part) is executed, those mechanisms receive the input provided to the Process
 (or System).  The <a class="reference internal" href="#Mechanism.Mechanism_Base.output_values" title="Mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of any Mechanism designated as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
 Mechanism for a Process is assigned as the <a class="reference internal" href="Function.html#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> of that Process, and similarly for systems to which it belongs.</p>
 <div class="admonition note">
@@ -481,24 +486,25 @@ Process <a class="reference internal" href="Process.html#Process.Process_Base.pa
 </div>
 <p>The parameters of a Mechanism are usually specified when the Mechanism is created.  However, these can be overridden
 when it executed.  This can be done in a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionary</span></a>
-assigned to the <strong>runtime_param</strong> argument of the Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method, or in a tuple
-with the Mechanism in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a Process (see Process <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a>).  Any value assigned to a
-parameter in a runtime_params dicitonary will override the current value of that parameter for the (and <em>only</em> the)
+assigned to the <strong>runtime_param</strong> argument of the Mechanism&#8217;s <a class="reference internal" href="#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method, or in a
+<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">tuple with the Mechanism</span></a> in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  Any value assigned to a
+parameter in a <strong>runtime_params</strong> dictionary will override the current value of that parameter for the (and <em>only</em> the)
 current execution of the Mechanism; the value will return to its previous value following current round of execution,
-unless the <code class="xref any docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code> is set for the component to which the parameter belongs. The runtime
-parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which is for
-a parameter of the Mechanism or its  function, or for one of the Mechanism&#8217;s States.  Entries for parameters of the
-Mechanism or its function use the standard format for <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionaries</span></a>.
-Entries for the Mechanism&#8217;s States can be used to specify runtime parameters of the corresponding State, its function,
-or any of the Projections to that State.  Each State entry uses a key corresponding to the type of State
-(INPUT_STATE_PARAMS, OUTPUT_STATE_PARAMS or PARAMETER_STATE_PARAMS), and the value is a subdictionary containing a
-parameter dictionary with the runtime  parameter specifications for all States of that type). Within the subdictionary,
-specification of parameters for the State or its function use the  standard format for <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionaries</span></a>.  Parameters for all of the State&#8217;s Projections can be specified in an entry
-with the key PROJECTION_PARAMS, and a subdictionary that contains the parameter specifications;  parameters for
-Projections of a particular type can be placed in an entry with a key specifying the type (MAPPING_PROJECTION_PARAMS,
-LEARNING_PROJECTION_PARAMS, CONTROL_PROJECTION_PARAMS, or GATING_PROJECTION_PARAMS; and parameters can for a specific
-Projection can be placed in an entry with a key specifying the name of the project and a dictionary with the
-specifications.</p>
+unless the <code class="xref any docutils literal"><span class="pre">runtimeParamStickyAssignmentPref</span></code> is set for the component to which the parameter belongs.</p>
+<p>The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of
+which is for a parameter of the Mechanism or its  function, or for one of the Mechanism&#8217;s <a class="reference internal" href="State.html"><span class="doc">States</span></a>.
+Entries for parameters of the Mechanism or its function use the standard format for
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specification dictionaries</span></a>. Entries for the Mechanism&#8217;s States can
+be used to specify runtime parameters of the corresponding State, its function, or any of the Projections to that State.
+Each State entry uses a key corresponding to the type of State (<em>INPUT_STATE_PARAMS</em>, <em>OUTPUT_STATE_PARAMS</em> or
+<em>PARAMETER_STATE_PARAMS</em>), and the value is a subdictionary containing a dictionary with the runtime  parameter
+specifications for all States of that type). Within that subdictionary, specification of parameters for the State or
+its function use the  standard format for <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionaries</span></a>.  Parameters
+for all of the State&#8217;s Projections can be specified in an entry with the key <em>PROJECTION_PARAMS</em>, and a subdictionary
+that contains the parameter specifications;  parameters for Projections of a particular type can be placed in an
+entry with a key specifying the type (<em>MAPPING_PROJECTION_PARAMS</em>, <em>LEARNING_PROJECTION_PARAMS</em>,
+<em>CONTROL_PROJECTION_PARAMS</em>, or <em>GATING_PROJECTION_PARAMS</em>; and parameters can for a specific Projection can be
+placed in an entry with a key specifying the name of the project and a dictionary with the specifications.</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -507,7 +513,7 @@ specifications.</p>
 <dt id="Mechanism.mechanism">
 <code class="descclassname">Mechanism.</code><code class="descname">mechanism</code><span class="sig-paren">(</span><em>mech_spec=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.mechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Factory method for Mechanism; returns the type of Mechanism specified or a default Mechanism.
-If called with no arguments, returns the <code class="xref any docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code>.</p>
+If called with no arguments, returns the <a class="reference internal" href="#Mechanism.Mechanism_Base.defaultMechanism" title="Mechanism.Mechanism_Base.defaultMechanism"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -516,9 +522,10 @@ If called with no arguments, returns the <code class="xref any docutils literal"
 <li><strong>mech_spec</strong> (<em>Optional[Mechanism subclass, str, or dict]</em>) &#8211; specification for the Mechanism to create.
 If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
 If it is string that is the name of a Mechanism subclass registered in the <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>,
-an instance of a <code class="xref any docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code> for <em>that class</em> is returned;
+an instance of a <a class="reference internal" href="#Mechanism.Mechanism_Base.defaultMechanism" title="Mechanism.Mechanism_Base.defaultMechanism"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code></a> for <em>that class</em> is returned;
 otherwise, the string is used to name an instance of the <code class="xref any docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code>.
-If it is <code class="xref any docutils literal"><span class="pre">None</span></code> or not specified, an instance of the <code class="xref any docutils literal"><span class="pre">default</span> <span class="pre">Mechanism</span></code> is returned;
+If it is <code class="xref any docutils literal"><span class="pre">None</span></code> or not specified, an instance of the <a class="reference internal" href="#Mechanism.Mechanism_Base.defaultMechanism" title="Mechanism.Mechanism_Base.defaultMechanism"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">mechanism</span></code></a> is
+returned;
 the nth instance created will be named by using the Mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">componentType</span></code> attribute as the
 base for the name and adding an indexed suffix:  componentType-n.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
@@ -652,11 +659,10 @@ the Mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span 
 </dd></dl>
 
 <dl class="attribute">
-<dt id="Mechanism.Mechanism_Base.phaseSpec">
-<code class="descname">phaseSpec</code><a class="headerlink" href="#Mechanism.Mechanism_Base.phaseSpec" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int or float :  default 0</em> &#8211; determines the time_step(s) at which the Mechanism is executed as part of a System
-(see <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> for specification, and <a class="reference internal" href="System.html#system-execution-phase"><span class="std std-ref">System Phase</span></a>
-for how phases are used).</p>
+<dt id="Mechanism.Mechanism_Base.is_finished">
+<code class="descname">is_finished</code><a class="headerlink" href="#Mechanism.Mechanism_Base.is_finished" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : default False</em> &#8211; set by a Mechanism to signal completion of its execution; used by <code class="xref any docutils literal"><span class="pre">Conditions_Component_Based</span></code> to predicate
+the execution of one or more other Components on the Mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -684,6 +690,13 @@ The key of each entry is a System to which the Mechanism belongs, and its value 
 </dd></dl>
 
 <dl class="attribute">
+<dt id="Mechanism.Mechanism_Base.defaultMechanism">
+<code class="descname">defaultMechanism</code><a class="headerlink" href="#Mechanism.Mechanism_Base.defaultMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Mechanism : default DDM</em> &#8211; sublass of Mechanism instantiated when the <a class="reference internal" href="#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> function is called without a specification for its
+<strong>mech_spec</strong> argument.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="Mechanism.Mechanism_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#Mechanism.Mechanism_Base.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default &lt;Mechanism subclass&gt;-&lt;index&gt;</em> &#8211; the name of the Mechanism.
@@ -703,7 +716,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 <dl class="method">
 <dt id="Mechanism.Mechanism_Base.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>runtime_params=None</em>, <em>clock=&lt;PsyNeuLink.Globals.TimeScale.Clock object&gt;</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>ignore_execution_id=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>runtime_params=None</em>, <em>clock=&lt;PsyNeuLink.Scheduling.TimeScale.Clock object&gt;</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>ignore_execution_id=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Carry out a single execution of the Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

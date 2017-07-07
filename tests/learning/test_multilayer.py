@@ -123,7 +123,7 @@ def test_multilayer():
     s.reportOutputPref = True
 
     results = s.run(
-        num_executions=10,
+        num_trials=10,
         inputs=stim_list,
         targets=target_list,
         call_after_trial=show_target,

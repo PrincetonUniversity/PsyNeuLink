@@ -62,7 +62,7 @@ def test_reinforcement():
     )
 
     results = s.run(
-        num_executions=10,
+        num_trials=10,
         inputs=input_list,
         targets=reward,
         call_before_trial=print_header,

@@ -68,5 +68,5 @@ stim_list_dict = {Color_Input:[1, 1],
 Color_Hidden.reportOutputPref = True
 mySystem.reportOutputPref = True
 mySystem.controller.reportOutputPref = True
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
              inputs=stim_list_dict)

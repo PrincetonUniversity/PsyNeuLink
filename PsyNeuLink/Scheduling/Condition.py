@@ -90,6 +90,8 @@ used to determine whether the associated Component is allowed to execute on that
 arbitrary schedules to be created, in which the execution of each Component can depend on one or more attributes of
 any other Components in the Composition.
 
+.. _Condition_Recurrent_Example:
+
 For example, the following script fragment creates a custom Condition in which `mech_A` is scheduled to wait to
 execute until a `RecurrentTransferMechanism` `mech_B` has "converged" (that is, settled to the point that none of
 its elements has changed in value more than a specified amount since the previous `TIME_STEP`)::

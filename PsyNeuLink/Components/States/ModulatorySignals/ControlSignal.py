@@ -81,9 +81,9 @@ primary attributes:
 .. _ControlSignal_Allocation:
 
 * `allocation`: assigned to the ControlSignal by the ControlMechanism to which it belongs, and converted to its
-  `intensity` by its `function <ControlSignal.function>`. Its value corresponds to the current round of execution of
-  the ControlMechanism to which the ControlSignal belongs.  The value in the previous round of execution can be 
-  accessed using the ControlSignal's `last_allocation` attribute.
+  `intensity` by its `function <ControlSignal.function>`. Its value corresponds to the current `TRIAL` in which the
+  the ControlMechanism was executed.  The value in the previous `TRIAL` can be accessed using the ControlSignal's
+  `last_allocation` attribute.
 ..
 * `allocation_samples`:  list of the allocation values to be sampled if the `ControlMechanism` to which the
   ControlSignal belongs determines its `allocation_policy <ControlMechanism.allocation_policy>` by sampling.
@@ -95,10 +95,10 @@ primary attributes:
 
 .. _ControlSignal_Intensity:
 
-* `intensity`:  the result of the ControlSignal`s `function <ControlSignal.function>` applied to its `allocation`,
-  and used to modify the value of the parameter for which the ControlSignal is responsible.  Its value corresponds
-  to the current round of execution of the ControlMechanism to which the ControlSignal belongs.  The value in the 
-  previous round of execution can be accessed using the ControlSignal's `lastIntensity` attribute.
+* `intensity`:  the result of the ControlSignal`s `function <ControlSignal.function>` applied to its `allocation`, and
+  used to modify the value of the parameter for which the ControlSignal is responsible.  Its value corresponds to the
+  most recent `TRIAL` in which the ControlMechanism (to which the ControlSignal belongs) was executed.  The value in
+  the previous `TRIAL` can be accessed using the ControlSignal's `lastIntensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -142,13 +142,13 @@ XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE M
 
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
-`function <ControlSignal.function>` to compute its `intensity` for that round of execution.  The `intensity` is used
+`function <ControlSignal.function>` to compute its `intensity` for that `TRIAL`.  The `intensity` is used
 by its associated `ControlProjection` to set the :keyword:`value` of the `parameterState <ParameterState>` to which it
 projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
 being controlled.  The ControlSignal's `intensity`is also used by its `cost functions <ControlSignal_Cost_Functions>`
 to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
 to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the 
-ControlSignal's `allocation` for the next round of execution.
+ControlSignal's `allocation` for the next `TRIAL`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the mechanism
@@ -349,9 +349,9 @@ class ControlSignal(ModulatorySignal):
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
         `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
-    COMMENT: [NEEDS DOCUMENTATION]
-    COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
+        the parameter(s) that it controls.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -435,8 +435,8 @@ class ControlSignal(ModulatorySignal):
         combined result of all cost functions that are enabled.
 
     modulation : ModulationParam
-        specifies the way in which the output of the ControlSignal is used to modulate the value of the parameter
-        it's `ControlProjection` controls.
+        specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
+        the parameter(s) that it controls.
 
     efferents : [List[ControlProjection]]
         a list with one item -- the `ControlProjection` assigned to the ControlSignal.

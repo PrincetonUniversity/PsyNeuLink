@@ -204,11 +204,12 @@ components being learned and/or its operation:
 
 * `learning_rate <LearningMechanism.learning_rate>` - the learning rate for the LearningMechanism.  This is used to
   specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
-  `learning_rate <LearningMechanism.learning_rate>` multiplies the weights changes provided by the LearningMechanism to
-  its function before conveying these to the `LearningProjection` used to modify the MappingProjection's matrix
-  parameter. Specifiying the `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the
-  :keyword:`learning_rate` parameter of its `function <LearningMechanism.function>` directly) supercedes any
-  specification of the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
+  `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
+  its `function <LearningMechanism.function>` before conveying these to the `LearningProjection` used to modify the
+  MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifiying the
+  `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
+  of its `function <LearningMechanism.function>` directly) supercedes any specification of the
+  :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
   `System <System.System_Base.learning_rate>` to which the LearningMechanism belongs.  The default value for a
   LearningMechanism's `learning_rate <LearningMechanism>` attribute is `None`, in which case the LearningMechanism
   (and its `function <LearningMechanism.function>`) inherit the specification of the
@@ -329,7 +330,7 @@ created or assigned to its LearningMechanism's `ERROR_SIGNAL <LearningMechanism_
 **TARGET Mechanisms**: receive the targets specified for learning.  When learning is specified for a `Process
 <Process_Learning>` or `System <System_Execution_Learning>`, the `ObjectiveMechanism`  that will receive its
 `targets <Run_Targets>` (specified in the call to its :keyword:`execute` or :keyword:`run` method) are identified and
-designated as `TARGET` Mechanisms. These are listed in the Process` or System's :keyword:`targetMechanisms` attribute.
+designated as `TARGET` Mechanisms. These are listed in the Process` or System's `target_mechanisms` attribute.
 It is important to note that the status of a `ProcessingMechanism` in a System takes precedence over its status in any
 of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process,
 if that Process is combined with others in a System, the Mechanism appears in any of those other Processes,
@@ -519,7 +520,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `learning_signals <LearningMechanism.learning_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.ADDITIVE
-        specifies the default form of modulation to be used by the LearningMechanism's LearningSignals, 
+        specifies the default form of modulation used by the LearningMechanism's LearningSignals,
         unless they are `individually specified <LearningSignal_Specification>`.
 
     function : LearningFunction or function

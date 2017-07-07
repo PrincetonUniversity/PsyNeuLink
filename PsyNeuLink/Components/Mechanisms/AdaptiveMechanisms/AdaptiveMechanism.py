@@ -18,10 +18,9 @@ other PsyNeuLink components.  In general, an AdaptiveMechanism receives its inpu
 this need not be the case. There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that
 modify the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that
 modify the  parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
-ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong have been
-:ref:`executed <LINK>`, with all LearningMechanisms then executed before all ControlMechanisms. Both types of
-AdaptiveMechanisms are executed before the next :ref:`round of execution <LINK>`, so that the modifications they make
-are available during the next round of execution of the process or system.
+ProcessingMechanisms in the `Process` or `System` to which they belong have been executed, with all LearningMechanisms
+then executed before all ControlMechanisms. Both types of AdaptiveMechanisms are executed before the next `TRIAL`,
+so that the modifications they make are available during the  `TRIAL` run for the Process or System.
 
 .. _AdaptiveMechanism_Creation:
 

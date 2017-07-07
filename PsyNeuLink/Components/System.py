@@ -41,7 +41,7 @@ support ESP).  A System can include two types of Mechanisms:
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
     and assign the result as their output.
 
-* `AdpativeMechanism`
+* `AdaptiveMechanism`
     These are used to adjust the operation of other components.  There are two types:
     `LearningMechanisms <LearningMechanism>` that adjust Projections, and `ControlMechanisms <ControlMechanism>`
     that adjust the parameters of other Mechanisms and/or their functions.
@@ -52,8 +52,8 @@ Creating a System
 -----------------
 
 Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single :ref:`default Mechanism <LINK>` will be created.  More generally, a System is
-created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
+containing a single `default_mechanism <Mechanism_Base.default_mechanism>` will be created.  More generally, a System
+is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
 Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
 argument of the System's constructor, or specifying a class of ControlMechanism;  if none is specified,
@@ -161,81 +161,89 @@ Execution
 ---------
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes each Mechanism in the System once, whereas `run <System_Base.execute>`
-allows a series of executions to be carried out.
+`execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
+`run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
+of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
+method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
+executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
+the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
+met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
+`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
+`control <System_Execution_Control>`, each of which is described below.
 
-.. _System_Execution_Order:
-
-Order
-~~~~~
-Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
-Processes. When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
-System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
-determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
-"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
-Projections in the System remain intact during execution and can be
-`initialized <System_Execution_Input_And_Initialization>` at the start of execution.
-
-.. _System_Execution_Phase:
-
-Phase
-~~~~~
-Execution occurs in passes through a System called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
-When executing a System in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
-execute a trial of every Mechanism in the System.  During each phase of execution, only the Mechanisms assigned to
-that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a `Process`.
-When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the System.
 
 .. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
-input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
-can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
-one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
-initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
-(see learning below;  also, see `Run` for additional details of formatting input specifications).
+`origin_mechanisms <System_Base.origin_mechanisms>`). If the `execute <System_Base.execute>` method is used, input for
+only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
+used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
+cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
+of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
+recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrent_init_mechanisms`), and target values are
+assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
+details of formatting input specifications).
+
+
+.. _System_Execution_Processing:
+
+Processing
+~~~~~~~~~~
+
+Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are
+executed in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is
+executed, it receives input from any other Mechanisms that project to it within the System,  but not from Mechanisms
+outside the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's
+`executionGraph` attribute, which is a subset of the System's `graph` that has been "pruned" to be acyclic (i.e.,
+devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent Projections in the System remain
+intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
+The order in which Components are executed can also be customized, using the System's Scheduler in combination with
+`Condition` specifications for individual Components, to execute different Components at different time scales, or to
+introduce dependencies among them (e.g., require that a recurrent mechanism settle before another one execute --
+see `example <Condition_Recurrent_Example>`).
+
 
 .. _System_Execution_Learning:
 
 Learning
 ~~~~~~~~
 The System will execute learning if it is specified for any `Process` in the System.  The System's `learning` attribute
-indicates whether learning is enabled for the System. Learning is executed for any components (individual Projections
-or Processes) for which it is specified after all `ProcessingMechanisms <ProcessingMechanism> in the
-System have been executed, but before the controller is executed (see below).  The learning components of a System
-can be displayed using the System's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
-sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
-<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format,
-one target must be provided for each `TARGET` Mechanism (listed in its
-`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
-`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
+indicates whether learning is enabled for the System. `Learning <Process_Learning>` is executed for any components
+(individual Projections or Processes) for which it is specified after the `processing <System_Execution_Processing>` of
+each `TRIAL` has completed, but before the `controller is executed <System_Execution_Control>`.  The learning components
+of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
+:keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
+Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
+<System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
+in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
+format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
-   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
-   (see :ref:`LearningProjection_Targets`).
+   A `target_mechanism <Process.Process_Base.target_mechanism>` of a Process is not necessarily one of the
+   `target_mechanisms <System_Base.target_mechanisms>` of the System to which it belongs
+   (see `LearningMechanism_Targets`).  Also, the changes to a System induced by learning are not applied until the
+   Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
+   of "lazy" updating).
+
 
 .. _System_Execution_Control:
 
 Control
 ~~~~~~~
-Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
-the OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute),
-and uses that information to set the value of parameters for those or other Mechanisms in the System, or their functions
-(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
-of a System can be displayed using the System's `show_graph` method with its **show_control** argument assigned
-:keyword:``True`. The controller is executed after all other Mechanisms in the System are executed, and sets the
-values of any parameters that it controls, which then take effect in the next round of execution.
+Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor the
+OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute), and uses
+that information to set the value of parameters for those or other Mechanisms in the System, or their functions (see
+`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored, and
+`ControlProjection_Creation` for specifying parameters to be controlled).  The control components of a System can be
+displayed using the System's `show_graph` method with its **show_control** argument assigned `True`.  The `controller`
+is executed after `processing <System_Execution_Processing>` and `learning <System_Execution_Learning>` have completed
+for a `TRIAL`, and sets the values of any parameters that it controls, which then take effect in the next `TRIAL`.
 
 COMMENT:
    Examples
@@ -402,12 +410,13 @@ def system(default_input_value=None,
     initial_values : dict of Mechanism:value entries
         a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
         `INITIALIZE_CYCLE`). The key for each entry is a Mechanism object, and the value is a number,
-        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's value
-        (i.e., Mechanism.value[0]).
+        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
+        `value <Mechanism.value>` (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism` used to monitor the value of the OutputState(s) for Mechanisms specified in
-        `monitor_for_control`, and that specify the value of `ControlProjections` in the System.
+        specifies the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for
+        Mechanisms specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the `controller` is executed during System execution.
@@ -422,14 +431,14 @@ def system(default_input_value=None,
     COMMENT
 
     learning_rate : float : None
-        set the learning rate for all Mechanisms in the System (see `learning_rate` attribute for additional
-        information).
+        set the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System
+        (see `learning_rate` attribute for additional information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
-        `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
+        `target_mechanisms` attribute).  There must be the same number of items as there are `target_mechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
-        for each of the corresponding `TARGET` Mechanism.
+        for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -530,7 +539,7 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: SystemDefaultControlMechanism,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
@@ -539,7 +548,7 @@ class System_Base(System):
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
-        - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
+        - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
@@ -573,45 +582,46 @@ class System_Base(System):
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the ControlMechanism used to monitor the value of the OutputState(s) for Mechanisms specified in
-        ``monitor_for_control`` argument, and specify the value of ControlProjections in the System.
+        the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for Mechanisms
+        specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         determines whether the `controller` is executed during System execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any Processes
+        indicates whether learning is being used;  is set to `True` if learning is specified for any Processes
         in the System or for the System itself.
 
     learning_rate : float : default None
-        determines the learning rate for all Mechanisms in the System.  This overrides any values set for the
-        function of individual LearningProjections, and persists for all subsequent runs of the System.  If it is
-        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
-        (either directly, or following a run of any Process or System to which the LearningProjection belongs and
-        for which a learning_rate was set).
+        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
+        for all subsequent executions of the System.  If it is set to `None`, then the learning_rate is determined by
+        last value assigned to each LearningMechanism (either directly, or following the execution of any Process or
+        System to which the LearningMechanism belongs and for which a learning_rate was set).
 
     targets : 2d nparray : default zeroes
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the :keyword:`targets` argument of System's `execute <System.execute>` and `run <System.run>` methods.
+        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
-        contains a graph of all of the Mechanisms in the System.
+        contains a graph of all of the Components in the System.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
-        The key of each entry is a receiver object_item, and
-        the value is a set of mechs that send Projections to that receiver.
+        The key of each entry is a receiver Component, and
+        the value is a set of Mechanisms that send Projections to that receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
         contains an acyclic subset of the System's `graph`, hierarchically organized by a toposort.
-        Used to specify the order in which Mechanisms are executed.
+        Used to specify the order in which Components are executed.
 
     execution_sets : list of sets
-        contains a list of Mechanism sets.
-        Each set contains Mechanisms to be executed at the same time.
+        contains a list of Component sets.
+        Each set contains Components to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
-    executionList : list of Mechanism objects
-        contains a list of Mechanisms in the order in which they are executed.
+    executionList : list of Mechanisms and/or Projections
+        contains a list of Components in the order in which they are executed.
         The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
@@ -657,7 +667,7 @@ class System_Base(System):
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
 
-    originMechanisms : MechanismList
+    origin_mechanisms : MechanismList
         contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive Projections from any other
         Mechanisms.
 
@@ -670,25 +680,21 @@ class System_Base(System):
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
-    recurrentInitMechanisms : MechanismList
+    recurrent_init_mechanisms : MechanismList
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
     learning_mechanisms : MechanismList)
         contains all `LearningMechanism <LearningMechanism>` in the System.
 
-        COMMENT:
-            based on _learning_mechs)
-        COMMENT
-
     target_mechanisms : MechanismList)
-        contains all `TARGET` Mechanisms in the System (used for learning.
+        contains all `TARGET` Mechanisms in the System (used for learning).
         COMMENT:
             based on _target_mechs)
         COMMENT
 
     target_input_states : List[SystemInputState]
-        one item for each `TARGET` Mechanism in the System (listed in `targetMechanisms`).  Used to represent the
+        one item for each `TARGET` Mechanism in the System (listed in `target_mechanisms`).  Used to represent the
         :keyword:`targets` specified in the System's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET InputState of each `TARGET` Mechanism during execution.
 
@@ -706,15 +712,15 @@ class System_Base(System):
             Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
             ProcessingMechanism(s) to be executed in the System.
 
-    numPhases : int
-        number of phases for System (read-only).
+        .. numPhases : int
+            number of phases for System (read-only).
 
-        .. implemented as an @property attribute; = _phaseSpecMax + 1
+            .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Must be the same length as the list of `INITIALIZE_CYCLE` Mechanisms in the System contained in
-        `recurrentInitMechanisms`.
+        `recurrent_init_mechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the System.
@@ -986,9 +992,9 @@ class System_Base(System):
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
-        if input is not None and len(input) != len(self.originMechanisms):
+        if input is not None and len(input) != len(self.origin_mechanisms):
             raise SystemError("Number of items in input ({}) must equal number of processes ({}) in {} ".
-                              format(len(input), len(self.originMechanisms),self.name))
+                              format(len(input), len(self.origin_mechanisms),self.name))
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
@@ -999,7 +1005,7 @@ class System_Base(System):
             # MODIFIED 2/8/17 NEW:
             # Get list of origin mechanisms for processes that have already been converted
             #   (for use below in assigning input)
-            orig_mechs_already_processed = list(p[0].originMechanisms[0] for
+            orig_mechs_already_processed = list(p[0].origin_mechanisms[0] for
                                                 p in processes_spec if isinstance(p,ProcessTuple))
             # MODIFIED 2/8/17 END
 
@@ -1032,7 +1038,7 @@ class System_Base(System):
                     #        if it is, use that one (and don't increment index for input
                     #        otherwise, assign input and increment input_index
                     try:
-                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].originMechanisms[0])
+                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].origin_mechanisms[0])
                     except ValueError:
                         input_index += 1
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
@@ -1168,9 +1174,9 @@ class System_Base(System):
 
         Assign MechanismLists:
             allMechanisms
-            originMechanisms
+            origin_mechanisms
             terminalMechanisms
-            recurrentInitMechanisms (INITIALIZE_CYCLE)
+            recurrent_init_mechanisms (INITIALIZE_CYCLE)
             learning_mechansims
             control_mechanisms
 
@@ -1436,9 +1442,9 @@ class System_Base(System):
                 if not object_item in self._control_object_item:
                     self._control_object_item.append(object_item)
 
-        self.originMechanisms = MechanismList(self, self._origin_mechs)
+        self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
-        self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mechs)
+        self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
@@ -1466,7 +1472,7 @@ class System_Base(System):
         # MODIFIED 2/8/17 NEW:
         # Construct self.variable from inputs to ORIGIN mechanisms
         self.variable = []
-        for mech in self.originMechanisms:
+        for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
@@ -1501,9 +1507,9 @@ class System_Base(System):
 # FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
 # FIX: RENAME SystemInputState -> SystemInputState
 
-        # Create SystemInputState for each ORIGIN mechanism in originMechanisms and
+        # Create SystemInputState for each ORIGIN mechanism in origin_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
-        for i, origin_mech in zip(range(len(self.originMechanisms)), self.originMechanisms):
+        for i, origin_mech in zip(range(len(self.origin_mechanisms)), self.origin_mechanisms):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
@@ -1814,7 +1820,7 @@ class System_Base(System):
 
         if self.learning and self.targets is None:
             if not self.target_mechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
                                   format(self.name))
             # # MODIFIED 6/25/17 OLD:
             # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
@@ -1830,7 +1836,7 @@ class System_Base(System):
 
         self.targets = np.atleast_2d(self.targets)
 
-        # Create SystemInputState for each TARGET mechanism in targetMechanisms and
+        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
@@ -1876,7 +1882,7 @@ class System_Base(System):
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        `INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
+        `INITIALIZE_CYCLE` and contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
@@ -1967,7 +1973,7 @@ class System_Base(System):
         # FIX: MOVE TO RUN??
         #region ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
-        num_origin_mechs = len(list(self.originMechanisms))
+        num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
             if (self.prefs.verbosePref and
@@ -1975,7 +1981,7 @@ class System_Base(System):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
-                input[i] = self.originMechanisms[i].variableInstanceDefault
+                input[i] = self.origin_mechanisms[i].variableInstanceDefault
 
         else:
             num_inputs = np.size(input,0)
@@ -1992,7 +1998,7 @@ class System_Base(System):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
+            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
                 # For each inputState of the ORIGIN mechansim
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
@@ -2214,7 +2220,7 @@ class System_Base(System):
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
-            # Report learning for targetMechanisms (and the processes to which they belong)
+            # Report learning for target_mechanisms (and the processes to which they belong)
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
@@ -2233,7 +2239,7 @@ class System_Base(System):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             reset_clock=True,
             initialize=False,
             targets=None,
@@ -2309,7 +2315,7 @@ class System_Base(System):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    reset_clock=reset_clock,
                    initialize=initialize,
                    targets=targets,
@@ -2474,7 +2480,7 @@ class System_Base(System):
         #     print ("\t\t\t{}".format(object_item.mechanism.name))
         #
         # print ("\n\tOrigin mechanisms: ".format(self.name))
-        # for object_item in self.originMechanisms.mechs_sorted:
+        # for object_item in self.origin_mechanisms.mechs_sorted:
         #     print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n\tTerminal mechanisms: ".format(self.name))
@@ -2486,7 +2492,7 @@ class System_Base(System):
         # # if any(process.learning for process in self.processes):
         # if self.learning:
         #     print ("\n\tTarget mechanisms: ".format(self.name))
-        #     for object_item in self.targetMechanisms.mechs:
+        #     for object_item in self.target_mechanisms.mechs:
         #         print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n---------------------------------------------------------")
@@ -2536,12 +2542,12 @@ class System_Base(System):
         """
 
         input_array = []
-        for mech in list(self.originMechanisms.mechanisms):
+        for mech in list(self.origin_mechanisms.mechanisms):
             input_array.append(mech.value)
         input_array = np.array(input_array)
 
         recurrent_init_array = []
-        for mech in list(self.recurrentInitMechanisms.mechanisms):
+        for mech in list(self.recurrent_init_mechanisms.mechanisms):
             recurrent_init_array.append(mech.value)
         recurrent_init_array = np.array(recurrent_init_array)
 
@@ -2578,9 +2584,9 @@ class System_Base(System):
         inspect_dict = {
             PROCESSES: self.processes,
             MECHANISMS: self.mechanisms,
-            ORIGIN_MECHANISMS: self.originMechanisms.mechanisms,
+            ORIGIN_MECHANISMS: self.origin_mechanisms.mechanisms,
             INPUT_ARRAY: input_array,
-            RECURRENT_MECHANISMS: self.recurrentInitMechanisms,
+            RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
             TERMINAL_MECHANISMS: self.terminalMechanisms.mechanisms,
             OUTPUT_STATE_NAMES: output_state_names,

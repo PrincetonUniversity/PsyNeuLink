@@ -114,7 +114,7 @@ multitaskingModel = system(processes=[StimulusResponseProcess, TaskHiddenProcess
                            prefs=system_prefs)
 
 #
-# multitaskingModel.run(num_executions=1,
+# multitaskingModel.run(num_trials=1,
 #             inputs=stim_list_dict,
 #             targets=target_list_dict)
 
