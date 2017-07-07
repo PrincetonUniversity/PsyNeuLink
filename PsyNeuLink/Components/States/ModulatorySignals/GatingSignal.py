@@ -155,20 +155,20 @@ as the `intercept` of each InputState's `function <InputState.function>`, thus a
 State in determining its `value <InputStat.value>`.
 
 *Gate InputStates differentially*.  In the example above, all of the InputStates were gated using a single
-GatingSignal.
+GatingSignal.::
 
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME:'GATING_SIGNAL_A':
-                                                           GATE:My_Input_Layer
-                                                           MODULATION:ModulationParam.ADDITIVE},
-                                                           {NAME:'GATING_SIGNAL_B':
-                                                           GATE:My_Hidden_Layer, My_Output_Layer}])
+    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
+                                                           GATE: My_Input_Layer,
+                                                           MODULATION: ModulationParam.ADDITIVE},
+                                                           {NAME: 'GATING_SIGNAL_B',
+                                                           GATE: [My_Hidden_Layer, My_Output_Layer]}])
 
 Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains
 an entry for the name of the GatingSignal, and a *GATE* entry that specifies the States to be gated
 (in this case, again exploiting the fact that the default is to modulate the primary InputState of a Mechanism).
 The first dict also contains a *MODULATION* entry that specifies the value of the
 `modulation <GatingSignal.modulation>` attribute for the GatingSignal.  The second one does not, so the default will
-be used (which, for a GatingSignal, is ModulationParam.MULTIPLICATIVE).  Thus, the InputState of ``My_Input_Layer``
+be used (which, for a GatingSignal, is `ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``My_Input_Layer``
 will be additively modulated, while the InputState of ``My_Hidden_Layer`` will be multiplicatively modulated by their
 GatingSignals, respectively.
 

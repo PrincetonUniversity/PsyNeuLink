@@ -50,7 +50,7 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when that
 component is executed, its Function's `function <Function_Base.function>` is executed.  The
 `function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
 (and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
@@ -89,7 +89,7 @@ Structure
 ---------
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
-`function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
+`function <Function_Base.function>` method.  Its core attribute is its `function <Function_Base.function>` attribute
 that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
 method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
@@ -253,18 +253,18 @@ class ModulationParam():
 
     MULTIPLICATIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State.function>`;
+        of the State's `function <State.function>`
 
     ADDITIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State.function>`;
+        of the State's `function <State.function>`
 
     OVERRIDE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`)
 
     DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State.value>`.
+        ignore the ModulatorySignal when calculating the State's `value <State.value>`
     """
     MULTIPLICATIVE = MultiplicativeParam
     # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
@@ -2268,7 +2268,7 @@ class SoftMax(
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before softmax transformation.
+        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax.function>`
@@ -2294,19 +2294,19 @@ class SoftMax(
         contains value to be transformed.
 
     gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the softmax transformation;  determines
+        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
         the "sharpness" of the distribution.
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all softmax-transformed values (the default);
-            * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
+            * **ALL**: array of all SoftMax-transformed values (the default);
+            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
               values to 1, 0 for all others.
 
-    bounds : None if `output <SoftMax.output>`==MAX_VAL, else (0,1) : default (0,1)
+    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
 
     owner : Mechanism
@@ -2379,7 +2379,7 @@ class SoftMax(
         Returns
         -------
 
-        softmax transformation of variable : number or np.array
+        SoftMax transformation of variable : number or np.array
 
         """
 
@@ -5730,16 +5730,16 @@ class WaldDist(DistributionFunction):
 
      .. _WaldDist:
 
-     Return a random sample from a wald distribution using numpy.random.wald
+     Return a random sample from a Wald distribution using numpy.random.wald
 
      Arguments
      ---------
 
      scale : float : default 1.0
-         Scale parameter of the wald distribution. Should be greater than zero.
+         Scale parameter of the Wald distribution. Should be greater than zero.
 
      mean : float : default 1.0
-         Mean of the wald distribution. Should be greater than or equal to zero.
+         Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
          a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -5758,10 +5758,10 @@ class WaldDist(DistributionFunction):
      ----------
 
      scale : float : default 1.0
-         Scale parameter of the wald distribution. Should be greater than zero.
+         Scale parameter of the Wald distribution. Should be greater than zero.
 
      mean : float : default 1.0
-         Mean of the wald distribution. Should be greater than or equal to zero.
+         Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
          a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -6057,10 +6057,10 @@ class Stability(ObjectiveFunction):
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
 
-         Compare the value of `variable <Stability.variable>` with its value after transformation by
-         `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
-         `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
-         by the length of `variable <Stability.variable>`.
+        Compare the value of `variable <Stability.variable>` with its value after transformation by
+        `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
+        `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
+        by the length of `variable <Stability.variable>`.
 
         Returns
         -------
@@ -6345,7 +6345,7 @@ class Reinforcement(
         specifies the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float : default default_learning_rate
-        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -6388,7 +6388,7 @@ class Reinforcement(
         return and array with a single non-zero value.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
@@ -6602,7 +6602,7 @@ class BackPropagation(LearningFunction):
         MATRIX parameterState.
 
     learning_rate : float : default default_learning_rate
-        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -6644,7 +6644,7 @@ class BackPropagation(LearningFunction):
         if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for

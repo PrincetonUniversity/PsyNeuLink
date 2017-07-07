@@ -1,10 +1,17 @@
 import numpy as np
+from PsyNeuLink.scheduling.condition import EveryNCalls, Any, AtPass, \
+    AfterNCalls, EveryNPasses
+
+from PsyNeuLink.scheduling.Scheduler import Scheduler
 
 from PsyNeuLink import ModulationParam
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
     BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms \
+    .GatingMechanism import \
+    GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, \
-    NOISE, THRESHOLD, TimeScale, DECISION_VARIABLE
+    NOISE, THRESHOLD, TimeScale
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
     .IntegratorMechanism import \
     IntegratorMechanism
@@ -23,9 +30,8 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
     import MappingProjection
 from PsyNeuLink.Components.States.ModulatorySignals import ControlSignal
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import BIAS, ENABLED, FUNCTION, \
-    FUNCTION_PARAMS, GAIN, NAME, INDEX, CALCULATE, INTERCEPT, MECHANISM, \
-    MODULATION
+from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
+    INTERCEPT, MECHANISM, MODULATION, GATE
 
 
 def intro():
@@ -271,7 +277,98 @@ def states():
                        name='My Test System')
     # endregion
 
-    if __name__ == '__main__':
-        # processes()
-        # mechanisms()
-        states()
+    # region GatingSignal
+    my_mechanism_a = TransferMechanism()
+    my_mechanism_b = TransferMechanism()
+    my_gating_mechanism = GatingMechanism(
+        gating_signals=[my_mechanism_a, my_mechanism_b.output_state])
+
+    my_input_layer = TransferMechanism(size=3)
+    my_hidden_layer = TransferMechanism(size=5)
+    my_output_layer = TransferMechanism(size=2)
+    my_gating_mechanism = GatingMechanism(gating_signals=[
+        {'GATE_ALL': [my_input_layer, my_hidden_layer, my_output_layer]}],
+        modulation=ModulationParam.ADDITIVE)
+
+    # Should this be list or tuple?
+    my_gating_mechanism = GatingMechanism(gating_signals=[
+        {NAME: 'GATING_SIGNAL_A', GATE: my_input_layer,
+         MODULATION: ModulationParam.ADDITIVE},
+        {NAME: 'GATING_SIGNAL_B', GATE: [my_hidden_layer, my_output_layer]}])
+    # endregion
+
+
+def scheduler():
+    # basic phasing in a linear process
+    A = TransferMechanism(function=Linear(), name='A')
+    B = TransferMechanism(function=Linear(), name='B')
+    C = TransferMechanism(function=Linear(), name='C')
+
+    # p = process(pathway=[A, B, C], name='p')
+    # s = system(processes=[p], name='s')
+    #
+    # sched = Scheduler(system=s)
+    # sched.add_condition(B, EveryNCalls(A, 2))
+    # sched.add_condition(C, EveryNCalls(B, 3))
+    #
+    # output = list(sched.run())
+    # print(output)
+
+    # alternate basic phasing in a linear process
+    # p = process(pathway=[A, B], name='p')
+    # s = system(processes=[p], name='s')
+    #
+    # sched = Scheduler(system=s)
+    # sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
+    # sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+    #
+    # termination_conds = {ts: None for ts in TimeScale}
+    # termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4,
+    #                                                  time_scale=TimeScale.TRIAL)
+    # output = list(sched.run())
+    # print(output)
+    # A = TransferMechanism(function=Linear(), name='A')
+    # B = TransferMechanism(function=Linear(), name='B')
+    #
+    # p = process(
+    #     pathway=[A, B],
+    #     name='p',
+    # )
+    # s = system(
+    #     processes=[p],
+    #     name='s',
+    # )
+    # sched = Scheduler(system=s)
+    #
+    # sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
+    # sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
+    #
+    # termination_conds = {ts: None for ts in TimeScale}
+    # termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4,
+    #                                                  time_scale=TimeScale.TRIAL)
+    # output = list(sched.run(termination_conds=termination_conds))
+    # print(output)
+
+    # basic phasing in two processes
+    p = process(pathway=[A, C], name='p')
+    q = process(pathway=[B, C], name='q')
+    s = system(processes=[p, q], name='s')
+
+    sched = Scheduler(system=s)
+    sched.add_condition(A, EveryNPasses(1))
+    sched.add_condition(B, EveryNCalls(A, 2))
+    sched.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
+
+    termination_conds = {ts: None for ts in TimeScale}
+    termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
+
+    output = list(sched.run(termination_conds=termination_conds))
+    print(output)
+
+
+if __name__ == '__main__':
+    # processes()
+    # mechanisms()
+    # states()
+    processes()
+    scheduler()

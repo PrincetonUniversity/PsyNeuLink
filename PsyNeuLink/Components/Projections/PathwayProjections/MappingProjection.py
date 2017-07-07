@@ -444,11 +444,12 @@ class MappingProjection(PathwayProjection_Base):
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
         If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix parameterState:
-                 it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-                 and then call its super().execute
-           - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
 
-        Assumes that if self.learning_mechanism is assigned *and* parameterState[MATRIX] has been instantiated
+        - it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
+          and then call its super().execute
+        - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
+
+        Assumes that if ``self.learning_mechanism`` is assigned *and* parameterState[MATRIX] has been instantiated
         then learningSignal exists;  this averts duck typing which otherwise would be required for the most
         frequent cases (i.e., *no* learningSignal).
 
