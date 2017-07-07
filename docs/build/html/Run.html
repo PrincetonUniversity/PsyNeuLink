@@ -84,28 +84,11 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Condition.html">Condition</a></li>
-<li class="toctree-l2"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Run</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#timing">Timing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#inputs">Inputs</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#initial-values">Initial Values</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#targets">Targets</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -195,7 +178,7 @@ runs only a single execution of the object;</li>
 <p>When the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of a Component is called, it executes that Component and all others within its scope of
 execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, the scope of
 execution is all of the Mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the scope of execution is
-all of the Mechanisms in the Processes specified in the System&#8217;s <code class="xref any docutils literal"><span class="pre">Processes</span></code> attribute.</p>
+all of the Mechanisms in the Processes specified in the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">Processes</span></code></a> attribute.</p>
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
@@ -288,7 +271,7 @@ be made about future inclusion of this format.</p>
 <p><em>(List[values] or ndarray)</em> &#8211; this uses a nested list or ndarray to fully specify the input for
 each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence.  It is more complex than the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a>,
 and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System&#8217;s <code class="xref any docutils literal"><span class="pre">origin_Mechanisms</span></code> attribute.  This is generally the
+appear in the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.originMechanisms" title="System.System_Base.originMechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_Mechanisms</span></code></a> attribute.  This is generally the
 same order in which they are declared, and can be displayed using the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a>
 method). Although this format is more complex, it may be better suited to automated input generation, since it does
 not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of

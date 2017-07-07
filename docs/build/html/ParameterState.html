@@ -85,9 +85,38 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
@@ -283,7 +312,7 @@ by assigning a default <a class="reference internal" href="ControlSignal.html"><
 a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, that specifies two of its parameters.  The <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter
 is specified using a tuple, the first item of which is the value to be assigned, and the second that specifies
 a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter is also specified using a tuple,
-in this case with a constructor for the ControlSignal that specifies its <code class="xref any docutils literal"><span class="pre">modulation</span></code>
+in this case with a constructor for the ControlSignal that specifies its <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.modulation" title="ModulatorySignals.ControlSignal.ControlSignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 parameter.</p>
 <p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its
 <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter is assigned a random weight matrix (using a

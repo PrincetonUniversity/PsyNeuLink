@@ -86,35 +86,39 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ConventionsAndDefinitions.html">Conventions and Definitions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="State.html">State</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">InputState</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-an-inputstate">Creating an InputState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">InputState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-an-inputstate">Creating an InputState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -144,6 +148,8 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Component.html">Component</a> &raquo;</li>
       
           <li><a href="State.html">State</a> &raquo;</li>
       
@@ -179,7 +185,7 @@ for additional details about the role of input_states in mechanisms).</p>
 <span id="inputstate-creation"></span><h2>Creating an InputState<a class="headerlink" href="#creating-an-inputstate" title="Permalink to this headline">¶</a></h2>
 <p>InputStates are created automatically when a mechanism is created.  For example, if a mechanism is created within
 the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a process`, the inputState for that mechanism will be created and assigned as the
-<code class="xref any docutils literal"><span class="pre">receiver</span></code> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding mechanism in the
+<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding mechanism in the
 pathway;  and a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> automatically creates an inputState for each mechanism that it
 monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the
 future). However they can modified as described below.</p>

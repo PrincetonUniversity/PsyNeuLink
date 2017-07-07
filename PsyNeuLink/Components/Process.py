@@ -50,7 +50,7 @@ Creating a Process
 A Process is created by calling the :py:func:`process` function. The Mechanisms to be included are specified in a list
 in the `pathway` argument, in the order in which they should be executed by the Process.  The Mechanism entries can be
 separated by `projections <Projection>` used to connect them.  If no arguments are provided to the `pathway` argument,
-a Process with a single :ref:`default Mechanism <LINK>` is created.
+a Process with a single `default Mechanism <Mechanism_Base.defaultMechanism>` is created.
 
 .. _Process_Structure:
 
@@ -238,8 +238,7 @@ executed using them (see `Mechanism` for parameter specification).  Finally the 
 .. note::
    Processes do not use a `Scheduler`; each Mechanism is executed once, in the order listed in the `pathway`.
    To more precisely control the order of and/or any dependencies in the sequence of executions, the Process
-   should be used to construct as `System`, and the System's `Scheduler <System.schedler>` together with
-   `Conditions <Conditons>` used to construt a custom schedule.
+   should be used to construct as `System`, together with `Conditions <Conditions>` to implement a custom schedule.
 
 If `learning <Process_Learning>` has been specified for the Process or any of the projections in its `pathway`,
 then the relevant `LearningMechanisms <LearningMechanism>` are executed. These calculate changes that will be made to
@@ -274,7 +273,7 @@ and ``mechanism_3``::
     projection_A = MappingProjection()
     my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
-*Inline Projection specification using a keyword:*  In this `pathway`, a `RANDOM_CONNECTIVITY_MATRIX <Matrix_Keywords>`
+*Inline Projection specification using a keyword:*  In this `pathway`, a `RANDOM_CONNECTIVITY_MATRIX`
 is assigned as the Projection between the first and second Mechanisms::
 
     my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])

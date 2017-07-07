@@ -41,7 +41,7 @@ support ESP).  A System can include two types of Mechanisms:
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
     and assign the result as their output.
 
-* `AdpativeMechanism`
+* `AdaptiveMechanism`
     These are used to adjust the operation of other components.  There are two types:
     `LearningMechanisms <LearningMechanism>` that adjust Projections, and `ControlMechanisms <ControlMechanism>`
     that adjust the parameters of other Mechanisms and/or their functions.
@@ -52,8 +52,8 @@ Creating a System
 -----------------
 
 Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single :ref:`default Mechanism <LINK>` will be created.  More generally, a System is
-created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
+containing a single `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.  More generally, a System
+is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
 Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
 argument of the System's constructor, or specifying a class of ControlMechanism;  if none is specified,
@@ -163,13 +163,13 @@ Execution
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
 `execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
 `run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
-of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of `calls to the `run <Scheduler.run>`
-method of the `Scheduler` specified in its `scheduler <System_Base.scheduler>` attribute.  After each call, it executes
-the Components returned by Scheduler (constituting a `TIME_STEP` of execution), until every Component in the System
-has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is met.  The
-execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
-`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`,
-and `control <System_Execution_Control>`, each of which is described below.
+of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
+method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
+executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
+the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
+met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
+`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
+`control <System_Execution_Control>`, each of which is described below.
 
 
 .. _System_Execution_Input_And_Initialization:
@@ -227,7 +227,7 @@ format <Run_Targets_Function_Format>`, which generates a target for each executi
 .. note::
    A `targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
    `targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
-   (see `LearningProjection_Targets`).  Also, the changes to a System induced by learning are not applied until the
+   (see `LearningMechanism_Targets`).  Also, the changes to a System induced by learning are not applied until the
    Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
