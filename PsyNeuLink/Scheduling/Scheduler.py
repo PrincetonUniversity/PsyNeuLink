@@ -213,7 +213,7 @@ import logging
 from toposort import toposort
 
 from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.Scheduling.Condition import AllHaveRun, Always, ConditionSet
+from PsyNeuLink.Scheduling.Condition import AllHaveRun, Always, ConditionSet, Never
 
 logger = logging.getLogger(__name__)
 
@@ -279,7 +279,11 @@ class Scheduler(object):
         # stores the in order list of self.run's yielded outputs
         self.execution_list = []
         self.consideration_queue = []
-        self.termination_conds = None
+        self.termination_conds = {
+            TimeScale.RUN: Never(),
+            TimeScale.TRIAL: AllHaveRun(),
+        }
+        self.update_termination_conditions(termination_conds)
 
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
@@ -345,6 +349,14 @@ class Scheduler(object):
                 for ts_count in TimeScale:
                     self.times[ts_scope][ts_count] = 0
 
+    def update_termination_conditions(self, termination_conds):
+        if termination_conds is not None:
+            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
+            self.termination_conds.update(termination_conds)
+
+        for ts in self.termination_conds:
+            self.termination_conds[ts].scheduler = self
+
     ################################################################################
     # Wrapper methods
     #   to allow the user to ignore the ConditionSet internals
@@ -374,7 +386,6 @@ class Scheduler(object):
     ################################################################################
     def _validate_run_state(self):
         self._validate_condition_set()
-        self._validate_termination()
 
     def _validate_condition_set(self):
         unspecified_nodes = []
@@ -383,20 +394,7 @@ class Scheduler(object):
                 self.condition_set.add_condition(node, Always())
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.warning('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
-
-    def _validate_termination(self):
-        if self.termination_conds is None:
-            logger.warning('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified, and so the termination conditions for all TimeScale will be set to AllHaveRun()')
-            self.termination_conds = {ts: AllHaveRun() for ts in TimeScale}
-        for tc in self.termination_conds:
-            if self.termination_conds[tc] is None:
-                if tc in [TimeScale.TRIAL]:
-                    raise SchedulerError('Must specify a {0} termination Condition (termination_conds[{0}]'.format(tc))
-            else:
-                if self.termination_conds[tc].scheduler is None:
-                    logger.debug('Setting scheduler of {0} to self ({1})'.format(self.termination_conds[tc], self))
-                    self.termination_conds[tc].scheduler = self
+            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
 
     ################################################################################
     # Run methods
@@ -407,8 +405,8 @@ class Scheduler(object):
         :param self:
         :param termination_conds: (dict) - a mapping from :keyword:`TimeScale`s to :keyword:`Condition`s that when met terminate the execution of the specified :keyword:`TimeScale`
         '''
-        self.termination_conds = termination_conds
         self._validate_run_state()
+        self.update_termination_conditions(termination_conds)
 
         def has_reached_termination(self, time_scale=None):
             term = True

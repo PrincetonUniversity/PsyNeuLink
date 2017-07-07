@@ -64,7 +64,7 @@ class TestLinear:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(B, 3))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -94,7 +94,7 @@ class TestLinear:
         sched.add_condition(B, Any(EveryNCalls(A, 2), AfterPass(1)))
         sched.add_condition(C, EveryNCalls(B, 3))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -124,7 +124,7 @@ class TestLinear:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(B, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -148,7 +148,7 @@ class TestLinear:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, All(AfterNCalls(B, 2), EveryNCalls(B, 1)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -175,7 +175,7 @@ class TestLinear:
         sched.add_condition(B, AfterNCalls(A, 5))
         sched.add_condition(C, AfterNCalls(B, 1))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         output = list(sched.run(termination_conds=termination_conds))
@@ -202,7 +202,7 @@ class TestLinear:
         sched.add_condition(B, AfterNCalls(A, 5))
         sched.add_condition(C, AfterNCalls(B, 1))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(2)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         output = list(sched.run(termination_conds=termination_conds))
@@ -227,7 +227,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = Any(AfterNCalls(A, 1), AfterNCalls(B, 1))
         output = list(sched.run(termination_conds=termination_conds))
@@ -248,7 +248,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = All(AfterNCalls(A, 1), AfterNCalls(B, 1))
         output = list(sched.run(termination_conds=termination_conds))
@@ -269,7 +269,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, WhenFinished(A))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 2)
 
@@ -298,7 +298,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, WhenFinished(A))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AtPass(5)
         output = list(sched.run(termination_conds=termination_conds))
@@ -321,7 +321,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, Any(WhenFinished(A), AfterNCalls(A, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 5)
         output = list(sched.run(termination_conds=termination_conds))
@@ -344,7 +344,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, Any(WhenFinished(A), AfterNCalls(A, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4)
         output = list(sched.run(termination_conds=termination_conds))
@@ -367,7 +367,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, All(WhenFinished(A), AfterNCalls(A, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 4)
         output = list(sched.run(termination_conds=termination_conds))
@@ -390,7 +390,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, All(WhenFinished(A), AfterNCalls(A, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AtPass(10)
         output = list(sched.run(termination_conds=termination_conds))
@@ -414,7 +414,7 @@ class TestLinear:
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNCalls(B, 2, time_scale=TimeScale.RUN)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 2, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -435,7 +435,7 @@ class TestLinear:
         sched.add_condition(A, Any(AtPass(0), EveryNCalls(B, 2)))
         sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(B, 8, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -459,7 +459,7 @@ class TestLinear:
         sched.add_condition(B, Any(JustRan(A), JustRan(B)))
         sched.add_condition(C, Any(EveryNCalls(B, 2), JustRan(C)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -483,7 +483,7 @@ class TestLinear:
         sched.add_condition(B, Any(EveryNCalls(A, 1), EveryNCalls(C, 1)))
         sched.add_condition(C, EveryNCalls(B, 1))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -517,7 +517,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 1))
         sched.add_condition(C, EveryNCalls(A, 1))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -546,7 +546,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 1))
         sched.add_condition(C, EveryNCalls(A, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -578,7 +578,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(A, 3))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 2, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -607,7 +607,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, All(WhenFinished(A), AfterNCalls(B, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
@@ -639,7 +639,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, All(WhenFinished(A), AfterNCalls(B, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
@@ -676,7 +676,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, Any(AfterNCalls(A, 3), AfterNCalls(B, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 4, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -705,7 +705,7 @@ class TestBranching:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, All(AfterNCalls(A, 3), AfterNCalls(B, 3)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 2, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -741,7 +741,7 @@ class TestBranching:
         sched.add_condition(C, Always())
         sched.add_condition(D, Always())
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(D, 1, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -770,7 +770,7 @@ class TestBranching:
         sched.add_condition(C, EveryNCalls(A, 2))
         sched.add_condition(D, All(EveryNCalls(B, 2), EveryNCalls(C, 2)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(D, 1, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -800,7 +800,7 @@ class TestBranching:
         sched.add_condition(C, EveryNCalls(A, 2))
         sched.add_condition(D, All(EveryNCalls(B, 2), EveryNCalls(C, 2)))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(D, 1, time_scale=TimeScale.TRIAL)
         output = list(sched.run(termination_conds=termination_conds))
@@ -841,7 +841,7 @@ class TestBranching:
         for m in comp.mechanisms:
             sched.add_condition(m, Always())
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = All(AfterNCalls(C1, 1), AfterNCalls(C2, 1))
         output = list(sched.run(termination_conds=termination_conds))
@@ -884,7 +884,7 @@ class TestBranching:
             C2: Any(AfterNCalls(B2, 2), AfterNCalls(B3, 2)),
         })
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = All(AfterNCalls(C1, 1), AfterNCalls(C2, 1))
         output = list(sched.run(termination_conds=termination_conds))
