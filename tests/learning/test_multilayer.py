@@ -20,8 +20,7 @@ def test_multilayer():
     Hidden_Layer_1 = TransferMechanism(
         name='Hidden Layer_1',
         function=Logistic(),
-        # default_input_value=np.zeros((5,)),
-        size=5
+        default_input_value=np.zeros((5,)),
     )
 
     Hidden_Layer_2 = TransferMechanism(
@@ -70,8 +69,7 @@ def test_multilayer():
     )
 
     p = process(
-        # default_input_value=[0, 0],
-        size=2,
+        default_input_value=[0, 0],
         pathway=[
             Input_Layer,
             # The following reference to Input_Weights is needed to use it in the pathway

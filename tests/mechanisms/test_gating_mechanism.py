@@ -38,8 +38,7 @@ def test_gating():
     )
 
     Gating_Mechanism = GatingMechanism(
-        # default_gating_policy=0.0,
-        size=[1],
+        default_gating_policy=0.0,
         gating_signals=[
             Hidden_Layer_1,
             Hidden_Layer_2,
@@ -88,8 +87,7 @@ def test_gating():
     )
 
     z = process(
-        # default_input_value=[0, 0],
-        size=2,
+        default_input_value=[0, 0],
         pathway=[
             Input_Layer,
             # The following reference to Input_Weights is needed to use it in the pathway

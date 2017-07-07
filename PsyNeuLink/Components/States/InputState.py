@@ -338,7 +338,6 @@ class InputState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 size=None,
                  function=LinearCombination(operation=SUM),
                  weight=None,
                  exponent=None,
@@ -359,7 +358,6 @@ class InputState(State_Base):
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
                                          variable=variable,
-                                         size=size,
                                          params=params,
                                          name=name,
                                          prefs=prefs,

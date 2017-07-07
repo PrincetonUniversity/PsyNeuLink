@@ -6,12 +6,14 @@
 PsyNeuLink Documentation
 ========================
 
-* `Purpose`
-* `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
-* `Overview_and_Sampler`
-* `Installation`
-* `Contributors`
-* `Indices_and_Tables`
+* :ref:`Purpose`
+* :ref:`Overview`
+* :ref:`What PsyNeuLink is NOT`
+* :ref:`Component Hierarchy <Component_Hierarchy>`
+* :ref:`Installation`
+* :ref:`Conventions`
+* :ref:`Contributors`
+* :ref:`Indices_and_Tables`
 
 
 .. _Purpose:
@@ -61,15 +63,14 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-While PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
-disparate existing models into a single, integrated system in which interactions among them can be examined, it is
-*not* currently as well suited to other kinds of efforts, such as:
+PsyNeuLink is not presently well suited to:
 
  - extensive model fitting
  - large scale simulations
+ - elaborate and detailed models of a particular form
  - biophysically-realistic models of individual neurons
 
-Other packages that are better suited to such applications are:
+Other packages that are much better for such applications are:
 `Emergent <https://grey.colorado.edu/emergent/index.php/Main_Page>`_ and
 `TensorFlow <https://www.tensorflow.org>`_ (for neural network models);
 `HDDM <http://ski.clps.brown.edu/hddm_docs/>`_ (for Drift Diffusion Models);
@@ -77,54 +78,38 @@ Other packages that are better suited to such applications are:
 `Genesis <http://www.genesis-sim.org>`_,
 `Neuron <https://www.neuron.yale.edu/neuron/>`_,
 and `Nengo <http://www.nengo.ca>`_  (for biophysically-realistic models of neuronal function).
-These packages are good for elaborate and detailed models of a particular form.
+
+These packages are all better for elaborate and detailed models of a particular form.
 In contrast, the focus in designing and implementing PsyNeuLink has been to make it as flexible and easy to use as
-possible, with the ability to integrate components constructed in other packages (including some of the ones listed
-above) into a single functioning system.  These are characteristics that are often (at least in the initial
-stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
-development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
-developing simpler models, or taking complex or highly detailed models that have been developed --
-or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
-to integration, documentation, and dissemination.
+possible, with the ability to integrate components constructed in other packages
+(includling some of the ones listed above).  These are characteristics that are often (at least in the initial
+stages of development) in tension with efficiency (think:  interpreted vs. compiled).  As PsyNeuLink grows and matures,
+our expectation is that it be made computationally more efficient.
 
-.. _Overview_and_Sampler:
 
-Overview and Sampler
---------------------
+.. _Overview:
 
-PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
-`Structure_Basic_Constructs` provides an overview of PsyNeuLink Components, Compositions, and their execution.
-The `UsersGuide` provides a more thorough description of how PsyNeuLink is organized and its basic principles of
-operation.  The `Tutorial` provides an interactive guide to the construction of models using PsyNeuLink.
+Overview and "Sampler"
+----------------------
 
 Basics
 ~~~~~~
 
+PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 PsyNeuLink models are made of `Components <Component>` and `Compositions <Composition>`:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
 For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
-"links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
-other Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses
-Projections to link Mechanisms together into pathways that can execute a process, and processes can be combined to
-form networks or circuits that make up a systems-level model.  A `Scheduler` coordinates the execution of Mechanisms
-in a Composition, each of which can be assigned one or more pre-specified or customized `Conditions <Condition>`.
+"links".  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
+Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses Projections
+to link Mechanisms together into pathways that can execute a process, and processes can be combined to form networks or
+circuits that make up a systems-level model.
 
 Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
 taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
-
-Since Mechanisms can implement any function, Projections insure that they can "communicate" with
-each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
-Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
-and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
-modelers the flexibility to commit each Component of their model to a form of processing and/or level of analysis
-that is appropriate for that Component, while providing the opportunity to test and explore how they interact with one
-another in a single system.
-
 
 .. _Index_Simple_Configurations:
 
@@ -243,46 +228,38 @@ specify the isolated behavior of a Mechanism (e.g., how many times it should be 
 `round of execution <LINK>`), or its behavior relative to that of one or more other Components (e.g., how many times
 it should execute or when it should stop executing relative to other Mechanisms).
 
-For example, the following script implements a Composition that integrates a 3-layered feedforward network for
-performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
-to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
-following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
-be used to execute the recurrent layer multiple times but the feedforward network only once in each round execution,
-as follows::
+For example, the following script configures a `RecurrentTransferMechanism` that begins executing immediately after
+receiving input from an input layer, and then executes repeatedly until the change in its value falls below a specified
+threshold, at which point the output layer is executed::
 
-    input_layer = TransferMechanism(size = 10)
-    hidden_layer = TransferMechanism(size = 100)
-    output_layer = TransferMechanism(size = 10)
-    recurent_layer = RecurrentTransferMechanism(size = 10)
+    my_input_layer = TransferMechanism(size = 3)
+    my_recurrent_layer = RecurrentTransferMechanism(size=10)
+    my_response_layer = TransferMechanism(size = 3)
+    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+    **?? settling_scheduler = **??
+    settling_system=(processes=[settling_process],
+                     scheduler=setting_scheduler)
 
-    feed_forward_network = process(pathway=[input_layer, hidden_layer, output_layer])
-    recurrent_network = process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
-    full_model = system(processes=[feed_forward_network, recurrent_network])
 
-    my_scheduler = Scheduler(system=full_model)
-    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
-                                                    EveryNCalls(my_recurrent_layer, 10)))
-    my_scheduler.add_condition(my_output_layer, EveryNCalls(my_hidden_layer, 2))
+Mechanisms can also be configured to execute in parallel but at different time scales relative to one another.  For
+example, a single-pass feedforward layer can be added to the network above, that executes once for each settling of
+the recurrent layer, with the following simple additions::
 
-The two Conditions added to the controller specify that: 1) ``my_hidden_layer`` should execute whenever either
-``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), and
-when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and
-provide that back to the ``hidden_layer``); 2) the ``output_layer`` should execute only after the ``hidden_layer``
-has executed twice (to integrate its inputs from both ``input_layer`` and ``recurrent_layer``).
+    my_input_layer = TransferMechanism(size = 3)
+    my_recurrent_layer = RecurrentTransferMechanism(size=10)
+    my_response_layer = TransferMechanism(size = 3)
+    settling_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])
+    **single_pass_mech = TransferMechanism(size=5)**
+    **single_pass_process = process(pathway=[my_input_layer, my_recurrent_layer, my_response_layer])**
+    **?? settling_scheduler = **??**
+    settling_system=(processes=[settling_process, **single_pass_process**],
+                     scheduler=setting_scheduler)
 
-More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
-execute until the change in its value falls below a specified threshold as follows::
-
-    minimal_change = lambda mech, thresh : abs(mech.value - mech.previous_value) < thresh))
-    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
-                                                    EveryNCalls(my_recurrent_layer, 1))
-    my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
-                                                       Until(minimal_change, my_recurrent_mech, thesh)))
-
-Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `Until`
-Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
-execution that is logically sensible.
-
+Time scales can also be specified explicitly.  For example, changing the Condition for the single_pass_layer
+to ``**??`` configures it to execute once for each 10 executions of ``my_recurrent_layer``, rather than only
+when it has settled.  Needless to say, the same methods can be used schedule different kinds of mechanisms and
+their dependencies on one another (such as a neural network that executes only after a DDM has reached its
+decision threshold).
 
 The `User's Guide <UserGuide>` provides a more detailed review of PsyNeuLink's organization and capabilities,
 and the `Tutorial` provides an interactive introduction to its use.
@@ -297,8 +274,8 @@ Instead, you can clone the github repo (https://github.com/PrincetonUniversity/P
 Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
-Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
+Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
 
 PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.
@@ -321,13 +298,11 @@ If you have trouble installing the package, or run into other problems, please c
 Contributors
 ------------
 
-* **Allie Burton**, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
-* **Changyan Wang**, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
 with substantial and greatly appreciated assistance from:
@@ -366,10 +341,16 @@ with substantial and greatly appreciated assistance from:
 .. toctree::
    :hidden:
 
-   QuickReference
+   System
+   Process
+   Mechanism
+   State
+   Projection
+   Run
+   Scheduler
    Component
-   Composition
-   Scheduling
+   Function
+
 
 .. _Indices_and_Tables:
 

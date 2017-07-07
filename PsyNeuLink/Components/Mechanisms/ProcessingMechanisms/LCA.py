@@ -121,7 +121,7 @@ class LCA(RecurrentTransferMechanism):
         initial_value=None,                \
         decay=1.0,                         \
         inhibition=1.0,                    \
-        noise=0.0,                         \
+        noise=0.1,                         \
         time_constant=1.0,                 \
         range=(float:min, float:max),      \
         time_scale=TimeScale.TIME_STEP,    \

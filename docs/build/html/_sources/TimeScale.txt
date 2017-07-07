@@ -2,8 +2,8 @@ TimeScale
 =========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 3
 
-.. automodule:: Scheduling.TimeScale
+.. automodule:: TimeScale
    :members:
    :exclude-members: random

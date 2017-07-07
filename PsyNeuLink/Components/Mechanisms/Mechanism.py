@@ -860,7 +860,6 @@ class Mechanism_Base(Mechanism):
     @tc.typecheck
     def __init__(self,
                  variable=None,
-                 size=None,
                  input_states=None,
                  output_states=None,
                  params=None,
@@ -959,7 +958,6 @@ class Mechanism_Base(Mechanism):
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
         super(Mechanism_Base, self).__init__(variable_default=variable,
-                                             size=size,
                                              param_defaults=params,
                                              prefs=prefs,
                                              name=name,

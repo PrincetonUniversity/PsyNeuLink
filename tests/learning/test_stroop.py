@@ -23,14 +23,13 @@ class TestStroop:
         # }
 
         colors = TransferMechanism(
-            size=2,
+            default_input_value=[0, 0],
             function=Linear,
             name="Colors",
         )
 
         words = TransferMechanism(
             default_input_value=[0, 0],
-            size=2,
             function=Linear,
             name="Words",
         )

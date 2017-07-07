@@ -5,6 +5,8 @@ from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
 from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanismError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Globals.Utilities import UtilitiesError
@@ -674,7 +676,6 @@ def test_transfer_mech_size_int_check_var():
         size=4
     )
     assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
-    assert len(T.size == 1) and T.size[0] == 4 and type(T.size[0]) == np.int64
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -687,6 +688,7 @@ def test_transfer_mech_size_int_inputs_ints():
         size=4
     )
     val = T.execute([10, 10, 10, 10]).tolist()
+    print("\n\n\n\n\n\n\nval is: ", val)
     assert val == [[10.0, 10.0, 10.0, 10.0]]
 
 # ------------------------------------------------------------------------------------------------
@@ -727,7 +729,6 @@ def test_transfer_mech_size_float_inputs_check_var():
         size=4.0,
     )
     assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
-    assert len(T.size == 1) and T.size[0] == 4.0 and type(T.size[0]) == np.int64
 
 # ------------------------------------------------------------------------------------------------
 # TEST 6
@@ -791,6 +792,7 @@ def test_transfer_mech_size_list_of_floats():
         name='T',
         size=[2., 3., 4.]
     )
+    print("\n\ntest_transfer_mech_size_list_of_floats variable: {}\n\n".format(T.variable))
     assert len(T.variable) == 3 and len(T.variable[0]) == 2 and len(T.variable[1]) == 3 and len(T.variable[2]) == 4
 
 # ------------------------------------------------------------------------------------------------
@@ -798,7 +800,6 @@ def test_transfer_mech_size_list_of_floats():
 # size = list of floats, variable = a compatible 2D array: check that variable is correct
 # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
 # is for possible user-defined functions.
-
 
 def test_transfer_mech_size_var_both_lists():
     T = TransferMechanism(
@@ -812,7 +813,6 @@ def test_transfer_mech_size_var_both_lists():
 # TEST 12
 # size = int, variable = a compatible 2D array: check that variable is correct
 
-
 def test_transfer_mech_size_var_both_lists():
     T = TransferMechanism(
         name='T',
@@ -820,12 +820,10 @@ def test_transfer_mech_size_var_both_lists():
         default_input_value=[[1, 2], [3, 4]]
     )
     assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
-    assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
 
 # ------------------------------------------------------------------------------------------------
 # TEST 13
 # variable = a 2D array: check that variable is correct
-
 
 def test_transfer_mech_size_var_both_lists():
     T = TransferMechanism(
@@ -844,7 +842,7 @@ def test_transfer_mech_size_var_both_lists():
 
 
 def test_transfer_mech_size_zero():
-    with pytest.raises(ComponentError) as error_text:
+    with pytest.raises(ProcessingMechanismError) as error_text:
         T = TransferMechanism(
             name='T',
             size=0,
@@ -857,7 +855,7 @@ def test_transfer_mech_size_zero():
 
 
 def test_transfer_mech_size_negative_one():
-    with pytest.raises(ComponentError) as error_text:
+    with pytest.raises(ProcessingMechanismError) as error_text:
         T = TransferMechanism(
             name='T',
             size=-1.0,
@@ -869,7 +867,6 @@ def test_transfer_mech_size_negative_one():
 # size = non-integer float, check integer-cast value-change warning
 # this test and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
 # warnings to be no longer fatal. At the time of writing (6/30/17, CW), warnings are always fatal.
-
 
 # the test commented out here is similar to what we'd want if we got warnings to be non-fatal
 # and error_text was correctly representing the warning. For now, the warning is hidden under
@@ -886,7 +883,6 @@ def test_transfer_mech_size_negative_one():
 # TEST 4
 # size = 2D array, check too-many-dimensions warning
 
-
 # def test_transfer_mech_size_2d():
 #     with pytest.raises(UserWarning) as error_text:
 #         T = TransferMechanism(
@@ -899,7 +895,6 @@ def test_transfer_mech_size_negative_one():
 # TEST 5
 # size = 2D array, check variable is correctly instantiated
 
-
 # for now, since the test above doesn't work, we use this test. 6/30/17 (CW)
 def test_transfer_mech_size_2d():
     T = TransferMechanism(
@@ -907,12 +902,10 @@ def test_transfer_mech_size_2d():
         size=[[2]],
     )
     assert len(T.variable) == 1 and len(T.variable[0]) == 2
-    assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
 
 # ------------------------------------------------------------------------------------------------
 # TEST 6
 # size = int, variable = incompatible array, check error
-
 
 def test_transfer_mech_size_var_incompatible1():
     with pytest.raises(ComponentError) as error_text:
@@ -926,7 +919,6 @@ def test_transfer_mech_size_var_incompatible1():
 # ------------------------------------------------------------------------------------------------
 # TEST 7
 # size = int list, variable = incompatible array, check error
-
 
 def test_transfer_mech_size_var_incompatible2():
     with pytest.raises(ComponentError) as error_text:

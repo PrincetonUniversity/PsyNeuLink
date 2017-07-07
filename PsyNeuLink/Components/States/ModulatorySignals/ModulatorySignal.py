@@ -291,7 +291,6 @@ class ModulatorySignal(OutputState):
 
     def __init__(self,
                  owner,
-                 size,
                  reference_value,
                  variable,
                  modulation,
@@ -320,7 +319,6 @@ class ModulatorySignal(OutputState):
         super().__init__(owner,
                          reference_value,
                          variable=variable,
-                         size=size,
                          index=index,
                          calculate=calculate,
                          params=params,

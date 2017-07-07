@@ -408,7 +408,6 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
-                 size=None,
                  function=Linear(),
                  params=None,
                  name=None,
@@ -430,7 +429,6 @@ class ParameterState(State_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
-                                             size=size,
                                              params=params,
                                              name=name,
                                              prefs=prefs,
@@ -544,6 +542,7 @@ def _instantiate_parameter_states(owner, context=None):
         owner.user_params
     except AttributeError:
         return
+
     # Instantiate parameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten

@@ -277,7 +277,7 @@ import logging
 
 from toposort import toposort
 
-from PsyNeuLink.Scheduling.Condition import AllHaveRun, Always, ConditionSet
+from PsyNeuLink.Scheduling.Condition import AllHaveRun, Always, ConditionSet, Never
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
@@ -342,23 +342,38 @@ class Scheduler(object):
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
     """
-
-    def __init__(self, system=None, condition_set=None, nodes=None, toposort_ordering=None):
+    def __init__(
+        self,
+        system=None,
+        composition=None,
+        graph=None,
+        condition_set=None,
+        termination_conds=None,
+    ):
+        '''
+        :param self:
+        :param composition: (Composition) - the Composition this scheduler is scheduling for
+        :param condition_set: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
+        '''
         self.condition_set = condition_set if condition_set is not None else ConditionSet(scheduler=self)
         # stores the in order list of self.run's yielded outputs
         self.execution_list = []
         self.consideration_queue = []
-        self.termination_conds = None
+        self.termination_conds = {
+            TimeScale.RUN: Never(),
+            TimeScale.TRIAL: AllHaveRun(),
+        }
+        self.update_termination_conditions(termination_conds)
 
         if system is not None:
             self.nodes = [m for m in system.executionList]
             self._init_consideration_queue_from_system(system)
-        elif nodes is not None:
-            self.nodes = nodes
-            if toposort_ordering is None:
-                raise SchedulerError('Instantiating Scheduler by list of nodes requires a toposort ordering '
-                                     '(kwarg toposort_ordering)')
-            self.consideration_queue = list(toposort_ordering)
+        elif composition is not None:
+            self.nodes = [vert.component for vert in composition.graph_processing.vertices]
+            self._init_consideration_queue_from_graph(composition.graph_processing)
+        elif graph is not None:
+            self.nodes = [vert.component for vert in graph.vertices]
+            self._init_consideration_queue_from_graph(graph)
         else:
             raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system), '
                                  'or a list of Components (kwarg nodes) and a toposort ordering over them '
@@ -366,7 +381,7 @@ class Scheduler(object):
 
         self._init_counts()
 
-    # the consideration queue is the ordered list of sets of nodes in the composition graph, by the
+    # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
     def _init_consideration_queue_from_system(self, system):
         dependencies = []
@@ -377,6 +392,15 @@ class Scheduler(object):
             dependencies.append(new_set)
         self.consideration_queue = dependencies
         logger.debug('Consideration queue: {0}'.format(self.consideration_queue))
+
+    def _init_consideration_queue_from_graph(self, graph):
+        dependencies = {}
+        for vert in graph.vertices:
+            dependencies[vert.component] = set()
+            for parent in graph.get_parents_from_component(vert.component):
+                dependencies[vert.component].add(parent.component)
+
+        self.consideration_queue = list(toposort(dependencies))
 
     def _init_counts(self):
         # self.times[p][q] stores the number of TimeScale q ticks that have happened in the current TimeScale p
@@ -415,6 +439,14 @@ class Scheduler(object):
                 for ts_count in TimeScale:
                     self.times[ts_scope][ts_count] = 0
 
+    def update_termination_conditions(self, termination_conds):
+        if termination_conds is not None:
+            logger.info('Specified termination_conds {0} overriding {1}'.format(termination_conds, self.termination_conds))
+            self.termination_conds.update(termination_conds)
+
+        for ts in self.termination_conds:
+            self.termination_conds[ts].scheduler = self
+
     ################################################################################
     # Wrapper methods
     #   to allow the user to ignore the ConditionSet internals
@@ -442,7 +474,6 @@ class Scheduler(object):
     ################################################################################
     def _validate_run_state(self):
         self._validate_condition_set()
-        self._validate_termination()
 
     def _validate_condition_set(self):
         unspecified_nodes = []
@@ -451,22 +482,7 @@ class Scheduler(object):
                 self.condition_set.add_condition(node, Always())
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
-            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.
-                        format(unspecified_nodes))
-
-    def _validate_termination(self):
-        if self.termination_conds is None:
-            logger.info('A termination Condition dict (termination_conds[<time_step>]: Condition) was not specified,'
-                        ' and so the termination conditions for all TimeScale will be set to AllHaveRun()')
-            self.termination_conds = {ts: AllHaveRun() for ts in TimeScale}
-        for tc in self.termination_conds:
-            if self.termination_conds[tc] is None:
-                if tc in [TimeScale.TRIAL]:
-                    raise SchedulerError('Must specify a {0} termination Condition (termination_conds[{0}]'.format(tc))
-            else:
-                if self.termination_conds[tc].scheduler is None:
-                    logger.debug('Setting scheduler of {0} to self ({1})'.format(self.termination_conds[tc], self))
-                    self.termination_conds[tc].scheduler = self
+            logger.info('These nodes have no Conditions specified, and will be scheduled with condition Always: {0}'.format(unspecified_nodes))
 
     ################################################################################
     # Run methods
@@ -480,27 +496,14 @@ class Scheduler(object):
         :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
                terminate the execution of the specified `TimeScale`
         '''
-        self.termination_conds = termination_conds
         self._validate_run_state()
-
-        logger.info('termination_conds: {0}, self.termination_conds: {1}'.
-                    format(termination_conds, self.termination_conds))
-
-        def has_reached_termination(self, time_scale=None):
-            term = True
-            if time_scale is None:
-                for ts in self.termination_conds:
-                    term = term and self.termination_conds[ts].is_satisfied()
-            else:
-                term = term and self.termination_conds[time_scale].is_satisfied()
-
-            return term
+        self.update_termination_conditions(termination_conds)
 
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
 
-        while not self.termination_conds[TimeScale.TRIAL].is_satisfied():
+        while not self.termination_conds[TimeScale.TRIAL].is_satisfied() and not self.termination_conds[TimeScale.RUN].is_satisfied():
             self._reset_counts_total(TimeScale.PASS)
             self._reset_time(TimeScale.PASS)
 
@@ -510,6 +513,7 @@ class Scheduler(object):
             while (
                 cur_index_consideration_queue < len(self.consideration_queue)
                 and not self.termination_conds[TimeScale.TRIAL].is_satisfied()
+                and not self.termination_conds[TimeScale.RUN].is_satisfied()
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
@@ -518,12 +522,8 @@ class Scheduler(object):
                 try:
                     iter(cur_consideration_set)
                 except TypeError as e:
-                    raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was'
-                                         ' instantiated with an actual toposort output for param toposort_ordering? '
-                                         'err: {0}'.format(e))
-                logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.
-                             format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.
-                                    join([str(x) for x in cur_consideration_set])))
+                    raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
+                logger.debug('trial, num passes in trial {0}, consideration_queue {1}'.format(self.times[TimeScale.TRIAL][TimeScale.PASS], ' '.join([str(x) for x in cur_consideration_set])))
 
                 # do-while, on cur_consideration_set_has_changed
                 # we check whether each node in the current consideration set is allowed to run,

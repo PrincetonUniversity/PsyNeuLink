@@ -150,7 +150,7 @@ if COMPOSITION is PROCESS:
     composition = z
 
     # PROCESS VERSION:
-    z.run(num_trials=10,
+    z.run(num_executions=10,
           # inputs=[[-1, 30],[2, 10]],
           # targets=[[0, 0, 1],[0, 0, 1]],
           inputs=stim_list,
@@ -170,7 +170,7 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph(show_learning=True)
     # x.show_graph()
     results = x.run(
-        num_trials=10,
+        num_executions=10,
         # inputs=stim_list,
         # inputs=[[-1, 30],[2, 10]],
         # targets=[[0, 0, 1],[0, 0, 1]],

@@ -373,7 +373,6 @@ class ProcessError(Exception):
 @tc.typecheck
 def process(process_spec=None,
             default_input_value=None,
-            size=None,
             pathway=None,
             initial_values:dict={},
             clamp_input:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
@@ -509,7 +508,6 @@ def process(process_spec=None,
     # Called without a specification, so return Process with default mechanism
     elif process_spec is None:
         return Process_Base(default_input_value=default_input_value,
-                            size=size,
                             pathway=pathway,
                             initial_values=initial_values,
                             clamp_input=clamp_input,
@@ -838,7 +836,6 @@ class Process_Base(Process):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
-                 size=None,
                  pathway=default_pathway,
                  initial_values=None,
                  clamp_input=None,
@@ -873,7 +870,6 @@ class Process_Base(Process):
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
 
         super(Process_Base, self).__init__(variable_default=default_input_value,
-                                           size=size,
                                            param_defaults=params,
                                            name=self.name,
                                            prefs=prefs,
@@ -2412,7 +2408,7 @@ class Process_Base(Process):
 
     @variableInstanceDefault.setter
     def variableInstanceDefault(self, value):
-        assigned = -1  # what is the purpose of this line? (7/5/17 CW)
+        assigned = -1
         try:
             value
         except ValueError as e:
