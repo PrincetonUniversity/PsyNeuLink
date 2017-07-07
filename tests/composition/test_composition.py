@@ -941,7 +941,93 @@ class TestRun:
         )
         assert 75 == output[0][0]
 
-    # when self.sched is ready:
+    def test_LPP(self):
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))   # 1 x 2 = 2
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))   # 2 x 2 = 4
+        C = TransferMechanism(name="C", function=Linear(slope=2.0))   # 4 x 2 = 8
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))   # 8 x 2 = 16
+        E = TransferMechanism(name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
+        comp.add_linear_processing_pathway([A,B,C,D,E])
+        comp._analyze_graph()
+        inputs_dict = {A: [[1]]}
+        sched = Scheduler(composition=comp)
+        output = comp.execute(
+            inputs=inputs_dict,
+            scheduler_processing=sched
+        )
+        assert 32 == output[0][0]
+
+    def test_LPP_with_projections(self):
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))  # 1 x 2 = 2
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))  # 2 x 2 = 4
+        C = TransferMechanism(name="C", function=Linear(slope=2.0))  # 4 x 2 = 8
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))  # 8 x 2 = 16
+        E = TransferMechanism(name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
+        A_to_B = MappingProjection(sender=A, receiver=B)
+        D_to_E = MappingProjection(sender=D, receiver=E)
+        comp.add_linear_processing_pathway([A, A_to_B, B, C, D, D_to_E, E])
+        comp._analyze_graph()
+        inputs_dict = {A: [[1]]}
+        sched = Scheduler(composition=comp)
+        output = comp.execute(
+            inputs=inputs_dict,
+            scheduler_processing=sched
+        )
+        assert 32 == output[0][0]
+
+    def test_LPP_end_with_projection(self):
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        C = TransferMechanism(name="C", function=Linear(slope=2.0))
+        D = TransferMechanism(name="D", function=Linear(slope=2.0))
+        E = TransferMechanism(name="E", function=Linear(slope=2.0))
+        A_to_B = MappingProjection(sender=A, receiver=B)
+        D_to_E = MappingProjection(sender=D, receiver=E)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, D_to_E])
+
+        assert "A projection cannot be the last item in a linear processing pathway." in str(error_text.value)
+
+    def test_LPP_two_projections_in_a_row(self):
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        C = TransferMechanism(name="C", function=Linear(slope=2.0))
+        A_to_B = MappingProjection(sender=A, receiver=B)
+        B_to_C = MappingProjection(sender=B, receiver=C)
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
+
+        assert "A projection in a linear processing pathway must be preceded by a mechanism and followed by a mechanism" \
+               in str(error_text.value)
+
+    def test_LPP_start_with_projection(self):
+        comp = Composition()
+        Nonsense_Projection = MappingProjection()
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
+
+        assert "The first item in a linear processing pathway must be a mechanism." in str(
+            error_text.value)
+
+    def test_LPP_wrong_component(self):
+        comp = Composition()
+        Nonsense = "string"
+        A = TransferMechanism(name="A", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B", function=Linear(slope=2.0))
+        with pytest.raises(CompositionError) as error_text:
+            comp.add_linear_processing_pathway([ A, Nonsense, B])
+
+        assert "A linear processing pathway must be made up of projections and mechanisms." in str(
+            error_text.value)
+
+                        # when self.sched is ready:
     # def test_run_default_scheduler(self):
     #     comp = Composition()
     #     A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
