@@ -1940,7 +1940,7 @@ class System_Base(System):
             self.scheduler_processing = Scheduler(system=self)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
+            self.scheduler_learning = Scheduler(graph=self.learningExecutionGraph)
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
@@ -2304,7 +2304,7 @@ class System_Base(System):
             self.scheduler_processing = Scheduler(system=self)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(nodes=self.learningExecutionList, toposort_ordering=toposort(self.learningGraph))
+            self.scheduler_learning = Scheduler(graph=self.learningExecutionGraph)
 
         logger.debug(inputs)
 

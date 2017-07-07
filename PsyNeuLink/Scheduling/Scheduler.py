@@ -372,12 +372,17 @@ class Scheduler(object):
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
         elif graph is not None:
-            self.nodes = [vert.component for vert in graph.vertices]
-            self._init_consideration_queue_from_graph(graph)
+            try:
+                self.nodes = [vert.component for vert in graph.vertices]
+                self._init_consideration_queue_from_graph(graph)
+            except AttributeError:
+                self.consideration_queue = list(toposort(graph))
+                self.nodes = []
+                for consideration_set in self.consideration_queue:
+                    for node in consideration_set:
+                        self.nodes.append(node)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system), '
-                                 'or a list of Components (kwarg nodes) and a toposort ordering over them '
-                                 '(kwarg toposort_ordering)')
+            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) or a graph dependency dict (kwarg graph)')
 
         self._init_counts()
 
