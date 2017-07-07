@@ -757,7 +757,7 @@ class Mechanism_Base(Mechanism):
         the execution of one or more other Components on the Mechanism.
 
     phaseSpec : int or float :  default 0
-        determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
+        determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
         (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
         for how phases are used).
 

@@ -313,7 +313,7 @@ class DDM_OUTPUT():
     *RESPONSE_TIME* : float
       • in `TRIAL` mode: mean time (in seconds) for the decision variable to reach the positive or negative value of
         `threshold <DDM.threshold>` as estimated by the analytic solution specified in `function <DDM.function>`); \n
-      • in `TIME_STEP` mode: the number of `TIME_STEP` \s that have occurred since the Mechanism began to execute in
+      • in `TIME_STEP` mode: the number of `TIME_STEP` that have occurred since the Mechanism began to execute in
         the current `TRIAL` or, if it has reached the positive or negative value of `threshold <DDM.threshold>`,
         the `TIME_STEP` at which that occurred. \n
       Corresponds to the second item of the Mechanism's `value <DDM.value>`.
