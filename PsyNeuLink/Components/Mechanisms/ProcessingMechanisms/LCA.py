@@ -23,7 +23,7 @@ network, in which each element is connected to every other element with mutually
 inhibitory weights have the same value, specified by its `inhibition <LCA.inhibition>` parameter.  In the case that
 it has two elements, the value of its `inhibition <LCA.inhibition>` parameter is equal to its `decay
 <RecurrentTransferMechanism.decay>` parameter, and the two are of sufficient magnitude, it implements a close
-approximation of a `DDM` mechanism
+approximation of a `DDM` Mechanism
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
 
@@ -45,18 +45,18 @@ Structure
 ---------
 
 The distinguishing feature of an LCA is its `matrix <LCA.matrix>` of uniform negative weights.  It also has, in
-addition to its `primary outputState <OutputState_Primary>` (which contains the current value of the elements of the
-LCA) and the outputStates of a RecurrentTransferMechanism, it has two additional outputStates: MAX_VS_NEXT and
-MAX_VS_AVG.  Both are two element arrays that track the element of the LCA with the currently highest value relative
-to the value of the others.  The two elements of the MAX_VS_NEXT outputState contain, respectively, the index of the
-LCA element with the greatest value, and the difference between its value and the next highest one;  MAX_VS_AVG
+addition to its `primary OutputState <OutputState_Primary>` (which contains the current value of the elements of the
+LCA) and the OutputStates of a RecurrentTransferMechanism, it has two additional OutputStates: `MAX_VS_NEXT <LCA.LCA_OUTPUT.MAX_VS_NEXT>` and
+`MAX_VS_AVG <MAX_VS_AVG>`.  Both are two element arrays that track the element of the LCA with the currently highest value relative
+to the value of the others.  The two elements of the `MAX_VS_NEXT` OutputState contain, respectively, the index of the
+LCA element with the greatest value, and the difference between its value and the next highest one;  `MAX_VS_AVG`
 contains the index of the LCA element with the greatest value, and the difference between its value and the average
-of all the others.  For an LCA with only two elements, MAX_VS_NEXT implements a close approximation of the
+of all the others.  For an LCA with only two elements, `MAX_VS_NEXT` implements a close approximation of the
 `threshold <DDM.threshold>` parameter of a `DDM`
 (see `Usher & McClelland, 2001; <http://psycnet.apa.org/?&fa=main.doiLanding&doi=10.1037/0033-295X.108.3.550>`_ and
 `Bogacz et al (2006) <https://www.ncbi.nlm.nih.gov/pubmed/17014301>`_).
-For an LCA with more than two elements, MAX_VS_NEXT and
-MAX_VS_AVERAGE implement threshold approximations with different properties
+For an LCA with more than two elements, `MAX_VS_NEXT` and
+`MAX_VS_AVERAGE` implement threshold approximations with different properties
 (see `McMillen & Holmes, 2006 <http://www.sciencedirect.com/science/article/pii/S0022249605000891>`_).
 
 .. _LCA_Execution:
@@ -93,7 +93,55 @@ MAX_VS_AVG = 'max_vs_avg'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class LCA_OUTPUT():
-        RESULT=RESULT
+    """
+    .. _LCA_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `LCA`:
+
+    .. _LCA_RESULT
+
+    *RESULT* : 1d np.array
+        result of the `function <LCA.function>` calculation
+
+    .. _LCA_MEAN
+
+    *MEAN* : float
+        the mean of the result
+
+    .. _LCA_VARIANCE
+
+    *VARIANCE* : float
+        the variance of the result
+
+    .. _LCA_ENERGY
+
+    *ENERGY* : float
+        the energy of the result, which is calculated using the `Stability
+        Function <Function.Stability.function>` with the ``ENERGY`` metric
+
+    .. _LCA_ENTROPY
+
+    *ENTROPY* : float
+        the entropy of the result, which is calculated using the `Stability
+        Function <Function.Stability.function>` with ``ENTROPY`` metric (Note:
+        this is only present if the Mechanism's `function` is bounded between
+        0 and 1)
+
+    .. _LCA_MAX_VS_NEXT
+
+    *MAX_VS_NEXT* : 1d np.array
+        a two-element Numpy array containing the index of the element of
+        `RESULT <LCA_OUTPUT.RESULT>` with the highest value (element 1) and the difference
+        between that and the next highest one in `TRANSFER_RESULT` (element 2)
+
+    .. _LCA_MAX_VS_AVG
+
+    *MAX_VS_AVG* : 1d np.array
+        a two-element Numpy array containing the index of the element of
+        `RESULT` with the highest value (element 1) and the difference
+        between that and the average of the value of all of `RESULT`'s
+        other elements
+    """    RESULT=RESULT
         MEAN=MEAN
         MEDIAN=MEDIAN
         STANDARD_DEVIATION=STANDARD_DEVIATION
@@ -107,9 +155,9 @@ class LCA_OUTPUT():
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_states]:
-#     setattr(DDM_OUTPUT.__class__, item, item)
+    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+    # for item in [item[NAME] for item in DDM_standard_output_states]:
+    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -144,11 +192,11 @@ class LCA(RecurrentTransferMechanism):
     ---------
 
     default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the mechanism to use if none is provided in a call to its
+        specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
-        `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
-        of the mechanism.
+        `function <TransferMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
+        of the Mechanism.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -173,11 +221,10 @@ class LCA(RecurrentTransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`::
+        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
+        set to `TimeScale.TIME_STEP`
 
-         result = (time_constant * current input) +
-         (1-time_constant * result on previous time_step)
+        `result = (time_constant * current input) + (1-time_constant * result on previous time_step)`
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -187,44 +234,43 @@ class LCA(RecurrentTransferMechanism):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
         This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
         parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
-    .. context=componentType+INITIALIZING):
-            context : str : default ''None''
-                   string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    context : str : default ''componentType+INITIALIZNG''
+           string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Attributes
     ----------
 
     variable : value
-        the input to mechanism's `function <LCA.function>`.
+        the input to the Mechanism's `function <LCA.function>`.
 
     function : Function
         the function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism,
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism,
         with a uniform set of negative weights, the magnitude of which are determined by the
         `inhibition <LCA.inhibition>` attribute.
 
     recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>`
+        a `MappingProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
         back to it `primary inputState <Mechanism_InputStates>`.
 
     inhibition : number : default 1.0
@@ -250,7 +296,7 @@ class LCA(RecurrentTransferMechanism):
 
     time_constant : float
         the time constant for exponential time averaging of input
-        when the mechanism is executed using the `TIME_STEP` `TimeScale`::
+        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -272,11 +318,11 @@ class LCA(RecurrentTransferMechanism):
         CORRECTED:
         value : 1d np.array
             the output of `function <LCA.function>`;  also assigned to :keyword:`value` of the TRANSFER_RESULT
-            outputState and the first item of :keyword:`output_values`.
+            OutputState and the first item of :keyword:`output_values`.
     COMMENT
 
     outputStates : Dict[str, OutputState]
-        an OrderedDict with the following `outputStates <OutputState>`:
+        an OrderedDict with the following `OutputStates <OutputState>`:
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
@@ -284,7 +330,7 @@ class LCA(RecurrentTransferMechanism):
           calculated using the `Stability` Function with the ENERGY metric;
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
           calculated using the `Stability` Function with the ENTROPY metric;
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
+          note:  this is only present if the Mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function);
         * `MAX_VS_NEXT`, the :keyword:`value` of which is a two element array: the first is the
           index of the element of RESULT with the highest value, and the second the difference between that
@@ -295,26 +341,26 @@ class LCA(RecurrentTransferMechanism):
 
     output_values : List[array(float64), float, float]
         a list with the following items:
-        * **result** of the `function <LCA.function>` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (:keyword:`value` of TRANSFER_MEAN outputState)
-        * **variance** of the result (:keyword:`value` of TRANSFER_VARIANCE outputState);
-        * **energy** of the result (:keyword:`value` of ENERGY outputState);
-        * **entropy** of the result (if the ENTROPY outputState is present);
-        * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT outputState);
-        * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG outputState).
+        * **result** of the `function <LCA.function>` calculation (value of TRANSFER_RESULT OutputState);
+        * **mean** of the result (:keyword:`value` of TRANSFER_MEAN OutputState)
+        * **variance** of the result (:keyword:`value` of TRANSFER_VARIANCE OutputState);
+        * **energy** of the result (:keyword:`value` of ENERGY OutputState);
+        * **entropy** of the result (if the ENTROPY OutputState is present);
+        * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputState);
+        * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputState).
 
     time_scale :  TimeScale
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
-        the name of the mechanism.
+        the name of the Mechanism.
         Specified in the **name** argument of the constructor for the projection;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

@@ -43,7 +43,7 @@ the **control_signals** argument.  When the ControlMechanism is created, it auto
 an ObjectiveMechanism (used to monitor and evaluate the values specified in **monitor_for_control**) 
 as well as `ControlSignals <ControlSignal>` and `ControlProjections <ControlProjection>` used to control the parameters
 specified in **control_signals**, as described below. The kind of ObjectiveMechanism created by a ControlMechanism,
-and how it evalutes the values it monitors, depends on the `subclass <ControlMechanism>` of ControlMechanism.
+and how it evaluates the values it monitors, depends on the `subclass <ControlMechanism>` of ControlMechanism.
 
 .. _ControlMechanism_Control_Signals:
 
@@ -76,7 +76,7 @@ ObjectiveMechanism is referenced by the ControlMechanism's
 `monitoring_mechanism <ControlMechanism.monitoring_mechanism>` attribute.
 
 ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism's
-'monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
+`monitor_for_control <ControlMechanism.monitor_for_control>` attribute, and evaluates them using the its `function`.
 This information is used to set the value of the ControlMechanism's ControlSignals.
 
 .. _ControlMechanism_Examples:

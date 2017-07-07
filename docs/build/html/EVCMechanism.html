@@ -13,19 +13,19 @@
 
   
   
-
+  
   
 
   
 
-
-
-
+  
+  
+    
 
   
 
-
-
+  
+  
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   
 
@@ -44,7 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
-
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,9 +85,9 @@
           
             
             
-
-
-
+              
+            
+            
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
@@ -105,10 +105,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PsyNeuLink</a>
-
+        
       </nav>
 
 
@@ -134,23 +134,23 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-
+    
       <li><a href="index.html">Docs</a> &raquo;</li>
-
+        
       <li>EVCMechanism</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-
+            
             <a href="_sources/EVCMechanism.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -190,7 +190,7 @@ custom functions to corresponding parameters of the EVCMechanism, as described u
 <div class="section" id="creating-an-evcmechanism">
 <span id="evcmechanism-creation"></span><h2>Creating an EVCMechanism<a class="headerlink" href="#creating-an-evcmechanism" title="Permalink to this headline">¶</a></h2>
 <p>An EVCMechanism is generated automatically when a system is created and an EVCMechanism is specified as its
-<a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> attribute (see <code class="xref any docutils literal"><span class="pre">Controller</span></code>).  However, it can also be created using the
+<code class="xref any docutils literal"><span class="pre">controller</span></code> attribute (see <code class="xref any docutils literal"><span class="pre">Controller</span></code>).  However, it can also be created using the
 standard Python method of calling its constructor. An EVCMechanism that has been constructed automatically can be
 customized by assigning values to its attributes (e.g., its functions, as described under <a class="reference internal" href="#evc-calculation"><span class="std std-ref">EVC Calculation</span></a> below).</p>
 <p>When an EVCMechanism is constructed automatically, it creates an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> (specified in its
@@ -224,7 +224,7 @@ The outputStates of the system being monitored by an EVCMechanism are listed in 
 <p>The <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an EVCMechanism returns an <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> – that is, the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of
 each of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> – that will be used in the next round of the system’s execution.  Any
 function can be used that returns an appropriate value (i.e., that specifies an <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> for the exact
-number of ControlSignals in the EVCMechanism’s <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, using the correct format for the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>
+number of ControlSignals in the EVCMechanism’s <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, using the correct format for the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>
 value of each ControlSignal). The default function is <code class="xref any docutils literal"><span class="pre">ControlSignalGridSearch</span></code>, which evaluates the performance of the
 system under a range of specified allocationPolicies, and returns the <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> that generates the best
 performance (the greatest EVC). This evaluation and selection procedure, including the four evaluation functions that it
@@ -275,7 +275,7 @@ are combined to determine the EVC can be customized by specifying a custom funct
 <div class="admonition note" id="evcmechanism-calling-and-assigning-functions">
 <p class="first admonition-title">Note</p>
 <p class="last">The EVCMechanism function attributes described above are all implemented as PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> objects
-(so that, among other reasons, they can be parameterized using a <a class="reference internal" href="Function.html#Function.Distance.params" title="Function.Distance.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> dictionary).  Therefore, to call the
+(so that, among other reasons, they can be parameterized using a <a class="reference internal" href="Function.html#Function.UniformDist.params" title="Function.UniformDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> dictionary).  Therefore, to call the
 function itself, it must be referenced as <code class="docutils literal"><span class="pre">&lt;EVCMechanism&gt;.&lt;function_attribute&gt;.function</span></code>.  A custom function
 assigned to one of the function attributes can be either a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, or a generic python
 function or method (including a lambda function).  However, if it is one of the latter, it is automatically
@@ -293,7 +293,7 @@ ControlSignal for each parameter that it controls.  One <a class="reference inte
 each of its ControlSignals, and the value of that outputState is the ControlSignal’s <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>.  When an EVCMechanism
 is <a class="reference internal" href="#evcmechanism-creation"><span class="std std-ref">created automatically</span></a>, it creates a ControlSignal for each parameter that has been
 specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see <a class="reference internal" href="Mechanism.html#mechanism-parameters"><span class="std std-ref">Mechanism Parameters</span></a>).  The ControlSignals of an EVCMechanism are listed in it <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
+see <a class="reference internal" href="Mechanism.html#mechanism-parameters"><span class="std std-ref">Mechanism Parameters</span></a>).  The ControlSignals of an EVCMechanism are listed in it <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
 attribute. Each ControlSignal is associated with a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> that projects to the
 <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the parameter controlled by that ControlSignal. The EVCMechanism’s
 <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> assigns an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value to each of its ControlSignals. The
@@ -408,27 +408,15 @@ and assigned an <a class="reference internal" href="OutputState.html"><span clas
 specification options).</li>
 <li><strong>control_signals</strong> (<em>List</em><em>[</em><em>Attribute of Mechanism</em><em> or </em><em>its function</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, or </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em>) – specifies the parameters to be controlled by the EVCMechanism
 (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> for details).</li>
-<<<<<<< HEAD
-<li><strong>function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a><em> or </em><em>method : ControlSignalGridSearch</em>) – specifies the function used to determine the <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> for the next execution of the system
+<li><strong>function</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><em>function</em></a><em> or </em><em>method : ControlSignalGridSearch</em>) – specifies the function used to determine the <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> for the next execution of the system
 (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute for a description of the default function).</li>
-<li><strong>value_function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a><em> or </em><em>method : value_function</em>) – specifies the function used to calculate the value of the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+<li><strong>value_function</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><em>function</em></a><em> or </em><em>method : value_function</em>) – specifies the function used to calculate the value of the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
 (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> attribute for additional details).</li>
-<li><strong>outcome_function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=PRODUCT</em><em>)</em>) – specifies the function used to calculate the outcome associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+<li><strong>outcome_function</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=PRODUCT</em><em>)</em>) – specifies the function used to calculate the outcome associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
 (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function"><code class="xref any py py-attr docutils literal"><span class="pre">outcome_function</span></code></a> attribute for additional details).</li>
-<li><strong>cost_function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to calculate the cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
+<li><strong>cost_function</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to calculate the cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
 (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.cost_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> attribute for additional details).</li>
-<li><strong>combine_outcome_and_cost_function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to combine the outcome and cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>,
-=======
-<li><strong>function</strong> (<a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a><em> or </em><em>method : ControlSignalGridSearch</em>) – specifies the function used to determine the <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a> for the next execution of the system
-(see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute for a description of the default function).</li>
-<li><strong>value_function</strong> (<a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a><em> or </em><em>method : value_function</em>) – specifies the function used to calculate the value of the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
-(see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a> attribute for additional details).</li>
-<li><strong>outcome_function</strong> (<a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=PRODUCT</em><em>)</em>) – specifies the function used to calculate the outcome associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
-(see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function"><code class="xref any py py-attr docutils literal"><span class="pre">outcome_function</span></code></a> attribute for additional details).</li>
-<li><strong>cost_function</strong> (<a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to calculate the cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>
-(see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.cost_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">cost_function</span></code></a> attribute for additional details).</li>
-<li><strong>combine_outcome_and_cost_function</strong> (<a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to combine the outcome and cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>,
->>>>>>> correcting capitalization
+<li><strong>combine_outcome_and_cost_function</strong> (<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><em>function</em></a><em> or </em><em>method : LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to combine the outcome and cost associated with the current <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>,
 to determine its value (see <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.combine_outcome_and_cost_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.combine_outcome_and_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">combine_outcome_and_cost_function</span></code></a> attribute for additional details).</li>
 <li><strong>save_all_values_and_policies</strong> (<em>bool : default False</em>) – when it is <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, saves all of the control allocation policies tested in <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_policies" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_policies"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_policies</span></code></a> and their
 values in <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_values" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.EVC_values"><code class="xref any py py-attr docutils literal"><span class="pre">EVC_values</span></code></a>.</li>
@@ -456,7 +444,7 @@ creates a ControlSignal for it, and assigns itself as its sender.</p>
 <dl class="attribute">
 <dt id="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.system">
 <code class="descname">system</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.system" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>System</em> – the <a class="reference internal" href="System.html"><span class="doc">system</span></a> for which EVCMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
+<dd><p><em>System</em> – the <a class="reference internal" href="System.html"><span class="doc">system</span></a> for which EVCMechanism is the <code class="xref any docutils literal"><span class="pre">controller</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -477,7 +465,7 @@ ControlSignals.</p>
 <dt id="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.origin_prediction_mechanisms">
 <code class="descname">origin_prediction_mechanisms</code><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.origin_prediction_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[ProcessingMechanism, ProcessingMechanism]</em> – dictionary of <a class="reference internal" href="#evcmechanism-prediction-mechanisms"><span class="std std-ref">prediction mechanisms</span></a> added to the <a class="reference internal" href="System.html"><span class="doc">system</span></a> for
-which the EVCMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>, one for each of its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms.  The key for each
+which the EVCMechanism is the <code class="xref any docutils literal"><span class="pre">controller</span></code>, one for each of its <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanisms.  The key for each
 entry is an <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism of the system, and the value is the corresponding prediction mechanism.</p>
 </dd></dl>
 
@@ -582,7 +570,7 @@ see <a class="reference internal" href="#evcmechanism-calling-and-assigning-func
 examples &lt;EVCMechanism_Examples&gt;`) are used as the <a class="reference internal" href="Function.html#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> and <a class="reference internal" href="Function.html#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> parameters of the
 <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, respectively. If the default <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.outcome_function"><code class="xref any py py-attr docutils literal"><span class="pre">outcome_function</span></code></a> is called by a custom
 <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a>, the weights and/or exponents can be specified as 1d arrays in a <code class="xref any docutils literal"><span class="pre">WEIGHTS</span></code> and/or <code class="xref any docutils literal"><span class="pre">EXPONENTS</span></code>
-entry of a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> specified for the <a class="reference internal" href="Function.html#Function.Distance.params" title="Function.Distance.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of
+entry of a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> specified for the <a class="reference internal" href="Function.html#Function.UniformDist.params" title="Function.UniformDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of
 the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function. The length of each array must equal the number of (and values be listed in
 the same order as) the outputStates in the EVCMechanism’s <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute.  These
 specifications will supercede any made for individual outputStates in the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument or
@@ -605,7 +593,7 @@ listed in the <a class="reference internal" href="#AdaptiveMechanisms.ControlMec
 called by a custom <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a>, the weights and/or exponents parameters of the function can be used,
 respectively, to scale and/or exponentiate the contribution of each ControlSignal’s cost to the aggregated
 value.  These must be specified as 1d arrays in a <code class="xref any docutils literal"><span class="pre">WEIGHTS</span></code> and/or <code class="xref any docutils literal"><span class="pre">EXPONENTS</span></code> entry of a
-<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> specified for the <a class="reference internal" href="Function.html#Function.Distance.params" title="Function.Distance.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of the
+<a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> specified for the <a class="reference internal" href="Function.html#Function.UniformDist.params" title="Function.UniformDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument of the
 <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function; the length of each array must equal the number of (and the values listed in the
 same order as) the ControlSignals in the EVCMechanism’s <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, and be in the same order.
 The default function can also be replaced with any
@@ -625,7 +613,7 @@ default <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanism
 exponents parameters of the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function can be used, respectively, to scale and/or exponentiate
 the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a <code class="xref any docutils literal"><span class="pre">WEIGHTS</span></code>
 and/or EXPONENTS entry of a  <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter specifiction dictionary</span></a>
-assigned to the function’s <a class="reference internal" href="Function.html#Function.Distance.params" title="Function.Distance.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument; each array must have two elements, the first for the outcome
+assigned to the function’s <a class="reference internal" href="Function.html#Function.UniformDist.params" title="Function.UniformDist.params"><code class="xref any py py-attr docutils literal"><span class="pre">params</span></code></a> argument; each array must have two elements, the first for the outcome
 and second for the cost. The default function can also be replaced with any
 <a class="reference internal" href="#evcmechanism-calling-and-assigning-functions"><span class="std std-ref">custom function</span></a> that returns a scalar value.  If used with
 the EVCMechanism’s default <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.value_function"><code class="xref any py py-attr docutils literal"><span class="pre">value_function</span></code></a>, a custom combine_outcome_and_cost_function must accomoudate three
@@ -707,7 +695,7 @@ All of the outputStates specified must be for a Mechanism that is in self.System
 <dl class="method">
 <dt id="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.run_simulation">
 <code class="descname">run_simulation</code><span class="sig-paren">(</span><em>inputs</em>, <em>allocation_vector</em>, <em>runtime_params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.run_simulation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Run simulation of <a class="reference internal" href="System.html"><span class="doc">system</span></a> for which the EVCMechanism is the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
+<dd><p>Run simulation of <a class="reference internal" href="System.html"><span class="doc">system</span></a> for which the EVCMechanism is the <code class="xref any docutils literal"><span class="pre">controller</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -718,11 +706,7 @@ should be the <code class="xref any docutils literal"><span class="pre">value</s
 attribute.  The inputs are available from the <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.predictedInput" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.predictedInput"><code class="xref any py py-attr docutils literal"><span class="pre">predictedInput</span></code></a> attribute.</li>
 <li><strong>allocation_vector</strong> (<em>(</em><em>1D np.array</em><em>)</em>) – the allocation policy to use in running the simulation, with one allocation value for each of the
 EVCMechanism’s ControlSignals (listed in <a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>).</li>
-<<<<<<< HEAD
-<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-=======
-<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.value" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
->>>>>>> correcting capitalization
+<li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Log.html#Log.LogEntry.value" title="Log.LogEntry.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
 their functions, or projection(s) to any of their states.  See <a class="reference internal" href="Mechanism.html#mechanism-runtime-parameters"><span class="std std-ref">Runtime Parameters</span></a> for a full
 description.</li>
 <li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.</li>
@@ -741,7 +725,7 @@ description.</li>
 
            </div>
            <div class="articleComments">
-
+            
            </div>
           </div>
           <footer>

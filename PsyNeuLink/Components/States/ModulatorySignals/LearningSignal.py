@@ -27,7 +27,7 @@ Creating a LearningSignal
 ------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is 
-`specified for learning <LearningMechanism_Creation>` and the projection belongs to the same system as the 
+`specified for learning <LearningMechanism_Creation>` and the projection belongs to the same System as the
 `LearningMechanism`.  LearningSignals can also be specified in the **learning_signals**
 argument of the constructor for a `LearningMechanism`.  Although a LearningSignal can be created directly using its 
 constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is neither
@@ -66,7 +66,7 @@ Structure
 ---------
 
 A LearningSignal is owned by an `LearningMechanism`, and associated with one or more 
-`LearningProjections <LearningProjection>` that project(s) to the `parameterStates <ParameterState>` associated with 
+`LearningProjections <LearningProjection>` that project(s) to the `ParameterStates <ParameterState>` associated with
 the parameter(s) to be learned.  A LearningSignal has the following primary attributes:
 
 .. _LearningSignal_Modulation:
@@ -203,7 +203,7 @@ class LearningSignal(ModulatorySignal):
 
     name : str : default OutputState-<index>
         a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the outputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
@@ -245,13 +245,13 @@ class LearningSignal(ModulatorySignal):
     name : str : default <State subclass>-<index>
         name of the outputState.
         Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        assigned by the StateRegistry of the Mechanism to which the outputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
