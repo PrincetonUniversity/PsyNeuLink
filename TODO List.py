@@ -1862,7 +1862,7 @@
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
 #
 #
-# IMPLEMENT: move defaults (e.g., defaultMechanism) to preferences
+# IMPLEMENT: move defaults (e.g., default_mechanism) to preferences
 #
 # IMPLEMENT: change pref names from name_pref to namePref
 #              (rectifying whatever conflict that will produce with other names)
@@ -2534,7 +2534,7 @@
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
 # - NEED TO INITIALIZE:            STATE_VALUE: NotImplemented,
-# - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
+# - IMPLEMENTATION NOTE: move default_mechanism to a preference (in Mechanism.__init__() or Process.__init())
 # - IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING RELEVANT PROJECTIONS?
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:
 #                   create class level property:  inputStateDefault, and assign it at subclass level??
@@ -2563,9 +2563,9 @@
     #    - should create list of valid projection keywords and limit validation below to that (instead of just str)
 #
 # - implement:
-#     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.defaultMechanism)
+#     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.default_mechanism)
 #        # IMPLEMENTATION NOTE: move this to a preference (in Process??)
-#        defaultMechanism = DDM_MECHANISM
+#        default_mechanism = DDM_MECHANISM
 #
 #endregion
 

@@ -52,7 +52,7 @@ Creating a System
 -----------------
 
 Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.  More generally, a System
+containing a single `default_mechanism <Mechanism_Base.default_mechanism>` will be created.  More generally, a System
 is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
 Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
@@ -537,7 +537,7 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: SystemDefaultControlMechanism,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods

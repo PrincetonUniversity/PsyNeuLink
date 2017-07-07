@@ -50,7 +50,7 @@ Creating a Process
 A Process is created by calling the :py:func:`process` function. The Mechanisms to be included are specified in a list
 in the `pathway` argument, in the order in which they should be executed by the Process.  The Mechanism entries can be
 separated by `projections <Projection>` used to connect them.  If no arguments are provided to the `pathway` argument,
-a Process with a single `default Mechanism <Mechanism_Base.defaultMechanism>` is created.
+a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.
 
 .. _Process_Structure:
 
@@ -489,7 +489,7 @@ def process(process_spec=None,
     """
 
     # MODIFIED 9/20/16 NEW:  REPLACED IN ARG ABOVE WITH None
-    pathway = pathway or [Mechanism_Base.defaultMechanism]
+    pathway = pathway or [Mechanism_Base.default_mechanism]
     # MODIFIED 9/20/16 END
 
     # # Called with a keyword
@@ -562,7 +562,7 @@ class Process_Base(Process):
             It implements a Process that is used to execute a sequence of mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:
-                    a single Mechanism of Mechanism class default Mechanism and TRIAL are used
+                    a single Mechanism of Mechanism class default_mechanism and TRIAL are used
                 * Process.input is set to the InputState.value of the first Mechanism in the pathway
                 * Process.output is set to the OutputState.value of the last Mechanism in the pathway
 
@@ -575,7 +575,7 @@ class Process_Base(Process):
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PATHWAY: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PATHWAY: [Mechanism_Base.default_mechanism],
                                 TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
@@ -831,7 +831,7 @@ class Process_Base(Process):
                                '_isControllerProcess': False
                                })
 
-    default_pathway = [Mechanism_Base.defaultMechanism]
+    default_pathway = [Mechanism_Base.default_mechanism]
 
     @tc.typecheck
     def __init__(self,
@@ -942,7 +942,7 @@ class Process_Base(Process):
             self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
-#         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
+#         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.default_mechanism] as default
 #         1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
 #             - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
 #         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
