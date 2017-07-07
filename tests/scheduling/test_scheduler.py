@@ -205,7 +205,12 @@ class TestLinear:
         termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(2)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
-        output = list(sched.run(termination_conds=termination_conds))
+        comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+        )
+        output = sched.execution_list
 
         expected_output = [
             A, A, A, A, A, B, C, B, C, B, C,

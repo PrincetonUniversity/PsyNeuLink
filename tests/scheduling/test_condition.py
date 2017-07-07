@@ -249,7 +249,12 @@ class TestCondition:
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(5)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A, set()]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -265,7 +270,12 @@ class TestCondition:
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AtTrial(4)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -281,7 +291,12 @@ class TestCondition:
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterTrial(4)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
