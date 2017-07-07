@@ -77,9 +77,9 @@ above, or using one of the following:
     and/or entries specifying the value of parameters used to instantiate it.
     These should take the following form:
 
-      * MECHANISM_TYPE: <name of a Mechanism type>
+      * *MECHANISM_TYPE*: <name of a Mechanism type>
 
-          if this entry is absent, a `default Mechanism <LINK>` will be created.
+          if this entry is absent, a `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.
 
       * <name of parameter>:<value>
 
@@ -362,7 +362,7 @@ Mechanisms that are part of one or more processes are assigned designations that
 any systems to which they belong. These designations are listed in the Mechanism's `processes` and `systems`
 attributes, respectively.  Any Mechanism designated as `ORIGIN` receives a Projection to its
 `primary InputState <Mechanism_InputStates>` from the Process(es) to which it belongs.  Accordingly, when the Process 
-(or System of which the Process is a part) is executed, those mechainsms receive the input provided to the Process 
+(or System of which the Process is a part) is executed, those mechanisms receive the input provided to the Process
 (or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` 
 Mechanism for a Process is assigned as the `output` of that Process, and similarly for systems to which it belongs.
 
@@ -496,7 +496,7 @@ class MechanismError(Exception):
 
 def mechanism(mech_spec=None, params=None, context=None):
     """Factory method for Mechanism; returns the type of Mechanism specified or a default Mechanism.
-    If called with no arguments, returns the `default Mechanism <LINK>`.
+    If called with no arguments, returns the `default Mechanism <Mechanism_Base.defaultMechanism>`.
 
     Arguments
     ---------
@@ -505,10 +505,11 @@ def mechanism(mech_spec=None, params=None, context=None):
         specification for the Mechanism to create.
         If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
         If it is string that is the name of a Mechanism subclass registered in the `MechanismRegistry`,
-        an instance of a `default Mechanism <LINK>` for *that class* is returned;
-        otherwise, the string is used to name an instance of the `default Mechanism <LINK>.
+        an instance of a `default Mechanism <Mechanism_Base.defaultMechanism>` for *that class* is returned;
+        otherwise, the string is used to name an instance of the `default Mechanism <Mechanism_Base.defaultMechanism>.
         If it is a dict, it must be a `Mechanism specification dictionary <`Mechanism_Creation>`.
-        If it is `None` or not specified, an instance of the `default Mechanism <LINK>` is returned;
+        If it is `None` or not specified, an instance of the `default mechanism <Mechanism_Base.defaultMechanism>` is
+        returned;
         the nth instance created will be named by using the Mechanism's :keyword:`componentType` attribute as the
         base for the name and adding an indexed suffix:  componentType-n.
 
@@ -756,10 +757,12 @@ class Mechanism_Base(Mechanism):
         set by a Mechanism to signal completion of its execution; used by `Conditions_Component_Based` to predicate
         the execution of one or more other Components on the Mechanism.
 
-    phaseSpec : int or float :  default 0
-        determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
-        (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
-        for how phases are used).
+    COMMENT:
+        phaseSpec : int or float :  default 0
+            determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
+            (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
+            for how phases are used).
+    COMMENT
 
     processes : Dict[Process, str]:
         a dictionary of the processes to which the Mechanism belongs, and a
@@ -775,6 +778,10 @@ class Mechanism_Base(Mechanism):
 
     time_scale : TimeScale : default TimeScale.TRIAL
         determines the default value of the `TimeScale` used by the Mechanism when executed.
+
+    defaultMechanism : Mechanism : default DDM
+        sublass of Mechanism instantiated when the `mechanism` function is called without a specification for its
+        **mech_spec** argument.
 
     name : str : default <Mechanism subclass>-<index>
         the name of the Mechanism.

@@ -19,7 +19,7 @@ A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMe
 more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a state by modifying a
 parameter of the State's `function <State.function>`.  There are three types of ModulatySignals, each of which is
 associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of a
-diffent type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
+different type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
 
 * `LearningSignal`
     This takes the `value <LearningSignal.value>` assigned to it by the `LearningMechanism` to which it belongs,
@@ -213,10 +213,6 @@ class ModulatorySignal(OutputState):
     function : Function or method : default Linear
         specifies the function used to determine the value of the ModulatorySignal from the value of its
         `owner <GatingMechanism.owner>`.
-
-    COMMENT:
-        [NEEDS DOCUMENTATION]
-    COMMENT
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.

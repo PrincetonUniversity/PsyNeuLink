@@ -200,6 +200,8 @@
 #                       no properties are created for them
 #                       they are not validated when assigned
 
+# FIX: targetMechanisms -> target_mechanisms, originMechanisms -> origin_mechanisms
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -591,7 +593,10 @@
 # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction
 # IMPLEMENT: Simple Hebbian learning
-# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
+# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels;
+#       does assigning it to a LearningMechanism result in "double-dipping" (since its LearningSignals inherits
+#       their owner's value, and assign that to the LearningProjection, which uses it on top of the LearningMechanism's
+#       use.
 
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION

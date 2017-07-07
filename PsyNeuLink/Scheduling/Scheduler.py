@@ -154,13 +154,14 @@ execution, over which every Component in the Composition has been considered for
 `consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
 same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
-The Scheduler continues to make `PASS`\ es through the `consideration_queue` until a termination
-Condition is satisfied. If no termination Conditions are specified, the Scheduler terminates a `TRIAL` when every
-Component has been specified for execution at least once (corresponding to the `AllHaveRun` Condition).  However,
-other termination Conditions can be specified, that may cause the Scheduler to terminate a `TRIAL` earlier  or later
-(e.g., when the  Condition for a particular Component or set of Components is met).  When the Scheduler terminates a
-`TRIAL`, the `Composition` begins processing the next input specified in the call to its `run <Composition.run>`
-method.  Thus, a `TRIAL` is defined as the scope of processing associated with a given input to the Composition.
+The Scheduler continues to make `PASS`\ es through the `consideration_queue` until a
+`termination Condition <Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified,
+the Scheduler terminates a `TRIAL` when every Component has been specified for execution at least once (corresponding
+to the `AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
+to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular Component or set of Components
+is met).  When the Scheduler terminates a `TRIAL`, the `Composition` begins processing the next input specified in
+the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of processing associated
+with a given input to the Composition.
 
 
 .. _Scheduler_Termination_Conditions:

@@ -7,9 +7,8 @@ PsyNeuLink Documentation
 ========================
 
 * `Purpose`
-* `Overview`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
-* `Conventions and Definitions <ConventionsAndDefinitions>`
+* `Overview_and_Sampler`
 * `Installation`
 * `Contributors`
 * `Indices_and_Tables`
@@ -88,10 +87,10 @@ developing simpler models, or taking complex or highly detailed models that have
 or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
 to integration, documentation, and dissemination.
 
-.. _Overview:
+.. _Overview_and_Sampler:
 
-Overview and "Sampler"
-----------------------
+Overview and Sampler
+--------------------
 
 PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
 The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
@@ -106,16 +105,25 @@ PsyNeuLink models are made of `Components <Component>` and `Compositions <Compos
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  `Mechanisms <Mechanism>` and `Projections <Projection>`.
 For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
-"links".  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
-Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses Projections
-to link Mechanisms together into pathways that can execute a process, and processes can be combined to form networks or
-circuits that make up a systems-level model.
+"links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+other Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses
+Projections to link Mechanisms together into pathways that can execute a process, and processes can be combined to
+form networks or circuits that make up a systems-level model.  A `Scheduler` coordinates the execution of Mechanisms
+in a Composition, each of which can be assigned one or more pre-specified or customized `Conditions <Condition>`.
 
 Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
 taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
+
+Since Mechanisms can implement any function, Projections insure that they can "communicate" with
+each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
+Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
+and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
+modelers the flexibility to commit each Component of their model to a form of processing and/or level of analysis
+that is appropriate for that Component, while providing the opportunity to test and explore how they interact with one
+another in a single system.
 
 
 .. _Index_Simple_Configurations:
@@ -265,7 +273,7 @@ has executed twice (to integrate its inputs from both ``input_layer`` and ``recu
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
 
-    minimal_change = lambda mech, thresh : max(mech.function_object.value-mech.function_object.prev_value) < thresh))
+    minimal_change = lambda mech, thresh : abs(mech.value - mech.previous_value) < thresh))
     my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
                                                     EveryNCalls(my_recurrent_layer, 1))
     my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
@@ -289,8 +297,8 @@ Instead, you can clone the github repo (https://github.com/PrincetonUniversity/P
 Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
-Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal.
-Note: The repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
+repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
 
 PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.
@@ -358,18 +366,10 @@ with substantial and greatly appreciated assistance from:
 .. toctree::
    :hidden:
 
-   ConventionsAndDefinitions
+   QuickReference
    Component
-   Mechanism
-   Projection
-   State
-   Function
    Composition
-   System
-   Process
-   Run
-   Scheduler
-
+   Scheduling
 
 .. _Indices_and_Tables:
 

@@ -41,7 +41,7 @@ support ESP).  A System can include two types of Mechanisms:
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
     and assign the result as their output.
 
-* `AdpativeMechanism`
+* `AdaptiveMechanism`
     These are used to adjust the operation of other components.  There are two types:
     `LearningMechanisms <LearningMechanism>` that adjust Projections, and `ControlMechanisms <ControlMechanism>`
     that adjust the parameters of other Mechanisms and/or their functions.
@@ -52,8 +52,8 @@ Creating a System
 -----------------
 
 Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single :ref:`default Mechanism <LINK>` will be created.  More generally, a System is
-created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
+containing a single `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.  More generally, a System
+is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
 Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
 argument of the System's constructor, or specifying a class of ControlMechanism;  if none is specified,
@@ -161,81 +161,89 @@ Execution
 ---------
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
-`execute <System_Base.execute>` executes each Mechanism in the System once, whereas `run <System_Base.execute>`
-allows a series of executions to be carried out.
+`execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
+`run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
+of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
+method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
+executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
+the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
+met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
+`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
+`control <System_Execution_Control>`, each of which is described below.
 
-.. _System_Execution_Order:
-
-Order
-~~~~~
-Mechanisms are executed in a topologically sorted order, based on the order in which they are listed in their
-Processes. When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the
-System,  but not from Mechanisms outside the System (PsyNeuLink does not support ESP).  The order of execution is
-determined by the System's `executionGraph` attribute, which is a subset of the System's `graph` that has been
-"pruned" to be acyclic (i.e., devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent
-Projections in the System remain intact during execution and can be
-`initialized <System_Execution_Input_And_Initialization>` at the start of execution.
-
-.. _System_Execution_Phase:
-
-Phase
-~~~~~
-Execution occurs in passes through a System called *phases*.  Each phase corresponds to a single `time_step <LINK>`.
-When executing a System in `trial <LINK>` mode, a trial is defined as the number of phases (time_steps) required to
-execute a trial of every Mechanism in the System.  During each phase of execution, only the Mechanisms assigned to
-that phase are executed.   Mechanisms are assigned a phase where they are listed in the `pathway` of a `Process`.
-When a Mechanism is executed, it receives input from any other Mechanisms that project to it within the System.
 
 .. _System_Execution_Input_And_Initialization:
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
-The input to a System is specified in the :keyword:`input` argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single trial must be a list or ndarray of values,
+The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used,
-input for only a single trial is provided, and only a single trial is executed.  The `run <System_Base.run>` method
-can be used for a sequence of executions (time_steps or trials), by providing it with a list or ndarray of inputs,
-one for each round of execution.  In both cases, two other types of input can be provided:  a list or ndarray of
-initialization values, and a list or ndarray of target values. Initialization values are assigned, at the start
-of execution, as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in
-`recurrentInitMechanisms`), and target values are assigned as the TARGET input of the System's `TARGET` Mechanisms
-(see learning below;  also, see `Run` for additional details of formatting input specifications).
+`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used, input for
+only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
+used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
+cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
+of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
+recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrentInitMechanisms`), and target values are
+assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
+details of formatting input specifications).
+
+
+.. _System_Execution_Processing:
+
+Processing
+~~~~~~~~~~
+
+Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are
+executed in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is
+executed, it receives input from any other Mechanisms that project to it within the System,  but not from Mechanisms
+outside the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's
+`executionGraph` attribute, which is a subset of the System's `graph` that has been "pruned" to be acyclic (i.e.,
+devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurrent Projections in the System remain
+intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
+The order in which Components are executed can also be customized, using the System's Scheduler in combination with
+`Condition` specifications for individual Components, to execute different Components at different time scales, or to
+introduce dependencies among them (e.g., require that a recurrent mechanism settle before another one execute --
+see `example <Condition_Recurrent_Example>`).
+
 
 .. _System_Execution_Learning:
 
 Learning
 ~~~~~~~~
 The System will execute learning if it is specified for any `Process` in the System.  The System's `learning` attribute
-indicates whether learning is enabled for the System. Learning is executed for any components (individual Projections
-or Processes) for which it is specified after all `ProcessingMechanisms <ProcessingMechanism> in the
-System have been executed, but before the controller is executed (see below).  The learning components of a System
-can be displayed using the System's `show_graph` method with its **show_learning** argument assigned :keyword:`True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
-sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+indicates whether learning is enabled for the System. `Learning <Process_Learning>` is executed for any components
+(individual Projections or Processes) for which it is specified after the `processing <System_Execution_Processing>` of
+each `TRIAL` has completed, but before the `controller is executed <System_Execution_Control>`.  The learning components
+of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
+:keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
+Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
 formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
-<System_Base.originMechanisms>` attribute).  If the targets are specified in sequence or mechanism format,
-one target must be provided for each `TARGET` Mechanism (listed in its
-`targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a
-`function format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
+<System_Base.originMechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
+in its `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a `function
+format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A :py:data:`targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
-   :py:data:`targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
-   (see :ref:`LearningProjection_Targets`).
+   A `targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
+   `targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
+   (see `LearningMechanism_Targets`).  Also, the changes to a System induced by learning are not applied until the
+   Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
+   of "lazy" updating).
+
 
 .. _System_Execution_Control:
 
 Control
 ~~~~~~~
-Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor
-the OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute),
-and uses that information to set the value of parameters for those or other Mechanisms in the System, or their functions
-(see :ref:`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are
-monitored, and :ref:`ControlProjection_Creation` for specifying parameters to be controlled).  The control components
-of a System can be displayed using the System's `show_graph` method with its **show_control** argument assigned
-:keyword:``True`. The controller is executed after all other Mechanisms in the System are executed, and sets the
-values of any parameters that it controls, which then take effect in the next round of execution.
+Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor the
+OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute), and uses
+that information to set the value of parameters for those or other Mechanisms in the System, or their functions (see
+`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored, and
+`ControlProjection_Creation` for specifying parameters to be controlled).  The control components of a System can be
+displayed using the System's `show_graph` method with its **show_control** argument assigned `True`.  The `controller`
+is executed after `processing <System_Execution_Processing>` and `learning <System_Execution_Learning>` have completed
+for a `TRIAL`, and sets the values of any parameters that it controls, which then take effect in the next `TRIAL`.
 
 COMMENT:
    Examples
@@ -401,12 +409,13 @@ def system(default_input_value=None,
     initial_values : dict of Mechanism:value entries
         a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
         `INITIALIZE_CYCLE`). The key for each entry is a Mechanism object, and the value is a number,
-        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's value
-        (i.e., Mechanism.value[0]).
+        list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
+        `value <Mechanism.value>` (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism` used to monitor the value of the OutputState(s) for Mechanisms specified in
-        `monitor_for_control`, and that specify the value of `ControlProjections` in the System.
+        specifies the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for
+        Mechanisms specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         specifies whether the `controller` is executed during System execution.
@@ -421,14 +430,14 @@ def system(default_input_value=None,
     COMMENT
 
     learning_rate : float : None
-        set the learning rate for all Mechanisms in the System (see `learning_rate` attribute for additional
-        information).
+        set the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System
+        (see `learning_rate` attribute for additional information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
         `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
-        for each of the corresponding `TARGET` Mechanism.
+        for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
@@ -571,45 +580,46 @@ class System_Base(System):
             Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the ControlMechanism used to monitor the value of the OutputState(s) for Mechanisms specified in
-        ``monitor_for_control`` argument, and specify the value of ControlProjections in the System.
+        the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for Mechanisms
+        specified in `monitor_for_control`, and that specifies the `value <ControlSignal.value>` of the
+        `ControlSignals <ControlSignal>` that control the parameters of Mechanisms (or their functions) in the System.
 
     enable_controller :  bool : default :keyword:`False`
         determines whether the `controller` is executed during System execution.
 
     learning : bool : default False
-        indicates whether learning is being used;  is set to True if learning is specified for any Processes
+        indicates whether learning is being used;  is set to `True` if learning is specified for any Processes
         in the System or for the System itself.
 
     learning_rate : float : default None
-        determines the learning rate for all Mechanisms in the System.  This overrides any values set for the
-        function of individual LearningProjections, and persists for all subsequent runs of the System.  If it is
-        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
-        (either directly, or following a run of any Process or System to which the LearningProjection belongs and
-        for which a learning_rate was set).
+        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
+        for all subsequent executions of the System.  If it is set to `None`, then the learning_rate is determined by
+        last value assigned to each LearningMechanism (either directly, or following the execution of any Process or
+        System to which the LearningMechanism belongs and for which a learning_rate was set).
 
     targets : 2d nparray : default zeroes
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the :keyword:`targets` argument of System's `execute <System.execute>` and `run <System.run>` methods.
+        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
-        contains a graph of all of the Mechanisms in the System.
+        contains a graph of all of the Components in the System.
         Each entry specifies a set of <Receiver>: {sender, sender...} dependencies.
-        The key of each entry is a receiver object_item, and
-        the value is a set of mechs that send Projections to that receiver.
+        The key of each entry is a receiver Component, and
+        the value is a set of Mechanisms that send Projections to that receiver.
         If a key (receiver) has no dependents, its value is an empty set.
 
     executionGraph : OrderedDict
         contains an acyclic subset of the System's `graph`, hierarchically organized by a toposort.
-        Used to specify the order in which Mechanisms are executed.
+        Used to specify the order in which Components are executed.
 
     execution_sets : list of sets
-        contains a list of Mechanism sets.
-        Each set contains Mechanisms to be executed at the same time.
+        contains a list of Component sets.
+        Each set contains Components to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
-    executionList : list of Mechanism objects
-        contains a list of Mechanisms in the order in which they are executed.
+    executionList : list of Mechanisms and/or Projections
+        contains a list of Components in the order in which they are executed.
         The list is a random sample of the permissible orders constrained by the `executionGraph`.
 
     mechanisms : list of Mechanism objects
@@ -675,12 +685,8 @@ class System_Base(System):
     learning_mechanisms : MechanismList)
         contains all `LearningMechanism <LearningMechanism>` in the System.
 
-        COMMENT:
-            based on _learning_mechs)
-        COMMENT
-
     target_mechanisms : MechanismList)
-        contains all `TARGET` Mechanisms in the System (used for learning.
+        contains all `TARGET` Mechanisms in the System (used for learning).
         COMMENT:
             based on _target_mechs)
         COMMENT
@@ -704,10 +710,10 @@ class System_Base(System):
             Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
             ProcessingMechanism(s) to be executed in the System.
 
-    numPhases : int
-        number of phases for System (read-only).
+        .. numPhases : int
+            number of phases for System (read-only).
 
-        .. implemented as an @property attribute; = _phaseSpecMax + 1
+            .. implemented as an @property attribute; = _phaseSpecMax + 1
 
     initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
