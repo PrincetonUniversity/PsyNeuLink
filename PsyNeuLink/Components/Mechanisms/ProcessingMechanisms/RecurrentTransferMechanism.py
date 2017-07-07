@@ -92,16 +92,50 @@ DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-        RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEVIATION=STANDARD_DEVIATION
-        VARIANCE=VARIANCE
-        ENERGY=ENERGY
-        ENTROPY=ENTROPY
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_states]:
-#     setattr(DDM_OUTPUT.__class__, item, item)
+    
+"""
+        .. _RecurrentTransferMechanism_Standard_OutputStates:
+
+        `Standard OutputStates <OutputState_Standard>` for
+        `RecurrentTransferMechanism`
+
+        .. TRANSFER_RESULT:
+
+        *RESULT* : 1d np.array
+            the result of the `function <RecurrentTransferMechanism.function>`
+            of the Mechanism
+
+        .. TRANSFER_MEAN:
+
+        *MEAN* : float
+            the mean of the result
+
+        *VARIANCE* : float
+            the variance of the result
+
+        .. ENERGY:
+
+        *ENERGY* : float
+            the energy of the result, which is calculated using the `Stability
+            Function <Function.Stability.function>` with the ``ENERGY`` metric
+
+        .. ENTROPY:
+
+        *ENTROPY* : float
+            The entropy of the result, which is calculated using the `Stability
+            Function <Function.Stability.function>` with the ENTROPY metric
+            (Note: this is only present if the Mechanism's `function` is bounded
+            between 0 and 1 (e.g. the `Logistic` Function)).
+        """    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEVIATION=STANDARD_DEVIATION
+    VARIANCE=VARIANCE
+    ENERGY=ENERGY
+    ENTROPY=ENTROPY
+    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+    # for item in [item[NAME] for item in DDM_standard_output_states]:
+    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED

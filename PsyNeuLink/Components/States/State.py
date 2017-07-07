@@ -13,7 +13,7 @@
 Overview
 --------
 
-A State provides an interface to one or more `projections <Projection>`, and receives the `value(s) <Projection>`
+A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
 provide by them.  The value of a State can be modulated by a `ModulatoryProjection`. There are three primary types of
 States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
 `MappingProjections <MappingProjection>`, and all of which are subject to modulation by
@@ -32,7 +32,7 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
 * `OutputState`:
     used by a Mechanism to send its value to any efferent projections.  For
     `ProcessingMechanisms <ProcessingMechanism>` these are `PathwayProjections <PathwayProjection>`, most commonly
-    `MappingProjection <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these
+    `MappingProjections <MappingProjection>`.  For `ModulatoryMechanisms <ModulatoryMechanism>`, these are
     `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
     OutputState can be modulated by a `GatingSignal`.
 
@@ -60,7 +60,7 @@ where its parameters are specified.  A State can be specified in those cases in 
 
     * an existing **State** object;
     ..
-    * the name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState` - a default State of the
+    * the name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) - a default State of the
       corresponding type will be created, using a default value for the State that is determined by the context
       in which it is specified.
     ..
@@ -81,12 +81,12 @@ where its parameters are specified.  A State can be specified in those cases in 
       COMMENT
       ..
       * *str*:<List> - the key is used as the name of the State, and the list must contain specifications for
-        one or more `projections <Projection_In_Context_Specification>` to or from the State,
+        one or more `Projections <Projection_In_Context_Specification>` to or from the State,
         depending on the type of State and the context in which it is specified;
         ..
 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
-      and the second item must be a specification for a `projection <Projection_In_Context_Specification>`
+      and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
 
 COMMENT:
@@ -102,18 +102,18 @@ Every State is owned by either a `Mechanism <Mechanism>` or a `Projection <Proje
 components, a State has the three following core attributes:
 
     * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
-      the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
+      the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
       its `path_afferents <State.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
       Mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
-    * `function <State.function>`:  for an `InputState` this aggregates the values of the projections that the State
+    * `function <State.function>`:  for an `InputState` this aggregates the values of the Projections that the State
       receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
       potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its
       `output_values <Mechanism.output_values>` attribute, under the potential influence of a `GatingSignal`.
-      See  `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
+      See `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
       with each type for a description of how they can be used to modulate the `function <State.function>` of a State.
     ..
     * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
@@ -362,22 +362,23 @@ class State_Base(State):
         list of all `ModulatoryProjections <ModulatoryProjection>` received by the State.
 
     efferents : Optional[List[Projection]]
-        list of outoging Projections from the State (i.e., for which is a `sender <Projection.sender>`
+        list of outgoing Projections from the State (i.e., for which is a `sender <Projection.sender>`
         (note:  only `OutputStates <OutputState>` have efferents;  the list is empty for other types of States).
 
     function : TransferFunction : default determined by type
-        used to determine the State's own value from the value of the projection(s) it receives;  the parameters that
-        the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a 
-        `ModualtoryProjection <ModulatoryProjection_Structure>`. 
+        used to determine the State's own value from the value of the Projection(s) it receives;  the parameters that
+        the TransferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
+        `ModulatoryProjection <ModulatoryProjection_Structure>`.
 
     value : number, list or np.ndarray
         current value of the State (updated by `update <State.update>` method).
 
     name : str : default <State subclass>-<index>
         the name of the State.
-        Specified in the **name** argument of the constructor for the State;  if not is specified,
-        a default is assigned by StateRegistry based on the States's subclass
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+        Specified in the **name** argument of the constructor for the State;
+        if not specified, a default is assigned by StateRegistry based on the
+        States's subclass (see :doc:`Registry <LINK>` for conventions used in naming,
+        including for default and duplicate names).
 
         .. note::
             Unlike other PsyNeuLink Components, States names are "scoped" within a Mechanism, meaning that States with
@@ -388,7 +389,7 @@ class State_Base(State):
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the State.
         Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
-        assigned using `classPreferences` defined in __init__.py
+        assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
@@ -1579,7 +1580,7 @@ def _instantiate_state_list(owner,
     Arguments:
     - state_type (class): State class to be instantiated
     - state_list (list): List of State specifications (generally from owner.paramsCurrent[kw<State>]),
-                             each itme of which must be a:
+                             each item of which must be a:
                                  string (used as name)
                                  value (used as constraint value)
                                  # ??CORRECT: (state_spec, params_dict) tuple  

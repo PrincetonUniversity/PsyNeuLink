@@ -197,7 +197,7 @@
 </div>
 <span class="target" id="module-State"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A State provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
+<p>A State provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
 provide by them.  The value of a State can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are three primary types of
 States, all of which are used by <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, one of which is used by
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, and all of which are subject to modulation by
@@ -225,7 +225,7 @@ parameter, that can be modulated by a <a class="reference internal" href="Learni
 <dt><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>:</dt>
 <dd><p class="first last">used by a Mechanism to send its value to any efferent projections.  For
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> these are <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a>, most commonly
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.  For <code class="xref any docutils literal"><span class="pre">ModulatoryMechanisms</span></code>, these
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.  For <code class="xref any docutils literal"><span class="pre">ModulatoryMechanisms</span></code>, these are
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> as described below. The <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an
 OutputState can be modulated by a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.</p>
 </dd>
@@ -260,7 +260,7 @@ where its parameters are specified.  A State can be specified in those cases in 
 <li>an existing <strong>State</strong> object;</li>
 </ul>
 <ul class="simple">
-<li>the name of a <strong>State subclass</strong> (<a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> - a default State of the
+<li>the name of a <strong>State subclass</strong> (<a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>) - a default State of the
 corresponding type will be created, using a default value for the State that is determined by the context
 in which it is specified.</li>
 </ul>
@@ -278,13 +278,13 @@ entries, in addition to those specific to a particular State subtype (see subtyp
 </ul>
 <ul class="simple">
 <li><em>str</em>:&lt;List&gt; - the key is used as the name of the State, and the list must contain specifications for
-one or more <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projections</span></a> to or from the State,
+one or more <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">Projections</span></a> to or from the State,
 depending on the type of State and the context in which it is specified;
 ..</li>
 </ul>
 </li>
 <li><p class="first">a <strong>2-item tuple</strong> - the first item must be a value, used as the default value for the State,
-and the second item must be a specification for a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection</span></a>
+and the second item must be a specification for a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">Projection</span></a>
 to or from the State, depending on the type of State and the context in which it is specified;</p>
 </li>
 </ul>
@@ -297,19 +297,19 @@ components, a State has the three following core attributes:</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">variable</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>,
-the value of this is determined by the  value(s) of the projection(s) that it receives (and that are listed in
+the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
 its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute).  For an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, it is the item of the owner
 Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> to which the OutputState is assigned (specified by the OutputState’s
 <a class="reference internal" href="OutputState.html#outputstate-index"><span class="std std-ref">index</span></a> attribute.</li>
 </ul>
 <ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">function</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this aggregates the values of the projections that the State
+<li><code class="xref any docutils literal"><span class="pre">function</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this aggregates the values of the Projections that the State
 receives (the default is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, it determines the value of the associated parameter, under the
 potential influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputState, it conveys the result  of the Mechanism’s function to its
 <code class="xref any docutils literal"><span class="pre">output_values</span></code> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.
-See  <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> associated
+See <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> associated
 with each type for a description of how they can be used to modulate the <code class="xref any docutils literal"><span class="pre">function</span></code> of a State.</li>
 </ul>
 <ul class="simple">
@@ -403,16 +403,16 @@ or using other methods for specifying a State (see <a class="reference internal"
 <dl class="attribute">
 <dt id="State.State_Base.efferents">
 <code class="descname">efferents</code><a class="headerlink" href="#State.State_Base.efferents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[List[Projection]]</em> – list of outoging Projections from the State (i.e., for which is a <code class="xref any docutils literal"><span class="pre">sender</span></code>
+<dd><p><em>Optional[List[Projection]]</em> – list of outgoing Projections from the State (i.e., for which is a <code class="xref any docutils literal"><span class="pre">sender</span></code>
 (note:  only <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> have efferents;  the list is empty for other types of States).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="State.State_Base.function">
 <code class="descname">function</code><a class="headerlink" href="#State.State_Base.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TransferFunction : default determined by type</em> – used to determine the State’s own value from the value of the projection(s) it receives;  the parameters that
-the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
-<a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModualtoryProjection</span></a>.</p>
+<dd><p><em>TransferFunction : default determined by type</em> – used to determine the State’s own value from the value of the Projection(s) it receives;  the parameters that
+the TransferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to modulation by a
+<a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-structure"><span class="std std-ref">ModulatoryProjection</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -425,9 +425,10 @@ the TrasnferFunction identifies as ADDITIVE and MULTIPLICATIVE are subject to mo
 <dt id="State.State_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#State.State_Base.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default &lt;State subclass&gt;-&lt;index&gt;</em> – the name of the State.
-Specified in the <strong>name</strong> argument of the constructor for the State;  if not is specified,
-a default is assigned by StateRegistry based on the States’s subclass
-(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+Specified in the <strong>name</strong> argument of the constructor for the State;
+if not specified, a default is assigned by StateRegistry based on the
+States’s subclass (see <span class="xref std std-doc">Registry</span> for conventions used in naming,
+including for default and duplicate names).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Unlike other PsyNeuLink Components, States names are “scoped” within a Mechanism, meaning that States with
@@ -442,7 +443,7 @@ creation).</p>
 <code class="descname">prefs</code><a class="headerlink" href="#State.State_Base.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : State.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the State.
 Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
-assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 

@@ -51,7 +51,7 @@ Structure
 ---------
 
 A ModulatorySignal is associated with one or more `ModulatoryProjections <ModulatoryProjection>` of the
-corresponding type, that project to the State(s), the value(s) of which it modulates.  THe ModulatoryProjections
+corresponding type, that project to the State(s), the value(s) of which it modulates.  The ModulatoryProjections
 received by a `State` are listed in its `mod_afferents` attribute. The method by which a ModulatorySignal
 modulates a State's `value <State.value>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, as described below.
@@ -129,7 +129,7 @@ Execution
 ModulatorySignals cannot be executed.  They are updated when the `AdaptiveMechanism` to which they belong is executed.
 When a ModulatorySignal is updated, it calculates its value, which is then made available to the
 `ModulatoryProjections <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
-When those projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
+When those Projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
 project.  The State's `function <State.function>` then uses that value for the parameter designated by the
 `modulation <ModulatorySignal.modulation>` attribute of the ModulatorySignal when the State is updated.  For example,
 consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function used by a
@@ -223,13 +223,13 @@ class ModulatorySignal(OutputState):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
-        a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        a string used for the name of the OutputState.
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the outputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for the OutputState.
+        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
 
@@ -260,11 +260,11 @@ class ModulatorySignal(OutputState):
     name : str : default <ModulatorySignal>-<index>
         name of the ModulatorySignal.
         Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
-        is assigned by the StateRegistry of the mechanism to which the ModulatorySignal belongs
+        is assigned by the StateRegistry of the Mechanism to which the ModulatorySignal belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a mechanism, meaning that States with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -272,7 +272,7 @@ class ModulatorySignal(OutputState):
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the ModulatorySignal.
         Specified in the **prefs** argument of the constructor for the ModulatorySignal;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """

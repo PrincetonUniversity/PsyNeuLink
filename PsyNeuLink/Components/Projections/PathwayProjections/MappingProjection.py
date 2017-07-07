@@ -42,11 +42,11 @@ COMMENT:
             if the mechanism is being instantiated on its own, the sender must be explicitly specified
 COMMENT
 
-A MappingProjection can be created in any of the ways that can be used to create a `projection <Projection_Creation>`).
+A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`).
 MappingProjections are also generated automatically in the following circumstances, using a `matrix <Mapping_Matrix>`
 appropriate to the circumstance:
 
-  * by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a projection assigned
+  * by a `process <Process>`, when two adjacent mechanisms in its `pathway` do not already have a Projection assigned
     between them (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines the appropriate matrix by
     context);
   ..
@@ -85,10 +85,10 @@ It can be specified in any of the following formats:
     specified offset.
 
   .. _MappingProjection_Tuple_Specification:
-  * **Tuple**.  This is used to specify a projection to the `parameterState <ParameterState>` for the matrix
+  * **Tuple**.  This is used to specify a Projection to the `parameterState <ParameterState>` for the matrix
     along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
     the first can be any of the specifications described above;  the second must be a
-    `projection specification <Projection_In_Context_Specification>`.
+    `Projection specification <Projection_In_Context_Specification>`.
 
   COMMENT:
       XXXXX VALIDATE THAT THIS CAN BE NOT ONLY A LEARNING_PROJECTION
@@ -134,10 +134,10 @@ Execution
 A MappingProjection uses its `function <MappingProjection.function>` and `matrix <MappingProjection.matrix>
 parameter to transform the value of its `sender <MappingProjection.sender>`, and assign this as the variable for its
 `receiver <MappingProjetion.receiver>`.  When executed, updating its parameterStates will cause in turn update
-the its `matrix <MappingProjetion.matrix> parameter based on any projections it receives (e.g., a `LearningProjection`).
+the its `matrix <MappingProjetion.matrix> parameter based on any Projections it receives (e.g., a `LearningProjection`).
 This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
 Because of :ref:`Lazy Evaluation <LINK>`, those changes will only take effect after the current execution (as a
-consequence, inspecting `matrix <MappingProjection.matrix>` will not show the effects of projections to its
+consequence, inspecting `matrix <MappingProjection.matrix>` will not show the effects of Projections to its
 parameterState until the MappingProjection has been executed).
 
 .. _Projection_Class_Reference:
@@ -171,13 +171,13 @@ class MappingProjection(PathwayProjection_Base):
         name=None,                                          \
         prefs=None)
 
-    Implements a projection that transmits the output of one mechanism to the input of another.
+    Implements a Projection that transmits the output of one mechanism to the input of another.
 
 
     COMMENT:
         Description:
             The MappingProjection class is a type in the Projection category of Component.
-            It implements a projection that takes the value of an outputState of one mechanism, transforms it as
+            It implements a Projection that takes the value of an outputState of one mechanism, transforms it as
             necessary, and provides it to the inputState of another ProcessingMechanism.
             It's function conveys (and possibly transforms) the OutputState.value of a sender
                 to the InputState.value of a receiver.
@@ -214,14 +214,14 @@ class MappingProjection(PathwayProjection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        specifies the source of the projection's input. If a mechanism is specified, its
+        specifies the source of the Projection's input. If a mechanism is specified, its
         `primary outputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the projection is used.
+        the context in which the Projection is used.
 
     receiver: Optional[InputState or Mechanism]
-        specifies the destination of the projection's output.  If a mechanism is specified, its
+        specifies the destination of the Projection's output.  If a mechanism is specified, its
         `primary inputState <Mechanism_InputStates>` will be used. If it is not specified, it will be assigned in
-        the context in which the projection is used.
+        the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
@@ -229,8 +229,8 @@ class MappingProjection(PathwayProjection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
+        the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
+        the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default MappingProjection-<index>
@@ -249,10 +249,10 @@ class MappingProjection(PathwayProjection_Base):
     componentType : MAPPING_PROJECTION
 
     sender : OutputState
-        identifies the source of the projection's input.
+        identifies the source of the Projection's input.
 
     receiver: InputState
-        identifies the destination of the projection.
+        identifies the destination of the Projection.
 
     learning_mechanism : LearningMechanism
         source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
@@ -268,13 +268,13 @@ class MappingProjection(PathwayProjection_Base):
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the Projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
+        the `PreferenceSet` for Projection.
+        Specified in the **prefs** argument of the constructor for the Projection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -401,7 +401,7 @@ class MappingProjection(PathwayProjection_Base):
             else:
                 self._matrix_spec = FULL_CONNECTIVITY_MATRIX
 
-        # Length of the output of the projection doesn't match the length of the receiving input state
+        # Length of the output of the Projection doesn't match the length of the receiving input state
         #    so consider reshaping the matrix
         if mapping_output_len != receiver_len:
 

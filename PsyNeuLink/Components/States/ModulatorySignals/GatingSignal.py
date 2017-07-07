@@ -29,7 +29,7 @@ A GatingSignal is created automatically whenever an `InputState` or `OutputState
 `specified for gating <GatingMechanism_Gating_Signals>`.  GatingSignals can also be specified in the 
 **gating_signals** argument of the constructor for a `GatingMechanism`, using any of the formats described 
 `below <GatingSignal_Specification>`.  Although a GatingSignal can be created directly using its constructor 
-(or any of the other ways for `creating an outputState <OutputStates_Creation>`),  this is neither necessary 
+(or any of the other ways for `creating an OutputState <OutputStates_Creation>`),  this is neither necessary
 nor advisable, as a GatingSignal has dedicated components and requirements for configuration that must be met 
 for it to function properly.
 
@@ -42,23 +42,16 @@ When a GatingSignal is specified in context (e.g., the **gating_signals** argume
 `GatingMechanism`, the specification can take any of the following forms:
 
   * an *InputState* or *OutputState* of a Mechanism;
-  |
-  * a *Mechanism*, in which case its `primary inputState <Mechanism_InputStates>` will be used; 
-  |
+  * a *Mechanism*, in which case its `primary inputState <Mechanism_InputStates>` will be used;
   * a *tuple*, with the *name* of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
     but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
-  |
   * a *specification dictionary*, that can take either of the following two forms:
-
     * for a single state, the dictionary must have the following two entries:
-
         * *NAME*: str - a string that is the name of the state to be gated;
         * *MECHANISM*: Mechanism - the Mechanism to which the state belongs;
-        In this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
-
+    In this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
     * for multiple states, the dictionary must have the following entry:
-
         * <str>:list - where the string used for the key specifies the name to be used for the GatingSignal,
           and the value is a list, each item of which is a `specification of a state <LINK>` to be gated by 
           the GatingSignal (and that will receive a `GatingProjection` from it).
@@ -111,14 +104,14 @@ Examples
 ~~~~~~~~
 
 *Gate an InputState and OutputState*.  The following example configures a `GatingMechanism` to gate the
-`primary InputState <Mechanism_InputState>` of one mechanism, and the `primary outputState <OutputState_Primary>`
+`primary InputState <Mechanism_InputState>` of one mechanism, and the `primary OutputState <OutputState_Primary>`
 of another::
 
     my_mechanism_A = TransferMechanism()
     my_mechanism_B = TransferMechanism()
     my_gating_mechanism = GatingMechanism(gating_signals=[my_mechanism_A, my_mechanism_B.output_state)
 
-Note that, in the **gating_signals** arg, the first item is reference to the mechanism_A rather than one of its
+Note that, in the **gating_signals** arg, the first item is reference to the ``my_mechanism_A`` rather than one of its
 states.  This is all that is necessary, the default for a `GatingSignal` is to modulate the
 `primary InputState <Mechanism_InputStates>` of a Mechanism.  The second item explicitly specifies the State to be
 gated (since it is not a default).  This will generate two GatingSignals, each of which will multiplicatively modulate
@@ -143,7 +136,7 @@ it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <In
                                             {'GATE_ALL': [My_Input_Layer, My_Hidden_Layer, My_Output_Layer]},
                                           modulation=ModulationParam.ADDITIVE)
 
-Note that, again, the gating_signals are listed as mechanisms, since their primary InputStates are to be gated.
+Note that, again, the ``gating_signals`` are listed as mechanisms, since their primary InputStates are to be gated.
 Since they are all listed in a single entry of a `state specification dictionary <LINK>`, they will all be gated by a
 single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the InputState of
 each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by a
@@ -252,12 +245,12 @@ class GatingSignal(ModulatorySignal):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
-        a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        a string used for the name of the OutputState.
+        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -286,9 +279,9 @@ class GatingSignal(ModulatorySignal):
         a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
 
     name : str : default <State subclass>-<index>
-        name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        name of the OutputState.
+        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
+        assigned by the StateRegistry of the mechanism to which the OutputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
@@ -298,7 +291,7 @@ class GatingSignal(ModulatorySignal):
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -349,7 +342,7 @@ class GatingSignal(ModulatorySignal):
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from GatingProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in GatingProjection._instantiate_sender),
+        #  (test for it, and create if necessary, as per OutputStates in GatingProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner=owner,

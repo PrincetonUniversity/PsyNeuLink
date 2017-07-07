@@ -56,7 +56,7 @@ component is executed, its Function's `function <Function_Base.function>` is exe
 (and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
 packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
-**Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
+**Manage parameters**. Parameters are attributes of a Function that either remain stable over multiple calls to the
 function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
 of a learning function); or, if they change, they do so less frequently or under the control of different factors
 than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
@@ -124,8 +124,8 @@ Functions are not executable objects, but their `function <Function_Base.functio
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
 `parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the
-call to the `function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying
-`runtime_params <Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
+call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
+`runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
 
 Class Reference
 ---------------
@@ -299,7 +299,7 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
     """
 
-    # Get function "meta-parameter" object specified in the projection sender's modulation attribute
+    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
     # Get the actual parameter of owner.function_object to be modulated
@@ -393,7 +393,7 @@ class Function_Base(Function):
               - calling the _instantiate_defaults method (which changes their default values)
               - including them in a call the function method (which changes their values for just for that call)
             - Parameters must be specified in a params dictionary:
-              - the key for each entry should be the name of the parameter (used also to name associated projections)
+              - the key for each entry should be the name of the parameter (used also to name associated Projections)
               - the value for each entry is the value of the parameter
 
         Return values:
@@ -6342,7 +6342,7 @@ class Reinforcement(
        `error_signal <Reinforcement.error_signal>` (1d np.array).
 
     activation_function : Function or function : SoftMax
-        specifies the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`.
+        specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float : default default_learning_rate
         supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
@@ -6384,7 +6384,7 @@ class Reinforcement(
         same position as the one in `activation_output <Reinforcement.activation_output>`.
 
     activation_function : Function or function : SoftMax
-        the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`; must
+        the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
         return and array with a single non-zero value.
 
     learning_rate : float
@@ -6403,7 +6403,7 @@ class Reinforcement(
          `error_signal <Reinforcement.error_signal>` received.
 
     owner : Mechanism
-        `mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -6463,7 +6463,7 @@ class Reinforcement(
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
-                                     "(if output mechanism being trained uses softmax,"
+                                     "(if output Mechanism being trained uses softmax,"
                                      " its \'output\' arg may need to be set to to PROB)".
                                      format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
@@ -6519,7 +6519,7 @@ class Reinforcement(
         error = self.error_signal
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
@@ -6588,11 +6588,11 @@ class BackPropagation(LearningFunction):
        `error_signal <BackPropagation.error_signal>` (1d np.array).
 
     activation_derivative : Function or function
-        specifies the derivative for the function of the mechanism that generates
+        specifies the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
 
     error_derivative : Function or function
-        specifies the derivative for the function of the mechanism that is the receiver of the
+        specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
 
     error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
@@ -6636,7 +6636,7 @@ class BackPropagation(LearningFunction):
 
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
-        target (training signal) and the output of the last mechanism in the sequence;
+        target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>.
 
     error_matrix : 2d np.array or ParameterState
@@ -6661,7 +6661,7 @@ class BackPropagation(LearningFunction):
          `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Mechanism
-        `mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -6852,7 +6852,7 @@ class BackPropagation(LearningFunction):
             error_matrix = self.error_matrix
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value

@@ -27,25 +27,31 @@ Overview
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from the
 `OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is
 needed to transmit that information to the `InputState` of another Mechanism (its
-`receiver <Projection.receiver>`).  There are three types of Projections that serve difference purposes:
+`receiver <Projection.receiver>`).  There are four types of Projections that serve different purposes:
 
 * `MappingProjection`
-    These take the output of a `ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
+    This takes the output of a `ProcessingMechanism <ProcessingMechanism>`, convert this by convolving it with
     the Projection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmit the result as
     input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
     `pathway` of a `Process`.
 ..
 * `ControlProjection`
-    These take an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
+    This takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
     of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
     that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
     in the context of a `System`.
 ..
 * `LearningProjection`
-    These take the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
+    This takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
     `ParameterState` of a `MappingProjection` which uses this to modify its
     `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
     learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
+..
+* `GatingProjection`
+    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
+    a GatingMechanism and conveys it to the `InputState` or `OutputState` of a
+    `ProcessingMechanism` for use by the state's `function` in modulating its
+    `value`.
 
 COMMENT:
 * Gating: takes an input signal and uses it to modulate the InputState and/or OutputState of the receiver

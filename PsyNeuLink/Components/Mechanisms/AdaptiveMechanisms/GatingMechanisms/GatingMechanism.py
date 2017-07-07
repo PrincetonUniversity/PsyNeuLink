@@ -13,7 +13,7 @@ Overview
 --------
 
 A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the InputState(s) and/or OutputState(s) of
-one or more `ProcessingMechanisms`.   It's function takes a value 
+one or more `ProcessingMechanisms`.   Its function takes a value
 COMMENT:
     ??FROM WHERE?
 COMMENT
