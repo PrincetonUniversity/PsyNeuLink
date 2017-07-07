@@ -165,7 +165,7 @@ def show_results():
 
 mySystem.controller.reportOutputPref = True
 
-mySystem.run(num_executions=nTrials,
+mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,
              call_after_time_step=show_results

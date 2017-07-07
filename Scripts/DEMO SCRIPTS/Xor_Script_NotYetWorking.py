@@ -92,7 +92,7 @@ def show_target():
     print(hidden_output_weights.matrix)
     
 
-three_layer_net.run(num_executions=100,
+three_layer_net.run(num_trials=100,
                   inputs=input_list,
                   targets=target_list,
                   call_before_trial=print_header,

@@ -75,7 +75,7 @@ stim_dict = {colors:[[1,0],[0,1]],
              words:[[0,1],[1,0]]}
 target_dict= {response:[[1,0],[0,1]]}
 
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
              inputs=stim_dict,
              targets=target_dict)
 

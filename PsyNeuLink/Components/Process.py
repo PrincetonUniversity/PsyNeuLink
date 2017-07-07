@@ -50,7 +50,7 @@ Creating a Process
 A Process is created by calling the :py:func:`process` function. The Mechanisms to be included are specified in a list
 in the `pathway` argument, in the order in which they should be executed by the Process.  The Mechanism entries can be
 separated by `projections <Projection>` used to connect them.  If no arguments are provided to the `pathway` argument,
-a Process with a single `default Mechanism <Mechanism_Base.defaultMechanism>` is created.
+a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.
 
 .. _Process_Structure:
 
@@ -489,7 +489,7 @@ def process(process_spec=None,
     """
 
     # MODIFIED 9/20/16 NEW:  REPLACED IN ARG ABOVE WITH None
-    pathway = pathway or [Mechanism_Base.defaultMechanism]
+    pathway = pathway or [Mechanism_Base.default_mechanism]
     # MODIFIED 9/20/16 END
 
     # # Called with a keyword
@@ -562,7 +562,7 @@ class Process_Base(Process):
             It implements a Process that is used to execute a sequence of mechanisms connected by projections.
             NOTES:
                 * if no pathway or time_scale is provided:
-                    a single Mechanism of Mechanism class default Mechanism and TRIAL are used
+                    a single Mechanism of Mechanism class default_mechanism and TRIAL are used
                 * Process.input is set to the InputState.value of the first Mechanism in the pathway
                 * Process.output is set to the OutputState.value of the last Mechanism in the pathway
 
@@ -575,7 +575,7 @@ class Process_Base(Process):
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PATHWAY: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PATHWAY: [Mechanism_Base.default_mechanism],
                                 TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
@@ -650,7 +650,7 @@ class Process_Base(Process):
 
     clamp_input : Optional[keyword]
         determines whether the Process' input continues to be applied to the `ORIGIN` Mechanism if it is executed again
-        within the same round of execution.  It can tae the following values:
+        within the same `TRIAL`.  It can take the following values:
 
         * `None`: applies the Process' `input` to the `ORIGIN` Mechanism only once (the first time it is executed)
           in a given round of the Process' execution.
@@ -710,7 +710,7 @@ class Process_Base(Process):
     mechanisms : List[Mechanism]
         a list of the Mechanisms in the Process.
 
-    originMechanisms : MechanismList
+    origin_mechanisms : MechanismList
         a list with the `ORIGIN` Mechanism of the Process.
 
         .. note:: A Process can have only one `ORIGIN` Mechanism; the use of a list is for compatibility with
@@ -831,7 +831,7 @@ class Process_Base(Process):
                                '_isControllerProcess': False
                                })
 
-    default_pathway = [Mechanism_Base.defaultMechanism]
+    default_pathway = [Mechanism_Base.default_mechanism]
 
     @tc.typecheck
     def __init__(self,
@@ -942,7 +942,7 @@ class Process_Base(Process):
             self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
-#         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.defaultMechanism] as default
+#         Uses paramClassDefaults[PATHWAY] == [Mechanism_Base.default_mechanism] as default
 #         1) ITERATE THROUGH CONFIG LIST TO PARSE AND INSTANTIATE EACH MECHANISM ITEM
 #             - RAISE EXCEPTION IF TWO PROJECTIONS IN A ROW
 #         2) ITERATE THROUGH CONFIG LIST AND ASSIGN PROJECTIONS (NOW THAT ALL MECHANISMS ARE INSTANTIATED)
@@ -1001,7 +1001,7 @@ class Process_Base(Process):
         self.firstMechanism = pathway[0]
         self.firstMechanism.processes[self] = ORIGIN
         self._origin_mechs = [pathway[0]]
-        self.originMechanisms = MechanismList(self, self._origin_mechs)
+        self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
         # Assign last mechanism in pathwway to lastMechanism attribute
         i = -1
@@ -1029,7 +1029,7 @@ class Process_Base(Process):
 
         if self.learning:
             self._check_for_target_mechanism()
-            if self.targetMechanism:
+            if self.target_mechanism:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
         else:
@@ -1875,8 +1875,8 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one TARGET ObjectiveMechanism for the process
-         Assign targetMechanism to self.targetMechanism,
-             assign self to targetMechanism.processes,
+         Assign target_mechanism to self.target_mechanism,
+             assign self to target_mechanism.processes,
              and report assignment if verbose
         """
 
@@ -1931,7 +1931,7 @@ class Process_Base(Process):
                                                              # list(self.terminalMechanisms)[0].name,
                                                              self.lastMechanism.name,
                                                              list(process.name for process in target_mech.processes)))
-                self.targetMechanism = None
+                self.target_mechanism = None
             else:
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1939,15 +1939,15 @@ class Process_Base(Process):
 
         elif len(target_mechs) > 1:
             target_mech_names = list(targetMechanism.name for targetMechanism in target_mechs)
-            raise ProcessError("PROGRAM ERROR: {} has more than one targetMechanism mechanism: {}".
+            raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
                                format(self.name, target_mech_names))
 
         else:
-            self.targetMechanism = target_mechs[0]
+            self.target_mechanism = target_mechs[0]
             self._target_mechs.append(target_mechs[0])
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
-                      format(self.targetMechanism.name, self.name))
+                      format(self.target_mechanism.name, self.name))
 
     def _instantiate_target_input(self, context=None):
 
@@ -1958,7 +1958,7 @@ class Process_Base(Process):
             # MODIFIED 6/26/17 NEW:
             # target arg was not specified in Process' constructor,
             #    so use the value of the TARGET InputState for the TARGET Mechanism as the default
-            self.target = self.targetMechanism.input_states[TARGET].value
+            self.target = self.target_mechanism.input_states[TARGET].value
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
                               " but its \'target\' argument was not specified; default will be used ({})".
@@ -1968,11 +1968,11 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
 
         # Create ProcessInputState for target and assign to targetMechanism's target inputState
-        target_mech_target = self.targetMechanism.input_states[TARGET]
+        target_mech_target = self.target_mechanism.input_states[TARGET]
 
         # Check that length of process' target input matches length of targetMechanism's target input
         if len(target) != len(target_mech_target.variable):
-            raise ProcessError("Length of target ({}) does not match length of input for targetMechanism in {}".
+            raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
                                format(len(target), len(target_mech_target.variable)))
 
         target_input_state = ProcessInputState(owner=self,
@@ -2214,7 +2214,7 @@ class Process_Base(Process):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             reset_clock=True,
             initialize=False,
             targets=None,
@@ -2245,7 +2245,7 @@ class Process_Base(Process):
             call the process' `initialize` method before a sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default None
-            target value(s) assigned to the process` `target <Process_Base.targetMechanisms>` mechanism for each
+            target value(s) assigned to the process` `target <Process_Base.target_mechanism>` mechanism for each
             execution (during learning).  The length (of the outermost level if a nested list, or lowest axis if an
             ndarray) must be equal to that of the `inputs` argument (see above).
 
@@ -2280,7 +2280,7 @@ class Process_Base(Process):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    reset_clock=reset_clock,
                    initialize=initialize,
                    targets=targets,
@@ -2381,7 +2381,7 @@ class Process_Base(Process):
 
 
         print ("\n\tOrigin mechanism: ".format(self.name))
-        for object_item in self.originMechanisms.mechs_sorted:
+        for object_item in self.origin_mechanisms.mechs_sorted:
             print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
 
         print ("\n\tTerminal mechanism: ".format(self.name))

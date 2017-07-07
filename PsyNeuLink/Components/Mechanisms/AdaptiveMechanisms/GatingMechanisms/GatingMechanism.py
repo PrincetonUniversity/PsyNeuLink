@@ -82,12 +82,12 @@ Execution
 
 A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the System's
 `graph <System.graph>`.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
-the effects of a GatingMechanism and its projections will generally not be applied in the first
-`round of execution <LINK>` (see `initialization <LINK>` for a description of how to configure the initialization
-of feedback loops in a System).  When executd, a GatingMechanism uses its input to determine the value of its
+the effects of a GatingMechanism and its projections will generally not be applied in the first `TRIAL` (see
+`initialization <System_Execution_Input_And_Initialization>` for a description of how to configure the initialization
+of feedback loops in a System).  When executed, a GatingMechanism uses its input to determine the value of its
 `GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
-round of execution , each GatingProjection's value is used by the state to which it projects to modulate the 
-`value <State.value>` of that state.
+`TRIAL`, each GatingProjection's value is used by the State to which it projects to modulate the `value <State.value>`
+of that State.
 
 When a GatingMechanism executes, the value of each item in its `gating_policy` is assigned as the value of each of
 the corresponding GatingSignals in its `gating_signals` attribute.  These, in turn, are used by their associated
@@ -556,6 +556,6 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
                         # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
                         # if not any(state.path_afferents for state in owner.input_states):
-                        #     system.originMechanisms.mechs.append(owner)
+                        #     system.origin_mechanisms.mechs.append(owner)
 
 

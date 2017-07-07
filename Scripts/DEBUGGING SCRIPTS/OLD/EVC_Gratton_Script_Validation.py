@@ -183,7 +183,7 @@ mySystem.controller.reportOutputPref = True
 
 # mySystem.show_graph()
 
-mySystem.run(num_executions=nTrials,
+mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
              )
 

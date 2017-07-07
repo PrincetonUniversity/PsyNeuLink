@@ -26,7 +26,7 @@ p = process(default_input_value=[0, 0, 0],
             target=0)
 
 print ('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-print ('targetMechanism weights: \n', action_selection.output_state.efferents[0].matrix)
+print ('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 actions = ['left', 'middle', 'right']
 reward_values = [15, 7, 13]
@@ -44,7 +44,7 @@ def show_weights():
     print ('\nreward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
     print ('action selected: ', action_selection.output_state.value)
 
-p.run(num_executions=10,
+p.run(num_trials=10,
       # inputs=[[[1, 1, 1]]],
       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
       inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},

@@ -97,7 +97,7 @@ target_list_dict = {response:[[1, 1]]}
 
 # mySystem.show_graph(show_learning=True)
 
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
             call_before_trial=print_header,

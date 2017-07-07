@@ -52,7 +52,7 @@ Creating a System
 -----------------
 
 Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.  More generally, a System
+containing a single `default_mechanism <Mechanism_Base.default_mechanism>` will be created.  More generally, a System
 is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
 Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
 `controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
@@ -179,12 +179,12 @@ Input and Initialization
 The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
 `run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`originMechanisms <System_Base.originMechanisms>`). If the `execute <System_Base.execute>` method is used, input for
+`origin_mechanisms <System_Base.origin_mechanisms>`). If the `execute <System_Base.execute>` method is used, input for
 only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
 used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
 of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
-recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrentInitMechanisms`), and target values are
+recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrent_init_mechanisms`), and target values are
 assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
 details of formatting input specifications).
 
@@ -218,15 +218,15 @@ each `TRIAL` has completed, but before the `controller is executed <System_Execu
 of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
 :keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
 Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
-<System_Base.originMechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
+<System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
-in its `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a `function
+in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
 format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A `targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
-   `targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
+   A `target_mechanism <Process.Process_Base.target_mechanism>` of a Process is not necessarily one of the
+   `target_mechanisms <System_Base.target_mechanisms>` of the System to which it belongs
    (see `LearningMechanism_Targets`).  Also, the changes to a System induced by learning are not applied until the
    Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
@@ -435,7 +435,7 @@ def system(default_input_value=None,
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
-        `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
+        `target_mechanisms` attribute).  There must be the same number of items as there are `target_mechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
         for each of the corresponding `TARGET` Mechanisms.
 
@@ -537,7 +537,7 @@ class System_Base(System):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.defaultMechanism],
+        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: SystemDefaultControlMechanism,
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
@@ -546,7 +546,7 @@ class System_Base(System):
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
-        - identify_origin_and_terminal_mechanisms():  assign self.originMechanisms and self.terminalMechanisms
+        - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
@@ -665,7 +665,7 @@ class System_Base(System):
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
 
-    originMechanisms : MechanismList
+    origin_mechanisms : MechanismList
         contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive Projections from any other
         Mechanisms.
 
@@ -678,7 +678,7 @@ class System_Base(System):
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
-    recurrentInitMechanisms : MechanismList
+    recurrent_init_mechanisms : MechanismList
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
@@ -692,7 +692,7 @@ class System_Base(System):
         COMMENT
 
     target_input_states : List[SystemInputState]
-        one item for each `TARGET` Mechanism in the System (listed in `targetMechanisms`).  Used to represent the
+        one item for each `TARGET` Mechanism in the System (listed in `target_mechanisms`).  Used to represent the
         :keyword:`targets` specified in the System's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET InputState of each `TARGET` Mechanism during execution.
 
@@ -718,7 +718,7 @@ class System_Base(System):
     initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Must be the same length as the list of `INITIALIZE_CYCLE` Mechanisms in the System contained in
-        `recurrentInitMechanisms`.
+        `recurrent_init_mechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the System.
@@ -988,9 +988,9 @@ class System_Base(System):
             processes_spec.append(ProcessTuple(Process_Base(), None))
 
         # If input to system is specified, number of items must equal number of processes with origin mechanisms
-        if input is not None and len(input) != len(self.originMechanisms):
+        if input is not None and len(input) != len(self.origin_mechanisms):
             raise SystemError("Number of items in input ({}) must equal number of processes ({}) in {} ".
-                              format(len(input), len(self.originMechanisms),self.name))
+                              format(len(input), len(self.origin_mechanisms),self.name))
 
         #region VALIDATE EACH ENTRY, STANDARDIZE FORMAT AND INSTANTIATE PROCESS
 
@@ -1001,7 +1001,7 @@ class System_Base(System):
             # MODIFIED 2/8/17 NEW:
             # Get list of origin mechanisms for processes that have already been converted
             #   (for use below in assigning input)
-            orig_mechs_already_processed = list(p[0].originMechanisms[0] for
+            orig_mechs_already_processed = list(p[0].origin_mechanisms[0] for
                                                 p in processes_spec if isinstance(p,ProcessTuple))
             # MODIFIED 2/8/17 END
 
@@ -1034,7 +1034,7 @@ class System_Base(System):
                     #        if it is, use that one (and don't increment index for input
                     #        otherwise, assign input and increment input_index
                     try:
-                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].originMechanisms[0])
+                        input_index_curr = orig_mechs_already_processed.index(processes_spec[i][0].origin_mechanisms[0])
                     except ValueError:
                         input_index += 1
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
@@ -1170,9 +1170,9 @@ class System_Base(System):
 
         Assign MechanismLists:
             allMechanisms
-            originMechanisms
+            origin_mechanisms
             terminalMechanisms
-            recurrentInitMechanisms (INITIALIZE_CYCLE)
+            recurrent_init_mechanisms (INITIALIZE_CYCLE)
             learning_mechansims
             control_mechanisms
 
@@ -1438,9 +1438,9 @@ class System_Base(System):
                 if not object_item in self._control_object_item:
                     self._control_object_item.append(object_item)
 
-        self.originMechanisms = MechanismList(self, self._origin_mechs)
+        self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
-        self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mechs)
+        self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
@@ -1468,7 +1468,7 @@ class System_Base(System):
         # MODIFIED 2/8/17 NEW:
         # Construct self.variable from inputs to ORIGIN mechanisms
         self.variable = []
-        for mech in self.originMechanisms:
+        for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
@@ -1503,9 +1503,9 @@ class System_Base(System):
 # FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
 # FIX: RENAME SystemInputState -> SystemInputState
 
-        # Create SystemInputState for each ORIGIN mechanism in originMechanisms and
+        # Create SystemInputState for each ORIGIN mechanism in origin_mechanisms and
         #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
-        for i, origin_mech in zip(range(len(self.originMechanisms)), self.originMechanisms):
+        for i, origin_mech in zip(range(len(self.origin_mechanisms)), self.origin_mechanisms):
 
             # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
@@ -1816,7 +1816,7 @@ class System_Base(System):
 
         if self.learning and self.targets is None:
             if not self.target_mechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
                                   format(self.name))
             # # MODIFIED 6/25/17 OLD:
             # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
@@ -1832,7 +1832,7 @@ class System_Base(System):
 
         self.targets = np.atleast_2d(self.targets)
 
-        # Create SystemInputState for each TARGET mechanism in targetMechanisms and
+        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
@@ -1878,7 +1878,7 @@ class System_Base(System):
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        `INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
+        `INITIALIZE_CYCLE` and contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
@@ -1969,7 +1969,7 @@ class System_Base(System):
         # FIX: MOVE TO RUN??
         #region ASSIGN INPUTS TO SystemInputStates
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
-        num_origin_mechs = len(list(self.originMechanisms))
+        num_origin_mechs = len(list(self.origin_mechanisms))
 
         if input is None:
             if (self.prefs.verbosePref and
@@ -1977,7 +1977,7 @@ class System_Base(System):
                 print("- No input provided;  default will be used: {0}")
             input = np.zeros_like(self.variable)
             for i in range(num_origin_mechs):
-                input[i] = self.originMechanisms[i].variableInstanceDefault
+                input[i] = self.origin_mechanisms[i].variableInstanceDefault
 
         else:
             num_inputs = np.size(input,0)
@@ -1994,7 +1994,7 @@ class System_Base(System):
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
-            for i, origin_mech in zip(range(num_origin_mechs), self.originMechanisms):
+            for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
                 # For each inputState of the ORIGIN mechansim
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
@@ -2216,7 +2216,7 @@ class System_Base(System):
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
-            # Report learning for targetMechanisms (and the processes to which they belong)
+            # Report learning for target_mechanisms (and the processes to which they belong)
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
@@ -2235,7 +2235,7 @@ class System_Base(System):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             reset_clock=True,
             initialize=False,
             targets=None,
@@ -2311,7 +2311,7 @@ class System_Base(System):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    reset_clock=reset_clock,
                    initialize=initialize,
                    targets=targets,
@@ -2476,7 +2476,7 @@ class System_Base(System):
         #     print ("\t\t\t{}".format(object_item.mechanism.name))
         #
         # print ("\n\tOrigin mechanisms: ".format(self.name))
-        # for object_item in self.originMechanisms.mechs_sorted:
+        # for object_item in self.origin_mechanisms.mechs_sorted:
         #     print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n\tTerminal mechanisms: ".format(self.name))
@@ -2488,7 +2488,7 @@ class System_Base(System):
         # # if any(process.learning for process in self.processes):
         # if self.learning:
         #     print ("\n\tTarget mechanisms: ".format(self.name))
-        #     for object_item in self.targetMechanisms.mechs:
+        #     for object_item in self.target_mechanisms.mechs:
         #         print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n---------------------------------------------------------")
@@ -2538,12 +2538,12 @@ class System_Base(System):
         """
 
         input_array = []
-        for mech in list(self.originMechanisms.mechanisms):
+        for mech in list(self.origin_mechanisms.mechanisms):
             input_array.append(mech.value)
         input_array = np.array(input_array)
 
         recurrent_init_array = []
-        for mech in list(self.recurrentInitMechanisms.mechanisms):
+        for mech in list(self.recurrent_init_mechanisms.mechanisms):
             recurrent_init_array.append(mech.value)
         recurrent_init_array = np.array(recurrent_init_array)
 
@@ -2580,9 +2580,9 @@ class System_Base(System):
         inspect_dict = {
             PROCESSES: self.processes,
             MECHANISMS: self.mechanisms,
-            ORIGIN_MECHANISMS: self.originMechanisms.mechanisms,
+            ORIGIN_MECHANISMS: self.origin_mechanisms.mechanisms,
             INPUT_ARRAY: input_array,
-            RECURRENT_MECHANISMS: self.recurrentInitMechanisms,
+            RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
             TERMINAL_MECHANISMS: self.terminalMechanisms.mechanisms,
             OUTPUT_STATE_NAMES: output_state_names,

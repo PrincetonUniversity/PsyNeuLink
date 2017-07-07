@@ -65,9 +65,9 @@ Creating a Mechanism
 
 Mechanisms can be created in several ways.  The simplest is to use the standard Python method of calling the
 constructor for the desired type of Mechanism.  Alternatively, the `mechanism() <mechanism>` function can be used to
-instantiate a specified type of Mechanism or a default Mechanism. Mechanisms can also be specified "in context,"
-for example in the `pathway` attribute of a Process; the Mechanism can be specified in either of the ways mentioned
-above, or using one of the following:
+instantiate a specified type of Mechanism or an instance of `default_mechanism <Mechanism_Base.default_mechanism>`.
+Mechanisms can also be specified "in context," for example in the `pathway` attribute of a Process; the Mechanism can
+be specified in either of the ways mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
   ..
@@ -79,7 +79,7 @@ above, or using one of the following:
 
       * *MECHANISM_TYPE*: <name of a Mechanism type>
 
-          if this entry is absent, a `default Mechanism <Mechanism_Base.defaultMechanism>` will be created.
+          if this entry is absent, a `default_mechanism <Mechanism_Base.default_mechanism>` will be created.
 
       * <name of parameter>:<value>
 
@@ -396,7 +396,7 @@ when it executed.  This can be done in a `parameter specification dictionary <Pa
 assigned to the **runtime_param** argument of the Mechanism's `execute <Mechanism_Base.execute>` method, or in a
 `tuple with the Mechanism <Process_Mechanisms>` in the `pathway` of a `Process`.  Any value assigned to a
 parameter in a **runtime_params** dictionary will override the current value of that parameter for the (and *only* the)
-current execution of the Mechanism; the value will return to its previous value following current round of execution, 
+current execution of the Mechanism; the value will return to its previous value following current execution,
 unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of
@@ -495,8 +495,8 @@ class MechanismError(Exception):
 
 
 def mechanism(mech_spec=None, params=None, context=None):
-    """Factory method for Mechanism; returns the type of Mechanism specified or a default Mechanism.
-    If called with no arguments, returns the `default Mechanism <Mechanism_Base.defaultMechanism>`.
+    """Factory method for Mechanism; returns the type of Mechanism specified or a `default_mechanism`.
+    If called with no arguments, returns the `default_mechanism <Mechanism_Base.default_mechanism>`.
 
     Arguments
     ---------
@@ -505,10 +505,10 @@ def mechanism(mech_spec=None, params=None, context=None):
         specification for the Mechanism to create.
         If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
         If it is string that is the name of a Mechanism subclass registered in the `MechanismRegistry`,
-        an instance of a `default Mechanism <Mechanism_Base.defaultMechanism>` for *that class* is returned;
-        otherwise, the string is used to name an instance of the `default Mechanism <Mechanism_Base.defaultMechanism>.
+        an instance of a `default_mechanism <Mechanism_Base.default_mechanism>` for *that class* is returned;
+        otherwise, the string is used to name an instance of the `default_mechanism <Mechanism_Base.default_mechanism>.
         If it is a dict, it must be a `Mechanism specification dictionary <`Mechanism_Creation>`.
-        If it is `None` or not specified, an instance of the `default mechanism <Mechanism_Base.defaultMechanism>` is
+        If it is `None` or not specified, an instance of the `default mechanism <Mechanism_Base.default_mechanism>` is
         returned;
         the nth instance created will be named by using the Mechanism's :keyword:`componentType` attribute as the
         base for the name and adding an indexed suffix:  componentType-n.
@@ -539,7 +539,7 @@ def mechanism(mech_spec=None, params=None, context=None):
 
     # Called with a string that is not in the Registry, so return default type with the name specified by the string
     elif isinstance(mech_spec, str):
-        return Mechanism_Base.defaultMechanism(name=mech_spec, params=params, context=context)
+        return Mechanism_Base.default_mechanism(name=mech_spec, params=params, context=context)
 
     # Called with a Mechanism type, so return instantiation of that type
     elif isclass(mech_spec) and issubclass(mech_spec, Mechanism):
@@ -556,15 +556,15 @@ def mechanism(mech_spec=None, params=None, context=None):
         except (KeyError, NameError):
             if Mechanism.classPreferences.verbosePref:
                 print("{0} entry missing from mechanisms dict specification ({1}); default ({2}) will be used".
-                      format(kwMechanismType, mech_spec, Mechanism_Base.defaultMechanism))
-            return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
+                      format(kwMechanismType, mech_spec, Mechanism_Base.default_mechanism))
+            return Mechanism_Base.default_mechanism(name=kwProcessDefaultMechanism, context=context)
         # Instantiate Mechanism using mech_spec dict as arguments
         else:
             return mech_spec(context=context, **mech_spec)
 
     # Called without a specification, so return default type
     elif mech_spec is None:
-        return Mechanism_Base.defaultMechanism(name=kwProcessDefaultMechanism, context=context)
+        return Mechanism_Base.default_mechanism(name=kwProcessDefaultMechanism, context=context)
 
     # Can't be anything else, so return empty
     else:
@@ -637,7 +637,7 @@ class Mechanism_Base(Mechanism):
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
             + paramNames (dict)
-            + defaultMechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
+            + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
 
         Class methods
         -------------
@@ -779,7 +779,7 @@ class Mechanism_Base(Mechanism):
     time_scale : TimeScale : default TimeScale.TRIAL
         determines the default value of the `TimeScale` used by the Mechanism when executed.
 
-    defaultMechanism : Mechanism : default DDM
+    default_mechanism : Mechanism : default DDM
         sublass of Mechanism instantiated when the `mechanism` function is called without a specification for its
         **mech_spec** argument.
 
@@ -827,7 +827,7 @@ class Mechanism_Base(Mechanism):
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
     # IMPLEMENTATION NOTE: move this to a preference
-    defaultMechanism = DDM_MECHANISM
+    default_mechanism = DDM_MECHANISM
 
 
     variableClassDefault = [0.0]
@@ -1632,7 +1632,7 @@ class Mechanism_Base(Mechanism):
 
     def run(self,
             inputs,
-            num_executions=None,
+            num_trials=None,
             call_before_execution=None,
             call_after_execution=None,
             time_scale=None):
@@ -1669,7 +1669,7 @@ class Mechanism_Base(Mechanism):
         from PsyNeuLink.Globals.Run import run
         return run(self,
                    inputs=inputs,
-                   num_executions=num_executions,
+                   num_trials=num_trials,
                    call_before_trial=call_before_execution,
                    call_after_trial=call_after_execution,
                    time_scale=time_scale)

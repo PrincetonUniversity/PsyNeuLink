@@ -69,7 +69,7 @@ def print_inputs():
     print('INPUTS :',mySystem.inputs)
 
 stimuli = [[[[0,0], [1,1]]], [[[2,2], [3,3]]]]
-my_results = mySystem.run(inputs=stimuli, num_executions=2, call_before=print_inputs)
+my_results = mySystem.run(inputs=stimuli, num_trials=2, call_before=print_inputs)
 
 print(my_results)
 

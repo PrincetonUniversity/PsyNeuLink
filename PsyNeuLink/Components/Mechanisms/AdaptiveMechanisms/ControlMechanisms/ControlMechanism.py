@@ -101,7 +101,7 @@ A ControlMechanism that is a system's `controller` is always the last Mechanism 
 *ERROR_SIGNAL* `input_state <ControlMechanism.input_state>`, and use that to determine its 
 `allocation_policy <ControlMechanism.allocation_policy>` that specifies the value assigned to each of its   
 `ControlSignals <ControlSignal>`.  Each of those is used by its associated `ControlProjection` to set the
-value of the ParameterState for the parameter it controls.  In the subsequent round of execution, 
+value of the ParameterState for the parameter it controls.  In the subsequent `TRIAL`,
 those parameter values are used by the Mechanism when it executes.
 
 .. note::

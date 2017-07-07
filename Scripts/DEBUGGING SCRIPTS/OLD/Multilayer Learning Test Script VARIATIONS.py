@@ -119,7 +119,7 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 # z.execute()
 
 # # PROCESS VERSION:
-# z.run(num_executions=10,
+# z.run(num_trials=10,
 #       # inputs=stim_list,
 #       inputs=[[-1, 30],[2, 10]],
 #       targets=[[0, 0, 1],[0, 0, 1]],
@@ -132,7 +132,7 @@ target_list = {Output_Layer:[[0, 0, 1],[0, 0, 1]]}
 x = system(processes=[z],
            targets=[0, 0, 1])
 # x.show_graph()
-x.run(num_executions=10,
+x.run(num_trials=10,
       # inputs=stim_list,
       # inputs=[[-1, 30],[2, 10]],
       # targets=[[0, 0, 1],[0, 0, 1]],

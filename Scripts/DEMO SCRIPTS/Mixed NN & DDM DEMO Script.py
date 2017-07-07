@@ -36,7 +36,7 @@ myDDM.reportOutputPref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
 input_set = {myInputLayer:[[-1,2],[2,3],[5,5]]}
 
 myProcess.run(inputs=input_set,
-              num_executions=2)
+              num_trials=2)
 
 mySystem = system(processes=[myProcess])
 
