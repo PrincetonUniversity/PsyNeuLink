@@ -519,6 +519,7 @@ class OutputState(State_Base):
                  owner,
                  reference_value,
                  variable=None,
+                 size=None,
                  function=LinearCombination(operation=SUM),
                  index=PRIMARY_OUTPUT_STATE,
                  calculate:is_function_type=Linear,
@@ -543,6 +544,7 @@ class OutputState(State_Base):
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner,
                          variable=variable,
+                         size=size,
                          params=params,
                          name=name,
                          prefs=prefs,

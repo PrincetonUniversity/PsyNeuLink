@@ -408,6 +408,7 @@ class ParameterState(State_Base):
                  owner,
                  reference_value=None,
                  variable=None,
+                 size=None,
                  function=Linear(),
                  params=None,
                  name=None,
@@ -429,6 +430,7 @@ class ParameterState(State_Base):
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
+                                             size=size,
                                              params=params,
                                              name=name,
                                              prefs=prefs,
