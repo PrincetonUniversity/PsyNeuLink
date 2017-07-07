@@ -10,7 +10,7 @@
 
 """
 
-<<<<<<< HEAD:PsyNeuLink/scheduling/condition.py
+<<<<<<< HEAD:PsyNeuLink.Scheduling/condition.py
 =======
 COMMENT:
     [**NAME OF THE MODULE SHOULD BE CAPITALIZED]

@@ -1,3 +1,2 @@
-toposort==1.4
+toposort
 numpy
-typecheck-decorator==1.2

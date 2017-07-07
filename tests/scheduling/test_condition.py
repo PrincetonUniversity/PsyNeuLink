@@ -46,7 +46,7 @@ class TestCondition:
 
             sched.add_condition(A, EveryNPasses(1))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = Any(AfterNCalls(A, 10), AtPass(5))
             output = list(sched.run(termination_conds=termination_conds))
@@ -63,7 +63,7 @@ class TestCondition:
 
             sched.add_condition(A, EveryNPasses(1))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = Any(AfterNCalls(A, 5), AtPass(10))
             output = list(sched.run(termination_conds=termination_conds))
@@ -79,7 +79,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, Not(AtPass(0)))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -95,7 +95,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, Not(AtPass(2)))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -113,7 +113,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, BeforePass(2))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -129,7 +129,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AtPass(0))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -150,7 +150,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AtPass(0))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 2)
             output = list(sched.run(termination_conds=termination_conds))
@@ -166,7 +166,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AtPass(2))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -182,7 +182,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AtPass(5))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -198,7 +198,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AtPass(6))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -214,7 +214,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AfterPass(0))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -230,7 +230,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AfterNPasses(1))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -246,10 +246,15 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, BeforeTrial(4))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(5)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A, set()]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -262,10 +267,15 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, Always())
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AtTrial(4)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -278,10 +288,15 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, Always())
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterTrial(4)
             termination_conds[TimeScale.TRIAL] = AtPass(1)
-            output = list(sched.run(termination_conds=termination_conds))
+            comp.run(
+                inputs={A: range(6)},
+                scheduler_processing=sched,
+                termination_processing=termination_conds
+            )
+            output = sched.execution_list
 
             expected_output = [A, A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
@@ -294,7 +309,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, AfterNPasses(1))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -312,7 +327,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(A, BeforeNCalls(A, 3))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -337,7 +352,7 @@ class TestCondition:
         #     sched.add_condition(A, Always())
         #     sched.add_condition(B, AtCall(A, 3))
 
-        #     termination_conds = {ts: None for ts in TimeScale}
+        #     termination_conds = {}
         #     termination_conds[TimeScale.RUN] = AfterNTrials(1)
         #     termination_conds[TimeScale.TRIAL] = AtPass(5)
         #     output = list(sched.run(termination_conds=termination_conds))
@@ -355,7 +370,7 @@ class TestCondition:
             sched = Scheduler(comp)
             sched.add_condition(B, AfterCall(A, 3))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -374,7 +389,7 @@ class TestCondition:
             sched.add_condition(A, Always())
             sched.add_condition(B, AfterNCalls(A, 3))
 
-            termination_conds = {ts: None for ts in TimeScale}
+            termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
             termination_conds[TimeScale.TRIAL] = AtPass(5)
             output = list(sched.run(termination_conds=termination_conds))
@@ -407,7 +422,7 @@ class TestCondition:
         )
         )
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         output = list(sched.run(termination_conds=termination_conds))
@@ -433,7 +448,7 @@ class TestCondition:
         sched.add_condition(B, EveryNPasses(1))
         sched.add_condition(C, WhenFinishedAny(A, B))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = list(sched.run(termination_conds=termination_conds))
@@ -459,7 +474,7 @@ class TestCondition:
         sched.add_condition(B, EveryNPasses(1))
         sched.add_condition(C, WhenFinishedAny(A, B))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
         output = list(sched.run(termination_conds=termination_conds))
@@ -483,7 +498,7 @@ class TestCondition:
         sched.add_condition(B, Always())
         sched.add_condition(C, Always())
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = WhenFinishedAny()
         output = []
@@ -518,7 +533,7 @@ class TestCondition:
         sched.add_condition(B, EveryNPasses(1))
         sched.add_condition(C, WhenFinishedAll(A, B))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = list(sched.run(termination_conds=termination_conds))
@@ -544,7 +559,7 @@ class TestCondition:
         sched.add_condition(B, EveryNPasses(1))
         sched.add_condition(C, WhenFinishedAll(A, B))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 5)
         output = list(sched.run(termination_conds=termination_conds))
@@ -568,7 +583,7 @@ class TestCondition:
         sched.add_condition(B, Always())
         sched.add_condition(C, Always())
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = WhenFinishedAll()
         output = []
@@ -601,7 +616,7 @@ class TestCondition:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(B, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AfterNCallsCombined(B, C, n=4)
         output = list(sched.run(termination_conds=termination_conds))
@@ -626,7 +641,7 @@ class TestCondition:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(B, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AllHaveRun(A, B, C)
         output = list(sched.run(termination_conds=termination_conds))
@@ -651,7 +666,7 @@ class TestCondition:
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(B, 2))
 
-        termination_conds = {ts: None for ts in TimeScale}
+        termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(1)
         termination_conds[TimeScale.TRIAL] = AllHaveRun()
         output = list(sched.run(termination_conds=termination_conds))

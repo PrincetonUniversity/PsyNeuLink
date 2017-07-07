@@ -1,9 +1,43 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+
+# ********************************************* Composition ***************************************************************
+
+"""
+..
+    Sections:
+      * `Composition_Overview`
+
+.. _Composition_Overview:
+
+Overview
+--------
+
+
+
+"""
+
 import logging
+import uuid
+
+import numpy as np
 
 from collections import Iterable, OrderedDict
 from enum import Enum
 
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Components.Projections.Projection import Projection
+from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+
 
 logger = logging.getLogger(__name__)
 
@@ -92,11 +126,33 @@ class CompositionError(Exception):
 
 
 class Vertex(object):
-    ########
-    # Helper class for Compositions.
-    # Serves as vertex for composition graph.
-    # Contains lists of incoming edges and outgoing edges.
-    ########
+    '''
+        Stores a Component for use with a `Graph`
+
+        Arguments
+        ---------
+
+        component : Component
+            the `Component` represented by this Vertex
+
+        parents : list[Vertex]
+            the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
+
+        children : list[Vertex]
+            the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
+
+        Attributes
+        ----------
+
+        component : Component
+            the `Component` represented by this Vertex
+
+        parents : list[Vertex]
+            the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
+
+        children : list[Vertex]
+            the `Vertices <Vertex>` corresponding to the outgoing edges of this `Vertex`
+    '''
 
     def __init__(self, component, parents=None, children=None):
         self.component = component
@@ -114,17 +170,31 @@ class Vertex(object):
 
 
 class Graph(object):
-    ########
-    # Helper class for Compositions.
-    # Serves to organize mechanisms.
-    # Contains a list of vertices.
-    ########
+    '''
+        A Graph of vertices and edges
+
+        Attributes
+        ----------
+
+        comp_to_vertex : dict{Component : Vertex}
+            maps `Component`\ s in the graph to the `Vertices <Vertex>` that represent them
+
+        vertices : list[Vertex]
+            the `Vertices <Vertex>` contained in this Graph
+
+    '''
 
     def __init__(self):
         self.comp_to_vertex = OrderedDict()  # Translate from mechanisms to related vertex
         self.vertices = []  # List of vertices within graph
 
     def copy(self):
+        '''
+            Returns
+            -------
+
+            A copy of the Graph. `Vertices <Vertex>` are distinct from their originals, and point to the same `Component` object
+        '''
         g = Graph()
 
         for vertex in self.vertices:
@@ -176,9 +246,21 @@ class Graph(object):
             child.parents.append(parent)
 
     def get_parents_from_component(self, component):
+        '''
+            Returns
+            -------
+
+            A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component**
+        '''
         return self.comp_to_vertex[component].parents
 
     def get_children_from_component(self, component):
+        '''
+            Returns
+            -------
+
+            A list[Vertex] of the child `Vertices <Vertex>` of the Vertex associated with **component**
+        '''
         return self.comp_to_vertex[component].children
 
 
@@ -191,33 +273,40 @@ class Composition(object):
 
         Attributes
         ----------
-    '''
-    def __init__(self):
-        ########
-        # Constructor for Compositions.
-        # Creates an empty Composition which has the following elements:
-        # - self.G is an OrderedDict that represents the Composition's graph.
-        #   Keys are mechanisms and values are lists of Connections that
-        #   terminate on that mechanism.
-        # - self.scheduler is a Scheduler object (see PsyNeuLink.scheduler)
-        #   that manages the order of mechanisms that fire on a given trial.
-        # - self.graph_analyzed is a Boolean that keeps track of whether
-        #   self.graph is up to date. This allows for analysis of the graph
-        #   only when needed for running the Composition for efficiency.
-        # - self.*_mechanisms is a list of Mechanisms that are of a certain
-        #   class within the composition graph.
-        ########
 
+        graph : `Graph`
+            The full `Graph` associated with this Composition. Contains both `Mechanism`\ s and `Projection`\ s used in processing \
+            or learning.
+
+        graph_processing : `Graph`
+            The `Graph` that contains only `Mechanisms`, excluding those used in learning
+
+        mechanisms : `list[Mechanism]`
+            A list of all `Mechanism`\ s contained in this Composition
+
+        scheduler_processing : Scheduler
+            The default `Scheduler` automatically generated by the Composition, used for the processing `phase of execution <execution>`
+
+        scheduler_learning : Scheduler
+            The default `Scheduler` automatically generated by the Composition, used for the learning `phase of execution <execution>`
+    '''
+
+    def __init__(self):
         # core attributes
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
+        self.input_mechanisms = {}
+
+        self._scheduler_processing = None
+        self._scheduler_learning = None
 
         # status attributes
-        # Needs to be created still| self.scheduler = Scheduler()
+        self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
         self.needs_update_graph = True   # Tracks if the Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True   # Tracks if the processing graph is current with the full graph
-        self.graph_consistent = True  # Tracks if the Composition is in a state that can be run (i.e. no dangling projections, (what else?))
+        self.needs_update_scheduler_processing = True  # Tracks if the processing scheduler needs to be regenerated
+        self.needs_update_scheduler_learning = True  # Tracks if the learning scheduler needs to be regenerated (mechanisms/projections added/removed etc)
 
         # helper attributes
         self.mechanisms_to_roles = OrderedDict()
@@ -230,7 +319,9 @@ class Composition(object):
         self.explicit_output_mechanisms = []  # Need to track to know which to leave untouched
         self.all_output_mechanisms = []
         self.target_mechanisms = []  # Do not need to track explicit as they mush be explicit
-        self.sched = Scheduler(self)
+
+        # TBI: update self.sched whenever something is added to the composition
+        self.sched = Scheduler(composition=self)
 
     @property
     def graph_processing(self):
@@ -242,6 +333,33 @@ class Composition(object):
             self._update_processing_graph()
 
         return self._graph_processing
+
+    @property
+    def scheduler_processing(self):
+        '''
+            Returns the Composition's processing scheduler. Builds the scheduler if it needs updating
+            since the last access.
+        '''
+        if self.needs_update_scheduler_processing or self._scheduler_processing is None:
+            self._scheduler_processing = Scheduler(graph=self.graph_processing)
+            self.needs_update_scheduler_processing = False
+
+        return self._scheduler_processing
+
+    @property
+    def scheduler_learning(self):
+        '''
+            Returns the Composition's learning scheduler. Builds the scheduler if it needs updating
+            since the last access.
+        '''
+        if self.needs_update_scheduler_learning or self._scheduler_learning is None:
+            self._scheduler_learning = Scheduler(graph=self.graph)
+            self.needs_update_scheduler_learning = False
+
+        return self._scheduler_learning
+
+    def _get_unique_id(self):
+        return uuid.uuid4()
 
     def add_mechanism(self, mech):
         '''
@@ -270,10 +388,13 @@ class Composition(object):
             ---------
 
             sender : Mechanism
-
+                the sender of **projection**
 
             projection : Projection
                 the projection to add
+
+            receiver : Mechanism
+                the receiver of **projection**
         '''
         if projection not in [vertex.component for vertex in self.graph.vertices]:
             projection.is_processing = False
@@ -283,8 +404,79 @@ class Composition(object):
             # Add connections between mechanisms and the projection
             self.graph.connect_components(sender, projection)
             self.graph.connect_components(projection, receiver)
+            self._validate_projection(sender, projection, receiver)
+
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
+
+    def add_linear_processing_pathway(self, pathway):
+        # First, verify that the pathway begins with a mechanism
+        if isinstance(pathway[0], Mechanism):
+            self.add_mechanism(pathway[0])
+        else:
+            # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg 
+            raise CompositionError("The first item in a linear processing pathway must be a "
+                                   "mechanism.")
+        # Then, add all of the remaining mechanisms in the pathway
+        for c in range(1, len(pathway)):
+            # if the current item is a mechanism, add it
+            if isinstance(pathway[c], Mechanism):
+                self.add_mechanism(pathway[c])
+
+        # Then, loop through and validate that the mechanism-projection relationships make sense
+        # and add MappingProjections where needed
+        for c in range(1, len(pathway)):
+            if isinstance(pathway[c], Mechanism):
+                if isinstance(pathway[c-1], Mechanism):
+                    # if the previous item was also a mechanism, add a mapping projection between them
+                    self.add_projection(pathway[c-1],
+                                        MappingProjection(sender=pathway[c-1],
+                                                          receiver=pathway[c]),
+                                        pathway[c])
+            # if the current item is a projection
+            elif isinstance(pathway[c], Projection):
+                if c == len(pathway) - 1:
+                    raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
+                                           " a linear processing pathway.".format(pathway[c]))
+                # confirm that it is between two mechanisms, then add the projection
+                if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c+1], Mechanism):
+                    self.add_projection(pathway[c-1], pathway[c], pathway[c+1])
+                else:
+                    raise CompositionError(
+                        "{} is not between two mechanisms. A projection in a linear processing pathway must be preceded"
+                        " by a mechanism and followed by a mechanism".format(pathway[c]))
+            else:
+                raise CompositionError("{} is not a projection or mechanism. A linear processing pathway must be made "
+                                       "up of projections and mechanisms.".format(pathway[c]))
+
+
+
+    def _validate_projection(self, sender, projection, receiver):
+
+        if hasattr(projection, "sender") and hasattr(projection, "receiver"):
+            # the sender and receiver were passed directly to the Projection object AND to compositions'
+            # add_projection() method -- confirm that these are consistent
+
+            if projection.sender.owner != sender:
+                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                       "components in their composition.".format(projection, sender))
+
+            if projection.receiver.owner != receiver:
+                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                       "components in their composition.".format(projection, receiver))
+        else:
+            # sender and receiver were NOT passed directly to the Projection object
+            # assign them based on the sender and receiver passed into add_projection()
+            projection.init_args['sender'] = sender
+            projection.init_args['receiver'] = receiver
+            projection._deferred_init(context=" INITIALIZING ")
+
+        if projection.sender.owner != sender:
+            raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
+                                   "components in the composition.".format(projection, sender))
+        if projection.receiver.owner != receiver:
+            raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
+                                   "components in the composition.".format(projection, receiver))
 
     def _analyze_graph(self, graph=None):
         ########
@@ -321,10 +513,10 @@ class Composition(object):
         # Identify Origin mechanisms
         for mech in self.mechanisms:
             if graph.get_parents_from_component(mech) == []:
-                self.add_mechanism_role(mech, MechanismRole.ORIGIN)
+                self._add_mechanism_role(mech, MechanismRole.ORIGIN)
         # Identify Terminal mechanisms
             if graph.get_children_from_component(mech) == []:
-                self.add_mechanism_role(mech, MechanismRole.TERMINAL)
+                self._add_mechanism_role(mech, MechanismRole.TERMINAL)
         # Identify Recurrent_init and Cycle mechanisms
         visited = []  # Keep track of all mechanisms that have been visited
         for origin_mech in self.get_mechanisms_by_role(MechanismRole.ORIGIN):  # Cycle through origin mechanisms first
@@ -338,8 +530,8 @@ class Composition(object):
                 for child in children:
                     # If the child has been visited this path and is not already initialized
                     if child in visited_current_path:
-                        self.add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
-                        self.add_mechanism_role(child, MechanismRole.CYCLE)
+                        self._add_mechanism_role(mech, MechanismRole.RECURRENT_INIT)
+                        self._add_mechanism_role(child, MechanismRole.CYCLE)
                     elif child not in visited:  # Else if the child has not been explored
                         next_visit_stack.append(child)  # Add it to the visit stack
         for mech in self.mechanisms:
@@ -353,12 +545,40 @@ class Composition(object):
                     children = [vertex.component for vertex in graph.get_children_from_component(remaining_mech)]
                     for child in children:
                         if child in visited_current_path:
-                            self.add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
-                            self.add_mechanism_role(child, MechanismRole.CYCLE)
+                            self._add_mechanism_role(remaining_mech, MechanismRole.RECURRENT_INIT)
+                            self._add_mechanism_role(child, MechanismRole.CYCLE)
                         elif child not in visited:
                             next_visit_stack.append(child)
 
         self.needs_update_graph = False
+
+    def _create_input_mechanisms(self):
+        '''
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
+            InputMechanism
+        '''
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        has_input_mechanism = self.input_mechanisms.keys()
+
+        # consider all of the mechanisms that are only origins OR have input mechanisms
+        for mech in is_origin.difference(has_input_mechanism):
+
+            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
+            if mech not in has_input_mechanism:
+                new_input_mech = TransferMechanism()
+                self.input_mechanisms[mech] = new_input_mech
+                MappingProjection(sender=new_input_mech, receiver=mech)
+
+            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+            else:
+                del self.input_mechanisms[mech]
+
+    def _assign_values_to_input_mechanisms(self, input_dict):
+        for mech in self.input_mechanisms.keys():
+            if mech in input_dict.keys():
+                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
+            else:
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
 
     def _update_processing_graph(self):
         '''
@@ -427,22 +647,22 @@ class Composition(object):
         except KeyError as e:
             raise CompositionError('Mechanism not assigned to role in mechanisms_to_roles: {0}'.format(e))
 
-    def set_mechanism_roles(self, mech, roles):
+    def _set_mechanism_roles(self, mech, roles):
         self.clear_mechanism_role(mech)
         for role in roles:
-            self.add_mechanism_role(role)
+            self._add_mechanism_role(role)
 
-    def clear_mechanism_roles(self, mech):
+    def _clear_mechanism_roles(self, mech):
         if mech in self.mechanisms_to_roles:
             self.mechanisms_to_roles[mech] = set()
 
-    def add_mechanism_role(self, mech, role):
+    def _add_mechanism_role(self, mech, role):
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
         self.mechanisms_to_roles[mech].add(role)
 
-    def remove_mechanism_role(self, mech, role):
+    def _remove_mechanism_role(self, mech, role):
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
 
@@ -450,7 +670,7 @@ class Composition(object):
 
     # mech_type specifies a type of mechanism, mech_type_list contains all of the mechanisms of that type
     # feed_dict is a dictionary of the input states of each mechanism of the specified type
-    def validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
+    def _validate_feed_dict(self, feed_dict, mech_type_list, mech_type):
         for mech in feed_dict.keys():  # For each mechanism given an input
             if mech not in mech_type_list:  # Check that it is the right kind of mechanism in the composition
                 if mech_type[0] in ['a', 'e', 'i', 'o', 'u']:  # Check for grammar
@@ -477,32 +697,210 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def run(self, scheduler, inputs=None, targets=None, recurrent_init=None):
-
-        if inputs:
-            self.validate_feed_dict(inputs, self.origin_mechanisms, "Inputs")
-        if targets:
-            self.validate_feed_dict(targets, self.target_mechanisms, "Targets")
-        if recurrent_init:
-            self.validate_feed_dict(recurrent_init, self.recurrent_init_mechanisms, "Recurrent Init")
-
+    def _create_input_mechanisms(self):
         '''
-        for current_component in scheduler.run_trial():
-            if current_component.name != "Clock":
-                # print("NAME: ",current_component.name)
-                current_vertex = self.graph.mech_to_vertex[current_component]
-                # print("INCOMING PROJECTION: ", current_vertex.incoming)
-                # print("OUTGOING PROJECTION: ", current_vertex.outgoing)
-                if current_component in inputs.keys():
-                    # print(current_component.name, " was found in inputs")
-                    new_value = current_component.execute(inputs[current_component])
-                    # for edge in current_vertex.outgoing:
-                    #     edge.projection.execute(new_value)
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
+            InputMechanism
+        '''
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        has_input_mechanism = self.input_mechanisms.keys()
 
-                else:
-                    current_component.execute()
-                # print(current_component.value)
+        # consider all of the mechanisms that are only origins OR have input mechanisms
+        for mech in is_origin.difference(has_input_mechanism):
+
+            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
+            if mech not in has_input_mechanism:
+                new_input_mech = TransferMechanism()
+                self.input_mechanisms[mech] = new_input_mech
+                MappingProjection(sender=new_input_mech, receiver=mech)
+
+            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
             else:
-                current_component.execute()
-                # print(current_component.value)
+                del self.input_mechanisms[mech]
+
+    def _assign_values_to_input_mechanisms(self, input_dict):
         '''
+            loops over the input values in the inputs dictionary and assigns each value directly to the output state of
+            its corresponding input mechanism
+        '''
+        for mech in self.input_mechanisms.keys():
+            if mech in input_dict.keys():
+                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
+            else:
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
+
+
+    def _assign_execution_ids(self, execution_id):
+        '''
+            assigns the same uuid to each mechanism in the composition's processing graph as well as all input
+            mechanisms for this composition. The uuid is either specified in the user's call to run(), or generated
+            randomly at run time.
+        '''
+
+        # Traverse processing graph and assign one uuid to all of its mechanisms
+        self._execution_id = execution_id or self._get_unique_id()
+        for v in self._graph_processing.vertices:
+            v.component._execution_id = self._execution_id
+        # Assign the uuid to all input mechanisms
+        for k in self.input_mechanisms.keys():
+            self.input_mechanisms[k]._execution_id = self._execution_id
+
+    def execute(
+            self,
+            inputs,
+            scheduler_processing=None,
+            scheduler_learning=None,
+            execution_id = None):
+        '''
+            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
+            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
+
+            Arguments
+            ---------
+            scheduler_processing : Scheduler
+                the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            scheduler_learning : Scheduler
+                the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            inputs: { Mechanism : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
+
+            execution_id : UUID
+                execution_id will typically be set to none and assigned randomly at runtime
+
+            Returns
+            ---------
+            output value of the final mechanism executed in the composition
+        '''
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        if scheduler_learning is None:
+            scheduler_learning = self.scheduler_learning
+
+        self._create_input_mechanisms()
+        self._assign_values_to_input_mechanisms(inputs)
+        self._assign_execution_ids(execution_id)
+
+        # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
+        execution_scheduler = scheduler_processing
+        num = None
+        for next_execution_set in execution_scheduler.run():
+
+            # execute each mechanism with EXECUTING in context
+            for mechanism in next_execution_set:
+                if isinstance(mechanism, Mechanism):
+                    num = mechanism.execute(context=EXECUTING + "composition")
+                    print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                    print("result = ", num)
+                    print()
+                    print()
+        return num
+
+    def run(
+        self,
+        scheduler_processing=None,
+        scheduler_learning=None,
+        termination_processing=None,
+        termination_learning=None,
+        inputs=None,
+        execution_id=None,
+        num_trials=None
+    ):
+        '''
+            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
+            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
+
+            Arguments
+            ---------
+
+            scheduler_processing : Scheduler
+                the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            scheduler_learning : Scheduler
+                the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            inputs: { Mechanism : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the list \
+                corresponds to a certain `TRIAL`
+
+            execution_id : UUID
+                execution_id will typically be set to none and assigned randomly at runtime
+
+            num_trials : int
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            Returns
+            ---------
+
+            output value of the final mechanism executed in the composition
+        '''
+        reuse_inputs = False
+
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
+
+        if scheduler_learning is None:
+            scheduler_learning = self.scheduler_learning
+
+        scheduler_processing.update_termination_conditions(termination_processing)
+        scheduler_learning.update_termination_conditions(termination_learning)
+
+        if inputs is None:
+            inputs = {}
+            len_inputs = 1
+        else:
+
+            len_inputs = len(list(inputs.values())[0])
+
+        # check whether the num trials given in the input dict matches the num_trials param
+        if num_trials is not None:
+            if len_inputs != num_trials:
+                # if one set of inputs was provided for many trials, set 'reuse_inputs' flag
+                if len_inputs == 1:
+                    reuse_inputs = True
+                # otherwise, warn user that there is something wrong with their input specification
+                else:
+                    raise CompositionError("The number of trials [{}] specified for the composition [{}] does not match the "
+                                           "length [{}] of the inputs specified in the inputs dictionary [{}]. "
+                                           .format(num_trials, self, len_inputs, inputs))
+
+        input_indices = range(len_inputs)
+
+        scheduler_processing._reset_counts_total(TimeScale.RUN)
+        scheduler_processing._reset_time(TimeScale.RUN)
+
+        # TBI: Handle learning graph
+
+        # TBI: Handle runtime params?
+        result = None
+
+        # loop over the length of the list of inputs (# of trials)
+        for input_index in input_indices:
+            if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied():
+                break
+
+            execution_inputs = {}
+
+            # loop over all mechanisms that receive inputs from the outside world
+            for mech in inputs.keys():
+                execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
+
+            num = self.execute(execution_inputs, scheduler_processing, execution_id)
+            if num is not None:
+                result = num
+
+        scheduler_processing._increment_time(TimeScale.RUN)
+
+        # return the output of the LAST mechanism executed in the composition
+        return result
