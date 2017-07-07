@@ -681,162 +681,8 @@ class Component(object):
             except TypeError:
                 pass
 
-        # try:
-        #     if variable_default is not None:
-        #         variable_default = np.atleast_2d(variable_default)
-        #         if len(np.shape(variable_default)) > 2:  # number of dimensions of variable_default > 2
-        #             if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-        #                 warnings.warn("variable_default had more than two dimensions (had {} dimensions) "
-        #                               "so only the first element of its second-highest-numbered axis will be"
-        #                               " used".format(len(np.shape(variable_default))))
-        #             while len(np.shape(variable_default)) > 2:  # reduce the dimensions of variable_default
-        #                 variable_default = variable_default[0]
-        #
-        #         # 6/30/17 (CW): Previously, using variable_default or default_input_value to create
-        #         # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
-        #         # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-        #         if isinstance(variable_default[0], list) or isinstance(variable_default[0], np.ndarray):
-        #             allLists = True
-        #             for i in range(len(variable_default[0])):
-        #                 if isinstance(variable_default[0][i], (list, np.ndarray)):
-        #                     variable_default[0][i] = np.array(variable_default[0][i])
-        #                 else:
-        #                     allLists = False
-        #                     break
-        #             if allLists:
-        #                 variable_default = variable_default[0]
-        # except:
-        #     raise ComponentError("Failed to convert variable_default ({}: {})"
-        #                          " to a 2D array".format(type(variable_default), variable_default))
-
-        # TODO: write tests for instantiating Adaptive Mechanisms using size instead of variable
-        # TODO: change all mentions of variable in the 'if' block below to variable_default
-        if size is not NotImplemented:
-
-            # region Fill in and infer variable_default and size if they aren't specified in args
-            # if variable_default is None and size is None:
-            #     variable_default = self.variableClassDefault
-            # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
-            # expected behavior when variable_default is None and size is None.
-
-            def checkAndCastInt(x):
-                if not isinstance(x, numbers.Number):
-                    raise ComponentError("An element ({}) in size is not a number.".format(x))
-                if x < 1:
-                    raise ComponentError("An element ({}) in size is not a positive number.".format(x))
-                try:
-                    int_x = int(x)
-                except:
-                    raise ComponentError(
-                        "Failed to convert an element ({}) in size argument to an integer. size "
-                        "should be a number, or iterable of numbers, which are integers or "
-                        "can be converted to integers.".format(x))
-                if int_x != x:
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                        warnings.warn("When an element ({}) in the size argument was cast to "
-                                      "integer, its value changed to {}.".format(x, int_x))
-                return int_x
-
-            #region Convert variable_default (if given) to a 2D array, and size (if given) to a 1D integer array
-            try:
-                if variable_default is not None:
-                    variable_default = np.atleast_2d(variable_default)
-                    if len(np.shape(variable_default)) > 2:  # number of dimensions of variable_default > 2
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                            warnings.warn("variable_default had more than two dimensions (had {} dimensions) "
-                                          "so only the first element of its second-highest-numbered axis will be"
-                                          " used".format(len(np.shape(variable_default))))
-                        while len(np.shape(variable_default)) > 2:  # reduce the dimensions of variable_default
-                            variable_default = variable_default[0]
-
-                    # 6/30/17 (CW): Previously, using variable_default or default_input_value to create
-                    # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
-                    # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                    if isinstance(variable_default[0], list) or isinstance(variable_default[0], np.ndarray):
-                        allLists = True
-                        for i in range(len(variable_default[0])):
-                            if isinstance(variable_default[0][i], (list, np.ndarray)):
-                                variable_default[0][i] = np.array(variable_default[0][i])
-                            else:
-                                allLists = False
-                                break
-                        if allLists:
-                            variable_default = variable_default[0]
-            except:
-                raise ComponentError("Failed to convert variable_default ({}: {})"
-                                     " to a 2D array".format(type(variable_default), variable_default))
-
-            try:
-                if size is not None:
-                    size = np.atleast_1d(size)
-                    if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                            warnings.warn(
-                                "size had more than one dimension (size had {} dimensions), so only the first "
-                                "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                        while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                            size = size[0]
-            except:
-                raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-            if size is not None:
-                size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-            # endregion
-
-            # region If variable_default is None, make it a 2D array of zeros each with length=size[i]
-            # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
-            # value of variable_default (though it's an unlikely use case), which is an array of zeros at the moment
-            if variable_default is None and size is not None:
-                try:
-                    variable_default = []
-                    for s in size:
-                        variable_default.append(np.zeros(s))
-                    variable_default = np.array(variable_default)
-                except:
-                    raise ComponentError("variable_default was not specified, but PsyNeuLink was unable to "
-                                         "infer variable_default from the size argument, {}. size should be"
-                                         " an integer or an array or list of integers. Either size or "
-                                         "variable_default must be specified.".format(size))
-            # endregion
-
-            # region If size is None, then make it a 1D array of scalars with size[i] = length(variable_default[i])
-            if size is None and variable_default is not None:
-                size = []
-                try:
-                    for input_vector in variable_default:
-                        size.append(len(input_vector))
-                    size = np.array(size)
-                except:
-                    raise ComponentError(
-                        "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the variable_default argument, {}. variable_default can be an array,"
-                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " variable_default must be specified.".format(variable_default))
-            # endregion
-
-            # region If length(size) = 1 and variable_default is not None, then expand size to length(variable_default)
-            if size is not None and variable_default is not None:
-                if len(size) == 1 and len(variable_default) > 1:
-                    new_size = np.empty(len(variable_default))
-                    new_size.fill(size[0])
-                    size = new_size
-            # endregion
-
-            # endregion
-
-            param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
-            self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
-
-            # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
-            # to a for loop iterating over each element of variable_default and size
-            # Both variable_default and size are specified
-            if variable_default is not None:  # try tossing this "if" check
-                # If they conflict, raise exception
-                for i in range(len(size)):
-                    if size[i] != len(variable_default[i]):
-                        raise ComponentError("The size arg of {} ({}) conflicts with the length "
-                                             "of its variable_default arg ({}) at element {}".
-                                             format(self.name, size[i], variable_default[i], i))
+        # If 'variable_default' was not specified, _handle_size() tries to infer 'variable_default' based on 'size'
+        variable_default = self._handle_size(size, variable_default)
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
@@ -881,17 +727,138 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
-    def _variable_to_2D(self, variable):
-        pass
-
     def _handle_size(self, size, variable):
-        """ If variable is None, _handle_size infers variable based on size. It converts variable to a 2D array
-            (for a Mechanism, variable[i] represents the input from the i-th input state) and converts size to a
-            1D array where size[i] is the length of the input from the i-th input state.
-            It performs some validations on size and variable as well.
-            If size is NotImplemented (usually in the case of Projections), then this function passes without doing
-            anything. Be aware that if size is NotImplemented, then
+        """ If variable is None, _handle_size tries to infer variable based on the size argument to the
+            __init__() function. This method is overwritten in subclasses like Mechanism and State.
+            If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
+            the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
+            array. It performs some validations on size and variable as well. This function is overrided in State.py.
+            If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
+            doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
+        # TODO: to get rid of the allLists bug, consider replacing np.atleast_2d with a similar method
+        if size is not NotImplemented:
+
+            # region Fill in and infer variable and size if they aren't specified in args
+            # if variable is None and size is None:
+            #     variable = self.variableClassDefault
+            # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
+            # expected behavior when variable is None and size is None.
+
+            def checkAndCastInt(x):
+                if not isinstance(x, numbers.Number):
+                    raise ComponentError("An element ({}) in size is not a number.".format(x))
+                if x < 1:
+                    raise ComponentError("An element ({}) in size is not a positive number.".format(x))
+                try:
+                    int_x = int(x)
+                except:
+                    raise ComponentError(
+                        "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
+                        "should be a number, or iterable of numbers, which are integers or "
+                        "can be converted to integers.".format(x, type(self), self.name))
+                if int_x != x:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn("When an element ({}) in the size argument was cast to "
+                                      "integer, its value changed to {}.".format(x, int_x))
+                return int_x
+
+            #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
+            try:
+                if variable is not None:
+                    variable = np.atleast_2d(variable)
+                    # 6/30/17 (CW): Previously, using variable or default_input_value to create
+                    # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
+                    # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
+                    if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
+                        allLists = True
+                        for i in range(len(variable[0])):
+                            if isinstance(variable[0][i], (list, np.ndarray)):
+                                variable[0][i] = np.array(variable[0][i])
+                            else:
+                                allLists = False
+                                break
+                        if allLists:
+                            variable = variable[0]
+            except:
+                raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
+
+            try:
+                if size is not None:
+                    size = np.atleast_1d(size)
+                    if len(np.shape(size)) > 1:  # number of dimensions of size > 1
+                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                            warnings.warn(
+                                "size had more than one dimension (size had {} dimensions), so only the first "
+                                "element of its highest-numbered axis will be used".format(len(np.shape(size))))
+                        while len(np.shape(size)) > 1:  # reduce the dimensions of size
+                            size = size[0]
+            except:
+                raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
+
+            if size is not None:
+                size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
+            # endregion
+
+            # region If variable is None, make it a 2D array of zeros each with length=size[i]
+            # implementation note: for good coding practices, perhaps add setting to enable easy change of the default
+            # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
+            if variable is None and size is not None:
+                try:
+                    variable = []
+                    for s in size:
+                        variable.append(np.zeros(s))
+                    variable = np.array(variable)
+                except:
+                    raise ComponentError("variable (possibly default_input_value)was not specified, but PsyNeuLink "
+                                         "was unable to infer variable from the size argument, {}. size should be"
+                                         " an integer or an array or list of integers. Either size or "
+                                         "variable must be specified.".format(size))
+            # endregion
+
+            # the two regions below (creating size if it's None and/or expanding it) are probably obsolete (7/7/17 CW)
+
+            # region If size is None, then make it a 1D array of scalars with size[i] = length(variable[i])
+            if size is None and variable is not None:
+                size = []
+                try:
+                    for input_vector in variable:
+                        size.append(len(input_vector))
+                    size = np.array(size)
+                except:
+                    raise ComponentError(
+                        "size was not specified, but PsyNeuLink was unable to infer size from "
+                        "the variable argument, {}. variable can be an array,"
+                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
+                        " variable must be specified.".format(variable))
+            # endregion
+
+            # region If length(size) = 1 and variable is not None, then expand size to length(variable)
+            if size is not None and variable is not None:
+                if len(size) == 1 and len(variable) > 1:
+                    new_size = np.empty(len(variable))
+                    new_size.fill(size[0])
+                    size = new_size
+            # endregion
+
+            # endregion
+
+            # the two lines below were used when size was a param and are likely obsolete (7/7/17 CW)
+            # param_defaults['size'] = size  # 7/5/17 potentially buggy? Not sure (CW)
+            # self.user_params_for_instantiation['size'] = None  # 7/5/17 VERY HACKY: See Changyan's Notes on this.
+
+            # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
+            # to a for loop iterating over each element of variable and size
+            # Both variable and size are specified
+            if variable is not None and size is not None:  # try tossing this "if" check
+                # If they conflict, raise exception
+                for i in range(len(size)):
+                    if size[i] != len(variable[i]):
+                        raise ComponentError("The size arg of {} ({}) conflicts with the length "
+                                             "of its variable arg ({}) at element {}".
+                                             format(self.name, size[i], variable[i], i))
+
+        return variable
 
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
