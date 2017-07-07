@@ -411,16 +411,22 @@ class Composition(object):
             self.needs_update_graph_processing = True
 
     def add_linear_processing_pathway(self, pathway):
+        # First, verify that the pathway begins with a mechanism
         if isinstance(pathway[0], Mechanism):
             self.add_mechanism(pathway[0])
         else:
             raise CompositionError("{} is not a mechanism. The first item in a linear processing pathway must be a "
                                    "mechanism.".format(pathway[0]))
-
+        # Then, add all of the remaining mechanisms in the pathway
         for c in range(1, len(pathway)):
-            # if the current item is a mechanism
+            # if the current item is a mechanism, add it
             if isinstance(pathway[c], Mechanism):
-                self.add_mechanism(pathway[c]) # add the mechanism
+                self.add_mechanism(pathway[c])
+
+        # Then, loop through and validate that the mechanism-projection relationships make sense
+        # and add MappingProjections where needed
+        for c in range(1, len(pathway)):
+            if isinstance(pathway[c], Mechanism):
                 if isinstance(pathway[c-1], Mechanism):
                     # if the previous item was also a mechanism, add a mapping projection between them
                     self.add_projection(pathway[c-1],
