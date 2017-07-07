@@ -42,7 +42,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             for m in [A]:
                 comp.add_mechanism(m)
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
 
             sched.add_condition(A, EveryNPasses(1))
 
@@ -59,7 +59,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             for m in [A]:
                 comp.add_mechanism(m)
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
 
             sched.add_condition(A, EveryNPasses(1))
 
@@ -76,7 +76,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, Not(AtPass(0)))
 
             termination_conds = {}
@@ -92,7 +92,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, Not(AtPass(2)))
 
             termination_conds = {}
@@ -110,7 +110,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforePass(2))
 
             termination_conds = {}
@@ -126,7 +126,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
 
             termination_conds = {}
@@ -147,7 +147,7 @@ class TestCondition:
             comp.add_projection(A, MappingProjection(), B)
             comp.add_projection(B, MappingProjection(), C)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(0))
 
             termination_conds = {}
@@ -163,7 +163,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(2))
 
             termination_conds = {}
@@ -179,7 +179,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(5))
 
             termination_conds = {}
@@ -195,7 +195,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AtPass(6))
 
             termination_conds = {}
@@ -211,7 +211,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterPass(0))
 
             termination_conds = {}
@@ -227,7 +227,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterNPasses(1))
 
             termination_conds = {}
@@ -243,7 +243,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeTrial(4))
 
             termination_conds = {}
@@ -264,7 +264,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
 
             termination_conds = {}
@@ -285,7 +285,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
 
             termination_conds = {}
@@ -306,7 +306,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, AfterNPasses(1))
 
             termination_conds = {}
@@ -324,7 +324,7 @@ class TestCondition:
             A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
             comp.add_mechanism(A)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, BeforeNCalls(A, 3))
 
             termination_conds = {}
@@ -348,7 +348,7 @@ class TestCondition:
         #     for m in [A,B]:
         #         comp.add_mechanism(m)
 
-        #     sched = Scheduler(comp)
+        #     sched = Scheduler(composition=comp)
         #     sched.add_condition(A, Always())
         #     sched.add_condition(B, AtCall(A, 3))
 
@@ -367,7 +367,7 @@ class TestCondition:
             for m in [A, B]:
                 comp.add_mechanism(m)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(B, AfterCall(A, 3))
 
             termination_conds = {}
@@ -385,7 +385,7 @@ class TestCondition:
             for m in [A, B]:
                 comp.add_mechanism(m)
 
-            sched = Scheduler(comp)
+            sched = Scheduler(composition=comp)
             sched.add_condition(A, Always())
             sched.add_condition(B, AfterNCalls(A, 3))
 
@@ -406,7 +406,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -442,7 +442,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNPasses(1))
@@ -468,7 +468,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNPasses(1))
@@ -492,7 +492,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
         sched.add_condition(B, Always())
@@ -527,7 +527,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNPasses(1))
@@ -553,7 +553,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNPasses(1))
@@ -577,7 +577,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), C)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, Always())
         sched.add_condition(B, Always())
@@ -610,7 +610,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -635,7 +635,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -660,7 +660,7 @@ class TestCondition:
             comp.add_mechanism(m)
         comp.add_projection(A, MappingProjection(), B)
         comp.add_projection(B, MappingProjection(), C)
-        sched = Scheduler(comp)
+        sched = Scheduler(composition=comp)
 
         sched.add_condition(A, EveryNPasses(1))
         sched.add_condition(B, EveryNCalls(A, 2))
@@ -686,8 +686,8 @@ class TestConditionSet:
         for m in [A, B]:
             comp.add_mechanism(m)
 
-        s1 = Scheduler(comp)
-        s2 = Scheduler(comp)
+        s1 = Scheduler(composition=comp)
+        s2 = Scheduler(composition=comp)
 
         cs = ConditionSet(s1)
         cs.add_condition(A, Always())
