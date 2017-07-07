@@ -4,14 +4,16 @@ from collections import Iterable, OrderedDict
 from enum import Enum
 
 import uuid
+import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Globals.Keywords import EXECUTING, RESULT
 from PsyNeuLink.Globals.TimeScale import TimeScale
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+
 
 logger = logging.getLogger(__name__)
 
@@ -410,15 +412,27 @@ class Composition(object):
         '''
         is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
         has_input_mechanism = self.input_mechanisms.keys()
-        # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
-        # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+
+        # consider all of the mechanisms that are only origins OR have input mechanisms
         for mech in is_origin.difference(has_input_mechanism):
+
+            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
             if mech not in has_input_mechanism:
                 new_input_mech = TransferMechanism()
                 self.input_mechanisms[mech] = new_input_mech
                 MappingProjection(sender=new_input_mech, receiver=mech)
+
+            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
             else:
                 del self.input_mechanisms[mech]
+
+    def _assign_values_to_input_mechanisms(self, input_dict):
+        for mech in self.input_mechanisms.keys():
+            if mech in input_dict.keys():
+                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
+            else:
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
+
 
     def _update_processing_graph(self):
         '''
@@ -537,21 +551,21 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def _execute_input_mechanisms(self, inputs, input_mechanisms):
-        '''
-            executes all input mechanisms with the inputs specified by the user. The mapping projections then update and
-            deliver the input values to the appropriate mechanisms in the composition.
-        '''
-        for mech in inputs.keys():
-            # grab the input value for this mechanism on this trial
-            input_val = inputs[mech]
-            # find the input mechanism corresponding to this mechanism
-            input_mechanism = input_mechanisms[mech]
-            # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
-            # received the value from the MappingProjection when execution of the actual composition begins
-            input_mechanism.execute(input=input_val, context=EXECUTING)
+    # def _execute_input_mechanisms(self, inputs, input_mechanisms):
+    #     '''
+    #         executes all input mechanisms with the inputs specified by the user. The mapping projections then update and
+    #         deliver the input values to the appropriate mechanisms in the composition.
+    #     '''
+    #     for mech in inputs.keys():
+    #         # grab the input value for this mechanism on this trial
+    #         input_val = inputs[mech]
+    #         # find the input mechanism corresponding to this mechanism
+    #         input_mechanism = input_mechanisms[mech]
+    #         # assign the input to this "input mechanism" so that its corresponding mechanism in the composition has
+    #         # received the value from the MappingProjection when execution of the actual composition begins
+    #         input_mechanism.execute(input=input_val, context=EXECUTING)
 
-    def _assign_execution_ids(self, execution_id, input_mechanisms):
+    def _assign_execution_ids(self, execution_id):
         '''
             assigns the same uuid to each mechanism in the composition's processing graph as well as all input
             mechanisms for this composition. The uuid is either specified in the user's call to run(), or generated
@@ -563,8 +577,8 @@ class Composition(object):
         for v in self._graph_processing.vertices:
             v.component._execution_id = self._execution_id
         # Assign the uuid to all input mechanisms
-        for k in input_mechanisms.keys():
-            input_mechanisms[k]._execution_id = self._execution_id
+        for k in self.input_mechanisms.keys():
+            self.input_mechanisms[k]._execution_id = self._execution_id
 
 
     def execute(
@@ -599,10 +613,10 @@ class Composition(object):
         '''
 
 
-        input_mechanisms = {}
+
         self._create_input_mechanisms()
-        self._execute_input_mechanisms(inputs, input_mechanisms)
-        self._assign_execution_ids(execution_id, input_mechanisms)
+        self._assign_values_to_input_mechanisms(inputs)
+        self._assign_execution_ids(execution_id)
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         # when self.sched is ready: execution_scheduler = scheduler_processing or self.sched
         execution_scheduler = scheduler_processing
@@ -665,14 +679,10 @@ class Composition(object):
         reuse_inputs = False
         if inputs is None:
             inputs = {}
-
-        # all mechanisms with inputs specified in the inputs dictionary
-        has_inputs = inputs.keys()
-
-        len_inputs = 1
-        # update len_inputs to match the num trials specified by the input dict
-        if inputs != {}:
+            len_inputs = 1
+        else:
             len_inputs = len(list(inputs.values())[0])
+
         # check whether the num trials given in the input dict matches the num_trials param
         if num_trials:
             if len_inputs != num_trials:
@@ -696,7 +706,7 @@ class Composition(object):
             execution_inputs = {}
 
             # loop over all mechanisms that receive inputs from the outside world
-            for mech in has_inputs:
+            for mech in inputs.keys():
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
             # when default scheduler (self.sched) is ready:
