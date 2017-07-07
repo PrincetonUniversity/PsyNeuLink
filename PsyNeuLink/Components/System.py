@@ -488,19 +488,20 @@ def system(default_input_value=None,
 
 class System_Base(System):
     """
-    System_Base(                              \
-    default_input_value=None,                 \
-    processes=None,                           \
-    initial_values=None,                      \
-    controller=SystemDefaultControlMechanism, \
-    enable_controller=:keyword:`False`,       \
-    monitor_for_control=None,                 \
-    control_signals=None,                     \
-    learning_rate=None,                       \
-    targets=None,                             \
-    params=None,                              \
-    name=None,                                \
-    prefs=None)
+
+    System_Base(                                  \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=None,                 \
+        control_signals=None,                     \
+        learning_rate=None,                       \
+        targets=None,                             \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
 
     COMMENT:
         VERSION WITH learning
@@ -684,10 +685,10 @@ class System_Base(System):
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-    learning_mechanisms : MechanismList)
+    learning_mechanisms : MechanismList
         contains all `LearningMechanism <LearningMechanism>` in the System.
 
-    target_mechanisms : MechanismList)
+    target_mechanisms : MechanismList
         contains all `TARGET` Mechanisms in the System (used for learning).
         COMMENT:
             based on _target_mechs)
@@ -733,7 +734,6 @@ class System_Base(System):
         Specified in the **name** argument of the constructor for the System;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
 
     prefs : PreferenceSet or specification dict : System.classPreferences
         the `PreferenceSet` for System.

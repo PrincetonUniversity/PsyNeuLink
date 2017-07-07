@@ -142,10 +142,10 @@ Sequence Format
 each `TRIAL` in a sequence.  It is more complex than the `Mechanism format <Run_Inputs_Mechanism_Format>`,
 and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
 appear in the System's `origin_Mechanisms <System.System_Base.origin_mechanisms>` attribute.  This is generally the
-same order in which they are declared, and can be displayed using the System's `show <System.System_Base.show>` 
-method). Although this format is more complex, it may be better suited to automated input generation, since it does 
-not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of 
-the Sequence format for all of the combinations of factors describe `above <Run_Inputs_Mechanism_Format>`.  
+same order in which they are declared, and can be displayed using the System's `show <System.System_Base.show>`
+method). Although this format is more complex, it may be better suited to automated input generation, since it does
+not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of
+the Sequence format for all of the combinations of factors describe `above <Run_Inputs_Mechanism_Format>`.
 The `figure <Run_Sequence_Format_Fig>` below shows examples.
 
     *Lists:* if there is more than one `TRIAL`, then the outermost level of the list is used for the sequence of
@@ -158,12 +158,12 @@ The `figure <Run_Sequence_Format_Fig>` below shows examples.
     then a sublist is used for each Mechanism for each `TRIAL`, within which a sublist is used for each
     InputState of the corresponding Mechanism, and inside that a sublist is used for the input for each InputState.
 
-    *ndarray:*  axis 0 is used for the first factor (`TRIAL`, Mechanism, InputState or input) for which there is only 
+    *ndarray:*  axis 0 is used for the first factor (`TRIAL`, Mechanism, InputState or input) for which there is only
     one item, axis 1 is used for the next factor for which there is only one item, and so forth.  For example, if there
     is more than one `TRIAL`, only one `ORIGIN` Mechanism, and that has only one InputState (the most common case),
-    then axis 0 is used for `TRIAL`, and axis 1 for inputs per `TRIAL`.  At the other extreme, if there are multiple 
+    then axis 0 is used for `TRIAL`, and axis 1 for inputs per `TRIAL`.  At the other extreme, if there are multiple
     `TRIALS`, more than one `ORIGIN` Mechanism, and more than one InputState for one or more of the `ORIGIN` Mechanisms,
-    then axis 0 is used for `TRIAL` `s, axis 1 for Mechanisms within `TRIAL`, axis 2 for InputStates of each Mechanism, 
+    then axis 0 is used for `TRIAL` `s, axis 1 for Mechanisms within `TRIAL`, axis 2 for InputStates of each Mechanism,
     and axis 3 for the input to each InputState of a Mechanism.  Note that if *any* Mechanism being run (directly, or as
     one of the `ORIGIN` Mechanisms of a Process or System) has more than one InputState, then an axis must be
     committed to InputStates, and the input to every InputState of every Mechanism must be specified in that axis
@@ -246,7 +246,7 @@ attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a
 the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
 `ComparatorMechanism's <ComparatorMechanism>` `sample <ComparatorMechanism.ComparatorMechanism.sample>`
 value, then the target must be within that range (for example, if the `TERMINAL` Mechanism is a
-`TransferMechanism` that uses a `Logistic` function, it's `range <TransferMechanism.TransferMechanism.range>` is
+`TransferMechanism` that uses a `Logistic` function, its `range <TransferMechanism.TransferMechanism.range>` is
 [0,1], so the target must be within that range).
 
 .. _Run_Targets_Sequence_Format:
@@ -440,8 +440,8 @@ def run(object,
         specifies time scale for Components that implement different forms of execution for different values of
         `TimeScale`.
 
-    Returns
-    -------
+   Returns
+   -------
 
     <object>.results : List[OutputState.value]
         list of the values, for each `TRIAL`, of the OutputStates for a Mechanism run directly,

@@ -31,7 +31,7 @@
 Overview
 --------
 
-A Process is `Composition` that is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`.
+A Process is a `Composition` that is a sequence of `Mechanisms <Mechanism>` linked by `Projections <Projection>`.
 Executing a Process executes all of its Mechanisms in the order in which they are listed in its `pathway` attribute:
 a list of Mechanism and (optional) Projection specifications.  Projections can be specified among any Mechanisms in a
 Process, including to themselves.  However, a Process cannot involve any "branching" (that is, one-to-many or
@@ -168,14 +168,14 @@ The output of a Process is a 2d np.array containing the values of its `TERMINAL`
 Learning
 ~~~~~~~~
 
-Learning modifies Projections between Mechanisms in a Process's `pathway`, so that the input to each Projection`s
+Learning modifies Projections between Mechanisms in a Process's `pathway`, so that the input to each Projection's
 `sender <MappingProjection_Sender>` produces the desired ("target") output from its
 `receiver <MappingProjection_Receiver>`.  Learning occurs when a Projection or Process for which learning has been
 specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire Process.
 It is specified for a particular Projection by including a `learning specification <LearningSignal_Specification>`
 in the specification for the Projection.  It is specified for the entire Process by assigning either a
 `LearningProjection` or `LearningSignal` specification, or the keyword *ENABLED* to the **learning** argument of the
-Process` constructor.  Specifying learning for a Process will implement it for all eligible Projections in the
+Process' constructor.  Specifying learning for a Process will implement it for all eligible Projections in the
 Process (i.e., all `MappingProjections <MappingProjection>`, excluding Projections from the Process' InputState to
 its `ORIGIN` Mechanism, and projections from the `TERMINAL` Mechanism to the Process' OutputState). When learning is
 specified for the Process, all Projections in the Process will be trained so that input to the Process (i.e., its
@@ -183,9 +183,8 @@ specified for the Process, all Projections in the Process will be trained so tha
 Mechanism). In either case, all Mechanisms that receive Projections for which learning has been specified must be
 `compatible with learning <LearningProjection>`).
 
-When learning is specified , the following Components are automatically created for each Projection involved (
+When learning is specified, the following Components are automatically created for each Projection involved (
 see figure below):
-
     * a `ComparatorMechanism` used to evaluate the output of the Projection's `receiver <MappingProjection_Receiver>`          against a target value;
     ..
     * a `MappingProjection` from the Projection's `receiver <MappingProjection_Receiver>` to the ComparatorMechanism;
@@ -634,7 +633,7 @@ class Process_Base(Process):
 
     input :  Optional[List[value] or ndarray]
         input to the Process for each `TRIAL` of executions;  it is assigned the value of the :keyword:`input` argument
-        in a call to the Process` `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
+        in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
         assigned as the value of the corresponding ProcessInputStates in `process_input_states`, and must match the
         format of the `variable <Mechanism.Mechanism_Base.variable>` for the Process' `ORIGIN` Mechanism.
 
@@ -733,7 +732,7 @@ class Process_Base(Process):
         COMMENT
 
     learning_mechanisms : MechanismList
-        a list of all of the `LearningMechanism <LearningMechanisms` in the Process.
+        a list of all of the `LearningMechanisms <LearningMechanisms>` in the Process.
 
         .. based on _learning_mechs
 
@@ -755,7 +754,7 @@ class Process_Base(Process):
              It is assigned to the ``phaseSpec`` for the Mechanism in the pathway with the largest ``phaseSpec`` value.
 
       .. numPhases : int : default 1
-            the number of ref:`phases <System_Execution_Phase>` for the Process.
+            the number of :ref:`phases <System_Execution_Phase>` for the Process.
 
         COMMENT:
             It is assigned as ``_phaseSpecMax + 1``.

@@ -166,8 +166,9 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      <li><a href="Component.html">Component</a> &raquo;</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        <li><a href="Component.html">Component</a> &raquo;</li>
           <li><a href="Projection.html">Projection</a> &raquo;</li>
 
           <li><a href="ModulatoryProjection.html">ModulatoryProjection</a> &raquo;</li>
@@ -267,7 +268,7 @@ executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an expla
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism"><em>LearningMechanism</em></a><em> or </em><a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal" title="ModulatorySignals.LearningSignal.LearningSignal"><em>LearningSignal</em></a><em>]</em>) – the source of the <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> for the LearningProjection;  If it is not specified, one will be
+<li><strong>sender</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism"><em>LearningMechanism</em></a><em> or </em><a class="reference internal" href="LearningSignal.html#module-ModulatorySignals.LearningSignal" title="ModulatorySignals.LearningSignal"><em>LearningSignal</em></a><em>]</em>) – the source of the <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.learning_signal" title="ModulatoryProjections.LearningProjection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> for the LearningProjection;  If it is not specified, one will be
 <code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">created</span></code> that is appropriate for the
 LearningProjection’s <code class="xref any docutils literal"><span class="pre">errorSource</span></code>.</li>
 <li><strong>receiver</strong> (Optional[MappingProjection or ParameterState for <code class="docutils literal"><span class="pre">matrix</span></code> parameter of one]) – the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> (or the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that owns it) for the
