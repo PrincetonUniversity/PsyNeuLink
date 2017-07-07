@@ -650,7 +650,7 @@ class Process_Base(Process):
 
     clamp_input : Optional[keyword]
         determines whether the Process' input continues to be applied to the `ORIGIN` Mechanism if it is executed again
-        within the same round of execution.  It can tae the following values:
+        within the same `TRIAL`.  It can take the following values:
 
         * `None`: applies the Process' `input` to the `ORIGIN` Mechanism only once (the first time it is executed)
           in a given round of the Process' execution.

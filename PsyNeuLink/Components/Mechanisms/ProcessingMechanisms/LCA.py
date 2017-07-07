@@ -160,7 +160,7 @@ class LCA(RecurrentTransferMechanism):
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
-        in each round of execution.
+        in each execution of the Mechanism.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -232,7 +232,7 @@ class LCA(RecurrentTransferMechanism):
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
-        in each round of execution (acts, in effect like the weight on a self-connection).
+        in each execution of the Mechanism (acts, in effect like the weight on a self-connection).
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -260,7 +260,8 @@ class LCA(RecurrentTransferMechanism):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
-        the value of the input on the previous round of execution, including the value of `recurrent_projection`.
+        the value of the input on the previous execution of the Mechanism, including the value of
+        `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of

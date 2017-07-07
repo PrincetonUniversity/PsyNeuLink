@@ -396,7 +396,7 @@ when it executed.  This can be done in a `parameter specification dictionary <Pa
 assigned to the **runtime_param** argument of the Mechanism's `execute <Mechanism_Base.execute>` method, or in a
 `tuple with the Mechanism <Process_Mechanisms>` in the `pathway` of a `Process`.  Any value assigned to a
 parameter in a **runtime_params** dictionary will override the current value of that parameter for the (and *only* the)
-current execution of the Mechanism; the value will return to its previous value following current round of execution, 
+current execution of the Mechanism; the value will return to its previous value following current execution,
 unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of

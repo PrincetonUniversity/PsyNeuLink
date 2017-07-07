@@ -45,12 +45,12 @@ parameter, which specifies a self-projecting MappingProjection;  that is, one th
 `primary outputState <OutputState_Primary>` back to it `primary inputState <Mechanism_InputStates>`.  
 In all other respects the mechanism is identical to a standard `TransferMechanism`.  
 
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, 
-that decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor in each 
-`round of execution <LINK>`.  It also has two additional outputStates:  an ENERGY outputState and, if its 
+In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
+decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor each time it is
+executed.  It also has two additional outputStates:  an ENERGY outputState and, if its
 `function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
-outputState, that each report the  respective values of the vector in it its 
-`primary (RESULTS) outputState <OutputState_Primary>`.
+OutputState, that each report the  respective values of the vector in it its
+`primary (RESULTS) OutputState <OutputState_Primary>`.
  
 .. _Recurrent_Transfer_Execution:
 
@@ -58,7 +58,7 @@ Execution
 ---------
 
 When a RecurrentTransferMechanism executes, it includes in its input the value of its 
-`primary outputState <OutputState_Primary>` from the last :ref:`round of execution <LINK>`.
+`primary OutputState <OutputState_Primary>` from its last execution.
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
 `function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
@@ -152,7 +152,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
-        in each round of execution.
+        each time it is executed.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
@@ -218,7 +218,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
-        in each round of execution.
+        each time it is executed.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -246,7 +246,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
-        the value of the input on the previous round of execution, including the value of `recurrent_projection`. 
+        the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as fist item of

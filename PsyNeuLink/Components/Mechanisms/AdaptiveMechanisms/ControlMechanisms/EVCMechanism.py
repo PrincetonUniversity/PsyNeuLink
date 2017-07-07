@@ -25,7 +25,7 @@ ControlSignal is associated with a `ControlProjection`.  The ControlProjection r
 it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
 particular combination of ControlSignal intensities is called an `allocation_policy`. When a system is executed,
 it concludes by executing the EVCMechanism, which determines the `allocation_policy` (i.e., the ControlSignal
-intensities, and thereby the values of the parameters being controlled) in the next round of execution.
+intensities, and thereby the values of the parameters being controlled) in the next `TRIAL`.
 
 .. _EVCMechanism_EVC:
 
@@ -35,7 +35,7 @@ possible `allocation_policy`, and chooses the best one. It does this by simulati
 `allocation_policy`, and evaluating the expected value of control (EVC): a cost-benefit analysis that weighs
 the cost of the ControlSignals against the outcome of performance for the given policy.  The EVCMechanism then
 selects the `allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the
-next round of execution. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
+next `TRIAL`. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
 custom functions to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
 
 .. _EVCMechanism_Creation:

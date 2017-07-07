@@ -314,16 +314,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the previous `round of execution <LINK>`.
+        the value of the `variable <TransferMechanism.variable>` on the previous execution of the Mechanism.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
 
     previous_value : float
-        the `value <TransferMechanism.value>` on the previous `round of execution <LINK>`.
+        the `value <TransferMechanism.value>` on the previous execution of the Mechanism.
 
     delta : float
-        the change in `value <TransferMechanism.value>` from the previous `round of execution <LINK>`
+        the change in `value <TransferMechanism.value>` from the previous execution of the Mechanism
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
     output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]

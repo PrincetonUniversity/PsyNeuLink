@@ -374,7 +374,7 @@ def run(object,
     Run a sequence of executions for a `process <Process>` or `system <System>`.
 
     COMMENT:
-        First, validate inputs (and targets, if learning is enabled).  Then, for each round of execution:
+        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL`:
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
