@@ -689,6 +689,7 @@ class Composition(object):
             self,
             inputs,
             scheduler_processing=None,
+            scheduler_learning=None,
             execution_id = None):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -716,14 +717,17 @@ class Composition(object):
             output value of the final mechanism executed in the composition
         '''
 
+        if scheduler_processing is None:
+            scheduler_processing = self.scheduler_processing
 
+        if scheduler_learning is None:
+            scheduler_learning = self.scheduler_learning
 
         self._create_input_mechanisms()
         self._assign_values_to_input_mechanisms(inputs)
         self._assign_execution_ids(execution_id)
 
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
-        # when self.sched is ready: execution_scheduler = scheduler_processing or self.sched
         execution_scheduler = scheduler_processing
         for next_execution_set in execution_scheduler.run():
 
@@ -818,8 +822,6 @@ class Composition(object):
             for mech in inputs.keys():
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            # when default scheduler (self.sched) is ready:
-            # num = self.execute(execution_inputs, scheduler_processing or self.sched, execution_id)
             num = self.execute(execution_inputs, scheduler_processing, execution_id)
 
         # return the output of the LAST mechanism executed in the composition
