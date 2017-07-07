@@ -1027,6 +1027,37 @@ class TestRun:
         assert "A linear processing pathway must be made up of projections and mechanisms." in str(
             error_text.value)
 
+    def test_LPP_two_origins_one_terminal(self):
+        # A ----> C --
+        #              ==> E
+        # B ----> D --
+
+        # 5 x 1 = 5 ----> 5 x 5 = 25 --
+        #                                25 + 25 = 50  ==> 50 * 5 = 250
+        # 5 * 1 = 5 ----> 5 x 5 = 25 --
+
+        comp = Composition()
+        A = TransferMechanism(name="A", function=Linear(slope=1.0))
+        B = TransferMechanism(name="B", function=Linear(slope=1.0))
+        C = TransferMechanism(name="C", function=Linear(slope=5.0))
+        D = TransferMechanism(name="D", function=Linear(slope=5.0))
+        E = TransferMechanism(name="E", function=Linear(slope=5.0))
+        comp.add_linear_processing_pathway([A, C, E])
+        comp.add_linear_processing_pathway([B, D, E])
+        comp._analyze_graph()
+        inputs_dict = {A: [5],
+                       B: [5]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched
+        )
+        assert 250 == output[0][0]
+
+
+
+
+
                         # when self.sched is ready:
     # def test_run_default_scheduler(self):
     #     comp = Composition()
