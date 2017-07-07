@@ -221,6 +221,7 @@ class Composition(object):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.mechanisms = []
+        self.input_mechanisms = {}
 
         # status attributes
         # Needs to be created still| self.scheduler = Scheduler()
@@ -402,6 +403,23 @@ class Composition(object):
 
         self.needs_update_graph = False
 
+    def _create_input_mechanisms(self):
+        '''
+            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
+            InputMechanism
+        '''
+        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
+        has_input_mechanism = self.input_mechanisms.keys()
+        # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
+        # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
+        for mech in is_origin.difference(has_input_mechanism):
+            if mech not in has_input_mechanism:
+                new_input_mech = TransferMechanism()
+                self.input_mechanisms[mech] = new_input_mech
+                MappingProjection(sender=new_input_mech, receiver=mech)
+            else:
+                del self.input_mechanisms[mech]
+
     def _update_processing_graph(self):
         '''
         Constructs the processing graph (the graph that contains only non-learning mechanisms as vertices)
@@ -519,22 +537,11 @@ class Composition(object):
                         raise ValueError("The value provided for input state {!s} of the mechanism \"{}\" has length {!s} \
                             where the input state takes values of length {!s}".format(i, mech.name, val_length, state_length))
 
-    def _create_input_mechanisms(self, inputs, input_mechanisms):
-        '''
-            builds a dictionary of { Mechanism : InputMechanism } pairs where each of the mechanisms in the composition
-            that receives an input value from the outside world (from the user) has a corresponding InputMechanism
-        '''
-
-        # build a dict of key-value pairs where key = mechanism and value = plain transfer mechanism w/ identity fn
-        for mech in inputs.keys():
-            # create plain mechanism with identity fn
-            new_input_mech = TransferMechanism(function=Linear(slope=1, intercept=0.0))
-            input_mechanisms[mech] = new_input_mech
-            # create a mapping projection from the "input mechanism" to the mechanism in the composition which needs
-            # this input
-            MappingProjection(sender=new_input_mech, receiver=mech)
-
     def _execute_input_mechanisms(self, inputs, input_mechanisms):
+        '''
+            executes all input mechanisms with the inputs specified by the user. The mapping projections then update and
+            deliver the input values to the appropriate mechanisms in the composition.
+        '''
         for mech in inputs.keys():
             # grab the input value for this mechanism on this trial
             input_val = inputs[mech]
@@ -565,25 +572,51 @@ class Composition(object):
             inputs,
             scheduler_processing=None,
             execution_id = None):
+        '''
+            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
+            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
 
-            input_mechanisms = {}
-            self._create_input_mechanisms(inputs, input_mechanisms)
-            self._execute_input_mechanisms(inputs, input_mechanisms)
-            self._assign_execution_ids(execution_id, input_mechanisms)
-            # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
-            # when self.sched is ready: execution_scheduler = scheduler_processing or self.sched
-            execution_scheduler = scheduler_processing
-            for next_execution_set in execution_scheduler.run():
+            Arguments
+            ---------
+            scheduler_processing : Scheduler
+                the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
 
-                # execute each mechanism with EXECUTING in context and the appropriate input
-                for mechanism in next_execution_set:
-                    if isinstance(mechanism, Mechanism):
-                        num = mechanism.execute(context=EXECUTING + "composition")
-                        print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
-                        print("result = ", num)
-                        print()
-                        print()
-            return num
+            scheduler_learning : Scheduler
+                the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
+                If not specified, the Composition will use its automatically generated scheduler
+
+            inputs: { Mechanism : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
+
+            execution_id : UUID
+                execution_id will typically be set to none and assigned randomly at runtime
+
+            Returns
+            ---------
+            output value of the final mechanism executed in the composition
+        '''
+
+
+        input_mechanisms = {}
+        self._create_input_mechanisms()
+        self._execute_input_mechanisms(inputs, input_mechanisms)
+        self._assign_execution_ids(execution_id, input_mechanisms)
+        # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
+        # when self.sched is ready: execution_scheduler = scheduler_processing or self.sched
+        execution_scheduler = scheduler_processing
+        for next_execution_set in execution_scheduler.run():
+
+            # execute each mechanism with EXECUTING in context
+            for mechanism in next_execution_set:
+                if isinstance(mechanism, Mechanism):
+                    num = mechanism.execute(context=EXECUTING + "composition")
+                    print(" -------------- EXECUTING ", mechanism.name, " -------------- ")
+                    print("result = ", num)
+                    print()
+                    print()
+        return num
 
     def run(
         self,
