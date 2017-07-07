@@ -184,7 +184,7 @@ only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `
 used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
 of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
-recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrentInitMechanisms`), and target values are
+recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrent_init_mechanisms`), and target values are
 assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
 details of formatting input specifications).
 
@@ -678,7 +678,7 @@ class System_Base(System):
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
-    recurrentInitMechanisms : MechanismList
+    recurrent_init_mechanisms : MechanismList
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
@@ -718,7 +718,7 @@ class System_Base(System):
     initial_values : list or ndarray of values :  default array of zero arrays
         values used to initialize Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`).
         Must be the same length as the list of `INITIALIZE_CYCLE` Mechanisms in the System contained in
-        `recurrentInitMechanisms`.
+        `recurrent_init_mechanisms`.
 
     timeScale : TimeScale  : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the System.
@@ -1172,7 +1172,7 @@ class System_Base(System):
             allMechanisms
             origin_mechanisms
             terminalMechanisms
-            recurrentInitMechanisms (INITIALIZE_CYCLE)
+            recurrent_init_mechanisms (INITIALIZE_CYCLE)
             learning_mechansims
             control_mechanisms
 
@@ -1440,7 +1440,7 @@ class System_Base(System):
 
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
-        self.recurrentInitMechanisms = MechanismList(self, self.recurrent_init_mechs)
+        self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
@@ -1878,7 +1878,7 @@ class System_Base(System):
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        `INITIALIZE_CYCLE` and contained in recurrentInitMechanisms.
+        `INITIALIZE_CYCLE` and contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
@@ -2543,7 +2543,7 @@ class System_Base(System):
         input_array = np.array(input_array)
 
         recurrent_init_array = []
-        for mech in list(self.recurrentInitMechanisms.mechanisms):
+        for mech in list(self.recurrent_init_mechanisms.mechanisms):
             recurrent_init_array.append(mech.value)
         recurrent_init_array = np.array(recurrent_init_array)
 
@@ -2582,7 +2582,7 @@ class System_Base(System):
             MECHANISMS: self.mechanisms,
             ORIGIN_MECHANISMS: self.origin_mechanisms.mechanisms,
             INPUT_ARRAY: input_array,
-            RECURRENT_MECHANISMS: self.recurrentInitMechanisms,
+            RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
             TERMINAL_MECHANISMS: self.terminalMechanisms.mechanisms,
             OUTPUT_STATE_NAMES: output_state_names,
