@@ -56,13 +56,15 @@ def test_EVC():
 
     # Processes:
     TaskExecutionProcess = process(
-        default_input_value=[0],
+        # default_input_value=[0],
+        size=1,
         pathway=[(Input), IDENTITY_MATRIX, (Decision)],
         name='TaskExecutionProcess',
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        # default_input_value=[0],
+        size=1,
         pathway=[(Reward)],
         name='RewardProcess',
     )

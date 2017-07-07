@@ -661,6 +661,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  variable:tc.any(list, np.ndarray),
+                 size=None,
                  error_source:tc.optional(Mechanism)=None,
                  function:is_function_type=BackPropagation,
                  learning_signals:tc.optional(list) = None,
@@ -690,6 +691,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         self._learning_rate = learning_rate
 
         super().__init__(variable=variable,
+                         size=size,
                          modulation=modulation,
                          params=params,
                          name=name,
