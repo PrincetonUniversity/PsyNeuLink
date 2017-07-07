@@ -83,8 +83,15 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
 .. _LearningSignal_Learning_Rate:
 
 * `learning_rate <LearningSignal.learning_rate>`: the learning_rate for a LearningSignal is used to specify the
-  `learning_rate <LearningProjection.learning_rate>` parameter for the `LearningProjection(s) <LearningProjection>`
-  that project from that LearningSignal.  If specified, it is applied in addition to xxxx
+  `learning_rate <LearningProjection.learning_rate>` parameter for its `LearningProjection(s) <LearningProjection>`
+  (i.e., those listed in its `efferents <LearningSignal.efferents>` attribute).  If specified, it is applied
+  multiplicatively to the LearningProjection`s `learning_signal <LearningProjection.learning_signal>` and thus can be
+  used to modulate the learning_rate in addition to (and on top of) one specified for the `LearningMechanism` or its
+  `function <LearningMechanism.function>`.  Specification of the `learning_rate <LearningSignal.learning_rate> for a
+  LearningSignal supercedes any specification(s) of the `learning_rate <LearningProjection.learning_rate>` for its
+  LearningProjections, as well as for any `Process <Process.Process_Base.learning_rate>` and/or
+  `System <System.System_Base.learning_rate>` to which the LearningSignal's owner belongs
+  (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
 .. _LearningSignal_Function:
 
@@ -186,8 +193,7 @@ class LearningSignal(ModulatorySignal):
     
     learning_rate : float or None : default None
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
-        (see `learning_rate <LearningSignal.learning_rate>` for details).  If specified, it is applied in
-        addition to xxxx
+        (see `learning_rate <LearningSignal.learning_rate>` for details).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value          of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the LearningSignal's
@@ -227,9 +233,9 @@ class LearningSignal(ModulatorySignal):
 
     learning_rate : float : None
         determines the learning rate for the LearningSignal.  It is used to specify the 
-        `learning_rate <LearningProjection.learning_rate>` parameter for the LearningProjection(s) that 
-        project from the LearningSignal (see description of `learning_rate <LearningProjection_Learning_Rate>` 
-        for additional details).  If specified, it is applied in addition to xxxx
+        `learning_rate <LearningProjection.learning_rate>` parameter for the LearningProjection(s) listed in the
+        `efferents <LearningSignal.efferents>` attribute (i.e., that project from the LearningSignal). See
+        `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details.
 
     modulation : ModulationParam
         determines the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the
@@ -237,7 +243,8 @@ class LearningSignal(ModulatorySignal):
         LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
     efferents : [List[ControlProjection]]
-        a list with one item -- the `ControlProjection` assigned to the ControlSignal.
+        a list of the `LearningProjections <LearningProjection>` assigned to (i.e., that project from) the
+        LearningSignal.
 
     name : str : default <State subclass>-<index>
         name of the outputState.
@@ -315,6 +322,3 @@ class LearningSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
-
-        # if self.learning_rate is None:
-        #     self.learning_rate = owner.learning_rate

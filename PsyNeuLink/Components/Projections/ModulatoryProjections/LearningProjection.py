@@ -263,14 +263,13 @@ class LearningProjection(ModulatoryProjection_Base):
                              PROJECTION_TYPE: LEARNING_PROJECTION}
 
     learning_rate : Optional[float]
-        determines the learning_rate for the LearningProjection.  If specified, it is applied
-        multiplicatively to the `learning_signal <LearningProjection.learning_signal>` and thus can be used to
-        modulate the learning rate in addition to (and on top of) the one specified for the `LearningMechanism` or
-        its `function <LearningMechanism.function>`.  Specificiation of the learning_rate for LearningProjection
-         supercedes
-        , or the process or
-        system to which it
-        belongs
+        determines the learning_rate for the LearningProjection.  If specified, it is applied multiplicatively to the
+        `learning_signal <LearningProjection.learning_signal>` and thus can be used to modulate the learning rate in
+        addition to (and on top of) one specified for the `LearningMechanism` or its
+        `function <LearningMechanism.function>`.  Specification of the
+        `learning_rate <LearningProjection.learning_rate>` for LearningProjection supercedes any specification(s) of
+        the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
+        `System <System.System_Base.learning_rate>` to which the LearningMechanism from which it projects belongs.
         (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
     weight_change_matrix : 2d np.array
