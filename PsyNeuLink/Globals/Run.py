@@ -239,8 +239,8 @@ completed.  If a function is used for the **targets**, then it will be used to g
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`targetMechanism <Process.Process_Base.targetMechanisms>` or
-System `targetMechanism <System.System_Base.targetMechanisms>` respectively), and the value of each target must
+`target_mechanism <Process.Process_Base.target_mechanism>` or
+System `targetMechanism <System.System_Base.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
 the `TERMINAL` Mechanism with which the target is compared (that is, the Mechanism that provides the
@@ -257,7 +257,7 @@ Sequence Format
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
 targets:  one for `TRIAL` \s, one for Mechanisms, and one for the elements of each input.  For a System
 with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
-`targetMechanisms <System.System_Base.targetMechanisms>` attribute.  This should be the same order in which
+`target_mechanisms <System.System_Base.target_mechanisms>` attribute.  This should be the same order in which
 they are declared, and can be displayed using the System's `show <System.System_Base.show>` method). All
 other requirements are the same as the `Sequence format <Run_Inputs_Sequence_Format>` for **inputs**.
 
@@ -788,7 +788,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
     # Stimuli are targets:
     #    - validate that there is a one-to-one mapping of target entries to target mechanisms in the process or system;
-    #    - insure that order of target stimuli in dict parallels order of target mechanisms in targetMechanisms list
+    #    - insure that order of target stimuli in dict parallels order of target mechanisms in target_mechanisms list
     else:
         # FIX: RE-WRITE USING NEXT AND StopIteration EXCEPTION ON FAIL TO FIND (THIS GIVES SPECIFICS)
         # FIX: TRY USING compare METHOD OF DICT OR LIST?
@@ -818,7 +818,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
         # Insure that target lists in dict are accessed in the same order as the
-        #   targets in the system's targetMechanisms list, by reassigning targets to an OrderedDict:
+        #   targets in the system's target_mechanisms list, by reassigning targets to an OrderedDict:
         from collections import OrderedDict
         ordered_targets = OrderedDict()
         for target in object.target_mechanisms:
@@ -829,7 +829,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
-                               "supposed to be in targetMechanisms for {}".
+                               "supposed to be in target_mechanism for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
             terminal_mech = process.terminalMechanisms[0]
@@ -1099,7 +1099,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.targetMechanism.target)))
+                                          np.size(object.target_mechanism.target)))
         return
 
     if object_type is PROCESS:
@@ -1110,7 +1110,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.targetMechanism.input_states[TARGET].variable):
+            if target_len != np.size(object.target_mechanism.input_states[TARGET].variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1118,7 +1118,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                 raise RunError("Length ({}) of target{} specified for run of {}"
                                    " does not match expected target length of {}".
                                    format(target_len, plural, append_type_to_name(object),
-                                          np.size(object.targetMechanism.target)))
+                                          np.size(object.target_mechanism.target)))
 
             if any(np.size(target) != target_len for target in target_array):
                 raise RunError("Not all of the targets specified for {} are of the same length".
@@ -1175,7 +1175,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # MODIFIED 12/23/16 NEW:
             # Validate that each target is compatible with its corresponding targetMechanism
             # FIX: CONSOLIDATE WITH TESTS FOR PROCESS AND FOR function_type ABOVE
-            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.targetMechanisms
+            # FIX: MAKE SURE THAT ITEMS IN targets ARE ALIGNED WITH CORRESPONDING object.target_mechanisms
             target_array = np.atleast_2d(targets)
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):

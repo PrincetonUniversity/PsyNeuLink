@@ -221,12 +221,12 @@ Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inp
 formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `originMechanisms
 <System_Base.originMechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
-in its `targetMechanisms <System_Base.targetMechanisms>` attribute).  Targets can also be specified in a `function
+in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
 format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
 
 .. note::
-   A `targetMechanism <Process.Process_Base.targetMechanisms>` of a Process is not necessarily a
-   `targetMechanism <System_Base.targetMechanisms>` of the System to which it belongs
+   A `target_mechanism <Process.Process_Base.target_mechanism>` of a Process is not necessarily one of the
+   `target_mechanisms <System_Base.target_mechanisms>` of the System to which it belongs
    (see `LearningMechanism_Targets`).  Also, the changes to a System induced by learning are not applied until the
    Mechanisms that receive those projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
@@ -435,7 +435,7 @@ def system(default_input_value=None,
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
         the values assigned to the TARGET input of each `TARGET` Mechanism in the System (listed in its
-        `targetMechanisms` attribute).  There must be the same number of items as there are `targetMechanisms`,
+        `target_mechanisms` attribute).  There must be the same number of items as there are `target_mechanisms`,
         and each item must have the same format (length and number of elements) as the TARGET input
         for each of the corresponding `TARGET` Mechanisms.
 
@@ -692,7 +692,7 @@ class System_Base(System):
         COMMENT
 
     target_input_states : List[SystemInputState]
-        one item for each `TARGET` Mechanism in the System (listed in `targetMechanisms`).  Used to represent the
+        one item for each `TARGET` Mechanism in the System (listed in `target_mechanisms`).  Used to represent the
         :keyword:`targets` specified in the System's `execute <System.execute>` and `run <System.run>` methods, and
         provide their values to the the TARGET InputState of each `TARGET` Mechanism during execution.
 
@@ -1816,7 +1816,7 @@ class System_Base(System):
 
         if self.learning and self.targets is None:
             if not self.target_mechanisms:
-                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no targetMechanisms".
+                raise SystemError("PROGRAM ERROR: Learning has been specified for {} but it has no target_mechanisms".
                                   format(self.name))
             # # MODIFIED 6/25/17 OLD:
             # raise SystemError("Learning has been specified for {} so its \'targets\' argument must also be specified".
@@ -1832,7 +1832,7 @@ class System_Base(System):
 
         self.targets = np.atleast_2d(self.targets)
 
-        # Create SystemInputState for each TARGET mechanism in targetMechanisms and
+        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
         #    assign MappingProjection from the SystemInputState
         #    to the TARGET mechanism's TARGET inputSate
         #    (i.e., from the SystemInputState to the ComparatorMechanism)
@@ -2216,7 +2216,7 @@ class System_Base(System):
 
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
-            # Report learning for targetMechanisms (and the processes to which they belong)
+            # Report learning for target_mechanisms (and the processes to which they belong)
             # Sort for consistency of reporting:
             print("\n\'{}' learning completed:".format(self.name))
 
@@ -2488,7 +2488,7 @@ class System_Base(System):
         # # if any(process.learning for process in self.processes):
         # if self.learning:
         #     print ("\n\tTarget mechanisms: ".format(self.name))
-        #     for object_item in self.targetMechanisms.mechs:
+        #     for object_item in self.target_mechanisms.mechs:
         #         print("\t\t{0} (phase: {1})".format(object_item.mechanism.name, object_item.phase))
         #
         # print ("\n---------------------------------------------------------")

@@ -200,7 +200,7 @@
 #                       no properties are created for them
 #                       they are not validated when assigned
 
-# FIX: targetMechanisms -> target_mechanisms, originMechanisms -> origin_mechanisms
+# FIX: originMechanisms -> origin_mechanisms
 
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
@@ -2215,7 +2215,7 @@
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
-# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX:  Order target assignments for system according to order in target_mechanisms rather than process
 # TEST SPECIFYING word_reading_process BEFORE color_naming_process
 #
 # ** FIX: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
@@ -2957,7 +2957,7 @@
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 # IMPLEMENT: add target (or targets) as arg in system.execute()
-# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
+# IMPLEMENT:  add attribute to target_mechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  LEARNING_PROJECTION for ProcessingMechanism;  if specified:
 #             - implement self.errorSignal attribute
 # IMPLEMENT: LEARNING_PROJECTION for Process:
@@ -2992,7 +2992,7 @@
 #
 # SYSTEM LEARNING ***************************************************************************************************
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
-#       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       - VALIDATE THAT target_mechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?

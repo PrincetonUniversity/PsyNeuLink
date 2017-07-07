@@ -330,7 +330,7 @@ created or assigned to its LearningMechanism's `ERROR_SIGNAL <LearningMechanism_
 **TARGET Mechanisms**: receive the targets specified for learning.  When learning is specified for a `Process
 <Process_Learning>` or `System <System_Execution_Learning>`, the `ObjectiveMechanism`  that will receive its
 `targets <Run_Targets>` (specified in the call to its :keyword:`execute` or :keyword:`run` method) are identified and
-designated as `TARGET` Mechanisms. These are listed in the Process` or System's :keyword:`targetMechanisms` attribute.
+designated as `TARGET` Mechanisms. These are listed in the Process` or System's `target_mechanisms` attribute.
 It is important to note that the status of a `ProcessingMechanism` in a System takes precedence over its status in any
 of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process,
 if that Process is combined with others in a System, the Mechanism appears in any of those other Processes,

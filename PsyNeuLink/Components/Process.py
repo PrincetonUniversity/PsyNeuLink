@@ -1029,7 +1029,7 @@ class Process_Base(Process):
 
         if self.learning:
             self._check_for_target_mechanism()
-            if self.targetMechanism:
+            if self.target_mechanism:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
         else:
@@ -1875,8 +1875,8 @@ class Process_Base(Process):
 
          This should only be called if self.learning is specified
          Check that there is one and only one TARGET ObjectiveMechanism for the process
-         Assign targetMechanism to self.targetMechanism,
-             assign self to targetMechanism.processes,
+         Assign target_mechanism to self.target_mechanism,
+             assign self to target_mechanism.processes,
              and report assignment if verbose
         """
 
@@ -1931,7 +1931,7 @@ class Process_Base(Process):
                                                              # list(self.terminalMechanisms)[0].name,
                                                              self.lastMechanism.name,
                                                              list(process.name for process in target_mech.processes)))
-                self.targetMechanism = None
+                self.target_mechanism = None
             else:
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -1939,15 +1939,15 @@ class Process_Base(Process):
 
         elif len(target_mechs) > 1:
             target_mech_names = list(targetMechanism.name for targetMechanism in target_mechs)
-            raise ProcessError("PROGRAM ERROR: {} has more than one targetMechanism mechanism: {}".
+            raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
                                format(self.name, target_mech_names))
 
         else:
-            self.targetMechanism = target_mechs[0]
+            self.target_mechanism = target_mechs[0]
             self._target_mechs.append(target_mechs[0])
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
-                      format(self.targetMechanism.name, self.name))
+                      format(self.target_mechanism.name, self.name))
 
     def _instantiate_target_input(self, context=None):
 
@@ -1958,7 +1958,7 @@ class Process_Base(Process):
             # MODIFIED 6/26/17 NEW:
             # target arg was not specified in Process' constructor,
             #    so use the value of the TARGET InputState for the TARGET Mechanism as the default
-            self.target = self.targetMechanism.input_states[TARGET].value
+            self.target = self.target_mechanism.input_states[TARGET].value
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
                               " but its \'target\' argument was not specified; default will be used ({})".
@@ -1968,11 +1968,11 @@ class Process_Base(Process):
         target = np.atleast_1d(self.target)
 
         # Create ProcessInputState for target and assign to targetMechanism's target inputState
-        target_mech_target = self.targetMechanism.input_states[TARGET]
+        target_mech_target = self.target_mechanism.input_states[TARGET]
 
         # Check that length of process' target input matches length of targetMechanism's target input
         if len(target) != len(target_mech_target.variable):
-            raise ProcessError("Length of target ({}) does not match length of input for targetMechanism in {}".
+            raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
                                format(len(target), len(target_mech_target.variable)))
 
         target_input_state = ProcessInputState(owner=self,
@@ -2245,7 +2245,7 @@ class Process_Base(Process):
             call the process' `initialize` method before a sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default None
-            target value(s) assigned to the process` `target <Process_Base.targetMechanisms>` mechanism for each
+            target value(s) assigned to the process` `target <Process_Base.target_mechanism>` mechanism for each
             execution (during learning).  The length (of the outermost level if a nested list, or lowest axis if an
             ndarray) must be equal to that of the `inputs` argument (see above).
 
