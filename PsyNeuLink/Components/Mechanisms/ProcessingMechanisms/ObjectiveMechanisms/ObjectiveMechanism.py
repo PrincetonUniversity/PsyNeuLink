@@ -425,7 +425,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
-                 size=None,  # not used until ProcessingMechanism_Base, but it's needed here to avoid errors
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -445,8 +444,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(
-                         variable=None,
+        super().__init__(variable=None,
                          input_states=input_states,
                          output_states=output_states,
                          params=params,

@@ -410,11 +410,13 @@ class State_Base(State):
     paramClassDefaults.update({STATE_PROJECTIONS:[],
                                MODULATORY_PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
+    #endregion
 
     @tc.typecheck
     def __init__(self,
                  owner:tc.any(Mechanism, Projection),
                  variable=None,
+                 size=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -514,6 +516,7 @@ class State_Base(State):
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(State_Base, self).__init__(variable_default=variable,
+                                         size=size,
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
@@ -530,6 +533,57 @@ class State_Base(State):
         else:
             if projections:
                 self._instantiate_projections_to_state(projections=projections, context=context)
+
+    def _handle_size(self, size, variable):
+        """Overwrites the parent method in Component.py, because the variable of a State
+            is generally 1D, rather than 2D as in the case of Mechanisms"""
+        if size is not NotImplemented:
+
+            def checkAndCastInt(x):
+                if not isinstance(x, numbers.Number):
+                    raise StateError("Size ({}) is not a number.".format(x))
+                if x < 1:
+                    raise StateError("Size ({}) is not a positive number.".format(x))
+                try:
+                    int_x = int(x)
+                except:
+                    raise StateError(
+                        "Failed to convert size argument ({}) for {} {} to an integer. For States, size "
+                        "should be a number, which is an integer or can be converted to integer.".
+                        format(x, type(self), self.name))
+                if int_x != x:
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn("When size ({}) was cast to integer, its value changed to {}.".format(x, int_x))
+                return int_x
+
+            # region Convert variable to a 1D array, cast size to an integer
+            if size is not None:
+                size = checkAndCastInt(size)
+            try:
+                if variable is not None:
+                    variable = np.atleast_1d(variable)
+            except:
+                raise StateError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
+            # endregion
+
+            # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
+            if variable is None and size is not None:
+                try:
+                    variable = np.zeros(size)
+                except:
+                    raise ComponentError("variable (perhaps default_input_value) was not specified, but PsyNeuLink "
+                                         "was unable to infer variable from the size argument, {}. size should be"
+                                         " an integer or able to be converted to an integer. Either size or "
+                                         "variable must be specified.".format(size))
+            #endregion
+
+            if variable is not None and size is not None:  # try tossing this "if" check
+                # If they conflict, raise exception
+                if size != len(variable):
+                    raise StateError("The size arg of {} ({}) conflicts with the length of its variable arg ({})".
+                                     format(self.name, size, variable))
+
+        return variable
 
     def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
@@ -632,7 +686,7 @@ class State_Base(State):
         if var_is_matrix:
             self.variable = self.variable[0]
 
-        # Insure that output of the function (self.value) is compatible with (same format as) its input (self.variable)
+        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.variable)
         #     (this enforces constraint that State functions should only combine values from multiple projections,
         #     but not transform them in any other way;  so the format of its value should be the same as its variable).
         if not iscompatible(self.variable, self.value):
@@ -1282,7 +1336,7 @@ class State_Base(State):
 
     """
 
-        # SET UP -------------------------------------------------------------------------------------------------------
+        # region SET UP ------------------------------------------------------------------------------------------------
         # Get State-specific param_specs
         try:
             # Get State params
@@ -1301,7 +1355,7 @@ class State_Base(State):
             # Treat as vector (list or np.array)
             value_is_number = False
 
-        # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------------
+        # region AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------------
 
         # Get type-specific params from PROJECTION_PARAMS
         mapping_params = merge_param_dicts(self.stateParams, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)

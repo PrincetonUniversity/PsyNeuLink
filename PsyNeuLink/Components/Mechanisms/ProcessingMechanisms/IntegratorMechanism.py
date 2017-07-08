@@ -221,10 +221,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         # self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
+                                                  size=size,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  size=size,
                                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED

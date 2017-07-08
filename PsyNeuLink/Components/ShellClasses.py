@@ -55,6 +55,7 @@ class System(ShellClass):
 
     def __init__(self,
                  variable_default=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
@@ -62,6 +63,7 @@ class System(ShellClass):
         if context is None:
             _attempt_to_call_base_class(self,'system()')
         super().__init__(variable_default=variable_default,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,
@@ -77,6 +79,7 @@ class System(ShellClass):
 class Process(ShellClass):
     def __init__(self,
                  variable_default=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
@@ -84,6 +87,7 @@ class Process(ShellClass):
         if context is None:
             _attempt_to_call_base_class(self,'process()')
         super().__init__(variable_default=variable_default,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,
@@ -96,6 +100,7 @@ class Mechanism(ShellClass):
 
     def __init__(self,
                  variable_default=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
@@ -103,6 +108,7 @@ class Mechanism(ShellClass):
         if context is None:
             _attempt_to_call_base_class(self,'mechanism()')
         super().__init__(variable_default=variable_default,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,

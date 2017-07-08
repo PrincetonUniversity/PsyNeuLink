@@ -91,6 +91,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  # default_input_value=None,
+                 # size=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
                  control_signals:tc.optional(list)=None,
@@ -98,7 +99,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        super(DefaultControlMechanism, self).__init__(#default_input_value =default_input_value,
+        super(DefaultControlMechanism, self).__init__(# default_input_value=default_input_value,
+                                                    # size=size,
                                                     monitor_for_control=monitor_for_control,
                                                     control_signals=control_signals,
                                                     params=params,
