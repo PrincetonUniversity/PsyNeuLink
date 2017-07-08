@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -43,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -83,7 +86,10 @@
           
             
             
-                <ul>
+              
+            
+            
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
@@ -100,8 +106,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="#">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -110,23 +118,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="#">Docs</a> &raquo;</li>
-      
-    <li>PsyNeuLink Documentation</li>
+    
+      <li><a href="#">Docs</a> &raquo;</li>
+        
+      <li>PsyNeuLink Documentation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/index.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -144,7 +169,7 @@
 </ul>
 <div class="section" id="purpose">
 <span id="id1"></span><h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is a &#8220;block modeling system&#8221; for cognitive neuroscience.  Block modeling systems allow components to be
+<p>PsyNeuLink is a “block modeling system” for cognitive neuroscience.  Block modeling systems allow components to be
 constructed that implement various, possibly disparate functions, and then link them together into a system to
 examine how they interact.  In PsyNeuLink, components are used to implement the function of brain subsystems and/or
 psychological processes, the interaction of which can then be simulated at the system level.</p>
@@ -153,7 +178,7 @@ of mind/brain function that are modular, customizable, extensible, disseminable,
 in a manner that:</p>
 <blockquote>
 <div><ul class="simple">
-<li>is <em>computationally general</em> &#8211;&nbsp;that is, that can implement any desired mechanism or process;</li>
+<li>is <em>computationally general</em> –&nbsp;that is, that can implement any desired mechanism or process;</li>
 </ul>
 <ul class="simple">
 <li>adheres as closely as possible to the insights and design principles that have been learned in computer science
@@ -184,14 +209,14 @@ integration of, and interaction among disparate components that can vary in thei
 <li>has an interface (API) that allows it to be used with other powerful tools for implementing individual components,
 such as:<ul>
 <li>MatLab (general purpose mathematical tools);</li>
-<li>TensorFlow, Teano (ODE&#8217;s, deep learning);</li>
+<li>TensorFlow, Teano (ODE’s, deep learning);</li>
 <li>Emergent (broad class of neurally-plausible connectionist models);</li>
 <li>ACT-R (symbolic, production system models).</li>
 </ul>
 </li>
 </ul>
 </div></blockquote>
-<p>The goal is to encourage users to think about information processing in a &#8220;mind/brain-like&#8221; way, while imposing as few
+<p>The goal is to encourage users to think about information processing in a “mind/brain-like” way, while imposing as few
 constraints as possible on what it is possible to implement or ask the model to do.</p>
 </div>
 <div class="section" id="what-psyneulink-is-not">
@@ -220,8 +245,8 @@ possible, with the ability to integrate components constructed in other packages
 above) into a single functioning system.  These are characteristics that are often (at least in the initial
 stages of development) in tension with efficiency (think:  interpreted vs. compiled).  One of the goals for future
 development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
-developing simpler models, or taking complex or highly detailed models that have been developed &#8211;
-or subjected to extensive parameter fitting &#8211; in other frameworks, and re-expressing them in a form that is amenable
+developing simpler models, or taking complex or highly detailed models that have been developed –
+or subjected to extensive parameter fitting – in other frameworks, and re-expressing them in a form that is amenable
 to integration, documentation, and dissemination.</p>
 </div>
 <div class="section" id="overview-and-sampler">
@@ -236,8 +261,8 @@ operation.  The <code class="xref any docutils literal"><span class="pre">Tutori
 <p>PsyNeuLink models are made of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.
-For those familiar with block modeling systems, Mechanisms are the &#8220;blocks&#8221; in PsyNeuLink, and Projections are the
-&#8220;links&#8221;.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+For those familiar with block modeling systems, Mechanisms are the “blocks” in PsyNeuLink, and Projections are the
+“links”.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
 other Mechanisms. Projections are used to send information from one Mechanism to another.  A <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> uses
 Projections to link Mechanisms together into pathways that can execute a process, and processes can be combined to
 form networks or circuits that make up a systems-level model.  A <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> coordinates the execution of Mechanisms
@@ -247,7 +272,7 @@ taking the inputs to a model and generating its outputs;  and ones that <em>modu
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.</p>
-<p>Since Mechanisms can implement any function, Projections insure that they can &#8220;communicate&#8221; with
+<p>Since Mechanisms can implement any function, Projections insure that they can “communicate” with
 each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
 Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
 and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
@@ -259,9 +284,9 @@ another in a single system.</p>
 <span id="index-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
 (for testing isolated interactions), or in Compositions to implement a full model.
-Linking Mechanisms for execution can be as simple as placing them in a list &#8211; PsyNeuLink provides the necessary
+Linking Mechanisms for execution can be as simple as placing them in a list – PsyNeuLink provides the necessary
 Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
-Composition &#8211; a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> &#8211; to create a 3-layered 5-2-5 encoder network, the first layer of which uses a Linear
+Composition – a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> – to create a 3-layered 5-2-5 encoder network, the first layer of which uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
@@ -280,7 +305,7 @@ function (the default for a TransferMechanism), and the other two of which use a
 <p>The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
 picks sensible defaults when necessary Components are not specified.  In the example above, since no projections were
 specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of mechanism,
-using random initial weights.  However, it is easy to spcify them explicitly, simply by inserting them in between the</p>
+using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them in between the</p>
 <blockquote>
 <div><p>mechanisms in the pathway for the process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_projection_1</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">+</span> <span class="o">-.</span><span class="mi">1</span><span class="p">))</span>
@@ -295,19 +320,18 @@ have been inserted directly, as follows:</p>
 </pre></div>
 </div>
 <p>PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
-a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_lalyer</span></code> can be added simply by adding another
+a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_layer</span></code> can be added simply by adding another
 entry to the pathway:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
-been accomplished by explicilty creating the recurrent connection:</p>
-<blockquote>
-<div><p>my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
-MappingProjection(sender=output_layer,</p>
-<blockquote>
-<div>receiver=hidden_layer)</div></blockquote>
-</div></blockquote>
+been accomplished by explicitly creating the recurrent connection:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
+                  <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_layer</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="more-elaborate-configurations">
 <span id="index-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
@@ -325,7 +349,7 @@ trained using backpropagation simply by adding an argument to the constructor fo
 <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, and others are currently being implemented (including Hebbian, Temporal
 Differences, and supervised learning for recurrent networks).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
-uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> &#8211; a more powerful form of Composition &#8211; to create two feedforward networks that converge on a single
+uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> – a more powerful form of Composition – to create two feedforward networks that converge on a single
 output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">colors_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLORS INPUT&#39;</span><span class="p">)</span>
 <span class="n">words_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORDS INPUT&#39;</span><span class="p">)</span>
@@ -351,9 +375,9 @@ display and/or analysis (such as <a class="reference external" href="https://net
 <div class="section" id="dynamics-of-execution">
 <span id="index-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
 <p>Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
-that execute at arbitrary and disparate &#8220;time scales&#8221;. For example, a Composition can include some Mechanisms
+that execute at arbitrary and disparate “time scales”. For example, a Composition can include some Mechanisms
 that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
-&#8220;single shot&#8221; computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
+“single shot” computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
 is run, each Component in it is executed at least once.  However, PsyNeuLink has a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> that can be used to
 design more complex dynamics of execution by assigning one or more <code class="xref any docutils literal"><span class="pre">Conditions</span></code> to any Mechanism. Conditions can
 specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
@@ -397,7 +421,7 @@ execute until the change in its value falls below a specified threshold as follo
 <p>Here, the criterion for stopping execution is defined as a function (<code class="docutils literal"><span class="pre">minimal_change</span></code>), that is used in an <code class="xref any docutils literal"><span class="pre">Until</span></code>
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.</p>
-<p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User&#8217;s Guide</span></a> provides a more detailed review of PsyNeuLink&#8217;s organization and capabilities,
+<p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides a more detailed review of PsyNeuLink’s organization and capabilities,
 and the <code class="xref any docutils literal"><span class="pre">Tutorial</span></code> provides an interactive introduction to its use.</p>
 </div>
 </div>
@@ -406,18 +430,18 @@ and the <code class="xref any docutils literal"><span class="pre">Tutorial</span
 <p>Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
 Instead, you can clone the github repo (<a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">https://github.com/PrincetonUniversity/PsyNeuLink</a>).
 Clone the master branch.
-Download the package with the green &#8220;Clone or download&#8221; button on the right side of the page and &#8220;Download ZIP.&#8221;</p>
+Download the package with the green “Clone or download” button on the right side of the page and “Download ZIP.”</p>
 <p>Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
 repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.</p>
 <p>PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.</p>
 <p>To install the package, navigate to the cloned directory in a terminal,
-switch to your preferred python3 environment, then run the command __&#8221;pip install .&#8221;__
+switch to your preferred python3 environment, then run the command __”pip install .”__
 (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.</p>
 <p>Once downloaded, a tutorial can be run using the terminal command <code class="docutils literal"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> within the root directory
 of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of files click on
-&#8220;PsyNeuLink Tutorial.ipynb&#8221;.  This will open the tutorial, that will provide any additional information needed to get
+“PsyNeuLink Tutorial.ipynb”.  This will open the tutorial, that will provide any additional information needed to get
 started.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
@@ -460,12 +484,15 @@ started.</p>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="QuickReference.html" class="btn btn-neutral float-right" title="Quick Reference" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="QuickReference.html" class="btn btn-neutral float-right" title="Quick Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -500,7 +527,8 @@ started.</p>
             VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
