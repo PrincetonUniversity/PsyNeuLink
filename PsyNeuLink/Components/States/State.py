@@ -492,8 +492,6 @@ class State_Base(State):
         params = self._assign_args_to_param_dicts(params=params)
 
         self.owner = owner
-        if 'LearningSignal' in self.__class__.__name__:
-            x = self.learning_rate
 
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,

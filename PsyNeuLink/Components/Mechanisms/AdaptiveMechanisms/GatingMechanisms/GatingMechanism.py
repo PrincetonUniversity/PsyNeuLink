@@ -363,6 +363,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
+
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
         if isinstance(gating_signal_spec, GatingSignal):
             gating_signal = gating_signal_spec[GATING_SIGNAL]
@@ -371,7 +372,18 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR GatingSignal
                 # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
                 # OR ASSIGN NAME IF IT IS DEFAULT, USING GATING_SIGNAL_DICT??
-                pass
+                # # MODIFIED 7/7/17 OLD:
+                # pass
+                # MODIFIED 7/7/17 NEW:
+                # default_name = self.name + '_' + GatingSignal.__name__
+                default_name = gating_signal_spec[NAME] + '_' + GatingSignal.__name__
+                gating_signal_spec.init_args[OWNER] = self
+                gating_signal_spec.init_args[NAME] = gating_signal_spec.init_args[NAME] or default_name
+                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
+                gating_signal_spec.init_args[REFERENCE_VALUE] = defaultGatingPolicy
+                gating_signal_spec._deferred_init(context=context)
+                gating_signal = gating_signal_spec
+                # MODIFIED 7/7/17 END
             elif not gating_signal_spec.owner is self:
                 raise GatingMechanismError("Attempt to assign GatingSignal to {} ({}) that is already owned by {}".
                                             format(self.name, gating_signal_spec.name, gating_signal_spec.owner.name))
