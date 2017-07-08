@@ -206,16 +206,20 @@ components being learned and/or its operation:
   specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
   `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
   its `function <LearningMechanism.function>` before conveying these to the `LearningProjection` used to modify the
-  MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifiying the
+  MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifying the
   `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
-  of its `function <LearningMechanism.function>` directly) supercedes any specification of the
-  :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
-  `System <System.System_Base.learning_rate>` to which the LearningMechanism belongs.  The default value for a
-  LearningMechanism's `learning_rate <LearningMechanism>` attribute is `None`, in which case the LearningMechanism
-  (and its `function <LearningMechanism.function>`) inherit the specification of the
-  `learning_rate <Process.Process_Base.learning_rate>` for the Process in which the LearningMechanism is executed.
-  If that is `None`, then it inherits it from the System in which it is executed.  If that is also `None`,
-  then it uses the default value assigned by its `function <LearningMechanism.function>`.
+  of its `function <LearningMechanism.function>` directly) supercedes any specification of the :keyword:`learning_rate`
+  for any `Process <Process.Process_Base.learning_rate>` and/or `System <System.System_Base.learning_rate>` to which
+  the LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate <LearningMechanism>`
+  attribute is `None`, in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit
+  the specification of the `learning_rate <Process.Process_Base.learning_rate>` for the Process in which the
+  LearningMechanism is executed. If that is `None`, then it inherits it from the System in which it is executed.  If
+  that is also `None`, then it uses the default value assigned by its `function <LearningMechanism.function>`.
+  Learning rate can also be specified individually for `LearningSignals <LearningSignal>` and/or their associated
+  `LearningProjections <LearningProjection>`.  Those have a direct multiplicative effect on the
+  LearningProjection's `learning_signal <LearningProjection.learning_signal>` used to modify the weight matrix of the
+  `learning_projection <LearningMechanism.learned_projection>`
+  (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
 
 COMMENT:
 @@@ THE FOLLOWING SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
@@ -1145,10 +1149,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_attributes_after_function(self, context=None):
 
-        super()._instantiate_attributes_after_function(context=context)
-
         if self._learning_rate is not None:
             self.learning_rate = self._learning_rate
+
+        super()._instantiate_attributes_after_function(context=context)
 
     def _execute(self,
                 variable=None,

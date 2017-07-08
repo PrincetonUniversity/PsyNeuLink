@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningProjection &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>LearningProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
         <link rel="next" title="ControlProjection" href="ControlProjection.html"/>
         <link rel="prev" title="ModulatoryProjection" href="ModulatoryProjection.html"/> 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -200,7 +200,7 @@ needed to implement learning for the MappingProjection (see <a class="reference 
 <span id="learningprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningProjection is created, its full initialization is <span class="xref std std-ref">deferred</span> until its
 <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.receiver" title="ModulatoryProjections.LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This
-allows a LearningProjection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
+allows a LearningProjection to be created before its <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
 in a script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>
 method.  This is not necessary if learning has been specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">system</span></a>,
@@ -417,7 +417,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

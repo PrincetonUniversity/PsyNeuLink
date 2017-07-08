@@ -439,7 +439,7 @@ class ControlSignal(ModulatorySignal):
         the parameter(s) that it controls.
 
     efferents : [List[ControlProjection]]
-        a list with one item -- the `ControlProjection` assigned to the ControlSignal.
+        a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
     name : str : default <State subclass>-<index>
         name of the outputState.

@@ -279,7 +279,7 @@ class GatingSignal(ModulatorySignal):
         <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
 
     efferents : [List[GatingProjection]]
-        a list of the `GatingProjections <GatingProjection>` assigned to the GatingSignal.
+        a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
 
     name : str : default <State subclass>-<index>
         name of the outputState.

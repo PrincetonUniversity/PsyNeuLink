@@ -79,8 +79,10 @@ projects is updated.  This occurs when the `learned_projection <LearningProjecti
 when the ProcessingMechanism that receives the `learned_projection <LearningProjection.learned_projection>` is
 executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When the LearningProjection is
 executed, it gets the `learning_signal <LearningProjection.learning_signal>` from its
-`sender <LearningProjection.sender>` and conveys this to its `receiver <LearningProjection.receiver>`,
-possibly modified by its `learning_rate <LearningProjection.learning_rate>` parameter if that is specified.
+`sender <LearningProjection.sender>` (i.e., the `value <LearningSignal.value>` of the `LearningSignal` from which it
+projects), and conveys that to its `receiver <LearningProjection.receiver>`, possibly modified by its `learning_rate
+<LearningProjection.learning_rate>` parameter if that is specified (or it is specified for its
+`sender <LearningProjection.sender>`).
 
 .. note::
    The changes in the `matrix <MappingProjection.maitrix>` parameter of a `MappingProjection` in response to the
@@ -261,10 +263,13 @@ class LearningProjection(ModulatoryProjection_Base):
                              PROJECTION_TYPE: LEARNING_PROJECTION}
 
     learning_rate : Optional[float]
-        determines the learning_rate for the LearningProjection.  If specified, it is applied
-        multiplicatively to the `learning_signal <LearningProjection.learning_signal>` and thus can be used to
-        modulate the learning rate in addition to (and on top of) the one specified for the `LearningMechanism` or
-        its `function <LearningMechanism.function>`, or the process or system to which it belongs
+        determines the learning_rate for the LearningProjection.  If specified, it is applied multiplicatively to the
+        `learning_signal <LearningProjection.learning_signal>` and thus can be used to modulate the learning rate in
+        addition to (and on top of) one specified for the `LearningMechanism` or its
+        `function <LearningMechanism.function>`.  Specification of the
+        `learning_rate <LearningProjection.learning_rate>` for LearningProjection supercedes any specification(s) of
+        the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
+        `System <System.System_Base.learning_rate>` to which the LearningMechanism from which it projects belongs.
         (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
     weight_change_matrix : 2d np.array
@@ -428,6 +433,9 @@ class LearningProjection(ModulatoryProjection_Base):
         #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
+        if self.sender.learning_rate is not None:
+            self.learning_rate = self.sender.learning_rate
+
     def _instantiate_receiver(self, context=None):
         """Validate that receiver has been assigned and is compatible with the output of function
 
@@ -501,7 +509,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   params=params,
                                                   context=context)
 
-        if self.learning_rate:
+        if self.learning_rate is not None:
             self.weight_change_matrix *= self.learning_rate
 
 

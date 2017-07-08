@@ -2542,6 +2542,9 @@ def make_property(name, default_value):
             #    example: slope or intercept parameter of a Linear Function)
             #    rationale: most common and therefore requires the greatest efficiency
             #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
+            from PsyNeuLink.Components.Functions.Function import Function
+            if not isinstance(self, Function):
+                raise TypeError
             return self.owner._parameter_states[backing_field[1:]].value
         except (AttributeError, TypeError):
             try:
