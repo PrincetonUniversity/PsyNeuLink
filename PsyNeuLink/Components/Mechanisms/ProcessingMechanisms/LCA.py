@@ -93,55 +93,56 @@ MAX_VS_AVG = 'max_vs_avg'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class LCA_OUTPUT():
-    """
-    .. _LCA_Standard_OutputStates:
+        """
+            .. _LCA_Standard_OutputStates:
 
-    `Standard OutputStates <OutputState_Standard>` for `LCA`:
+            `Standard OutputStates <OutputState_Standard>` for `LCA`:
 
-    .. _LCA_RESULT
+            .. _LCA_RESULT
 
-    *RESULT* : 1d np.array
-        result of the `function <LCA.function>` calculation
+            *RESULT* : 1d np.array
+                result of the `function <LCA.function>` calculation
 
-    .. _LCA_MEAN
+            .. _LCA_MEAN
 
-    *MEAN* : float
-        the mean of the result
+            *MEAN* : float
+                the mean of the result
 
-    .. _LCA_VARIANCE
+            .. _LCA_VARIANCE
 
-    *VARIANCE* : float
-        the variance of the result
+            *VARIANCE* : float
+                the variance of the result
 
-    .. _LCA_ENERGY
+            .. _LCA_ENERGY
 
-    *ENERGY* : float
-        the energy of the result, which is calculated using the `Stability
-        Function <Function.Stability.function>` with the ``ENERGY`` metric
+            *ENERGY* : float
+                the energy of the result, which is calculated using the `Stability
+                Function <Function.Stability.function>` with the ``ENERGY`` metric
 
-    .. _LCA_ENTROPY
+            .. _LCA_ENTROPY
 
-    *ENTROPY* : float
-        the entropy of the result, which is calculated using the `Stability
-        Function <Function.Stability.function>` with ``ENTROPY`` metric (Note:
-        this is only present if the Mechanism's `function` is bounded between
-        0 and 1)
+            *ENTROPY* : float
+                the entropy of the result, which is calculated using the `Stability
+                Function <Function.Stability.function>` with ``ENTROPY`` metric (Note:
+                this is only present if the Mechanism's `function` is bounded between
+                0 and 1)
 
-    .. _LCA_MAX_VS_NEXT
+            .. _LCA_MAX_VS_NEXT
 
-    *MAX_VS_NEXT* : 1d np.array
-        a two-element Numpy array containing the index of the element of
-        `RESULT <LCA_OUTPUT.RESULT>` with the highest value (element 1) and the difference
-        between that and the next highest one in `TRANSFER_RESULT` (element 2)
+            *MAX_VS_NEXT* : 1d np.array
+                a two-element Numpy array containing the index of the element of
+                `RESULT <LCA_OUTPUT.RESULT>` with the highest value (element 1) and the difference
+                between that and the next highest one in `TRANSFER_RESULT` (element 2)
 
-    .. _LCA_MAX_VS_AVG
+            .. _LCA_MAX_VS_AVG
 
-    *MAX_VS_AVG* : 1d np.array
-        a two-element Numpy array containing the index of the element of
-        `RESULT` with the highest value (element 1) and the difference
-        between that and the average of the value of all of `RESULT`'s
-        other elements
-    """    RESULT=RESULT
+            *MAX_VS_AVG* : 1d np.array
+                a two-element Numpy array containing the index of the element of
+                `RESULT` with the highest value (element 1) and the difference
+                between that and the average of the value of all of `RESULT`'s
+                other elements
+        """
+        RESULT=RESULT
         MEAN=MEAN
         MEDIAN=MEDIAN
         STANDARD_DEVIATION=STANDARD_DEVIATION

@@ -145,7 +145,7 @@ modulation, using one of the values of `ModulationParam` for its `modulation <Mo
 Execution
 ---------
 
-States cannot be executed.  They are updated when the component to which they belong is executed.  InputStates and
+States cannot be executed.  They are updated when the Component to which they belong is executed.  InputStates and
 ParameterStates belonging to a Mechanism are updated before the Mechanism's function is called.  OutputStates
 are updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that
 project to it (listed in its `all_afferents <State.all_afferents>` attribute.  It uses the values it receives from any

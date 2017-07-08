@@ -2242,9 +2242,8 @@ class Logistic(
         """
         return output * (1 - output)
 
-
-class SoftMax(
-    TransferFunction):  # -------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+class SoftMax(TransferFunction):
     """
     SoftMax(               \
          variable_default, \
@@ -2264,7 +2263,7 @@ class SoftMax(
     Arguments
     ---------
 
-    variable : 1d np.array : default variableClassDefault
+    variable_default : 1d np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -2307,7 +2306,6 @@ class SoftMax(
               values to 1, 0 for all others.
 
     bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
-
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -5113,9 +5111,8 @@ class NF_Results(AutoNumber):
     MEAN_CORRECT_VARIANCE = ()
     MEAN_CORRECT_SKEW_RT = ()
 
-
-class NavarroAndFuss(
-    IntegratorFunction):  # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+class NavarroAndFuss(IntegratorFunction):
     """
     NavarroAndFuss(                             \
         variable_default=variableCLassDefault,  \
@@ -5202,9 +5199,7 @@ class NavarroAndFuss(
         Gaussian random process).
 
     t0 : float or 1d np.array
-
         determines the assumed non-decision time to determine the response time returned by the solution.
-
 
     bias : float or 1d np.array
         normalized starting point:

@@ -93,7 +93,7 @@ DECAY = 'decay'
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
     
-"""
+    """
         .. _RecurrentTransferMechanism_Standard_OutputStates:
 
         `Standard OutputStates <OutputState_Standard>` for
@@ -126,7 +126,8 @@ class RECURRENT_OUTPUT():
             Function <Function.Stability.function>` with the ENTROPY metric
             (Note: this is only present if the Mechanism's `function` is bounded
             between 0 and 1 (e.g. the `Logistic` Function)).
-        """    RESULT=RESULT
+        """
+    RESULT=RESULT
     MEAN=MEAN
     MEDIAN=MEDIAN
     STANDARD_DEVIATION=STANDARD_DEVIATION

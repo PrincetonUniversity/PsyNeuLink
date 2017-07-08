@@ -15,7 +15,7 @@
 Overview
 --------
 
-`Condition <Condition>` s are used to specify when `Component <Component>` s are allowed to execute.  Conditions
+`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Component
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
 Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL`), or the state of other
@@ -111,6 +111,7 @@ the standard `Condition()` with `mech_A` and `epsilon` as its arguments, and `co
 thus scheduling it to execute one time when all of the elements of `mech_A` have changed by less than `epsilon`.
 
 .. _Condition_Structure:
+COMMENT:
     [**??IS THE FOLLOWING CORRECT?  owner AND scheduler DON'T SEEM TO BE ARGS OF Condition.__init__??]
     K: this is correct and by design. 1. they are never used outside of adding them to schedulers, at which point
     the scheduler and owner are known. They must be assigned overwritten at this time otherwise those attributes
@@ -119,10 +120,16 @@ COMMENT
 Conditions can be created at any time, and take effect immediately for the execution of any `Scheduler(s) <Scheduler>`
 with which they are associated. (K: I don't think this is accurate) The `owner <Condition.owner>` and `scheduler <Condition.scheduler>` can also be
 specified explicitly, in the corresponding arguments of its constructor; (K: they can't be specified in the constructor) however, usually these can be determined
-and assigned automatically based on the context in which the Condition is created [**?? EXAMPLE?**]. (K: example is basically
-any example script using the add_condition method - it's really not important.)  The Condition's
-**dependencies** and **func** arguments must both be explicitly specified.  These are used to determine whether a
-Condition is satisfied during each `round of execution <LINK>` (K: round of execution is poorly defined and should refer to a TimeScale)
+and assigned automatically based on the context in which the Condition is created.
+COMMENT:
+[**?? EXAMPLE?**]. (K: example is basically
+any example script using the add_condition method - it's really not important.)
+COMMENT
+The Condition's **dependencies** and **func** arguments must both be explicitly specified.
+These are used to determine whether a Condition is satisfied during each `round of execution <LINK>`
+COMMENT:
+(K: round of execution is poorly defined and should refer to a TimeScale)
+COMMENT
 : `func <Condition.func>` is called with
 `dependencies <Condition.dependencies>` as its parameter (and optionally, additional named and unnamed arguments).
 COMMENT:
@@ -137,7 +144,6 @@ COMMENT:
         additional named and unnamed arguments).
     They are not in an exact format by design, because they can be customized by any advanced user.
 COMMENT
-
 
 .. hint ::
     If you do not want to use the dependencies parameter, and instead want to use only args or kwargs, you may

@@ -13,7 +13,7 @@
 Overview
 --------
 
-A ParameterState belongs to either a `Mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
+A ParameterState belongs to either a `Mechanism <Mechanism>` or a `MappingProjection` and is used to represent and
 possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
 receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
 modify the value of the parameter. The Projections received by a ParameterState are listed in its
@@ -151,7 +151,7 @@ In the following example, a `MappingProjection` is created, and its
                                               matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal))
 
 .. note::
-   the `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
+   The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
    `function <MappingProjection.MappingProjection.function>`;  however, since it has only one standard function,
    its arguments are available in the constructor for the Projection (see
    `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).

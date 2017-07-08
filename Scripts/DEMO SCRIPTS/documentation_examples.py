@@ -1,8 +1,8 @@
 import numpy as np
-from PsyNeuLink.scheduling.condition import EveryNCalls, Any, AtPass, \
+from PsyNeuLink.Scheduling.condition import EveryNCalls, Any, AtPass, \
     AfterNCalls, EveryNPasses
 
-from PsyNeuLink.scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 from PsyNeuLink import ModulationParam
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
