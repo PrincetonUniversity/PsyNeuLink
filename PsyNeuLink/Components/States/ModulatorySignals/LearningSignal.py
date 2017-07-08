@@ -17,7 +17,7 @@ A LearningSignal is a type of `ModulatorySignal`, that is specialized for use wi
 from the `LearningMechanism` to which it belongs, and uses that to compute a `learning_signal` that is assigned as the
 `value <LearningProjection.value>` of its `LearningProjection`. The LearningProjection conveys its value to a
 `ParameterState` of the projection being learned, which in turns uses that to modify the corresponding parameter.
-By default, the projection is a `MappingProjection`, the parameter is its 'matrix <MappingProjection.matrix>`
+By default, the projection is a `MappingProjection`, the parameter is its `matrix <MappingProjection.matrix>`
 parameter, and the `learning_signal` is a matrix of weight changes that are added to MappingProjection's
 `matrix <MappingProjection.matrix>`.
 
@@ -27,10 +27,10 @@ Creating a LearningSignal
 ------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is 
-`specified for learning <LearningMechanism_Creation>` and the projection belongs to the same system as the 
+`specified for learning <LearningMechanism_Creation>` and the projection belongs to the same System as the
 `LearningMechanism`.  LearningSignals can also be specified in the **learning_signals**
 argument of the constructor for a `LearningMechanism`.  Although a LearningSignal can be created directly using its 
-constructor (or any of the other ways for `creating an `OutputState <OutputStates_Creation>`), this is neither
+constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is neither
 necessary nor advisable, as a LearningSignal has dedicated components and requirements for configuration that must be 
 met for it to function properly.
 
@@ -45,7 +45,7 @@ When a LearningSignal is specified in context (e.g., the **learning_signals** ar
   * a *ParameterState* of the Projection to which the parameter belongs;
   |
   * a *Projection*, which must be either a `LearningProjection`, or a `MappingProjection` to which the 
-    LearingSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection 
+    LearningSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection
     projects to the *MATRIX* ParameterState of a `MappingProjection`. 
   |
   * a *tuple*, with the *name* of the parameter as its 1st item. and the *projection* to which it belongs as the 2nd;
@@ -53,6 +53,7 @@ When a LearningSignal is specified in context (e.g., the **learning_signals** ar
     but precludes specification of any `parameters <LearningSignal_Structure>` for the LearningSignal.
   |
   * a *specification dictionary*, that must contain at least the following two entries:
+
     * *NAME*:str - a string that is the name of the parameter to be controlled;
     * *PROJECTION*:Projection - the Projection to which the parameter belongs; 
       (note: the Projection itself should be specified even if the parameter belongs to its function).
@@ -65,7 +66,7 @@ Structure
 ---------
 
 A LearningSignal is owned by an `LearningMechanism`, and associated with one or more 
-`LearningProjections <LearningProjection>` that project(s) to the `parameterStates <ParameterState>` associated with 
+`LearningProjections <LearningProjection>` that project(s) to the `ParameterStates <ParameterState>` associated with
 the parameter(s) to be learned.  A LearningSignal has the following primary attributes:
 
 .. _LearningSignal_Modulation:
@@ -74,9 +75,9 @@ the parameter(s) to be learned.  A LearningSignal has the following primary attr
   used by the ParameterState(s) to which it projects to modify their value (see `ModulatorySignal_Modulation` for an
   explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
   is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the LearningMechanism to which 
-  the LearningSignal belongs;  this the is same for all of the LearningSignals belonging to that LearningMechanism.  
-  However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a 
-  specification dictionary where the LearningSignal is specified, as described `above <LearningaSignal_Specification>`.
+  the LearningSignal belongs;  this is the same for all of the LearningSignals belonging to that LearningMechanism.
+  However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a
+  specification dictionary where the LearningSignal is specified, as described `above <LearningSignal_Specification>`.
   The `modulation <LearningSignal.modulation>` value of a LearningSignal is used by all of the 
   `LearningProjections <LearningProjection>` that project from that LearningSignal.
     
@@ -205,12 +206,12 @@ class LearningSignal(ModulatorySignal):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
-        a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        a string used for the name of the OutputState.
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -247,19 +248,19 @@ class LearningSignal(ModulatorySignal):
         LearningSignal.
 
     name : str : default <State subclass>-<index>
-        name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        name of the OutputState.
+        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
+        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -310,7 +311,7 @@ class LearningSignal(ModulatorySignal):
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
+        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner=owner,

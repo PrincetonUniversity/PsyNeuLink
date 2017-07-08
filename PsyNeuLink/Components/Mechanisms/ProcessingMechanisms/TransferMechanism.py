@@ -28,7 +28,7 @@ Overview
 
 A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
 or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set of PsyNeuLink
-`Functions <Function>` (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
+`Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a user-defined custom function.
 
 
 .. _Transfer_Creation:
@@ -235,7 +235,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
-         result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -263,9 +264,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
-    .. context=componentType+INITIALIZING):
-            context : str : default ''None''
-                   string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    context : str : default componentType+INITIALIZING
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Returns
     -------
@@ -276,7 +276,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS
-        the input to mechanism's `function <TransferMechanism.function>`.
+        the input to Mechanism's `function <TransferMechanism.function>`.
         COMMENT:
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
@@ -286,7 +286,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         (i.e., the vector transformed by `function <TransferMechanism.function>`.
 
     function : Function :  default Linear
-        the function used to transform the input.
+        the Function used to transform the input.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -303,7 +303,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     time_constant : float : default 1.0
         the time constant for exponential time averaging of input
-        when the mechanism is executed using the `TIME_STEP` `TimeScale`::
+        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -335,19 +335,19 @@ class TransferMechanism(ProcessingMechanism_Base):
     output_values : List[array(float64),array(float64),array(float64),array(float64)]
         each item is the value of the corresponding OutputState in `output_states <TransferMechanism.output_states>`.
 
-    time_scale :  TimeScale : defaul tTimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+    time_scale :  TimeScale : default TimeScale.TRIAL
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
-        the name of the mechanism.
-        Specified in the **name** argument of the constructor for the projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Projection;
+        if not specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
         the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """

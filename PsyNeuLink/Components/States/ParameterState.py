@@ -13,12 +13,12 @@
 Overview
 --------
 
-A parameterState belongs to either a `mechanism <Mechanism>` or a `MappingProjection`, and is used to represent and
+A ParameterState belongs to either a `Mechanism <Mechanism>` or a `MappingProjection` and is used to represent and
 possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
 receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
-modify the value of the parameter. The projections received by a parameterState are listed in its
+modify the value of the parameter. The Projections received by a ParameterState are listed in its
 `path_afferents <ParameterState.path_afferents>` attribute. Its `function <ParameterState.function>` combines the
-values of those projections, and uses the result to modify the value of the parameter that is used by the
+values of those Projections, and uses the result to modify the value of the parameter that is used by the
 owner or its `function <Component.function>`.
 
 
@@ -62,27 +62,27 @@ Parameters can be specified in one of several places:
 
 The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the
 Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
-name as the parameter, and can be referenced using standard python attribute ("dot") notation;  for example,
+name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example,
 the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
 ``my_component.param``).
 
 When the Component is executed, it updates the ParameterState by calling the ParameterState's
 `function <ParameterState.function>` with the attribute's value for the parameter.  The result is
 assigned as the ParameterState's `value <ParameterState.value>`, which is used by the owner
-of the ParameterState as the value of the correspondign parameter of its own `function <Component.function>`.
+of the ParameterState as the value of the corresponding parameter of its own `function <Component.function>`.
 
 .. note::
    It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
-   and the `function <Component.function>` of its owner.**  The former is used to determine the value of a parameter
+   and the `function <Component.function>` of its **owner.**  The former is used to determine the value of a parameter
    used by the latter (see `figure <ModulatorySignals_Figure>`, and `State_Execution` for additional details).
 
 The specification of the initial value of a parameter can take any of the following forms:
 
-    * A **value**.  This must be a valid value for the parameter.  it creates a default ParameterState,
+    * A **value**.  This must be a valid value for the parameter. It creates a default ParameterState,
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
     ..
-    * A reference to an existing **ParameterState** object.  It's name must be the name of a parameter of the
+    * A reference to an existing **ParameterState** object.  Its name must be the name of a parameter of the
       owner or its `function <Component.function>`, and its value must be a valid one for the parameter.
 
       .. note::
@@ -100,10 +100,10 @@ The specification of the initial value of a parameter can take any of the follow
       (Gating components cannot -- they can only be assgined to InputStates or OutputStates).
     ..
     * A 2-item (value, Modulatory specification) **tuple**.  This creates a default
-      parameterState, uses the value (1st) item of the tuple as parameterState's
-      `base_value <ParameterState.base_value>`, and assigns the parameter's name as the name of the parameterState.
-      The projection (2nd) item of the tuple is used to create and/or assign the specified projection, that is assigned
-      the parameterState as its `receiver <Projection.Projection.receiver>`.  The projection must be a
+      ParameterState, uses the value (1st) item of the tuple as ParameterState's
+      `base_value <ParameterState.base_value>`, and assigns the parameter's name as the name of the ParameterState.
+      The Projection (2nd) item of the tuple is used to create and/or assign the specified Projection, that is assigned
+      the ParameterState as its `receiver <Projection.Projection.receiver>`.  The Projection must be a
       `ControlProjection` or `LearningProjection`, and its value must be a valid one for the parameter.
 
       .. note::
@@ -123,10 +123,10 @@ Mechanism's `execute <Mechanism.execute>` method.
 Examples
 ~~~~~~~~
 
-In the following example, a mechanism is created by specifying two of its parameters, as well as its
+In the following example, a Mechanism is created by specifying two of its parameters, as well as its
 `function <Component.function>` and two of that function's parameters, each using a different specification format::
 
-    my_mechanism = RecurrentTransferMechanism(size=5
+    my_mechanism = RecurrentTransferMechanism(size=5,
                                               noise=ControlSignal),
                                               function=Logistic(gain=(0.5, ControlSignal),
                                                                 bias=(1.0, ControlSignal(
@@ -137,7 +137,7 @@ directly assigning a value to it.  The second specifies the `noise <RecurrentTra
 by assigning a default `ControlSignal`;  this will use the default value of the
 `noise <RecurrentTransferMechanism.noise>` attribute.  The **function** argument is specified using the constructor for
 a `Logistic` function, that specifies two of its parameters.  The `gain <Logistic.gain>` parameter
-is specified using a tuple, the first item of which is the value to be assigned, and the second that specifies
+is specified using a tuple, the first item of which is the value to be assigned, and the second specifies
 a default `ControlSignal`.  The `bias <Logistic.bias>` parameter is also specified using a tuple,
 in this case with a constructor for the ControlSignal that specifies its `modulation <ControlSignal.modulation>`
 parameter.
@@ -151,16 +151,16 @@ In the following example, a `MappingProjection` is created, and its
                                               matrix=(RANDOM_CONNECTIVITY_MATRIX, LearningSignal))
 
 .. note::
-   the `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
+   The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's
    `function <MappingProjection.MappingProjection.function>`;  however, since it has only one standard function,
-   its arguments are available in the constructor for the projection (see
+   its arguments are available in the constructor for the Projection (see
    `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
     my_mechanism = RecurrentTransferMechanism(
                               size=5
-                              params={SIZE:5,
+                              params={NOISE:5,
                                       'size':ControlSignal,
                                       FUNCTION:Logistic,
                                       FUNCTION_PARAMS:{GAIN:(0.5, ControlSignal),
@@ -200,8 +200,8 @@ attribute value, which is then assigned as the ParameterState's `value <Paramete
 
 * `mod_afferents <ParameterState.mod_afferents>`: lists the `ModulatoryProjections <ModulationProjection>` that
   project to the ParameterState.  These specify either the value of the ParameterState's
-  `function <ParameterState.funtion>`, the `value <ParameterState.value>` of the ParameterState itself
-  (see `ModulatorySignals_Modulation).
+  `function <ParameterState.function>`, the `value <ParameterState.value>` of the ParameterState itself
+  (see `ModulatorySignals_Modulation`).
 
 * `function <ParameterState.function>`:  takes `variable <Parameter.variable>` as its input, and the values
   specified for the function's parameters by any `ModulatoryProjections` (listed in `mod_afferents
@@ -209,7 +209,7 @@ attribute value, which is then assigned as the ParameterState's `value <Paramete
 
 * `value <ParameterState.value>`: the result of `function <ParameterState.function>`; used by the ParameterState's
   owner as the value of the parameter of its `function <Component.function>` for which the the ParameterState is
-  responsble when the owner executes.
+  responsible when the owner executes.
 
 All of the user-modifiable parameters of a Component are listed in its `user_params <Component.user_params>` attribute,
 which is a read-only dictionary with an entry for each parameter.  The parameters of a Component can be
@@ -265,15 +265,15 @@ class ParameterState(State_Base):
     name=None,                                                   \
     prefs=None)
 
-    Implements a subclass of `State` that represents and possibly modifies the value of a parameter for a mechanism,
-    projection, or function.
+    Implements a subclass of `State` that represents and possibly modifies the value of a parameter for a Mechanism,
+    Projection, or function.
 
     COMMENT:
 
         Description
         -----------
             The ParameterState class is a componentType in the State category of Function,
-            Its FUNCTION executes the projections that it receives and updates the ParameterState's value
+            Its FUNCTION executes the Projections that it receives and updates the ParameterState's value
 
         Class attributes
         ----------------
@@ -288,7 +288,7 @@ class ParameterState(State_Base):
         Class methods
         -------------
             _instantiate_function: insures that function is ARITHMETIC) (default: Operation.PRODUCT)
-            update_state: updates self.value from projections, base_value and runtime in PARAMETER_STATE_PARAMS
+            update_state: updates self.value from Projections, base_value and runtime in PARAMETER_STATE_PARAMS
 
         StateRegistry
         -------------
@@ -319,16 +319,16 @@ class ParameterState(State_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the parameterState or its function, and/or a custom function and its parameters.  Values specified for
+        the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     name : str : default InputState-<index>
-        a string used for the name of the inputState.
-        If not is specified, a default is assigned by StateRegistry of the mechanism to which the inputState belongs
+        a string used for the name of the InputState.
+        If not is specified, a default is assigned by StateRegistry of the Mechanism to which the InputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the inputState.
+        the `PreferenceSet` for the InputState.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -337,7 +337,7 @@ class ParameterState(State_Base):
     ----------
 
     owner : Mechanism or MappingProjection
-        the `Mechanism` or `MappingProjection` to which the parameterState belongs.
+        the `Mechanism` or `MappingProjection` to which the ParameterState belongs.
 
     variable : number, list or np.ndarray
         the parameter's attribute value — that is, the value of the attribute of the
@@ -367,20 +367,20 @@ class ParameterState(State_Base):
         `mod_afferents <ParameterState.mod_afferents>`.
 
     name : str : default <State subclass>-<index>
-        the name of the inputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        the name of the InputState.
+        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
+        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, states names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, states' names are "scoped" within a Mechanism, meaning that states with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the inputState.
-        Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
+        the `PreferenceSet` for the InputState.
+        Specified in the **prefs** argument of the constructor for the Projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -427,7 +427,7 @@ class ParameterState(State_Base):
         self.reference_value = reference_value
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
-        # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
+        # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
                                              size=size,
@@ -437,14 +437,14 @@ class ParameterState(State_Base):
                                              context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Insure that parameterState (as identified by its name) is for a valid parameter of the owner
+        """Insure that ParameterState (as identified by its name) is for a valid parameter of the owner
 
         Parameter can be either owner's, or owner's function_object
         """
 
         # If the parameter is not in either the owner's user_params dict or its function_params dict, throw exception
         if not self.name in self.owner.user_params.keys() and not self.name in self.owner.function_params.keys():
-            raise ParameterStateError("Name of requested parameterState ({}) does not refer to a valid parameter "
+            raise ParameterStateError("Name of requested ParameterState ({}) does not refer to a valid parameter "
                                       "of the component ({}) or it function ({})".
                                       format(self.name,
                                              # self.owner.function_object.__class__.__name__,
@@ -468,7 +468,7 @@ class ParameterState(State_Base):
 
         # # Insure that output of function (self.value) is compatible with relevant parameter's reference_value
         if not iscompatible(self.value, self.reference_value):
-            raise ParameterStateError("Value ({0}) of the {1} parameterState for the {2} mechanism is not compatible "
+            raise ParameterStateError("Value ({0}) of the {1} ParameterState for the {2} Mechanism is not compatible "
                                       "the type of value expected for that parameter ({3})".
                                            format(self.value,
                                                   self.name,
@@ -521,19 +521,19 @@ def _instantiate_parameter_states(owner, context=None):
     """Call _instantiate_parameter_state for all params in user_params to instantiate ParameterStates for them
 
     If owner.params[PARAMETER_STATE] is None or False:
-        - no parameterStates will be instantiated.
-    Otherwise, instantiate parameterState for each allowable param in owner.user_params
+        - no ParameterStates will be instantiated.
+    Otherwise, instantiate ParameterState for each allowable param in owner.user_params
 
     """
 
-    # TBI / IMPLEMENT: use specs to implement parameterStates below
+    # TBI / IMPLEMENT: use specs to implement ParameterStates below
 
     owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
-    # Check that parameterStates for owner have not been explicitly suppressed (by assigning to None)
+    # Check that ParameterStates for owner have not been explicitly suppressed (by assigning to None)
     try:
         no_parameter_states = not owner.params[PARAMETER_STATES]
-        # PARAMETER_STATES for owner was suppressed (set to False or None), so do not instantiate any parameterStates
+        # PARAMETER_STATES for owner was suppressed (set to False or None), so do not instantiate any ParameterStates
         if no_parameter_states:
             return
     except KeyError:
@@ -544,7 +544,7 @@ def _instantiate_parameter_states(owner, context=None):
         owner.user_params
     except AttributeError:
         return
-    # Instantiate parameterState for each param in user_params (including all params in function_params dict),
+    # Instantiate ParameterState for each param in user_params (including all params in function_params dict),
     #     using its value as the state_spec
     # IMPLEMENTATION NOTE:  Use user_params_for_instantiation since user_params may have been overwritten
     #                       when defaults were assigned to paramsCurrent in Component.__init__,
@@ -559,7 +559,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
     Exclude if it is a:
-        parameterState that already exists (e.g., in case of a call from Component.assign_params)
+        ParameterState that already exists (e.g., in case of a call from Component.assign_params)
         non-numeric value (including None, NotImplemented, False or True)
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
@@ -577,8 +577,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
 
     # EXCLUSIONS:
 
-    # # Skip if parameterState already exists (e.g., in case of call from Component.assign_params)
-    # if param_name in owner.parameterStates:
+    # # Skip if ParameterState already exists (e.g., in case of call from Component.assign_params)
+    # if param_name in owner.ParameterStates:
     #     return
 
     from PsyNeuLink.Components.Projections.Projection import Projection
@@ -606,7 +606,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             pass
         else:
             return
-    # Allow tuples (could be spec that includes a projection or Modulation)
+    # Allow tuples (could be spec that includes a Projection or Modulation)
     elif isinstance(param_value, tuple):
         # # MODIFIED 4/18/17 NEW:
         # # FIX: EXTRACT VALUE HERE (AS IN Component.__init__?? [4/18/17]
@@ -710,7 +710,7 @@ def _is_legal_param_value(owner, value):
 
 
 def _get_parameter_state(sender_owner, sender_type, param_name, component):
-    """Return parameterState for named parameter of a mechanism requested by owner
+    """Return ParameterState for named parameter of a Mechanism requested by owner
     """
 
     # Validate that component is a Mechanism or Projection
@@ -721,12 +721,12 @@ def _get_parameter_state(sender_owner, sender_type, param_name, component):
     try:
         return component._parameter_states[param_name]
     except KeyError:
-        # Check that param (named by str) is an attribute of the mechanism
+        # Check that param (named by str) is an attribute of the Mechanism
         if not (hasattr(component, param_name) or hasattr(component.function_object, param_name)):
             raise ParameterStateError("{} (in specification of {}  {}) is not an attribute "
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))
-        # Check that the mechanism has a parameterState for the param
+        # Check that the Mechanism has a ParameterState for the param
         if not param_name in component._parameter_states.names:
             raise ParameterStateError("There is no ParameterState for the parameter ({}) of {} "
                                         "specified in {} for {}".

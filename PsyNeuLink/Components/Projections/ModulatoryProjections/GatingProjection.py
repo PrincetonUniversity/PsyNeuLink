@@ -170,7 +170,7 @@ class GatingProjection(ModulatoryProjection_Base):
     receiver : InputState or OutputState of a ProcessingMechanism
         `inputState <InputState>` or `outputState <OutputState>` to which the GatingProjection projects.
 
-    gatting_signal : 1d np.array
+    gating_signal : 1d np.array
         the input to the GatingProjection; same as the :keyword:`value` of the `sender <GatingProjection.sender>`.
 
     value : float
