@@ -13,19 +13,19 @@
 
   
   
-
+  
   
 
   
 
-
-
-
+  
+  
+    
 
   
 
-
-
+  
+  
     <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   
 
@@ -47,7 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
-
+   
   <div class="wy-grid-for-nav">
 
     
@@ -88,9 +88,9 @@
           
             
             
-
-
-
+              
+            
+            
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
@@ -137,10 +137,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-
+        
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">PsyNeuLink</a>
-
+        
       </nav>
 
 
@@ -166,26 +166,29 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      <li><a href="Component.html">Component</a> &raquo;</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Component.html">Component</a> &raquo;</li>
+        
           <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
-
+        
           <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
-
+        
       <li>Control Mechanism</li>
-
-
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-
+            
             <a href="_sources/ControlMechanism.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-
+    
   </ul>
 
-
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -199,13 +202,13 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> that modifies the parameter(s) of one or more <code class="xref any docutils literal"><span class="pre">ProcessingMechanisms</span></code>.
 Its function takes a value (usually the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and uses that to calculate an
-<a class="reference internal" href="EVCMechanism.html#AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.EVCMechanism.EVCMechanism.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
+<a class="reference internal" href="#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>:  a list of <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> values for each of its ControlSignals that specify the value to assign
 to each parameter of a ProcessingMechanism (or its function) that it controls.  Each of these values is assigned as
 the value of a corresponding <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (a subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by ControlMechanisms), and conveyed by
 the associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of the relevant ProcessingMechanism.
 A ControlMechanism can regulate only the parameters of Mechanisms in the system for which it is the
-<code class="xref any docutils literal"><span class="pre">controller</span></code>.  The control components of a system can be displayed using the system’s
-<code class="xref any docutils literal"><span class="pre">show_graph</span></code> method with its <strong>show_control</strong> argument assigned <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>.</p>
+<a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a>.  The control components of a system can be displayed using the system’s
+<a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_control</strong> argument assigned <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>.</p>
 <p>The control components of a
 system are executed after all ProcessingMechanisms and <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning components</span></a> in that system have
 been executed.</p>
@@ -213,14 +216,14 @@ been executed.</p>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating A ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
 <p>ControlMechanisms can be created using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a <code class="xref any docutils literal"><span class="pre">system</span> <span class="pre">is</span> <span class="pre">created</span></code>, and it is assigned as
-the <code class="xref any docutils literal"><span class="pre">controller</span></code> for that system. The values to be monitored by the ControlMechanism are
+A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">system is created</span></a>, and it is assigned as
+the <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">controller</span></a> for that system. The values to be monitored by the ControlMechanism are
 specified in the <strong>monitor_for_control</strong> argument of its constructor, and the parameters it controls are specified in
 the <strong>control_signals</strong> argument.  When the ControlMechanism is created, it automatically creates
 an ObjectiveMechanism (used to monitor and evaluate the values specified in <strong>monitor_for_control</strong>)
 as well as <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> used to control the parameters
 specified in <strong>control_signals</strong>, as described below. The kind of ObjectiveMechanism created by a ControlMechanism,
-and how it evalutes the values it monitors, depends on the <a class="reference internal" href="#"><span class="doc">subclass</span></a> of ControlMechanism.</p>
+and how it evaluates the values it monitors, depends on the <a class="reference internal" href="#"><span class="doc">subclass</span></a> of ControlMechanism.</p>
 <div class="section" id="specifying-parameters-to-control">
 <span id="controlmechanism-control-signals"></span><h3>Specifying Parameters to Control<a class="headerlink" href="#specifying-parameters-to-control" title="Permalink to this headline">¶</a></h3>
 <p>ControlMechanisms are used to control the parameter values of Mechanisms and/or their functions.  A parameter can be
@@ -243,26 +246,20 @@ The <strong>monitor_for_control</strong> argument must be a list, each item of w
 of one.  These are assigned to the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">monitored_values</span></a> attribute, and the
 ObjectiveMechanism is referenced by the ControlMechanism’s
 <code class="xref any docutils literal"><span class="pre">monitoring_mechanism</span></code> attribute.</p>
-<<<<<<< HEAD
-<p>ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism&#8217;s
-&#8216;monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
-This information is used to set the value of the ControlMechanism&#8217;s ControlSignals.</p>
-=======
 <p>ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism’s
-‘monitor_for_control &lt;ControlMechanism.monitor_for_control&gt;` attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.Logistic.function" title="Function.Logistic.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
+<code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> attribute, and evaluates them using the its <a class="reference internal" href="Function.html#Function.BogaczEtAl.function" title="Function.BogaczEtAl.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.
 This information is used to set the value of the ControlMechanism’s ControlSignals.</p>
->>>>>>> correcting capitalization
 <p class="rubric" id="controlmechanism-examples">Examples</p>
 <p>EXAMPLES HERE</p>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="controlmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ControlMechanism that is a system’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last Mechanism to be executed (see <code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Control</span></code>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
+<p>A ControlMechanism that is a system’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is always the last Mechanism to be executed (see <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System Control</span></a>).  Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the value in its
 <em>ERROR_SIGNAL</em> <code class="xref any docutils literal"><span class="pre">input_state</span></code>, and use that to determine its
 <code class="xref any docutils literal"><span class="pre">allocation_policy</span></code> that specifies the value assigned to each of its
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  Each of those is used by its associated <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to set the
-value of the ParameterState for the parameter it controls.  In the subsequent round of execution,
+value of the ParameterState for the parameter it controls.  In the subsequent <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>,
 those parameter values are used by the Mechanism when it executes.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -347,7 +344,7 @@ to the <a class="reference internal" href="ParameterState.html"><span class="doc
 
            </div>
            <div class="articleComments">
-
+            
            </div>
           </div>
           <footer>
