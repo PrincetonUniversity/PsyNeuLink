@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputState &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>OutputState &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="State" href="State.html"/>
         <link rel="next" title="ModulatorySignal" href="ModulatorySignal.html"/>
         <link rel="prev" title="ParameterState" href="ParameterState.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -275,7 +275,7 @@ assigned.</p>
 </div></blockquote>
 <p>The list of OutputStates for a Mechanism can be accessed using its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>
 attribute, and new ones can be added to an existing Mechanism by appending a list (containing specifications in the
-form listed above) to the <a class="reference internal" href="DDM.html#ProcessingMechanisms.DDM.DDM.output_states" title="ProcessingMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> list. Assigning without appending will replace any existing OutputStates.
+form listed above) to the <a class="reference internal" href="ObjectiveMechanism.html#ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.output_states" title="ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> list. Assigning without appending will replace any existing OutputStates.
 If the name of an explicitly specified OutputState is the same as one that was created automatically (or another one
 that was created explicitly), its name will be suffixed with a numerical index (incremented for each OutputState with
 that name), and the OutputState will be added to the list (that is, it will <em>not</em> replace ones that were already
@@ -428,7 +428,7 @@ the <strong>index</strong> argument).  This must match (in number and type of el
 <strong>variable</strong> argument.  It is used to insure the compatibility of the source of the
 input for the OutputState with its <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the template for the OutputState’s <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
-<li><strong>function</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em>, </em><a class="reference internal" href="Function.html#Function.BogaczEtAl.function" title="Function.BogaczEtAl.function"><em>function</em></a><em>, or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – <p>function used to aggregate the values of the projections received by the OutputState.
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em>, </em><a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a><em>, or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – <p>function used to aggregate the values of the projections received by the OutputState.
 It must produce a result that has the same format (number and type of elements) as the item of the Mechanism’s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to which the OutputState is assigned (specified by its
 <strong>index</strong> argument).</p>
@@ -440,7 +440,7 @@ It must produce a result that has the same format (number and type of elements) 
 <li><strong>index</strong> (<em>int : default PRIMARY_OUTPUT_STATE</em>) – specifies the item of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> used as input for the
 function specified by the OutputState’s <a class="reference internal" href="#OutputState.OutputState.calculate" title="OutputState.OutputState.calculate"><code class="xref any py py-attr docutils literal"><span class="pre">calculate</span></code></a> attribute, to determine the
 OutputState’s <a class="reference internal" href="#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>calculate</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em>, </em><a class="reference internal" href="Function.html#Function.BogaczEtAl.function" title="Function.BogaczEtAl.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to convert the designated item of the owner Mechanism’s
+<li><strong>calculate</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em>, </em><a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><em>function</em></a><em>, or </em><em>method : default Linear</em>) – specifies the function used to convert the designated item of the owner Mechanism’s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (specified by the OutputState’s <code class="xref std std-keyword docutils literal"><span class="pre">index</span></code> attribute),
 before it is assigned as the OutputState’s <a class="reference internal" href="#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The function must accept a value that
 has the same format (number and type of elements) as the item of the Mechanism’s
@@ -549,7 +549,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10d020e80&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x110b86630&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard
 OutputStates</span></a> of a class</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -559,7 +559,7 @@ OutputStates</span></a> of a class</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component to which this OutputState belongs</li>
 <li><strong>output_state_dicts</strong> (<em>list of dicts</em>) – list of dictionaries specifying OutputStates for the Component specified
-by <a class="reference internal" href="Function.html#Function.BogaczEtAl.owner" title="Function.BogaczEtAl.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+by <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.owner" title="ModulatorySignals.LearningSignal.LearningSignal.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
 <li><strong>indices</strong> (<em>PRIMARY_OUTPUT_STATES</em><em>, </em><em>SEQUENTIAL</em><em>, </em><em>list of ints</em>) – <p>specifies how to assign the INDEX entry for each dict listed in
 <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></p>
 <p>The effects of each value of indices are as follows:</p>
@@ -656,7 +656,7 @@ by <a class="reference internal" href="Function.html#Function.BogaczEtAl.owner" 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="Composition" href="Composition.html"/>
         <link rel="next" title="Process" href="Process.html"/>
         <link rel="prev" title="Composition" href="Composition.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -323,7 +323,7 @@ see <a class="reference internal" href="Condition.html#condition-recurrent-examp
 </div>
 <div class="section" id="learning">
 <span id="system-execution-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
-<p>The System will execute learning if it is specified for any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> in the System.  The System’s <a class="reference internal" href="#System.System_Base.learning" title="System.System_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
+<p>The System will execute learning if it is specified for any <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> in the System.  The System’s <a class="reference internal" href="Process.html#Process.Process_Base.learning" title="Process.Process_Base.learning"><code class="xref any py py-attr docutils literal"><span class="pre">learning</span></code></a> attribute
 indicates whether learning is enabled for the System. <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Learning</span></a> is executed for any components
 (individual Projections or Processes) for which it is specified after the <a class="reference internal" href="#system-execution-processing"><span class="std std-ref">processing</span></a> of
 each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> has completed, but before the <a class="reference internal" href="#system-execution-control"><span class="std std-ref">controller is executed</span></a>.  The learning components
@@ -387,7 +387,7 @@ Mechanisms specified in <code class="xref any docutils literal"><span class="pre
 <li><strong>monitor_for_control</strong> (<em>list of OutputState objects</em><em> or </em><em>specifications : default None</em>) – specifies the OutputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms in the System to be monitored by its <a class="reference internal" href="#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 (see <code class="xref any docutils literal"><span class="pre">ControlMechanism_Monitored_OutputStates</span></code> for specifying the <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument).</li>
 <li><strong>learning_rate</strong> (<em>float : None</em>) – set the learning_rate for all <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in the System
-(see <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional information).</li>
+(see <a class="reference internal" href="#System.System_Base.learning_rate" title="System.System_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional information).</li>
 <li><strong>targets</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>List</em><em>]</em><em>]</em><em>, </em><em>2d np.ndarray</em><em>] </em><em>: default ndarrays of zeroes</em>) – the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the System (listed in its
 <a class="reference internal" href="#System.System_Base.target_mechanisms" title="System.System_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="#System.System_Base.target_mechanisms" title="System.System_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a>,
 and each item must have the same format (length and number of elements) as the TARGET input
@@ -863,7 +863,7 @@ mechanism of the system.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
