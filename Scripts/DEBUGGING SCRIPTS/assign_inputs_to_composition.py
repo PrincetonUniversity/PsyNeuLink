@@ -4,9 +4,9 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism, mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.Globals.Keywords import EXECUTING
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 from pprint import pprint
 
 
