@@ -9,9 +9,9 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.Scheduling.Condition import EveryNCalls
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.composition import Composition, CompositionError, MechanismRole
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class TestConstructor:
         ]
     )
     def test_timing_no_args(self, count):
-        t = timeit('comp = Composition()', setup='from PsyNeuLink.composition import Composition', number=count)
+        t = timeit('comp = Composition()', setup='from PsyNeuLink.Composition import Composition', number=count)
         print()
         logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
@@ -75,7 +75,7 @@ class TestAddMechanism:
             'comp.add_mechanism(mechanism())',
             setup='''
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
-from PsyNeuLink.composition import Composition
+from PsyNeuLink.Composition import Composition
 comp = Composition()
 ''',
             number=count
@@ -125,7 +125,7 @@ class TestAddProjection:
                    setup='''
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.composition import Composition
+from PsyNeuLink.Composition import Composition
 comp = Composition()
 A = TransferMechanism(name='A')
 B = TransferMechanism(name='B')
