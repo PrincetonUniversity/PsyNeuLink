@@ -455,11 +455,7 @@ class State_Base(State):
         """
         if kargs:
             try:
-                # # MODIFIED 5/10/17 OLD:
-                # variable = kargs[STATE_VALUE]
-                # MODIFIED 5/10/17 NEW:
                 variable = kargs[VARIABLE]
-                # MODIFIED 5/10/17 END
             except (KeyError, NameError):
                 pass
             try:
@@ -493,13 +489,9 @@ class State_Base(State):
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(params=params)
 
-        # # VALIDATE owner
-        # if isinstance(owner, (Mechanism, Projection)):
-        #     self.owner = owner
-        # else:
-        #     raise StateError("\'owner\' argument ({0}) for {1} must be a Mechanism or projection".
-        #                               format(owner, name))
         self.owner = owner
+        if 'LearningSignal' in self.__class__.__name__:
+            x = self.learning_rate
 
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
