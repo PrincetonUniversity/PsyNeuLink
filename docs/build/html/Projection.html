@@ -178,11 +178,11 @@
 <p>Projections allow information to be passed between <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  A Projection takes its input from the
 <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of one Mechanism (its <code class="xref any docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is
 needed to transmit that information to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another Mechanism (its
-<code class="xref any docutils literal"><span class="pre">receiver</span></code>).  There are three types of Projections that serve difference purposes:</p>
+<code class="xref any docutils literal"><span class="pre">receiver</span></code>).  There are four types of Projections that serve different purposes:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
-<dd><p class="first last">These take the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
+<dd><p class="first last">This takes the output of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, convert this by convolving it with
 the Projection&#8217;s <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter, and transmit the result as
 input to another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in the
 <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.</p>
@@ -193,7 +193,7 @@ input to another ProcessingMechanism.  Typically, MappingProjections are used to
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">These take an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> specification, usually the ouptput
+<dd><p class="first last">This takes an <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="ModulatoryProjections.ControlProjection.ControlProjection.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> specification, usually the ouptput
 of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and transmit this to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a>
 that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
 in the context of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
@@ -204,10 +204,21 @@ in the context of a <a class="reference internal" href="System.html"><span class
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">These take the value of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmit this to the
+<dd><p class="first last">This takes the value of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmit this to the
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> which uses this to modify its
 <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. LearningProjections are used when
 learning has been specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
+<dd><p class="first last">This takes the <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> belonging to
+a GatingMechanism and conveys it to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> for use by the state&#8217;s <a class="reference internal" href="Function.html#Function.Distance.function" title="Function.Distance.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> in modulating its
+<a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </dd>
 </dl>
 </li>

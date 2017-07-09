@@ -50,13 +50,13 @@ Overview
 --------
 
 A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when thata
+for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when that
 component is executed, its Function's `function <Function_Base.function>` is executed.  The
 `function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
 (and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
 packages functions in a Function component: to *manage parameters*, and for *modularity*.
 
-**Manage parameters**. Parameters are attributes of a function that either remain stable over multiple calls to the
+**Manage parameters**. Parameters are attributes of a Function that either remain stable over multiple calls to the
 function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
 of a learning function); or, if they change, they do so less frequently or under the control of different factors
 than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
@@ -89,7 +89,7 @@ Structure
 ---------
 
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
-`function <Function_Base.function>` method.  It's core attribute is its `function <Function_Base.function>` attribute,
+`function <Function_Base.function>` method.  Its core attribute is its `function <Function_Base.function>` attribute
 that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
 method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
 "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
@@ -124,8 +124,8 @@ Functions are not executable objects, but their `function <Function_Base.functio
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
 `parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the
-call to the `function <Function_Base.function>`.  For `mechanisms <Mechanism>`, this can also be done by specifying
-`runtime_params <Mechanism_Runtime_Parameters>` for the mechanism when it is `executed <Mechanism_Base.execute>`.
+call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
+`runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
 
 Class Reference
 ---------------
@@ -253,18 +253,18 @@ class ModulationParam():
 
     MULTIPLICATIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State.function>`;
+        of the State's `function <State.function>`
 
     ADDITIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State.function>`;
+        of the State's `function <State.function>`
 
     OVERRIDE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`);
+        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`)
 
     DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State.value>`.
+        ignore the ModulatorySignal when calculating the State's `value <State.value>`
     """
     MULTIPLICATIVE = MultiplicativeParam
     # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
@@ -299,7 +299,7 @@ def _get_modulated_param(owner, mod_proj:ModulatoryProjection_Base):
     """Return ModulationParam object, function param name and value of param modulated by ModulatoryProjection
     """
 
-    # Get function "meta-parameter" object specified in the projection sender's modulation attribute
+    # Get function "meta-parameter" object specified in the Projection sender's modulation attribute
     function_mod_meta_param_obj = mod_proj.sender.modulation
 
     # Get the actual parameter of owner.function_object to be modulated
@@ -393,7 +393,7 @@ class Function_Base(Function):
               - calling the _instantiate_defaults method (which changes their default values)
               - including them in a call the function method (which changes their values for just for that call)
             - Parameters must be specified in a params dictionary:
-              - the key for each entry should be the name of the parameter (used also to name associated projections)
+              - the key for each entry should be the name of the parameter (used also to name associated Projections)
               - the value for each entry is the value of the parameter
 
         Return values:
@@ -2242,9 +2242,8 @@ class Logistic(
         """
         return output * (1 - output)
 
-
-class SoftMax(
-    TransferFunction):  # -------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------
+class SoftMax(TransferFunction):
     """
     SoftMax(               \
          variable_default, \
@@ -2264,11 +2263,11 @@ class SoftMax(
     Arguments
     ---------
 
-    variable : 1d np.array : default variableClassDefault
+    variable_default : 1d np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
-        specifies a value by which to multiply `variable <Linear.variable>` before softmax transformation.
+        specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
         specifies the format of array returned by `function <SoftMax.function>`
@@ -2294,20 +2293,19 @@ class SoftMax(
         contains value to be transformed.
 
     gain : float
-        value by which `variable <Logistic.variable>` is multiplied before the softmax transformation;  determines
+        value by which `variable <Logistic.variable>` is multiplied before the SoftMax transformation;  determines
         the "sharpness" of the distribution.
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
-        determines how the softmax-transformed values of the elements in `variable <SoftMax.variable>` are reported
+        determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
         in the array returned by `function <SoftMax.funtion>`:
-            * **ALL**: array of all softmax-transformed values (the default);
-            * **MAX_VAL**: softmax-transformed value for the element with the maximum such value, 0 for all others;
-            * **MAX_INDICATOR**: 1 for the element with the maximum softmax-transformed value, 0 for all others;
-            * **PROB**: probabilistically chosen element based on softmax-transformed values after normalizing sum of
+            * **ALL**: array of all SoftMax-transformed values (the default);
+            * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
+            * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
+            * **PROB**: probabilistically chosen element based on SoftMax-transformed values after normalizing sum of
               values to 1, 0 for all others.
 
-    bounds : None if `output <SoftMax.output>`==MAX_VAL, else (0,1) : default (0,1)
-
+    bounds : None if `output <SoftMax.output>` == MAX_VAL, else (0,1) : default (0,1)
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -2379,7 +2377,7 @@ class SoftMax(
         Returns
         -------
 
-        softmax transformation of variable : number or np.array
+        SoftMax transformation of variable : number or np.array
 
         """
 
@@ -3828,11 +3826,11 @@ class AdaptiveIntegrator(
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
 
-        **Note:**
-        In order to generate random noise, we recommend selecting a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-        the noise will simply be an offset that remains the same across all executions.
+        .. note::
+            In order to generate random noise, we recommend selecting a probability distribution function
+            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
+            the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
@@ -5113,9 +5111,8 @@ class NF_Results(AutoNumber):
     MEAN_CORRECT_VARIANCE = ()
     MEAN_CORRECT_SKEW_RT = ()
 
-
-class NavarroAndFuss(
-    IntegratorFunction):  # ----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+class NavarroAndFuss(IntegratorFunction):
     """
     NavarroAndFuss(                             \
         variable_default=variableCLassDefault,  \
@@ -5202,9 +5199,7 @@ class NavarroAndFuss(
         Gaussian random process).
 
     t0 : float or 1d np.array
-
         determines the assumed non-decision time to determine the response time returned by the solution.
-
 
     bias : float or 1d np.array
         normalized starting point:
@@ -5730,16 +5725,16 @@ class WaldDist(DistributionFunction):
 
      .. _WaldDist:
 
-     Return a random sample from a wald distribution using numpy.random.wald
+     Return a random sample from a Wald distribution using numpy.random.wald
 
      Arguments
      ---------
 
      scale : float : default 1.0
-         Scale parameter of the wald distribution. Should be greater than zero.
+         Scale parameter of the Wald distribution. Should be greater than zero.
 
      mean : float : default 1.0
-         Mean of the wald distribution. Should be greater than or equal to zero.
+         Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
          a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -5758,10 +5753,10 @@ class WaldDist(DistributionFunction):
      ----------
 
      scale : float : default 1.0
-         Scale parameter of the wald distribution. Should be greater than zero.
+         Scale parameter of the Wald distribution. Should be greater than zero.
 
      mean : float : default 1.0
-         Mean of the wald distribution. Should be greater than or equal to zero.
+         Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
          a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
@@ -6057,10 +6052,10 @@ class Stability(ObjectiveFunction):
                  context=None):
         """Calculate the stability of `variable <Stability.variable>`.
 
-         Compare the value of `variable <Stability.variable>` with its value after transformation by
-         `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
-         `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
-         by the length of `variable <Stability.variable>`.
+        Compare the value of `variable <Stability.variable>` with its value after transformation by
+        `matrix <Stability.matrix>` and `transfer_fct <Stability.transfer_fct>` (if specified), using the specified
+        `metric <Stability.metric>`.  If `normalize <Stability.normalize>` is `True`, the result is divided
+        by the length of `variable <Stability.variable>`.
 
         Returns
         -------
@@ -6342,10 +6337,10 @@ class Reinforcement(
        `error_signal <Reinforcement.error_signal>` (1d np.array).
 
     activation_function : Function or function : SoftMax
-        specifies the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`.
+        specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float : default default_learning_rate
-        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -6384,11 +6379,11 @@ class Reinforcement(
         same position as the one in `activation_output <Reinforcement.activation_output>`.
 
     activation_function : Function or function : SoftMax
-        the function of the mechanism that generates `activation_output <Reinforcement.activation_output>`; must
+        the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
         return and array with a single non-zero value.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
@@ -6403,7 +6398,7 @@ class Reinforcement(
          `error_signal <Reinforcement.error_signal>` received.
 
     owner : Mechanism
-        `mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -6463,7 +6458,7 @@ class Reinforcement(
         if not INITIALIZING in context:
             if np.count_nonzero(self.activation_output) != 1:
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
-                                     "(if output mechanism being trained uses softmax,"
+                                     "(if output Mechanism being trained uses softmax,"
                                      " its \'output\' arg may need to be set to to PROB)".
                                      format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
 
@@ -6519,7 +6514,7 @@ class Reinforcement(
         error = self.error_signal
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
@@ -6588,11 +6583,11 @@ class BackPropagation(LearningFunction):
        `error_signal <BackPropagation.error_signal>` (1d np.array).
 
     activation_derivative : Function or function
-        specifies the derivative for the function of the mechanism that generates
+        specifies the derivative for the function of the Mechanism that generates
         `activation_output <BackPropagation.activation_output>`.
 
     error_derivative : Function or function
-        specifies the derivative for the function of the mechanism that is the receiver of the
+        specifies the derivative for the function of the Mechanism that is the receiver of the
         `error_matrix <BackPropagation.error_matrix>`.
 
     error_matrix : List, 2d np.array, np.matrix, ParameterState, or MappingProjection
@@ -6602,7 +6597,7 @@ class BackPropagation(LearningFunction):
         MATRIX parameterState.
 
     learning_rate : float : default default_learning_rate
-        supercedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -6636,7 +6631,7 @@ class BackPropagation(LearningFunction):
 
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
-        target (training signal) and the output of the last mechanism in the sequence;
+        target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>.
 
     error_matrix : 2d np.array or ParameterState
@@ -6644,7 +6639,7 @@ class BackPropagation(LearningFunction):
         if it is a `ParameterState`, it refers to the MATRIX parameterState of the `MappingProjection` being learned.
 
     learning_rate : float
-        the learning rate used by the function.  If specified, it supercedes any learning_rate specified for the
+        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
         `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
@@ -6661,7 +6656,7 @@ class BackPropagation(LearningFunction):
          `error_matrix <BackPropagation.error_matrix>`.
 
     owner : Mechanism
-        `mechanism <Mechanism>` to which the function belongs.
+        `Mechanism <Mechanism>` to which the function belongs.
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
@@ -6852,7 +6847,7 @@ class BackPropagation(LearningFunction):
             error_matrix = self.error_matrix
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
-        #                      1) if no learning_rate is specified for the mechanism, need to assign None
+        #                      1) if no learning_rate is specified for the Mechanism, need to assign None
         #                          so that the process or system can see it is free to be assigned
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value

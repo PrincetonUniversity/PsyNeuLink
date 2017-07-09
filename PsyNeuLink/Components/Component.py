@@ -24,7 +24,7 @@ It defines a common set of attributes possessed, and methods used by all Compone
 Creating a Component
 --------------------
 
-A Component is never created directly.  However, its __init__() method is always called when a subclass is instantiated;
+A Component is never created directly.  However, its ``__init__()`` method is always called when a subclass is instantiated;
 that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization
 procedure.
 
@@ -44,7 +44,7 @@ Every Component has the following set of core attributes that govern its operati
 
 * **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
   `function <Component.function>`.  Specification of the variable in the constructor for a Component determines both
-  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as
+  its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array, etc.) as well as
   its default value (the value used when the Component is executed and no input is provided).
 
 .. _Component_Function:
@@ -67,7 +67,7 @@ Every Component has the following set of core attributes that govern its operati
       This will create a default instance of the specified subclass, using default values for its parameters.
     |
     * **Function** - this can be either an existing `Function <Function>` object or the constructor for one, as in the
-      following examples:
+      following examples::
 
         my_component = SomeComponent(function=SomeFunction)
 
@@ -78,7 +78,7 @@ Every Component has the following set of core attributes that govern its operati
 
       The specified Function will be used as a template to create a new Function object that is assigned to the
       `function_object` attribute of the Component, the `function <Function.function>` of which will be assigned as
-      the 'function <Component.function>` attribute of the Component.
+      the `function <Component.function>` attribute of the Component.
 
       .. note::
 
@@ -90,7 +90,7 @@ Every Component has the following set of core attributes that govern its operati
 
   A `function <Component.function>` can also be specified in an entry of a
   `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
-  **params** argument of the constructor for the Component, with the keyword FUNCTION as its key, and one of the
+  **params** argument of the constructor for the Component, with the keyword *FUNCTION* as its key, and one of the
   specifications above as its value, as in the following example::
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
@@ -152,7 +152,7 @@ COMMENT
   conventions used in assigning default names and handling of duplicate names).
 ..
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
-  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in __init__.py
+  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `PreferenceSet <LINK>` for details).
 

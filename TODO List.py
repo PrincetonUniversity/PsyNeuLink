@@ -86,6 +86,8 @@
 
 # PNL TEAM:
 # =========
+# PRINCIPLE:  Constructors should allow specification/assignment of other Components to which they are related/connected
+#                   which should be able to be interpreted in context (e.g., assignment of projections to States)
 # DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
 # DOCUMENTATION: Revise docstrings for Integrator mechanisms and RecurrentTransferMechanisms
 #                    using formatting template from TransferMechanism and DDM
