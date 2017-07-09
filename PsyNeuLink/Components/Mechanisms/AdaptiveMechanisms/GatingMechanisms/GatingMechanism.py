@@ -365,7 +365,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
 
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
-        if isinstance(gating_signal_spec, GatingSignal):
+        if isinstance(gating_signal_spec[GATING_SIGNAL], GatingSignal):
             gating_signal = gating_signal_spec[GATING_SIGNAL]
             # Deferred Initialization, so assign owner, name, and initialize
             if gating_signal.value is DEFERRED_INITIALIZATION:
@@ -377,14 +377,13 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 # MODIFIED 7/7/17 NEW:
                 # default_name = self.name + '_' + GatingSignal.__name__
                 default_name = gating_signal_spec[NAME] + '_' + GatingSignal.__name__
-                gating_signal_spec.init_args[OWNER] = self
-                gating_signal_spec.init_args[NAME] = gating_signal_spec.init_args[NAME] or default_name
+                gating_signal.init_args[OWNER] = self
+                gating_signal.init_args[NAME] = gating_signal.init_args[NAME] or default_name
                 # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
-                gating_signal_spec.init_args[REFERENCE_VALUE] = defaultGatingPolicy
-                gating_signal_spec._deferred_init(context=context)
-                gating_signal = gating_signal_spec
+                gating_signal.init_args[REFERENCE_VALUE] = defaultGatingPolicy
+                gating_signal._deferred_init(context=context)
                 # MODIFIED 7/7/17 END
-            elif not gating_signal_spec.owner is self:
+            elif not gating_signal.owner is self:
                 raise GatingMechanismError("Attempt to assign GatingSignal to {} ({}) that is already owned by {}".
                                             format(self.name, gating_signal_spec.name, gating_signal_spec.owner.name))
             gating_signal_name = gating_signal.name
@@ -396,11 +395,22 @@ class GatingMechanism(AdaptiveMechanism_Base):
             gating_signal_name = gating_signal_spec[NAME]
             # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
             # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)
-            if gating_signal_name in [gs.name for gs in self.gating_signals if isinstance(gs, GatingSignal)]:
+            # MODIFIED 7/8/17 OLD:
+            # if gating_signal_name in [gs.name for gs in self.gating_signals if isinstance(gs, GatingSignal)]:
+            #     gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
+            # MODIFIED 7/8/17 NEW:
+            # Get names of any instantiated (or deferred_init) GatingSignals
+            existing_names = []
+            for gs in self.gating_signals:
+                if isinstance(gs, GatingSignal):
+                    if gs.value is DEFERRED_INITIALIZATION and gs.init_args[NAME]:
+                        existing_names.append(gs.init_args[NAME])
+                    else:
+                        existing_names.append(gs.name)
+            # Add index to name of GatingSignal if its name is already used
+            if gating_signal_name in existing_names:
                 gating_signal_name = gating_signal_name + '-' + repr(len(self.gating_signals))
-
-            # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
-            # from PsyNeuLink.Components.States.State import _instantiate_state
+            # MODIFIED 7/8/17 END
 
             # Get constraint for OutputState's value
             #    - get GatingMechanism's value
@@ -483,7 +493,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         if MAKE_DEFAULT_GATING_MECHANISM in self.paramsCurrent:
             if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
-                self._take_over_as_default_gating_mechanism(context=context)
+                self._assign_as_gating_mechanism(context=context)
 
         # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
         # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
@@ -497,7 +507,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                 for key, projection in self.paramsCurrent[GATING_PROJECTIONS].items():
                     self._instantiate_gating_projection(projection, context=self.name)
 
-    def _take_over_as_default_gating_mechanism(self, context=None):
+    def _assign_as_gating_mechanism(self, context=None):
 
         # FIX 5/23/17: INTEGRATE THIS WITH ASSIGNMENT OF gating_signals
         # FIX:         (E.G., CHECK IF SPECIFIED GatingSignal ALREADY EXISTS)

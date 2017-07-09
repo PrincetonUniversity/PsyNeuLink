@@ -625,6 +625,9 @@ class OutputState(State_Base):
         if isinstance(self.calculate, type):
             self.calculate = self.calculate().function
 
+        # 7/8/17 - INSTANTIATE ANY SPECIFIED PROJECTIONS HERE
+        TEST = True
+
     def _execute(self, function_params, context):
         """Call self.function with owner's value as variable
         """
