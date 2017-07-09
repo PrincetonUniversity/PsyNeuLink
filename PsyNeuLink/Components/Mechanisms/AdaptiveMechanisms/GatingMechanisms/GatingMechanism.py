@@ -300,7 +300,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if self.gating_signal_specs:
             for gating_signal in self.gating_signal_specs:
                 self._instantiate_gating_signal(gating_signal=gating_signal, context=context)
-                TEST = True
 
         # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default OutputState
         # super()._instantiate_output_states(context=context)
