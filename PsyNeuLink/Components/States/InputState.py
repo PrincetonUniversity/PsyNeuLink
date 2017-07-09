@@ -424,6 +424,15 @@ class InputState(State_Base):
                                                   self.reference_value))
                                                   # self.owner.variable))
 
+    def _instantiate_projections(self, projections, context=None):
+        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+
+        Call _instantiate_projections_to_state to assign:
+            PathwayProjections to .pathway_afferents
+            ModulatoryProjections to .mod_afferents
+        """
+        self._instantiate_projections_to_state(projections=projections, context=context)
+
     def _execute(self, function_params, context):
         """Call self.function with self.variable
 

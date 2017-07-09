@@ -624,6 +624,38 @@ class OutputState(State_Base):
         if isinstance(self.calculate, type):
             self.calculate = self.calculate().function
 
+    def _instantiate_projections(self, projections, context=None):
+        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+
+        Assume specification in projections as ModulatoryProjection if it is a:
+            ModulatoryProjection
+            ModulatorySignal
+            AdaptiveMechanism
+        Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
+
+        Assume all remaining specifications in projections are for outgoing MappingProjections;
+            these should be either Mechanisms, States or MappingProjections to one of those
+        Call _instantiate_projections_from_state to assign MappingProjections to .efferents
+
+        """
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+        from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+
+        # Treat as ModulatoryProjection spec if it is a ModulatoryProjection, ModulatorySignal or AdaptiveMechanism
+        modulatory_projections = [proj for proj in projections
+                                  if isinstance(proj, (ModulatoryProjection_Base,
+                                                       ModulatorySignal,
+                                                       AdaptiveMechanism_Base))]
+        self._instantiate_projections_to_state(projections=modulatory_projections, context=context)
+
+        # Treat all remaining specifications in projections as ones for outgoing MappingProjections
+        pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
+        for proj in pathway_projections:
+            self._instantiate_projection_from_state(projection_spec=MappingProjection,
+                                                    receiver=proj,
+                                                    context=context)
+
     def _execute(self, function_params, context):
         """Call self.function with owner's value as variable
         """
