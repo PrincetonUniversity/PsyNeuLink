@@ -94,6 +94,8 @@
 #                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
 # DOCUMENTATION: What to call ConventionsAndDefinitions:  Structural Overivew?  Outline?
 #
+# IMPLEMENT: tests for GatingSignal (per Multilayer Learning Test Script [WITH GATING]:
+#            TEST all forms of GatingSignal specification
 # IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
 #            (??multimple inheritance, as RTM as also a TM?)
 #            Integrate <mechanism>.previous_value with stateful and is_finished

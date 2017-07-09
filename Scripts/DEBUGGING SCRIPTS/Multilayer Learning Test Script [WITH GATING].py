@@ -44,8 +44,8 @@ Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                        # },
                                        # THIS GENERATES THREE GatingSignals, EACH WITH ONE Projection:
                                        Hidden_Layer_1,
-                                       Hidden_Layer_2,
-                                       # my_gating_signal,
+                                       # Hidden_Layer_2,
+                                       my_gating_signal,
                                        Output_Layer
                                    ])
 

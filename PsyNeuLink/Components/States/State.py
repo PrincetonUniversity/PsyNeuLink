@@ -622,11 +622,11 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if STATE_PROJECTIONS in target_set:
+        if STATE_PROJECTIONS in request_set:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
-            projections = target_set[STATE_PROJECTIONS]
+            projections = request_set[STATE_PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
         else:
