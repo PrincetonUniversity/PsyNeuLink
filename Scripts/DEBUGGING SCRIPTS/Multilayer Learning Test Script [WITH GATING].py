@@ -28,19 +28,19 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
-                                       # THIS GENERATES ONE GatingSignal WITH THREE Projections
-                                       {
-                                       # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
-                                       # NAME: 'GATING SIGNAL EXPLICIT NAME',
-                                       # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
-                                        'GATE_ALL': [Hidden_Layer_1,
-                                                     Hidden_Layer_2,
-                                                     Output_Layer]
-                                       },
+                                       # # THIS GENERATES ONE GatingSignal WITH THREE Projections
+                                       # {
+                                       # # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
+                                       # # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                       # # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
+                                       #  'GATE_ALL': [Hidden_Layer_1,
+                                       #               Hidden_Layer_2,
+                                       #               Output_Layer]
+                                       # },
                                        # THIS GENERATES THREE GatingSignals, EACH WITH ONE Projection:
-                                       # Hidden_Layer_1,
-                                       # Hidden_Layer_2,
-                                       # Output_Layer
+                                       Hidden_Layer_1,
+                                       Hidden_Layer_2,
+                                       Output_Layer
                                    ])
 
 
