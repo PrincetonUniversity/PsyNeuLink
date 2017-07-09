@@ -636,9 +636,9 @@ def _parse_gating_signal_spec(owner, state_spec):
     # Get gated states from any already instantiated GatingSignals in gating_signals arg
     if owner.gating_signals:
         #                                   _gating_signal_arg
-        for gating_signal in [gs for gs in owner.gating_signals #   is already an instantiated GatingSignal
+        for owner_gs in [gs for gs in owner.gating_signals #   is already an instantiated GatingSignal
                               if (isinstance(gs, GatingSignal) and not gs.value is DEFERRED_INITIALIZATION)]:
-            all_gated_states.extend([proj.receiver for proj in gating_signal.efferents])
+            all_gated_states.extend([proj.receiver for proj in owner_gs.efferents])
     # Add states for current GatingSignal
     all_gated_states.extend(states)
     # Check for duplicates

@@ -362,7 +362,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         gating_signal_spec = _parse_gating_signal_spec(owner=self, state_spec=gating_signal)
 
-
         # Specification is a GatingSignal (either passed in directly, or parsed from tuple above)
         if isinstance(gating_signal_spec[GATING_SIGNAL], GatingSignal):
             gating_signal = gating_signal_spec[GATING_SIGNAL]
@@ -390,7 +389,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
         # Instantiate OutputState for GatingSignal
         else:
-
             gating_signal_name = gating_signal_spec[NAME]
             # FIX: ??CALL REGISTRY FOR NAME HERE (AS FOR OUTPUTSTATE IN MECHANISM?? -
             # FIX:  OR IS THIS DONE AUTOMATICALLY IN _instantiate_state??)
