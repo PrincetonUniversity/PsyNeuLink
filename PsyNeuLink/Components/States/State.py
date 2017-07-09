@@ -637,12 +637,12 @@ class State_Base(State):
 
         if projections:
             # Validate projection specs in list
-            from PsyNeuLink.Components.Projections import Projection
+            from PsyNeuLink.Components.Projections.Projection import Projection
             for projection in projections:
                 try:
                     issubclass(projection, Projection)
                 except TypeError:
-                    if (isinstance(projection, Projection) or iscompatible(projection. dict)):
+                    if (isinstance(projection, Projection) or iscompatible(projection, dict)):
                         continue
                     else:
                         if self.prefs.verbosePref:
