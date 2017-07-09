@@ -13,8 +13,6 @@
 
   
   
-  
-  
 
   
 
@@ -44,7 +42,6 @@
 
 <body class="wy-body-for-nav" role="document">
 
-   
   <div class="wy-grid-for-nav">
 
     
@@ -85,10 +82,7 @@
           
             
             
-              
-            
-            
-              <ul>
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
@@ -105,10 +99,8 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">PsyNeuLink</a>
-        
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
       </nav>
 
 
@@ -117,40 +109,23 @@
         <div class="rst-content">
           
 
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
-
   <ul class="wy-breadcrumbs">
-    
-      <li><a href="index.html">Docs</a> &raquo;</li>
-        
-      <li>Utilities</li>
-    
-    
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Utilities</li>
       <li class="wy-breadcrumbs-aside">
         
-            
-            <a href="_sources/Utilities.rst.txt" rel="nofollow"> View page source</a>
+          
+            <a href="_sources/Utilities.txt" rel="nofollow"> View page source</a>
           
         
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -309,10 +284,10 @@ If reference is omitted, candidate must match specs in kargs</p>
 <dl class="docutils">
 <dt>kargs is an optional dictionary with the following entries:</dt>
 <dd><dl class="first last docutils">
-<dt>kwCompatibilityType (“type”):&lt;type&gt; (default: list):  (spec local_variable: match_type)</dt>
+<dt>kwCompatibilityType (&#8220;type&#8221;):&lt;type&gt; (default: list):  (spec local_variable: match_type)</dt>
 <dd><ul class="first last">
 <li><dl class="first docutils">
-<dt>if reference is provided, candidate’s type must match or be subclass of reference,</dt>
+<dt>if reference is provided, candidate&#8217;s type must match or be subclass of reference,</dt>
 <dd><p class="first last">irrespective of whether kwCompatibilityType is specified or absent;  however, if:
 + kwCompatibilityType is absent, enums are treated as numbers (of which they are a subclass)
 + kwCompatibilityType = enum, then candidate must be an enum if reference is one</p>
@@ -327,7 +302,7 @@ If reference is omitted, candidate must match specs in kargs</p>
 if kwCompatibilityNumeric is <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code>, candidate can contain any type</p>
 </dd>
 </dl>
-<p class="last">if kwCompatibilityType is specified, candidate’s type must match or be subclass of specified type</p>
+<p class="last">if kwCompatibilityType is specified, candidate&#8217;s type must match or be subclass of specified type</p>
 </dd>
 </dl>
 </li>
@@ -339,29 +314,32 @@ if kwCompatibilityNumeric is <code class="xref std std-keyword docutils literal"
 </li>
 </ul>
 </dd>
-<dt>kwCompatibilityLength (“length”):&lt;int&gt;  (default: 0):    (spec local_variable: match_length)</dt>
-<dd><ul class="first simple">
+<dt>kwCompatibilityLength (&#8220;length&#8221;):&lt;int&gt;  (default: 0):    (spec local_variable: match_length)</dt>
+<dd><ul class="first">
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength is absent:</dt>
-<dd>if reference is absent, candidate can be of any length
-if reference is provided, candidate must match reference length</dd>
+<dd><p class="first last">if reference is absent, candidate can be of any length
+if reference is provided, candidate must match reference length</p>
+</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength = 0:</dt>
-<dd>candidate can be any length, irrespective of the reference or its length</dd>
+<dd><p class="first last">candidate can be any length, irrespective of the reference or its length</p>
+</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>if kwCompatibilityLength &gt; 0:</dt>
-<dd>if reference is provided, candidate must be same length as reference
-if reference is omitted, length of candidate must equal value of kwLength</dd>
+<dd><p class="first last">if reference is provided, candidate must be same length as reference
+if reference is omitted, length of candidate must equal value of kwLength</p>
+</dd>
 </dl>
 </li>
 </ul>
 <p class="last">Note: kwCompatibility &lt; 0 is illegal;  it will generate a warning and be set to 0</p>
 </dd>
-<dt>kwCompatibilityNumeric (“number”: &lt;bool&gt; (default: <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>)  (spec local_variable: number_only)</dt>
+<dt>kwCompatibilityNumeric (&#8220;number&#8221;: &lt;bool&gt; (default: <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>)  (spec local_variable: number_only)</dt>
 <dd><dl class="first last docutils">
 <dt>If kwCompatibilityNumeric is <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>, candidate must be either numeric or a list or tuple of</dt>
 <dd>numeric types</dd>
@@ -378,9 +356,9 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>candidate</strong> – (value)</li>
-<li><strong>reference</strong> – (value)</li>
-<li><strong>args</strong> – (dict)</li>
+<li><strong>candidate</strong> &#8211; (value)</li>
+<li><strong>reference</strong> &#8211; (value)</li>
+<li><strong>args</strong> &#8211; (dict)</li>
 </ul>
 </td>
 </tr>
@@ -412,12 +390,12 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>source</strong> (<em>-</em>) – container dict (entries are dicts); search entries for specific and general dicts</li>
-<li><strong>specific</strong> (<em>-</em>) – if str, use as key to look for specific dict in source, and check that it is a dict</li>
-<li><strong>general</strong> (<em>-</em>) – if str, use as key to look for general dict in source, and check that it is a dict</li>
-<li><strong>source</strong> – (dict)</li>
-<li><strong>specific</strong> – (dict or str)</li>
-<li><strong>general</strong> – (dict or str)</li>
+<li><strong>source</strong> (<em>-</em>) &#8211; container dict (entries are dicts); search entries for specific and general dicts</li>
+<li><strong>specific</strong> (<em>-</em>) &#8211; if str, use as key to look for specific dict in source, and check that it is a dict</li>
+<li><strong>general</strong> (<em>-</em>) &#8211; if str, use as key to look for general dict in source, and check that it is a dict</li>
+<li><strong>source</strong> &#8211; (dict)</li>
+<li><strong>specific</strong> &#8211; (dict or str)</li>
+<li><strong>general</strong> &#8211; (dict or str)</li>
 </ul>
 </td>
 </tr>
@@ -431,9 +409,9 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 <dl class="function">
 <dt id="Utilities.multi_getattr">
 <code class="descclassname">Utilities.</code><code class="descname">multi_getattr</code><span class="sig-paren">(</span><em>obj</em>, <em>attr</em>, <em>default=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Utilities.multi_getattr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a named attribute from an object; multi_getattr(x, ‘a.b.c.d’) is
+<dd><p>Get a named attribute from an object; multi_getattr(x, &#8216;a.b.c.d&#8217;) is
 equivalent to x.a.b.c.d. When a default argument is given, it is
-returned when any attribute in the chain doesn’t exist; without
+returned when any attribute in the chain doesn&#8217;t exist; without
 it, an exception is raised when a missing attribute is encountered.</p>
 </dd></dl>
 
@@ -447,7 +425,7 @@ it, an exception is raised when a missing attribute is encountered.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> – </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>value</strong> &#8211; </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -473,10 +451,10 @@ it, an exception is raised when a missing attribute is encountered.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sender</strong> (<em>int</em>) – specifies number of rows.</li>
-<li><strong>receiver</strong> (<em>int</em>) – spcifies number of columns.</li>
-<li><strong>range</strong> (<em>int</em>) – specifies upper limit (lower limit = 0).</li>
-<li><strong>offset</strong> (<em>int</em>) – specifies amount added to each entry of the matrix.</li>
+<li><strong>sender</strong> (<em>int</em>) &#8211; specifies number of rows.</li>
+<li><strong>receiver</strong> (<em>int</em>) &#8211; spcifies number of columns.</li>
+<li><strong>range</strong> (<em>int</em>) &#8211; specifies upper limit (lower limit = 0).</li>
+<li><strong>offset</strong> (<em>int</em>) &#8211; specifies amount added to each entry of the matrix.</li>
 </ul>
 </td>
 </tr>
@@ -503,10 +481,10 @@ the key to use is specified by the <strong>key</strong> arg of the constructor, 
 <blockquote>
 <div><p>the key must match the keyed attribute of a component in the list; otherwise an exception is raised;</p>
 </div></blockquote>
-<ul class="simple">
+<ul>
 <li><dl class="first docutils">
 <dt>for setting an entry:</dt>
-<dd><ul class="first last">
+<dd><ul class="first last simple">
 <li>the key must match the key of the component being assigned;</li>
 <li>if there is already a component in the list the keyed vaue of which matches the key, it is replaced;</li>
 <li>if there is no component in the list the keyed attribute of which matches the key,
@@ -517,7 +495,8 @@ the component is appended to the list;</li>
 </li>
 <li><dl class="first docutils">
 <dt>for getting lists of the names, values of the keyed attributes, and values of the <code class="xref any docutils literal"><span class="pre">value</span></code></dt>
-<dd>attributes of components in the list.</dd>
+<dd><p class="first last">attributes of components in the list.</p>
+</dd>
 </dl>
 </li>
 </ul>
@@ -529,21 +508,24 @@ the component is appended to the list;</li>
 and the convenience access and assignment by name (e.g., akin to a dict).
 Lists are used (instead of a dict or OrderedDict) since:</p>
 <blockquote class="last">
-<div><ul class="simple">
+<div><ul>
 <li><dl class="first docutils">
 <dt>ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from</dt>
-<dd>collections of states to other variables, such as lists of their values);</dd>
+<dd><p class="first last">collections of states to other variables, such as lists of their values);</p>
+</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>they are most commonly accessed either exhaustively (e.g., in looping through them during execution),</dt>
-<dd>or by key (e.g., to get the first, “primary” one), which makes the efficiencies of a dict for
-accessing by key/name less critical;</dd>
+<dd><p class="first last">or by key (e.g., to get the first, &#8220;primary&#8221; one), which makes the efficiencies of a dict for
+accessing by key/name less critical;</p>
+</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>the number of states in a collection for a given mechanism is likely to be small so that, even when</dt>
-<dd>accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.</dd>
+<dd><p class="first last">accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.</p>
+</dd>
 </dl>
 </li>
 </ul>
@@ -555,11 +537,11 @@ accessing by key/name less critical;</dd>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component_type</strong> (<em>Class</em>) – specifies the class of the items in the list.</li>
-<li><strong>name</strong> (<em>str : 'ContentAddressableList'</em>) – name to use for ContentAddressableList</li>
-<li><strong>key</strong> (str : default <a class="reference internal" href="#Utilities.ContentAddressableList.name" title="Utilities.ContentAddressableList.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) – specifies the attribute of <strong>component_type</strong> used to key items in the list by content;
-<strong>component_type</strong> must have this attribute or, if it is not provided, an attribute with the name ‘name’.</li>
-<li><strong>list</strong> (<em>List : default None</em>) – specifies a list used to initialize the list;
+<li><strong>component_type</strong> (<em>Class</em>) &#8211; specifies the class of the items in the list.</li>
+<li><strong>name</strong> (<em>str : 'ContentAddressableList'</em>) &#8211; name to use for ContentAddressableList</li>
+<li><strong>key</strong> (str : default <a class="reference internal" href="#Utilities.ContentAddressableList.name" title="Utilities.ContentAddressableList.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a>) &#8211; specifies the attribute of <strong>component_type</strong> used to key items in the list by content;
+<strong>component_type</strong> must have this attribute or, if it is not provided, an attribute with the name &#8216;name&#8217;.</li>
+<li><strong>list</strong> (<em>List : default None</em>) &#8211; specifies a list used to initialize the list;
 all of the items must be of type <strong>component_type</strong> and have the <strong>key</strong> attribute.</li>
 </ul>
 </td>
@@ -569,50 +551,50 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.component_type">
 <code class="descname">component_type</code><a class="headerlink" href="#Utilities.ContentAddressableList.component_type" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Class</em> – the class of the items in the list.</p>
+<dd><p><em>Class</em> &#8211; the class of the items in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.name">
 <code class="descname">name</code><a class="headerlink" href="#Utilities.ContentAddressableList.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – name if provided as arg, else name of of ContentAddressableList class</p>
+<dd><p><em>str</em> &#8211; name if provided as arg, else name of of ContentAddressableList class</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.key">
 <code class="descname">key</code><a class="headerlink" href="#Utilities.ContentAddressableList.key" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the attribute of <a class="reference internal" href="#Utilities.ContentAddressableList.component_type" title="Utilities.ContentAddressableList.component_type"><code class="xref any py py-attr docutils literal"><span class="pre">component_type</span></code></a> used to key items in the list by content;</p>
+<dd><p><em>str</em> &#8211; the attribute of <a class="reference internal" href="#Utilities.ContentAddressableList.component_type" title="Utilities.ContentAddressableList.component_type"><code class="xref any py py-attr docutils literal"><span class="pre">component_type</span></code></a> used to key items in the list by content;</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.data">
 <code class="descname">data</code><a class="headerlink" href="#Utilities.ContentAddressableList.data" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List (property)</em> – the actual list of items.</p>
+<dd><p><em>List (property)</em> &#8211; the actual list of items.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.names">
 <code class="descname">names</code><a class="headerlink" href="#Utilities.ContentAddressableList.names" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List (property)</em> – values of the <a class="reference internal" href="Component.html"><span class="doc">name</span></a> attribute of components in the list.</p>
+<dd><p><em>List (property)</em> &#8211; values of the <a class="reference internal" href="Component.html"><span class="doc">name</span></a> attribute of components in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.key_values">
 <code class="descname">key_values</code><a class="headerlink" href="#Utilities.ContentAddressableList.key_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List (property)</em> – values of the keyed attribute of each component in the list.</p>
+<dd><p><em>List (property)</em> &#8211; values of the keyed attribute of each component in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Utilities.ContentAddressableList.values">
 <code class="descname">values</code><a class="headerlink" href="#Utilities.ContentAddressableList.values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List (property)</em> – values of the <a class="reference internal" href="Component.html"><span class="doc">value</span></a> attribute of components in the list.</p>
+<dd><p><em>List (property)</em> &#8211; values of the <a class="reference internal" href="Component.html"><span class="doc">value</span></a> attribute of components in the list.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt>
 <code class="descname">names</code></dt>
 <dd><p>Return list of <code class="xref any docutils literal"><span class="pre">values</span></code> of the name attribute of components in the list.
-:returns: <strong>names</strong> – list of the values of the <code class="xref any docutils literal"><span class="pre">name</span></code> attributes of components in the list.
+:returns: <strong>names</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">name</span></code> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
 
@@ -620,7 +602,7 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dt>
 <code class="descname">key_values</code></dt>
 <dd><p>Return list of <code class="xref any docutils literal"><span class="pre">values</span></code> of the keyed attribute of components in the list.
-:returns: <strong>key_values</strong> – list of the values of the <code class="xref any docutils literal"><span class="pre">keyed</span></code> attributes of components in the list.
+:returns: <strong>key_values</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">keyed</span></code> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
 
@@ -628,7 +610,7 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dt>
 <code class="descname">values</code></dt>
 <dd><p>Return list of values of components in the list.
-:returns: <strong>values</strong> – list of the values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list.
+:returns: <strong>values</strong> &#8211; list of the values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list.
 :rtype: list</p>
 </dd></dl>
 
@@ -636,7 +618,7 @@ all of the items must be of type <strong>component_type</strong> and have the <s
 <dt id="Utilities.ContentAddressableList.values_as_lists">
 <code class="descname">values_as_lists</code><a class="headerlink" href="#Utilities.ContentAddressableList.values_as_lists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return list of values of components in the list, each converted to a list.
-:returns: <strong>values</strong> – list of list values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list,
+:returns: <strong>values</strong> &#8211; list of list values of the <code class="xref any docutils literal"><span class="pre">value</span></code> attributes of components in the list,
 :rtype: list</p>
 </dd></dl>
 
@@ -661,9 +643,6 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 </div>
 
 
-           </div>
-           <div class="articleComments">
-            
            </div>
           </div>
           <footer>
@@ -698,8 +677,7 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
             VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
+            HAS_SOURCE:  true
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
