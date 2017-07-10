@@ -475,6 +475,30 @@ class ParameterState(State_Base):
                                                   self.owner.name,
                                                   self.reference_value))
 
+    def _instantiate_projections(self, projections, context=None):
+        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+
+        Disallow any PathwayProjections
+        Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
+
+        """
+
+        # MODIFIED 7/8/17
+        # FIX:  THIS SHOULD ALSO LOOK FOR OTHER FORMS OF SPECIFICATION
+        # FIX:  OF A PathwayProjection (E.G., TARGET STATE OR MECHANISM)
+        from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
+        pathway_projections = [proj for proj in projections if isinstance(proj, PathwayProjection_Base)]
+        if pathway_projections:
+            pathway_proj_names = []
+            for proj in pathway_projections:
+                pathway_proj_names.append(proj.name + ' ')
+            raise StateError("{} not allowed for {}: {}".
+                             format(PathwayProjection_Base.__self__.__name__,
+                                    self.__class__.__name__,
+                                    pathway_proj_names))
+
+        self._instantiate_projections_to_state(projections=projections, context=context)
+
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
 

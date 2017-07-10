@@ -329,3 +329,27 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         self._modulation = self.modulation or owner.modulation
+
+    def _instantiate_projections(self, projections, context=None):
+        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+
+        Specification should be an existing ModulatoryProjection, or a receiver Mechanism or State
+        Disallow any other specifications (including PathwayProjections)
+        Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
+
+        """
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
+
+        modulatory_projection_specs = [proj for proj in projections
+                                  if isinstance(proj, ModulatoryProjection_Base, Mechanism, State)]
+        excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
+        if excluded_specs:
+            raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
+                             format(ModulatoryProjection_Base.componentName,
+                                    self.__class__.__name__,
+                                    excluded_specs))
+
+        for receiver_spec in modulatory_projection_specs:
+            self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)

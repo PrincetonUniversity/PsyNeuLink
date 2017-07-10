@@ -496,8 +496,6 @@ class State_Base(State):
         params = self._assign_args_to_param_dicts(params=params)
 
         self.owner = owner
-        if 'LearningSignal' in self.__class__.__name__:
-            x = self.learning_rate
 
         # Register State with StateRegistry of owner (Mechanism to which the State is being assigned)
         register_category(entry=self,
@@ -527,16 +525,13 @@ class State_Base(State):
                                          context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
-        try:
-            projections = self.paramsCurrent[STATE_PROJECTIONS]
-        except KeyError:
+        if STATE_PROJECTIONS in self.paramsCurrent:
+            self._instantiate_projections(self.paramsCurrent[STATE_PROJECTIONS], context=context)
+        else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
             #                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
             pass
-        else:
-            if projections:
-                self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a State
@@ -627,11 +622,11 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if STATE_PROJECTIONS in target_set:
+        if STATE_PROJECTIONS in request_set:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
-            projections = target_set[STATE_PROJECTIONS]
+            projections = request_set[STATE_PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
         else:
@@ -642,12 +637,12 @@ class State_Base(State):
 
         if projections:
             # Validate projection specs in list
-            from PsyNeuLink.Components.Projections import Projection
+            from PsyNeuLink.Components.Projections.Projection import Projection
             for projection in projections:
                 try:
                     issubclass(projection, Projection)
                 except TypeError:
-                    if (isinstance(projection, Projection) or iscompatible(projection. dict)):
+                    if (isinstance(projection, Projection) or iscompatible(projection, dict)):
                         continue
                     else:
                         if self.prefs.verbosePref:
@@ -704,6 +699,25 @@ class State_Base(State):
                                              self.owner.name,
                                              self.variable.__class__.__name__,
                                              self.variable))
+
+    def _instantiate_projections(self, projections, context=None):
+        """Implement any Projection(s) to/from State specified in STATE_PROJECTIONS entry of params arg
+
+        Must be implemented by subclasss, to handle interpretation of projection specification(s)
+        in a class-appropriate manner:
+            PathwayProjections:
+              InputState: _instantiate_projections_to_state (.pathway_afferents)
+              ParameterState: disallowed
+              OutputState: _instantiate_projections_from_state (.efferents)
+              ModulatorySignal: disallowed
+            ModulatoryProjections:
+              InputState, OutputState and ParameterState:  _instantiate_projections_to_state (mod_afferents)
+              ModulatorySignal: _instantiate_projections_from_state (.efferents)
+        """
+
+        raise StateError("{} must implement _instantiate_projections (called for {})".
+                         format(self.__class__.__name__,
+                                self.name))
 
     def _instantiate_projections_to_state(self, projections, context=None):
         """Instantiate projections to a State and assign them to self.path_afferents
@@ -1012,7 +1026,7 @@ class State_Base(State):
         If kwMStateProjections is absent or empty, no projections are created
         """
 
-        from PsyNeuLink.Components.Projections.Projection import Projection_Base
+        from PsyNeuLink.Components.Projections.Projection import Projection_Base, ProjectionRegistry
 
         state_name_string = self.name
         item_prefix_string = ""
@@ -1022,8 +1036,10 @@ class State_Base(State):
 
         # # MODIFIED 12/1/16 OLD:
         # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
-        # MODIFIED 12/1/16 NEW:
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # # MODIFIED 12/1/16 NEW:
+        # default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # MODIFIED 7/10/17 NEWER:
+        default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
         # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
