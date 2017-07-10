@@ -874,7 +874,7 @@ class Mechanism_Base(Mechanism):
 
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
-            to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
+            to validate size and variable_default and param_defaults, and assign params to paramInstanceDefaults;
             it uses INPUT_STATE as the variable_default
         * registers Mechanism with MechanismRegistry
 

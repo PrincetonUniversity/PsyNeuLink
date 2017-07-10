@@ -44,8 +44,13 @@ Every Component has the following set of core attributes that govern its operati
 
 * **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
   `function <Component.function>`.  Specification of the variable in the constructor for a Component determines both
-  its format (e.g., whether it's value is numeric, its dimensionality and shape if it is an array, etc.) as well as
+  its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array, etc.) as well as
   its default value (the value used when the Component is executed and no input is provided).
+
+* **size** - the `size <Component.size>` attribute can be used to define the variable <Component.variable> attribute.
+  Specification of the size in the constructor for a Component sets the variable equal to an array of zeros of that
+  size. For example, setting size = 3 is equivalent to setting variable = [0, 0, 0] and setting size = [4, 3] is
+  equivalent to setting variable = [[0, 0, 0, 0], [0, 0, 0]].
 
 .. _Component_Function:
 
@@ -209,6 +214,12 @@ COMMENT:
       compatibility with other attributes of the Component and/or the attributes of other Components (for example, the
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
+
+      * `_handle_size <Component._handle_size>` converts the keyword:`variable` and keyword:`size` arguments
+        to the correct dimensions (for keyword:`Mechanism`, this is a 2D array and 1D array, respectively).
+        If keyword:`variable` was not passed as an argument, this method attempts to infer keyword:`variable`
+        from the keyword:`size` argument, and vice versa if the keyword:`size` argument is missing.
+        The _handle_size method then checks that the keyword:`size` and keyword:`variable` arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the Component being created.
@@ -438,6 +449,8 @@ class Component(object):
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
+        The size argument is an int or array of ints, which specify the size of variable and set variable to be array(s)
+            of zeros.
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
             + Component subclasses can define the param FUNCTION:<method or Function class>
@@ -494,6 +507,7 @@ class Component(object):
         
 
     Class methods:
+        - _handle_size(size, variable)
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
         - _instantiate_defaults(variable, request_set, assign_missing, target_set, default_set=None
@@ -575,6 +589,7 @@ class Component(object):
 
         Initialization arguments:
         - variable_default (anything): establishes type for the variable, used for validation
+        - size (int or 1D array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
@@ -727,6 +742,9 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
+    # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
+    # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
     def _handle_size(self, size, variable):
         """ If variable is None, _handle_size tries to infer variable based on the size argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and State.

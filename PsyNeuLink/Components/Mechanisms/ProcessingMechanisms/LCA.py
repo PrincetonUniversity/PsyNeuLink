@@ -117,6 +117,7 @@ class LCA(RecurrentTransferMechanism):
     """
     LCA(                                   \
         default_input_value=None,          \
+        size=None,                         \
         function=Logistic,                 \
         initial_value=None,                \
         decay=1.0,                         \
@@ -149,6 +150,9 @@ class LCA(RecurrentTransferMechanism):
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if variable is not passed as an argument.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,

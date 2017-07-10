@@ -260,6 +260,7 @@ class ParameterState(State_Base):
     reference_value=None                                         \
     function=LinearCombination(operation=PRODUCT),               \
     variable=None,                                               \
+    size=None,                                                   \
     parameter_modulation_operation=Modulation.MULTIPLY,          \
     params=None,                                                 \
     name=None,                                                   \
@@ -312,6 +313,9 @@ class ParameterState(State_Base):
     variable : number, list or np.ndarray
         specifies the parameter's initial value and attribute value — that is, the value of the attribute of the
         ParameterState's owner or its `function <Component.function>` assigned to the parameter.
+
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if variable is not passed as an argument.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to convert the parameter's attribute value (same as the ParameterState's

@@ -83,6 +83,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     """
     IntegratorMechanism(                            \
     default_input_value=None,                               \
+    size=None,                                              \
     function=Integrator(integration_type=ADAPTIVE, rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
@@ -124,6 +125,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         also serves as a template to specify the length of `variable <IntegratorMechanism.variable>` for
         `function <IntegratorMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
         mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
