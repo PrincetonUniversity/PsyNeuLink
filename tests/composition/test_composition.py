@@ -1060,6 +1060,7 @@ class TestCallBeforeTimescale:
     def test_call_before_record_timescale(self):
         time_step_array = []
         trial_array = []
+        pass_array = []
 
         def cb_timestep(scheduler, arr):
             def record_timestep():
@@ -1068,6 +1069,14 @@ class TestCallBeforeTimescale:
 
             return record_timestep
 
+        def cb_pass(scheduler, arr):
+
+            def record_pass():
+
+                arr.append(scheduler.times[TimeScale.RUN][TimeScale.PASS])
+
+            return record_pass
+
         def cb_trial(scheduler, arr):
 
             def record_trial():
@@ -1075,6 +1084,7 @@ class TestCallBeforeTimescale:
                 arr.append(scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
 
             return record_trial
+
 
 
         comp = Composition()
@@ -1092,11 +1102,13 @@ class TestCallBeforeTimescale:
             inputs=inputs_dict,
             scheduler_processing=sched,
             call_before_timestep=cb_timestep(sched, time_step_array),
-            call_before_trial=cb_trial(sched, trial_array)
+            call_before_trial=cb_trial(sched, trial_array),
+            call_before_pass= cb_pass(sched, pass_array)
         )
 
         assert time_step_array == [0, 1, 0, 1, 0, 1, 0, 1]
         assert trial_array == [0, 1, 2 , 3]
+        assert pass_array == [0, 1, 2, 3]
 
                         # when self.sched is ready:
     # def test_run_default_scheduler(self):

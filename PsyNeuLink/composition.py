@@ -751,6 +751,7 @@ class Composition(object):
             scheduler_processing=None,
             scheduler_learning=None,
             call_before_timestep=None,
+            call_before_pass=None,
             execution_id = None):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -787,13 +788,21 @@ class Composition(object):
         self._create_input_mechanisms()
         self._assign_values_to_input_mechanisms(inputs)
         self._assign_execution_ids(execution_id)
-
+        self._current_pass = -1
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
         num = None
-        for next_execution_set in execution_scheduler.run():
+
+        for next_output in execution_scheduler.run():
+
+            next_execution_set, next_pass = next_output
+
+            if call_before_pass:
+                if self._current_pass != next_pass:
+                    call_before_pass()
+                    self._current_pass = next_pass
+
             if call_before_timestep:
-                print("calling before timestep")
                 call_before_timestep()
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
@@ -815,7 +824,8 @@ class Composition(object):
         execution_id=None,
         num_trials=None,
         call_before_trial = None,
-        call_before_timestep = None
+        call_before_timestep = None,
+        call_before_pass=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -907,6 +917,7 @@ class Composition(object):
                                scheduler_processing,
                                scheduler_learning,
                                call_before_timestep,
+                               call_before_pass,
                                execution_id)
 
             if num is not None:
