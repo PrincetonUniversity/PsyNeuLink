@@ -343,7 +343,7 @@ class ModulatorySignal(OutputState):
             import ModulatoryProjection_Base
 
         modulatory_projection_specs = [proj for proj in projections
-                                  if isinstance(proj, ModulatoryProjection_Base, Mechanism, State)]
+                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State))]
         excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
         if excluded_specs:
             raise StateError("The following are not allowed as a specification for a {} from a {}: {}".

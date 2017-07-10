@@ -629,6 +629,7 @@ class State_Base(State):
             projections = request_set[STATE_PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
+                request_set[STATE_PROJECTIONS] = projections
         else:
             # If no projections, ignore (none will be created)
             projections = None
@@ -1026,7 +1027,7 @@ class State_Base(State):
         If kwMStateProjections is absent or empty, no projections are created
         """
 
-        from PsyNeuLink.Components.Projections.Projection import Projection_Base
+        from PsyNeuLink.Components.Projections.Projection import Projection_Base, ProjectionRegistry
 
         state_name_string = self.name
         item_prefix_string = ""
@@ -1036,8 +1037,10 @@ class State_Base(State):
 
         # # MODIFIED 12/1/16 OLD:
         # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
-        # MODIFIED 12/1/16 NEW:
-        default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # # MODIFIED 12/1/16 NEW:
+        # default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
+        # MODIFIED 7/10/17 NEWER:
+        default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
         # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
