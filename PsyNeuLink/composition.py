@@ -750,7 +750,6 @@ class Composition(object):
             inputs,
             scheduler_processing=None,
             scheduler_learning=None,
-            call_before_pass=None,
             call_before_timestep=None,
             execution_id = None):
         '''
@@ -794,6 +793,7 @@ class Composition(object):
         num = None
         for next_execution_set in execution_scheduler.run():
             if call_before_timestep:
+                print("calling before timestep")
                 call_before_timestep()
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
@@ -815,7 +815,6 @@ class Composition(object):
         execution_id=None,
         num_trials=None,
         call_before_trial = None,
-        call_before_pass = None,
         call_before_timestep = None
     ):
         '''
@@ -904,7 +903,11 @@ class Composition(object):
             for mech in inputs.keys():
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            num = self.execute(execution_inputs, scheduler_processing, execution_id, call_before_timestep, call_before_pass)
+            num = self.execute(execution_inputs,
+                               scheduler_processing,
+                               scheduler_learning,
+                               call_before_timestep,
+                               execution_id)
 
             if num is not None:
                 result = num

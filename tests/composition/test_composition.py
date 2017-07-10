@@ -1057,7 +1057,24 @@ class TestRun:
 
 class TestCallBeforeTimescale:
 
-    def test_call_before_timestep(self):
+    def test_call_before_record_timescale(self):
+        time_step_array = []
+        trial_array = []
+
+        def cb_timestep(scheduler, arr):
+            def record_timestep():
+
+                arr.append(scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
+
+            return record_timestep
+
+        def cb_trial(scheduler, arr):
+
+            def record_trial():
+
+                arr.append(scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
+
+            return record_trial
 
 
         comp = Composition()
@@ -1070,21 +1087,16 @@ class TestCallBeforeTimescale:
         comp._analyze_graph()
         inputs_dict = {A: [1, 2, 3, 4]}
         sched = Scheduler(composition=comp)
-        def cb_timestep(scheduler):
-            def print_timestep():
-                print("Time Step # = ", scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
-            return print_timestep
-        def cb_trial(scheduler):
-            def print_trial():
-                print("Trial # = ", scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
-            return print_trial
-        output = comp.run(
+
+        comp.run(
             inputs=inputs_dict,
             scheduler_processing=sched,
-            call_before_timestep=cb_timestep(sched),
-            call_before_trial=cb_trial(sched)
+            call_before_timestep=cb_timestep(sched, time_step_array),
+            call_before_trial=cb_trial(sched, trial_array)
         )
 
+        assert time_step_array == [0, 1, 0, 1, 0, 1, 0, 1]
+        assert trial_array == [0, 1, 2 , 3]
 
                         # when self.sched is ready:
     # def test_run_default_scheduler(self):
