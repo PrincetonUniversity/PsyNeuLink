@@ -688,6 +688,42 @@ class Not(Condition):
     def owner(self, value):
         self.args[0].owner = value
 
+
+class NWhen(Condition):
+    """NWhen
+
+    Parameters:
+
+        condition(Condition): a `Condition`
+
+        n(int): the maximum number of times this condition will be satisfied
+
+    Satisfied when:
+
+        - the first **n** times **condition** is satisfied upon evaluation
+
+    """
+    def __init__(self, condition, n=1):
+        self.satisfactions = 0
+
+        super().__init__(self.satis, condition, n)
+
+    @Condition.scheduler.setter
+    def scheduler(self, value):
+        self.args[0].scheduler = value
+
+    @Condition.owner.setter
+    def owner(self, value):
+        self.args[0].owner = value
+
+    def satis(self, condition, n):
+        if self.satisfactions < n:
+            if condition.is_satisfied():
+                self.satisfactions += 1
+                return True
+        return False
+
+
 ######################################################################
 # Time-based Conditions
 #   - satisfied based only on TimeScales
