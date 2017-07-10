@@ -674,7 +674,7 @@ class Not(Condition):
 
     Satisfied when:
 
-        - the Condition is not satisfied.
+        - **condition** is not satisfied.
 
     """
     def __init__(self, condition):
