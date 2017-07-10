@@ -495,6 +495,38 @@ class Condition(object):
 #########################################################################################################
 
 ######################################################################
+# Generic Conditions
+#   - convenience wrappers
+######################################################################
+
+
+While = Condition
+
+
+class Until(Condition):
+    """
+    Until
+
+    Parameters:
+
+        func : callable
+            specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
+
+        args : *args
+            specifies formal arguments to pass to `func` when the Condition is evaluated.
+
+        kwargs : **kwargs
+            specifies keyword arguments to pass to `func` when the Condition is evaluated.
+
+    Satisfied when:
+
+        - **func** is False
+
+    """
+    def __init__(self, func, *args, **kwargs):
+        super().__init__(lambda *args, **kwargs: not func(*args, **kwargs), *args, **kwargs)
+
+######################################################################
 # Static Conditions
 #   - independent of components and time
 ######################################################################
