@@ -43,14 +43,18 @@ Every Component has the following set of core attributes that govern its operati
 .. _Component_Variable:
 
 * **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
-  `function <Component.function>`.  Specification of the variable in the constructor for a Component determines both
-  its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array, etc.) as well as
-  its default value (the value used when the Component is executed and no input is provided).
+  `function <Component.function>`.  Specification of the **variable** argument in the constructor for a Component
+  determines both its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array,
+  etc.) as well as its default value (the value used when the Component is executed and no input is provided), and
+  takes precedence over the specification of `size <Component_Size>`.
 
-* **size** - the `size <Component.size>` attribute can be used to define the variable <Component.variable> attribute.
-  Specification of the size in the constructor for a Component sets the variable equal to an array of zeros of that
-  size. For example, setting size = 3 is equivalent to setting variable = [0, 0, 0] and setting size = [4, 3] is
-  equivalent to setting variable = [[0, 0, 0, 0], [0, 0, 0]].
+.. _Component_Size:
+
+* **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
+  constructor for a Component can be used as a convenient method for specifying the `variable <Component>`, attribute
+  in which case it will be assigned as an array of zeros of the specified size.  For example, setting  **size** = 3 is
+  equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent to setting
+  **variable* = [[0, 0, 0, 0], [0, 0, 0]].
 
 .. _Component_Function:
 
