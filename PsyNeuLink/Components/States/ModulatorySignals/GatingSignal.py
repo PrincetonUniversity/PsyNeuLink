@@ -357,15 +357,8 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-    # def _instantiate_function(self, context=None):
-    #     super()._instantiate_function(context=context)
-    #     self.function_object.FunctionOutputTypeConversion = True
-    #     self.function_object.functionOutputType = FunctionOutputType.RAW_NUMBER
-    #     TEST = True
-
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
-
 
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
