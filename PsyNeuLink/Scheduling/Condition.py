@@ -102,7 +102,7 @@ its elements has changed in value more than a specified amount since the previou
                 return False
         return True
     epsilon = 0.01
-    my_scheduler.add_condition(mech_B, NWhen(Condition(converge, mech_A, epsilon), 1))
+    my_scheduler.add_condition(mech_A, NWhen(Condition(converge, mech_B, epsilon), 1))
 
 In the example, a function `converge` is defined that references the `delta <TransferMechanism.delta>` attribute of
 a `TransferMechanism` (which reports the change in its `value <TransferMechanism.value>`). The function is assigned to
@@ -342,7 +342,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evalute the `Conditions <Condition>`
 
-    conditions : dict{Component: Condition}
+    conditions : dict{`Component`: `Condition`}
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
@@ -353,7 +353,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evalute the `Conditions <Condition>`
 
-    conditions : dict{Component: Condition}
+    conditions : dict{`Component`: `Condition`}
         the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
         with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
@@ -404,7 +404,7 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : dict{Component: Condition}
+        conditions : dict{`Component`: `Condition`}
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
             each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value).
 

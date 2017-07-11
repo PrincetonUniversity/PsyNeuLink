@@ -26,8 +26,8 @@ It defines a common set of attributes possessed, and methods used by all Composi
 Creating a Composition
 ----------------------
 
-A generic Composition can be created by calling the constructor, and then adding `Components <Components>` using the
-Compositions add methods.  However, more commonly, a Composition is created using the constructor for one of its
+A generic Composition can be created by calling the constructor, and then adding `Components <Component>` using the
+Composition's add methods.  However, more commonly, a Composition is created using the constructor for one of its
 subclasses:  `System` or `Process`.  These automatically create Compositions from lists of Components.  Once created,
 Components can be added or removed from an existing Composition using its add and/or remove methods.
 
@@ -104,6 +104,7 @@ class MechanismRole(Enum):
         functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
     - MONITORED
+        .
 
     - LEARNING
         A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
@@ -117,6 +118,7 @@ class MechanismRole(Enum):
         details, see `TARGET mechanisms <LearningProjection_Targets>` and specifying `target values <Run_Targets>`.
 
     - RECURRENT_INIT
+        .
 
 
     """
@@ -294,9 +296,6 @@ class Composition(object):
             The full `Graph` associated with this Composition. Contains both `Mechanism`\ s and `Projection`\ s used in processing \
             or learning.
 
-        graph_processing : `Graph`
-            The `Graph` that contains only `Mechanisms`, excluding those used in learning
-
         mechanisms : `list[Mechanism]`
             A list of all `Mechanism`\ s contained in this Composition
 
@@ -342,7 +341,8 @@ class Composition(object):
     @property
     def graph_processing(self):
         '''
-            Returns the Composition's processing graph. Builds the graph if it needs updating
+            Returns the Composition's processing graph (contains only `Mechanisms`, excluding those
+            used in learning). Builds the graph if it needs updating
             since the last access.
         '''
         if self.needs_update_graph_processing or self._graph_processing is None:
@@ -443,10 +443,10 @@ class Composition(object):
         # and add MappingProjections where needed
         for c in range(1, len(pathway)):
             if isinstance(pathway[c], Mechanism):
-                if isinstance(pathway[c-1], Mechanism):
+                if isinstance(pathway[c - 1], Mechanism):
                     # if the previous item was also a mechanism, add a mapping projection between them
-                    self.add_projection(pathway[c-1],
-                                        MappingProjection(sender=pathway[c-1],
+                    self.add_projection(pathway[c - 1],
+                                        MappingProjection(sender=pathway[c - 1],
                                                           receiver=pathway[c]),
                                         pathway[c])
             # if the current item is a projection
@@ -455,8 +455,8 @@ class Composition(object):
                     raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
                                            " a linear processing pathway.".format(pathway[c]))
                 # confirm that it is between two mechanisms, then add the projection
-                if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c+1], Mechanism):
-                    self.add_projection(pathway[c-1], pathway[c], pathway[c+1])
+                if isinstance(pathway[c - 1], Mechanism) and isinstance(pathway[c + 1], Mechanism):
+                    self.add_projection(pathway[c - 1], pathway[c], pathway[c + 1])
                 else:
                     raise CompositionError(
                         "{} is not between two mechanisms. A projection in a linear processing pathway must be preceded"
@@ -464,8 +464,6 @@ class Composition(object):
             else:
                 raise CompositionError("{} is not a projection or mechanism. A linear processing pathway must be made "
                                        "up of projections and mechanisms.".format(pathway[c]))
-
-
 
     def _validate_projection(self, sender, projection, receiver):
 
@@ -717,7 +715,6 @@ class Composition(object):
             else:
                 self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
 
-
     def _assign_execution_ids(self, execution_id):
         '''
             assigns the same uuid to each mechanism in the composition's processing graph as well as all input
@@ -738,7 +735,8 @@ class Composition(object):
             inputs,
             scheduler_processing=None,
             scheduler_learning=None,
-            execution_id = None):
+            execution_id=None
+    ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
             to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
@@ -753,7 +751,7 @@ class Composition(object):
                 the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
 
-            inputs: { Mechanism : list }
+            inputs: { `Mechanism` : list }
                 a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
                 the user. For each pair, the key is the Mechanism and the value is a list of inputs.
 
@@ -815,7 +813,7 @@ class Composition(object):
                 the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
 
-            inputs: { Mechanism : list }
+            inputs: { `Mechanism` : list }
                 a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
                 the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the list \
                 corresponds to a certain `TRIAL`
