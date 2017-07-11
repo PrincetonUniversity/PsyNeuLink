@@ -528,7 +528,7 @@ class State_Base(State):
                                          prefs=prefs,
                                          context=context.__class__.__name__)
 
-        # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
+        # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
