@@ -454,7 +454,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -1979,7 +1979,7 @@ the context in which the projection is used.</li>
 <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the projection is used.</li>
 <li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
-value of the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
+value of the <a class="reference internal" href="#Function.Stability.MappingProjection.sender" title="Function.Stability.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
 the projection&#8217;s default assignment (<a class="reference internal" href="#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  Values specified for parameters in the dictionary
@@ -2016,7 +2016,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="Function.Stability.MappingProjection.learning_mechanism">
 <code class="descname">learning_mechanism</code><a class="headerlink" href="#Function.Stability.MappingProjection.learning_mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>LearningMechanism</em> &#8211; source of error signal for that determine changes to the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
+<dd><p><em>LearningMechanism</em> &#8211; source of error signal for that determine changes to the <a class="reference internal" href="#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
 <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
@@ -2024,7 +2024,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="Function.Stability.MappingProjection.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#Function.Stability.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array</em> &#8211; matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
-<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#Function.Stability.MappingProjection.receiver" title="Function.Stability.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<a class="reference internal" href="#Function.Stability.MappingProjection.sender" title="Function.Stability.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2074,7 +2074,7 @@ frequent cases (i.e., <em>no</em> learningSignal).</p>
 
 <dl class="class">
 <dt id="Function.Stability.ParameterState">
-<em class="property">class </em><code class="descclassname">Stability.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None                                             function=LinearCombination(operation=PRODUCT)</em>, <em>variable=None</em>, <em>parameter_modulation_operation=Modulation.MULTIPLY</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.ParameterState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Stability.</code><code class="descname">ParameterState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None                                             function=LinearCombination(operation=PRODUCT)</em>, <em>variable=None</em>, <em>size=None</em>, <em>parameter_modulation_operation=Modulation.MULTIPLY</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability.ParameterState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that represents and possibly modifies the value of a parameter for a mechanism,
 projection, or function.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2089,6 +2089,7 @@ to which the function belongs.</li>
 <li><strong>reference_value</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the default value of the parameter for which the ParameterState is responsible.</li>
 <li><strong>variable</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the parameter&#8217;s initial value and attribute value —&nbsp;that is, the value of the attribute of the
 ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> assigned to the parameter.</li>
+<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies variable as array(s) of zeros if variable is not passed as an argument.</li>
 <li><strong>function</strong> (<em>Function or method : default LinearCombination(operation=SUM)</em>) &#8211; specifies the function used to convert the parameter&#8217;s attribute value (same as the ParameterState&#8217;s
 <a class="reference internal" href="#Function.Stability.ParameterState.variable" title="Function.Stability.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) to the ParameterState&#8217;s <a class="reference internal" href="#Function.Stability.ParameterState.value" title="Function.Stability.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
@@ -2135,19 +2136,19 @@ must match the format (number and types of elements) of the ParameterState&#8217
 <dd><p><em>Function : default Linear</em> &#8211; converts the parameter&#8217;s attribute value (same as the ParameterState&#8217;s <a class="reference internal" href="#Function.Stability.ParameterState.variable" title="Function.Stability.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)
 to the ParameterState&#8217;s <a class="reference internal" href="#Function.Stability.ParameterState.value" title="Function.Stability.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the influence of any
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> received by the ParameterState (and listed in its
-<a class="reference internal" href="#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterState&#8217;s
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterState&#8217;s
 <a class="reference internal" href="ParameterState.html"><span class="doc">value</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.Stability.ParameterState.value">
 <code class="descname">value</code><a class="headerlink" href="#Function.Stability.ParameterState.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number, list or np.ndarray</em> &#8211; the result returned by the ParameterState&#8217;s <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
+<dd><p><em>number, list or np.ndarray</em> &#8211; the result returned by the ParameterState&#8217;s <a class="reference internal" href="#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
 ParameterState&#8217;s owner or its <code class="xref any docutils literal"><span class="pre">function</span></code> as the value of the parameter for which the
 ParmeterState is responsible.  Note that this is not necessarily the same as the parameter&#8217;s attribute value
 (that is, the value of the owner&#8217;s attribute for the parameter), since the ParameterState&#8217;s
-<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
-<a class="reference internal" href="#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>.</p>
+<a class="reference internal" href="#Function.Stability.ParameterState.function" title="Function.Stability.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2264,7 +2265,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>variable_default</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.ArgumentTherapy.variable" title="Function.ArgumentTherapy.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -2440,7 +2441,7 @@ arguments of the constructor.</li>
 <li><strong>error_derivative</strong> (<em>Function or function</em>) &#8211; specifies the derivative for the function of the mechanism that is the receiver of the
 <a class="reference internal" href="#Function.BackPropagation.error_matrix" title="Function.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>.</li>
 <li><strong>error_matrix</strong> (<em>List, 2d np.array, np.matrix, ParameterState, or MappingProjection</em>) &#8211; matrix, the output of which is used to calculate the <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.
-If it is specified as a ParameterState it must be one for the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+If it is specified as a ParameterState it must be one for the <a class="reference internal" href="#Function.Stability.MappingProjection.matrix" title="Function.Stability.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>;  if it is a MappingProjection, it must be one with a
 MATRIX parameterState.</li>
 <li><strong>learning_rate</strong> (<em>float : default default_learning_rate</em>) &#8211; supercedes any specification for the <a class="reference internal" href="Process.html"><span class="doc">process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">system</span></a> to which the function&#8217;s
