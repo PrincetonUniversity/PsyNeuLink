@@ -410,7 +410,6 @@ class State_Base(State):
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
     #endregion
 
@@ -626,7 +625,7 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if PROJECTIONS in request_set:
+        if PROJECTIONS in request_set and request_set[PROJECTIONS]:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
@@ -1039,13 +1038,7 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        # # MODIFIED 12/1/16 OLD:
-        # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
-        # # MODIFIED 12/1/16 NEW:
-        # default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
-        # MODIFIED 7/10/17 NEWER:
         default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
-        # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
         # - insure it is in self.efferents
