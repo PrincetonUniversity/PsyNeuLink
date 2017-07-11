@@ -832,7 +832,7 @@ class Component(object):
                         variable.append(np.zeros(s))
                     variable = np.array(variable)
                 except:
-                    raise ComponentError("variable (possibly default_input_value)was not specified, but PsyNeuLink "
+                    raise ComponentError("variable (possibly default_input_value) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or an array or list of integers. Either size or "
                                          "variable must be specified.".format(size))
@@ -872,7 +872,7 @@ class Component(object):
             # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
             # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
-            if variable is not None and size is not None:  # try tossing this "if" check
+            if variable is not None and size is not None:
                 # If they conflict, give warning
                 if len(size) != len(variable):
                     if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
