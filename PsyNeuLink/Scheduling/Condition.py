@@ -166,7 +166,7 @@ COMMENT
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `True`. \
       Equivalent to `Condition(func, *args, **kwargs)`
 
-    * `Until`\ (func, *args, **kwargs)
+    * `WhileNot`\ (func, *args, **kwargs)
       \
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `False`. \
       Equivalent to `Not(Condition(func, *args, **kwargs))`
@@ -503,9 +503,9 @@ class Condition(object):
 While = Condition
 
 
-class Until(Condition):
+class WhileNot(Condition):
     """
-    Until
+    WhileNot
 
     Parameters:
 

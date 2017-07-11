@@ -277,9 +277,9 @@ execute until the change in its value falls below a specified threshold as follo
     my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
                                                     EveryNCalls(my_recurrent_layer, 1))
     my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
-                                                       Until(minimal_change, my_recurrent_mech, thesh)))
+                                                       WhileNot(minimal_change, my_recurrent_mech, thesh)))
 
-Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `Until`
+Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `WhileNot`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.
 
