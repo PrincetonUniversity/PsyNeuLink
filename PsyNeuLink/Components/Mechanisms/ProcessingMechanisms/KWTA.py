@@ -13,6 +13,7 @@ from PsyNeuLink.Components.Mechanisms import Mechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.InputState import InputState
+import builtins
 
 class KWTAError(Exception):
     def __init__(self, error_value):
@@ -56,7 +57,7 @@ class KWTA(RecurrentTransferMechanism):
 
         kwta_log_function = Logistic(gain=gain, bias=bias)
 
-        # IMPLEMENTATION NOTE: parts of this region may be redundant with code in TransferMechanism.__init__()
+        # IMPLEMENTATION NOTE: parts of this region may be redundant with code in Component._handle_size()
         # region Fill in and infer default_input_value and size if they aren't specified in args
         if default_input_value is None and size is None:
             if matrix is None:
@@ -72,39 +73,62 @@ class KWTA(RecurrentTransferMechanism):
                     raise KWTAError("Unable to parse matrix argument, {}. Please input a 2D array,"
                                     " list, or numpy matrix".format(matrix))
 
+        def checkAndCastInt(x):
+            if not isinstance(x, numbers.Number):
+                raise ComponentError("An element ({}) in size is not a number.".format(x))
+            if x < 1:
+                raise ComponentError("An element ({}) in size is not a positive number.".format(x))
+            try:
+                int_x = int(x)
+            except:
+                raise ComponentError(
+                    "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
+                    "should be a number, or iterable of numbers, which are integers or "
+                    "can be converted to integers.".format(x, type(self), self.name))
+            if int_x != x:
+                if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    warnings.warn("When an element ({}) in the size argument was cast to "
+                                  "integer, its value changed to {}.".format(x, int_x))
+            return int_x
+
         # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
         # default_input_value are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
         # region Convert default_input_value (if given) to a 2D array, and size (if given) to a 1D integer array
-
         try:
             if default_input_value is not None:
                 default_input_value = np.atleast_2d(default_input_value)
-                if len(np.shape(default_input_value)) > 2:  # number of dimensions of default_input_value > 2
-                    warnings.warn("default_input_value had more than two dimensions (had {} dimensions) "
-                                  "so only the first element of its second-highest-numbered axis will be"
-                                  " used".format(len(np.shape(default_input_value))))
-                    while len(np.shape(default_input_value)) > 2:  # reduce the dimensions of default_input_value
+                # 6/30/17 (CW): Previously, using default_input_value or default_input_value to create
+                # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
+                # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
+                if isinstance(default_input_value[0], list) or isinstance(default_input_value[0], np.ndarray):
+                    allLists = True
+                    for i in builtins.range(len(default_input_value[0])):
+                        if isinstance(default_input_value[0][i], (list, np.ndarray)):
+                            default_input_value[0][i] = np.array(default_input_value[0][i])
+                        else:
+                            allLists = False
+                            break
+                    if allLists:
                         default_input_value = default_input_value[0]
         except:
-            raise TransferError("Failed to convert default_input_value (of type {})"
-                                " to a 2D array".format(type(default_input_value)))
+            raise ComponentError("Failed to convert default_input_value (of type {}) to a 2D array.".
+                                 format(type(default_input_value)))
 
         try:
             if size is not None:
                 size = np.atleast_1d(size)
                 if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                    warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
-                                  "element of its highest-numbered axis will be used".format(len(np.shape(size))))
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn(
+                            "size had more than one dimension (size had {} dimensions), so only the first "
+                            "element of its highest-numbered axis will be used".format(len(np.shape(size))))
                     while len(np.shape(size)) > 1:  # reduce the dimensions of size
                         size = size[0]
         except:
-            raise TransferError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
+            raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
 
-        try:
-            if size is not None:
-                map(lambda x: int(x), size)  # convert all elements of size to int
-        except:
-            raise TransferError("Failed to convert an element in size to an integer.")
+        if size is not None:
+            size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
         # endregion
 
         # region If default_input_value is None, make it a 2D array of zeros each with length=size[i]
@@ -118,38 +142,77 @@ class KWTA(RecurrentTransferMechanism):
                     default_input_value.append(np.zeros(s))
                 default_input_value = np.array(default_input_value)
             except:
-                raise TransferError("default_input_value was not specified, but PsyNeuLink was unable to "
-                                    "infer default_input_value from the size argument, {}. size should be"
-                                    " an integer or an array or list of integers. Either size or "
-                                    "default_input_value must be specified.".format(size))
+                raise ComponentError("default_input_value was not specified, but PsyNeuLink was unable to "
+                                     "infer default_input_value from the size argument, {}. size should be"
+                                     " an integer or an array or list of integers. Either size or "
+                                     "default_input_value must be specified.".format(size))
         # endregion
 
         # region If size is None, then make it a 1D array of scalars with size[i] = length(default_input_value[i])
         # added 6/22/17
-        if size is None:
+        if size is None and default_input_value is not None:
             size = []
             try:
                 for input_vector in default_input_value:
                     size.append(len(input_vector))
                 size = np.array(size)
             except:
-                raise TransferError("size was not specified, but PsyNeuLink was unable to infer size from "
-                                    "the default_input_value argument, {}. default_input_value can be an array,"
-                                    " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                                    " default_input_value must be specified.".format(default_input_value))
+                raise ComponentError(
+                    "size was not specified, but PsyNeuLink was unable to infer size from "
+                    "the default_input_value argument, {}. default_input_value can be an array,"
+                    " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
+                    " default_input_value must be specified.".format(default_input_value))
         # endregion
 
-        # region If length(size) = 1 and default_input_value is not None, then expand size to length(default_input_value)
+        # region If length(size) = 1 and default_input_value is not None,
+        # then expand size to length(default_input_value)
         if len(size) == 1 and len(default_input_value) > 1:
             new_size = np.empty(len(default_input_value))
             new_size.fill(size[0])
             size = new_size
         # endregion
 
-        # IMPLEMENTATION NOTE: if default_input_value and size are both specified as arguments, they will be checked
-        # against each other in Component.py, during _instantiate_defaults().
+        # check if default_input_value and size are compatible, if not, then give
+        # warning and set size based on default_input_value
+        if default_input_value is not None and size is not None:
+            # If they conflict, give warning
+            if len(size) != len(default_input_value):
+                if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                    warnings.warn("The size arg of {} conflicts with the length of its "
+                                  "default_input_value arg ({}) at element {}: default_input_value takes precedence".
+                                  format(self.name, size[i], default_input_value[i], i))
+                size = []
+                try:
+                    for input_vector in default_input_value:
+                        size.append(len(input_vector))
+                    size = np.array(size)
+                except:
+                    raise ComponentError(
+                        "size was not specified, but PsyNeuLink was unable to infer size from "
+                        "the default_input_value argument, {}. default_input_value can be an array,"
+                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
+                        " default_input_value must be specified.".format(default_input_value))
+            else:
+                for i in builtins.range(len(size)):
+                    if size[i] != len(default_input_value[i]):
+                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                            warnings.warn("The size arg of {} ({}) conflicts with the length "
+                                          "of its default_input_value arg ({}) at element {}: default_input_value takes precedence".
+                                          format(self.name, size[i], default_input_value[i], i))
+                        size = []
+                        try:
+                            for input_vector in default_input_value:
+                                size.append(len(input_vector))
+                            size = np.array(size)
+                        except:
+                            raise ComponentError(
+                                "size was not specified, but PsyNeuLink was unable to infer size from "
+                                "the default_input_value argument, {}. default_input_value can be an array,"
+                                " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
+                                " default_input_value must be specified.".format(default_input_value))
         # endregion
 
+        # if default_input_value was passed as a 1D vector, append an array of zeros to it.
         if len(default_input_value) == 1:
             d = list(default_input_value)
             d.append(np.zeros(len(default_input_value[0])))
@@ -237,7 +300,7 @@ class KWTA(RecurrentTransferMechanism):
 
         # Check that number of input_states and their variables are consistent with owner.variable,
         #    and adjust the latter if not
-        for i in range(len(owner.input_states)):
+        for i in builtins.range(len(owner.input_states)):
             input_state = owner.input_states[i]
             try:
                 variable_item_is_OK = iscompatible(self.variable[i], input_state.value)
@@ -301,7 +364,7 @@ class KWTA(RecurrentTransferMechanism):
         inhibVector = np.array(inhibVector)  # may be redundant
         if (inhibVector == 0).all():
             if type(context) == str and INITIALIZING not in context:
-                print("inhib vector ({}) was all zeros (input was ({})), so inhibition will be uniform".
+                print("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
                       format(inhibVector, current_input))
             inhibVector = np.ones(int(self.size[0]))
         if (inhibVector > 0).all():
@@ -323,7 +386,7 @@ class KWTA(RecurrentTransferMechanism):
 
         # current_input[indices[i - 1]] is the i-th largest element of current_input
         indices = []
-        for i in range(int(self.size[0])):
+        for i in builtins.range(int(self.size[0])):
             j = 0
             w = np.where(current_input == sortedInput[i])
             while w[0][j] in indices:
@@ -334,7 +397,7 @@ class KWTA(RecurrentTransferMechanism):
         # scales[i] is the scale on inhibition that would put the (i+1)-th largest
         # element in current_input at the threshold
         scales = np.zeros(int(self.size[0]))
-        for i in range(int(self.size[0])):
+        for i in builtins.range(int(self.size[0])):
             inhib = inhibVector[indices[i]]
             if inhib == 0:
                 pass
