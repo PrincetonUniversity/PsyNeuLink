@@ -180,7 +180,7 @@
 <span class="target" id="module-ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ComparatorMechanism is a subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that receives two inputs (a sample and a target), compares
-them using its <code class="xref any docutils literal"><span class="pre">function</span></code>, and generates as its output an
+them using its <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and generates as its output an
 <code class="xref any docutils literal"><span class="pre">error_signal</span></code> that is the discrepancy between them.</p>
 </div>
 <div class="section" id="creating-a-comparatormechanism">
@@ -194,7 +194,7 @@ ComparatorMechanism is created, two inputStates are created, one each for its sa
 by default, <em>SAMPLE</em> and <em>TARGET</em>). Each is assigned a MappingProjection from the corresponding outputState specified
 in the <strong>sample</strong> and <strong>target</strong> arguments.</p>
 <p>It is important to recognize that the value of the <em>SAMPLE</em> and <em>TARGET</em> inputStates must have the same length and type,
-so that they can be compared using the ComparatorMechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  By default,
+so that they can be compared using the ComparatorMechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  By default,
 they use the format of the outputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively,
 and the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to each uses an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.  Therefore, for the default configuration, the
 outputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments must have values of the same length and type.
@@ -213,16 +213,16 @@ for the inputState in the <strong>input_states</strong> argument.</p>
 </div>
 <div class="section" id="structure">
 <span id="comparatormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ComparatorMechanism has two <code class="xref any docutils literal"><span class="pre">inputStates</span></code>, each of which receives a
+<p>A ComparatorMechanism has two <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">inputStates</span></code></a>, each of which receives a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from a corresponding outputState specified in the <strong>sample</strong> and <strong>target</strong>
 arguments of its constructor.  The inputStates are listed in the mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">input_states</span></code> attribute.  The outputStates from which they receive their
 projections (specified in the <strong>sample</strong> and <strong>target</strong> arguments) are listed in the mechanism&#8217;s
-<code class="xref any docutils literal"><span class="pre">sample</span></code> and <code class="xref any docutils literal"><span class="pre">target</span></code> attributes as well as in its <code class="xref any docutils literal"><span class="pre">monitored_values</span></code> attribute.
-The ComparatorMechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> compares the value of the sample and target
+<a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attributes as well as in its <code class="xref any docutils literal"><span class="pre">monitored_values</span></code> attribute.
+The ComparatorMechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> compares the value of the sample and target
 inputStates.  By default, it uses a <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, assigning the sample inputState a
 <code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>1</em>, so that the
-sample is subtracted from the target.  However, the <code class="xref any docutils literal"><span class="pre">function</span></code> can be customized, so
+sample is subtracted from the target.  However, the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be customized, so
 long as it is replaced with one that takes two arrays with the same format as its inputs, and generates a similar
 array as its result.  The result is assigned as the value of the Comparator mechanism&#8217;s <em>ERROR_SIGNAL</em>
 (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) outputState.</p>
@@ -230,9 +230,9 @@ array as its result.  The result is assigned as the value of the Comparator mech
 <div class="section" id="execution">
 <span id="comparatormechanism-function"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an ComparatorMechanism is executed, it updates its input_states with the values of the outputStates specified
-in its <strong>sample</strong> and <strong>target</strong> arguments, and then uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to
-compare these.  By default, the result is assigned as to the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <em>ERROR_SIGNAL</em>
-<code class="xref any docutils literal"><span class="pre">output_state</span></code>, and as the first item of the mechanism&#8217;s
+in its <strong>sample</strong> and <strong>target</strong> arguments, and then uses its <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
+compare these.  By default, the result is assigned as to the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>ERROR_SIGNAL</em>
+<a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a>, and as the first item of the mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">output_value</span></code> attribute.</p>
 <p class="rubric" id="comparatormechanism-example">Example</p>
 <p id="comparatormechanism-default-input-value-example"><em>Formatting inputState values</em></p>
@@ -271,60 +271,77 @@ one of those was desired, it would have had to be specified explicitly in the <s
 <span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>sample: &lt;typecheck.framework.optional object at 0x10c01d198&gt; = None, target: &lt;typecheck.framework.optional object at 0x10c01d2e8&gt; = None, input_states=['SAMPLE', 'TARGET'], function=(LinearCombination LinearCombination Function-7), output_states: &lt;typecheck.framework.optional object at 0x10c01d470&gt; = ['error_signal', 'MSE'], size=None, params=None, name=None, prefs: &lt;function is_pref_set at 0x10bb7e2f0&gt; = None, context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>ComparatorMechanism(                                        sample,                                                 target,                                                 input_states=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          input_states=[ERROR_SIGNAL]                             params=None,                                            name=None,                                              prefs=None)</p>
-<p>Implements the ComparatorMechanism subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.</p>
-<dl class="docutils">
-<dt>sample</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState, Mechanism, value, or string</span><dd>specifies the value to compare with the <code class="xref any docutils literal"><span class="pre">target</span></code> by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>target</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState, Mechanism, value, or string</span><dd>specifies the value with which the <code class="xref any docutils literal"><span class="pre">sample</span></code> is compared by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>input_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">List[InputState, value, str or dict] or Dict[]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default [SAMPLE, TARGET]</span><dd>specifies the names and/or formats to use for the values of the sample and target inputStates;
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>                                        sample,                                                 target,                                                 input_states=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          input_states=[ERROR_SIGNAL]                             params=None,                                            name=None,                                              prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements the ComparatorMechanism subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sample</strong> (<em>OutputState, Mechanism, value, or string</em>) &#8211; specifies the value to compare with the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>target</strong> (<em>OutputState, Mechanism, value, or string</em>) &#8211; specifies the value with which the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>input_states</strong> (<em>List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]</em>) &#8211; specifies the names and/or formats to use for the values of the sample and target inputStates;
 by default they are named <em>SAMPLE</em> and <em>TARGET</em>, and their formats are match the value of the outputStates
-specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively.</dd>
-<dt>function: Function, function or method</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">default Distance(metric=DIFFERENCE)</span><dd>specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <code class="xref any docutils literal"><span class="pre">sample</span></code> with the <code class="xref any docutils literal"><span class="pre">target</span></code>.</dd>
-<dt>output_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">List[OutputState, value, str or dict] or Dict[]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default [ERROR_SIGNAL]</span><dd>specifies the outputStates for the mechanism;</dd>
-<dt>params</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Optional[Dict[param keyword, param value]]</span><dd>a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively.</li>
+<li><strong>function</strong> (<em>Function, function or method : default Distance(metric=DIFFERENCE)</em>) &#8211; specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
+<li><strong>output_states</strong> (<em>List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]</em>) &#8211; specifies the outputStates for the mechanism;</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the
-constructor.</dd>
-<dt>name</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ComparatorMechanism-&lt;index&gt;</span><dd>a string used for the name of the mechanism.
+constructor.</li>
+<li><strong>name</strong> (<em>str : default ComparatorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
-(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</dd>
-<dt>prefs</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">Optional[PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">Mechanism.classPreferences]</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</dd>
-</dl>
-<dl class="docutils">
-<dt>sample</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>determines the value to compare with the <code class="xref any docutils literal"><span class="pre">target</span></code> by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>target</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>determines the value with which <code class="xref any docutils literal"><span class="pre">sample</span></code> is compared by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</dd>
-<dt>input_states</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">ContentAddressableList[InputState, InputState]</span><dd>contains the two inputStates named, by default, <em>SAMPLE</em> and <em>TARGET</em>, each of which receives a
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the outputStates referenced by the <code class="xref any docutils literal"><span class="pre">sample</span></code> and <code class="xref any docutils literal"><span class="pre">target</span></code> attributes.</dd>
-<dt>function</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">CombinationFunction, function or method</span><dd>used to compare the <code class="xref any docutils literal"><span class="pre">sample</span></code> with the <code class="xref any docutils literal"><span class="pre">target</span></code>.  It can be any PsyNeuLink <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>,
+(see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample">
+<code class="descname">sample</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> &#8211; determines the value to compare with the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target">
+<code class="descname">target</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> &#8211; determines the value with which <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states">
+<code class="descname">input_states</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[InputState, InputState]</em> &#8211; contains the two inputStates named, by default, <em>SAMPLE</em> and <em>TARGET</em>, each of which receives a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the outputStates referenced by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attributes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction, function or method</em> &#8211; used to compare the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.  It can be any PsyNeuLink <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>,
 or a python function that takes a 2d array with two items and returns a 1d array of the same length
-as the two input items.</dd>
-</dl>
-</div></blockquote>
+as the two input items.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value">
+<code class="descname">value</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; the result of the comparison carried out by the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state">
+<code class="descname">output_state</code><a class="headerlink" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> &#8211; contains the &#8216;primary &lt;OutputState_Primary&gt;` outputState of the ComparatorMechanism; the default is
+its <em>ERROR_SIGNAL</em> outputState, the value of which is equal to the <a class="reference internal" href="#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+attribute of the ComparatorMechanism.</p>
+</dd></dl>
+
 <dl class="docutils">
-<dt>\    value</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span><dd><blockquote class="first">
-<div>the result of the comparison carried out by the <code class="xref any docutils literal"><span class="pre">function</span></code>.</div></blockquote>
-<dl class="last docutils">
-<dt>output_state</dt>
- <span class="classifier-delimiter">:</span> <span class="classifier">OutputState</span><dd>contains the &#8216;primary &lt;OutputState_Primary&gt;` outputState of the ComparatorMechanism; the default is
-its <em>ERROR_SIGNAL</em> outputState, the value of which is equal to the <code class="xref any docutils literal"><span class="pre">value</span></code>
-attribute of the ComparatorMechanism.</dd>
 <dt>output_states</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">ContentAddressableList[OutputState]</span><dd>contains, by default, only the <em>ERROR_SIGNAL</em> (primary) outputState of the ComparatorMechanism.</dd>
 <dt>output_values</dt>
@@ -339,8 +356,6 @@ if not is specified, a default is assigned by <code class="xref any docutils lit
 Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</dd>
-</dl>
-</dd>
 </dl>
 </dd></dl>
 

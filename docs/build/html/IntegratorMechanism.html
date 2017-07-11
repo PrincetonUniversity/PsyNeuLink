@@ -220,7 +220,7 @@ specified for <code class="xref std std-keyword docutils literal"><span class="p
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Integrator(integration_type=ADAPTIVE</em>, <em>rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>size=None</em>, <em>function=Integrator(integration_type=ADAPTIVE</em>, <em>rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements the IntegratorMechanism subclass of Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -232,6 +232,7 @@ specified for <code class="xref std std-keyword docutils literal"><span class="p
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of the
 mechanism.</li>
+<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default Integrator</em>) &#8211; specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
 of values, and return one of the same form.</li>
 <li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
