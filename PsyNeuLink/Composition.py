@@ -18,7 +18,23 @@
 Overview
 --------
 
+Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
+It defines a common set of attributes possessed, and methods used by all Composition objects.
 
+.. _Composition_Creation:
+
+Creating a Composition
+----------------------
+
+A generic Composition can be created by calling the constructor, and then adding `Components <Components>` using the
+Compositions add methods.  However, more commonly, a Composition is created using the constructor for one of its
+subclasses:  `System` or `Process`.  These automatically create Compositions from lists of Components.  Once created,
+Components can be added or removed from an existing Composition using its add and/or remove methods.
+
+.. _Composition_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
