@@ -1999,16 +1999,18 @@ class System_Base(System):
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
             for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
-                # For each inputState of the ORIGIN mechansim
+                # For each inputState of the ORIGIN mechanism
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
-                    system_input_state = next(projection.sender
-                                              for projection in origin_mech.input_states[j].path_afferents
-                                              if isinstance(projection.sender, SystemInputState))
+                    system_input_state = next((projection.sender
+                                               for projection in origin_mech.input_states[j].path_afferents
+                                               if isinstance(projection.sender, SystemInputState)), None)
                     if system_input_state:
                         system_input_state.value = input[i][j]
                     else:
-                        raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+                        print("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
+                              format(origin_mech.name, j+1, origin_mech.input_states[j]))
+                        # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
         if termination_processing is not None:
