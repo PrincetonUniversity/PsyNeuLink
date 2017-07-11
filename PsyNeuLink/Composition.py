@@ -568,34 +568,6 @@ class Composition(object):
 
         self.needs_update_graph = False
 
-    def _create_input_mechanisms(self):
-        '''
-            builds a dictionary of { Mechanism : InputMechanism } pairs where each origin mechanism has a corresponding
-            InputMechanism
-        '''
-        is_origin = self.get_mechanisms_by_role(MechanismRole.ORIGIN)
-        has_input_mechanism = self.input_mechanisms.keys()
-
-        # consider all of the mechanisms that are only origins OR have input mechanisms
-        for mech in is_origin.difference(has_input_mechanism):
-
-            # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
-            if mech not in has_input_mechanism:
-                new_input_mech = TransferMechanism()
-                self.input_mechanisms[mech] = new_input_mech
-                MappingProjection(sender=new_input_mech, receiver=mech)
-
-            # If mech HAS AN INPUT mechanism but isn't an origin, REMOVE the input mechanism
-            else:
-                del self.input_mechanisms[mech]
-
-    def _assign_values_to_input_mechanisms(self, input_dict):
-        for mech in self.input_mechanisms.keys():
-            if mech in input_dict.keys():
-                self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
-            else:
-                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
-
     def _update_processing_graph(self):
         '''
         Constructs the processing graph (the graph that contains only non-learning mechanisms as vertices)
