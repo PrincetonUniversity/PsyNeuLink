@@ -519,6 +519,7 @@ def _instantiate_input_states(owner, context=None):
             break
 
     if not variable_item_is_OK:
+        # NOTE: This block of code appears unused, and the 'for' loop appears to cause an error anyways. (7/11/17 CW)
         old_variable = owner.variable
         new_variable = []
         for state_name, state in owner.input_states:
