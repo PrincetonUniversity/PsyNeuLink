@@ -453,6 +453,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         """Implement decay
         """
 
+        if INITIALIZING in context:
+            self.previous_input = self.variable
+
         if self.decay is not None and self.decay != 1.0:
             self.previous_input *= self.decay
 
