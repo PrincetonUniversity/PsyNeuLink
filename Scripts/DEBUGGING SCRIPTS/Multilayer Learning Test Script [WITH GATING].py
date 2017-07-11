@@ -3,6 +3,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import *
+from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
@@ -24,23 +25,28 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
                         default_input_value = [0,0,0])
 
+my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
+                                # params={GATING_PROJECTIONS:Hidden_Layer_2})
+                                params={STATE_PROJECTIONS:Hidden_Layer_2})
+
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
-                                       # THIS GENERATES ONE GatingSignal WITH THREE Projections
-                                       {
-                                       # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
-                                       # NAME: 'GATING SIGNAL EXPLICIT NAME',
-                                       # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
-                                        'GATE_ALL': [Hidden_Layer_1,
-                                                     Hidden_Layer_2,
-                                                     Output_Layer]
-                                       },
+                                       # # THIS GENERATES ONE GatingSignal WITH THREE Projections
+                                       # {
+                                       # # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
+                                       # # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                       # # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
+                                       #  'GATE_ALL': [Hidden_Layer_1,
+                                       #               Hidden_Layer_2,
+                                       #               Output_Layer]
+                                       # },
                                        # THIS GENERATES THREE GatingSignals, EACH WITH ONE Projection:
-                                       # Hidden_Layer_1,
+                                       Hidden_Layer_1,
                                        # Hidden_Layer_2,
-                                       # Output_Layer
+                                       my_gating_signal,
+                                       Output_Layer
                                    ])
 
 

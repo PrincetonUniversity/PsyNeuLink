@@ -181,11 +181,11 @@ or its **termination_learning** argument to terminate the execution of learning:
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
-
 Examples
 --------
 
 Please see `Condition` for a list of all supported Conditions and their behavior.
+
 
 * Basic phasing in a linear process::
 
@@ -423,17 +423,17 @@ class Scheduler(object):
         return self.condition_set.__contains__(item)
 
     def add_condition(self, owner, condition):
-        '''
+        """
         :param owner: the `Component` that is dependent on the `condition`
-        :param conditions: a `Condition` (including All or Any)
-        '''
+        :param condition: a `Condition` (including All or Any)
+        """
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
-        '''
+        """
         :param conditions: a `dict` mapping `Component`\ s to `Condition`\ s,
                which can be added later with `add_condition`
-        '''
+        """
         self.condition_set.add_condition_set(conditions)
 
     ################################################################################
@@ -473,13 +473,14 @@ class Scheduler(object):
     ################################################################################
 
     def run(self, termination_conds=None):
-        '''
-        run is a python generator, that when iterated over provides the next `TIME_STEP` of
-        executions at each iteration
+        """
+        run is a Python generator, that when iterated over provides the next
+        `TIME_STEP` of executions at each iteration
 
-        :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
+        :param termination_conds: (dict) - a mapping from `TimeScale`\ s to
+        `Condition`\ s that when met
                terminate the execution of the specified `TimeScale`
-        '''
+        """
         self.termination_conds = termination_conds
         self._validate_run_state()
 

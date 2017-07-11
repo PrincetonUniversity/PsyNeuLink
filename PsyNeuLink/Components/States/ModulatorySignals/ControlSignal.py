@@ -27,8 +27,8 @@ its `allocation` in the future.
 Creating a ControlSignal
 ------------------------
 
-A ControlSignal is created automatically whenever the parameter of a mechanism or of its function
-is `specified for control <ControlMechanism_Control_Signals>` and the mechanism belongs to a system for which
+A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function
+is `specified for control <ControlMechanism_Control_Signals>` and the Mechanism belongs to a System for which
 an `ControlMechanism` is the `controller`.  ControlSignals can also be specified in the **control_signals**
 argument of the constructor for a `ControlMechanism`.  Although a ControlSignal can be created directly using its 
 constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is neither 
@@ -45,11 +45,12 @@ When a ControlSignal is specified in context (e.g., the **control_signals** argu
 
   * a *ParameterState* of the Mechanism to which the parameter belongs;
   |
-  * a *tuple*, with the *name* of the parameter as its 1st item. and the *mechanism* to which it belongs as the 2nd;
+  * a *tuple*, with the *name* of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   |
   * a *specification dictionary*, that must contain at least the following two entries:
+
     * *NAME*:str - a string that is the name of the parameter to be controlled;
     * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
       (note: the Mechanism itself should be specified even if the parameter belongs to its function).
@@ -63,7 +64,7 @@ Structure
 ---------
 
 A ControlSignal is owned by an `ControlMechanism`, and associated with a `ControlProjection` that projects to the
-`parameterState <ParameterState>` associated with the parameter to be controlled.  A ControlSignal has the following
+`ParameterState <ParameterState>` associated with the parameter to be controlled.  A ControlSignal has the following
 primary attributes:
 
 .. _ControlSignal_Modulation:
@@ -89,7 +90,7 @@ primary attributes:
   ControlSignal belongs determines its `allocation_policy <ControlMechanism.allocation_policy>` by sampling.
 ..
 * `function <ControlSignal.function>`: converts the ControlSignal's `allocation` to its `intensity`.  By default this
-  is an identity function (:keyword:`Linear(slope=1, intercept=0))`), that simpy uses the `allocation` as the
+  is an identity function (:keyword:`Linear(slope=1, intercept=0))`), that simply uses the `allocation` as the
   `intensity`.  However, :keyword:`function` can be assigned another `TransferFunction`, or any other function that
   takes and returns a scalar value or 1d array.
 
@@ -143,15 +144,15 @@ XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE M
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
 `function <ControlSignal.function>` to compute its `intensity` for that `TRIAL`.  The `intensity` is used
-by its associated `ControlProjection` to set the :keyword:`value` of the `parameterState <ParameterState>` to which it
-projects. The paramemterState uses that value, in turn, to modify the value of the mechanism or function parameter
-being controlled.  The ControlSignal's `intensity`is also used by its `cost functions <ControlSignal_Cost_Functions>`
+by its associated `ControlProjection` to set the :keyword:`value` of the `ParameterState <ParameterState>` to which it
+projects. The ParameterState uses that value, in turn, to modify the value of the Mechanism or function parameter
+being controlled.  The ControlSignal's `intensity` is also used by its `cost functions <ControlSignal_Cost_Functions>`
 to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
 to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the 
 ControlSignal's `allocation` for the next `TRIAL`.
 
 .. note::
-   The changes in a parameter in response to the execution of a ControlMechanism are not applied until the mechanism
+   The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
    with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
@@ -160,7 +161,7 @@ ControlSignal's `allocation` for the next `TRIAL`.
 Examples
 ~~~~~~~~
 
-*Modulate the parameter of a Mechanism's <function <Mechanism.function>*.  The following example assigns a
+*Modulate the parameter of a Mechanism's function*.  The following example assigns a
 ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function used by a `TransferMechanism`::
 
     My_Mech = TransferMechanism(function=Logistic(bias=(1.0, ControlSignal)))
@@ -359,12 +360,12 @@ class ControlSignal(ModulatorySignal):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
-        a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        a string used for the name of the OutputState.
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -439,22 +440,22 @@ class ControlSignal(ModulatorySignal):
         the parameter(s) that it controls.
 
     efferents : [List[ControlProjection]]
-        a list with one item -- the `ControlProjection` assigned to the ControlSignal.
+        a list of the `ControlProjections <ControlProjection>` assigned to (i.e., that project from) the ControlSignal.
 
     name : str : default <State subclass>-<index>
-        name of the outputState.
-        Specified in the **name** argument of the constructor for the outputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the outputState belongs
+        name of the OutputState.
+        Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
+        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, state names are "scoped" within a Mechanism, meaning that states with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: states within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences
-        the `PreferenceSet` for the outputState.
+        the `PreferenceSet` for the OutputState.
         Specified in the **prefs** argument of the constructor for the projection;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -518,7 +519,7 @@ class ControlSignal(ModulatorySignal):
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per outputStates in ControlProjection._instantiate_sender),
+        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner=owner,
@@ -622,7 +623,7 @@ class ControlSignal(ModulatorySignal):
         # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  control_signals;
         # #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
         # #    it returns default_allocation policy which has only a singel item,
-        # #    however validation of indices for outputStates requires that proper number of items be in self.value
+        # #    however validation of indices for OutputStates requires that proper number of items be in self.value
         # # FIX: SHOULD VALIDATE THAT FUNCTION INDEED RETURNS A VALUE WITH LENGTH = # ControlSignals
         try:
             self.owner.value = self.owner.allocation_policy
@@ -712,10 +713,12 @@ class ControlSignal(ModulatorySignal):
         Computes new intensity and cost attributes from allocation
 
         Use self.function to assign intensity
+
             - if ignoreIntensityFunction is set (for efficiency, if the execute method it is the identity function):
-                ignore self.function
-                pass allocation (input to control_signal) along as its output
-        Update cost
+
+                - ignore self.function
+                - pass allocation (input to control_signal) along as its output
+        Update cost.
         Assign intensity to value of ControlSignal (done in setter property for value)
 
         :parameter allocation: (single item list, [0-1])
@@ -794,15 +797,15 @@ class ControlSignal(ModulatorySignal):
                 cost_change_string = "+" + str(cost_change)
             print("Cost: {0} [{1}])".format(self.cost, cost_change_string))
 
-        #region Record control_signal values in owner mechanism's log
+        #region Record control_signal values in owner Mechanism's log
         # Notes:
-        # * Log control_signals for ALL states of a given mechanism in the mechanism's log
-        # * Log control_signals for EACH state in a separate entry of the mechanism's log
+        # * Log control_signals for ALL states of a given Mechanism in the Mechanism's log
+        # * Log control_signals for EACH state in a separate entry of the Mechanism's log
 
-        # Get receiver mechanism and state
+        # Get receiver Mechanism and state
         controller = self.owner
 
-        # Get logPref for mechanism
+        # Get logPref for Mechanism
         log_pref = controller.prefs.logPref
 
         # Get context
@@ -868,6 +871,7 @@ class ControlSignal(ModulatorySignal):
 
     @property
     def intensity(self):
+        # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
         return self._intensity
 
     @intensity.setter
@@ -937,6 +941,7 @@ class ControlSignal(ModulatorySignal):
         if isinstance(self._value, str):
             return self._value
         else:
+            # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
 
     @value.setter

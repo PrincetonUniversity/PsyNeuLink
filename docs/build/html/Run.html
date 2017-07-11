@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="prev" title="TimeScale" href="TimeScale.html"/> 
 
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -361,7 +361,7 @@ attribute of the <a class="reference internal" href="Keywords.html#Keywords.Keyw
 the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism with which the target is compared (that is, the Mechanism that provides the
 <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism&#8217;s</span></a> <a class="reference internal" href="ComparatorMechanism.html#ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a>
 value, then the target must be within that range (for example, if the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism is a
-<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, it&#8217;s <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, its <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is
 [0,1], so the target must be within that range).</p>
 <div class="section" id="run-targets-sequence-format">
 <span id="id1"></span><h4>Sequence Format<a class="headerlink" href="#run-targets-sequence-format" title="Permalink to this headline">¶</a></h4>
@@ -401,7 +401,7 @@ This format allows targets to be constructed programmatically, in response to co
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>inputs</strong> (List[input] or ndarray(input) : default default_input_value for a single <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>) &#8211; the input for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence (see <a class="reference internal" href="#run-inputs"><span class="std std-ref">Inputs</span></a> for detailed description of formatting
 requirements and options).</li>
 <li><strong>num_trials</strong> (<em>int : default None</em>) &#8211; the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s to run.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code> (the default), then a number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s run will be equal
@@ -421,11 +421,14 @@ If it is <code class="xref any docutils literal"><span class="pre">True</span></
 <li><strong>call_after_time_step</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
 <li><strong>time_scale</strong> (<em>TimeScale :  default TimeScale.TRIAL</em>) &#8211; specifies time scale for Components that implement different forms of execution for different values of
 <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</li>
-<li><strong>Returns</strong> &#8211; </li>
-<li><strong>-------</strong> &#8211; </li>
-<li><strong>&lt;object&gt;.results</strong> (<em>List[OutputState.value]</em>) &#8211; list of the values, for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, of the OutputStates for a Mechanism run directly,
-or of the OutputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;object&gt;.results</strong> &#8211; list of the values, for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, of the OutputStates for a Mechanism run directly,
+or of the OutputStates of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[OutputState.value]</p>
 </td>
 </tr>
 </tbody>
@@ -474,7 +477,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

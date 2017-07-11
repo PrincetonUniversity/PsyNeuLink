@@ -14,10 +14,10 @@
 Overview
 --------
 
-A ControlProjection is a subclass of `ModulatoryProjection` that projects to the `parameterState <ParameterState>` of
-a `ProcessingMechanism`. It takes the value of a `ControlSignal` of a `ControlMechanism`, and uses it to  modify the
+A ControlProjection is a subclass of `ModulatoryProjection` that projects to the `ParameterState <ParameterState>` of
+a `ProcessingMechanism`. It takes the value of a `ControlSignal` of a `ControlMechanism` and uses it to  modify the
 value of the parameter associated with the ParameterState to which it projects.  All of the ControlProjections in a
-system, along with its other `control components <ControlMechanism>`, can be displayed using the system's `show_graph`
+System, along with its other `control components <ControlMechanism>`, can be displayed using the System's `show_graph`
 method with its **show_control** argument assigned as :keyword:`True`.
 
 .. _ControlProjection_Creation:
@@ -25,7 +25,7 @@ method with its **show_control** argument assigned as :keyword:`True`.
 Creating a ControlProjection
 ----------------------------
 
-A ControlProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
+A ControlProjection can be created using any of the standard ways to `create a Projection <Projection_Creation>`,
 or by including it in a tuple that `specifies a parameter <ParameterState_Specifying_Parameters>` for a `Mechanism`,
 `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection is created
 using its constructor on its own, the `receiver <ControlProjection.receiver>` argument must be specified.  If it is
@@ -75,7 +75,7 @@ modify the parameter for which it is responsible.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-   Mechanism that receives the projection are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy"
+   Mechanism that receives the Projection are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy"
    updating).
 
 .. _ControlProjection_Class_Reference:
@@ -119,7 +119,7 @@ class ControlProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The ControlProjection class is a type in the Projection category of Component.
-            It implements a projection to the parameterState of a mechanism that modifies a parameter of its function.
+            It implements a projection to the ParameterState of a mechanism that modifies a parameter of its function.
             It:
                - takes a scalar as its input (sometimes referred to as an "allocation")
                - uses its `function` to compute its value (sometimes referred to as its "intensity"
@@ -150,7 +150,7 @@ class ControlProjection(ModulatoryProjection_Base):
     ---------
 
     sender : Optional[Mechanism or OutputState]
-        specifies the source of the input for the ControlProjection;  usually an `outputState <OutputState>` of a
+        specifies the source of the input for the ControlProjection;  usually an `OutputState <OutputState>` of a
         `ControlMechanism <ControlMechanism>`, and commonly the `ControlSignal` of an `EVCMechanism`.  If it is not
         specified, the ControlProjection will 
         COMMENT:
@@ -159,7 +159,7 @@ class ControlProjection(ModulatoryProjection_Base):
         be ignored during execution.
 
     receiver : Optional[Mechanism or ParameterState]
-        specifies the parameterState associated with the parameter to be controlled.  This must be specified,
+        specifies the ParameterState associated with the parameter to be controlled.  This must be specified,
         or be able to be determined by the context in which the ControlProjection is created or assigned.
 
     function : TransferFunction : default Linear
@@ -168,12 +168,12 @@ class ControlProjection(ModulatoryProjection_Base):
         
     control_signal_params : Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the `ControlSignal` that is the sender of the projection (see `ControlSignal_Structure` for a description
+        the `ControlSignal` that is the sender of the Projection (see `ControlSignal_Structure` for a description
         of ControlSignal parameters). 
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
+        the Projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
@@ -184,7 +184,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the `PreferenceSet` for the ControlProjection.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
@@ -208,14 +208,14 @@ class ControlProjection(ModulatoryProjection_Base):
 
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the Projection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Projection.
+        Specified in the **prefs** argument of the constructor for the Projection;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
 
@@ -338,7 +338,7 @@ class ControlProjection(ModulatoryProjection_Base):
                 self.receiver = receiver_parameter_state
             else:
                 raise ControlProjectionError("Unable to assign ControlProjection ({0}) from {1} to {2}, "
-                                         "as it has several parameterStates;  must specify one (or each) of them"
+                                         "as it has several ParameterStates;  must specify one (or each) of them"
                                          " as receiver(s)".
                                          format(self.name, self.sender.owner, self.receiver.name))
         # else:

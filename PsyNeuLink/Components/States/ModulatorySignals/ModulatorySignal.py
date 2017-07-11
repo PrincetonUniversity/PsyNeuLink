@@ -17,7 +17,7 @@ Overview
 A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to
 `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of one or more `States <State>` by of way one or
 more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a state by modifying a
-parameter of the State's `function <State.function>`.  There are three types of ModulatySignals, each of which is
+parameter of the State's `function <State.function>`.  There are three types of ModulatorySignals, each of which is
 associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of a
 different type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
 
@@ -51,7 +51,7 @@ Structure
 ---------
 
 A ModulatorySignal is associated with one or more `ModulatoryProjections <ModulatoryProjection>` of the
-corresponding type, that project to the State(s), the value(s) of which it modulates.  THe ModulatoryProjections
+corresponding type, that project to the State(s), the value(s) of which it modulates.  The ModulatoryProjections
 received by a `State` are listed in its `mod_afferents` attribute. The method by which a ModulatorySignal
 modulates a State's `value <State.value>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, as described below.
@@ -68,7 +68,7 @@ another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modula
 determines which of these two parameters should be assigned its value, or which of two other actions to take when the
 State updates its `value <State.value>`.  It is specified using a value of `ModulationParam <Function.ModulationParam>`.
 The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
-which multiplies the State`s `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
+which multiplies the State's `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
 before passing it to the State's `function <State.function>`.  The default for `LearningSignals <LearningSignal>` is
 `ModulationParam.ADDITIVE`, which adds the `value <LearningSignal.value>` of the LearningSignal (i.e., the weight
 changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current weight
@@ -129,7 +129,7 @@ Execution
 ModulatorySignals cannot be executed.  They are updated when the `AdaptiveMechanism` to which they belong is executed.
 When a ModulatorySignal is updated, it calculates its value, which is then made available to the
 `ModulatoryProjections <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
-When those projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
+When those Projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
 project.  The State's `function <State.function>` then uses that value for the parameter designated by the
 `modulation <ModulatorySignal.modulation>` attribute of the ModulatorySignal when the State is updated.  For example,
 consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function used by a
@@ -223,13 +223,13 @@ class ModulatorySignal(OutputState):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default OutputState-<index>
-        a string used for the name of the outputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the outputState
+        a string used for the name of the OutputState.
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
-        the `PreferenceSet` for the outputState.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for the OutputState.
+        If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
 
@@ -245,7 +245,7 @@ class ModulatorySignal(OutputState):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the ModulatorySignal's `value <ModulatorySignal.value>`; the default is an identity function that
-        assigns `variable <ModulatorySignal.variable` as ModulatorySignal's `value <ModulatorySignal.value>`.
+        assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
         result of `function <ModulatorySignal.function>`, and is the value used to determine the `value <State.value>`
@@ -260,11 +260,11 @@ class ModulatorySignal(OutputState):
     name : str : default <ModulatorySignal>-<index>
         name of the ModulatorySignal.
         Specified in the **name** argument of the constructor for the ModulatorySignal.  If not is specified, a default
-        is assigned by the StateRegistry of the mechanism to which the ModulatorySignal belongs
+        is assigned by the StateRegistry of the Mechanism to which the ModulatorySignal belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, State names are "scoped" within a mechanism, meaning that States with
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
             the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
             Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
@@ -272,7 +272,7 @@ class ModulatorySignal(OutputState):
     prefs : PreferenceSet or specification dict : State.classPreferences
         the `PreferenceSet` for the ModulatorySignal.
         Specified in the **prefs** argument of the constructor for the ModulatorySignal;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
@@ -302,20 +302,29 @@ class ModulatorySignal(OutputState):
                  prefs,
                  context):
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params,
-                                                  modulation=modulation)
+        try:
+            if self.value in {DEFERRED_INITIALIZATION, INITIALIZING}:
+                # If init was deferred, it may have been because owner was not yet known (see below),
+                #   and so modulation hasn't had a chance to be assigned to the owner's value
+                #   (i.e., if it was not specified in the constructor), so do so here;
+                #   however modulation has already been assigned to params, so need to assign it there
+                params[MODULATION] = self.modulation or owner.modulation
 
-        # If owner or reference_value has not been assigned, defer init to State.instantiate_projection_to_state()
-        if owner is None or reference_value is None:
-            # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = self
-            self.init_args['name'] = name
+        except AttributeError:
+            # Assign args to params and functionParams dicts (kwConstants must == arg names)
+            params = self._assign_args_to_param_dicts(params=params,
+                                                      modulation=modulation)
 
-            # Flag for deferred initialization
-            self.value = DEFERRED_INITIALIZATION
-            return
+            # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+            if owner is None or reference_value is None:
+                # Store args for deferred initialization
+                self.init_args = locals().copy()
+                self.init_args['context'] = self
+                self.init_args['name'] = name
+
+                # Flag for deferred initialization
+                self.value = DEFERRED_INITIALIZATION
+                return
 
         super().__init__(owner,
                          reference_value,
@@ -329,3 +338,27 @@ class ModulatorySignal(OutputState):
                          context=context)
 
         self._modulation = self.modulation or owner.modulation
+
+    def _instantiate_projections(self, projections, context=None):
+        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+
+        Specification should be an existing ModulatoryProjection, or a receiver Mechanism or State
+        Disallow any other specifications (including PathwayProjections)
+        Call _instantiate_projection_from_state to assign ModulatoryProjections to .efferents
+
+        """
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
+            import ModulatoryProjection_Base
+
+        modulatory_projection_specs = [proj for proj in projections
+                                  if isinstance(proj, (ModulatoryProjection_Base, Mechanism, State))]
+        excluded_specs = [spec for spec in projections if not spec in modulatory_projection_specs]
+        if excluded_specs:
+            raise StateError("The following are not allowed as a specification for a {} from a {}: {}".
+                             format(ModulatoryProjection_Base.componentName,
+                                    self.__class__.__name__,
+                                    excluded_specs))
+
+        for receiver_spec in modulatory_projection_specs:
+            self._instantiate_projection_from_state(projection_spec=type(self), receiver=receiver_spec, context=context)

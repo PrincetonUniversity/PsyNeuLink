@@ -20,7 +20,7 @@ Overview
 
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent 
 network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
-referenced by the mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
+referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
   
 .. _Recurrent_Transfer_Creation:
@@ -30,7 +30,7 @@ Creating a RecurrentTransferMechanism
 
 A RecurrentTransferMechanism can be created directly by calling its constructor, or using the 
 `mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its 
-**mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the mechanism's 
+**mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the Mechanism's
 constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is 
 `FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a 
 standard `TransferMechanism`.
@@ -41,15 +41,15 @@ Structure
 ---------
 
 The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
-parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the mechanism's 
-`primary outputState <OutputState_Primary>` back to it `primary inputState <Mechanism_InputStates>`.  
-In all other respects the mechanism is identical to a standard `TransferMechanism`.  
+parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the Mechanism's
+`primary OutputState <OutputState_Primary>` back to it `primary InputState <Mechanism_InputStates>`.
+In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
 decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor each time it is
-executed.  It also has two additional outputStates:  an ENERGY outputState and, if its
+executed.  It also has two additional OutputStates:  an ENERGY OutputState and, if its
 `function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
-OutputState, that each report the  respective values of the vector in it its
+OutputState, that each report the respective values of the vector in it its
 `primary (RESULTS) OutputState <OutputState_Primary>`.
  
 .. _Recurrent_Transfer_Execution:
@@ -65,7 +65,7 @@ Like a `TransferMechanism`, the function used to update each element can be assi
 if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it 
 decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
 specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
-function and parameters (see `Transfer_Execution`), and returns the results in its outputStates.
+function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
 
 .. _Recurrent_Transfer_Class_Reference:
 
@@ -92,16 +92,51 @@ DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-        RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEVIATION=STANDARD_DEVIATION
-        VARIANCE=VARIANCE
-        ENERGY=ENERGY
-        ENTROPY=ENTROPY
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-# for item in [item[NAME] for item in DDM_standard_output_states]:
-#     setattr(DDM_OUTPUT.__class__, item, item)
+    
+    """
+        .. _RecurrentTransferMechanism_Standard_OutputStates:
+
+        `Standard OutputStates <OutputState_Standard>` for
+        `RecurrentTransferMechanism`
+
+        .. TRANSFER_RESULT:
+
+        *RESULT* : 1d np.array
+            the result of the `function <RecurrentTransferMechanism.function>`
+            of the Mechanism
+
+        .. TRANSFER_MEAN:
+
+        *MEAN* : float
+            the mean of the result
+
+        *VARIANCE* : float
+            the variance of the result
+
+        .. ENERGY:
+
+        *ENERGY* : float
+            the energy of the result, which is calculated using the `Stability
+            Function <Function.Stability.function>` with the ``ENERGY`` metric
+
+        .. ENTROPY:
+
+        *ENTROPY* : float
+            The entropy of the result, which is calculated using the `Stability
+            Function <Function.Stability.function>` with the ENTROPY metric
+            (Note: this is only present if the Mechanism's `function` is bounded
+            between 0 and 1 (e.g. the `Logistic` Function)).
+        """
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEVIATION=STANDARD_DEVIATION
+    VARIANCE=VARIANCE
+    ENERGY=ENERGY
+    ENTROPY=ENTROPY
+    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+    # for item in [item[NAME] for item in DDM_standard_output_states]:
+    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
@@ -122,7 +157,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Implements RecurrentTransferMechanism subclass of `TransferMechaism`.
+    Implements RecurrentTransferMechanism subclass of `TransferMechanism`.
 
     COMMENT:
         Description
@@ -173,7 +208,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
-         result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -201,24 +237,23 @@ class RecurrentTransferMechanism(TransferMechanism):
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
-    .. context=componentType+INITIALIZING):
-            context : str : default ''None''
-                   string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    context : str : default componentType+INITIALIZING
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Attributes
     ----------
 
     variable : value
-        the input to mechanism's `function <RecurrentTransferMechanism.variable>`.
+        the input to Mechanism's `function <RecurrentTransferMechanism.variable>`.
 
     function : Function
-        the function used to transform the input.
+        the Function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the mechanism.
+        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
 
     recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the mechanism's `primary outputState <OutputState_Primary>` 
+        a `MappingProjection` that projects from the Mechanism's `primary outputState <OutputState_Primary>`
         back to it `primary inputState <Mechanism_InputStates>`.
 
     decay : float : default 1.0
@@ -240,7 +275,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     time_constant : float
         the time constant for exponential time averaging of input
-        when the mechanism is executed using the `TIME_STEP` `TimeScale`::
+        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -254,18 +289,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`; same value as fist item of
+        result of executing `function <TransferMechanism.function>`; same value as first item of
         `output_values <TransferMechanism.output_values>`.    
 
     COMMENT:
         CORRECTED:
         value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
+            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
             and the first item of ``output_values``.
     COMMENT
 
     outputStates : Dict[str, OutputState]
         an OrderedDict with the following `outputStates <OutputState>`:
+
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
@@ -278,6 +314,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     output_values : List[array(float64), float, float]
         a list with the following items:
+
         * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
         * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
         * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);
@@ -288,15 +325,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
-        the name of the mechanism.
-        Specified in the **name** argument of the constructor for the projection;
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Projection;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     Returns

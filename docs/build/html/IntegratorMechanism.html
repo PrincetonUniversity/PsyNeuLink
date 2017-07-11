@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanism" href="ProcessingMechanism.html"/>
         <link rel="next" title="DDM" href="DDM.html"/>
         <link rel="prev" title="TransferMechanism" href="TransferMechanism.html"/> 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -191,7 +191,7 @@ assigned a custom function.</p>
 <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function and specifying INTEGRATOR_MECHANISM as its <strong>mech_spec</strong>
 argument.  Its function is specified in the <strong>function</strong> argument, which can be parameterized by calling its
 constructor with parameter values:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Integrator</span><span class="p">(</span><span class="n">integration_type</span><span class="o">=</span><span class="n">ADAPTIVE</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_time_averaging_mechanism</span> <span class="o">=</span> <span class="n">IntegratorMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">AdaptiveIntegrator</span><span class="p">(</span><span class="n">rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -201,7 +201,7 @@ constructor with parameter values:</p>
 used as the  <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.   The
 <code class="xref std std-keyword docutils literal"><span class="pre">default_input_value</span></code> argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when mechanism is executed.  The default for
-<code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">Integrator(integration_type=ADAPTIVE,</span> <span class="pre">rate=0.5)</span></code>. However, a custom function can
+<code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">AdaptiveIntegrator(rate=0.5)</span></code>. However, a custom function can
 also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
 and returns a value of the same type and format.  The mechanism has a single <code class="xref any docutils literal"><span class="pre">outputState</span></code> of which is assigned the result of  the call to the mechanism&#8217;s
 <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
@@ -220,7 +220,7 @@ specified for <code class="xref std std-keyword docutils literal"><span class="p
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>size=None</em>, <em>function=Integrator(integration_type=ADAPTIVE</em>, <em>rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=AdaptiveIntegrator(rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements the IntegratorMechanism subclass of Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -232,13 +232,12 @@ specified for <code class="xref std std-keyword docutils literal"><span class="p
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
 <code class="xref any docutils literal"><span class="pre">function</span></code>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> of the
 mechanism.</li>
-<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default Integrator</em>) &#8211; specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
 of values, and return one of the same form.</li>
 <li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
 This must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> for the <code class="xref std std-keyword docutils literal"><span class="pre">rate</span></code> parameter to have an effect.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the mechanism, parameters for its <a href="#id1"><span class="problematic" id="id2">`</span></a>function &lt;IntegratorMechanism.function&gt;, and/or a custom function and its
+the mechanism, parameters for its <code class="xref any docutils literal"><span class="pre">function</span></code>, and/or a custom function and its
 parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default IntegratorMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
@@ -255,20 +254,20 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default</em> &#8211; the input to mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
+<dd><p><em>value: default</em> &#8211; the input to Mechanism&#8217;s <code class="docutils literal"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : defaultTimeScale.TRIAL</em> &#8211; specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.</p>
+<dd><p><em>TimeScale : defaultTimeScale.TRIAL</em> &#8211; specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
-Specified in the :keyword:<strong>name</strong> argument of the constructor for the mechanism;
+<dd><p><em>str : default IntegratorMechanism-&lt;index&gt;</em> &#8211; the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Mechanism;
 if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -276,9 +275,9 @@ if not is specified, a default is assigned by <code class="xref any docutils lit
 <dl class="attribute">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
@@ -335,11 +334,13 @@ if it has more than one element, each element is applied to the corresponding el
 <p>If noise is specified as a single float or function, while <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array,
 noise will be applied to each variable element. In the case of a noise function, this means that the function
 will be executed separately for each variable element.</p>
-<p><strong>Note:</strong>
-In order to generate random noise, we recommend selecting a probability distribution function
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In order to generate random noise, we recommend selecting a probability distribution function
 (see <code class="xref any docutils literal"><span class="pre">Distribution</span> <span class="pre">Functions</span></code> for details), which will generate a new noise value from
 its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
 the noise will simply be an offset that remains the same across all executions.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -450,7 +451,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
