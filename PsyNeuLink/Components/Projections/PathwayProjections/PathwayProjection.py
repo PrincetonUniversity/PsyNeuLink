@@ -45,11 +45,11 @@ Execution
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
-from PsyNeuLink.Globals.Keywords import TRANSMISSIVE_PROJECTION
+from PsyNeuLink.Globals.Keywords import PATHWAY_PROJECTION
 
 class PathwayProjection_Base(Projection_Base):
 
-    componentCategory = TRANSMISSIVE_PROJECTION
+    componentCategory = PATHWAY_PROJECTION
 
     def __init__(self,
                  receiver,

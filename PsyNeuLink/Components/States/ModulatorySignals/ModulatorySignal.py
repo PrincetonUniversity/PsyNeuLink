@@ -340,7 +340,7 @@ class ModulatorySignal(OutputState):
         self._modulation = self.modulation or owner.modulation
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Specification should be an existing ModulatoryProjection, or a receiver Mechanism or State
         Disallow any other specifications (including PathwayProjections)

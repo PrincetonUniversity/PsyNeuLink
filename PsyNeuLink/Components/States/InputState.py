@@ -82,7 +82,7 @@ one of the specifications below:
     ..
     * A **specification dictionary**.  This creates the specified InputState using the first item of the owner
       Mechanism's ``variable`` as the InputState's :py:data:`variable <InputState.variable>`.  In addition to the
-      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a STATE_PROJECTIONS
+      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a PROJECTIONS
       entry, the value of which can be a Projection,
       :ref:`Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
       items that are either of those.
@@ -425,7 +425,7 @@ class InputState(State_Base):
                                                   # self.owner.variable))
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Call _instantiate_projections_to_state to assign:
             PathwayProjections to .pathway_afferents

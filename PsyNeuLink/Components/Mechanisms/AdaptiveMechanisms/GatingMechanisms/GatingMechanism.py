@@ -492,7 +492,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             if self.paramsCurrent[MAKE_DEFAULT_GATING_MECHANISM]:
                 self._assign_as_gating_mechanism(context=context)
 
-        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF STATE_PROJECTIONS, ETC.
+        # FIX: 5/23/17 CONSOLIDATE/SIMPLIFY THIS RE: gating_signal ARG??  USE OF PROJECTIONS, ETC.
         # FIX:         ?? WHERE WOULD GATING_PROJECTIONS HAVE BEEN SPECIFIED IN paramsCURRENT??
         # FIX:         DOCUMENT THAT VALUE OF GATING ENTRY CAN BE A PROJECTION
         # FIX:         RE-WRITE parse_state_spec TO TAKE TUPLE THAT SPECIFIES (PARAM VALUE, GATING SIGNAL)
