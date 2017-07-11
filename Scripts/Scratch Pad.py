@@ -2502,7 +2502,7 @@ import numpy as np
 #             for k, v in spec.items():
 #                 # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
 #                 #
-#                 if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+#                 if not k in {NAME, VALUE, PROJECTIONS}:
 #                     name = k
 #                     value = v
 #
@@ -2510,8 +2510,8 @@ import numpy as np
 #                 name = spec[NAME]
 #
 #             call_for_projection = False
-#             if STATE_PROJECTIONS in spec:
-#                 call_for_projection = spec[STATE_PROJECTIONS]
+#             if PROJECTIONS in spec:
+#                 call_for_projection = spec[PROJECTIONS]
 #
 #             if isinstance(spec[VALUE], (dict, tuple)):
 #                 # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec

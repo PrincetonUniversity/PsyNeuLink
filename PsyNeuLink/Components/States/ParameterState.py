@@ -476,7 +476,7 @@ class ParameterState(State_Base):
                                                   self.reference_value))
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Disallow any PathwayProjections
         Call _instantiate_projections_to_state to assign ModulatoryProjections to .mod_afferents
@@ -530,15 +530,13 @@ class ParameterState(State_Base):
 
     @property
     def pathway_projections(self):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to access path_projection for {};"
-                                  "it is a {} which does not have {}s".
-                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+        raise ParameterStateError("PROGRAM ERROR: Attempt to access {} for {}; {}s do not have {}s".
+                                  format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
     @pathway_projections.setter
     def pathway_projections(self, value):
-        raise ParameterStateError("PROGRAM ERROR: Attempt to assign path_projection to {};"
-                                  "it is a {} which cannot accept {}s".
-                                  format(self.name, PARAMETER_STATE, TRANSMISSIVE_PROJECTION))
+        raise ParameterStateError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
+                                  format(PATHWAY_PROJECTION, self.name, PARAMETER_STATE, PATHWAY_PROJECTION))
 
 
 def _instantiate_parameter_states(owner, context=None):

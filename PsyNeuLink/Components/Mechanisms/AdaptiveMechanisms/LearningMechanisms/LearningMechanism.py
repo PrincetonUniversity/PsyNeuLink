@@ -1001,18 +1001,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
             #        so parse:
             # FIX 5/23/17: NEED TO GET THE KEYWORDS STRAIGHT FOR PASSING LearningSignal SPECIFICATIONS
             # IMPLEMENTATION NOTE:
-            #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
             #                      here, the tuple comes from a (param, Projection) specification in learning_signal arg
             #    Delete whichever one it was, as neither is a recognized LearningSignal param
             #        (which will balk at it in LearningSignal._validate_params)
             elif (learning_signal_params and
-                    any(kw in learning_signal_spec[PARAMS] for kw in {LEARNING_SIGNAL_SPECS, STATE_PROJECTIONS})):
+                    any(kw in learning_signal_spec[PARAMS] for kw in {LEARNING_SIGNAL_SPECS, PROJECTIONS})):
                 if LEARNING_SIGNAL_SPECS in learning_signal_spec[PARAMS]:
                     spec = learning_signal_params[LEARNING_SIGNAL_SPECS]
                     del learning_signal_params[LEARNING_SIGNAL_SPECS]
-                elif STATE_PROJECTIONS in learning_signal_spec[PARAMS]:
-                    spec = learning_signal_params[STATE_PROJECTIONS]
-                    del learning_signal_params[STATE_PROJECTIONS]
+                elif PROJECTIONS in learning_signal_spec[PARAMS]:
+                    spec = learning_signal_params[PROJECTIONS]
+                    del learning_signal_params[PROJECTIONS]
 
                 # LearningSignal
                 if isinstance(spec, LearningSignal):
@@ -1020,7 +1020,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
                 else:
                     # Projection
-                    # IMPLEMENTATION NOTE: Projection was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
+                    # IMPLEMENTATION NOTE: Projection was placed in list in PROJECTIONS entry by _parse_state_spec
                     if isinstance(spec, list) and isinstance(spec[0], Projection):
                         if isinstance(spec[0], MappingProjection):
                             mapping_projection = spec[0]

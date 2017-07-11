@@ -181,8 +181,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
                        STATE_PARAMS,
-                       STATE_PROJECTIONS,
-                       MODULATORY_PROJECTIONS,
+                       PROJECTIONS,
                        PROJECTION_TYPE,
                        LEARNING_PROJECTION_PARAMS,
                        LEARNING_SIGNAL_SPECS,
@@ -254,7 +253,7 @@ class State_Base(State):
         Description
         -----------
             Represents and updates the value of the input, output or parameter of a Mechanism
-                - receives inputs from projections (self.path_afferents, STATE_PROJECTIONS)
+                - receives inputs from projections (self.path_afferents, PROJECTIONS)
                 - input_states and parameterStates: combines inputs from all projections (mapping, control or learning)
                     and uses this as variable of function to update the value attribute
                 - output_states: represent values of output of function
@@ -291,7 +290,7 @@ class State_Base(State):
             + variableClassDefault (value): [0]
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
-            + paramClassDefaults (dict): {STATE_PROJECTIONS: []}             # Projections to States
+            + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States
             + paramNames (dict)
             + owner (Mechansim)
             + FUNCTION (Function class or object, or method)
@@ -323,7 +322,7 @@ class State_Base(State):
         - params (dict):  (if absent, default State is implemented)
             + FUNCTION (method)         |  Implemented in subclasses; used in update()
             + FUNCTION_PARAMS (dict) |
-            + STATE_PROJECTIONS:<projection specification or list of ones>
+            + PROJECTIONS:<projection specification or list of ones>
                 if absent, no projections will be created
                 projection specification can be: (see Projection for details)
                     + Projection object
@@ -411,8 +410,7 @@ class State_Base(State):
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({STATE_PROJECTIONS:[],
-                               MODULATORY_PROJECTIONS:[]})
+    paramClassDefaults.update({PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
     #endregion
 
@@ -440,7 +438,7 @@ class State_Base(State):
             - params (dict):
                 + if absent, implements default State determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:
-                    + STATE_PROJECTIONS:<Projection object, Projection class, dict, or list of either or both>
+                    + PROJECTIONS:<Projection object, Projection class, dict, or list of either or both>
                         if absent, no projections will be created
                         if dict, must contain entries specifying a projection:
                             + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
@@ -525,12 +523,12 @@ class State_Base(State):
                                          context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
-        if STATE_PROJECTIONS in self.paramsCurrent:
-            self._instantiate_projections(self.paramsCurrent[STATE_PROJECTIONS], context=context)
+        if PROJECTIONS in self.paramsCurrent:
+            self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
             # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-            #                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
+            #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
 
     def _handle_size(self, size, variable):
@@ -611,7 +609,7 @@ class State_Base(State):
 
         Call super (Component._validate_params()
         Validate following params:
-            + STATE_PROJECTIONS:  <entry or list of entries>; each entry must be one of the following:
+            + PROJECTIONS:  <entry or list of entries>; each entry must be one of the following:
                 + Projection object
                 + Projection class
                 + specification dict, with the following entries:
@@ -622,14 +620,14 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if STATE_PROJECTIONS in request_set:
+        if PROJECTIONS in request_set:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
-            projections = request_set[STATE_PROJECTIONS]
+            projections = request_set[PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
-                request_set[STATE_PROJECTIONS] = projections
+                request_set[PROJECTIONS] = projections
         else:
             # If no projections, ignore (none will be created)
             projections = None
@@ -702,7 +700,7 @@ class State_Base(State):
                                              self.variable))
 
     def _instantiate_projections(self, projections, context=None):
-        """Implement any Projection(s) to/from State specified in STATE_PROJECTIONS entry of params arg
+        """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
 
         Must be implemented by subclasss, to handle interpretation of projection specification(s)
         in a class-appropriate manner:
@@ -735,7 +733,7 @@ class State_Base(State):
             assign as sender of the projection
         + Mechanism object:
             check that it is compatible with (i.e., a legitimate sender for) projection
-        + specification dict (usually from STATE_PROJECTIONS entry of params dict):
+        + specification dict (usually from PROJECTIONS entry of params dict):
             checks that projection function output is compatible with self.value
             implements projection
             dict must contain:
@@ -873,7 +871,7 @@ class State_Base(State):
                         warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      PROJECTION_TYPE,
-                                     STATE_PROJECTIONS,
+                                     PROJECTIONS,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
                 else:
@@ -885,7 +883,7 @@ class State_Base(State):
                               format(item_prefix_string,
                                      PROJECTION_TYPE,
                                      error_str,
-                                     STATE_PROJECTIONS,
+                                     PROJECTIONS,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
@@ -897,7 +895,7 @@ class State_Base(State):
                         warnings.warn("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                               format(item_prefix_string,
                                      PROJECTION_PARAMS,
-                                     STATE_PROJECTIONS, state_name_string,
+                                     PROJECTIONS, state_name_string,
                                      item_suffix_string,
                                      default_projection_type.__class__.__name__))
 
@@ -911,7 +909,7 @@ class State_Base(State):
                           format(item_prefix_string,
                                  PROJECTION_TYPE,
                                  err_str,
-                                 STATE_PROJECTIONS,
+                                 PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -1115,7 +1113,7 @@ class State_Base(State):
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
                                  PROJECTION_TYPE,
-                                 STATE_PROJECTIONS,
+                                 PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
             else:
@@ -1127,7 +1125,7 @@ class State_Base(State):
                           format(item_prefix_string,
                                  PROJECTION_TYPE,
                                  error_str,
-                                 STATE_PROJECTIONS,
+                                 PROJECTIONS,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -1139,7 +1137,7 @@ class State_Base(State):
                     print("{0}{1} not specified in {2} params{3}; default {4} will be assigned".
                           format(item_prefix_string,
                                  PROJECTION_PARAMS,
-                                 STATE_PROJECTIONS, state_name_string,
+                                 PROJECTIONS, state_name_string,
                                  item_suffix_string,
                                  default_projection_type.__class__.__name__))
 
@@ -1153,7 +1151,7 @@ class State_Base(State):
                       format(item_prefix_string,
                              PROJECTION_TYPE,
                              err_str,
-                             STATE_PROJECTIONS,
+                             PROJECTIONS,
                              item_suffix_string,
                              default_projection_type.__class__.__name__))
 
@@ -1850,13 +1848,13 @@ def _instantiate_state(owner,                  # Object to which state will belo
             if it is a string:
                 test if it is a keyword and get its value by calling keyword method of owner's execute method
                 otherwise, return None (suppress assignment of ParameterState)
-        assign second item to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
+        assign second item to STATE_PARAMS{PROJECTIONS:<projection>}
     + Projection object:
         assign constraint_value to value
-        assign projection to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
+        assign projection to STATE_PARAMS{PROJECTIONS:<projection>}
     + Projection class (or keyword string constant for one):
         assign constraint_value to value
-        assign projection class spec to STATE_PARAMS{STATE_PROJECTIONS:<projection>}
+        assign projection class spec to STATE_PARAMS{PROJECTIONS:<projection>}
     + specification dict for State (see XXX for context):
         check compatibility of STATE_VALUE with constraint_value
     + value:
@@ -2128,7 +2126,7 @@ def _parse_state_spec(owner,
     #     return dict(**{NAME:state.name,
     #                   VARIABLE:state.variable,
     #                   VALUE:state.value,
-    #                   # PARAMS:{STATE_PROJECTIONS:state.pathway_projections}})
+    #                   # PARAMS:{PROJECTIONS:state.pathway_projections}})
     #                   PARAMS:state.params})
 
     # Validate that state_type is a State class
@@ -2261,7 +2259,7 @@ def _parse_state_spec(owner,
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
-        params.update({STATE_PROJECTIONS:[state_spec[1]]})
+        params.update({PROJECTIONS:[state_spec[1]]})
 
         # Parse state_spec in first item of tuple (without params)
         state_dict = _parse_state_spec(owner=owner,
@@ -2278,7 +2276,7 @@ def _parse_state_spec(owner,
         state_dict[PARAMS].update(params)
 
     # Projection class, object, or keyword:
-    #     set variable to value and assign projection spec to STATE_PROJECTIONS entry in params
+    #     set variable to value and assign projection spec to PROJECTIONS entry in params
     # IMPLEMENTATION NOTE:  It is the caller's responsibility to assign the value arg
     #                           appropriately for the state being requested, for:
     #                               InputState, projection's value;
@@ -2290,7 +2288,7 @@ def _parse_state_spec(owner,
         state_dict[VARIABLE] =  value
         if state_dict[PARAMS] is None:
             state_dict[PARAMS] = {}
-        state_dict[PARAMS].update({STATE_PROJECTIONS:[state_spec]})
+        state_dict[PARAMS].update({PROJECTIONS:[state_spec]})
 
     # string (keyword or name specification)
     elif isinstance(state_spec, str):
