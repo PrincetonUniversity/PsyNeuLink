@@ -813,7 +813,7 @@ def test_transfer_mech_size_var_both_lists():
 # size = int, variable = a compatible 2D array: check that variable is correct
 
 
-def test_transfer_mech_size_var_both_lists():
+def test_transfer_mech_size_scalar_var_2d():
     T = TransferMechanism(
         name='T',
         size=2,
@@ -827,12 +827,68 @@ def test_transfer_mech_size_var_both_lists():
 # variable = a 2D array: check that variable is correct
 
 
-def test_transfer_mech_size_var_both_lists():
+def test_transfer_mech_var_2d_array():
     T = TransferMechanism(
         name='T',
         default_input_value=[[1, 2], [3, 4]]
     )
     assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
+
+# ------------------------------------------------------------------------------------------------
+# TEST 14
+# variable = a 1D array, size does not match: check that variable and output are correct
+
+
+def test_transfer_mech_var_1D_size_wrong():
+    T = TransferMechanism(
+        name='T',
+        default_input_value=[1, 2, 3, 4],
+        size=2
+    )
+    assert len(T.variable) == 1 and (T.variable[0] == [1, 2, 3, 4]).all()
+    val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 15
+# variable = a 1D array, size does not match again: check that variable and output are correct
+
+
+def test_transfer_mech_var_1D_size_wrong_2():
+    T = TransferMechanism(
+        name='T',
+        default_input_value=[1, 2, 3, 4],
+        size=[2, 3, 4]
+    )
+    assert len(T.variable) == 1 and (T.variable[0] == [1, 2, 3, 4]).all()
+    val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
+    assert val == [[10.0, 10.0, 10.0, 10.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 16
+# size = int, variable = incompatible array, check variable
+
+
+def test_transfer_mech_size_var_incompatible1():
+    T = TransferMechanism(
+        name='T',
+        size=2,
+        default_input_value=[[1, 2], [3, 4, 5]]
+    )
+    assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
+
+# ------------------------------------------------------------------------------------------------
+# TEST 17
+# size = array, variable = incompatible array, check variable
+
+
+def test_transfer_mech_size_var_incompatible1():
+    T = TransferMechanism(
+        name='T',
+        size=[2, 2],
+        default_input_value=[[1, 2], [3, 4, 5]]
+    )
+    assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
 
 # ------------------------------------------------------------------------------------------------
 
@@ -908,31 +964,3 @@ def test_transfer_mech_size_2d():
     )
     assert len(T.variable) == 1 and len(T.variable[0]) == 2
     assert len(T.size) == 1 and T.size[0] == 2 and len(T.params['size']) == 1 and T.params['size'][0] == 2
-
-# ------------------------------------------------------------------------------------------------
-# TEST 6
-# size = int, variable = incompatible array, check error
-
-
-def test_transfer_mech_size_var_incompatible1():
-    with pytest.raises(ComponentError) as error_text:
-        T = TransferMechanism(
-            name='T',
-            size=2,
-            default_input_value=[[1, 2], [3, 4, 5]]
-        )
-    assert " conflicts with the length of " in str(error_text.value)
-
-# ------------------------------------------------------------------------------------------------
-# TEST 7
-# size = int list, variable = incompatible array, check error
-
-
-def test_transfer_mech_size_var_incompatible2():
-    with pytest.raises(ComponentError) as error_text:
-        T = TransferMechanism(
-            name='T',
-            size=[3, 2],
-            default_input_value=[[1, 2], [3, 4, 5]]
-        )
-    assert " conflicts with the length of " in str(error_text.value)

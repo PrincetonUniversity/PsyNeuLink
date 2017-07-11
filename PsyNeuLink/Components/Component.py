@@ -851,12 +851,19 @@ class Component(object):
             # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
             if variable is not None and size is not None:  # try tossing this "if" check
-                # If they conflict, raise exception
-                for i in range(len(size)):
-                    if size[i] != len(variable[i]):
-                        raise ComponentError("The size arg of {} ({}) conflicts with the length "
-                                             "of its variable arg ({}) at element {}".
-                                             format(self.name, size[i], variable[i], i))
+                # If they conflict, give warning
+                if len(size) != len(variable):
+                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                        warnings.warn("The size arg of {} conflicts with the length "
+                                      "of its variable arg ({}) at element {}: variable takes precedence".
+                                      format(self.name, size[i], variable[i], i))
+                else:
+                    for i in range(len(size)):
+                        if size[i] != len(variable[i]):
+                            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                                warnings.warn("The size arg of {} ({}) conflicts with the length "
+                                                 "of its variable arg ({}) at element {}: variable takes precedence".
+                                                 format(self.name, size[i], variable[i], i))
 
         return variable
 
