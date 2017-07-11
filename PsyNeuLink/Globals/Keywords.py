@@ -518,7 +518,7 @@ GATING_POLICY = 'gating_policy'
 STATE = "State"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
-PROJECTIONS = "Projections"  # Used to specify projection list to State
+PROJECTIONS = "projections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"
