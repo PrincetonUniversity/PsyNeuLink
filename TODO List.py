@@ -81,6 +81,7 @@
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
 # 14) IMPLEMENT Model fitting
+# 15) IMPLEMENT Statefulness:  Integrators, ControlSignal.intensity, ?Gating, Learning?
 
 
 # PNL TEAM:
@@ -93,6 +94,8 @@
 #                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
 # DOCUMENTATION: What to call ConventionsAndDefinitions:  Structural Overivew?  Outline?
 #
+# IMPLEMENT: tests for GatingSignal (per Multilayer Learning Test Script [WITH GATING]:
+#            TEST all forms of GatingSignal specification
 # IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
 #            (??multimple inheritance, as RTM as also a TM?)
 #            Integrate <mechanism>.previous_value with stateful and is_finished
@@ -1357,6 +1360,7 @@
 # - Fully implement logging
 #    For both of the above:
 #       use @property to determine whether current value should be set to local value, type, category or class default
+#       integrate ControlSignal.intensity with logging
 # - Implement timing
 # - implement **args (per State init)
 # - MAKE SURE _check_args IS CALLED IN execute
@@ -1892,6 +1896,8 @@
 #                 ADAPT THEM TO LogEntry tuple FORMAT
 #     WHEN DONE, SEARCH FOR FIX LOG:
 #
+# FIX: Integrate with ControlSignal.intensity
+
 # DOCUMENTATION: ADD DESCRIPTION OF HOW LOGGING IS TURNED ON AND OFF ONCE THAT IS IMPLEMENTED
 #
 # IMPLEMENT: ORDER OUTPUT ALPHABETICALLY (OR IN SOME OTHER CONSISTENT MANNER)

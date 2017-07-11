@@ -871,6 +871,7 @@ class ControlSignal(ModulatorySignal):
 
     @property
     def intensity(self):
+        # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
         return self._intensity
 
     @intensity.setter
@@ -940,6 +941,7 @@ class ControlSignal(ModulatorySignal):
         if isinstance(self._value, str):
             return self._value
         else:
+            # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity
 
     @value.setter

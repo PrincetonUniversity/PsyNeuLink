@@ -540,7 +540,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             #    1st item was either assigned to the NAME entry of the control_signal_spec dict
             #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
             #        or used as param value, if it was a parameter specification tuple
-            #    2nd item was placed CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
+            #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
             #        so parse:
             # IMPLEMENTATION NOTE:
             #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,

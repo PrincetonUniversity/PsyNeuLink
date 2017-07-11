@@ -629,6 +629,7 @@ class State_Base(State):
             projections = request_set[STATE_PROJECTIONS]
             if not isinstance(projections, list):
                 projections = [projections]
+                request_set[STATE_PROJECTIONS] = projections
         else:
             # If no projections, ignore (none will be created)
             projections = None
@@ -845,7 +846,7 @@ class State_Base(State):
                 else:
                     projection_spec = projection_spec()
                 # Check appropriateness of State
-                _check_projection_sender_compatiability(self, default_projection_type, state_type)
+                _check_projection_sender_compatability(self, default_projection_type, state_type)
                 # Assign State as projections's sender (for use below)
                 sender = projection_spec
 
@@ -853,7 +854,7 @@ class State_Base(State):
             # - check compatibility with projection's type
             # - default projection itself will be created below
             elif isinstance(projection_spec, Mechanism):
-                _check_projection_sender_compatiability(self, default_projection_type, type(projection_spec))
+                _check_projection_sender_compatability(self, default_projection_type, type(projection_spec))
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -864,7 +865,7 @@ class State_Base(State):
                 # Get projection type from specification dict
                 try:
                     projection_type = projection_spec[PROJECTION_TYPE]
-                    _check_projection_sender_compatiability(self, default_projection_type, projection_type)
+                    _check_projection_sender_compatability(self, default_projection_type, projection_type)
                 except KeyError:
                     projection_type = default_projection_type
                     default_string = kwDefault
@@ -1052,12 +1053,30 @@ class State_Base(State):
         projection_params = {}
 
         # VALIDATE RECEIVER
+        # # MODIFIED 7/8/17 OLD:
+        # # Must be an InputState or ParameterState
+        # from PsyNeuLink.Components.States.InputState import InputState
+        # from PsyNeuLink.Components.States.ParameterState import ParameterState
+        # if not isinstance(receiver, (InputState, ParameterState, Mechanism)):
+        #     raise StateError("Receiver {} of {} from {} must be an InputState, ParameterState".
+        #                      format(receiver, projection_spec, self.name))
+        # MODIFIED 7/8/17 NEW:
+        # ALLOW SPEC TO BE ANY STATE (INCLUDING OutPutState, FOR GATING PROJECTIONS)
+        # OR MECHANISM (IN WHICH CASE PRIMARY INPUTSTATE IS ASSUMED)
         # Must be an InputState or ParameterState
-        from PsyNeuLink.Components.States.InputState import InputState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
-        if not isinstance(receiver, (InputState, ParameterState)):
-            raise StateError("Receiver {} of {} from {} must be an InputState or ParameterState".
+        from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+        from PsyNeuLink.Components.States.State import State
+        if not isinstance(receiver, (State, Mechanism)):
+            raise StateError("Receiver ({}) of {} from {} must be a State or Mechanism".
                              format(receiver, projection_spec, self.name))
+        # If receiver is a Mechanism, assume use of primary InputState (and warn if verbose is set)
+        if isinstance(receiver, Mechanism):
+            if self.verbosePref:
+                warnings.warn("Receiver {} of {} from {} is a Mechanism, so its primary InputState will be used".
+                              format(receiver, projection_spec, self.name))
+            receiver = receiver.input_state
+
+        # MODIFIED 7/8/17 END
 
         # INSTANTIATE PROJECTION_SPEC
         # If projection_spec is a Projection object:
@@ -1156,6 +1175,7 @@ class State_Base(State):
         # Note: this automatically assigns projection to self.efferents and
         #       to it's receiver's afferents list:
         #           when a projection is instantiated, it assigns itself to:
+        #               MODIFIED 7/8/17: QUESTION: DOES THE FOLLOWING FAIL TO MENTION .mod_afferents for Mod Projs?
         #               its receiver's .path_afferents attribute (in Projection._instantiate_receiver)
         #               its sender's .efferents list attribute (in Projection._instantiate_sender)
         if not projection_object:
@@ -1184,8 +1204,8 @@ class State_Base(State):
 
         # If projection is valid, assign to State's efferents list
         else:
-            # This is needed to avoid duplicates, since instantiation of projection may have already called this method
-            #    and assigned projection to self.efferents list
+            # Check for duplicates (since instantiation of projection may have already called this method
+            #    and assigned projection to self.efferents list)
             if not projection_spec in self.efferents:
                 self.efferents.append(projection_spec)
 
@@ -1545,11 +1565,16 @@ class State_Base(State):
     @value.setter
     def value(self, assignment):
 
-        from math import isnan
-        if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
-                    TEST = True
+        # MODIFIED 7/8/17 OLD:
+        # from math import isnan
+        # if isinstance(assignment, np.ndarray) and assignment.ndim == 2 and isnan(assignment[0][0]):
+        #             TEST = True
+        # MODIFIED 7/8/17 END
 
         self._value = assignment
+
+        if self._value is DEFERRED_INITIALIZATION or self._value is INITIALIZING:
+            return
 
         # Store value in log if specified
         # Get logPref
@@ -2028,7 +2053,7 @@ def _check_state_ownership(owner, param_name, mechanism_state):
     return mechanism_state
 
 
-def _check_projection_sender_compatiability(owner, projection_type, sender_type):
+def _check_projection_sender_compatability(owner, projection_type, sender_type):
     from PsyNeuLink.Components.States.OutputState import OutputState
     from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
     from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal

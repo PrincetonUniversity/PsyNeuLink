@@ -357,15 +357,8 @@ class GatingSignal(ModulatorySignal):
                          prefs=prefs,
                          context=self)
 
-    # def _instantiate_function(self, context=None):
-    #     super()._instantiate_function(context=context)
-    #     self.function_object.FunctionOutputTypeConversion = True
-    #     self.function_object.functionOutputType = FunctionOutputType.RAW_NUMBER
-    #     TEST = True
-
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
-
 
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
@@ -433,17 +426,25 @@ def _parse_gating_signal_spec(owner, state_spec):
     #         index = repr(index+1)
     #     return 'Default'+GATING_SIGNAL_SUFFIX+index
 
-    # Specification is for a GatingSignal - return as is
+    # Specification is for a GatingSignal
     if isinstance(state_spec, GatingSignal):
         gating_signal = state_spec
-        gating_signal_name = gating_signal.name
-        states = []
-        for proj in gating_signal.efferents:
-            _validate_receiver(owner, proj, Mechanism, GATING_SIGNAL)
-            states.append(proj.receiver.owner)
-        if not states:
-            raise GatingSignalError("Attempt to assign an existing {} to {} that has no GatingProjections".
-                                       format(GATING_SIGNAL, owner.name))
+        # GatingSignal initialization has been deferred, so just get name and return
+        if gating_signal.value is DEFERRED_INITIALIZATION:
+            gating_signal_name = gating_signal.init_args[NAME]
+            return {NAME: gating_signal_name,
+                    STATES: [],
+                    PARAMS: [],
+                    GATING_SIGNAL: gating_signal}
+        else:
+            gating_signal_name = gating_signal.name
+            states = []
+            for proj in gating_signal.efferents:
+                _validate_receiver(owner, proj, Mechanism, GATING_SIGNAL)
+                states.append(proj.receiver.owner)
+            if not states:
+                raise GatingSignalError("Attempt to assign an existing {} to {} that has no GatingProjections".
+                                           format(GATING_SIGNAL, owner.name))
 
     # For all other specs:
     #    - if it is a single spec (state name and mech):
@@ -627,10 +628,10 @@ def _parse_gating_signal_spec(owner, state_spec):
     all_gated_states = []
     # Get gated states from any already instantiated GatingSignals in gating_signals arg
     if owner.gating_signals:
-        #                                   _gating_signal_arg     already instantiated GatingSignal
-        for gating_signal in [gs for gs in owner.gating_signals if isinstance(gs, GatingSignal)]:
-            #                  gated state
-            all_gated_states.extend([proj.receiver for proj in gating_signal.efferents])
+        #                                   _gating_signal_arg
+        for owner_gs in [gs for gs in owner.gating_signals #   is already an instantiated GatingSignal
+                              if (isinstance(gs, GatingSignal) and not gs.value is DEFERRED_INITIALIZATION)]:
+            all_gated_states.extend([proj.receiver for proj in owner_gs.efferents])
     # Add states for current GatingSignal
     all_gated_states.extend(states)
     # Check for duplicates
