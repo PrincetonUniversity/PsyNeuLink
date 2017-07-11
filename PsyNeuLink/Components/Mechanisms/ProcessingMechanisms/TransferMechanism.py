@@ -651,10 +651,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     noise = new_noise
                 else:
                     noise = noise()
-
-            current_input = self.input_state.value + noise
+            # formerly: current_input = self.input_state.value + noise
+            current_input = self.variable[0] + noise
         else:
-            raise MechanismError("time_scale not specified for TransferMechanism")
+            raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
         self.previous_input = current_input
 

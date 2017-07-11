@@ -26,6 +26,7 @@ class KWTA(RecurrentTransferMechanism):
     componentType = KWTA
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
+    paramClassDefaults.update({'function': Logistic})  # perhaps hacky? not sure (7/10/17 CW)
 
     standard_output_states = RecurrentTransferMechanism.standard_output_states.copy()
 
@@ -34,7 +35,8 @@ class KWTA(RecurrentTransferMechanism):
                  default_input_value=None,
                  size=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
-                 function=Logistic,
+                 gain=1,
+                 bias=0,
                  initial_value=None,
                  matrix=None,  # None defaults to a hollow uniform inhibition matrix
                  decay: tc.optional(tc.any(int, float)) = 1.0,
@@ -52,12 +54,14 @@ class KWTA(RecurrentTransferMechanism):
                  context=componentType + INITIALIZING,
                  ):
 
+        kwta_log_function = Logistic(gain=gain, bias=bias)
+
         # IMPLEMENTATION NOTE: parts of this region may be redundant with code in TransferMechanism.__init__()
         # region Fill in and infer default_input_value and size if they aren't specified in args
         if default_input_value is None and size is None:
             if matrix is None:
                 default_input_value = [[0]]
-                size = [1]
+                size=[1]
             else:
                 try:
                     if isinstance(matrix, list):
@@ -146,6 +150,11 @@ class KWTA(RecurrentTransferMechanism):
         # against each other in Component.py, during _instantiate_defaults().
         # endregion
 
+        if len(default_input_value) == 1:
+            d = list(default_input_value)
+            d.append(np.zeros(len(default_input_value[0])))
+            default_input_value = np.array(d)
+
         # region set up the additional input_state that will represent inhibition
         # convert input_states to a list, if it was a dict before: this makes working with it easier
         if isinstance(input_states, dict):
@@ -155,10 +164,11 @@ class KWTA(RecurrentTransferMechanism):
             input_states = ["Default_input_state"]
 
         if isinstance(input_states, list) and len(input_states) > 1:
-            warnings.warn("kWTA adjusts only the FIRST input state. If you have multiple input states, "
-                          "only the primary one will have adjusted, to have k values above the threshold.")
+            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
+                warnings.warn("kWTA adjusts only the FIRST input state. If you have multiple input states, "
+                              "only the primary one will be adjusted to have k values above the threshold.")
 
-        input_states.append("Inhibition input state")
+        input_states.append("Inhibition_input_state")
         # endregion
 
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -169,22 +179,22 @@ class KWTA(RecurrentTransferMechanism):
         if matrix is None:
             matrix = np.full((size[0], size[0]), -1) * get_matrix(HOLLOW_MATRIX, size[0], size[0])
 
-        super().__init__(default_input_value = default_input_value,
-                         size = size,
-                         input_states = input_states,
-                         function = function,
-                         initial_value = initial_value,
-                         decay = decay,
-                         noise = noise,
-                         matrix = matrix,
-                         time_constant = time_constant,
-                         range = range,
-                         output_states = output_states,
-                         time_scale = time_scale,
-                         params = params,
-                         name = name,
-                         prefs = prefs,
-                         context = context)
+        super().__init__(default_input_value=default_input_value,
+                         size=size,
+                         input_states=input_states,
+                         function=kwta_log_function,
+                         initial_value=initial_value,
+                         decay=decay,
+                         noise=noise,
+                         matrix=matrix,
+                         time_constant=time_constant,
+                         range=range,
+                         output_states=output_states,
+                         time_scale=time_scale,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=context)
 
     def _instantiate_input_states(self, context=None):
         # this code is copied heavily from InputState.py, devel branch 6/26/17
@@ -193,10 +203,8 @@ class KWTA(RecurrentTransferMechanism):
         owner = self
 
         # extendedSelfVariable = list(self.variable)
-        # extendedSelfVariable.append(np.zeros(self.size[0]))
+        # extendedSelfVariable.append(np.ones(self.size[0]))
         # extendedSelfVariable = np.array(extendedSelfVariable)
-        # print("length of extendedSelfVariable", len(extendedSelfVariable))
-        # print(extendedSelfVariable)
 
         from PsyNeuLink.Components.States.State import _instantiate_state_list
         state_list = _instantiate_state_list(owner=owner,
@@ -204,7 +212,7 @@ class KWTA(RecurrentTransferMechanism):
                                              state_type=InputState,
                                              state_param_identifier=INPUT_STATES,
                                              constraint_value=self.variable,
-                                             constraint_value_name="function variable",
+                                             constraint_value_name="kwta-extended function variable",
                                              context=context)
 
         # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
@@ -285,24 +293,28 @@ class KWTA(RecurrentTransferMechanism):
 
     # this function returns the KWTA-scaled current_input, which is scaled based on
     # self.k_value, self.threshold, and self.ratio
-    def _kwta_scale(self, current_input):
+    def _kwta_scale(self, current_input, context=None):
 
         k = self.int_k
 
         inhibVector = self.input_states[self.indexOfInhibitionInputState].value  # inhibVector is the inhibition input
         inhibVector = np.array(inhibVector)  # may be redundant
         if (inhibVector == 0).all():
-            print("inhib vector was all zeros, so converting to ones")
+            if type(context) == str and INITIALIZING not in context:
+                print("inhib vector ({}) was all zeros (input was ({})), so inhibition will be uniform".
+                      format(inhibVector, current_input))
             inhibVector = np.ones(int(self.size[0]))
         if (inhibVector > 0).all():
-            print("inhibVector was all positive, so it will be multiplied by negative one")
             inhibVector = -1 * inhibVector
         if (inhibVector == 0).any():
-            raise KWTAError("inhibVector contained some, but not all, zeros: not currently supported")
+            raise KWTAError("inhibVector ({}) contained some, but not all, zeros: not "
+                            "currently supported".format(inhibVector))
         if (inhibVector > 0).any():
-            raise KWTAError("inhibVector was not all positive or all negative: not currently supported")
+            raise KWTAError("inhibVector ({}) was not all positive or all negative: not "
+                            "currently supported".format(inhibVector))
         if len(inhibVector) != len(current_input):
-            raise KWTAError("The inhibition vector is of a different length than the primary input vector.")
+            raise KWTAError("The inhibition vector ({}) is of a different length than the"
+                            " current primary input vector ({}).".format(inhibVector, current_input))
 
         if not isinstance(current_input, np.ndarray):
             warnings.warn("input was not a numpy array: this may cause unexpected KWTA behavior")
@@ -312,7 +324,11 @@ class KWTA(RecurrentTransferMechanism):
         # current_input[indices[i - 1]] is the i-th largest element of current_input
         indices = []
         for i in range(int(self.size[0])):
-            indices.append(np.where(current_input == sortedInput[i])[0][0])
+            j = 0
+            w = np.where(current_input == sortedInput[i])
+            while w[0][j] in indices:
+                j += 1
+            indices.append(np.where(current_input == sortedInput[i])[0][j])
         indices = np.array(indices)
 
         # scales[i] is the scale on inhibition that would put the (i+1)-th largest
@@ -331,7 +347,39 @@ class KWTA(RecurrentTransferMechanism):
         skMinusOne = sorted(scales, reverse=True)[k - 1]
         final_scale = sorted(scales, reverse=True)[k] * self.ratio + sorted(scales, reverse=True)[k - 1] * (1 - self.ratio)
 
-        return current_input + final_scale * inhibVector
+        out = current_input + final_scale * inhibVector
+
+        if (sum(out > self.threshold) > k) or (sum(out < self.threshold) > len(out) - k):
+            warnings.warn("KWTA scaling was not fully successful. The input was {}, the inhibition vector was {}, "
+                          "and the KWTA-scaled input was {}".format(current_input, inhibVector, out))
+
+        return out
+
+    # # deprecated: used when variable was length 1.
+    # def execute(self,
+    #             input=None,
+    #             runtime_params=None,
+    #             clock=CentralClock,
+    #             time_scale=TimeScale.TRIAL,
+    #             ignore_execution_id = False,
+    #             context=None):
+    #     context = context or NO_CONTEXT
+    #     if EXECUTING not in context and EVC_SIMULATION not in context:
+    #         if input is None:
+    #             input = self.variableInstanceDefault
+    #         if isinstance(input, list):
+    #             input.append(np.zeros(self.size[0]))
+    #         elif isinstance(input, np.ndarray):
+    #             new_input = list(input)
+    #             new_input.append(np.zeros(self.size[0]))
+    #             input = np.array(new_input)
+    #
+    #     return super().execute(input=input,
+    #                            runtime_params=runtime_params,
+    #                            clock=clock,
+    #                            time_scale=time_scale,
+    #                            ignore_execution_id=ignore_execution_id,
+    #                            context=context)
 
     # this is the exact same as _execute in TransferMechanism, except that this _execute calls _kwta_scale()
     # and implements decay as self.previous_input *= self.decay
@@ -342,136 +390,148 @@ class KWTA(RecurrentTransferMechanism):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        """Execute TransferMechanism function and return transform of input
+        self.variable[0] = self._kwta_scale(self.variable[0], context = context)
 
-        Execute TransferMechanism function on input, and assign to output_values:
-            - Activation value for all units
-            - Mean of the activation values across units
-            - Variance of the activation values across units
-        Return:
-            value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
-            mean of items in RESULT outputState[TransferOuput.MEAN].value
-            variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+        return super()._execute(variable=self.variable,
+                       runtime_params=runtime_params,
+                       clock=clock,
+                       time_scale=time_scale,
+                       context=context)
 
-        Arguments:
-
-        # CONFIRM:
-        variable (float): set to self.value (= self.input_value)
-        - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
-            + NOISE (float)
-            + TIME_CONSTANT (float)
-            + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
-        - context (str)
-
-        Returns the following values in self.value (2D np.array) and in
-            the value of the corresponding outputState in the self.outputStates dict:
-            - activation value (float)
-            - mean activation value (float)
-            - standard deviation of activation values (float)
-
-        :param self:
-        :param variable (float)
-        :param params: (dict)
-        :param time_scale: (TimeScale)
-        :param context: (str)
-        :rtype self.outputState.value: (number)
-        """
-
-        # NOTE: This was heavily based on 6/20/17 devel branch version of _execute from TransferMechanism.py
-        # Thus, any errors in that version should be fixed in this version as well.
-
-        # FIX: ??CALL check_args()??
-
-        # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
-        # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.variable to initialize state of input
-
-
-        if INITIALIZING in context:
-            self.previous_input = self.variable
-
-        if self.decay is not None and self.decay != 1.0:
-            self.previous_input *= self.decay
-
-        # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
-        time_scale = self.time_scale
-
-        #region ASSIGN PARAMETER VALUES
-
-        time_constant = self.time_constant
-        range = self.range
-        noise = self.noise
-
-        #endregion
-
-        #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
-
-        # FIX: NOT UPDATING self.previous_input CORRECTLY
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
-
-        # Update according to time-scale of integration
-        if time_scale is TimeScale.TIME_STEP:
-
-            if not self.integrator_function:
-
-                self.integrator_function = AdaptiveIntegrator(
-                                            self.input_state.value,
-                                            initializer = self.initial_value,
-                                            noise = self.noise,
-                                            rate = self.time_constant
-                                            )
-
-            current_input = self.integrator_function.execute(self.input_state.value,
-                                                        # Should we handle runtime params?
-                                                             # params={INITIALIZER: self.previous_input,
-                                                             #         INTEGRATION_TYPE: ADAPTIVE,
-                                                             #         NOISE: self.noise,
-                                                             #         RATE: self.time_constant}
-                                                             # context=context
-                                                             # name=Integrator.componentName + '_for_' + self.name
-                                                             )
-
-        elif time_scale is TimeScale.TRIAL:
-            if self.noise_function:
-                if isinstance(noise, (list, np.ndarray)):
-                    new_noise = []
-                    for n in noise:
-                        new_noise.append(n())
-                    noise = new_noise
-                elif isinstance(variable, (list, np.ndarray)):
-                    new_noise = []
-                    for v in variable[0]:
-                        new_noise.append(noise())
-                    noise = new_noise
-                else:
-                    noise = noise()
-
-            current_input = self.input_state.value + noise
-        else:
-            raise MechanismError("time_scale not specified for KWTA")
-
-        # this is the primary line that's different in KWTA compared to TransferMechanism
-        # this scales the current_input properly
-        current_input = self._kwta_scale(current_input)
-
-        self.previous_input = current_input
-
-        # Apply TransferMechanism function
-        output_vector = self.function(variable=current_input, params=runtime_params)
-
-        # # MODIFIED  OLD:
-        # if list(range):
-        # MODIFIED  NEW:
-        if range is not None:
-        # MODIFIED  END
-            minCapIndices = np.where(output_vector < range[0])
-            maxCapIndices = np.where(output_vector > range[1])
-            output_vector[minCapIndices] = np.min(range)
-            output_vector[maxCapIndices] = np.max(range)
-
-        return output_vector
-        #endregion
+        # NOTE 7/10/17 CW: this version of KWTA executes scaling _before_ noise or integration is applied. This can be
+        # changed, but I think it requires overriding the whole _execute function (as below),
+        # rather than calling super._execute()
+        #
+        # """Execute TransferMechanism function and return transform of input
+        #
+        # Execute TransferMechanism function on input, and assign to output_values:
+        #     - Activation value for all units
+        #     - Mean of the activation values across units
+        #     - Variance of the activation values across units
+        # Return:
+        #     value of input transformed by TransferMechanism function in outputState[TransferOuput.RESULT].value
+        #     mean of items in RESULT outputState[TransferOuput.MEAN].value
+        #     variance of items in RESULT outputState[TransferOuput.VARIANCE].value
+        #
+        # Arguments:
+        #
+        # # CONFIRM:
+        # variable (float): set to self.value (= self.input_value)
+        # - params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:
+        #     + NOISE (float)
+        #     + TIME_CONSTANT (float)
+        #     + RANGE ([float, float])
+        # - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
+        # - context (str)
+        #
+        # Returns the following values in self.value (2D np.array) and in
+        #     the value of the corresponding outputState in the self.outputStates dict:
+        #     - activation value (float)
+        #     - mean activation value (float)
+        #     - standard deviation of activation values (float)
+        #
+        # :param self:
+        # :param variable (float)
+        # :param params: (dict)
+        # :param time_scale: (TimeScale)
+        # :param context: (str)
+        # :rtype self.outputState.value: (number)
+        # """
+        #
+        # # NOTE: This was heavily based on 6/20/17 devel branch version of _execute from TransferMechanism.py
+        # # Thus, any errors in that version should be fixed in this version as well.
+        #
+        # # FIX: ??CALL check_args()??
+        #
+        # # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
+        # # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
+        # # Use self.variable to initialize state of input
+        #
+        #
+        # if INITIALIZING in context:
+        #     self.previous_input = self.variable
+        #
+        # if self.decay is not None and self.decay != 1.0:
+        #     self.previous_input *= self.decay
+        #
+        # # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
+        # time_scale = self.time_scale
+        #
+        # #region ASSIGN PARAMETER VALUES
+        #
+        # time_constant = self.time_constant
+        # range = self.range
+        # noise = self.noise
+        #
+        # #endregion
+        #
+        # #region EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
+        #
+        # # FIX: NOT UPDATING self.previous_input CORRECTLY
+        # # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
+        #
+        # # Update according to time-scale of integration
+        # if time_scale is TimeScale.TIME_STEP:
+        #
+        #     if not self.integrator_function:
+        #
+        #         self.integrator_function = AdaptiveIntegrator(
+        #                                     self.variable,
+        #                                     initializer = self.initial_value,
+        #                                     noise = self.noise,
+        #                                     rate = self.time_constant
+        #                                     )
+        #
+        #     current_input = self.integrator_function.execute(self.variable,
+        #                                                 # Should we handle runtime params?
+        #                                                      # params={INITIALIZER: self.previous_input,
+        #                                                      #         INTEGRATION_TYPE: ADAPTIVE,
+        #                                                      #         NOISE: self.noise,
+        #                                                      #         RATE: self.time_constant}
+        #                                                      # context=context
+        #                                                      # name=Integrator.componentName + '_for_' + self.name
+        #                                                      )
+        #
+        # elif time_scale is TimeScale.TRIAL:
+        #     if self.noise_function:
+        #         if isinstance(noise, (list, np.ndarray)):
+        #             new_noise = []
+        #             for n in noise:
+        #                 new_noise.append(n())
+        #             noise = new_noise
+        #         elif isinstance(variable, (list, np.ndarray)):
+        #             new_noise = []
+        #             for v in variable[0]:
+        #                 new_noise.append(noise())
+        #             noise = new_noise
+        #         else:
+        #             noise = noise()
+        #
+        #     current_input = self.input_state.value + noise
+        # else:
+        #     raise MechanismError("time_scale not specified for KWTA")
+        #
+        # # this is the primary line that's different in KWTA compared to TransferMechanism
+        # # this scales the current_input properly
+        # current_input = self._kwta_scale(current_input)
+        #
+        # self.previous_input = current_input
+        #
+        # # Apply TransferMechanism function
+        # output_vector = self.function(variable=current_input, params=runtime_params)
+        #
+        # # # MODIFIED  OLD:
+        # # if list(range):
+        # # MODIFIED  NEW:
+        # if range is not None:
+        # # MODIFIED  END
+        #     minCapIndices = np.where(output_vector < range[0])
+        #     maxCapIndices = np.where(output_vector > range[1])
+        #     output_vector[minCapIndices] = np.min(range)
+        #     output_vector[maxCapIndices] = np.max(range)
+        #
+        # return output_vector
+        # #endregion
 
 @tc.typecheck
 def _instantiate_recurrent_projection(mech: Mechanism_Base,
