@@ -434,7 +434,8 @@ class State_Base(State):
                 must be list or tuple of numbers, or a number (in which case it will be converted to a single-item list)
                 must match input and output of State's update function, and any sending or receiving projections
             - size (int or array/list of ints):
-                Sets variable to be array(s) of zeros, if variable is not specified as an argument.
+                Sets variable to be array(s) of zeros, if **variable** is not specified as an argument;
+                if **variable** is specified, it takes precedence over the specification of **size**.
             - params (dict):
                 + if absent, implements default State determined by PROJECTION_TYPE param
                 + if dict, can have the following entries:

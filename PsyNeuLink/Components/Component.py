@@ -589,7 +589,7 @@ class Component(object):
 
         Initialization arguments:
         - variable_default (anything): establishes type for the variable, used for validation
-        - size (int or 1D array of ints): if specified, establishes variable if variable was not already specified
+        - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
@@ -746,11 +746,11 @@ class Component(object):
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
     def _handle_size(self, size, variable):
-        """ If variable is None, _handle_size tries to infer variable based on the size argument to the
+        """ If variable is None, _handle_size tries to infer variable based on the **size** argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and State.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
             the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overrided in State.py.
+            array. It performs some validations on size and variable as well. This function is overridden in State.py.
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """

@@ -170,7 +170,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         its length must equal the number of items specified in the **gating_signals** arg.
 
     size : int, list or np.ndarray of ints
-        specifies default_gating_policy as array(s) of zeros if default_gating_policy is not passed as an argument.
+        specifies default_gating_policy as array(s) of zeros if **default_gating_policy** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
 
     gating_signals : List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the InputStates and/or OutputStates to be gated by the GatingMechanism;

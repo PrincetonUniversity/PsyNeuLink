@@ -127,7 +127,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array

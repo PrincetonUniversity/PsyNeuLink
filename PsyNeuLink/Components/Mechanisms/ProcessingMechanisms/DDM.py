@@ -461,7 +461,8 @@ class DDM(ProcessingMechanism_Base):
         and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
         of greater than 1 is handled).
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
         `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine

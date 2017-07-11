@@ -315,7 +315,8 @@ class ParameterState(State_Base):
         ParameterState's owner or its `function <Component.function>` assigned to the parameter.
 
     size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if variable is not passed as an argument.
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to convert the parameter's attribute value (same as the ParameterState's

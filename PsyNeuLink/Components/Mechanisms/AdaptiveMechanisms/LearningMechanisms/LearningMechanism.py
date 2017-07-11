@@ -561,7 +561,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `learning sequence <LearningMechanism_Learning_Configurations>`.
 
     size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if variable is not passed as an argument.
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     COMMENT:
       error_output : 1d np.array

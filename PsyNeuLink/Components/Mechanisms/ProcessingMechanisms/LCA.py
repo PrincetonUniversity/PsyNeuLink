@@ -152,7 +152,8 @@ class LCA(RecurrentTransferMechanism):
         of the mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if variable is not passed as an argument.
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
