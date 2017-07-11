@@ -419,6 +419,7 @@ class State_Base(State):
                  owner:tc.any(Mechanism, Projection),
                  variable=None,
                  size=None,
+                 projections=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -463,7 +464,11 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                params = kargs[STATE_PARAMS]
+                size = kargs[SIZE]
+            except (KeyError, NameError):
+                pass
+            try:
+                projections = kargs[PROJECTIONS]
             except (KeyError, NameError):
                 pass
             try:
@@ -491,7 +496,8 @@ class State_Base(State):
                              format(self.__class__.__name__, STATE))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(projections=projections,
+                                                  params=params)
 
         self.owner = owner
 
@@ -523,7 +529,7 @@ class State_Base(State):
                                          context=context.__class__.__name__)
 
         # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
-        if PROJECTIONS in self.paramsCurrent:
+        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
