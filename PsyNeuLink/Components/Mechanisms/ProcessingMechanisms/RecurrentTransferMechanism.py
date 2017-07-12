@@ -415,6 +415,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif isinstance(matrix_param, str):
                 matrix = get_matrix(matrix_param, size, size)
 
+            elif isinstance(matrix_param, np.matrix):
+                matrix = np.array(matrix_param)
+
             else:
                 matrix = matrix_param
 
@@ -435,9 +438,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             if rows != size:
                 if (matrix_param, MappingProjection):
                     # if __name__ == '__main__':
-                    err_msg = ("Size of {} param for {} ({}) must be same as variable for {} ({})"
-                               "to be used as recurrent projection for {}".
-                               format(MATRIX, matrix_param.name, rows, self.name, size))
+                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of the variable for {} "
+                               "(whose size is {}, variable is {})".
+                               format(MATRIX, self.name, rows, self.name, self.size, self.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
                                format(MATRIX, self.name, rows, size))

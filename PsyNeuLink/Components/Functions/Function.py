@@ -2971,6 +2971,15 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if isinstance(specification, function_type):
         return specification(rows, cols)
 
+    # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
+    # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
+    if type(specification) == str:
+        try:
+            return np.array(np.matrix(specification))
+        except ValueError:
+            # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
+            pass
+
     # Specification not recognized
     return None
 

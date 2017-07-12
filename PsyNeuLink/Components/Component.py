@@ -2006,7 +2006,10 @@ class Component(object):
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
                 else:
                     type_name = self.paramClassDefaults[param_name].__class__.__name__
-                raise ComponentError("Value of {} param for {} ({}) must be a {}".
+                if param_name == 'matrix':
+                    raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
+                                    format(param_name, self.name, param_value))
+                raise ComponentError("Value of {} param for {} ({}) must be compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):
