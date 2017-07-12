@@ -625,7 +625,7 @@ class OutputState(State_Base):
             self.calculate = self.calculate().function
 
     def _instantiate_projections(self, projections, context=None):
-        """Instantiate Projections specified in STATE_PROJECTIONS entry of params arg of State's constructor
+        """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Assume specification in projections as ModulatoryProjection if it is a:
             ModulatoryProjection

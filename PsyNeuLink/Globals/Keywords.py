@@ -306,9 +306,8 @@ MAPPING_PROJECTION = "MappingProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
-TRANSMISSIVE_PROJECTION = "TransmissiveProjection"
+PATHWAY_PROJECTION = "TransmissiveProjection"
 MODULATORY_PROJECTION = "ModulatoryProjection"
-MODULATORY_PROJECTIONS = "ModulatoryProjections"
 
 
 # Function:
@@ -519,7 +518,7 @@ GATING_POLICY = 'gating_policy'
 STATE = "State"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
-STATE_PROJECTIONS = "StateProjections"  # Used to specify projection list to State
+PROJECTIONS = "Projections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"
 kwStateContext = "StateContext"

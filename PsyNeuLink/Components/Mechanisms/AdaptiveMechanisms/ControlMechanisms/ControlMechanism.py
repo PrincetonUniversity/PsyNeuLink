@@ -545,18 +545,18 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             # IMPLEMENTATION NOTE:
             #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
             #                         to pass specification from a parameter specification tuple
-            #    STATE_PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
             #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
             #    Delete whichever one it was, as neither is a recognized ControlSignal param
             #        (which will balk at it in ControlSignal._validate_params)
             elif (control_signal_params and
-                    any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, STATE_PROJECTIONS})):
+                    any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
                 if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
                     spec = control_signal_params[CONTROL_SIGNAL_SPECS]
                     del control_signal_params[CONTROL_SIGNAL_SPECS]
-                elif STATE_PROJECTIONS in control_signal_spec[PARAMS]:
-                    spec = control_signal_params[STATE_PROJECTIONS]
-                    del control_signal_params[STATE_PROJECTIONS]
+                elif PROJECTIONS in control_signal_spec[PARAMS]:
+                    spec = control_signal_params[PROJECTIONS]
+                    del control_signal_params[PROJECTIONS]
 
                 # ControlSignal
                 if isinstance(spec, ControlSignal):
@@ -564,7 +564,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
                 else:
                     # Mechanism
-                    # IMPLEMENTATION NOTE: Mechanism was placed in list in STATE_PROJECTIONS entry by _parse_state_spec
+                    # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
                     if isinstance(spec, list) and isinstance(spec[0], Mechanism):
                         mech = spec[0]
                         parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)

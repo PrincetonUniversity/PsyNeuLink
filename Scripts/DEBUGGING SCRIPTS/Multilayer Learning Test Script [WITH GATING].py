@@ -27,7 +27,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
                                 # params={GATING_PROJECTIONS:Hidden_Layer_2})
-                                params={STATE_PROJECTIONS:Hidden_Layer_2})
+                                params={PROJECTIONS:Hidden_Layer_2})
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
