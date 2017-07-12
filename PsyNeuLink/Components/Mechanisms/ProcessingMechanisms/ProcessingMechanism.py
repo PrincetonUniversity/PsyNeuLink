@@ -93,7 +93,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         """Abstract class for processing mechanisms
 
         :param variable: (value)
-        :param size: (value)
+        :param size: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)

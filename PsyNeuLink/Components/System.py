@@ -394,8 +394,8 @@ def system(default_input_value=None,
     ---------
 
     default_input_value : list or ndarray of values : default default input for `ORIGIN` Mechanism of each Process
-        the input to the System if none is provided in a call to the `execute <System_Base.execute> or
-        `run <System_Base.run> methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
+        the input to the System if none is provided in a call to the `execute <System_Base.execute>` or
+        `run <System_Base.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
         in the System.
         COMMENT:
             REPLACE DefaultProcess BELOW USING Inline markup
@@ -486,19 +486,20 @@ def system(default_input_value=None,
 
 class System_Base(System):
     """
-    System_Base(                              \
-    default_input_value=None,                 \
-    processes=None,                           \
-    initial_values=None,                      \
-    controller=SystemDefaultControlMechanism, \
-    enable_controller=:keyword:`False`,       \
-    monitor_for_control=None,                 \
-    control_signals=None,                     \
-    learning_rate=None,                       \
-    targets=None,                             \
-    params=None,                              \
-    name=None,                                \
-    prefs=None)
+
+    System_Base(                                  \
+        default_input_value=None,                 \
+        processes=None,                           \
+        initial_values=None,                      \
+        controller=SystemDefaultControlMechanism, \
+        enable_controller=:keyword:`False`,       \
+        monitor_for_control=None,                 \
+        control_signals=None,                     \
+        learning_rate=None,                       \
+        targets=None,                             \
+        params=None,                              \
+        name=None,                                \
+        prefs=None)
 
     COMMENT:
         VERSION WITH learning
@@ -682,10 +683,10 @@ class System_Base(System):
         contains Mechanisms with recurrent Projections that are candidates for
         `initialization <System_Execution_Input_And_Initialization>`.
 
-    learning_mechanisms : MechanismList)
+    learning_mechanisms : MechanismList
         contains all `LearningMechanism <LearningMechanism>` in the System.
 
-    target_mechanisms : MechanismList)
+    target_mechanisms : MechanismList
         contains all `TARGET` Mechanisms in the System (used for learning).
         COMMENT:
             based on _target_mechs)
@@ -704,7 +705,7 @@ class System_Base(System):
         COMMENT
 
     value : 3D ndarray
-        contains an array of 2D arrays, each of which is the `output_values `of a `TERMINAL` Mechanism in the System.
+        contains an array of 2D arrays, each of which is the `output_values` of a `TERMINAL` Mechanism in the System.
 
         .. _phaseSpecMax : int
             Maximum phase specified for any Mechanism in System.  Determines the phase of the last (set of)
@@ -731,7 +732,6 @@ class System_Base(System):
         Specified in the **name** argument of the constructor for the System;
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
 
     prefs : PreferenceSet or specification dict : System.classPreferences
         the `PreferenceSet` for System.
@@ -1995,16 +1995,18 @@ class System_Base(System):
 
             # Get SystemInputState that projects to each ORIGIN mechanism and assign input to it
             for i, origin_mech in zip(range(num_origin_mechs), self.origin_mechanisms):
-                # For each inputState of the ORIGIN mechansim
+                # For each inputState of the ORIGIN mechanism
                 for j in range(len(origin_mech.input_states)):
                    # Get the input from each projection to that inputState (from the corresponding SystemInputState)
-                    system_input_state = next(projection.sender
-                                              for projection in origin_mech.input_states[j].path_afferents
-                                              if isinstance(projection.sender, SystemInputState))
+                    system_input_state = next((projection.sender
+                                               for projection in origin_mech.input_states[j].path_afferents
+                                               if isinstance(projection.sender, SystemInputState)), None)
                     if system_input_state:
                         system_input_state.value = input[i][j]
                     else:
-                        raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+                        print("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
+                              format(origin_mech.name, j+1, origin_mech.input_states[j]))
+                        # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
         self.input = input
         if termination_processing is not None:
@@ -2410,7 +2412,7 @@ class System_Base(System):
 
     def show(self, options=None):
         """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` Mechanisms,
-        `TARGET` Mechahinsms, ``outputs`` and their labels for the System.
+        `TARGET` Mechanisms, ``outputs`` and their labels for the System.
 
         Arguments
         ---------
@@ -2511,25 +2513,25 @@ class System_Base(System):
 
             RECURRENT_INIT_ARRAY: ndarray of initial_values
 
-            TERMINAL_MECHANISMS:list of `TERMINAL` Mechanisms
+            TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms
 
             OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array
 
-            OUTPUT_VALUE_ARRAY:3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
+            OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
             Mechanisms
 
-            NUM_PHASES_PER_TRIAL:number of phases required to execute all Mechanisms in the system
+            NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system
 
-            LEARNING_MECHANISMS:list of `LearningMechanisms <LearningMechanism>`
+            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`
 
-            TARGET:list of `TARGET` Mechanisms
+            TARGET: list of `TARGET` Mechanisms
 
-            LEARNING_PROJECTION_RECEIVERS:list of `MappingProjections <MappingProjection>` that receive learning
+            LEARNING_PROJECTION_RECEIVERS: list of `MappingProjections <MappingProjection>` that receive learning
             projections
 
-            CONTROL_MECHANISMS:list of `ControlMechanisms <ControlMechanism>`
+            CONTROL_MECHANISMS: list of `ControlMechanisms <ControlMechanism>`
 
-            CONTROL_PROJECTION_RECEIVERS:list of `ParameterStates <ParameterState>` that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections
 
         Returns
         -------
@@ -2883,9 +2885,9 @@ class SystemInputState(OutputState):
 
     Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
     `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
-     mechanism of the system.
+    mechanism of the system.
 
-    .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
+    .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
 
        self.value is used to represent the item of the targets arg to system.execute or system.run

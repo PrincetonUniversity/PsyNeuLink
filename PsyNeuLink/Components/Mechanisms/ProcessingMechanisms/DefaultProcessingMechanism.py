@@ -64,6 +64,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
+        :param size: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)

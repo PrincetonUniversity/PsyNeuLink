@@ -28,7 +28,7 @@ An IntegratorMechanism can be created directly by calling its constructor, or us
 argument.  Its function is specified in the **function** argument, which can be parameterized by calling its
 constructor with parameter values::
 
-    my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
+    my_time_averaging_mechanism = IntegratorMechanism(function=AdaptiveIntegrator(rate=0.5))
 
 .. _IntegratorMechanism_Structure
 
@@ -39,7 +39,7 @@ An IntegratorMechanism has a single `inputState <InputState>`, the `value <Input
 used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.   The
 :keyword:`default_input_value` argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when mechanism is executed.  The default for
-`function <IntegratorMechanism.function>` is `Integrator(integration_type=ADAPTIVE, rate=0.5)`. However, a custom function can
+`function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However, a custom function can
 also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
 and returns a value of the same type and format.  The mechanism has a single `outputState <OutputState>, the `value
 <OutputState.OutputState.value>` of which is assigned the result of  the call to the mechanism's
@@ -83,7 +83,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     """
     IntegratorMechanism(                            \
     default_input_value=None,                               \
-    function=Integrator(integration_type=ADAPTIVE, rate=0.5), \
+    size=None,                                              \
+    function=AdaptiveIntegrator(rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
@@ -125,6 +126,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         `function <IntegratorMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
         mechanism.
 
+    size : int, list or np.ndarray of ints
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
@@ -135,7 +140,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the mechanism, parameters for its `function <IntegratorMechanism.function>, and/or a custom function and its
+        the mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
         parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -152,21 +157,21 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
     variable : value: default
-        the input to mechanism's ``function``.
+        the input to Mechanism's ``function``.
 
     time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
+        specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default IntegratorMechanism-<index>
-        the name of the mechanism.
-        Specified in the :keyword:**name** argument of the constructor for the mechanism;
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """

@@ -15,10 +15,10 @@
 Overview
 --------
 
-`Condition <Condition>`\ s are used to specify when `Component <Component>`\ s are allowed to execute.  Conditions
+`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Component
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
-Composition (e.g., how many `TIME_STEP`\ s have occurred in the current `TRIAL`), or the state of other
+Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL`), or the state of other
 Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
 `pre-specified Conditions <Condition_Pre_Specified>` that can be parametrized (e.g., how many times a Component should
 be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
@@ -340,7 +340,7 @@ class ConditionSet(object):
 
     scheduler : Scheduler
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
-        evalute the `Conditions <Condition>`
+        evaluate the `Conditions <Condition>`
 
     conditions : dict{`Component`: `Condition`}
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
@@ -351,7 +351,7 @@ class ConditionSet(object):
 
     scheduler : Scheduler
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
-        evalute the `Conditions <Condition>`
+        evaluate the `Conditions <Condition>`
 
     conditions : dict{`Component`: `Condition`}
         the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
@@ -442,7 +442,7 @@ class Condition(object):
     owner (Component):
         the `Component` with which the Condition is associated, and the execution of which it determines.
 
-        """
+    """
     def __init__(self, func, *args, **kwargs):
         self.func = func
         self.args = args
