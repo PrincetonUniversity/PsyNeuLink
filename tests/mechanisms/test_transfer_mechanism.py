@@ -595,7 +595,7 @@ def test_transfer_mech_time_constant_0_8_list():
         T.execute([1, 1, 1, 1]).tolist()
     assert (
         "Value of time_constant param" in str(error_text.value)
-        and "must be a float" in str(error_text.value)
+        and "must be compatible with float" in str(error_text.value)
     )
 
 # ------------------------------------------------------------------------------------------------
