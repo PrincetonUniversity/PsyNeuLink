@@ -285,6 +285,10 @@ class InputState(State_Base):
         the template for the `value <Projection.Projection.value>` of each Projection that the InputState receives,
         each of which must match the format (number and types of elements) of the InputState's :keyword:`variable`.
 
+    size : int, list or np.ndarray of ints
+    specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+    if **variable** is specified, it takes precedence over the specification of **size**.
+
     function : CombinationFunction : default LinearCombination(operation=SUM))
         performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each
         Projection received by the InputState.
