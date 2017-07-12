@@ -90,6 +90,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
     def __init__(self,
                  variable,
+                 size,
                  modulation,
                  params,
                  name,
@@ -107,6 +108,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
 
         super().__init__(variable=variable,
+                         size=size,
                          params=params,
                          name=name,
                          prefs=prefs,

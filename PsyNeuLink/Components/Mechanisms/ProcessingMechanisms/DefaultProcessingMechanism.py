@@ -58,6 +58,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -73,6 +74,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         params = self._assign_args_to_param_dicts(params=params)
 
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
+                                                              size=size,
                                                               params=params,
                                                               name=name,
                                                               prefs=prefs,

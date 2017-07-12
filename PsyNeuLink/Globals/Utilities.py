@@ -232,11 +232,17 @@ def is_matrix(m):
         return True
     if isinstance(m, (list, np.ndarray, np.matrix)):
         return True
+    try:
+        m2 = np.matrix(m)
+        return is_matrix(m2)
+    except:
+        pass
     if callable(m):
         try:
             return is_matrix(m())
         except:
             return False
+    return False
 
 
 def is_distance_metric(s):

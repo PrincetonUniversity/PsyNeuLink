@@ -27,6 +27,7 @@ def test_reinforcement():
 
     p = process(
         default_input_value=[0, 0, 0],
+        size=3,
         pathway=[input_layer, action_selection],
         learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
         target=0,
