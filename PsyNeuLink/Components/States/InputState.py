@@ -364,7 +364,7 @@ class InputState(State_Base):
 
     @tc.typecheck
     def __init__(self,
-                 owner,
+                 owner=None,
                  reference_value=None,
                  variable=None,
                  size=None,
@@ -382,6 +382,18 @@ class InputState(State_Base):
                                                   weight=weight,
                                                   exponent=exponent,
                                                   params=params)
+
+        # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+        if owner is None or reference_value is None:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            self.init_args['projections'] = projections
+
+            # Flag for deferred initialization
+            self.value = DEFERRED_INITIALIZATION
+            return
 
         self.reference_value = reference_value
 

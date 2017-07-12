@@ -290,18 +290,18 @@ class ModulatorySignal(OutputState):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 owner,
-                 size,
-                 reference_value,
-                 variable,
-                 projections,
-                 modulation,
-                 index,
-                 calculate,
-                 params,
-                 name,
-                 prefs,
-                 context):
+                 owner=None,
+                 size=None,
+                 reference_value=None,
+                 variable=None,
+                 projections=None,
+                 modulation=None,
+                 index=None,
+                 calculate=None,
+                 params=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
 
         # Deferred initialization
         try:
@@ -318,22 +318,8 @@ class ModulatorySignal(OutputState):
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
 
-            # # MODIFIED 7/12/17 OLD:
-            # # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-            # if owner is None or reference_value is None:
-            #     # Store args for deferred initialization
-            #     self.init_args = locals().copy()
-            #     self.init_args['context'] = self
-            #     self.init_args['name'] = name
-            #     self.init_args['projections'] = projections
-            #
-            #     # Flag for deferred initialization
-            #     self.value = DEFERRED_INITIALIZATION
-            #     return
-            # # MODIFIED 7/12/17 END:
-
-        super().__init__(owner,
-                         reference_value,
+        super().__init__(owner=owner,
+                         reference_value=reference_value,
                          variable=variable,
                          size=size,
                          projections=projections,
@@ -344,7 +330,9 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        self._modulation = self.modulation or owner.modulation
+        # If owner is specified but modulation has not been specified, assign to owner's value
+        if owner and self._modulation is None:
+            self._modulation = self.modulation or owner.modulation
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor

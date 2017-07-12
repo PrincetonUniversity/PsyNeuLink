@@ -515,8 +515,8 @@ class OutputState(State_Base):
 
     @tc.typecheck
     def __init__(self,
-                 owner,
-                 reference_value,
+                 owner=None,
+                 reference_value=None,
                  variable=None,
                  size=None,
                  function=LinearCombination(operation=SUM),
@@ -534,7 +534,6 @@ class OutputState(State_Base):
                                                   function=function,
                                                   params=params)
 
-        # MODIFIED 7/12/17 NEW:
         # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
         if owner is None or reference_value is None:
             # Store args for deferred initialization
@@ -546,7 +545,6 @@ class OutputState(State_Base):
             # Flag for deferred initialization
             self.value = DEFERRED_INITIALIZATION
             return
-        # MODIFIED 7/12/17 END:
 
         self.reference_value = reference_value
 
