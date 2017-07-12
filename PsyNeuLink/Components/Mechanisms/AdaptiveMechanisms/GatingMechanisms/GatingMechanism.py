@@ -129,10 +129,11 @@ class GatingMechanismError(Exception):
 class GatingMechanism(AdaptiveMechanism_Base):
     """
     GatingMechanism_Base(                           \
-        default_input_value=None,                   \
-        gating_signals=None                         \
-        modulation=ModulationParam.MULTIPLICATIVE   \
-        function=Linear,                            \
+        default_gating_policy=None,                 \
+        size=None,                                  \
+        function=Linear(slope=1, intercept=0),      \
+        gating_signals:tc.optional(list) = None,    \
+        modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE, \
         params=None,                                \
         name=None,                                  \
         prefs=None)
@@ -169,6 +170,14 @@ class GatingMechanism(AdaptiveMechanism_Base):
         the default value for each of the GatingMechanism's GatingSignals;
         its length must equal the number of items specified in the **gating_signals** arg.
 
+    size : int, list or np.ndarray of ints
+        specifies default_gating_policy as array(s) of zeros if **default_gating_policy** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to transform input to `gating_policy` to value;  the default is an identity function
+        that simply assigns the GatingMechanism's input to its `value`.
+
     gating_signals : List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the InputStates and/or OutputStates to be gated by the GatingMechanism;
         the number of items must equal the length of the **default_gating_policy** arg;
@@ -178,10 +187,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's GatingSignals, unless
         they are `individually specified <GatingSignal_Specification>`.
-
-    function : TransferFunction : default Linear(slope=1, intercept=0)
-        specifies function used to transform input to `gating_policy` to value;  the default is an identity function
-        that simply assigns the GatingMechanism's input to its `value`.
         
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
@@ -244,7 +249,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_gating_policy=None,
                  size=None,
-                 function = Linear(slope=1, intercept=0),
+                 function=Linear(slope=1, intercept=0),
                  gating_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,

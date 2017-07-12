@@ -144,6 +144,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     RecurrentTransferMechanism(        \
     default_input_value=None,          \
+    size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
     initial_value=None,                \
@@ -176,6 +177,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -485,6 +490,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
+
+        if INITIALIZING in context:
+            self.previous_input = self.variable
 
         if self.decay is not None and self.decay != 1.0:
             self.previous_input *= self.decay

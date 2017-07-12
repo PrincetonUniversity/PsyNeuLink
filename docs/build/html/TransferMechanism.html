@@ -261,7 +261,7 @@ and to the 1st item of the Mechanism&#8217;s <a class="reference internal" href=
 
 <dl class="class">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.TransferMechanism.</code><code class="descname">TransferMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.TransferMechanism.</code><code class="descname">TransferMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements TransferMechanism subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -273,6 +273,7 @@ and to the 1st item of the Mechanism&#8217;s <a class="reference internal" href=
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
 <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
 of the mechanism.</li>
+<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
 or a custom function.</li>
 <li><strong>initial_value</strong> (<em>value, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the starting value for time-averaged input (only relevant if
@@ -320,13 +321,6 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value: default Transfer_DEFAULT_BIAS</em> &#8211; the input to Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.size">
-<code class="descname">size</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.size" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> &#8211; length of the first (and only) item in <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
-(i.e., the vector transformed by <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">

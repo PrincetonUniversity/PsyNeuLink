@@ -167,12 +167,13 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(                    \
+    TransferMechanism(           \
     default_input_value=None,    \
+    size=None,                   \
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
-    time_constant=1.0,                    \
+    time_constant=1.0,           \
     range=(float:min, float:max),\
     time_scale=TimeScale.TRIAL,  \
     params=None,                 \
@@ -216,6 +217,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -280,10 +285,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         COMMENT:
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
-
-    size : int
-        length of the first (and only) item in `variable <TransferMechanism.variable>`
-        (i.e., the vector transformed by `function <TransferMechanism.function>`.
 
     function : Function :  default Linear
         the Function used to transform the input.
@@ -651,10 +652,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     noise = new_noise
                 else:
                     noise = noise()
-
-            current_input = self.input_state.value + noise
+            # formerly: current_input = self.input_state.value + noise
+            current_input = self.variable[0] + noise
         else:
-            raise MechanismError("time_scale not specified for TransferMechanism")
+            raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
         self.previous_input = current_input
 
