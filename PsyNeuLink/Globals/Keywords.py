@@ -306,7 +306,7 @@ MAPPING_PROJECTION = "MappingProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
-PATHWAY_PROJECTION = "TransmissiveProjection"
+PATHWAY_PROJECTION = "PathwayProjection"
 MODULATORY_PROJECTION = "ModulatoryProjection"
 
 
