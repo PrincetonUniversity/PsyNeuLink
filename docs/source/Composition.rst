@@ -8,3 +8,4 @@ Composition
    Process
 
 .. automodule:: Composition
+   :members:

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
         <link rel="up" title="Processing Mechanism" href="ProcessingMechanism.html"/>
         <link rel="next" title="IntegratorMechanism" href="IntegratorMechanism.html"/>
         <link rel="prev" title="Processing Mechanism" href="ProcessingMechanism.html"/> 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.3
+                0.1
               </div>
             
           
@@ -181,7 +181,7 @@
 <span id="transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
 or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set of PsyNeuLink
-<a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> (<a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a> or <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>) or specified using a user-defined custom function.</p>
+<a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> (<a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a> or <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>), or specified using a user-defined custom function.</p>
 </div>
 <div class="section" id="creating-a-transfermechanism">
 <span id="transfer-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
@@ -217,9 +217,9 @@ the following parameters (in addition to any specified for the <a class="referen
 <li><a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.noise" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>: applied element-wise to the input before transforming it.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>: if <a class="reference internal" href="DDM.html#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
+<li><a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>: if <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code>,
 the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
-if <a class="reference internal" href="DDM.html#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is ignored.</li>
+if <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is <code class="xref std std-keyword docutils literal"><span class="pre">TimeScale.TRIAL</span></code>, <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is ignored.</li>
 </ul>
 <ul class="simple">
 <li><a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.range" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a>: caps all elements of the <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> result by
@@ -261,7 +261,7 @@ and to the 1st item of the Mechanism&#8217;s <a class="reference internal" href=
 
 <dl class="class">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.TransferMechanism.</code><code class="descname">TransferMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.TransferMechanism.</code><code class="descname">TransferMechanism</code><span class="sig-paren">(</span><em>default_input_value=None</em>, <em>function=Linear</em>, <em>initial_value=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements TransferMechanism subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -273,7 +273,6 @@ and to the 1st item of the Mechanism&#8217;s <a class="reference internal" href=
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
 <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
 of the mechanism.</li>
-<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies default_input_value as array(s) of zeros if default_input_value is not passed as an argument.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
 or a custom function.</li>
 <li><strong>initial_value</strong> (<em>value, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the starting value for time-averaged input (only relevant if
@@ -284,8 +283,7 @@ if it is a float, it must be in the interval [0,1] and is used to scale the vari
 if it is a function, it must return a scalar value.</li>
 <li><strong>time_constant</strong> (<em>float : default 1.0</em>) &#8211; <p>the time constant for exponential time averaging of input when the mechanism is executed with <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
 set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
-<span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -305,14 +303,18 @@ If not is specified, a default is assigned by <code class="xref any docutils lit
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
-<li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) &#8211; string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
+<li><strong>context=componentType+INITIALIZING)</strong> (<em>.</em>) &#8211; <dl class="docutils">
+<dt>context</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &#8216;&#8217;None&#8217;&#8216;</span><dd>string used for contextualization of instantiation, hierarchical calls, executions, etc.</dd>
+</dl>
+</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>instance of TransferMechanism</strong></p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#module-ProcessingMechanisms.TransferMechanism" title="ProcessingMechanisms.TransferMechanism">TransferMechanism</a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism" title="ProcessingMechanisms.TransferMechanism.TransferMechanism">TransferMechanism</a></p>
 </td>
 </tr>
 </tbody>
@@ -320,13 +322,20 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value: default Transfer_DEFAULT_BIAS</em> &#8211; the input to Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p><em>value: default Transfer_DEFAULT_BIAS</em> &#8211; the input to mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.size">
+<code class="descname">size</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; length of the first (and only) item in <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.variable" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+(i.e., the vector transformed by <a class="reference internal" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.function">
 <code class="descname">function</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function :  default Linear</em> &#8211; the Function used to transform the input.</p>
+<dd><p><em>Function :  default Linear</em> &#8211; the function used to transform the input.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -349,7 +358,7 @@ if it is a function, it must return a scalar value.</p>
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant">
 <code class="descname">time_constant</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_constant" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float : default 1.0</em> &#8211; the time constant for exponential time averaging of input
-when the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>:</p>
+when the mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -407,15 +416,15 @@ and/or custom OutputStates may be listed, if they have been <span class="xref st
 <dl class="attribute">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale : default TimeScale.TRIAL</em> &#8211; specifies whether the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
+<dd><p><em>TimeScale : defaul tTimeScale.TRIAL</em> &#8211; specifies whether the mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.name">
 <code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default TransferMechanism-&lt;index&gt;</em> &#8211; the name of the Mechanism.
-Specified in the <strong>name</strong> argument of the constructor for the Projection;
-if not specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+<dd><p><em>str : default TransferMechanism-&lt;index&gt;</em> &#8211; the name of the mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
@@ -423,8 +432,8 @@ if not specified, a default is assigned by <code class="xref any docutils litera
 <dt id="ProcessingMechanisms.TransferMechanism.TransferMechanism.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.TransferMechanism.TransferMechanism.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
-Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+Specified in the <strong>prefs</strong> argument of the constructor for the mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
@@ -474,7 +483,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
