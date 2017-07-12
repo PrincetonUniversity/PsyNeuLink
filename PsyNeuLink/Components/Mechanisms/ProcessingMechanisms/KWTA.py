@@ -64,7 +64,7 @@ class KWTA(RecurrentTransferMechanism):
                 default_input_value = [[0]]
                 size=[1]
             else:
-                try:
+                try: # TODO: make this match the matrix handling in _validate_params() of RecurrentTransferMechanism
                     if isinstance(matrix, list):
                         size = len(matrix[0])
                     else:
