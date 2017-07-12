@@ -25,9 +25,15 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
                         default_input_value = [0,0,0])
 
+from PsyNeuLink.Components.States.InputState import InputState
+
+my_input_state = InputState(owner=Output_Layer,
+                            projections=Input_Layer,
+                            name="GOOBAH")
+
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
-                                # params={GATING_PROJECTIONS:Hidden_Layer_2})
-                                params={PROJECTIONS:Hidden_Layer_2})
+                                projections=Hidden_Layer_2)
+                                # params={PROJECTIONS:Hidden_Layer_2})
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
