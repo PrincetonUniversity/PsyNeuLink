@@ -375,26 +375,53 @@ as follows:</p>
 <span class="n">full_model</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">feed_forward_network</span><span class="p">,</span> <span class="n">recurrent_network</span><span class="p">])</span>
 
 <span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">full_model</span><span class="p">)</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                                                <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_output_layer</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_hidden_layer</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_output_layer</span><span class="p">,</span>
+    <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>The two Conditions added to the controller specify that: 1) <code class="docutils literal"><span class="pre">my_hidden_layer</span></code> should execute whenever either
-<code class="docutils literal"><span class="pre">input_hidden_layer</span></code> has executed once (to encode the stimulus and make available to the <code class="docutils literal"><span class="pre">recurrent_layer</span></code>), and
-when the <code class="docutils literal"><span class="pre">recurrent_layer</span></code> has executed 10 times (to allow it to settle on a context representation and
-provide that back to the <code class="docutils literal"><span class="pre">hidden_layer</span></code>); 2) the <code class="docutils literal"><span class="pre">output_layer</span></code> should execute only after the <code class="docutils literal"><span class="pre">hidden_layer</span></code>
-has executed twice (to integrate its inputs from both <code class="docutils literal"><span class="pre">input_layer</span></code> and <code class="docutils literal"><span class="pre">recurrent_layer</span></code>).</p>
+<p>The two Conditions added to the controller specify that:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">my_hidden_layer</span></code> should execute whenever either <code class="docutils literal"><span class="pre">input_hidden_layer</span></code> has executed once (to encode the stimulus and make available to the <code class="docutils literal"><span class="pre">recurrent_layer</span></code>), or when the <code class="docutils literal"><span class="pre">recurrent_layer</span></code> has executed 10 times (to allow it to settle on a context representation and provide that back to the <code class="docutils literal"><span class="pre">hidden_layer</span></code>)</li>
+<li>the <code class="docutils literal"><span class="pre">output_layer</span></code> should execute only after the <code class="docutils literal"><span class="pre">hidden_layer</span></code> has executed twice (to integrate its inputs from both <code class="docutils literal"><span class="pre">input_layer</span></code> and <code class="docutils literal"><span class="pre">recurrent_layer</span></code>).</li>
+</ol>
+</div></blockquote>
 <p>More sophisticated Conditions can also be created.  For example, the <code class="docutils literal"><span class="pre">recurrent_layer</span></code> can be scheduled to
 execute until the change in its value falls below a specified threshold as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">minimal_change</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">mech</span><span class="p">,</span> <span class="n">thresh</span> <span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mech</span><span class="o">.</span><span class="n">value</span> <span class="o">-</span> <span class="n">mech</span><span class="o">.</span><span class="n">previous_value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">thresh</span><span class="p">))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                                                <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="n">Any</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">1</span>
-                                                   <span class="n">Until</span><span class="p">(</span><span class="n">minimal_change</span><span class="p">,</span> <span class="n">my_recurrent_mech</span><span class="p">,</span> <span class="n">thesh</span><span class="p">)))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">converge</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mech</span><span class="o">.</span><span class="n">delta</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+<span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_hidden_layer</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_recurrent_layer</span><span class="p">,</span>
+    <span class="n">All</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">WhileNot</span><span class="p">(</span><span class="n">converge</span><span class="p">,</span> <span class="n">my_recurrent_mech</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
-<p>Here, the criterion for stopping execution is defined as a function (<code class="docutils literal"><span class="pre">minimal_change</span></code>), that is used in an <a class="reference internal" href="Condition.html#Scheduling.Condition.Until" title="Scheduling.Condition.Until"><code class="xref any py py-class docutils literal"><span class="pre">Until</span></code></a>
+<p>Here, the criterion for stopping execution is defined as a function (<code class="docutils literal"><span class="pre">converge</span></code>), that is used in a <a class="reference internal" href="Condition.html#Scheduling.Condition.WhileNot" title="Scheduling.Condition.WhileNot"><code class="xref any py py-class docutils literal"><span class="pre">WhileNot</span></code></a>
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.</p>
 <p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User&#8217;s Guide</span></a> provides a more detailed review of PsyNeuLink&#8217;s organization and capabilities,
