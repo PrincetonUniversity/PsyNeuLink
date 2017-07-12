@@ -89,6 +89,37 @@ where its parameters are specified.  A State can be specified in those cases in 
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
 
+.. _State_Projections:
+
+Projections
+~~~~~~~~~~~
+
+When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
+argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with the key
+*PROJECTIONS*. In both cases, the Projections must be specified in a list. The following of types of Projections can be
+specified for each type of State:
+
+    * `InputState`
+        • `PathwayProjection(s) <PathwayProjection>`
+          - assigned to its `pathway_afferents <Input.pathway_afferents>` attribute.
+        • `GatingProjection(s) <GatingProjection>`
+          - assigned to its `mod_afferents <InputState.mod_afferents>` attribute.
+
+    * `ParameterState`
+        • `ControlProjection(s) <ControlProjection>` - assigned to its `mod_afferents <ParameterState.mod_afferents>`
+          attribute.
+
+    * `OutputState`
+        • `PathwayProjection(s) <PathwayProjection>`
+          - assigned to its `efferents <Output.efferents>` attribute.
+        • `GatingProjection(s) <GatingProjection>`
+          - assigned to its `mod_afferents <OutputState.mod_afferents>` attribute.
+
+    * `ModulatorySignal`
+        • `ModulatoryProjection(s) <ModulatoryProjection>`
+          - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
+
+
 COMMENT:
 *** EXAMPLES HERE
 COMMENT
@@ -238,6 +269,9 @@ class State_Base(State):
     """
     State_Base(        \
     owner,             \
+    variable=None,     \
+    size=None,         \
+    projections=None,  \
     params=None,       \
     name=None,         \
     prefs=None)

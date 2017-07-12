@@ -26,7 +26,6 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         default_input_value = [0,0,0])
 
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
-                                # params={GATING_PROJECTIONS:Hidden_Layer_2})
                                 projections=Hidden_Layer_2)
                                 # params={PROJECTIONS:Hidden_Layer_2})
 
