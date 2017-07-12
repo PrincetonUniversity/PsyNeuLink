@@ -223,7 +223,7 @@ Graphic Displays
 At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
 using its `show_graph` method.  This can be used to display just the processing components (i.e.,
 `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`, or to include
-`learning <LearningMechanism>` and/or control <ControlMechanism>` components.  A future release may include
+`learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release may include
 a more complete graphical user interface.
 
 
@@ -235,7 +235,7 @@ Preferences
 PsyNeuLink supports a hierarchical system of `Preferences` for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
 to default to the value of any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
-its own preference for reporting, or use the default value for all`ProcessingMechanisms <ProcessingMechanism>`,
+its own preference for reporting, or use the default value for all `ProcessingMechanisms <ProcessingMechanism>`,
 all `Mechanisms <Mechanism>`, or all `Components <Component>`.  There are preferences for reporting to the
 console during execution, logging, warnings, and validation (useful for debugging, but suppressable for efficiency of
 execution).

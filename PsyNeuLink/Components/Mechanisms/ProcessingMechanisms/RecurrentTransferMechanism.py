@@ -144,6 +144,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     """
     RecurrentTransferMechanism(        \
     default_input_value=None,          \
+    size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
     initial_value=None,                \
@@ -176,6 +177,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -410,6 +415,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif isinstance(matrix_param, str):
                 matrix = get_matrix(matrix_param, size, size)
 
+            elif isinstance(matrix_param, np.matrix):
+                matrix = np.array(matrix_param)
+
             else:
                 matrix = matrix_param
 
@@ -430,9 +438,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             if rows != size:
                 if (matrix_param, MappingProjection):
                     # if __name__ == '__main__':
-                    err_msg = ("Size of {} param for {} ({}) must be same as variable for {} ({})"
-                               "to be used as recurrent projection for {}".
-                               format(MATRIX, matrix_param.name, rows, self.name, size))
+                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of the variable for {} "
+                               "(whose size is {}, variable is {})".
+                               format(MATRIX, self.name, rows, self.name, self.size, self.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
@@ -485,6 +493,9 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
+
+        if INITIALIZING in context:
+            self.previous_input = self.variable
 
         if self.decay is not None and self.decay != 1.0:
             self.previous_input *= self.decay

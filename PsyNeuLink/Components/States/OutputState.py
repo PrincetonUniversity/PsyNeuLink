@@ -336,12 +336,14 @@ class OutputState(State_Base):
     owner,                                     \
     reference_value,                           \
     variable=None,                             \
+    size=None,                                 \
     function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
     params=None,                               \
     name=None,                                 \
-    prefs=None)
+    prefs=None,                                \
+    context=None)
 
     Implements a subclass of `State` that represents an output of a Mechanism.
 
@@ -388,6 +390,10 @@ class OutputState(State_Base):
 
     variable : number, list or np.ndarray
         specifies the template for the OutputState's `variable <OutputState.variable>`.
+
+    size : int, list or np.ndarray of ints
+    specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+    if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function, function, or method : default LinearCombination(operation=SUM)
         function used to aggregate the values of the projections received by the OutputState.

@@ -55,9 +55,18 @@ Every Component has the following set of core attributes that govern its operati
 .. _Component_Variable:
 
 * **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
-  `function <Component.function>`.  Specification of the variable in the constructor for a Component determines both
-  its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array, etc.) as well as
-  its default value (the value used when the Component is executed and no input is provided).
+  `function <Component.function>`.  Specification of the **variable** argument in the constructor for a Component
+  determines both its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array,
+  etc.) as well as its default value (the value used when the Component is executed and no input is provided), and
+  takes precedence over the specification of `size <Component_Size>`.
+
+.. _Component_Size:
+
+* **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
+  constructor for a Component can be used as a convenient method for specifying the `variable <Component>`, attribute
+  in which case it will be assigned as an array of zeros of the specified size.  For example, setting  **size** = 3 is
+  equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent to setting
+  **variable* = [[0, 0, 0, 0], [0, 0, 0]].
 
 .. _Component_Function:
 
@@ -221,6 +230,12 @@ COMMENT:
       compatibility with other attributes of the Component and/or the attributes of other Components (for example, the
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
+
+      * `_handle_size <Component._handle_size>` converts the keyword:`variable` and keyword:`size` arguments
+        to the correct dimensions (for keyword:`Mechanism`, this is a 2D array and 1D array, respectively).
+        If keyword:`variable` was not passed as an argument, this method attempts to infer keyword:`variable`
+        from the keyword:`size` argument, and vice versa if the keyword:`size` argument is missing.
+        The _handle_size method then checks that the keyword:`size` and keyword:`variable` arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the Component being created.
@@ -450,6 +465,8 @@ class Component(object):
         The variable(s) can be a function reference, in which case the function is called to resolve the value;
             however:  it must be "wrapped" as an item in a list, so that it is not called before being passed
                       it must of course return a variable of the type expected for the variable
+        The size argument is an int or array of ints, which specify the size of variable and set variable to be array(s)
+            of zeros.
         The default variableList is a list of default values, one for each of the variables defined in the child class
         The params argument is a dictionary; the key for each entry is the parameter name, associated with its value.
             + Component subclasses can define the param FUNCTION:<method or Function class>
@@ -506,6 +523,7 @@ class Component(object):
         
 
     Class methods:
+        - _handle_size(size, variable)
         - _validate_variable(variable)
         - _validate_params(request_set, target_set, context)
         - _instantiate_defaults(variable, request_set, assign_missing, target_set, default_set=None
@@ -587,6 +605,7 @@ class Component(object):
 
         Initialization arguments:
         - variable_default (anything): establishes type for the variable, used for validation
+        - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
@@ -739,12 +758,15 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
+    # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
+    # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
     def _handle_size(self, size, variable):
-        """ If variable is None, _handle_size tries to infer variable based on the size argument to the
+        """ If variable is None, _handle_size tries to infer variable based on the **size** argument to the
             __init__() function. This method is overwritten in subclasses like Mechanism and State.
             If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
             the input from the i-th input state). If self is a State, variable is a 1D array and size is a length-1 1D
-            array. It performs some validations on size and variable as well. This function is overrided in State.py.
+            array. It performs some validations on size and variable as well. This function is overridden in State.py.
             If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
@@ -822,7 +844,7 @@ class Component(object):
                         variable.append(np.zeros(s))
                     variable = np.array(variable)
                 except:
-                    raise ComponentError("variable (possibly default_input_value)was not specified, but PsyNeuLink "
+                    raise ComponentError("variable (possibly default_input_value) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or an array or list of integers. Either size or "
                                          "variable must be specified.".format(size))
@@ -862,7 +884,7 @@ class Component(object):
             # MODIFIED 6/28/17 (CW): Because size was changed to always be a 1D array, the check below was changed
             # to a for loop iterating over each element of variable and size
             # Both variable and size are specified
-            if variable is not None and size is not None:  # try tossing this "if" check
+            if variable is not None and size is not None:
                 # If they conflict, give warning
                 if len(size) != len(variable):
                     if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
@@ -1996,7 +2018,10 @@ class Component(object):
                     type_name = 'the name of a subclass of ' + self.paramClassDefaults[param_name].__base__.__name__
                 else:
                     type_name = self.paramClassDefaults[param_name].__class__.__name__
-                raise ComponentError("Value of {} param for {} ({}) must be a {}".
+                if param_name == 'matrix':
+                    raise ComponentError("Value of {} param for {} ({}) must be a valid matrix specification".
+                                    format(param_name, self.name, param_value))
+                raise ComponentError("Value of {} param for {} ({}) must be compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
     def _get_param_value_from_tuple(self, param_spec):

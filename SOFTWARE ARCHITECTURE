@@ -76,8 +76,8 @@ Description: Princeton University licenses this file to You under the Apache Lic
      - Class(required_arg, [optional_args]) # comment
 
      Hierarchy:
-     - Component: abstract class - cannont be instantiated directly
-         - Category: abstract classes - cannont be instantiated directly
+     - Component: abstract class - cannot be instantiated directly
+         - Category: abstract classes - cannot be instantiated directly
              - Type: cannot be instantiated
                  - Subtype: can be instantiated
                     <instances>
@@ -440,27 +440,28 @@ Keep components simple; put any necessary complexity (to make it easier for the 
          3) Assign log
          4) Enforce implementation of variableClassDefault
          5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
-         6) assign_defaults
+	 6) _handle_size infers variable from the size argument (see Notes On Size)
+         7) _instantiate_defaults
              a) _validate_variable
                  - get value from ParamValueProjection tuple
                  - resolve function object or reference to current value
-                 - insure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
+                 - ensure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
                  - assign self.variable = variable
              b) assign missing params (if assign_missing == True)
              c) _validate_params
                  - checks that each param is listed in paramClassDefaults
                  - checks that value is compatible with on in paramClassDefauts
-         7) Set self.variable = variableInstanceDefault
-         8) Set self.paramsCurrent = paramInstanceDefaults
-         9) _validate_function
+         8) Set self.variable = variableInstanceDefault
+         9) Set self.paramsCurrent = paramInstanceDefaults
+         10) _validate_function
              - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
                  finally self.execute;  if none present or valid, an exception is raised
-         10) _instantiate_attributes_before_function: stub for subclasses
-         11) _instantiate_function
+         11) _instantiate_attributes_before_function: stub for subclasses
+         12) _instantiate_function
              - instantiate params[FUNCTION] if present and assign to self.execute
              - else, instantiate self.execute; if it is not implemented, raise exception
              - call execute method to determine its output and type and assign to self.value
-         12) _instantiate_attributes_after_function: stub for subclasses
+         13) _instantiate_attributes_after_function: stub for subclasses
 
      B) Process:
          1) Assign name
@@ -803,3 +804,22 @@ Keep components simple; put any necessary complexity (to make it easier for the 
          TEMPLATE
              def observe_value_at_keypath(keypath, old_value, new_value):
                  [specify actions to be taken for each attribute (keypath) observed]
+
+### Notes on Size:
+
+The size attribute is purely used for instantiating PsyNeuLink Components (and subclasses, such as Mechanism and State). Size is simply a substitute for variable (or default_input_value) and causes variable to become a correctly-sized array of zeros. For example, initializing a Mechanism with size=4 will result in _handle_size() setting variable to be equal to [[0, 0, 0, 0]]; initializing with size=[1, 2, 3] will result in variable being equal to [[0], [0, 0], [0, 0, 0]] where the three vectors of zeros represent the default inputs to 3 different input-states for that Mechanism.
+
+_handle_size() is the function within Component.__init__() which does the following:
+	-If size is None and variable is None: Do nothing
+	-Convert variable and size to the proper dimensionality (for Mechanisms, size is a 1D array)
+	-If variable is None and size is not None: infer variable based on size (a.k.a. make it a 2D array of zeros, where the length of the i-th array is equal to the i-th entry in size)
+	-If size is None and variable is not None: infer size based on variable (a.k.a. measure the lengths of each entry in variable, and make size a 1D array holding those lengths)
+	-Check that size and variable are compatible with each other (useful if the user for some reason specifies both size and variable)
+
+Note that _handle_size operates differently for different kinds of objects: at time of writing (7/9/17), _handle_size converts variable to a 1D array if the object being initialized is a State, and converts variable to a 2D array if the object is a Mechanism. This is because Mechanisms may take differently-formatted inputs (so long as the user specifies a function that can handle this), so Mechanisms need a way to specify different variable-formats for each InputState. However, States only ever receive input in one specific format, even if they are getting input from multiple sources. So, their variable is 1-dimensional.
+In terms of software architecture, this is done by having the Mechanism (2D variable) version of _handle_size() written in Component.py, and State.py overrides _handle_size() with the 1D variable version.
+
+Note that size is a property, NOT an internally stored attribute or parameter. After initialization of an object is complete, users aren’t allowed to change its size. Size is not stored, so when a user ‘gets’ the size of a Component, the size is dynamically calculated based on the Component’s variable.
+
+Known bug: size may fail if you try to use inputs that are matrices, or other unorthodox values. Needs to be fixed, and fixing this might also make it easier to override the _handle_size function.
+Debugging tip: If your program faces bugs related to dimensionality, _handle_size may be a likely culprit because _handle_size() messes with the dimensionality of ‘variable’.

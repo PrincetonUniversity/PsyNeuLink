@@ -28,6 +28,8 @@ def test_transfer_mech_inputs_list_of_ints():
     )
     val = T.execute([10, 10, 10, 10]).tolist()
     assert val == [[10.0, 10.0, 10.0, 10.0]]
+    assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
+    # this test assumes size is returned as a 1D array: if it's not, then several tests in this file must be changed
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -593,7 +595,7 @@ def test_transfer_mech_time_constant_0_8_list():
         T.execute([1, 1, 1, 1]).tolist()
     assert (
         "Value of time_constant param" in str(error_text.value)
-        and "must be a float" in str(error_text.value)
+        and "must be compatible with float" in str(error_text.value)
     )
 
 # ------------------------------------------------------------------------------------------------
@@ -674,7 +676,7 @@ def test_transfer_mech_size_int_check_var():
         size=4
     )
     assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
-    assert len(T.size == 1) and T.size[0] == 4 and type(T.size[0]) == np.int64
+    assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
