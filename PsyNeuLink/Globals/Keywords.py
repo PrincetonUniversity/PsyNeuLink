@@ -119,7 +119,7 @@ class MatrixKeywords:
 
     """
     def __init__(self):
-        self.MATRIX = MATRIX
+        # self.MATRIX = MATRIX
         self.IDENTITY_MATRIX = IDENTITY_MATRIX
         self.HOLLOW_MATRIX = HOLLOW_MATRIX
         self.FULL_CONNECTIVITY_MATRIX = FULL_CONNECTIVITY_MATRIX

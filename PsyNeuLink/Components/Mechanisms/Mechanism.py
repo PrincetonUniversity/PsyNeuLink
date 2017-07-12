@@ -874,7 +874,7 @@ class Mechanism_Base(Mechanism):
 
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
-            to validate variable_default and param_defaults, and assign params to paramInstanceDefaults;
+            to validate size and variable_default and param_defaults, and assign params to paramInstanceDefaults;
             it uses INPUT_STATE as the variable_default
         * registers Mechanism with MechanismRegistry
 
@@ -1687,6 +1687,7 @@ class Mechanism_Base(Mechanism):
             if isinstance(input, np.ndarray) and input.dtype is np.dtype('O') and num_inputs == num_input_states:
                 pass
             else:
+                num_inputs = np.size(input, 0)  # revert num_inputs to its previous value, when printing the error
                 raise SystemError("Number of inputs ({0}) to {1} does not match "
                                   "its number of input_states ({2})".
                                   format(num_inputs, self.name,  num_input_states ))

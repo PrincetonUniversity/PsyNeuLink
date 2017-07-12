@@ -564,6 +564,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the error signal received from either an ObjectiveMechanism or the next LearningMechanism in a
         `learning sequence <LearningMechanism_Learning_Configurations>`.
 
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
+
     COMMENT:
       error_output : 1d np.array
             the output of the next Mechanism in the pathway (the one to which the `error_signal` pertains, and projected
