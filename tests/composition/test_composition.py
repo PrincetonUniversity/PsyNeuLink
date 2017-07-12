@@ -949,7 +949,7 @@ class TestRun:
         C = TransferMechanism(name="C", function=Linear(slope=2.0))   # 4 x 2 = 8
         D = TransferMechanism(name="D", function=Linear(slope=2.0))   # 8 x 2 = 16
         E = TransferMechanism(name="E", function=Linear(slope=2.0))  # 16 x 2 = 32
-        comp.add_linear_processing_pathway([A,B,C,D,E])
+        comp.add_linear_processing_pathway([A, B, C, D, E])
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
@@ -1022,7 +1022,7 @@ class TestRun:
         A = TransferMechanism(name="A", function=Linear(slope=2.0))
         B = TransferMechanism(name="B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
-            comp.add_linear_processing_pathway([ A, Nonsense, B])
+            comp.add_linear_processing_pathway([A, Nonsense, B])
 
         assert "A linear processing pathway must be made up of projections and mechanisms." in str(
             error_text.value)
@@ -1054,11 +1054,7 @@ class TestRun:
         )
         assert 250 == output[0][0]
 
-
-
-
-
-                        # when self.sched is ready:
+    # when self.sched is ready:
     # def test_run_default_scheduler(self):
     #     comp = Composition()
     #     A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))

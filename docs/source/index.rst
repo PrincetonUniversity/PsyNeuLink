@@ -154,7 +154,7 @@ The full process can be run simply by calling its run method::
 The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
 picks sensible defaults when necessary Components are not specified.  In the example above, since no projections were
 specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of mechanism,
-using random initial weights.  However, it is easy to spcify them explicitly, simply by inserting them in between the
+using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them in between the
  mechanisms in the pathway for the process::
 
     my_projection_1 = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) + -.1))
@@ -167,13 +167,13 @@ have been inserted directly, as follows::
     my_encoder = process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) + -.1)), hidden_layer, output_layer])
 
 PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
-a recurrent Projection from the ``output_layer`` back to the ``hidden_lalyer`` can be added simply by adding another
+a recurrent Projection from the ``output_layer`` back to the ``hidden_layer`` can be added simply by adding another
 entry to the pathway::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
 
 This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
-been accomplished by explicilty creating the recurrent connection:
+been accomplished by explicitly creating the recurrent connection::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
     MappingProjection(sender=output_layer,
@@ -260,26 +260,51 @@ as follows::
     full_model = system(processes=[feed_forward_network, recurrent_network])
 
     my_scheduler = Scheduler(system=full_model)
-    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
-                                                    EveryNCalls(my_recurrent_layer, 10)))
-    my_scheduler.add_condition(my_output_layer, EveryNCalls(my_hidden_layer, 2))
 
-The two Conditions added to the controller specify that: 1) ``my_hidden_layer`` should execute whenever either
-``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), and
-when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and
-provide that back to the ``hidden_layer``); 2) the ``output_layer`` should execute only after the ``hidden_layer``
-has executed twice (to integrate its inputs from both ``input_layer`` and ``recurrent_layer``).
+    my_scheduler.add_condition(
+        my_hidden_layer,
+        Any(
+            EveryNCalls(my_input_layer, 1),
+            EveryNCalls(my_recurrent_layer, 10)
+        )
+    )
+    my_scheduler.add_condition(
+        my_output_layer,
+        EveryNCalls(my_hidden_layer, 2)
+    )
+
+The two Conditions added to the controller specify that:
+
+   1. ``my_hidden_layer`` should execute whenever either ``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), or when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and provide that back to the ``hidden_layer``)
+
+   2. the ``output_layer`` should execute only after the ``hidden_layer`` has executed twice (to integrate its inputs from both ``input_layer`` and ``recurrent_layer``).
 
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
 
-    minimal_change = lambda mech, thresh : abs(mech.value - mech.previous_value) < thresh))
-    my_scheduler.add_condition(my_hidden_layer, Any(EveryNCalls(my_input_layer, 1),
-                                                    EveryNCalls(my_recurrent_layer, 1))
-    my_scheduler.add_condition(my_recurrent_layer, Any(my_hidden_layer, 1
-                                                       Until(minimal_change, my_recurrent_mech, thesh)))
+    def converge(mech, thresh):
+        for val in mech.delta:
+            if abs(val) >= thresh:
+                return False
+        return True
+    epsilon = 0.01
 
-Here, the criterion for stopping execution is defined as a function (``minimal_change``), that is used in an `Until`
+    my_scheduler.add_condition(
+        my_hidden_layer,
+        Any(
+            EveryNCalls(my_input_layer, 1),
+            EveryNCalls(my_recurrent_layer, 1)
+        )
+    )
+    my_scheduler.add_condition(
+        my_recurrent_layer,
+        All(
+            EveryNCalls(my_hidden_layer, 1),
+            WhileNot(converge, my_recurrent_mech, epsilon)
+        )
+    )
+
+Here, the criterion for stopping execution is defined as a function (``converge``), that is used in a `WhileNot`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.
 

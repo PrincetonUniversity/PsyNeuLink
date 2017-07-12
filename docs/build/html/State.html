@@ -34,8 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
+        <link rel="up" title="Component" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
-        <link rel="prev" title="Gating Mechanism" href="GatingMechanism.html"/> 
+        <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,29 +86,35 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">State</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l2"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#modulation">Modulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">State</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#modulation">Modulation</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -137,6 +144,8 @@
 <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Component.html">Component</a> &raquo;</li>
       
     <li>State</li>
       <li class="wy-breadcrumbs-aside">
@@ -184,7 +193,7 @@ its value can be modulated by a <a class="reference internal" href="GatingSignal
 <dd><ul class="first last simple">
 <li>used by a Mechanism to represent the value of one of its parameters, or a parameter of its
 <code class="xref any docutils literal"><span class="pre">function</span></code>, that can be modulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>;</li>
-<li>used by a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to represent the value of its <code class="xref any docutils literal"><span class="pre">matrix</span></code>
+<li>used by a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to represent the value of its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter, that can be modulated by a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>.</li>
 </ul>
 </dd>
@@ -427,7 +436,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
         <a href="InputState.html" class="btn btn-neutral float-right" title="InputState" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GatingMechanism.html" class="btn btn-neutral" title="Gating Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="GatingProjection.html" class="btn btn-neutral" title="GatingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

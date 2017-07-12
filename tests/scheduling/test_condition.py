@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Composition import Composition
-from PsyNeuLink.Scheduling.Condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny
+from PsyNeuLink.Scheduling.Condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, BeforePass, BeforeTrial, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
 from PsyNeuLink.Scheduling.Condition import ConditionError, ConditionSet
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
@@ -34,6 +34,39 @@ class TestCondition:
     def test_invalid_input_WhenFinishedAll_2(self):
         with pytest.raises(ConditionError):
             WhenFinished({None}).is_satisfied()
+
+    class TestGeneric:
+        def test_WhileNot_AtPass(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            comp.add_mechanism(A)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, WhileNot(lambda sched: sched.times[TimeScale.RUN][TimeScale.PASS] == 0, sched))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AtPass(5)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [set(), A, A, A, A]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        def test_WhileNot_AtPass_in_middle(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            comp.add_mechanism(A)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, WhileNot(lambda sched: sched.times[TimeScale.RUN][TimeScale.PASS] == 2, sched))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AtPass(5)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A, A, set(), A, A]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
 
     class TestRelative:
 
@@ -101,6 +134,34 @@ class TestCondition:
             output = list(sched.run(termination_conds=termination_conds))
 
             expected_output = [A, A, set(), A, A]
+            assert output == pytest.helpers.setify_expected_output(expected_output)
+
+        @pytest.mark.parametrize(
+            'n,expected_output', [
+                (0, ['A', 'A', 'A', 'A', 'A', 'A']),
+                (1, ['A', 'A', 'A', 'B', 'A', 'A', 'A']),
+                (2, ['A', 'A', 'A', 'B', 'A', 'B', 'A', 'A']),
+            ]
+        )
+        def test_NWhen_AfterNCalls(self, n, expected_output):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='B')
+            for m in [A, B]:
+                comp.add_mechanism(m)
+            comp.add_projection(A, MappingProjection(), B)
+
+            sched = Scheduler(composition=comp)
+            sched.add_condition(A, Always())
+            sched.add_condition(B, NWhen(AfterNCalls(A, 3), n))
+
+            termination_conds = {}
+            termination_conds[TimeScale.RUN] = AfterNTrials(1)
+            termination_conds[TimeScale.TRIAL] = AfterNCalls(A, 6)
+            output = list(sched.run(termination_conds=termination_conds))
+
+            expected_output = [A if x == 'A' else B for x in expected_output]
+
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
     class TestTime:

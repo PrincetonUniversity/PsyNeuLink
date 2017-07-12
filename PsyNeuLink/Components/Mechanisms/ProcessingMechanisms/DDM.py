@@ -196,9 +196,8 @@ demonstrate all of the possible parameters (see individual `Functions <Funtion>`
 
 `Integrator <Integrator>` ::
 
-    my_DDM_TimeStep = DDM(function=Integrator( integration_type = DIFFUSION,
+    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(
                                       noise=0.5,
-                                      time_step_size = 1.0,
                                       initializer = 0.0,
                                       ),
                 time_scale=TimeScale.TIME_STEP,
@@ -313,7 +312,7 @@ class DDM_OUTPUT():
     *RESPONSE_TIME* : float
       • in `TRIAL` mode: mean time (in seconds) for the decision variable to reach the positive or negative value of
         `threshold <DDM.threshold>` as estimated by the analytic solution specified in `function <DDM.function>`); \n
-      • in `TIME_STEP` mode: the number of `TIME_STEP` \s that have occurred since the Mechanism began to execute in
+      • in `TIME_STEP` mode: the number of `TIME_STEP` that have occurred since the Mechanism began to execute in
         the current `TRIAL` or, if it has reached the positive or negative value of `threshold <DDM.threshold>`,
         the `TIME_STEP` at which that occurred. \n
       Corresponds to the second item of the Mechanism's `value <DDM.value>`.
@@ -401,6 +400,7 @@ class DDM(ProcessingMechanism_Base):
     """
     DDM(                       \
     default_input_value=None,  \
+    size=None,                 \
     function=BogaczEtAl,       \
     params=None,               \
     name=None,                 \
@@ -459,11 +459,14 @@ class DDM(ProcessingMechanism_Base):
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
         and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
         of greater than 1 is handled).
+    size : int, list or np.ndarray of ints
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
         `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine
         is installed). If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>` must
-        be `Integrator` with an integration_type of DIFFUSION, and the mechanism
+        be `DriftDiffusionIntegrator`, and the mechanism
         will return the result of one time step.
     time_scale :  TimeScale : default TimeScale.TRIAL
         specifies whether the mechanism is executed on the time_step or trial time scale.
@@ -493,7 +496,7 @@ class DDM(ProcessingMechanism_Base):
     function :  IntegratorFunction : default BogaczEtAl
         the function used to compute the outcome of the decision process when `time_scale <DDM.time_scale>` is
         `TimeScale.TRIAL`.  If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>`
-        must be `Integrator` with an 'integration_type <Integrator.integration_type>' of DIFFUSION, and the mechanism
+        must be `DriftDiffusionIntegrator`, and the mechanism
         will return the result of one time step.
     function_params : Dict[str, value]
         contains one entry for each parameter of the mechanism's function.
@@ -741,11 +744,6 @@ class DDM(ProcessingMechanism_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
         functions = {BogaczEtAl, NavarroAndFuss, DriftDiffusionIntegrator}
-
-        # this size validation assumes that one of the super()._validate_params calls already checked
-        # that size is  6/30/17 (CW)
-        if SIZE in target_set:
-            print("\ntarget_set[SIZE]: ", target_set[SIZE])
 
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),

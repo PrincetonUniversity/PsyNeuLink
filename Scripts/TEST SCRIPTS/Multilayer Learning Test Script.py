@@ -95,7 +95,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
-            learning_rate=1.0,
+            # learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
@@ -150,7 +150,7 @@ if COMPOSITION is PROCESS:
     composition = z
 
     # PROCESS VERSION:
-    z.run(num_executions=10,
+    z.run(num_trials=10,
           # inputs=[[-1, 30],[2, 10]],
           # targets=[[0, 0, 1],[0, 0, 1]],
           inputs=stim_list,
@@ -162,7 +162,7 @@ elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
                targets=[0, 0, 1],
-               learning_rate=1.0)
+               learning_rate=2.0)
 
     x.reportOutputPref = True
     composition = x
@@ -170,7 +170,7 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph(show_learning=True)
     # x.show_graph()
     results = x.run(
-        num_executions=10,
+        num_trials=10,
         # inputs=stim_list,
         # inputs=[[-1, 30],[2, 10]],
         # targets=[[0, 0, 1],[0, 0, 1]],

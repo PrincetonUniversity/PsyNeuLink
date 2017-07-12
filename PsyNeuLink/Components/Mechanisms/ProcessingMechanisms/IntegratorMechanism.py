@@ -14,7 +14,7 @@ Overview
 
 An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
-independently integrated.  The default function (`Integrator`) can be parameterized to implement either a simple
+independently integrated.  The default function (`Integrator`) can be parametrized to implement either a simple
 increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
 assigned a custom function.
 
@@ -24,25 +24,27 @@ Creating an IntegratorMechanism
 -------------------------------
 
 An IntegratorMechanism can be created directly by calling its constructor, or using the
-`mechanism() <Mechanism.mechanism>` function and specifying INTEGRATOR_MECHANISM as its **mech_spec**
-argument.  Its function is specified in the **function** argument, which can be parameterized by calling its
+`mechanism() <Mechanism.mechanism>` function and specifying *INTEGRATOR_MECHANISM* as its **mech_spec**
+argument.  Its function is specified in the **function** argument, which can be parametrized by calling its
 constructor with parameter values::
 
-    my_time_averaging_mechanism = IntegratorMechanism(function=Integrator(integration_type=ADAPTIVE, rate=0.5))
+    my_time_averaging_mechanism = IntegratorMechanism(function=AdaptiveIntegrator(rate=0.5))
+
+The **default_input_value** argument specifies the format of its input (i.e., whether it is a single scalar or an
+array), as well as the value to use if none is provided when mechanism is executed.  Alternatively, the **size**
+argument can be used to specify the length of the array, in which case it will be initialized with all zeros.
 
 .. _IntegratorMechanism_Structure
 
 Structure
 ---------
 
-An IntegratorMechanism has a single `inputState <InputState>`, the `value <InputState.InputState.value>` of which is
-used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.   The
-:keyword:`default_input_value` argument specifies the format of its input (i.e., whether it is a single scalar or an
-array), as well as the value to use if none is provided when mechanism is executed.  The default for
-`function <IntegratorMechanism.function>` is `Integrator(integration_type=ADAPTIVE, rate=0.5)`. However, a custom function can
-also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric values as its input,
-and returns a value of the same type and format.  The mechanism has a single `outputState <OutputState>, the `value
-<OutputState.OutputState.value>` of which is assigned the result of  the call to the mechanism's
+An IntegratorMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
+used as the  `variable <IntegratorMechanism.variable>` for its `function <IntegratorMechanism.function>`.
+The default for `function <IntegratorMechanism.function>` is `AdaptiveIntegrator(rate=0.5)`. However,
+a custom function can also be specified,  so long as it takes a numeric value, or a list or np.ndarray of numeric
+values as its input, and returns a value of the same type and format.  The mechanism has a single `OutputState`,
+the `value <OutputState.OutputState.value>` of which is assigned the result of  the call to the Mechanism's
 `function  <IntegratorMechanism.function>`.
 
 .. _IntegratorMechanism_Execution
@@ -51,12 +53,12 @@ Execution
 ---------
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
-result to the `value <IntegratorMechanism.value>` of its (primary) outputState.  For the default function
-(`Integrator`), if the value specified for :keyword:`default_input_value` is a list or array, each element of the array
-is independently integrated.  If its :keyword:`rate` parameter is a single value, that rate will be used for
-integrating each element.  If the :keyword:`rate` parameter is a list or array, then each element will be used as the
-rate for the corresponding element of the input (in this case, :keyword:`rate` must be the same length as the value
-specified for :keyword:`default_input_value`).
+result to the `value <IntegratorMechanism.value>` of its `primary OutputState <OutputState_Primary>`.  For the default
+function (`Integrator`), if the value specified for **default_input_value** is a list or array, or **size** is greater
+than 1, each element of the array is independently integrated.  If its `rate <Integrator.rate>` parameter is a
+single value,  that rate will be used for integrating each element.  If the `rate <Integrator.rate>` parameter is a
+list or array, then each element will be used as the rate for the corresponding element of the input (in this case,
+`rate <Integrator.rate>` must be the same length as the value specified for **default_input_value** or **size**).
 
 
 .. _IntegratorMechanism_Class_Reference:
@@ -83,7 +85,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     """
     IntegratorMechanism(                            \
     default_input_value=None,                               \
-    function=Integrator(integration_type=ADAPTIVE, rate=0.5), \
+    size=None,                                              \
+    function=AdaptiveIntegrator(rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
@@ -125,6 +128,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         `function <IntegratorMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
         mechanism.
 
+    size : int, list or np.ndarray of ints
+        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
+        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
@@ -135,7 +142,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the mechanism, parameters for its `function <IntegratorMechanism.function>, and/or a custom function and its
+        the mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
         parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -152,21 +159,21 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
     variable : value: default
-        the input to mechanism's ``function``.
+        the input to Mechanism's ``function``.
 
     time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
+        specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default IntegratorMechanism-<index>
-        the name of the mechanism.
-        Specified in the :keyword:**name** argument of the constructor for the mechanism;
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Mechanism;
         if not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
@@ -221,10 +228,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         # self.size = size
 
         super(IntegratorMechanism, self).__init__(variable=default_input_value,
+                                                  size=size,
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  size=size,
                                                   context=self)
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED

@@ -181,7 +181,6 @@ or its **termination_learning** argument to terminate the execution of learning:
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
-
 Examples
 --------
 
@@ -462,7 +461,7 @@ class Scheduler(object):
     def add_condition(self, owner, condition):
         '''
         :param owner: the `Component` that is dependent on the `condition`
-        :param conditions: a `Condition` (including All or Any)
+        :param condition: a `Condition` (including All or Any)
         '''
         self.condition_set.add_condition(owner, condition)
 

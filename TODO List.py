@@ -81,16 +81,21 @@
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
 # 14) IMPLEMENT Model fitting
+# 15) IMPLEMENT Statefulness:  Integrators, ControlSignal.intensity, ?Gating, Learning?
 
 
 # PNL TEAM:
 # =========
+# PRINCIPLE:  Constructors should allow specification/assignment of other Components to which they are related/connected
+#                   which should be able to be interpreted in context (e.g., assignment of projections to States)
 # DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
 # DOCUMENTATION: Revise docstrings for Integrator mechanisms and RecurrentTransferMechanisms
 #                    using formatting template from TransferMechanism and DDM
 #                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
 # DOCUMENTATION: What to call ConventionsAndDefinitions:  Structural Overivew?  Outline?
 #
+# IMPLEMENT: tests for GatingSignal (per Multilayer Learning Test Script [WITH GATING]:
+#            TEST all forms of GatingSignal specification
 # IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
 #            (??multimple inheritance, as RTM as also a TM?)
 #            Integrate <mechanism>.previous_value with stateful and is_finished
@@ -269,19 +274,18 @@
 
 #  DOCUMENTATION: State Specification Dictionaries:
 #                            - general notion, schema and keys common to all states (in State)
-#                                  STATE_PROJECTIONS
-#                                  MODULATORY_PROJECTIONS
+#                                  PROJECTIONS
 #                                  MODULATION_FUNCTION
 #                            - specific ones for each subclass (in subclass pages)
 #                                  InputState:
-#                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
-#                                      GATING [=MODULATORY PROJECTIONS]
+#                                      ??SOURCES [=PROJECTIONS] can be string, mech, or outputState
+#                                      GATING
 #                                  ParameterState:
-#                                      CONTROL [=MODULATORY_PROJECTIONS] can be(string, mech) or ParameterState
-#                                      LEARNING [=MODULATORY PROJECTIONS]
+#                                      CONTROL can be(string, mech) or ParameterState
+#                                      LEARNING
 #                                  OutputState:
-#                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
-#                                      GATING [=MODULATORY PROJECTIONS]
+#                                      DESTINATIONS [=PROJECTIONS] can be string, mech, or inputStae
+#                                      GATING
 #  DOCUMENTATION: weights and exponents args/attributes
 #  DOCUMENTATION: Add mention of `standard_input_states` and `standard_output_states` to Mechanism
 #  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
@@ -1355,6 +1359,7 @@
 # - Fully implement logging
 #    For both of the above:
 #       use @property to determine whether current value should be set to local value, type, category or class default
+#       integrate ControlSignal.intensity with logging
 # - Implement timing
 # - implement **args (per State init)
 # - MAKE SURE _check_args IS CALLED IN execute
@@ -1890,6 +1895,8 @@
 #                 ADAPT THEM TO LogEntry tuple FORMAT
 #     WHEN DONE, SEARCH FOR FIX LOG:
 #
+# FIX: Integrate with ControlSignal.intensity
+
 # DOCUMENTATION: ADD DESCRIPTION OF HOW LOGGING IS TURNED ON AND OFF ONCE THAT IS IMPLEMENTED
 #
 # IMPLEMENT: ORDER OUTPUT ALPHABETICALLY (OR IN SOME OTHER CONSISTENT MANNER)
@@ -2765,7 +2772,7 @@
 #            -> useful for debugging;  confusing to have updates not appear until next trial
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-#                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
+#                       if params = NotImplemented or there is no param[PROJECTIONS]
 #
 # **** IMPLEMENTATION NOTE: ***
 #                 FOR MechainismInputState SET self.value = self.variable of owner
@@ -2776,7 +2783,7 @@
 # - clean up documentation
 #
          # - %%% MOVE TO State
-         #  - MOVE STATE_PROJECTIONS out of STATE_PARAMS:
+         #  - MOVE PROJECTIONS out of STATE_PARAMS:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF STATE_PARAMS IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params

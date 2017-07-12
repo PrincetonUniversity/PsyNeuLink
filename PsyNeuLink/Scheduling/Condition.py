@@ -15,10 +15,10 @@
 Overview
 --------
 
-`Condition <Condition>`\ s are used to specify when `Component <Component>`\ s are allowed to execute.  Conditions
+`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Component
 itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
-Composition (e.g., how many `TIME_STEP`\ s have occurred in the current `TRIAL`), or the state of other
+Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL`), or the state of other
 Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
 `pre-specified Conditions <Condition_Pre_Specified>` that can be parametrized (e.g., how many times a Component should
 be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
@@ -102,7 +102,7 @@ its elements has changed in value more than a specified amount since the previou
                 return False
         return True
     epsilon = 0.01
-    my_scheduler.add_condition(mech_B, NWhen(Condition(converge, mech_A, epsilon), 1))
+    my_scheduler.add_condition(mech_A, NWhen(Condition(converge, mech_B, epsilon), 1))
 
 In the example, a function `converge` is defined that references the `delta <TransferMechanism.delta>` attribute of
 a `TransferMechanism` (which reports the change in its `value <TransferMechanism.value>`). The function is assigned to
@@ -166,7 +166,7 @@ COMMENT
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `True`. \
       Equivalent to `Condition(func, *args, **kwargs)`
 
-    * `Until`\ (func, *args, **kwargs)
+    * `WhileNot`\ (func, *args, **kwargs)
       \
       satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to `False`. \
       Equivalent to `Not(Condition(func, *args, **kwargs))`
@@ -340,9 +340,9 @@ class ConditionSet(object):
 
     scheduler : Scheduler
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
-        evalute the `Conditions <Condition>`
+        evaluate the `Conditions <Condition>`
 
-    conditions : dict{Component: Condition}
+    conditions : dict{`Component`: `Condition`}
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
@@ -351,9 +351,9 @@ class ConditionSet(object):
 
     scheduler : Scheduler
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
-        evalute the `Conditions <Condition>`
+        evaluate the `Conditions <Condition>`
 
-    conditions : dict{Component: Condition}
+    conditions : dict{`Component`: `Condition`}
         the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
         with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
@@ -404,7 +404,7 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : dict{Component: Condition}
+        conditions : dict{`Component`: `Condition`}
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
             each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value).
 
@@ -442,9 +442,8 @@ class Condition(object):
     owner (Component):
         the `Component` with which the Condition is associated, and the execution of which it determines.
 
-        """
-    def __init__(self, dependencies, func, *args, **kwargs):
-        self.dependencies = dependencies
+    """
+    def __init__(self, func, *args, **kwargs):
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -484,16 +483,48 @@ class Condition(object):
         has_kwargs = len(self.kwargs) > 0
 
         if has_args and has_kwargs:
-            return self.func(self.dependencies, *self.args, **self.kwargs)
+            return self.func(*self.args, **self.kwargs)
         if has_args:
-            return self.func(self.dependencies, *self.args)
+            return self.func(*self.args)
         if has_kwargs:
-            return self.func(self.dependencies, **self.kwargs)
-        return self.func(self.dependencies)
+            return self.func(**self.kwargs)
+        return self.func()
 
 #########################################################################################################
 # Included Conditions
 #########################################################################################################
+
+######################################################################
+# Generic Conditions
+#   - convenience wrappers
+######################################################################
+
+
+While = Condition
+
+
+class WhileNot(Condition):
+    """
+    WhileNot
+
+    Parameters:
+
+        func : callable
+            specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.
+
+        args : *args
+            specifies formal arguments to pass to `func` when the Condition is evaluated.
+
+        kwargs : **kwargs
+            specifies keyword arguments to pass to `func` when the Condition is evaluated.
+
+    Satisfied when:
+
+        - **func** is False
+
+    """
+    def __init__(self, func, *args, **kwargs):
+        super().__init__(lambda *args, **kwargs: not func(*args, **kwargs), *args, **kwargs)
 
 ######################################################################
 # Static Conditions
@@ -514,7 +545,7 @@ class Always(Condition):
 
     """
     def __init__(self):
-        super().__init__(True, lambda x: x)
+        super().__init__(lambda: True)
 
 
 class Never(Condition):
@@ -529,7 +560,7 @@ class Never(Condition):
         - never satisfied.
     """
     def __init__(self):
-        super().__init__(False, lambda x: x)
+        super().__init__(lambda: False)
 
 ######################################################################
 # Composite Conditions
@@ -564,23 +595,23 @@ class All(Condition):
 
     """
     def __init__(self, *args):
-        super().__init__(args, self.satis)
+        super().__init__(self.satis, *args)
 
     @Condition.scheduler.setter
     def scheduler(self, value):
-        for cond in self.dependencies:
+        for cond in self.args:
             logger.debug('schedule setter: Setting scheduler of {0} to ({1})'.format(cond, value))
             if cond.scheduler is None:
                 cond.scheduler = value
 
     @Condition.owner.setter
     def owner(self, value):
-        for cond in self.dependencies:
+        for cond in self.args:
             logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
             if cond.owner is None:
                 cond.owner = value
 
-    def satis(self, conds):
+    def satis(self, *conds):
         for cond in conds:
             if not cond.is_satisfied():
                 return False
@@ -610,24 +641,24 @@ class Any(Condition):
 
     """
     def __init__(self, *args):
-        super().__init__(args, self.satis)
+        super().__init__(self.satis, *args)
 
     @Condition.scheduler.setter
     def scheduler(self, value):
-        logger.debug('Any setter args: {0}'.format(self.dependencies))
-        for cond in self.dependencies:
+        logger.debug('Any setter args: {0}'.format(self.args))
+        for cond in self.args:
             logger.debug('schedule setter: Setting scheduler of {0} to ({1})'.format(cond, value))
             if cond.scheduler is None:
                 cond.scheduler = value
 
     @Condition.owner.setter
     def owner(self, value):
-        for cond in self.dependencies:
+        for cond in self.args:
             logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
             if cond.owner is None:
                 cond.owner = value
 
-    def satis(self, conds):
+    def satis(self, *conds):
         for cond in conds:
             if cond.is_satisfied():
                 return True
@@ -643,19 +674,55 @@ class Not(Condition):
 
     Satisfied when:
 
-        - the Condition is not satisfied.
+        - **condition** is not satisfied.
 
     """
     def __init__(self, condition):
-        super().__init__(condition, lambda c: not c.is_satisfied())
+        super().__init__(lambda c: not c.is_satisfied(), condition)
 
     @Condition.scheduler.setter
     def scheduler(self, value):
-        self.dependencies.scheduler = value
+        self.args[0].scheduler = value
 
     @Condition.owner.setter
     def owner(self, value):
-        self.dependencies.owner = value
+        self.args[0].owner = value
+
+
+class NWhen(Condition):
+    """NWhen
+
+    Parameters:
+
+        condition(Condition): a `Condition`
+
+        n(int): the maximum number of times this condition will be satisfied
+
+    Satisfied when:
+
+        - the first **n** times **condition** is satisfied upon evaluation
+
+    """
+    def __init__(self, condition, n=1):
+        self.satisfactions = 0
+
+        super().__init__(self.satis, condition, n)
+
+    @Condition.scheduler.setter
+    def scheduler(self, value):
+        self.args[0].scheduler = value
+
+    @Condition.owner.setter
+    def owner(self, value):
+        self.args[0].owner = value
+
+    def satis(self, condition, n):
+        if self.satisfactions < n:
+            if condition.is_satisfied():
+                self.satisfactions += 1
+                return True
+        return False
+
 
 ######################################################################
 # Time-based Conditions
@@ -688,7 +755,7 @@ class BeforePass(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] < n
-        super().__init__(n, func, time_scale)
+        super().__init__(func, n, time_scale)
 
 
 class AtPass(Condition):
@@ -721,7 +788,7 @@ class AtPass(Condition):
             except KeyError as e:
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
                                      format(type(self).__name__, e, time_scale))
-        super().__init__(n, func)
+        super().__init__(func, n)
 
 
 class AfterPass(Condition):
@@ -749,7 +816,7 @@ class AfterPass(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] > n
-        super().__init__(n, func, time_scale)
+        super().__init__(func, n, time_scale)
 
 
 class AfterNPasses(Condition):
@@ -773,7 +840,7 @@ class AfterNPasses(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] >= n
-        super().__init__(n, func, time_scale)
+        super().__init__(func, n, time_scale)
 
 
 class EveryNPasses(Condition):
@@ -799,7 +866,7 @@ class EveryNPasses(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.PASS] % n == 0
-        super().__init__(n, func, time_scale)
+        super().__init__(func, n, time_scale)
 
 
 class BeforeTrial(Condition):
@@ -831,7 +898,7 @@ class BeforeTrial(Condition):
             except KeyError as e:
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
                                      format(type(self).__name__, e, time_scale))
-        super().__init__(n, func)
+        super().__init__(func, n)
 
 
 class AtTrial(Condition):
@@ -863,7 +930,7 @@ class AtTrial(Condition):
             except KeyError as e:
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
                                      format(type(self).__name__, e, time_scale))
-        super().__init__(n, func)
+        super().__init__(func, n)
 
 
 class AfterTrial(Condition):
@@ -896,7 +963,7 @@ class AfterTrial(Condition):
             except KeyError as e:
                 raise ConditionError('{0}: {1}, is time_scale set correctly? Currently: {2}'.
                                      format(type(self).__name__, e, time_scale))
-        super().__init__(n, func)
+        super().__init__(func, n)
 
 
 class AfterNTrials(Condition):
@@ -919,7 +986,7 @@ class AfterNTrials(Condition):
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
             return self.scheduler.times[time_scale][TimeScale.TRIAL] >= n
-        super().__init__(n, func, time_scale)
+        super().__init__(func, n, time_scale)
 
 ######################################################################
 # Component-based Conditions
@@ -953,7 +1020,7 @@ class BeforeNCalls(Condition):
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls < n
-        super().__init__(dependency, func, n)
+        super().__init__(func, dependency, n)
 
 # NOTE:
 # The behavior of AtNCalls is not desired (i.e. depending on the order mechanisms are checked, B running AtNCalls(A, x))
@@ -988,7 +1055,7 @@ class AtNCalls(Condition):
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls == n
-        super().__init__(dependency, func, n)
+        super().__init__(func, dependency, n)
 
 
 class AfterCall(Condition):
@@ -1017,7 +1084,7 @@ class AfterCall(Condition):
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls > n
-        super().__init__(dependency, func, n)
+        super().__init__(func, dependency, n)
 
 
 class AfterNCalls(Condition):
@@ -1046,7 +1113,7 @@ class AfterNCalls(Condition):
             num_calls = self.scheduler.counts_total[time_scale][dependency]
             logger.debug('{0} has reached {1} num_calls in {2}'.format(dependency, num_calls, time_scale.name))
             return num_calls >= n
-        super().__init__(dependency, func, n)
+        super().__init__(func, dependency, n)
 
 
 class AfterNCallsCombined(Condition):
@@ -1072,7 +1139,7 @@ class AfterNCallsCombined(Condition):
     def __init__(self, *dependencies, n=None, time_scale=TimeScale.TRIAL):
         logger.debug('{0} args: deps {1}, n {2}, ts {3}'.format(type(self).__name__, dependencies, n, time_scale))
 
-        def func(_none, *dependencies, n=None):
+        def func(*dependencies, n=None):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
@@ -1084,7 +1151,7 @@ class AfterNCallsCombined(Condition):
                 logger.debug('{0} has reached {1} num_calls in {2}'.
                              format(d, self.scheduler.counts_total[time_scale][d], time_scale.name))
             return count_sum >= n
-        super().__init__(None, func, *dependencies, n=n)
+        super().__init__(func, *dependencies, n=n)
 
 
 class EveryNCalls(Condition):
@@ -1130,7 +1197,7 @@ class EveryNCalls(Condition):
             num_calls = self.scheduler.counts_useable[dependency][self.owner]
             logger.debug('{0} has reached {1} num_calls'.format(dependency, num_calls))
             return num_calls >= n
-        super().__init__(dependency, func, n)
+        super().__init__(func, dependency, n)
 
 
 class JustRan(Condition):
@@ -1161,7 +1228,7 @@ class JustRan(Condition):
                 return dependency in self.scheduler.execution_list[-1]
             except TypeError:
                 return dependency == self.scheduler.execution_list[-1]
-        super().__init__(dependency, func)
+        super().__init__(func, dependency)
 
 
 class AllHaveRun(Condition):
@@ -1181,7 +1248,7 @@ class AllHaveRun(Condition):
 
     """
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
-        def func(_none, *dependencies):
+        def func(*dependencies):
             if self.scheduler is None:
                 raise ConditionError('{0}: self.scheduler is None - scheduler must be assigned'.
                                      format(type(self).__name__))
@@ -1191,7 +1258,7 @@ class AllHaveRun(Condition):
                 if self.scheduler.counts_total[time_scale][d] < 1:
                     return False
             return True
-        super().__init__(None, func, *dependencies)
+        super().__init__(func, *dependencies)
 
 
 class WhenFinished(Condition):
@@ -1220,7 +1287,7 @@ class WhenFinished(Condition):
                 raise ConditionError('WhenFinished: Unsupported dependency type: {0}; ({1})'.
                                      format(type(dependency), e))
 
-        super().__init__(dependency, func)
+        super().__init__(func, dependency)
 
 
 class WhenFinishedAny(Condition):
@@ -1246,7 +1313,7 @@ class WhenFinishedAny(Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(_none, *dependencies):
+        def func(*dependencies):
             if len(dependencies) == 0:
                 dependencies = self.scheduler.nodes
             for d in dependencies:
@@ -1257,7 +1324,7 @@ class WhenFinishedAny(Condition):
                     raise ConditionError('WhenFinishedAny: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
             return False
 
-        super().__init__(None, func, *dependencies)
+        super().__init__(func, *dependencies)
 
 
 class WhenFinishedAll(Condition):
@@ -1283,7 +1350,7 @@ class WhenFinishedAll(Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(_none, *dependencies):
+        def func(*dependencies):
             if len(dependencies) == 0:
                 dependencies = self.scheduler.nodes
             for d in dependencies:
@@ -1294,4 +1361,4 @@ class WhenFinishedAll(Condition):
                     raise ConditionError('WhenFinishedAll: Unsupported dependency type: {0}; ({1})'.format(type(d), e))
             return True
 
-        super().__init__(None, func, *dependencies)
+        super().__init__(func, *dependencies)

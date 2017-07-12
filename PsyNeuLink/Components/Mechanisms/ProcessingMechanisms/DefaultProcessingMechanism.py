@@ -58,12 +58,14 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     @tc.typecheck
     def __init__(self,
                  default_input_value=None,
+                 size=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
         """Add Linear as default function, assign default name, and call super.__init__
 
         :param default_input_value: (value)
+        :param size: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
         :param prefs: (PreferenceSet)
@@ -72,6 +74,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         params = self._assign_args_to_param_dicts(params=params)
 
         super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
+                                                              size=size,
                                                               params=params,
                                                               name=name,
                                                               prefs=prefs,
