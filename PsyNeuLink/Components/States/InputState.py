@@ -31,65 +31,70 @@ Creating an InputState
 
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the :ref:`pathway of a Process <Process_Pathway>`, its InputState will be created and assigned as
-the ``receiver`` of a MappingProjection from the  preceding Mechanism in the pathway.
+being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned as
+the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
+`pathway <Process.pathway>`.
 
-An InputState must be owned by a Mechanism. Therefore, if the InputState is created directly, its Mechanism
-must be specified in the ``owner`` argument of its constructor; if the InputState is specified in the
-INPUT_STATES entry of the parameter dictionary for a Mechanism, then the owner is inferred from the context.
+An InputState must be owned by a `Mechanism`.  If the InputState is created directly, its `owner <InputState.owner>`
+can specified in the **owner** argument of its constructor; otherwise, its initialization will be
+`deferred <State_Deferred_Initialization>` until it is `assigned to an owner <>`.  If the InputState is specified in
+the constructor for a `Mechanism` (see `below <InputState_Specification>`), or in its
+`add_states <Mechanism.add_states>` method, then the `owner <InputState.owner>` is inferred from context and assigned
+automatically.
 
 .. _InputState_Specification
 
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom input_states need to be specified when a Mechanism is created,
-# or added to an existing Mechanism,
-they can be specified in an entry of the Mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
-and a value that specifies one or more input_states. For a single InputState, the value can be any of the
-specifications in the the list below.  To create multiple input_states, the value of the INPUT_STATES entry
-can be either a list, each item of which can be any of the specifications below;  or, it can be an dictionary,
-in which the key for each entry is a string specifying the name for the InputState to be created, and its value is
-one of the specifications below:
+If one or more custom InputStates need to be specified when a Mechanism is created, they can be specified in the
+**input_states** argument of the Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter dictionary
+assigned to the constructor's **params** argument.  For a single InputState, the value can be any of the
+specifications listed below.  To create multiple InputStates, the value can be either a list, each item of which can be
+any of the specifications below;  or, it can be an dictionary, in which the key for each entry is a string specifying
+the name for the InputState to be created, and its value is one of the specifications below:
 
-    * An existing **InputState** object or the name of one.  Its ``value`` must be compatible with the item of the
-      owner Mechanism's :py:data:`variable <Component.variable>` to which it will be assigned.
+    * An existing **InputState object** or the name of one.  Its `value <InputState.value>` must be compatible with
+      the item of the owner Mechanism's `variable <Mechanism.variable>` to which it will be assigned.
     ..
-    * The :class:`InputState` **class** or a string.  This creates a default InputState using the the first item of
-      the owner Mechanism's ``variable`` as the InputState's :py:data:`variable <InputState.variable>`.
-      If INPUT_STATE is used, a default name is assigned to the State;  if a string is, it is assigned as
-      the name of the InputState (see :ref:`naming conventions <LINK>`).
+    * The **InputState class**, the keyword *INPUT_STATE*, or a string.  This creates a default InputState using the
+      first item of the owner Mechanism's `variable <Mechanism.variable>` as the InputState's
+      `variable <InputState.variable>`. If *INPUT_STATE* is used, a default name is assigned to the State;  if a
+      string is used, it is assigned as the name of the InputState (see :ref:`naming conventions <LINK>`).
     ..
-    * A **value**.  This creates a default InputState using the specified value as InputState's ``variable``.
-      This must be compatible with the item of the owner Mechanism's ``variable`` to which the InputState is assigned.
+    * A **value**.  This creates a default InputState using the specified value as InputState's
+      `variable <InputState.variable>`. This must be compatible with the item of the owner Mechanism's
+      `variable <Mechanism.variable>`.
     ..
     * A **Projection subclass**. This creates a default InputState using the first item of the owner Mechanism's
-      ``variable`` as the InputState's :py:data:`variable <InputState.variable>`, and a Projection of the specified
-      type to the InputState using its ``variable`` as the template for the Projection's ``value``.
+      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection` of the
+      specified type to the InputState using its `variable <InputState.variable>` as the template for the Projection's
+      `value <Projection.value>`.
     ..
 
        CONFIRM THAT THIS IS TRUE:
     * A **Projection object**.  This creates a default InputState using the first item of the owner Mechanism's
-    ``variable`` as the template for the InputState's ``variable``, and assigns the State as the Projection's
-    ``receiver``. The Projection's ``value`` must be compatible with the InputState's ``variable``.
+      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`, and assigns the State as
+      the `Projection's <Projection>` `receiver <Projection.receiver>`. The Projection's `value <Projection.value>`
+      must be compatible with the InputState's `variable <InputState.variable>`.
     ..
     * A **specification dictionary**.  This creates the specified InputState using the first item of the owner
-      Mechanism's ``variable`` as the InputState's :py:data:`variable <InputState.variable>`.  In addition to the
-      standard entries of a :ref:`params <LINK>` dictionary, the dictionary can have a PROJECTIONS
-      entry, the value of which can be a Projection,
-      :ref:`Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing
-      items that are either of those.
+      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
+      standard entries of a `state specification dictionary <LINK>`, the dictionary can have a *PROJECTIONS*
+      entry, the value of which can be a `Projection`, a
+      `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
+      are either of those.
     ..
-    * A **2-item tuple**.  This creates a default InputState using the first (value) item as its
-      :keyword:`variable`, and assigns the State as the :keyword:`receiver` of the 2nd (Projection) item.
+    * A **2-item tuple**.  The first item must be a value, and the second a `Projection` specification.
+      This creates a default InputState using the first item as the InputState's `variable <InputState.variable>`,
+      and assigns the State as the `receiver <Projection.receiver>` of the Projection specified in the second item.
 
     .. note::
-       In all cases, the resulting ``value`` of the InputState must be compatible with (that is, have the same number
-       and type of elements as) the item of its :ref:`owner Mechanism's variable <Mechanism_Variable>` to which it is
-       assigned. This is insured by the default ``function`` (:any:`LinearCombination`), since this preserves the
-       format of its input;  it must also be true for any other function that is assigned as the ``function`` for an
-       InputState.
-COMMENT
+       In all cases, the resulting `value <InputState.value>` of the InputState must be compatible with (that is,
+       have the same number and type of elements as) the item of its owner Mechanism's `variable <Mechanism_Variable>`.
+       This is insured by the default `function <InputState.function>` (`LinearCombination`), since this preserves
+       the format of its input;  it must also be true for any other function that is assigned as the
+       `function <InputState.function>` for an InputState.
 
 COMMENT:
    CHECK THIS:
@@ -101,22 +106,30 @@ COMMENT:
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
 COMMENT
 
-COMMENT:
-Assigning input_states using the INPUT_STATES entry of a Mechanism's parameter dictionary adds them to any
-that are automatically generated for that Mechanism;  if the name of one explicitly specified is the same as one
-automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
-the one automatically generated). InputStates can also be added by using the
-:py:func:`assign_output_state <OutputState.assign_output_state>`. If the Mechanism requires multiple input_states
-(i.e., it's ``variable`` attribute has more than on item), it assigns the ``value`` of each InputState to an item of
-its ``variable`` (see :ref:`Mechanism Variable <Mechanism_Variable>`). Therefore, the number of input_states
-specified must equal the number of items in the Mechanisms's ``variable``.  An exception is if the Mechanism's
-``variable`` has more than one item, it may still be assigned a single InputState;  in that case, the ``value`` of
-that InputState must have the same number of items as the  Mechanisms's ``variable``.  For cases in which there are
-multiple input_states, the order in which they are specified in the list or OrderedDict must parallel the order of
-the items to which they will be assigned in the Mechanism's ``variable``; furthermore, as noted above, the ``value`` for
-each InputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
-COMMENT
+.. note::
+   Assigning InputStates to a Mechanism in its constructor (see `above <InputState_Specification>`) **replaces** any
+   that are automatically generated for that Mechanism (i.e., those created by default).  If any of those are needed,
+   they must be *expliclity specified* in the list provided in the **input_states** argument of the constructor,
+   or the *INPUT_STATES* entry of the parameter dictionary assigned to its **params** argument).  This is **not**
+   true if the Mechanism's `add_states <Mechanism.add_states>` method is used;  those are added to any InputStates
+   that already belong to the Mechanism.
 
+.. _InputStates_and_Mechanism_Variable:
+
+Multiple InputStates and a Mechanism's `variable <Mechanism.variable>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If a Mechanism requires multiple InputStates (i.e., it's
+`variable <InputState.variable>` attribute has more than on item), it assigns the `value <InputState.value>` of each
+InputState to an item of its `variable <Mechanism.variable>` (see `Mechanism Variable <Mechanism_Variable>`).
+Therefore, the number of InputStates specified must equal the number of items in the Mechanisms's
+`variable <Mechanism.variable>`, with one exception:  If the Mechanism's `variable <Mechanism.variable>` has more
+than one item, it may still be assigned a single InputState;  in that case, the `value <InputState.value>` of
+that InputState must have the same number of items as the  Mechanisms's `variable <Mechanism.variable>`.  For
+Mechanism that have multiple InputStates, the order in which they are specified in Mechanism's constructor must parallel
+the order of the items to which they will be assigned in the Mechanism's `variable <Mechanism.variable>`; furthermore,
+as noted above, the `value <InputState.value>` for each InputState must match (in number and types of elements) the
+item of `variable <Mechanism.variable>` to which it will be assigned.
 
 .. _InputState_Projections:
 
@@ -138,25 +151,29 @@ Structure
 
 Every InputState is owned by a `Mechanism <Mechanism>`. It can receive one or more
 `MappingProjections <MappingProjection>` from other Mechanisms, as well as from the Process or System to which its
-owner belongs (if it is the `ORIGIN` Mechanism for that Process or System).  The Projections received by an
-InputState are listed in its `path_afferents <InputState.path_afferents>` attribute.
+owner belongs (if it is the `ORIGIN` Mechanism for that Process or System).  The MappingProjections received by an
+InputState are listed in its `path_afferents <InputState.path_afferents>` attribute.  An InputState can also receive
+one or more `GatingProjections <GatingProjection>` and that regulate its value (see the descriptions of Modulation
+under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <GatingSignal_Modulation>` for additional
+details). The GatingProjections received by an InputState are listed in its `mod_afferents <InputState.mod_afferents>`
+attribute.
 
-Like all PsyNeuLink components, an InputState has the three following core attributes:
+Like all PsyNeuLink components, an InputState also has the three following core attributes:
 
-* `variable <InputState.variable>`:  this serves as a template for the :keyword:`value` of each Projection that the
-  InputState receives: each must match both the number and type of elements of the InputState's
+* `variable <InputState.variable>`:  this serves as a template for the `value <Projection.value>` of each Projection
+  that the InputState receives: each must match both the number and type of elements of the InputState's
   `variable <InputState.variable>`.
 ..
 * `function <InputState.function>`:  this performs an elementwise (Hadamard) aggregation  of the
-  :keyword:`value` of all of the Projections received by the InputState, and assigns the result to the InputState's
-  `value <InputState.value>` attribute.  The default function is `LinearCombination` that sums the values.  A custom
-  function can be specified (e.g., to perform a Hadamard product, or to handle non-numeric values in some way), so long
-  as it generates a result that is compatible with the format of the `value <InputState.value>` of the InputState
-  expected by its owner Mechanism's `variable <Mechanism.Mechanism_Base.variable>`.
+  `value <Projection.value>` of all of the `Projections <Projeciton>` received by the InputState, and assigns the
+  result to the InputState's `value <InputState.value>` attribute.  The default function is `LinearCombination` that
+  sums the values.  A custom function can be specified, so long as it generates a result that is compatible with the
+  format of the `value <InputState.value>` of the InputState expected by its owner Mechanism's
+  `variable <Mechanism.Mechanism_Base.variable>`.
 ..
-* `value <InputState.value>`:  this is the aggregated value of the Projections received by the InputState, assigned to
-  it by the InputState's `function <InputState.function>`.  It must be compatible with item of the owner Mechanism's
-  `variable <Mechanism.Mechanism_Base.variable>` to which the InputState has been assigned.
+* `value <InputState.value>`:  this is the aggregated value of the `Projections <Projection>` received by the
+  InputState, assigned to it by the InputState's `function <InputState.function>`.  It must be compatible with item
+  of the owner Mechanism's `variable <Mechanism.Mechanism_Base.variable>` to which the InputState has been assigned.
 
 Execution
 ---------
@@ -259,8 +276,13 @@ class InputState(State_Base):
         specifies the template for the InputState's `variable <InputState.variable>` attribute.
 
     function : Function or method : default LinearCombination(operation=SUM)
-        specifies the function used to aggregate the values of the Projections received by the InputState.
-        It must produce a result that has the same format (number and type of elements) as its input.
+        specifies the function used to aggregate the `values <Projection.value>` of the `Projections <Projection>`
+        received by the InputState.  It must produce a result that has the same format (number and type of elements)
+        as the item of its owern Mechanism's `variable <Mechanism.variable>` to which the InputState has been assigned.
+
+    projections : list of Projection specifications
+        species the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
+        received by the InputState (see `InputState_Projections` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for

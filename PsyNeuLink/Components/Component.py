@@ -24,9 +24,21 @@ It defines a common set of attributes possessed, and methods used by all Compone
 Creating a Component
 --------------------
 
-A Component is never created directly.  However, its ``__init__()`` method is always called when a subclass is instantiated;
-that, in turn, calls a standard set of methods (listed `below <Component_Methods>`) as part of the initialization
-procedure.
+A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
+method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
+(listed `below <Component_Methods>`) as part of the initialization procedure.
+
+.. _Component_Deferred_Init:
+
+If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
+`State <State.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its full
+initialization is deferred until its the information is available (e.g., the `State` is assigned to a `Mechanism`, or
+a `Projection` is assigned its `sender <Projection.sender>` and `receiver <Projection.receiver>`).  This allows
+Components to be created before all of the information they require is available (e.g., at the beginning of a script).
+However, for the Component to be operational, initialization must be completed its `deferred_init` method must be
+called.  This is usually done automatically when the Component is assigned to another Component to which it belongs
+(e.g., assigning a State to a Mechanism) or to a Composition (e.g., a Projection to the `pathway <Process.pahtway>`)
+of a `Process`), as appropriate.
 
 .. _Component_Structure:
 

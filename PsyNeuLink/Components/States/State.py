@@ -52,10 +52,10 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, or by specifying the State in the constructor for the object
-to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
-in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`;
-and a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
+automatically by the objects to which they belong (their `owner <State_Owner>`), or by specifying the State in the
+constructor for its owner.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
+in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`; and a
+`ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
 where its parameters are specified.  A State can be specified in those cases in any of the following forms:
 
     * an existing **State** object;
@@ -88,6 +88,16 @@ where its parameters are specified.  A State can be specified in those cases in 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
+
+COMMENT:
+
+.. _State_Deferred_Initialization:
+
+If a State is created on its own, and its `owner <State_Owner>` is not specified, then its initialization will be
+`deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically when it is assigned
+to a owner (`Mechanism` or `Projection`) using that Component's `add_states` method.  If it is not assigned to an
+owner, it will not be functional (i.e., used during execution of `Mechanism <Mechansim_Execution>` or
+`Composition <Composition_Execution>`, irrespective of whether it has any Projections assigned to it.
 
 .. _State_Projections:
 
@@ -123,28 +133,23 @@ Projections must be specified in a list.  Each entry must be either a specificat
 in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
 Mechanism. If a Mechanism is specified, its primary InputState or OutputState  is used, as appropriate.  When a
 sender or receiver is used to specify the Projection, the type of Projection created is inferred from the State and
-the type of sender or receiver specified, as illustrated in the examples below:
+the type of sender or receiver specified, as illustrated in the examples below.  Note that the State must be
+`assigned to an owner <State_Deferred_Initialization>` in order to be functional, irrespective of whether any
+`Projections <Projection>` have been assigned to it.
 
-COMMENT:
-TBI
-The following creates an InputState ``my_input_state`` for a Mechanism ``mech_A``, and a `MappingProjection` to it from
-another Mechanism ``mech_B``::
+The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
+`primary OutputState <OutputState_Primary>` of ``mech_A``::
 
-    my_input_state = InputState(owner=mech_A,
-                                projections=[mech_B])
-COMMENT
+    my_input_state = InputState(projections=[mech_A])
 
-The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_C`` and ``mech_D``,
+The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
 and assigns it to a ``my_gating_mech``::
 
-    my_gating_signal = GatingSignal(projections=[mech_C, mech_D])
+    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
     my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
 
-The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_C`` and ``mech_D``.
+The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_B`` and ``mech_C``.
 
-
-COMMENT:
-*** EXAMPLES HERE
 COMMENT
 
 .. _State_Structure:
@@ -152,8 +157,23 @@ COMMENT
 Structure
 ---------
 
-Every State is owned by either a `Mechanism <Mechanism>` or a `Projection <Projection>`. Like all PsyNeuLink
-components, a State has the three following core attributes:
+.. _State_Owner:
+
+Owner
+~~~~~
+
+Every State has an `owner <State.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the owner
+must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.  For
+`ModulatorySignals`, it must be an `AdaptiveMechanism`.  When a State is created as part of another Component, its
+`owner <State.owner>` is assigned automatically to that Component.  It is also assigned automatically when the State
+is assigned to a Component using that Component's `add_states` method.  Otherwise, it must be specified explicitly
+in the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be
+`deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
+
+Variable, Function and Value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
     * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
@@ -402,7 +422,7 @@ class State_Base(State):
     ----------
 
     owner : Mechanism or Projection
-        object to which the State belongs.
+        object to which the State belongs (see `State_Owner` for additional details).
 
     base_value : number, list or np.ndarray
         value with which the State was initialized.
@@ -817,6 +837,7 @@ class State_Base(State):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -915,6 +936,12 @@ class State_Base(State):
             # - default projection itself will be created below
             elif isinstance(projection_spec, Mechanism):
                 _check_projection_sender_compatability(self, default_projection_type, type(projection_spec))
+                # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
+                # (for ModulatoryProjections, don't assign sender, which will defer initialization)
+                # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
+                #     import ProcessingMechanism_Base
+                if isinstance(projection_spec, ProcessingMechanism_Base):
+                    sender = projection_spec.output_state
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -2115,8 +2142,10 @@ def _check_projection_sender_compatability(owner, projection_type, sender_type):
     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
-    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, OutputState):
+    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, (OutputState,
+                                                                                   ProcessingMechanism_Base)):
         return
     if issubclass(projection_type, LearningProjection) and issubclass(sender_type, LearningSignal):
         return
