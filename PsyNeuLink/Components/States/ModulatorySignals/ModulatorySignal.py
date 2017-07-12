@@ -303,30 +303,34 @@ class ModulatorySignal(OutputState):
                  prefs,
                  context):
 
+        # Deferred initialization
         try:
             if self.value in {DEFERRED_INITIALIZATION, INITIALIZING}:
-                # If init was deferred, it may have been because owner was not yet known (see below),
+                # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
                 #   and so modulation hasn't had a chance to be assigned to the owner's value
-                #   (i.e., if it was not specified in the constructor), so do so here;
+                #   (i.e., if it was not specified in the constructor), so do it now;
                 #   however modulation has already been assigned to params, so need to assign it there
                 params[MODULATION] = self.modulation or owner.modulation
 
+        # Standard initialization
         except AttributeError:
             # Assign args to params and functionParams dicts (kwConstants must == arg names)
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
 
-            # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-            if owner is None or reference_value is None:
-                # Store args for deferred initialization
-                self.init_args = locals().copy()
-                self.init_args['context'] = self
-                self.init_args['name'] = name
-                self.init_args['projections'] = projections
-
-                # Flag for deferred initialization
-                self.value = DEFERRED_INITIALIZATION
-                return
+            # # MODIFIED 7/12/17 OLD:
+            # # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+            # if owner is None or reference_value is None:
+            #     # Store args for deferred initialization
+            #     self.init_args = locals().copy()
+            #     self.init_args['context'] = self
+            #     self.init_args['name'] = name
+            #     self.init_args['projections'] = projections
+            #
+            #     # Flag for deferred initialization
+            #     self.value = DEFERRED_INITIALIZATION
+            #     return
+            # # MODIFIED 7/12/17 END:
 
         super().__init__(owner,
                          reference_value,

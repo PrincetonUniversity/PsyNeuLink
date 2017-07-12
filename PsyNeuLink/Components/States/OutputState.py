@@ -534,6 +534,20 @@ class OutputState(State_Base):
                                                   function=function,
                                                   params=params)
 
+        # MODIFIED 7/12/17 NEW:
+        # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
+        if owner is None or reference_value is None:
+            # Store args for deferred initialization
+            self.init_args = locals().copy()
+            self.init_args['context'] = self
+            self.init_args['name'] = name
+            self.init_args['projections'] = projections
+
+            # Flag for deferred initialization
+            self.value = DEFERRED_INITIALIZATION
+            return
+        # MODIFIED 7/12/17 END:
+
         self.reference_value = reference_value
 
         # FIX: 5/26/16
