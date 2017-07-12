@@ -25,6 +25,13 @@ Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
                         default_input_value = [0,0,0])
 
+from PsyNeuLink.Components.States.InputState import InputState
+
+# my_input_state = InputState(owner=Output_Layer,
+#                             projections=Input_Layer.output_states[RESULT]
+#                             )
+
+
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
                                 projections=Hidden_Layer_2)
                                 # params={PROJECTIONS:Hidden_Layer_2})

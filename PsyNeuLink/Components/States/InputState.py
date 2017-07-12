@@ -29,14 +29,6 @@ for additional details about the role of input_states in Mechanisms).
 Creating an InputState
 ----------------------
 
-InputStates are created automatically when a Mechanism is created.  For example, if a Mechanism is created within
-the `pathway` of a `Process`, the InputState for that Mechanism will be created and assigned as the
-`receiver <MappingProjection.MappingProjection.receiver>` of a `MappingProjection` from the  preceding Mechanism in the
-pathway;  and a `ControlMechanism <ControlMechanism>` automatically creates an InputState for each Mechanism that it
-monitors. PsyNeuLink does not currently support the explicit creation of input_states (this may be implemented in the
-future). However they can modified as described below.
-
-COMMENT:
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
 being created within the :ref:`pathway of a Process <Process_Pathway>`, its InputState will be created and assigned as
@@ -51,11 +43,12 @@ INPUT_STATES entry of the parameter dictionary for a Mechanism, then the owner i
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom input_states need to be specified when a Mechanism is created, or added to an existing Mechanism,
+If one or more custom input_states need to be specified when a Mechanism is created,
+# or added to an existing Mechanism,
 they can be specified in an entry of the Mechanism's parameter dictionary, using the key :keyword`INPUT_STATES`
 and a value that specifies one or more input_states. For a single InputState, the value can be any of the
 specifications in the the list below.  To create multiple input_states, the value of the INPUT_STATES entry
-can be either a list, each item of which can be any of the specifications below;  or, it can be an OrderedDict,
+can be either a list, each item of which can be any of the specifications below;  or, it can be an dictionary,
 in which the key for each entry is a string specifying the name for the InputState to be created, and its value is
 one of the specifications below:
 
@@ -110,7 +103,7 @@ COMMENT
 
 COMMENT:
 Assigning input_states using the INPUT_STATES entry of a Mechanism's parameter dictionary adds them to any
-that are automatically generated for that Mechanism;  if the name of one explicitly specified is them same as one
+that are automatically generated for that Mechanism;  if the name of one explicitly specified is the same as one
 automatically generated, the name will be suffixed with a numerical index and added (that is, it will *not* replace
 the one automatically generated). InputStates can also be added by using the
 :py:func:`assign_output_state <OutputState.assign_output_state>`. If the Mechanism requires multiple input_states
@@ -123,6 +116,20 @@ multiple input_states, the order in which they are specified in the list or Orde
 the items to which they will be assigned in the Mechanism's ``variable``; furthermore, as noted above, the ``value`` for
 each InputState must match (in number and types of elements) the item of ``variable`` to which it will be assigned.
 COMMENT
+
+
+.. _InputState_Projections:
+
+Projections
+~~~~~~~~~~~
+
+When an InputState is created, it can be assigned one or more `Projections <Projection>`, using either the
+**projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
+the key *PROJECTIONS*.  An InputState can be assigned either `MappingProjection(s) <MappingProjection>` or
+`GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `pathway_afferents` attribute
+and GatingProjections to its `mod_afferents` attribute.  See `State_Projections` for additional details concerning
+the specification of Projections when creating a State.
+
 
 .. _InputState_Structure:
 

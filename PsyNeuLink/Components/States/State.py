@@ -37,8 +37,8 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
     OutputState can be modulated by a `GatingSignal`.
 
 * `ModulatorySignal`:
-    used by an `AdaptiveMechanism` to modulate the value of the primary types of States listed above.
-    There are three types of ModulatorySignals:
+    a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
+    types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
     * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
@@ -96,8 +96,7 @@ Projections
 
 When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
 argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with the key
-*PROJECTIONS*. In both cases, the Projections must be specified in a list. The following of types of Projections can be
-specified for each type of State:
+*PROJECTIONS*. The following of types of Projections can be specified for each type of State:
 
     * `InputState`
         • `PathwayProjection(s) <PathwayProjection>`
@@ -118,6 +117,30 @@ specified for each type of State:
     * `ModulatorySignal`
         • `ModulatoryProjection(s) <ModulatoryProjection>`
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
+
+Projections must be specified in a list.  Each entry must be either a specification for a `projection
+<Projection_In_Context_Specification>`, or by a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
+in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
+Mechanism. If a Mechanism is specified, its primary InputState or OutputState  is used, as appropriate.  When a
+sender or receiver is used to specify the Projection, the type of Projection created is inferred from the State and
+the type of sender or receiver specified, as illustrated in the examples below:
+
+COMMENT:
+TBI
+The following creates an InputState ``my_input_state`` for a Mechanism ``mech_A``, and a `MappingProjection` to it from
+another Mechanism ``mech_B``::
+
+    my_input_state = InputState(owner=mech_A,
+                                projections=[mech_B])
+COMMENT
+
+The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_C`` and ``mech_D``,
+and assigns it to a ``my_gating_mech``::
+
+    my_gating_signal = GatingSignal(projections=[mech_C, mech_D])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_C`` and ``mech_D``.
 
 
 COMMENT:
