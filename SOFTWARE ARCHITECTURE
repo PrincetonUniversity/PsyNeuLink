@@ -821,5 +821,5 @@ In terms of software architecture, this is done by having the Mechanism (2D vari
 
 Note that size is a property, NOT an internally stored attribute or parameter. After initialization of an object is complete, users aren’t allowed to change its size. Size is not stored, so when a user ‘gets’ the size of a Component, the size is dynamically calculated based on the Component’s variable.
 
-Known bug: size may fail if you try to use inputs that are matrices, or other unorthodox values. This is due to a BAD reliance on the np.at_least2d function. Needs to be fixed, and fixing this would also make it easier to override the _handle_size function.
+Known bug: size may fail if you try to use inputs that are matrices, or other unorthodox values. Needs to be fixed, and fixing this might also make it easier to override the _handle_size function.
 Debugging tip: If your program faces bugs related to dimensionality, _handle_size may be a likely culprit because _handle_size() messes with the dimensionality of ‘variable’.
