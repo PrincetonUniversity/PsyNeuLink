@@ -26,6 +26,12 @@ TransferMechanism Functions:
 
 Integrator Functions:
   * `Integrator`
+  * `SimpleIntegrator`
+  * `ConstantIntegrator`
+  * `AdaptiveIntegrator`
+  * `DriftDiffusionIntegrator`
+  * `OrnsteinUhlenbeckIntegrator`
+  * `AccumulatorIntegrator`
   * `BogaczEtAl`
   * `NavarroAndFuss`
 
@@ -156,7 +162,7 @@ from functools import reduce
 from operator import *
 from random import randint
 
-from numpy import abs, tanh, exp
+from numpy import abs, exp, tanh
 
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Keywords import *
@@ -965,11 +971,11 @@ class UserDefinedFunction(Function_Base):
 class CombinationFunction(Function_Base):
     """Function that combines multiple items, yielding a result with the same shape as its operands
 
-    All CombinationFunctions must have two attributes - multiplicative_param and additive_param - 
-        each of which is assigned the name of one of the function's parameters;  
-        this is for use by ModulatoryProjections (and, in particular, GatingProjections, 
-        when the CombinationFunction is used as the function of an InputState or OutputState). 
-     
+    All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
+        each of which is assigned the name of one of the function's parameters;
+        this is for use by ModulatoryProjections (and, in particular, GatingProjections,
+        when the CombinationFunction is used as the function of an InputState or OutputState).
+
     """
     componentType = COMBINATION_FUNCTION_TYPE
 
@@ -1030,7 +1036,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     Combine values in each of one or more arrays into a single value for each array.
     Use optional SCALE and OFFSET parameters to linearly transform the resulting value for each array.
-    Returns a scalar value for each array of the input. 
+    Returns a scalar value for each array of the input.
 
     COMMENT:
         IMPLEMENTATION NOTE: EXTEND TO MULTIDIMENSIONAL ARRAY ALONG ARBITRARY AXIS
@@ -1079,7 +1085,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     scale : float
         value is applied multiplicatively to each element of the array after applying the `operation <Reduce.operation>`
-        (see `scale <Reduce.scale>` for details);  this done before applying the `offset <Reduce.offset>` 
+        (see `scale <Reduce.scale>` for details);  this done before applying the `offset <Reduce.offset>`
         (if it is specified).
 
     offset : float
@@ -1146,8 +1152,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Calculate sum or product of the elements for each array in `variable <Reduce.variable>`, 
-        apply `scale <Reduce.scale>` and/or `offset <Reduce.offset>`, and return array of resulting values.        
+        Calculate sum or product of the elements for each array in `variable <Reduce.variable>`,
+        apply `scale <Reduce.scale>` and/or `offset <Reduce.offset>`, and return array of resulting values.
 
         Arguments
         ---------
@@ -1323,8 +1329,8 @@ class LinearCombination(
         product of the arrays in `variable  <LinearCombination.variable>`.
 
     scale : float or np.ndarray
-        value is applied multiplicatively to each element of the array after applying the 
-        `operation <LinearCombination.operation>` (see `scale <LinearCombination.scale>` for details);  
+        value is applied multiplicatively to each element of the array after applying the
+        `operation <LinearCombination.operation>` (see `scale <LinearCombination.scale>` for details);
         this done before applying the `offset <LinearCombination.offset>` (if it is specified).
 
     offset : float or np.ndarray
@@ -1451,10 +1457,10 @@ class LinearCombination(
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weghts, exponents, scale and offset parameters
-        
+
         Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
         Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable
-        
+
         Note: the checks of compatiability with variable are only performed for validation calls during execution
               (i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
               a parameter may be re-assigned before variable assigned during is known
@@ -1491,7 +1497,7 @@ class LinearCombination(
                                     format(SCALE, self.name, scale))
             if EXECUTING in context:
                 if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.variable.size or 
+                        (scale.size != self.variable.size or
                          scale.shape != self.variable.shape)):
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
@@ -1509,7 +1515,7 @@ class LinearCombination(
                                     format(OFFSET, self.name, offset))
             if EXECUTING in context:
                 if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.variable.size or 
+                        (offset.size != self.variable.size or
                          offset.shape != self.variable.shape)):
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
@@ -1680,15 +1686,15 @@ class TransferFunction(Function_Base):
     All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
         if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
         tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
-        
-    All TransferFunctions must also have two attributes - multiplicative_param and additive_param - 
-        each of which is assigned the name of one of the function's parameters;  
-        this is for use by ModulatoryProjections (and, in particular, GatingProjections, 
-        when the TransferFunction is used as the function of an InputState or OutputState). 
-     
+
+    All TransferFunctions must also have two attributes - multiplicative_param and additive_param -
+        each of which is assigned the name of one of the function's parameters;
+        this is for use by ModulatoryProjections (and, in particular, GatingProjections,
+        when the TransferFunction is used as the function of an InputState or OutputState).
+
     """
     componentType = TRANSFER_FUNCTION_TYPE
-    
+
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
     def __init__(self, variable_default,
                          params,
@@ -1717,11 +1723,11 @@ class TransferFunction(Function_Base):
     @property
     def multiplicative(self):
         return getattr(self, self.multiplicative_param)
-    
+
     @multiplicative.setter
     def multiplicative(self, val):
         setattr(self, self.multiplicative_param, val)
-        
+
     @property
     def additive(self):
         return getattr(self, self.additive_param)
@@ -2999,108 +3005,108 @@ class IntegratorFunction(Function_Base):
 
 class Integrator(
     IntegratorFunction):  # --------------------------------------------------------------------------------
-    # """
-    # Integrator(                 \
-    #     variable_default=None,  \
-    #     rate=1.0,               \
-    #
-    #     noise=0.0,              \
-    #     time_step_size=1.0,     \
-    #     initializer,     \
-    #     params=None,            \
-    #     owner=None,             \
-    #     prefs=None,             \
-    #     )
-    #
-    # .. _Integrator:
-    #
-    # Integrate current value of `variable <Integrator.variable>` with its prior value.
-    #
-    # Arguments
-    # ---------
-    #
-    # variable_default : number, list or np.array : default variableClassDefault
-    #     specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-    #     integrated.
-    #
-    # rate : float, list or 1d np.array : default 1.0
-    #     specifies the rate of integration.  If it is a list or array, it must be the same length as
-    #     `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
-    #
-    # noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-    #     specifies random value to be added in each call to `function <Integrator.function>`. (see
-    #     `noise <Integrator.noise>` for details).
-    #
-    # time_step_size : float : default 0.0
-    #     determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
-    #     is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
-    #
-    # initializer float, list or 1d np.array : default 0.0
-    #     specifies starting value for integration.  If it is a list or array, it must be the same length as
-    #     `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
-    #
-    # params : Optional[Dict[param keyword, param value]]
-    #     a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
-    #     function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-    #     arguments of the constructor.
-    #
-    # owner : Component
-    #     `component <Component>` to which to assign the Function.
-    #
-    # prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-    #     the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-    #     defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-    #
-    #
-    # Attributes
-    # ----------
-    #
-    # variable : number or np.array
-    #     current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
-    #     added to the prior value;  if it is an array, each element is independently integrated.
-    #
-    # rate : float or 1d np.array
-    #     determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-    #     all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-    #     applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
-    #     applies to the corresponding element of `variable <Integrator.variable>`.
-    #
-    # noise : float, function, list, or 1d np.array
-    #     specifies random value to be added in each call to `function <Integrator.function>`.
-    #
-    #     If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
-    #     specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
-    #     noise will be applied to each variable element. In the case of a noise function, this means that the function
-    #     will be executed separately for each variable element.
-    #
-    #     Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
-    #     value will be used to construct the standard DDM probability distribution. For all other types of integration,
-    #     in order to generate random noise, we recommend that you instead select a probability distribution function
-    #     (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-    #     its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
-    #     list or array of these), then the noise will simply be an offset that remains the same across all executions.
-    #
-    # initializer : 1d np.array or list
-    #     determines the starting value for integration (i.e., the value to which
-    #     `previous_value <Integrator.previous_value>` is set.
-    #
-    #     If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
-    #     initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
-    #     array, initializer will be applied to each variable element. In the case of an initializer function, this means
-    #     that the function will be executed separately for each variable element.
-    #
-    # previous_value : 1d np.array : default variableClassDefault
-    #     stores previous value with which `variable <Integrator.variable>` is integrated.
-    #
-    # owner : Mechanism
-    #     `component <Component>` to which the Function has been assigned.
-    #
-    # prefs : PreferenceSet or specification dict : Projection.classPreferences
-    #     the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-    #     if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-    #     (see :doc:`PreferenceSet <LINK>` for details).
-    #
-    # """
+    """
+    Integrator(                 \
+        variable_default=None,  \
+        rate=1.0,               \
+
+        noise=0.0,              \
+        time_step_size=1.0,     \
+        initializer,     \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
+
+    .. _Integrator:
+
+    Integrate current value of `variable <Integrator.variable>` with its prior value.
+
+    Arguments
+    ---------
+
+    variable_default : number, list or np.array : default variableClassDefault
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <Integrator.function>`. (see
+        `noise <Integrator.noise>` for details).
+
+    time_step_size : float : default 0.0
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
+        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    rate : float or 1d np.array
+        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
+        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <Integrator.variable>`.
+
+    noise : float, function, list, or 1d np.array
+        specifies random value to be added in each call to `function <Integrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
+        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
+        value will be used to construct the standard DDM probability distribution. For all other types of integration,
+        in order to generate random noise, we recommend that you instead select a probability distribution function
+        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
+        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : 1d np.array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <Integrator.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
+        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
+        array, initializer will be applied to each variable element. In the case of an initializer function, this means
+        that the function will be executed separately for each variable element.
+
+    previous_value : 1d np.array : default variableClassDefault
+        stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
 
     componentName = INTEGRATOR_FUNCTION
     variableClassDefault = [[0]]
@@ -3553,7 +3559,7 @@ class ConstantIntegrator(
     Integrates prior value by adding `rate <Integrator.rate>` and `noise <Integrator.noise>`. Ignores
     `variable <Integrator.variable>`).
 
-    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +`noise <Integrator.noise>`
+    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
 
     Arguments
     ---------
@@ -4524,7 +4530,7 @@ class AccumulatorIntegrator(
     Integrates prior value by adding `rate <Integrator.rate>` and `noise <Integrator.noise>`. Ignores
     `variable <Integrator.variable>`).
 
-    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` +`noise <Integrator.noise>`
+    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
 
     Arguments
     ---------
@@ -4626,7 +4632,7 @@ class AccumulatorIntegrator(
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
-        INCREMENT: None, 
+        INCREMENT: None,
     })
 
     # multiplicative param does not make sense in this case
