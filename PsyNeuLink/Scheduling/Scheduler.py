@@ -419,7 +419,6 @@ class Scheduler(object):
         self.counts_useable = {node: {n: 0 for n in self.nodes} for node in self.nodes}
         self._reset_counts_total(TimeScale.TRIAL)
         self._reset_time(TimeScale.TRIAL)
-        self._num_passes = 0
 
         while not self.termination_conds[TimeScale.TRIAL].is_satisfied() and not self.termination_conds[TimeScale.RUN].is_satisfied():
             self._reset_counts_total(TimeScale.PASS)
@@ -492,7 +491,6 @@ class Scheduler(object):
             # if an entire pass occurs with nothing running, add an empty time step
             if not execution_list_has_changed:
                 self.execution_list.append(set())
-
                 yield self.execution_list[-1]
 
                 self._increment_time(TimeScale.TIME_STEP)
