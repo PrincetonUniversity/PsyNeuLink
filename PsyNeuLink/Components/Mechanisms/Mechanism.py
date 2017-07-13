@@ -1353,6 +1353,7 @@ class Mechanism_Base(Mechanism):
         """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
+            or process InputStates before and/or after call to _instantiate_input_states
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, context=context)
@@ -1361,6 +1362,7 @@ class Mechanism_Base(Mechanism):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_states
+            or process InputStates before and/or after call to _instantiate_parameter_states
         """
 
         from PsyNeuLink.Components.States.ParameterState import _instantiate_parameter_states
@@ -1370,6 +1372,7 @@ class Mechanism_Base(Mechanism):
         """Call State._instantiate_output_states to instantiate orderedDict of OutputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_states
+            or process InputStates before and/or after call to _instantiate_output_states
         """
         from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
         _instantiate_output_states(owner=self, context=context)
@@ -1874,10 +1877,10 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states:tc.any(list, State)):
+    def add_states(self, states:tc.any(State, list)):
         """Add one or more `States <State>` to the Mechanism
 
-        Only `InputStates <InputState> and ``OutputStates <OutputState>` can be added;
+        Only `InputStates <InputState> and `OutputStates <OutputState>` can be added;
         `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
 
         .. note::
@@ -1897,17 +1900,27 @@ class Mechanism_Base(Mechanism):
             The State(s) can be specified in any of the ways that States can be specified in the
             constructor for a Mechanism (see `specifying states <State_Specification>`).
         """
+        from PsyNeuLink.Components.States.State import _parse_state_type, _instantiate_state_list
+        from PsyNeuLink.Components.States.InputState import InputState
+        from PsyNeuLink.Components.States.OutputState import OutputState
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
             states = [states]
 
-        for state in states:
-            # Validate state specification
-            state = _instantiate_state
-            xxxx
+        input_states = []
+        output_states = []
 
-            # Check owners
+        for state in states:
+            state_type = _parse_state_type(state)
+            if isinstance(state_type, InputState):
+                input_states.append(state)
+            elif isinstance(state_type, OutputState):
+                output_states.append(state)
+
+        # _instantiate_state_list(self, input_states, InputState)
+        self._instantiate_input_states(input_states)
+        self._instantiate_output_states(output_states)
 
 
     def _get_mechanism_param_values(self):

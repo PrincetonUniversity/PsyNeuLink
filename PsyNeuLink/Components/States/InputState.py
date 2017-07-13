@@ -561,7 +561,6 @@ def _instantiate_input_states(owner, context=None):
         owner._input_states = state_list
 
 
-
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
     for i in range (len(owner.input_states)):

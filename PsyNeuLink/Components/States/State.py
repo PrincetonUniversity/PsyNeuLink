@@ -73,8 +73,13 @@ where its parameters are specified.  A State can be specified in those cases in 
 
       ..
       * *NAME*:<str> - the string is used as the name of the State;
+      
+      ..
+      * *STATE_TYPE*:<State type> - specifies type of State to create (necessary if it cannot be determined from the
+        the context of the other entries or in which it is being created)
       ..
       * *VALUE*:<value> - the value is used as the default value of the State;
+
       COMMENT:
           ..
           * *PROJECTIONS*:<List> - the list must contain specifications for one or more
@@ -82,6 +87,7 @@ where its parameters are specified.  A State can be specified in those cases in 
             depending the type of State and the context in which it is specified;
       COMMENT
       ..
+
       * *str*:<List> - the key is used as the name of the State, and the list must contain specifications for
         one or more `Projections <Projection_In_Context_Specification>` to or from the State,
         depending on the type of State and the context in which it is specified;
@@ -1991,7 +1997,6 @@ def _instantiate_state(owner,                  # Object to which state will belo
     state_spec = _parse_state_spec(owner=owner,
                                    state_type=state_type,
                                    state_spec=state_spec,
-                                   # state_spec=state_spec,
                                    name=state_name,
                                    params=state_params,
                                    value=constraint_value)
@@ -2164,6 +2169,44 @@ def _check_projection_sender_compatability(owner, projection_type, sender_type):
                          format(sender_type, owner.__class__.__name__, owner.owner.name))
 
 
+def _parse_state_type(owner, state_spec):
+    """Determine State type for state_spec and return type
+
+    Determine type from context and/or type of state_spec if the latter is not a `State` or `Mechanism`.
+    """
+
+    if isinstance(state_spec, State):
+        return type(state_spec)
+
+    # if isinstance(state_spec, Mechanism):
+
+    # if isinstance(state_spec, Projection):
+
+    # if isinstance(state_spec, tuple):
+    #     _is_legal_state_spec_tuple(owner, state_spec)
+    #     tuple_spec = state_spec[1]
+    #     if isinstance(tuple_spec, State):
+    #         # InputState specified as 2nd item of tuple must be a destination, so choose State based on owner:
+    #         if isinstance(owner, ProcessingMechanism)
+    #             if isinstance(tuple_spec, InputState):
+    #                 return OutputState
+    #             if isinstance(tuple_spec, OutputState):
+    #                 return InputState
+    #     else:
+    #         # Call recursively to handle other types of specs
+    #         return _parse_state_type(owner, tuple_spec)
+
+    if isinstance(state_spec, dict):
+        if STATE_TYPE in state_spec:
+            if not inspect.isclass(STATE_TYPE) and issubclass(state_spec[STATE_TYPE], State):
+                raise StateError("STATE entry of state specification for {} ({})"
+                                 "is not a State or type of State".
+                                 format(owner.name, state_spec[STATE]))
+            return state_spec[STATE]
+
+    raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
+
+
 # FIX 5/23/17:  UPDATE TO ACCOMODATE (param, ControlSignal) TUPLE
 @tc.typecheck
 def _parse_state_spec(owner,
@@ -2268,7 +2311,8 @@ def _parse_state_spec(owner,
     state_dict = {NAME: name,
                   VARIABLE: variable,
                   VALUE: value,
-                  PARAMS: params}
+                  PARAMS: params,
+                  STATE_TYPE: state_type}
 
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
@@ -2317,6 +2361,11 @@ def _parse_state_spec(owner,
                 state_dict[PARAMS].update(params)
 
         else:
+            # Error if STATE_TYPE is specified in dict and not the same as the state_spec specified in call to method
+            if STATE_TYPE in state_spec and state_spec[STATE_TYPE] != state_type:
+                raise StateError("PROGRAM ERROR: STATE_TYPE entry in State specification dictionary for {} ({}) "
+                                 "is not the same as one specified in call to _parse_state_spec ({})".
+                                 format(owner.name, state_spec[STATE_TYPE, state_type]))
             # Warn if VARIABLE was not in dict
             if not VARIABLE in state_spec and owner.prefs.verbosePref:
                 print("{} missing from specification dict for {} of {};  default ({}) will be used".
@@ -2339,14 +2388,7 @@ def _parse_state_spec(owner,
     # # 2-item tuple (spec, projection)
     # 2-item tuple (spec, Component)
     elif isinstance(state_spec, tuple):
-        if len(state_spec) != 2:
-            raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
-                             format(state_type_name, owner.name, state_spec))
-        # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
-        if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
-            raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
-                             "for a Mechanism, State, or Projection".
-                             format(state_type_name, owner.__class__.__name__, state_spec[1]))
+        _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
@@ -2426,3 +2468,18 @@ def _parse_state_spec(owner,
         state_dict[VARIABLE] = state_dict[VALUE]
 
     return state_dict
+
+
+def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
+
+    state_type_name = state_type_name or STATE
+
+    if len(state_spec) != 2:
+        raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
+                         format(state_type_name, owner.name, state_spec))
+    # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
+    if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
+        raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
+                         "for a Mechanism, State, or Projection".
+                         format(state_type_name, owner.__class__.__name__, state_spec[1]))
+

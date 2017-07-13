@@ -250,7 +250,7 @@ assigned.</p>
 </div></blockquote>
 <p>The list of OutputStates for a Mechanism can be accessed using its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>
 attribute, and new ones can be added to an existing Mechanism by appending a list (containing specifications in the
-form listed above) to the <a class="reference internal" href="ObjectiveMechanism.html#ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.output_states" title="ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism.ObjectiveMechanism.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> list. Assigning without appending will replace any existing OutputStates.
+form listed above) to the <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> list. Assigning without appending will replace any existing OutputStates.
 If the name of an explicitly specified OutputState is the same as one that was created automatically (or another one
 that was created explicitly), its name will be suffixed with a numerical index (incremented for each OutputState with
 that name), and the OutputState will be added to the list (that is, it will <em>not</em> replace ones that were already
@@ -388,7 +388,7 @@ which the OutputState is the <code class="xref any docutils literal"><span class
 <span id="outputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="OutputState.OutputState">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value</em>, <em>variable=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>index=PRIMARY_OUTPUT_STATE</em>, <em>calculate=Linear</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.OutputState" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">OutputState</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>index=PRIMARY_OUTPUT_STATE</em>, <em>calculate=Linear</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.OutputState" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a subclass of <a class="reference internal" href="State.html"><span class="doc">State</span></a> that represents an output of a Mechanism.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -403,6 +403,9 @@ the <strong>index</strong> argument).  This must match (in number and type of el
 <strong>variable</strong> argument.  It is used to insure the compatibility of the source of the
 input for the OutputState with its <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>variable</strong> (<em>number, list or np.ndarray</em>) &#8211; specifies the template for the OutputState&#8217;s <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; </li>
+<li><strong>variable as array(s) of zeros if variable is not passed as an argument;</strong> (<em>specifies</em>) &#8211; </li>
+<li><strong>variable is specified, it takes precedence over the specification of size.</strong> (<em>if</em>) &#8211; </li>
 <li><strong>function</strong> (<em>Function, function, or method : default LinearCombination(operation=SUM)</em>) &#8211; <p>function used to aggregate the values of the projections received by the OutputState.
 It must produce a result that has the same format (number and type of elements) as the item of the Mechanism&#8217;s
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to which the OutputState is assigned (specified by its
@@ -524,7 +527,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10e5fad68&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10ed032b0&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard
 OutputStates</span></a> of a class</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -534,7 +537,7 @@ OutputStates</span></a> of a class</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component to which this OutputState belongs</li>
 <li><strong>output_state_dicts</strong> (<em>list of dicts</em>) &#8211; list of dictionaries specifying OutputStates for the Component specified
-by <a class="reference internal" href="Function.html#Function.LinearMatrix.owner" title="Function.LinearMatrix.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+by <a class="reference internal" href="Function.html#Function.Stability.owner" title="Function.Stability.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
 <li><strong>indices</strong> (<em>PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints</em>) &#8211; <p>specifies how to assign the INDEX entry for each dict listed in
 <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></p>
 <p>The effects of each value of indices are as follows:</p>
