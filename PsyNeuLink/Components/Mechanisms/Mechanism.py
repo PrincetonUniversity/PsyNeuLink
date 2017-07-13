@@ -166,10 +166,10 @@ COMMENT
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's
 `variable <Mechanism_Base.variable>` attribute.  This is a 2d array with one item for each of the Mechanism's
-`Input_states <Mechanism_InputStates>`.  The result of the :keyword:`function` is placed in the Mechanism's
-`value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
-Mechanism's :keyword:`value` is used by its `OutputStates <Mechanism_OutputStates>` to generate their :keyword:`value`
-attributes, each of which is assigned as an item of the list in the Mechanism's
+`Input_states <Mechanism_InputStates>`.  The result of the `function <Mechanism_Base.function>` is placed in the
+Mechanism's `value <Mechanism_Base.value>` attribute, which is also a 2d array with one or more items.  The
+Mechanism's `value <Mechanism_Base.value>` is used by its `OutputStates <Mechanism_OutputStates>` to generate their
+`value <OutputState.value>` attributes, each of which is assigned as the value of an item of the list in the Mechanism's
 `output_values <Mechanism_Base.output_values>` attribute.
 
 .. note::
@@ -231,9 +231,9 @@ from its Projections (usually by summing them), and assigns the result to the In
 
 The value of each InputState for the Mechanism is assigned as the value of an item of the Mechanism's
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as in a corresponding item of its
-`input_value <Mechanism_Base.input_value>` attribute (a list).  The :keyword:`variable` provides the input to the
-Mechanism's `function <Mechanism_Base.function>`, while its :keyword:`input_value` provides a more convenient way
-of accessing its individual items.
+`input_value <Mechanism_Base.input_value>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the
+input to the Mechanism's `function <Mechanism_Base.function>`, while its `input_value <Mechanism_Base.input_value>`
+provides a more convenient way of accessing its individual items.
 
 COMMENT:
 The number of input_states for the Mechanism must match the number of tems specified for the Mechanism's
@@ -248,9 +248,9 @@ ParameterStates
 ^^^^^^^^^^^^^^^
 
 These represent the parameters that determine the operation of a Mechanism, including the parameters of its
-:keyword:`function`.  One `ParameterState` is assigned to each of the parameters of the Mechanism
-and/or its :keyword:`function` (these correspond to the arguments in their constructors).  Like other States,
-ParameterStates can receive Projections. Typically these are from the `ControlProjections <ControlProjection>`
+`function <Mechanism_Base.function>`.  One `ParameterState` is assigned to each of the parameters of the Mechanism
+and/or its `function <Mechanism_Base.function>` (these correspond to the arguments in their constructors).  Like other
+States, ParameterStates can receive Projections. Typically these are from the `ControlProjections <ControlProjection>`
 of a `ControlMechanism` that is used to modify parameter values in response to the outcome(s) of
 processing.  A parameter value (and the value of its associated ParameterState) can be specified when a Mechanism or
 its function is first created  using the corresponding argument in the object's constructor.  Parameter values can
@@ -668,9 +668,10 @@ class Mechanism_Base(Mechanism):
     ----------
 
     variable : 2d np.array : default variableInstanceDefault
-        value used as input to the Mechanism's `function <Mechanism_Base.function>`.  When specified in a constructor
-        for the Mechanism, it is used as a template to define the format (length and type of elements) and default
-        value of the function's input.
+        value used as input to the Mechanism's `function <Mechanism_Base.function>`, each item of which corresponds to
+        a `value <InputState.value>` of one of the InputStates in its `input_states <Mechanism.input_states>`
+        attribute.  When specified in the **variable** argument of the constructor for the Mechanism,  it is used as
+        a template to define the format (length and type of elements) and default value of the function's input.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
 

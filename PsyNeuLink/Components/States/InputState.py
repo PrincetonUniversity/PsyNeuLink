@@ -53,10 +53,16 @@ InputStates are specified in the parameter dictionary, any specified in the **in
 
 .. note::
    Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
-   Mechanism (i.e., those that is creates for itself by default).  If any of those need to be retained, they must be
+   Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they must be
    explicitly specified in the list assigned to the **input_states** argument or the *INPUT_STATES* entry of
-   the parameter dictionary in the **params** argument).  This is **not** true for InputStates added to a Mechanism
-   using its `add_states` method;  those are added to any InputStates that already belong to the Mechanism.
+   the parameter dictionary in the **params** argument).  The number of InputStates specified in the constructor
+   determines the number of items in the owner Mechanism's `variable <Mechanism_Base.variable>`, which supersedes
+   specification of the **variable** and/or **size** arguments in the constructor.
+
+   Assigning InputStates to a Mechanism using the Mechanism's `add_states` method **adds** the InputStates to any
+   that already belong to that Mechanism.  This also adds an item to the owner Mechanism's
+   `variable <Mechanism_Base.variable>` for each InputState added, superseding specification of the **variable**
+   and/or **size** arguments in the Mechanism's constructor.
 
 For a single InputState, the value can be any of the specifications listed below.  To create multiple InputStates, the
 value can be either a list, each item of which can be any of the specifications below;  or, it can be a dictionary, in
@@ -102,10 +108,10 @@ one of the specifications below:
       and assigns the State as the `receiver <Projection.receiver>` of the Projection specified in the second item.
 
     .. note::
-       In all cases, the resulting `value <InputState.value>` of the InputState must be compatible with (that is,
-       have the same number and type of elements as) the item of its owner Mechanism's `variable <Mechanism_Variable>`.
-       This is insured by the default `function <InputState.function>` (`LinearCombination`), since this preserves
-       the format of its input;  it must also be true for any other function that is assigned as the
+       In all cases, the resulting `value <InputState.value>` of the InputState must be compatible with (that is, have
+       the same number and type of elements as) the item of its owner Mechanism's `variable <Mechanism_Base.variable>`.
+       This is insured by the default `function <InputState.function>` (`LinearCombination`), since this preserves the
+       format of its input;  it must also be true for any other function that is assigned as the
        `function <InputState.function>` for an InputState.
 
 COMMENT:
@@ -569,16 +575,16 @@ def _instantiate_input_states(owner, input_states=None, context=None):
 
     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
     # FIX: Hack to prevent recursion in calls to setter and assign_params
+    # Call from Mechanism.add_states, so append rather than replace input_states
     if context and 'COMMAND_LINE' in context:
-        owner.input_states = state_list
+        owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
 
 
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not
-    for i in range (len(owner.input_states)):
-        input_state = owner.input_states[i]
+    for i, input_state in enumerate(owner.input_states):
         try:
             variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
             if not variable_item_is_OK:
@@ -591,7 +597,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
         # NOTE: This block of code appears unused, and the 'for' loop appears to cause an error anyways. (7/11/17 CW)
         old_variable = owner.variable
         new_variable = []
-        for state_name, state in owner.input_states:
+        for state in owner.input_states:
             new_variable.append(state.value)
         owner.variable = np.array(new_variable)
         if owner.verbosePref:
