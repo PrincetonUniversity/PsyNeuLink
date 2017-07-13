@@ -51,12 +51,12 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
 Creating a State
 ----------------
 
-States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong (their `owner <State_Owner>`), or by specifying the State in the
-constructor for its owner.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
-in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`; and a
-`ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
-where its parameters are specified.  A State can be specified in those cases in any of the following forms:
+In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
+or by specifying the State in the constructor for its owner.  For example, `InputStates <InputState>` and
+`OutputStates <OutputState>` can be specified in the **input_states** and **output_states** arguments, respectively,
+of the constructor for a `Mechanism`; and a `ParameterState` can be specified in the argument of the constructor for
+a function of a Mechanism or Projection, where its parameters are specified.  A State can be specified in those cases
+in any of the following forms:
 
 .. _State_Specification:
 
@@ -101,11 +101,14 @@ COMMENT:
 
 .. _State_Deferred_Initialization:
 
-If a State is created on its own, and its `owner <State_Owner>` is not specified, then its initialization will be
-`deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically when it is assigned
-to a owner (`Mechanism` or `Projection`) using that Component's `add_states` method.  If it is not assigned to an
-owner, it will not be functional (i.e., used during execution of `Mechanism <Mechansim_Execution>` or
-`Composition <Composition_Execution>`, irrespective of whether it has any Projections assigned to it.
+`InputStates <InputState>`, `OutputStates <OutputState>` and `ModulatorySignals <ModulatorySignal>` can also be
+created on their own, by using the relevant constructors;  however, `ParameterStates <ParameterState>` cannot be
+created on their own. If a State is created on its own, and its `owner <State_Owner>` is not specified, then its
+initialization will be `deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically
+when it is assigned to an owner `Mechanism <Mechanism_Base>` using the owner's `add_states` method.  If the State is
+not assigned to an owner, it will not be functional (i.e., used during the execution of `Mechanisms
+<Mechanism_Base_Execution>` and/or `Compositions <Composition_Execution>`, irrespective of whether it has any
+`Projections <Projection>` assigned to it.
 
 .. _State_Projections:
 
@@ -174,7 +177,7 @@ Every State has an `owner <State.owner>`.  For `InputStates <InputState>` and `O
 must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.  For
 `ModulatorySignals`, it must be an `AdaptiveMechanism`.  When a State is created as part of another Component, its
 `owner <State.owner>` is assigned automatically to that Component.  It is also assigned automatically when the State
-is assigned to a Component using that Component's `add_states` method.  Otherwise, it must be specified explicitly
+is assigned to a `Mechanism` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly
 in the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be
 `deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
 
@@ -269,8 +272,12 @@ state_keywords.update({STATE_VALUE,
                        LEARNING_SIGNAL_SPECS,
                        CONTROL_PROJECTION_PARAMS,
                        CONTROL_SIGNAL_SPECS,
-                       GATING_PROJECTION_PARAMS
+                       GATING_PROJECTION_PARAMS,
+                       GATING_SIGNAL_SPECS
                        })
+
+state_type_keywords = {STATE_TYPE}
+
 
 def _is_state_type (spec):
     if issubclass(spec, State):
@@ -2180,9 +2187,12 @@ def _parse_state_type(owner, state_spec):
 
     Determine type from context and/or type of state_spec if the latter is not a `State` or `Mechanism`.
     """
-
     if isinstance(state_spec, State):
         return type(state_spec)
+
+    if isinstance(state_spec, str) and state_spec in state_type_keywords:
+        import sys
+        return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
 
     # if isinstance(state_spec, Mechanism):
 

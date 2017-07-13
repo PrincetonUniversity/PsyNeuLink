@@ -96,10 +96,7 @@
 <li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-state">Creating a State</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#projections">Projections</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-state">Creating a State</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#owner">Owner</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#variable-function-and-value">Variable, Function and Value</a></li>
@@ -232,12 +229,12 @@ types of States listed above.  There are three types of ModulatorySignals:</p>
 </div>
 <div class="section" id="creating-a-state">
 <span id="state-creation"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
-<p>States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong (their <a class="reference internal" href="#state-owner"><span class="std std-ref">owner</span></a>), or by specifying the State in the
-constructor for its owner.  For example, <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> can be specified,
-in the <strong>input_states</strong> and <strong>output_states</strong> arguments, respectively, of the constructor for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and a
-<a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> can be specified in the argument of the constructor for a function of a Mechanism or Projection,
-where its parameters are specified.  A State can be specified in those cases in any of the following forms:</p>
+<p>In general, States are created automatically by the objects to which they belong (their <a class="reference internal" href="#state-owner"><span class="std std-ref">owner</span></a>),
+or by specifying the State in the constructor for its owner.  For example, <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> can be specified in the <strong>input_states</strong> and <strong>output_states</strong> arguments, respectively,
+of the constructor for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> can be specified in the argument of the constructor for
+a function of a Mechanism or Projection, where its parameters are specified.  A State can be specified in those cases
+in any of the following forms:</p>
 <blockquote id="state-specification">
 <div><ul class="simple">
 <li>an existing <strong>State</strong> object;</li>
@@ -257,6 +254,10 @@ entries, in addition to those specific to a particular State subtype (see subtyp
 <li><em>NAME</em>:&lt;str&gt; - the string is used as the name of the State;</li>
 </ul>
 <ul class="simple">
+<li><em>STATE_TYPE</em>:&lt;State type&gt; - specifies type of State to create (necessary if it cannot be determined from the
+the context of the other entries or in which it is being created)</li>
+</ul>
+<ul class="simple">
 <li><em>VALUE</em>:&lt;value&gt; - the value is used as the default value of the State;</li>
 </ul>
 <ul class="simple">
@@ -272,57 +273,6 @@ to or from the State, depending on the type of State and the context in which it
 </li>
 </ul>
 </div></blockquote>
-<div class="section" id="projections">
-<span id="state-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
-<p>When a State is created, it can be assigned one or more <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, using either the <strong>projections</strong>
-argument of its constructor, or in an entry of a dictionary assigned to the <strong>params</strong> argument with the key
-<em>PROJECTIONS</em>. In both cases, the Projections must be specified in a list. The following of types of Projections can be
-specified for each type of State:</p>
-<blockquote>
-<div><ul>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></dt>
-<dd><ul class="first last simple">
-<li><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection(s)</span></a>
-- assigned to its <code class="xref any docutils literal"><span class="pre">pathway_afferents</span></code> attribute.</li>
-<li><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>
-- assigned to its <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> attribute.</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></dt>
-<dd><ul class="first last simple">
-<li><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> - assigned to its <a class="reference internal" href="Function.html#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>
-attribute.</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></dt>
-<dd><ul class="first last simple">
-<li><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection(s)</span></a>
-- assigned to its <code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute.</li>
-<li><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>
-- assigned to its <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> attribute.</li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></dt>
-<dd><ul class="first last simple">
-<li><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a>
-- assigned to its <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.efferents" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.</li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-</div>
 </div>
 <div class="section" id="structure">
 <span id="state-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -332,7 +282,7 @@ attribute.</li>
 must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  For <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> it can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>.  For
 <code class="xref any docutils literal"><span class="pre">ModulatorySignals</span></code>, it must be an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a>.  When a State is created as part of another Component, its
 <code class="xref any docutils literal"><span class="pre">owner</span></code> is assigned automatically to that Component.  It is also assigned automatically when the State
-is assigned to a Component using that Component&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  Otherwise, it must be specified explicitly
+is assigned to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> using that Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  Otherwise, it must be specified explicitly
 in the <strong>owner</strong> argument of the constructor for the State.  If it is not, the State&#8217;s initialization will be
 <code class="xref any docutils literal"><span class="pre">deferred</span></code> until it has been assigned to an owner.</p>
 </div>

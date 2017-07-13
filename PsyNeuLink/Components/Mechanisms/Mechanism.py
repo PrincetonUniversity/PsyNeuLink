@@ -1883,22 +1883,19 @@ class Mechanism_Base(Mechanism):
         Only `InputStates <InputState> and `OutputStates <OutputState>` can be added;
         `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
 
-        .. note::
-            If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
-            Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
-            assigning, or aborting.
-            COMMENT:
-                ;  the State must be removed from its current
-                owner first (using that Component's `remove_states` method) before being added to a new one.
-            COMMENT
+        If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
+        Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
+        assigning, or aborting.
 
         Arguments
         ---------
 
         states : State or List[State]
             one more `InputStates <InputState>` or `OutputStates <OutputState>` to be added to the Mechanism.
-            The State(s) can be specified in any of the ways that States can be specified in the
-            constructor for a Mechanism (see `specifying states <State_Specification>`).
+            State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
+            `State specification dictionary <LINK>` (the latter must have a STATE_TYPE entry specifying the class
+            or keyword for InputState or OutputState).
+
         """
         from PsyNeuLink.Components.States.State import _parse_state_type, _instantiate_state_list
         from PsyNeuLink.Components.States.InputState import InputState, _instantiate_input_states

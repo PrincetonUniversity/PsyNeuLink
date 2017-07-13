@@ -277,6 +277,8 @@ from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state_list
 from PsyNeuLink.Components.Functions.Function import *
 
+state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
+
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
 #     TIME_STAMP      = 1 << 0

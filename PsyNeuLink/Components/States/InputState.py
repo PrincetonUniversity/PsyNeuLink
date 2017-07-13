@@ -38,9 +38,8 @@ the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  p
 An InputState must be owned by a `Mechanism`.  If the InputState is created directly, its `owner <InputState.owner>`
 can specified in the **owner** argument of its constructor; otherwise, its initialization will be
 `deferred <State_Deferred_Initialization>` until it is `assigned to an owner <>`.  If the InputState is specified in
-the constructor for a `Mechanism` (see `below <InputState_Specification>`), or in its
-`add_states <Mechanism.add_states>` method, then the `owner <InputState.owner>` is inferred from context and assigned
-automatically.
+the constructor for a `Mechanism` (see `below <InputState_Specification>`), or in its `add_states` method,  then the
+`owner <InputState.owner>` is inferred from context and assigned automatically.
 
 .. _InputState_Specification
 
@@ -111,7 +110,7 @@ COMMENT
    that are automatically generated for that Mechanism (i.e., those created by default).  If any of those are needed,
    they must be *expliclity specified* in the list provided in the **input_states** argument of the constructor,
    or the *INPUT_STATES* entry of the parameter dictionary assigned to its **params** argument).  This is **not**
-   true if the Mechanism's `add_states <Mechanism.add_states>` method is used;  those are added to any InputStates
+   true if the Mechanism's `add_states` method is used;  those are added to any InputStates
    that already belong to the Mechanism.
 
 .. _InputStates_and_Mechanism_Variable:
@@ -195,6 +194,8 @@ Class Reference
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state_list
 from PsyNeuLink.Components.Functions.Function import *
+
+state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
 #                                                          reportOutput_pref=reportOutputPrefTypeDefault,
