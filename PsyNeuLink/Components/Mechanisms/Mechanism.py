@@ -1561,10 +1561,10 @@ class Mechanism_Base(Mechanism):
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
         self.value = self._execute(variable=self.variable,
-                                      runtime_params=runtime_params,
-                                      clock=clock,
-                                      time_scale=time_scale,
-                                      context=context)
+                                   runtime_params=runtime_params,
+                                   clock=clock,
+                                   time_scale=time_scale,
+                                   context=context)
 
         # # MODIFIED 3/3/17 OLD:
         # self.value = np.atleast_2d(self.value)
