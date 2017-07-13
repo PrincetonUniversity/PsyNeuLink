@@ -137,10 +137,10 @@ it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <In
                                           modulation=ModulationParam.ADDITIVE)
 
 Note that, again, the ``gating_signals`` are listed as mechanisms, since their primary InputStates are to be gated.
-Since they are all listed in a single entry of a `state specification dictionary <LINK>`, they will all be gated by a
-single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the InputState of
-each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by a
-`GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the
+Since they are all listed in a single entry of a `State specification dictionary <State_Specification>`, they will all
+be gated by a single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the
+InputState of each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by
+a `GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the
 default for its `GatingSignals <GatingSignal>) pertains to the `function <InputState.function>` of each `InputState`.
 By default that is a `Linear` function, the *ADDITIVE_PARAM* of which is its `intercept <Linear.intercept>` parameter.
 Therefore, in the example above, each time the InputStates are updated, the value of the GatingSignal will be assigned

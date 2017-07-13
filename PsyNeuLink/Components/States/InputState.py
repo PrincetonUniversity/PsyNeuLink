@@ -46,41 +46,54 @@ the constructor for a `Mechanism` (see `below <InputState_Specification>`), or i
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom InputStates need to be specified when a Mechanism is created, they can be specified in the
+If one or more custom InputStates need to be specified when a `Mechanism` is created, they can be specified in the
 **input_states** argument of the Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter dictionary
-assigned to the constructor's **params** argument.  For a single InputState, the value can be any of the
-specifications listed below.  To create multiple InputStates, the value can be either a list, each item of which can be
-any of the specifications below;  or, it can be an dictionary, in which the key for each entry is a string specifying
-the name for the InputState to be created, and its value is one of the specifications below:
+assigned to the constructor's **params** argument.  The latter takes precedence over the former (that is, if
+InputStates are specified in the parameter dictionary, any specified in the **input_states** argument will be ignored).
+
+.. note::
+   Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
+   Mechanism (i.e., those that is creates for itself by default).  If any of those need to be retained, they must be
+   explicitly specified in the list assigned to the **input_states** argument or the *INPUT_STATES* entry of
+   the parameter dictionary in the **params** argument).  This is **not** true for InputStates added to a Mechanism
+   using its `add_states` method;  those are added to any InputStates that already belong to the Mechanism.
+
+For a single InputState, the value can be any of the specifications listed below.  To create multiple InputStates, the
+value can be either a list, each item of which can be any of the specifications below;  or, it can be a dictionary, in
+which the key for each entry is a string specifying the name for the InputState to be created, and its value is
+one of the specifications below:
 
     * An existing **InputState object** or the name of one.  Its `value <InputState.value>` must be compatible with
-      the item of the owner Mechanism's `variable <Mechanism.variable>` to which it will be assigned.
+      the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it will be assigned.
     ..
     * The **InputState class**, the keyword *INPUT_STATE*, or a string.  This creates a default InputState using the
-      first item of the owner Mechanism's `variable <Mechanism.variable>` as the InputState's
+      first item of the owner Mechanism's `variable <Mechanism_Base.variable>` as the InputState's
       `variable <InputState.variable>`. If *INPUT_STATE* is used, a default name is assigned to the State;  if a
       string is used, it is assigned as the name of the InputState (see :ref:`naming conventions <LINK>`).
     ..
     * A **value**.  This creates a default InputState using the specified value as InputState's
       `variable <InputState.variable>`. This must be compatible with the item of the owner Mechanism's
-      `variable <Mechanism.variable>`.
+      `variable <Mechanism_Base.variable>`.
     ..
     * A **Projection subclass**. This creates a default InputState using the first item of the owner Mechanism's
-      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection` of the
-      specified type to the InputState using its `variable <InputState.variable>` as the template for the Projection's
-      `value <Projection.value>`.
+      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection`
+      of the specified type to the InputState using its `variable <InputState.variable>` as the template for the
+      Projection's `value <Projection.value>`.
     ..
 
+    COMMENT:
        CONFIRM THAT THIS IS TRUE:
     * A **Projection object**.  This creates a default InputState using the first item of the owner Mechanism's
-      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`, and assigns the State as
-      the `Projection's <Projection>` `receiver <Projection.receiver>`. The Projection's `value <Projection.value>`
-      must be compatible with the InputState's `variable <InputState.variable>`.
+      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and assigns the
+      State as the `Projection's <Projection>` `receiver <Projection.receiver>`. The Projection's `value
+      <Projection.value>` must be compatible with the InputState's `variable <InputState.variable>`.
+    COMMENT
     ..
-    * A **specification dictionary**.  This creates the specified InputState using the first item of the owner
-      `variable <Mechanism.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
-      standard entries of a `state specification dictionary <LINK>`, the dictionary can have a *PROJECTIONS*
-      entry, the value of which can be a `Projection`, a
+
+    * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner
+      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
+      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have a
+      *PROJECTIONS* entry, the value of which can be a `Projection`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
       are either of those.
     ..
@@ -105,30 +118,22 @@ COMMENT:
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
 COMMENT
 
-.. note::
-   Assigning InputStates to a Mechanism in its constructor (see `above <InputState_Specification>`) **replaces** any
-   that are automatically generated for that Mechanism (i.e., those created by default).  If any of those are needed,
-   they must be *expliclity specified* in the list provided in the **input_states** argument of the constructor,
-   or the *INPUT_STATES* entry of the parameter dictionary assigned to its **params** argument).  This is **not**
-   true if the Mechanism's `add_states` method is used;  those are added to any InputStates
-   that already belong to the Mechanism.
-
 .. _InputStates_and_Mechanism_Variable:
 
-Multiple InputStates and a Mechanism's `variable <Mechanism.variable>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Multiple InputStates and a Mechanism's `variable <Mechanism_Base.variable>` Attribute
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a Mechanism requires multiple InputStates (i.e., it's
-`variable <InputState.variable>` attribute has more than on item), it assigns the `value <InputState.value>` of each
-InputState to an item of its `variable <Mechanism.variable>` (see `Mechanism Variable <Mechanism_Variable>`).
-Therefore, the number of InputStates specified must equal the number of items in the Mechanisms's
-`variable <Mechanism.variable>`, with one exception:  If the Mechanism's `variable <Mechanism.variable>` has more
-than one item, it may still be assigned a single InputState;  in that case, the `value <InputState.value>` of
-that InputState must have the same number of items as the  Mechanisms's `variable <Mechanism.variable>`.  For
-Mechanism that have multiple InputStates, the order in which they are specified in Mechanism's constructor must parallel
-the order of the items to which they will be assigned in the Mechanism's `variable <Mechanism.variable>`; furthermore,
-as noted above, the `value <InputState.value>` for each InputState must match (in number and types of elements) the
-item of `variable <Mechanism.variable>` to which it will be assigned.
+If a Mechanism requires multiple InputStates (i.e., it's `variable <InputState.variable>` attribute has more than one
+item), it assigns the `value <InputState.value>` of each InputState to an item of its
+`variable <Mechanism_Base.variable>` (see `Mechanism Variable <Mechanism_Variable>`). Therefore, the number of
+InputStates specified must equal the number of items in the Mechanisms's `variable <Mechanism_Base.variable>`, with one
+exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned a
+single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same number of
+items as the Mechanisms's `variable <Mechanism_Base.variable>`.  For Mechanisms that have multiple InputStates, the
+order in which they are specified in Mechanism's constructor must parallel the order of the items to which they will be
+assigned in the Mechanism's `variable <Mechanism_Base.variable>`; furthermore, as noted above, the
+`value <InputState.value>` for each InputState must match (in number and types of elements) the item of
+`variable <Mechanism_Base.variable>` to which it will be assigned.
 
 .. _InputState_Projections:
 

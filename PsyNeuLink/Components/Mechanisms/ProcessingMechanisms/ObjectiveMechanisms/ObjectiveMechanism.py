@@ -49,7 +49,7 @@ of InputStates specified must equal the number of OutputStates specified in the 
 `examples <ObjectiveMechanism_Examples>` below). The value of each must also be of the same type as the value of the
 corresponding OutputState, however their lengths can differ;  in that case, by default, the MappingProjection created
 uses a  `FULL_CONNECTIVITY` matrix, although this too can be customized using the *PROJECTION* entry of a
-`state specification dictionary <LINK>` for the InputState in the **input_states** argument.
+`State specification dictionary <State_Specification>` for the InputState in the **input_states** argument.
 
 
 .. _ObjectiveMechanism_Structure:

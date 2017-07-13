@@ -96,19 +96,21 @@ be specified in either of the ways mentioned above, or using one of the followin
     For example, `LearningMechanisms <LearningMechanism>` (and associated `LearningProjections <LearningProjection>`)
     are created automatically when `learing <Process_Learning>` is specified for a Process.
 
-Every Mechanism has one or more `inputStates <InputState>`, `ParameterStates <ParameterState>`, and
+.. _Mechanism_Creation_States:
+
+Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and
 `OutputStates <OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send Projections,
 and to execute its `function <Mechanism_Function>`).  When a Mechanism is created, it automatically creates the
 ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
-It also creates any inputStates and OutputStates required for the Projections it has been assigned. InputStates and
+It also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
 OutputStates, and corresponding Projections, can also be specified in **input_states** and **output_state** arguments
-of the Mechanism's constructor, or in its params dictionary using entries with the keys INPUT_STATES and OUTPUT_STATES, 
-respectively. The value of each entry can be the name of an existing State, a specification dictionary for one, a value
-(used as the State's ``variable``), a string (used to create a default State with that name), or a list containing of
-any of these to create multiple States (see `InputStates <InputState_Creation>` and
-`OutputStates <OutputStates_Creation>` for details).  The following is an example that creates an instance of a
-TransferMechanism with a default InputState named "MY_INPUT" and three 
-`pre-specified types of OutputStates <OutputState_Specification>`::
+of the Mechanism's constructor, or in its params dictionary using entries with the keys *INPUT_STATES* and
+*OUTPUT_STATES*, respectively. The value of each entry can be of the allowable forms for
+`specifying a state <State_Specification>`. InputStates and OutputStates can also be added to an existing Mechanism
+using its `add_states` method, although this is generally not needed and therefore an uncommon practice.
+
+The following is an example that creates an instance of a TransferMechanism that names the default InputState
+``MY_INPUT``, and assigns three `standard <OutputState_Standard>` OutputStates::
  
      my_mech = TransferMechanism(input_states=['MY_INPUT'], output_states=[RESULT, MEAN, VARIANCE])
 
@@ -183,7 +185,12 @@ attributes, each of which is assigned as an item of the list in the Mechanism's
 States
 ~~~~~~
 
-Every Mechanism has three types of States (shown schematically in the figure below):
+Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
+`ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are
+created automatically when the `Mechanism is created <Mechanism_Creation_States>`.  However, InputStates and
+OutputStates can be added to an existing Mechanism using its `add_states` method.
+
+The three types of States are shown schematically in the figure below, and described briefly in the following sections.
 
 .. _Mechanism_Figure:
 
@@ -590,8 +597,9 @@ class Mechanism_Base(Mechanism):
                     • specify 2d variable for Mechanism (i.e., without explicit InputState specifications)
                         once the variable of the Mechanism has been converted to a 2d array, an InputState is assigned
                         for each item of axis 0, and the corresponding item is assigned as the InputState's variable
-                    • explicitly specify input_states in params[INPUT_STATES] (each with its own variable specification);
-                        those variables will be concantenated into a 2d array to create the Mechanism's variable
+                    • explicitly specify input_states in params[*INPUT_STATES*] (each with its own variable
+                        specification); those variables will be concantenated into a 2d array to create the Mechanism's
+                        variable
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
@@ -1854,8 +1862,6 @@ class Mechanism_Base(Mechanism):
             - Exponential Function: default x_range = [0.1, 5.0]
             - All Other Functions: default x_range = [-10.0, 10.0]
 
-
-
         Returns
         -------
         Mechanism's function plot : Matplotlib window
@@ -1878,10 +1884,11 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     def add_states(self, states:tc.any(State, list), context=COMMAND_LINE):
-        """Add one or more `States <State>` to the Mechanism
+        """
+        add_states(states)
 
-        Only `InputStates <InputState> and `OutputStates <OutputState>` can be added;
-        `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
+        Add one or more `States <State>` to the MechanismOnly `InputStates <InputState> and `OutputStates <OutputState>`
+        can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
 
         If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
         Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
@@ -1893,8 +1900,8 @@ class Mechanism_Base(Mechanism):
         states : State or List[State]
             one more `InputStates <InputState>` or `OutputStates <OutputState>` to be added to the Mechanism.
             State specification(s) can be an InputState or OutputState object, class reference, class keyword, or
-            `State specification dictionary <LINK>` (the latter must have a STATE_TYPE entry specifying the class
-            or keyword for InputState or OutputState).
+            `State specification dictionary <State_Specification>` (the latter must have a *STATE_TYPE* entry
+            specifying the class or keyword for InputState or OutputState).
 
         """
         from PsyNeuLink.Components.States.State import _parse_state_type, _instantiate_state_list

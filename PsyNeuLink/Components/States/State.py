@@ -2256,7 +2256,7 @@ def _parse_state_spec(owner,
 
     # # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
     # #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT
-    # # Get convert state object into state specification dictionary,
+    # # Get convert state object into State specification dictionary,
     # #     replacing any set, dict or Component with its id to avoid problems with deepcopy
     # @tc.typecheck
     # def _state_dict(state:State):
@@ -2288,7 +2288,7 @@ def _parse_state_spec(owner,
     # State object:
     # - check that it is of the specified type and, if so:
     #     - if force_dict is False, return the primary state object
-    #     - if force_dict is True, get state's attributes and return their values in a state specification dictionary
+    #     - if force_dict is True, get state's attributes and return their values in a State specification dictionary
 
     if isinstance(state_spec, State):
         if isinstance(state_spec, state_type):
