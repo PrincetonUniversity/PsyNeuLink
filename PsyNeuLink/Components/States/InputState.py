@@ -510,16 +510,18 @@ class InputState(State_Base):
 
 # def _instantiate_input_states(owner, input_states=None, context=None):
 def _instantiate_input_states(owner, input_states=None, context=None):
-    """Call State._instantiate_state_list() to instantiate orderedDict of InputState(s)
+    """Call State._instantiate_state_list() to instantiate ContentAddressableList of InputState(s)
 
     Create ContentAddressableList of InputState(s) specified in paramsCurrent[INPUT_STATES]
 
-    If INPUT_STATES is not specified, use self.variable to create a default input state
+    If input_states is not specified:
+        - use owner.input_states as list of InputState specifications
+        - if owner.input_states is empty, user owner.variable to create a default InputState
 
     When completed:
-        - self.input_states contains an OrderedDict of one or more input_states
-        - self.input_state contains the `primary InputState <Mechanism_InputStates>`:  first or only one in OrderedDict
-        - paramsCurrent[OUTPUT_STATES] contains the same OrderedDict (of one or more input_states)
+        - self.input_states contains a ContentAddressableList of one or more input_states
+        - self.input_state contains the `primary InputState <Mechanism_InputStates>`:  first or only one in input_states
+        - paramsCurrent[INPUT_STATES] contains the same ContentAddressableList (of one or more input_states)
         - each InputState corresponds to an item in the variable of the owner's function
         - the value of all of the input_states is stored in a list in input_value
         - if there is only one InputState, it is assigned the full value

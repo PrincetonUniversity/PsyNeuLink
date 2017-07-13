@@ -697,26 +697,25 @@ class OutputState(State_Base):
 
 
 
-def _instantiate_output_states(owner, context=None):
-    # MODIFIED 12/7/16 NEW:
-    # ADD TO DOCUMENTATION BELOW:
-    # EXPAND constraint_value to match specification of OutputStates (by # and function return values):
-    #            in order to both constrain spec and also match # States to # items in constraint
-    #            (checked in _instantiate_state_list)
-    # For each OutputState:
-    #      check for index param:
-    #          if it is a State, get from attribute
-    #          if it is dict, look for param
-    #          if it is anything else, assume index is PRIMARY_OUTPUT_STATE
-    #      get indexed value from output.value
-    #      append the indexed value to constraint_value
-
-    # ALSO: INSTANTIATE CALCULATE FUNCTION
-    # MODIFIED 12/7/16 END
-    """Call State._instantiate_state_list() to instantiate orderedDict of OutputState(s)
+def _instantiate_output_states(owner, output_states=None, context=None):
+    """Call State._instantiate_state_list() to instantiate ContentAddressableList of OutputState(s)
 
     Create ContentAddressableList of OutputState(s) specified in paramsCurrent[OUTPUT_STATES]
-    If OUTPUT_STATES is not specified, use self.value to create a default output State
+
+    If output_states is not specified:
+        - use owner.output_states as list of OutputState specifications
+        - if owner.output_states is empty, use owner.value to create a default OutputState
+
+    For each OutputState:
+         check for index param:
+             if it is a State, get from index attribute
+             if it is dict, look for INDEX entry
+             if it is anything else, assume index is PRIMARY_OUTPUT_STATE
+         get indexed value from output.value
+         append the indexed value to constraint_value
+             so that it matches specification of OutputStates (by # and function return values)
+         instantiate Calculate function if specified
+
     When completed:
         - self.outputStates contains a ContentAddressableList of one or more OutputStates;
         - self.output_state contains first or only OutputState in list;
@@ -755,14 +754,19 @@ def _instantiate_output_states(owner, context=None):
         else:
             owner_value = converted_to_2d
 
+    # This allows method to be called by Mechanism.add_input_states() with set of user-specified input_states,
+    #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
+    #    assigned in the **input_states** argument of the Mechanism's constructor)
+    output_states = output_states or owner.output_states
+
     # Get the value of each OutputState
     # IMPLEMENTATION NOTE:
     # Should change the default behavior such that, if len(owner_value) == len owner.paramsCurrent[OUTPUT_STATES]
     #        (that is, there is the same number of items in owner_value as there are OutputStates)
     #        then increment index so as to assign each item of owner_value to each OutputState
     # IMPLEMENTATION NOTE:  SHOULD BE REFACTORED TO USE _parse_state_spec TO PARSE ouput_states arg
-    if owner.output_states:
-        for i, output_state in enumerate(owner.output_states):
+    if output_states:
+        for i, output_state in enumerate(output_states):
 
             # Default is PRIMARY_OUTPUT_STATE
             index = PRIMARY_OUTPUT_STATE
@@ -810,7 +814,7 @@ def _instantiate_output_states(owner, context=None):
         constraint_value = owner_value
 
     state_list = _instantiate_state_list(owner=owner,
-                                         state_list=owner.output_states,
+                                         state_list=output_states,
                                          state_type=OutputState,
                                          state_param_identifier=OUTPUT_STATES,
                                          constraint_value=constraint_value,

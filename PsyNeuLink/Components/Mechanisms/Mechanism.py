@@ -1375,7 +1375,7 @@ class Mechanism_Base(Mechanism):
             or process InputStates before and/or after call to _instantiate_output_states
         """
         from PsyNeuLink.Components.States.OutputState import _instantiate_output_states
-        _instantiate_output_states(owner=self, context=context)
+        _instantiate_output_states(owner=self, output_states=self.output_states, context=context)
 
     def _add_projection_to_mechanism(self, state, projection, context=None):
 
