@@ -1873,6 +1873,43 @@ class Mechanism_Base(Mechanism):
         plt.plot(x_space, self.function(x_space), lw=3.0, c='r')
         plt.show()
 
+    @tc.typecheck
+    def add_states(self, states:tc.any(list, State)):
+        """Add one or more `States <State>` to the Mechanism
+
+        Only `InputStates <InputState> and ``OutputStates <OutputState>` can be added;
+        `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
+
+        .. note::
+            If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
+            Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
+            assigning, or aborting.
+            COMMENT:
+                ;  the State must be removed from its current
+                owner first (using that Component's `remove_states` method) before being added to a new one.
+            COMMENT
+
+        Arguments
+        ---------
+
+        states : State or List[State]
+            one more `InputStates <InputState>` or `OutputStates <OutputState>` to be added to the Mechanism.
+            The State(s) can be specified in any of the ways that States can be specified in the
+            constructor for a Mechanism (see `specifying states <State_Specification>`).
+        """
+
+        # Put in list to standardize treatment below
+        if not isinstance(states, list):
+            states = [states]
+
+        for state in states:
+            # Validate state specification
+            state = _instantiate_state
+            xxxx
+
+            # Check owners
+
+
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
         :return: (dict)
@@ -1891,7 +1928,6 @@ class Mechanism_Base(Mechanism):
             return self.output_state
         if issubclass(state_type, ParameterState):
             raise Mechanism("PROGRAM ERROR:  illegal call to {} for a primary {}".format(self.name, PARAMETER_STATE))
-
 
     @property
     def value(self):

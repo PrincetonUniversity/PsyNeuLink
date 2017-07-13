@@ -28,7 +28,7 @@ Output_Layer = TransferMechanism(name='Output Layer',
 from PsyNeuLink.Components.States.InputState import InputState
 
 my_input_state = InputState(
-    owner=Output_Layer,
+    # owner=Output_Layer,
     projections=Input_Layer,
     name="GOOBAH"
 )

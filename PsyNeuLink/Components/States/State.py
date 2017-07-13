@@ -58,6 +58,8 @@ in the **input_states** and **output_states** arguments, respectively, of the co
 `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
 where its parameters are specified.  A State can be specified in those cases in any of the following forms:
 
+.. _State_Specification:
+
     * an existing **State** object;
     ..
     * the name of a **State subclass** (`InputState`, `ParameterState`, or `OutputState`) - a default State of the
