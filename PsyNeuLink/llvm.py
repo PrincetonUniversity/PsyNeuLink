@@ -178,6 +178,17 @@ __engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 __mod = binding.parse_assembly(str(__module))
 __mod.verify()
 
+__pass_manager_builder = binding.PassManagerBuilder()
+__pass_manager_builder.inlining_threshold = 99999 # Inline all function calls
+__pass_manager_builder.loop_vectorize = True
+__pass_manager_builder.slp_vectorize = True
+__pass_manager_builder.opt_level = 3 # Most aggressive optimizations
+
+__pass_manager = binding.ModulePassManager()
+
+__pass_manager_builder.populate(__pass_manager);
+
+__pass_manager.run(__mod)
 
 # Now add the module and make sure it is ready for execution
 __engine.add_module(__mod)
