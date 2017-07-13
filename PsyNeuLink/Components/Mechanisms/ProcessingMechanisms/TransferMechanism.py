@@ -453,6 +453,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             initial_value = target_set[INITIAL_VALUE]
             if initial_value is not None:
                 if not iscompatible(initial_value, self.variable):
+                    raise Exception("initial_value is {}, type {}\nself.variable is {}, type {}".
+                                    format(initial_value, type(initial_value), self.variable, type(self.variable)))
                     raise TransferError("The format of the initial_value parameter for {} ({}) "
                                         "must match its input ({})".
                                         format(append_type_to_name(self), initial_value, self.variable[0]))
@@ -546,7 +548,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        self.initial_value = self.initial_value or self.variableInstanceDefault
+        if self.initial_value is None:
+            self.initial_value = self.variableInstanceDefault
 
     def _execute(self,
                  variable=None,
@@ -596,10 +599,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
 
-
-        if INITIALIZING in context:
-            self.previous_input = self.variable
-
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         time_scale = self.time_scale
 
@@ -623,7 +622,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
                 self.integrator_function = AdaptiveIntegrator(
                                             self.variable,
-                                            initializer = self.previous_input,
+                                            initializer = self.initial_value,
                                             noise = self.noise,
                                             rate = self.time_constant
                                             )
@@ -653,7 +652,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 else:
                     noise = noise()
             # formerly: current_input = self.input_state.value + noise
-            current_input = self.variable[0] + noise
+            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
+            # when the input is given as a string.
+            if (np.array(noise) != 0).any():
+                current_input = self.variable[0] + noise
+            else:
+                current_input = self.variable[0]
         else:
             raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
