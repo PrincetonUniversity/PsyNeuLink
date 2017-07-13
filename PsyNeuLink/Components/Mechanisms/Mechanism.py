@@ -1892,7 +1892,9 @@ class Mechanism_Base(Mechanism):
 
         If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
         Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
-        assigning, or aborting.
+        assigning, or aborting.  If the name of a specified State is the same as an existing one of the same time,
+        an index will be appended to its name, and incremented for each State added with the same name
+        (see :ref:`naming conventions <LINK>`).
 
         Arguments
         ---------
