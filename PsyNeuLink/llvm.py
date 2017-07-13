@@ -87,7 +87,7 @@ def setup_mxv():
     with builder.goto_block(outer_cond_block):
         tmp = builder.load(index_i_var);
         cond = builder.icmp_signed("<", tmp, y)
-        builder.cbranch(cond, outer_body_block, outer_out_block)
+        builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99,1])
 
     # Loop body
     with builder.goto_block(outer_body_block):
@@ -107,7 +107,7 @@ def setup_mxv():
         with builder.goto_block(inner_cond_block):
             tmp = builder.load(index_j_var);
             cond = builder.icmp_signed("<", tmp, y)
-            builder.cbranch(cond, inner_body_block, inner_out_block)
+            builder.cbranch(cond, inner_body_block, inner_out_block).set_weights([99,1])
 
         # Loop body
         with builder.goto_block(inner_body_block):
