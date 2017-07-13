@@ -751,11 +751,11 @@ class Composition(object):
         inputs,
         scheduler_processing=None,
         scheduler_learning=None,
+        execution_id=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
-        execution_id=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -763,6 +763,11 @@ class Composition(object):
 
             Arguments
             ---------
+
+            inputs: { `Mechanism` : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
+
             scheduler_processing : Scheduler
                 the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
@@ -771,12 +776,20 @@ class Composition(object):
                 the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
 
-            inputs: { `Mechanism` : list }
-                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
-                the user. For each pair, the key is the Mechanism and the value is a list of inputs.
-
             execution_id : UUID
                 execution_id will typically be set to none and assigned randomly at runtime
+
+            call_before_time_step : callable
+                will be called before each `TIME_STEP` is executed
+
+            call_after_time_step : callable
+                will be called after each `TIME_STEP` is executed
+
+            call_before_pass : callable
+                will be called before each `PASS` is executed
+
+            call_after_pass : callable
+                will be called after each `PASS` is executed
 
             Returns
             ---------
@@ -836,11 +849,11 @@ class Composition(object):
 
     def run(
         self,
+        inputs=None,
         scheduler_processing=None,
         scheduler_learning=None,
         termination_processing=None,
         termination_learning=None,
-        inputs=None,
         execution_id=None,
         num_trials=None,
         call_before_time_step=None,
@@ -857,6 +870,11 @@ class Composition(object):
             Arguments
             ---------
 
+            inputs: { `Mechanism` : list }
+                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+                the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the list \
+                corresponds to a certain `TRIAL`
+
             scheduler_processing : Scheduler
                 the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
@@ -865,11 +883,6 @@ class Composition(object):
                 the scheduler object which owns the conditions that will instruct the Learning execution of this Composition. \
                 If not specified, the Composition will use its automatically generated scheduler
 
-            inputs: { `Mechanism` : list }
-                a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
-                the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the list \
-                corresponds to a certain `TRIAL`
-
             execution_id : UUID
                 execution_id will typically be set to none and assigned randomly at runtime
 
@@ -877,6 +890,24 @@ class Composition(object):
                 typically, the composition will infer the number of trials from the length of its input specification.
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
+
+            call_before_time_step : callable
+                will be called before each `TIME_STEP` is executed
+
+            call_after_time_step : callable
+                will be called after each `TIME_STEP` is executed
+
+            call_before_pass : callable
+                will be called before each `PASS` is executed
+
+            call_after_pass : callable
+                will be called after each `PASS` is executed
+
+            call_before_trial : callable
+                will be called before each `TRIAL` is executed
+
+            call_after_trial : callable
+                will be called after each `TRIAL` is executed
 
             Returns
             ---------
