@@ -509,6 +509,7 @@ class InputState(State_Base):
         self.path_afferents = assignment
 
 
+# def _instantiate_input_states(owner, input_states=None, context=None):
 def _instantiate_input_states(owner, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of InputState(s)
 
@@ -530,6 +531,11 @@ def _instantiate_input_states(owner, context=None):
 
     (See State._instantiate_state_list() for additional details)
     """
+
+    # This allows method to be called by Mechanism.add_input_states() with set of user-specified input_states,
+    #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
+    #    assigned in the **input_states** argument of the Mechanism's constructor)
+    # input_states = input_states or owner.input_states
 
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=owner.input_states,
