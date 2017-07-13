@@ -196,7 +196,7 @@ __engine.finalize_object()
 
 #This prints generated x86 assembly
 if __dumpenv is not None and __dumpenv.find("isa") != -1:
-    print("x86 assembly:")
+    print("ISA assembly:")
     print(__target_machine.emit_assembly(__mod))
 
 def get_mxv():
