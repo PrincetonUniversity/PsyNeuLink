@@ -33,6 +33,8 @@ my_input_state = InputState(
     name="GOOBAH"
 )
 
+Output_Layer.add_states(my_input_state)
+
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
                                 projections=Hidden_Layer_2)
                                 # params={PROJECTIONS:Hidden_Layer_2})

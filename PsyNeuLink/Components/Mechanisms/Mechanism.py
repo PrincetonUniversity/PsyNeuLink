@@ -1877,7 +1877,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states:tc.any(State, list)):
+    def add_states(self, states:tc.any(State, list), context=COMMAND_LINE):
         """Add one or more `States <State>` to the Mechanism
 
         Only `InputStates <InputState> and `OutputStates <OutputState>` can be added;
@@ -1901,8 +1901,8 @@ class Mechanism_Base(Mechanism):
             constructor for a Mechanism (see `specifying states <State_Specification>`).
         """
         from PsyNeuLink.Components.States.State import _parse_state_type, _instantiate_state_list
-        from PsyNeuLink.Components.States.InputState import InputState
-        from PsyNeuLink.Components.States.OutputState import OutputState
+        from PsyNeuLink.Components.States.InputState import InputState, _instantiate_input_states
+        from PsyNeuLink.Components.States.OutputState import OutputState, _instantiate_output_states
 
         # Put in list to standardize treatment below
         if not isinstance(states, list):
@@ -1912,16 +1912,15 @@ class Mechanism_Base(Mechanism):
         output_states = []
 
         for state in states:
-            state_type = _parse_state_type(state)
+            state_type = _parse_state_type(self, state)
             if isinstance(state_type, InputState):
                 input_states.append(state)
             elif isinstance(state_type, OutputState):
                 output_states.append(state)
 
         # _instantiate_state_list(self, input_states, InputState)
-        self._instantiate_input_states(input_states)
-        self._instantiate_output_states(output_states)
-
+        _instantiate_input_states(self, input_states, context=context)
+        _instantiate_output_states(self, output_states, context=context)
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
