@@ -952,13 +952,6 @@ class Component(object):
 
         # Get args in call to __init__ and create access to default values
         sig = inspect.signature(self.__init__)
-        # print(sig.parameters)
-        # def default(val):
-        #     print("type(self) is: ", type(self))
-        #     print("sig is: ", sig)
-        #     print("sig.parameters is: ", sig.parameters)
-        #     print("val is: ", val)
-        #     return list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
         default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 

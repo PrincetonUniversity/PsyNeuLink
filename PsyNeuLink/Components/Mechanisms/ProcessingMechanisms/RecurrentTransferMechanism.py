@@ -493,7 +493,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         super()._instantiate_attributes_after_function(context=context)
-        print('self.matrix before overriding: ', self.matrix)
+
         if self.auto is not None and self.cross is not None:
             a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
             c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
