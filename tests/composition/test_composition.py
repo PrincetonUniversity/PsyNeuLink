@@ -1,8 +1,9 @@
+import functools
 import logging
+import numpy as np
+import pytest
 
 from timeit import timeit
-
-import pytest
 
 from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import mechanism
@@ -12,6 +13,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Composition import Composition, CompositionError, MechanismRole
 from PsyNeuLink.Scheduling.Condition import EveryNCalls
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -1053,6 +1055,249 @@ class TestRun:
             scheduler_processing=sched
         )
         assert 250 == output[0][0]
+
+
+class TestCallBeforeAfterTimescale:
+
+    def test_call_before_record_timescale(self):
+        time_step_array = []
+        trial_array = []
+        pass_array = []
+
+        def cb_timestep(scheduler, arr):
+            def record_timestep():
+
+                arr.append(scheduler.times[TimeScale.TIME_STEP][TimeScale.TIME_STEP])
+
+            return record_timestep
+
+        def cb_pass(scheduler, arr):
+
+            def record_pass():
+
+                arr.append(scheduler.times[TimeScale.RUN][TimeScale.PASS])
+
+            return record_pass
+
+        def cb_trial(scheduler, arr):
+
+            def record_trial():
+
+                arr.append(scheduler.times[TimeScale.LIFE][TimeScale.TRIAL])
+
+            return record_trial
+
+        comp = Composition()
+
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp._analyze_graph()
+        inputs_dict = {A: [1, 2, 3, 4]}
+        sched = Scheduler(composition=comp)
+
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=cb_timestep(sched, time_step_array),
+            call_before_trial=cb_trial(sched, trial_array),
+            call_before_pass=cb_pass(sched, pass_array)
+        )
+
+        assert time_step_array == [0, 1, 0, 1, 0, 1, 0, 1]
+        assert trial_array == [0, 1, 2, 3]
+        assert pass_array == [0, 1, 2, 3]
+
+    def test_call_beforeafter_values_onepass(self):
+
+        def record_values(d, time_scale, *mechs):
+            if time_scale not in d:
+                d[time_scale] = {}
+            for mech in mechs:
+                if mech not in d[time_scale]:
+                    d[time_scale][mech] = []
+                if mech.value is None:
+                    d[time_scale][mech].append(np.nan)
+                else:
+                    d[time_scale][mech].append(mech.value)
+
+        comp = Composition()
+
+        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
+        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp._analyze_graph()
+        inputs_dict = {A: [1, 2, 3, 4]}
+        sched = Scheduler(composition=comp)
+
+        before = {}
+        after = {}
+
+        before_expected = {
+            TimeScale.TIME_STEP: {
+                A: [np.nan, 2, 2, 4, 4, 6, 6, 8],
+                B: [np.nan, np.nan, 10, 10, 20, 20, 30, 30]
+            },
+            TimeScale.PASS: {
+                A: [np.nan, 2, 4, 6],
+                B: [np.nan, 10, 20, 30]
+            },
+            TimeScale.TRIAL: {
+                A: [np.nan, 2, 4, 6],
+                B: [np.nan, 10, 20, 30]
+            },
+        }
+
+        after_expected = {
+            TimeScale.TIME_STEP: {
+                A: [2, 2, 4, 4, 6, 6, 8, 8],
+                B: [np.nan, 10, 10, 20, 20, 30, 30, 40]
+            },
+            TimeScale.PASS: {
+                A: [2, 4, 6, 8],
+                B: [10, 20, 30, 40]
+            },
+            TimeScale.TRIAL: {
+                A: [2, 4, 6, 8],
+                B: [10, 20, 30, 40]
+            },
+        }
+
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B),
+        )
+
+        for ts in before_expected:
+            for mech in before_expected[ts]:
+                np.testing.assert_allclose(before[ts][mech], before_expected[ts][mech], err_msg='Failed on before[{0}][{1}]'.format(ts, mech))
+
+        for ts in after_expected:
+            for mech in after_expected[ts]:
+                comp = []
+                for x in after[ts][mech]:
+                    try:
+                        comp.append(x[0][0])
+                    except TypeError:
+                        comp.append(x)
+                np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
+
+    def test_call_beforeafter_values_twopass(self):
+
+        def record_values(d, time_scale, *mechs):
+            if time_scale not in d:
+                d[time_scale] = {}
+            for mech in mechs:
+                if mech not in d[time_scale]:
+                    d[time_scale][mech] = []
+                if mech.value is None:
+                    d[time_scale][mech].append(np.nan)
+                else:
+                    d[time_scale][mech].append(mech.value)
+
+        comp = Composition()
+
+        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
+        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
+        comp.add_mechanism(A)
+        comp.add_mechanism(B)
+        comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+        comp._analyze_graph()
+        inputs_dict = {A: [1, 2]}
+        sched = Scheduler(composition=comp)
+        sched.add_condition(B, EveryNCalls(A, 2))
+
+        before = {}
+        after = {}
+
+        before_expected = {
+            TimeScale.TIME_STEP: {
+                A: [
+                    np.nan, 1, 2,
+                    2, 4, 6,
+                ],
+                B: [
+                    np.nan, np.nan, np.nan,
+                    4, 4, 4,
+                ]
+            },
+            TimeScale.PASS: {
+                A: [
+                    np.nan, 1,
+                    2, 4,
+                ],
+                B: [
+                    np.nan, np.nan,
+                    4, 4,
+                ]
+            },
+            TimeScale.TRIAL: {
+                A: [np.nan, 2],
+                B: [np.nan, 4]
+            },
+        }
+
+        after_expected = {
+            TimeScale.TIME_STEP: {
+                A: [
+                    1, 2, 2,
+                    4, 6, 6,
+                ],
+                B: [
+                    np.nan, np.nan, 4,
+                    4, 4, 16,
+                ]
+            },
+            TimeScale.PASS: {
+                A: [
+                    1, 2,
+                    4, 6,
+                ],
+                B: [
+                    np.nan, 4,
+                    4, 16,
+                ]
+            },
+            TimeScale.TRIAL: {
+                A: [2, 6],
+                B: [4, 16]
+            },
+        }
+
+        comp.run(
+            inputs=inputs_dict,
+            scheduler_processing=sched,
+            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B),
+            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B),
+            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B),
+            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B),
+            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B),
+            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B),
+        )
+
+        for ts in before_expected:
+            for mech in before_expected[ts]:
+                np.testing.assert_allclose(before[ts][mech], before_expected[ts][mech], err_msg='Failed on before[{0}][{1}]'.format(ts, mech))
+
+        for ts in after_expected:
+            for mech in after_expected[ts]:
+                comp = []
+                for x in after[ts][mech]:
+                    try:
+                        comp.append(x[0][0])
+                    except TypeError:
+                        comp.append(x)
+                np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
 
     # when self.sched is ready:
     # def test_run_default_scheduler(self):

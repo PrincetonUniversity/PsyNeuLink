@@ -457,10 +457,14 @@ class Composition(object):
             if isinstance(pathway[c], Mechanism):
                 if isinstance(pathway[c - 1], Mechanism):
                     # if the previous item was also a mechanism, add a mapping projection between them
-                    self.add_projection(pathway[c - 1],
-                                        MappingProjection(sender=pathway[c - 1],
-                                                          receiver=pathway[c]),
-                                        pathway[c])
+                    self.add_projection(
+                        pathway[c - 1],
+                        MappingProjection(
+                            sender=pathway[c - 1],
+                            receiver=pathway[c]
+                        ),
+                        pathway[c]
+                    )
             # if the current item is a projection
             elif isinstance(pathway[c], Projection):
                 if c == len(pathway) - 1:
@@ -743,11 +747,15 @@ class Composition(object):
             self.input_mechanisms[k]._execution_id = self._execution_id
 
     def execute(
-            self,
-            inputs,
-            scheduler_processing=None,
-            scheduler_learning=None,
-            execution_id=None
+        self,
+        inputs,
+        scheduler_processing=None,
+        scheduler_learning=None,
+        call_before_time_step=None,
+        call_before_pass=None,
+        call_after_time_step=None,
+        call_after_pass=None,
+        execution_id=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -785,12 +793,30 @@ class Composition(object):
         self._create_input_mechanisms()
         self._assign_values_to_input_mechanisms(inputs)
         self._assign_execution_ids(execution_id)
-
+        next_pass_before = 1
+        next_pass_after = 1
         # run scheduler to receive sets of mechanisms that may be executed at this time step in any order
         execution_scheduler = scheduler_processing
         num = None
-        for next_execution_set in execution_scheduler.run():
 
+        if call_before_pass:
+            call_before_pass()
+
+        for next_execution_set in execution_scheduler.run():
+            if call_after_pass:
+                if next_pass_after == execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]:
+                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.format(next_pass_after, execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]))
+                    call_after_pass()
+                    next_pass_after += 1
+
+            if call_before_pass:
+                if next_pass_before == execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]:
+                    call_before_pass()
+                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.format(next_pass_before, execution_scheduler.times[TimeScale.TRIAL][TimeScale.PASS]))
+                    next_pass_before += 1
+
+            if call_before_time_step:
+                call_before_time_step()
             # execute each mechanism with EXECUTING in context
             for mechanism in next_execution_set:
                 if isinstance(mechanism, Mechanism):
@@ -799,6 +825,13 @@ class Composition(object):
                     print("result = ", num)
                     print()
                     print()
+
+            if call_after_time_step:
+                call_after_time_step()
+
+        if call_after_pass:
+            call_after_pass()
+
         return num
 
     def run(
@@ -809,7 +842,13 @@ class Composition(object):
         termination_learning=None,
         inputs=None,
         execution_id=None,
-        num_trials=None
+        num_trials=None,
+        call_before_time_step=None,
+        call_after_time_step=None,
+        call_before_pass=None,
+        call_after_pass=None,
+        call_before_trial=None,
+        call_after_trial=None,
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
@@ -870,9 +909,11 @@ class Composition(object):
                     reuse_inputs = True
                 # otherwise, warn user that there is something wrong with their input specification
                 else:
-                    raise CompositionError("The number of trials [{}] specified for the composition [{}] does not match the "
-                                           "length [{}] of the inputs specified in the inputs dictionary [{}]. "
-                                           .format(num_trials, self, len_inputs, inputs))
+                    raise CompositionError(
+                        "The number of trials [{}] specified for the composition [{}] does not match the "
+                        "length [{}] of the inputs specified in the inputs dictionary [{}]. "
+                        .format(num_trials, self, len_inputs, inputs)
+                    )
 
         input_indices = range(len_inputs)
 
@@ -886,6 +927,8 @@ class Composition(object):
 
         # loop over the length of the list of inputs (# of trials)
         for input_index in input_indices:
+            if call_before_trial:
+                call_before_trial()
             if scheduler_processing.termination_conds[TimeScale.RUN].is_satisfied():
                 break
 
@@ -895,9 +938,22 @@ class Composition(object):
             for mech in inputs.keys():
                 execution_inputs[mech] = inputs[mech][0 if reuse_inputs else input_index]
 
-            num = self.execute(execution_inputs, scheduler_processing, execution_id)
+            num = self.execute(
+                execution_inputs,
+                scheduler_processing,
+                scheduler_learning,
+                call_before_time_step,
+                call_before_pass,
+                call_after_time_step,
+                call_after_pass,
+                execution_id,
+            )
+
             if num is not None:
                 result = num
+
+            if call_after_trial:
+                call_after_trial()
 
         scheduler_processing._increment_time(TimeScale.RUN)
 
