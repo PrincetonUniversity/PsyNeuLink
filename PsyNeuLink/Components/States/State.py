@@ -37,8 +37,8 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
     OutputState can be modulated by a `GatingSignal`.
 
 * `ModulatorySignal`:
-    used by an `AdaptiveMechanism` to modulate the value of the primary types of States listed above.
-    There are three types of ModulatorySignals:
+    a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
+    types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
     * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
@@ -52,10 +52,10 @@ Creating a State
 ----------------
 
 States can be created using the constructor for one of the subclasses.  However, in general, they are created
-automatically by the objects to which they belong, or by specifying the State in the constructor for the object
-to which it belongs.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
-in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`;
-and a `ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
+automatically by the objects to which they belong (their `owner <State_Owner>`), or by specifying the State in the
+constructor for its owner.  For example, `InputStates <InputState>` and `OutputStates <OutputState>` can be specified,
+in the **input_states** and **output_states** arguments, respectively, of the constructor for a `Mechanism`; and a
+`ParameterState` can be specified in the argument of the constructor for a function of a Mechanism or Projection,
 where its parameters are specified.  A State can be specified in those cases in any of the following forms:
 
     * an existing **State** object;
@@ -90,7 +90,66 @@ where its parameters are specified.  A State can be specified in those cases in 
       to or from the State, depending on the type of State and the context in which it is specified;
 
 COMMENT:
-*** EXAMPLES HERE
+
+.. _State_Deferred_Initialization:
+
+If a State is created on its own, and its `owner <State_Owner>` is not specified, then its initialization will be
+`deferred <Component_Deferred_Initialization>`.  Its initialization is completed automatically when it is assigned
+to a owner (`Mechanism` or `Projection`) using that Component's `add_states` method.  If it is not assigned to an
+owner, it will not be functional (i.e., used during execution of `Mechanism <Mechansim_Execution>` or
+`Composition <Composition_Execution>`, irrespective of whether it has any Projections assigned to it.
+
+.. _State_Projections:
+
+Projections
+~~~~~~~~~~~
+
+When a State is created, it can be assigned one or more `Projections <Projection>`, using either the **projections**
+argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with the key
+*PROJECTIONS*. The following of types of Projections can be specified for each type of State:
+
+    * `InputState`
+        • `PathwayProjection(s) <PathwayProjection>`
+          - assigned to its `pathway_afferents <Input.pathway_afferents>` attribute.
+        • `GatingProjection(s) <GatingProjection>`
+          - assigned to its `mod_afferents <InputState.mod_afferents>` attribute.
+
+    * `ParameterState`
+        • `ControlProjection(s) <ControlProjection>` - assigned to its `mod_afferents <ParameterState.mod_afferents>`
+          attribute.
+
+    * `OutputState`
+        • `PathwayProjection(s) <PathwayProjection>`
+          - assigned to its `efferents <Output.efferents>` attribute.
+        • `GatingProjection(s) <GatingProjection>`
+          - assigned to its `mod_afferents <OutputState.mod_afferents>` attribute.
+
+    * `ModulatorySignal`
+        • `ModulatoryProjection(s) <ModulatoryProjection>`
+          - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
+
+Projections must be specified in a list.  Each entry must be either a specification for a `projection
+<Projection_In_Context_Specification>`, or by a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
+in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
+Mechanism. If a Mechanism is specified, its primary InputState or OutputState  is used, as appropriate.  When a
+sender or receiver is used to specify the Projection, the type of Projection created is inferred from the State and
+the type of sender or receiver specified, as illustrated in the examples below.  Note that the State must be
+`assigned to an owner <State_Deferred_Initialization>` in order to be functional, irrespective of whether any
+`Projections <Projection>` have been assigned to it.
+
+The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
+`primary OutputState <OutputState_Primary>` of ``mech_A``::
+
+    my_input_state = InputState(projections=[mech_A])
+
+The following creates a `GatingSignal` with `GatingProjections <GatingProjection>` to ``mech_B`` and ``mech_C``,
+and assigns it to a ``my_gating_mech``::
+
+    my_gating_signal = GatingSignal(projections=[mech_B, mech_C])
+    my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
+
+The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_B`` and ``mech_C``.
+
 COMMENT
 
 .. _State_Structure:
@@ -98,8 +157,23 @@ COMMENT
 Structure
 ---------
 
-Every State is owned by either a `Mechanism <Mechanism>` or a `Projection <Projection>`. Like all PsyNeuLink
-components, a State has the three following core attributes:
+.. _State_Owner:
+
+Owner
+~~~~~
+
+Every State has an `owner <State.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the owner
+must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.  For
+`ModulatorySignals`, it must be an `AdaptiveMechanism`.  When a State is created as part of another Component, its
+`owner <State.owner>` is assigned automatically to that Component.  It is also assigned automatically when the State
+is assigned to a Component using that Component's `add_states` method.  Otherwise, it must be specified explicitly
+in the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be
+`deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
+
+Variable, Function and Value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
     * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
@@ -238,6 +312,9 @@ class State_Base(State):
     """
     State_Base(        \
     owner,             \
+    variable=None,     \
+    size=None,         \
+    projections=None,  \
     params=None,       \
     name=None,         \
     prefs=None)
@@ -345,7 +422,7 @@ class State_Base(State):
     ----------
 
     owner : Mechanism or Projection
-        object to which the State belongs.
+        object to which the State belongs (see `State_Owner` for additional details).
 
     base_value : number, list or np.ndarray
         value with which the State was initialized.
@@ -410,7 +487,6 @@ class State_Base(State):
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({PROJECTIONS:[]})
     paramNames = paramClassDefaults.keys()
     #endregion
 
@@ -419,6 +495,7 @@ class State_Base(State):
                  owner:tc.any(Mechanism, Projection),
                  variable=None,
                  size=None,
+                 projections=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -466,7 +543,11 @@ class State_Base(State):
             except (KeyError, NameError):
                 pass
             try:
-                params = kargs[STATE_PARAMS]
+                size = kargs[SIZE]
+            except (KeyError, NameError):
+                pass
+            try:
+                projections = kargs[PROJECTIONS]
             except (KeyError, NameError):
                 pass
             try:
@@ -494,7 +575,8 @@ class State_Base(State):
                              format(self.__class__.__name__, STATE))
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(params=params)
+        params = self._assign_args_to_param_dicts(projections=projections,
+                                                  params=params)
 
         self.owner = owner
 
@@ -525,8 +607,8 @@ class State_Base(State):
                                          prefs=prefs,
                                          context=context.__class__.__name__)
 
-        # INSTANTIATE PROJECTION_SPECS SPECIFIED IN PARAM_SPECS
-        if PROJECTIONS in self.paramsCurrent:
+        # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
+        if PROJECTIONS in self.paramsCurrent and self.paramsCurrent[PROJECTIONS]:
             self._instantiate_projections(self.paramsCurrent[PROJECTIONS], context=context)
         else:
             # No projections specified, so none will be created here
@@ -623,7 +705,7 @@ class State_Base(State):
             #     ParameterState, projection, 2-item tuple or value
         """
 
-        if PROJECTIONS in request_set:
+        if PROJECTIONS in request_set and request_set[PROJECTIONS]:
             # if projection specification is an object or class reference, needs to be wrapped in a list
             # - to be consistent with paramClassDefaults
             # - for consistency of treatment below
@@ -758,6 +840,7 @@ class State_Base(State):
         from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # If specification is not a list, wrap it in one for consistency of treatment below
         # (since specification can be a list, so easier to treat any as a list)
@@ -856,6 +939,12 @@ class State_Base(State):
             # - default projection itself will be created below
             elif isinstance(projection_spec, Mechanism):
                 _check_projection_sender_compatability(self, default_projection_type, type(projection_spec))
+                # If Mechanism is a ProcessingMechanism, assign its primary OutputState as the sender
+                # (for ModulatoryProjections, don't assign sender, which will defer initialization)
+                # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism \
+                #     import ProcessingMechanism_Base
+                if isinstance(projection_spec, ProcessingMechanism_Base):
+                    sender = projection_spec.output_state
 
             # If projection_spec is a dict:
             # - get projection_type
@@ -1036,13 +1125,7 @@ class State_Base(State):
         default_string = ""
         kwDefault = "default "
 
-        # # MODIFIED 12/1/16 OLD:
-        # default_projection_type = self.paramsCurrent[PROJECTION_TYPE]
-        # # MODIFIED 12/1/16 NEW:
-        # default_projection_type = self.paramClassDefaults[PROJECTION_TYPE]
-        # MODIFIED 7/10/17 NEWER:
         default_projection_type = ProjectionRegistry[self.paramClassDefaults[PROJECTION_TYPE]].subclass
-        # MODIFIED 12/1/16 END
 
         # Instantiate projection specification and
         # - insure it is in self.efferents
@@ -2062,8 +2145,10 @@ def _check_projection_sender_compatability(owner, projection_type, sender_type):
     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
     from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
+    from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
-    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, OutputState):
+    if issubclass(projection_type, MappingProjection) and issubclass(sender_type, (OutputState,
+                                                                                   ProcessingMechanism_Base)):
         return
     if issubclass(projection_type, LearningProjection) and issubclass(sender_type, LearningSignal):
         return

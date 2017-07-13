@@ -294,6 +294,7 @@ class ModulatorySignal(OutputState):
                  size,
                  reference_value,
                  variable,
+                 projections,
                  modulation,
                  index,
                  calculate,
@@ -321,6 +322,7 @@ class ModulatorySignal(OutputState):
                 self.init_args = locals().copy()
                 self.init_args['context'] = self
                 self.init_args['name'] = name
+                self.init_args['projections'] = projections
 
                 # Flag for deferred initialization
                 self.value = DEFERRED_INITIALIZATION
@@ -330,6 +332,7 @@ class ModulatorySignal(OutputState):
                          reference_value,
                          variable=variable,
                          size=size,
+                         projections=projections,
                          index=index,
                          calculate=calculate,
                          params=params,
