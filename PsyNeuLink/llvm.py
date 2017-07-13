@@ -159,10 +159,12 @@ binding.initialize_native_target()
 # but why?
 binding.initialize_native_asmprinter()
 
+__features = binding.get_host_cpu_features().flatten()
+__cpu_name = binding.get_host_cpu_name()
 
 # Create compilation target, use default triple
 __target = binding.Target.from_default_triple()
-__target_machine = __target.create_target_machine(opt=3)
+__target_machine = __target.create_target_machine(cpu = __cpu_name, features = __features, opt = 3)
 
 # And an execution engine with an empty backing module
 # TODO: why is empty backing mod necessary?
