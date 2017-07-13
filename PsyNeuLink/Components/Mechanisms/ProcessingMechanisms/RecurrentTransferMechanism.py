@@ -190,21 +190,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
-        or a MappingProjection to use.
+        or a MappingProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
+        will be ignored in favor of those arguments.
 
     auto : number or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
         **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if matrix is specified, it will be overwritten by **auto** and/or **cross**,
-        if either is specified.
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **cross**, if either is specified.
 
     cross : number of None : default None
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **cross**, if **cross** is not None;
         If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
         **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
-        1 and all non-diagonal entries -1. if matrix is specified, it will be overwritten by **auto** and/or **cross**,
-        if either is specified.
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **cross**, if either is specified.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
