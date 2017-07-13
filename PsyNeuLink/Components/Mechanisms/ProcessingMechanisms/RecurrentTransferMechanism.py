@@ -147,6 +147,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
+    auto=None,                         \
+    cross=None,                        \
     initial_value=None,                \
     decay=None,                        \
     noise=0.0,                         \
@@ -188,7 +190,21 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
-        or a MappingProjection to use. 
+        or a MappingProjection to use.
+
+    auto : number or None : default None
+        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
+        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if matrix is specified, it will be overwritten by **auto** and/or **cross**,
+        if either is specified.
+
+    cross : number of None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **cross**, if **cross** is not None;
+        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if matrix is specified, it will be overwritten by **auto** and/or **cross**,
+        if either is specified.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -352,30 +368,42 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_input_value=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_states: tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
+                 auto: is_numeric_or_none=None,
+                 cross: is_numeric_or_none=None,
                  function=Linear,
                  initial_value=None,
-                 decay:is_numeric_or_none=None,
-                 noise:is_numeric_or_none=0.0,
-                 time_constant:is_numeric_or_none=1.0,
+                 decay: is_numeric_or_none=None,
+                 noise: is_numeric_or_none=0.0,
+                 time_constant: is_numeric_or_none=1.0,
                  range=None,
-                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
+                 output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: is_pref_set=None,
                  context=componentType+INITIALIZING):
         """Instantiate RecurrentTransferMechanism
         """
+        if output_states is None:
+            output_states = [RESULT]
+
+        # if auto is not None and cross is not None:
+        #     matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
+        # elif auto is not None:
+        # elif cross is not None:
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  initial_value=initial_value,
                                                   matrix=matrix,
                                                   decay=decay,
                                                   output_states=output_states,
                                                   params=params,
-                                                  noise=noise)
+                                                  noise=noise,
+                                                  auto=auto,
+                                                  cross=cross)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -438,9 +466,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             if rows != size:
                 if (matrix_param, MappingProjection):
                     # if __name__ == '__main__':
-                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of the variable for {} "
-                               "(whose size is {}, variable is {})".
-                               format(MATRIX, self.name, rows, self.name, self.size, self.variable))
+                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
+                               "{} {} (whose size is {} and whose variable is {})".
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
@@ -454,11 +482,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
                                              format(DECAY, self.name, decay))
 
+    def _instantiate_attributes_before_function(self, context=None):
+        """
+        """
+        super()._instantiate_attributes_before_function(context=context)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
         """
 
         super()._instantiate_attributes_after_function(context=context)
+        print('self.matrix before overriding: ', self.matrix)
+        if self.auto is not None and self.cross is not None:
+            a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
+            c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
+            self.matrix = a + c
+        if self.auto is not None:
+            self.matrix = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
+        if self.cross is not None:
+            self.matrix = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
 
         if isinstance(self.matrix, MappingProjection):
             self.recurrent_projection = self.matrix
@@ -495,10 +537,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         if INITIALIZING in context:
-            self.previous_input = self.variable
-
-        if self.decay is not None and self.decay != 1.0:
-            self.previous_input *= self.decay
+            if self.decay is not None and self.decay != 1.0:
+                self.previous_input *= self.decay
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

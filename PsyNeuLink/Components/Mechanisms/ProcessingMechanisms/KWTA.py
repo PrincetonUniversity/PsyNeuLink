@@ -40,6 +40,8 @@ class KWTA(RecurrentTransferMechanism):
                  bias=0,
                  initial_value=None,
                  matrix=None,  # None defaults to a hollow uniform inhibition matrix
+                 auto: is_numeric_or_none=None,  # not used: only here to avoid bugs
+                 cross: is_numeric_or_none=None,
                  decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,

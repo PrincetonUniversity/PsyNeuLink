@@ -395,6 +395,8 @@ class LCA(RecurrentTransferMechanism):
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
+                 auto:is_numeric_or_none=None,  # not used: only here to avoid bugs
+                 cross:is_numeric_or_none=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
