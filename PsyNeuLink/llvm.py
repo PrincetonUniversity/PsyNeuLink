@@ -146,10 +146,9 @@ def setup_mxv():
 
 setup_mxv()
 
-dumpenv = os.environ.get("PNL_LLVM_DUMP")
-if dumpenv is not None and dumpenv.find("llvm") != -1:
+__dumpenv = os.environ.get("PNL_LLVM_DUMP")
+if __dumpenv is not None and __dumpenv.find("llvm") != -1:
     print(__module)
-
 
 # Compiler binding
 binding.initialize()
@@ -185,7 +184,7 @@ __engine.add_module(__mod)
 __engine.finalize_object()
 
 #This prints generated x86 assembly
-if dumpenv is not None and dumpenv.find("isa") != -1:
+if __dumpenv is not None and __dumpenv.find("isa") != -1:
     print("x86 assembly:")
     print(__target_machine.emit_assembly(__mod))
 
