@@ -462,9 +462,10 @@ class InputState(State_Base):
 
         # Insure that self.value is compatible with (relevant item of) self.owner.variable
         if not iscompatible(self.value, self.reference_value):
-            raise InputStateError("Value ({0}) of {1} for {2} is not compatible with "
-                                           "the variable ({3}) of its function".
+            raise InputStateError("Value ({}) of {} {} for {} is not compatible with "
+                                           "the variable ({}) of its function".
                                            format(self.value,
+                                                  self.componentName,
                                                   self.name,
                                                   self.owner.name,
                                                   self.reference_value))

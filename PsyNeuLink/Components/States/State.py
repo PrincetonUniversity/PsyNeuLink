@@ -2000,8 +2000,18 @@ def _instantiate_state(owner,                  # Object to which state will belo
     # state_spec is State object
     # - check that its value attribute matches the constraint_value
     # - check that its owner = owner
-    # - if either fails, assign default
+    # - if either fails, assign default State
     if isinstance(state_spec, state_type):
+        # State initialization was deferred (owner or referenc_value was missing), so
+        #    assign owner, variable, and/or reference_value if they were not specified
+        if state_spec.value is DEFERRED_INITIALIZATION:
+            if not state_spec.init_args[OWNER]:
+                state_spec.init_args[OWNER] = owner
+                state_spec.init_args[VARIABLE] = owner.variable[0]
+            if not hasattr(state_spec, 'reference_value'):
+                state_spec.reference_value = owner.variable[0]
+            state_spec._deferred_init()
+
         # Check that State's value is compatible with Mechanism's variable
         if iscompatible(state_spec.value, constraint_value):
             # Check that Mechanism is State's owner;  if it is not, user is given options

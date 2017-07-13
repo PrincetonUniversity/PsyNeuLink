@@ -1913,14 +1913,18 @@ class Mechanism_Base(Mechanism):
 
         for state in states:
             state_type = _parse_state_type(self, state)
-            if isinstance(state_type, InputState):
+            if (isinstance(state_type, InputState) or
+                    (inspect.isclass(state_type) and issubclass(state_type, InputState))):
                 input_states.append(state)
-            elif isinstance(state_type, OutputState):
+            elif (isinstance(state_type, OutputState) or
+                    (inspect.isclass(state_type) and issubclass(state_type, OutputState))):
                 output_states.append(state)
 
         # _instantiate_state_list(self, input_states, InputState)
-        _instantiate_input_states(self, input_states, context=context)
-        _instantiate_output_states(self, output_states, context=context)
+        if input_states:
+            _instantiate_input_states(self, input_states, context=context)
+        if output_states:
+            _instantiate_output_states(self, output_states, context=context)
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent
