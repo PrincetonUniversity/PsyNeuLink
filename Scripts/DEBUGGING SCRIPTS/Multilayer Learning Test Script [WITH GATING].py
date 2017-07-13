@@ -30,7 +30,7 @@ from PsyNeuLink.Components.States.InputState import InputState
 my_input_state = InputState(
     # owner=Output_Layer,
     projections=Input_Layer,
-    name="GOOBAH"
+    name="TEST ADD INPUT STATE"
 )
 
 Output_Layer.add_states(my_input_state)

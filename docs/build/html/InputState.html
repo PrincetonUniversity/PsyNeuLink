@@ -236,8 +236,8 @@ Projection&#8217;s <code class="xref any docutils literal"><span class="pre">val
 <ul class="simple">
 <li>A <strong>State specification dictionary</strong>.  This creates the specified InputState using the first item of the owner
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the InputState&#8217;s <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  In addition to the
-standard entries of a <code class="xref any docutils literal"><span class="pre">State</span> <span class="pre">specification</span> <span class="pre">dictionary</span></code>, the dictionary can have a <em>PROJECTIONS</em>
-entry, the value of which can be a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, a
+standard entries of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a>, the dictionary can have a
+<em>PROJECTIONS</em> entry, the value of which can be a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, a
 <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">Projection specification dictionary</span></a>, or a list containing items that
 are either of those.</li>
 </ul>
@@ -276,7 +276,7 @@ assigned in the Mechanism&#8217;s <a class="reference internal" href="Mechanism.
 <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the <strong>params</strong> argument with
 the key <em>PROJECTIONS</em>.  An InputState can be assigned either <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> or
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>.  MappingProjections are assigned to its <code class="xref any docutils literal"><span class="pre">pathway_afferents</span></code> attribute
-and GatingProjections to its <a class="reference internal" href="Function.html#Function.Stability.ParameterState.mod_afferents" title="Function.Stability.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  See <code class="xref any docutils literal"><span class="pre">State_Projections</span></code> for additional details concerning
+and GatingProjections to its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  See <code class="xref any docutils literal"><span class="pre">State_Projections</span></code> for additional details concerning
 the specification of Projections when creating a State.</p>
 </div>
 </div>
