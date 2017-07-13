@@ -195,7 +195,7 @@ class Graph(object):
         ----------
 
         comp_to_vertex : dict{`Component` : `Vertex`}
-            maps `Component`\ s in the graph to the `Vertices <Vertex>` that represent them
+            maps `Component`\\ s in the graph to the `Vertices <Vertex>` that represent them
 
         vertices : list[Vertex]
             the `Vertices <Vertex>` contained in this Graph
@@ -305,11 +305,11 @@ class Composition(object):
         ----------
 
         graph : `Graph`
-            The full `Graph` associated with this Composition. Contains both `Mechanism`\ s and `Projection`\ s used in processing \
+            The full `Graph` associated with this Composition. Contains both `Mechanism`\\ s and `Projection`\\ s used in processing \
             or learning.
 
         mechanisms : `list[Mechanism]`
-            A list of all `Mechanism`\ s contained in this Composition
+            A list of all `Mechanism`\\ s contained in this Composition
     '''
 
     def __init__(self):

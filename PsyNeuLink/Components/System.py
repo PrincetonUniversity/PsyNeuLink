@@ -162,7 +162,7 @@ Execution
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
 `execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
-`run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
+`run <System_Base.run>` allows a series of `TRIAL`` \\s to be executed, one for each input in the **inputs** argument
 of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
 method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
 executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
@@ -181,7 +181,7 @@ The input to a System is specified in the **input** argument of either its `exec
 each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
 `origin_mechanisms <System_Base.origin_mechanisms>`). If the `execute <System_Base.execute>` method is used, input for
 only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
-used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
+used for a sequence of `TRIAL`` \\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
 of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
 recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrent_init_mechanisms`), and target values are

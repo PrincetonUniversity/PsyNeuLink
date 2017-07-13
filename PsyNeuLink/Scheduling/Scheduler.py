@@ -50,7 +50,7 @@ COMMENT
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
   zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
   cycles (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is
-  used as the default order of executions, subject to any `Condition`\ s that have been specified
+  used as the default order of executions, subject to any `Condition`\\ s that have been specified
   (see `below <Scheduler_Algorithm>`).
 
 If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
@@ -154,7 +154,7 @@ execution, over which every Component in the Composition has been considered for
 `consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
 same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
-The Scheduler continues to make `PASS`\ es through the `consideration_queue` until a
+The Scheduler continues to make `PASS`\\ es through the `consideration_queue` until a
 `termination Condition <Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified,
 the Scheduler terminates a `TRIAL` when every Component has been specified for execution at least once (corresponding
 to the `AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
@@ -338,7 +338,7 @@ class Scheduler(object):
 
     times: dict{TimeScale: dict{TimeScale: int}}
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
-        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\ es that have occurred in the
+        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
     """
     def __init__(
@@ -467,7 +467,7 @@ class Scheduler(object):
 
     def add_condition_set(self, conditions):
         '''
-        :param conditions: a `dict` mapping `Component`\ s to `Condition`\ s,
+        :param conditions: a `dict` mapping `Component`\\ s to `Condition`\\ s,
                which can be added later with `add_condition`
         '''
         self.condition_set.add_condition_set(conditions)
@@ -497,7 +497,7 @@ class Scheduler(object):
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
 
-        :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
+        :param termination_conds: (dict) - a mapping from `TimeScale`\\ s to `Condition`\\ s that when met
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()
