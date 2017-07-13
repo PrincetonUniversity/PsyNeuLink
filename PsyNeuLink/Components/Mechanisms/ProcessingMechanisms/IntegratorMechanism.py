@@ -107,8 +107,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                           FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                      kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                      kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
-            + paramNames (dict): names as above
-
         Class methods:
             None
 
@@ -195,9 +193,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
 
     })
-
-    # Set default input_value to default bias for SigmoidLayer
-    paramNames = paramClassDefaults.keys()
 
     from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator
 

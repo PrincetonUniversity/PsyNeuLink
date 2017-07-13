@@ -213,7 +213,6 @@ class GatingSignal(ModulatorySignal):
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS (Modulation.MULTIPLY)
-            + paramNames (dict)
 
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear

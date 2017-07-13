@@ -194,7 +194,6 @@ class ComparatorMechanism(ObjectiveMechanism):
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-            + paramNames (dict): names as above
 
         Class methods:
             None
@@ -314,8 +313,6 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         MONITORED_VALUES: None})
-
-    paramNames = paramClassDefaults.keys()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:SSE,

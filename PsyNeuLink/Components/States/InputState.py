@@ -246,7 +246,6 @@ class InputState(State_Base):
                 + FUNCTION_PARAMS (dict)
                 # + kwStateProjectionAggregationFunction (LinearCombination, Operation.SUM)
                 # + kwStateProjectionAggregationMode (LinearCombination, Operation.SUM)
-            + paramNames (dict)
 
         Class methods
         -------------
@@ -510,7 +509,7 @@ class InputState(State_Base):
 
 
 # def _instantiate_input_states(owner, input_states=None, context=None):
-def _instantiate_input_states(owner, context=None):
+def _instantiate_input_states(owner, input_states=None, context=None):
     """Call State._instantiate_state_list() to instantiate orderedDict of InputState(s)
 
     Create ContentAddressableList of InputState(s) specified in paramsCurrent[INPUT_STATES]
@@ -535,10 +534,10 @@ def _instantiate_input_states(owner, context=None):
     # This allows method to be called by Mechanism.add_input_states() with set of user-specified input_states,
     #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
     #    assigned in the **input_states** argument of the Mechanism's constructor)
-    # input_states = input_states or owner.input_states
+    input_states = input_states or owner.input_states
 
     state_list = _instantiate_state_list(owner=owner,
-                                         state_list=owner.input_states,
+                                         state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATES,
                                          constraint_value=owner.variable,

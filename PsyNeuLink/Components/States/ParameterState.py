@@ -284,7 +284,6 @@ class ParameterState(State_Base):
             + paramClassDefaults (dict)
                 + FUNCTION (Linear)
                 + PROJECTION_TYPE (CONTROL_PROJECTION)
-            + paramNames (dict)
 
         Class methods
         -------------

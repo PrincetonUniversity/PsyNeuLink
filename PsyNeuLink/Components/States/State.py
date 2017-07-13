@@ -376,7 +376,6 @@ class State_Base(State):
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
             + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States
-            + paramNames (dict)
             + owner (Mechansim)
             + FUNCTION (Function class or object, or method)
 
@@ -478,8 +477,6 @@ class State_Base(State):
 
     """
 
-    #region CLASS ATTRIBUTES
-
     componentCategory = kwStateComponentCategory
     className = STATE
     suffix = " " + className
@@ -495,8 +492,7 @@ class State_Base(State):
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
                                            PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
-    paramNames = paramClassDefaults.keys()
-    #endregion
+    paramClassDefaults.update({STATE_TYPE: None})
 
     @tc.typecheck
     def __init__(self,
@@ -2312,7 +2308,8 @@ def _parse_state_spec(owner,
                   VARIABLE: variable,
                   VALUE: value,
                   PARAMS: params,
-                  STATE_TYPE: state_type}
+                  STATE_TYPE: state_type
+                  }
 
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
@@ -2466,6 +2463,9 @@ def _parse_state_spec(owner,
     # If variable is none, use value:
     if state_dict[VARIABLE] is None:
         state_dict[VARIABLE] = state_dict[VALUE]
+
+    # # Add STATE_TYPE entry to state_dict
+    # state_dict[STATE_TYPE] = state_type
 
     return state_dict
 

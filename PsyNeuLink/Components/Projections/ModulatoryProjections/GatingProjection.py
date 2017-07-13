@@ -122,7 +122,6 @@ class GatingProjection(ModulatoryProjection_Base):
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
                 PROJECTION_SENDER_VALUE: [defaultGatingSignal]
-            + paramNames = paramClassDefaults.keys()
     COMMENT
 
 

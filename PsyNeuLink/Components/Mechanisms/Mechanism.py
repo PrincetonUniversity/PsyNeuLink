@@ -636,7 +636,6 @@ class Mechanism_Base(Mechanism):
                 + MECHANISM_TIME_SCALE (TimeScale): TimeScale.TRIAL (timeScale at which Mechanism executes)
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
                     specifies order in which types of States are executed;  used by self.execute]
-            + paramNames (dict)
             + default_mechanism (str): Currently DDM_MECHANISM (class reference resolved in __init__.py)
 
         Class methods
@@ -1356,7 +1355,7 @@ class Mechanism_Base(Mechanism):
             or process InputStates before and/or after call to _instantiate_input_states
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
-        # _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
+        _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
         _instantiate_input_states(owner=self, context=context)
 
     def _instantiate_parameter_states(self, context=None):

@@ -441,7 +441,6 @@ class DDM(ProcessingMechanism_Base):
                                                           DDM_PROBABILITY_LOWER_THRESHOLD,
                                                           DDM_RT_CORRECT_MEAN,
                                                           DDM_RT_CORRECT_VARIANCE,
-            + paramNames (dict): names as above
         Class methods
         -------------
             - plot() : generates a dynamic plot of the DDM
@@ -562,9 +561,6 @@ class DDM(ProcessingMechanism_Base):
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES: None})
-
-    # Set default input_value to default bias for DDM
-    paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
     def __init__(self,

@@ -287,7 +287,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-            + paramNames (dict): names as above
 
         Class methods:
             None
@@ -424,8 +423,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         })
-
-    paramNames = paramClassDefaults.keys()
 
     standard_output_states = standard_output_states.copy()
 
