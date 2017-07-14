@@ -485,6 +485,9 @@ class OutputState(State_Base):
     owner : Mechanism
         the Mechanism to which the OutputState belongs.
 
+    mod_afferents : List[GatingProjection]
+        a list of the `GatingProjections <GatingProjection>` received by the InputState.
+
     variable : number, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` specified by the
         OutputState's `index <OutputState.index>` attribute.
@@ -510,9 +513,9 @@ class OutputState(State_Base):
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
         of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
-    efferents : Optional[List[Projection]]
-        a list of the projections sent by the OutputState (i.e., for which the OutputState is a
-        `sender <Projection.Projection.sender>`).
+    efferents : List[MappingProjection]
+        a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState
+        is a `sender <Projection.Projection.sender>`).
 
     name : str : default <State subclass>-<index>
         name of the OutputState.

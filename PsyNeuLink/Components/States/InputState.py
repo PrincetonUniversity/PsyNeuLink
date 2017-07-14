@@ -366,9 +366,12 @@ class InputState(State_Base):
     owner : Mechanism
         the Mechanism to which the InputState belongs.
 
-    afferents : Optional[List[Projection]]
-        a list of the Projections received by the InputState
+    pathway_afferents : List[MappingProjection]
+        a list of the `MappingProjections <MappingProjection>` received by the InputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
+
+    mod_afferents : List[GatingProjection]
+        a list of the `GatingProjections <GatingProjection>` received by the InputState.
 
     variable : number, list or np.ndarray
         the template for the `value <Projection.Projection.value>` of each Projection that the InputState receives,
