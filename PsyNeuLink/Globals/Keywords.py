@@ -160,7 +160,7 @@ MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 ON = True
 OFF = False
 DEFAULT = False
-AUTO = True
+# AUTO = True  # MODIFIED 7/14/17 CW
 
 
 # Used by initDirective
@@ -303,6 +303,7 @@ MODULATORY_SIGNAL = 'ModulatorySignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
+AUTO_ASSOCIATIVE_PROJECTION = "AutoAssociativeProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
@@ -566,6 +567,8 @@ kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
+AUTO = 'auto'
+CROSS = 'cross'
 
 
 #endregion
