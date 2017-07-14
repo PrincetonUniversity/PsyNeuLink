@@ -621,17 +621,6 @@ class ControlSignal(ModulatorySignal):
                                              "a list or 1D np.array of numbers".
                                          format(allocation_samples, self.name))
 
-        # # If allocation_policy has been assigned, set self.value to it so it reflects the number of  control_signals;
-        # #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
-        # #    it returns default_allocation policy which has only a singel item,
-        # #    however validation of indices for OutputStates requires that proper number of items be in self.value
-        # # FIX: SHOULD VALIDATE THAT FUNCTION INDEED RETURNS A VALUE WITH LENGTH = # ControlSignals
-        try:
-            self.owner.value = self.owner.allocation_policy
-        except AttributeError:
-            pass
-
-
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         # ControlProjection Cost Functions

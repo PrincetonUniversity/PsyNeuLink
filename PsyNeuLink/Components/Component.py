@@ -2390,7 +2390,10 @@ class Component(object):
         self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
-        self._value_template = self.value
+        try:
+            self._default_value = self.value.copy()
+        except AttributeError:
+            self._default_value = self.value
 
     def _instantiate_attributes_after_function(self, context=None):
         pass

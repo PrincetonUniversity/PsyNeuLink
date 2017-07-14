@@ -510,6 +510,13 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         else:
             self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
+        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals);
+        #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
+        #    it returns default_allocation policy which has only a single item,
+        #    however validation of indices for OutputStates requires that proper number of items be in self.value
+        self.value = self.allocation_policy
+        self._default_value = self.value
+
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
 
         control_projection = None
