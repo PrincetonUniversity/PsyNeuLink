@@ -640,19 +640,20 @@ class OutputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.owner.value is not None:
-            value = self.owner.value
-        # The following is the case if add_states is called but owner Mechanism has not yet been executed
-        #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
-        #     and generate error if for some reason that is not the case
-        else:
-            try:
-                value = self.owner.output_values
-                if value is None:
-                    raise AttributeError
-            except AttributeError:
-                raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
-                                       format(self.owner.name))
+        # if self.owner.value is not None:
+        #     value = self.owner.value
+        # # The following is the case if add_states is called but owner Mechanism has not yet been executed
+        # #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
+        # #     and generate error if for some reason that is not the case
+        # else:
+        #     try:
+        #         value = self.owner.output_values
+        #         if value is None:
+        #             raise AttributeError
+        #     except AttributeError:
+        #         raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
+        #                                format(self.owner.name))
+        value = self.owner._value_template
 
         if INDEX in target_set:
             try:
