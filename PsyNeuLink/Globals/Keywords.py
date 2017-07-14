@@ -339,6 +339,7 @@ LCA = "LCA"
 KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
+COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
 
 # Functions:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"

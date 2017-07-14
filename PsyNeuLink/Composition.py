@@ -47,7 +47,8 @@ from collections import Iterable, OrderedDict
 from enum import Enum
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.CompositionInterfaceMechanism \
+    import CompositionInterfaceMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import Projection
 from PsyNeuLink.Globals.Keywords import EXECUTING
@@ -712,7 +713,7 @@ class Composition(object):
 
             # If mech IS AN ORIGIN mechanism but it doesn't have an input mechanism, ADD input mechanism
             if mech not in has_input_mechanism:
-                new_input_mech = TransferMechanism()
+                new_input_mech = CompositionInterfaceMechanism()
                 self.input_mechanisms[mech] = new_input_mech
                 MappingProjection(sender=new_input_mech, receiver=mech)
 
