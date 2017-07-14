@@ -49,7 +49,7 @@ of InputStates specified must equal the number of OutputStates specified in the 
 `examples <ObjectiveMechanism_Examples>` below). The value of each must also be of the same type as the value of the
 corresponding OutputState, however their lengths can differ;  in that case, by default, the MappingProjection created
 uses a  `FULL_CONNECTIVITY` matrix, although this too can be customized using the *PROJECTION* entry of a
-`state specification dictionary <LINK>` for the InputState in the **input_states** argument.
+`State specification dictionary <State_Specification>` for the InputState in the **input_states** argument.
 
 
 .. _ObjectiveMechanism_Structure:
@@ -287,7 +287,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-            + paramNames (dict): names as above
 
         Class methods:
             None
@@ -424,8 +423,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         FUNCTION: LinearCombination,
         })
-
-    paramNames = paramClassDefaults.keys()
 
     standard_output_states = standard_output_states.copy()
 

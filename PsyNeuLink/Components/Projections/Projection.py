@@ -321,7 +321,6 @@ class Projection_Base(Projection):
             + variableClassDefault (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
-            + paramNames (dict)
             + FUNCTION (Function class or object, or method)
 
         Class methods
@@ -518,8 +517,6 @@ class Projection_Base(Projection):
                                               name=self.name,
                                               prefs=prefs,
                                               context=context.__class__.__name__)
-
-        # self.paramNames = self.paramInstanceDefaults.keys()
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender

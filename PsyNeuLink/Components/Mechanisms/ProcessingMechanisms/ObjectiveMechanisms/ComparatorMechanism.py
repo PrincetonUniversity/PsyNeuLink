@@ -44,9 +44,9 @@ also be compatible with the value of the OutputStates specified in the **sample*
 the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped
 to the sample and target InputStates of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
-so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, 
-this can be specified using the *PROJECTION* entry of a `state specification dictionary <LINK>`
-for the InputState in the **input_states** argument.
+so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, this
+can be specified using the *PROJECTION* entry of a `State specification dictionary <State_Specification>` for the
+InputState in the **input_states** argument.
 
 .. _ComparatorMechanism_Structure:
 
@@ -194,7 +194,6 @@ class ComparatorMechanism(ObjectiveMechanism):
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-            + paramNames (dict): names as above
 
         Class methods:
             None
@@ -314,8 +313,6 @@ class ComparatorMechanism(ObjectiveMechanism):
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         MONITORED_VALUES: None})
-
-    paramNames = paramClassDefaults.keys()
 
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:SSE,

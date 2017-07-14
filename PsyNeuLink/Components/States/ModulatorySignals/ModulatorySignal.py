@@ -73,10 +73,10 @@ before passing it to the State's `function <State.function>`.  The default for `
 `ModulationParam.ADDITIVE`, which adds the `value <LearningSignal.value>` of the LearningSignal (i.e., the weight
 changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current weight
 `matrix <MappingProjection.matrix>` for the `MappingProjection` being learned).  The
-`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of
-the ModulatorySignal's constructor, or in a *MODULATION* entry of a `state specification dictionary <LINK>` used to
-create the ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the value of
-the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism` to which it belongs.
+`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of the
+ModulatorySignal's constructor, or in a *MODULATION* entry of a `State specification dictionary <State_Specification>`
+used to create the ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the
+value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism` to which it belongs.
 
 .. note::
    `OVERRIDE <ModulatorySignal_Modulation>` can be specified for **only one** ModulatoryProjection to a State;
@@ -192,7 +192,6 @@ class ModulatorySignal(OutputState):
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS (Modulation.MULTIPLY)
-            + paramNames (dict)
 
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear
@@ -290,46 +289,36 @@ class ModulatorySignal(OutputState):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 owner,
-                 size,
-                 reference_value,
-                 variable,
-                 projections,
-                 modulation,
-                 index,
-                 calculate,
-                 params,
-                 name,
-                 prefs,
-                 context):
+                 owner=None,
+                 size=None,
+                 reference_value=None,
+                 variable=None,
+                 projections=None,
+                 modulation=None,
+                 index=None,
+                 calculate=None,
+                 params=None,
+                 name=None,
+                 prefs=None,
+                 context=None):
 
+        # Deferred initialization
         try:
             if self.value in {DEFERRED_INITIALIZATION, INITIALIZING}:
-                # If init was deferred, it may have been because owner was not yet known (see below),
+                # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
                 #   and so modulation hasn't had a chance to be assigned to the owner's value
-                #   (i.e., if it was not specified in the constructor), so do so here;
+                #   (i.e., if it was not specified in the constructor), so do it now;
                 #   however modulation has already been assigned to params, so need to assign it there
                 params[MODULATION] = self.modulation or owner.modulation
 
+        # Standard initialization
         except AttributeError:
             # Assign args to params and functionParams dicts (kwConstants must == arg names)
             params = self._assign_args_to_param_dicts(params=params,
                                                       modulation=modulation)
 
-            # If owner or reference_value has not been assigned, defer init to State._instantiate_projection()
-            if owner is None or reference_value is None:
-                # Store args for deferred initialization
-                self.init_args = locals().copy()
-                self.init_args['context'] = self
-                self.init_args['name'] = name
-                self.init_args['projections'] = projections
-
-                # Flag for deferred initialization
-                self.value = DEFERRED_INITIALIZATION
-                return
-
-        super().__init__(owner,
-                         reference_value,
+        super().__init__(owner=owner,
+                         reference_value=reference_value,
                          variable=variable,
                          size=size,
                          projections=projections,
@@ -340,7 +329,9 @@ class ModulatorySignal(OutputState):
                          prefs=prefs,
                          context=context)
 
-        self._modulation = self.modulation or owner.modulation
+        # If owner is specified but modulation has not been specified, assign to owner's value
+        if owner and self._modulation is None:
+            self._modulation = self.modulation or owner.modulation
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor

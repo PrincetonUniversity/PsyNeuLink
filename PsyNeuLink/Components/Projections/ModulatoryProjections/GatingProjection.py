@@ -27,7 +27,7 @@ A GatingProjection can be created using any of the standard ways to `create a pr
 by including it in the specification of an `InputState` or `OutputState` .  If a GatingProjection is created using its
 constructor on its own, the **receiver** argument must be specified.  It can be specified as a particular InputState
 or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, the Mechanism's
-`primary InputState <Mechanism_InputStates>` will be used. If the GatingProjection is included in an InputState or
+`primary InputState <InputState_Primary>` will be used. If the GatingProjection is included in an InputState or
 OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
 If a GatingProjection's `sender <GatingProjection.sender>` is not specified, the `sender <GatingProjection.sender>`
 is assigned to the OutputState of a `DefaultGatingMechanism`.
@@ -122,7 +122,6 @@ class GatingProjection(ModulatoryProjection_Base):
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
                 PROJECTION_SENDER_VALUE: [defaultGatingSignal]
-            + paramNames = paramClassDefaults.keys()
     COMMENT
 
 

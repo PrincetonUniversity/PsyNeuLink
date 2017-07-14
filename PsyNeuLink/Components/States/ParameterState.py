@@ -244,6 +244,8 @@ from PsyNeuLink.Components.Functions.Function import *
 from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.State import _instantiate_state
 
+state_type_keywords = state_type_keywords.update({PARAMETER_STATE})
+
 
 class ParameterStateError(Exception):
     def __init__(self, error_value):
@@ -284,7 +286,6 @@ class ParameterState(State_Base):
             + paramClassDefaults (dict)
                 + FUNCTION (Linear)
                 + PROJECTION_TYPE (CONTROL_PROJECTION)
-            + paramNames (dict)
 
         Class methods
         -------------

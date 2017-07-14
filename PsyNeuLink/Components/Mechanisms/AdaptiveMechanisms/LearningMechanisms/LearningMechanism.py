@@ -495,7 +495,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 + FUNCTION (Function): (default: BP)
                 + FUNCTION_PARAMS:
                     + LEARNING_RATE (value): (default: 1)
-            + paramNames (dict)
             + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 

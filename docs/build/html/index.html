@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PsyNeuLink Documentation &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>PsyNeuLink Documentation &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="#"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="#"/>
         <link rel="next" title="Quick Reference" href="QuickReference.html"/> 
 
   
@@ -62,7 +62,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -280,7 +280,7 @@ function (the default for a TransferMechanism), and the other two of which use a
 <p>The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
 picks sensible defaults when necessary Components are not specified.  In the example above, since no projections were
 specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of mechanism,
-using random initial weights.  However, it is easy to spcify them explicitly, simply by inserting them in between the</p>
+using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them in between the</p>
 <blockquote>
 <div><p>mechanisms in the pathway for the process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_projection_1</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="o">.</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">+</span> <span class="o">-.</span><span class="mi">1</span><span class="p">))</span>
@@ -295,19 +295,18 @@ have been inserted directly, as follows:</p>
 </pre></div>
 </div>
 <p>PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
-a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_lalyer</span></code> can be added simply by adding another
+a recurrent Projection from the <code class="docutils literal"><span class="pre">output_layer</span></code> back to the <code class="docutils literal"><span class="pre">hidden_layer</span></code> can be added simply by adding another
 entry to the pathway:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
 </pre></div>
 </div>
 <p>This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
-been accomplished by explicilty creating the recurrent connection:</p>
-<blockquote>
-<div><p>my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
-MappingProjection(sender=output_layer,</p>
-<blockquote>
-<div>receiver=hidden_layer)</div></blockquote>
-</div></blockquote>
+been accomplished by explicitly creating the recurrent connection:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
+                  <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_layer</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="more-elaborate-configurations">
 <span id="index-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
@@ -524,7 +523,7 @@ started.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

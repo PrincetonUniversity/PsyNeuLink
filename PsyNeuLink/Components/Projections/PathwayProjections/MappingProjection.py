@@ -220,7 +220,7 @@ class MappingProjection(PathwayProjection_Base):
 
     receiver: Optional[InputState or Mechanism]
         specifies the destination of the Projection's output.  If a mechanism is specified, its
-        `primary InputState <Mechanism_InputStates>` will be used. If it is not specified, it will be assigned in
+        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX

@@ -154,7 +154,7 @@ The full process can be run simply by calling its run method::
 The order of that the Mechanisms appear in the list determines the order of their Projections, and PsyNeuLink
 picks sensible defaults when necessary Components are not specified.  In the example above, since no projections were
 specified, PsyNeuLink automatically created ones that were properly sized to connect each pair of mechanism,
-using random initial weights.  However, it is easy to spcify them explicitly, simply by inserting them in between the
+using random initial weights.  However, it is easy to specify them explicitly, simply by inserting them in between the
  mechanisms in the pathway for the process::
 
     my_projection_1 = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) + -.1))
@@ -167,13 +167,13 @@ have been inserted directly, as follows::
     my_encoder = process(pathway=[input_layer, (.2 * np.random.rand(2, 5)) + -.1)), hidden_layer, output_layer])
 
 PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
-a recurrent Projection from the ``output_layer`` back to the ``hidden_lalyer`` can be added simply by adding another
+a recurrent Projection from the ``output_layer`` back to the ``hidden_layer`` can be added simply by adding another
 entry to the pathway::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer, hidden_layer])
 
 This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
-been accomplished by explicilty creating the recurrent connection:
+been accomplished by explicitly creating the recurrent connection::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
     MappingProjection(sender=output_layer,

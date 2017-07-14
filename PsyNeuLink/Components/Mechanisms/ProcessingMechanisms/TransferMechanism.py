@@ -196,7 +196,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
-            + paramNames (dict): names as above
 
         Class methods
         -------------
@@ -368,8 +367,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     paramClassDefaults.update({NOISE: None})
 
     standard_output_states = standard_output_states.copy()
-
-    paramNames = paramClassDefaults.keys()
 
     variableClassDefault = [[0]]
 

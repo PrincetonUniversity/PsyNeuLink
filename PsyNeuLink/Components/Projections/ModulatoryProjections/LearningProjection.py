@@ -180,7 +180,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     + PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                     + PROJECTION_TYPE: LEARNING_PROJECTION
 
-            + paramNames (dict)
             + classPreference (PreferenceSet): LearningProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 

@@ -171,7 +171,6 @@ class LearningSignal(ModulatorySignal):
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
-            + paramNames (dict)
 
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear)

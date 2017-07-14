@@ -142,7 +142,6 @@ class ControlProjection(ModulatoryProjection_Base):
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
-            + paramNames = paramClassDefaults.keys()
     COMMENT
 
 

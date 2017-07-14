@@ -181,7 +181,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_signals : List[InputState or OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the InputStates and/or OutputStates to be gated by the GatingMechanism;
         the number of items must equal the length of the **default_gating_policy** arg;
-        if a Mechanism is specified, its `primary InputState <Mechanism_InputStates>` will be used
+        if a Mechanism is specified, its `primary InputState <InputState_Primary>` will be used
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
