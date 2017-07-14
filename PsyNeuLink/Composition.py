@@ -752,11 +752,11 @@ class Composition(object):
         inputs,
         scheduler_processing=None,
         scheduler_learning=None,
-        execution_id=None,
         call_before_time_step=None,
         call_before_pass=None,
         call_after_time_step=None,
         call_after_pass=None,
+        execution_id=None
     ):
         '''
             Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
