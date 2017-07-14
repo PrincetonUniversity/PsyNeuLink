@@ -273,7 +273,7 @@ class KWTA(RecurrentTransferMechanism):
         state_list = _instantiate_state_list(owner=owner,
                                              state_list=owner.input_states,
                                              state_type=InputState,
-                                             state_param_identifier=INPUT_STATES,
+                                             state_param_identifier=INPUT_STATE,
                                              constraint_value=self.variable,
                                              constraint_value_name="kwta-extended function variable",
                                              context=context)

@@ -866,8 +866,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.variable):
-                raise RunError("Incompatible stimuli ({}) for {} ({})".
-                                  format(stim, append_type_to_name(mech), mech.variable))
+                raise RunError("Input stimululs ({}) for {} is incompatible with its variable ({})".
+                                  format(stim, mech.name, mech.variable))
 
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])

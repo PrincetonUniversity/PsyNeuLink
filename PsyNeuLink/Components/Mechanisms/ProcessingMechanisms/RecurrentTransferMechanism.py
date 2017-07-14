@@ -42,7 +42,7 @@ Structure
 
 The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
 parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to it `primary InputState <Mechanism_InputStates>`.
+`primary OutputState <OutputState_Primary>` back to it `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
