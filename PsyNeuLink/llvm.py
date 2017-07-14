@@ -191,6 +191,8 @@ __pass_manager = binding.ModulePassManager()
 __pass_manager_builder.populate(__pass_manager);
 
 __pass_manager.run(__mod)
+if __dumpenv is not None and __dumpenv.find("opt") != -1:
+    print(__mod)
 
 # Now add the module and make sure it is ready for execution
 __engine.add_module(__mod)
