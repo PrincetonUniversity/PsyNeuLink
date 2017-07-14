@@ -201,21 +201,17 @@ assigned to the constructor&#8217;s <strong>params</strong> argument.  The latte
 InputStates are specified in the parameter dictionary, any specified in the <strong>input_states</strong> argument will be ignored).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>Assigning InputStates to a Mechanism in its constructor <strong>replaces</strong> any that are automatically generated for that
-Mechanism (i.e., those that is creates for itself by default).  If any of those need to be retained, they must be
+<p class="last">Assigning InputStates to a Mechanism in its constructor <strong>replaces</strong> any that are automatically generated for that
+Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they must be
 explicitly specified in the list assigned to the <strong>input_states</strong> argument or the <em>INPUT_STATES</em> entry of
-the parameter dictionary in the <strong>params</strong> argument).  The number of InputStates specified in the constructor
-determines the number of items in the owner Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, which supersedes
-specification of the <strong>variable</strong> and/or <strong>size</strong> arguments in the constructor.</p>
-<p class="last">Assigning InputStates to a Mechanism using the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method <strong>adds</strong> the InputStates to any
-that already belong to that Mechanism.  This also adds an item to the owner Mechanism&#8217;s
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each InputState added, superseding specification of the <strong>variable</strong>
-and/or <strong>size</strong> arguments in the Mechanism&#8217;s constructor.</p>
+the parameter dictionary in the <strong>params</strong> argument).  This is <strong>not</strong> true for InputStates added using a
+Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> attributes;  those are added to any that already belong to the Mechanism.</p>
 </div>
-<p>For a single InputState, the value can be any of the specifications listed below.  To create multiple InputStates, the
-value can be either a list, each item of which can be any of the specifications below;  or, it can be a dictionary, in
-which the key for each entry is a string specifying the name for the InputState to be created, and its value is
-one of the specifications below:</p>
+<p>Assigning InputStates to a Mechanism using the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method <strong>adds</strong> the InputStates to any
+that already belong to that Mechanism. For a single InputState, the value can be any of the specifications listed below.
+To create multiple InputStates, the value can be either a list, each item of which can be any of the specifications
+below;  or, it can be a dictionary, in which the key for each entry is a string specifying the name for the
+InputState to be created, and its value is one of the specifications below:</p>
 <blockquote>
 <div><ul class="simple">
 <li>An existing <strong>InputState object</strong> or the name of one.  Its <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be compatible with
@@ -253,27 +249,35 @@ and assigns the State as the <code class="xref any docutils literal"><span class
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">In all cases, the resulting <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputState must be compatible with (that is,
-have the same number and type of elements as) the item of its owner Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">variable</span></a>.
-This is insured by the default <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>), since this preserves
-the format of its input;  it must also be true for any other function that is assigned as the
+<p class="last">In all cases, the resulting <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the InputState must be compatible with (that is, have
+the same number and type of elements as) the item of its owner Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
+This is insured by the default <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>), since this preserves the
+format of its input;  it must also be true for any other function that is assigned as the
 <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for an InputState.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="multiple-inputstates-and-a-mechanism-s-variable-attribute">
-<span id="inputstates-and-mechanism-variable"></span><h3>Multiple InputStates and a Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> Attribute<a class="headerlink" href="#multiple-inputstates-and-a-mechanism-s-variable-attribute" title="Permalink to this headline">¶</a></h3>
-<p>If a Mechanism requires multiple InputStates (i.e., it&#8217;s <a class="reference internal" href="#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute has more than one
-item), it assigns the <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputState to an item of its
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">Mechanism Variable</span></a>). Therefore, the number of
-InputStates specified must equal the number of items in the Mechanisms&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, with one
-exception: If the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> has more than one item, it may still be assigned a
-single InputState;  in that case, the <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that InputState must have the same number of
-items as the Mechanisms&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  For Mechanisms that have multiple InputStates, the
-order in which they are specified in Mechanism&#8217;s constructor must parallel the order of the items to which they will be
-assigned in the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>; furthermore, as noted above, the
-<a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each InputState must match (in number and types of elements) the item of
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to which it will be assigned.</p>
+<div class="section" id="inputstates-and-a-mechanism-s-variable-and-function-attributes">
+<span id="inputstates-mechanism-variable-and-function"></span><h3>InputStates and a Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> Attributes<a class="headerlink" href="#inputstates-and-a-mechanism-s-variable-and-function-attributes" title="Permalink to this headline">¶</a></h3>
+<p>A Mechanism must have one InputState for each item of its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see
+<a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">Mechanism</span></a>).  The value specified in the <strong>variable</strong> or <strong>size</strong> arguments of the
+Mechanism&#8217;s constructor determines the number of items in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base" title="Mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal"><span class="pre">variable</span></code></a>, which ordinarily matches
+the size (along axis 0) of the input expected by its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Therefore,
+if any InputStates are specified in the constructor, the number of them must match the number of items in
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  InputStates can be added to a Mechanism&#8217;s using <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method;  this
+extends its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> by a number of items equal to the number of InputStates
+added, and each new item is assigned a value compatible with the <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding
+InputState added.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Adding InputStates to a Mechanism using its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method may introduce an incompatibility with the
+Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, which takes the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+as its input; such an incompatibility will generate an error.  It is the user&#8217;s responsibility to ensure that the
+explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, so that the total number of InputStates (listed in the Mechanism&#8217;s
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_states" title="Mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute matches the number of items expected for the input to the
+function specified in the Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> attribute  (i.e., its size along axis 0).</p>
+</div>
 </div>
 <div class="section" id="projections">
 <span id="inputstate-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
@@ -281,7 +285,7 @@ assigned in the Mechanism&#8217;s <a class="reference internal" href="Mechanism.
 <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the <strong>params</strong> argument with
 the key <em>PROJECTIONS</em>.  An InputState can be assigned either <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection(s)</span></a> or
 <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>.  MappingProjections are assigned to its <code class="xref any docutils literal"><span class="pre">pathway_afferents</span></code> attribute
-and GatingProjections to its <a class="reference internal" href="State.html#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  See <code class="xref any docutils literal"><span class="pre">State_Projections</span></code> for additional details concerning
+and GatingProjections to its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  See <code class="xref any docutils literal"><span class="pre">State_Projections</span></code> for additional details concerning
 the specification of Projections when creating a State.</p>
 </div>
 </div>

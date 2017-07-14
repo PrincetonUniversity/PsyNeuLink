@@ -1795,18 +1795,18 @@ def _instantiate_state_list(owner,
         #                      WITH RESPECT TO ITEMS OF constraint_value (I.E., owner.value)
         # If number of States exceeds number of items in constraint_value, raise exception
         if num_states > num_constraint_items:
-            raise StateError("There are too many {0} specified ({1}) in {2} "
-                                 "for the number of values ({3}) in the {4} of its function".
+            raise StateError("There are too many {}s specified ({}) in {} "
+                                 "for the number of items ({}) in the {} of its function".
                                  format(state_param_identifier,
                                         num_states,
-                                        owner.__class__.__name__,
+                                        owner.name,
                                         num_constraint_items,
                                         constraint_value_name))
 
         # If number of States is less than number of items in constraint_value, raise exception
         elif num_states < num_constraint_items:
-            raise StateError("There are fewer {0} specified ({1}) than the number of values ({2}) "
-                                 "in the {3} of the function for {4}".
+            raise StateError("There are fewer {}s specified ({}) than the number of items ({}) "
+                                 "in the {} of the function for {}".
                                  format(state_param_identifier,
                                         num_states,
                                         num_constraint_items,

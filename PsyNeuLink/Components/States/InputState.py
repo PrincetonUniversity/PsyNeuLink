@@ -52,22 +52,17 @@ assigned to the constructor's **params** argument.  The latter takes precedence 
 InputStates are specified in the parameter dictionary, any specified in the **input_states** argument will be ignored).
 
 .. note::
-   Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
-   Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they must be
-   explicitly specified in the list assigned to the **input_states** argument or the *INPUT_STATES* entry of
-   the parameter dictionary in the **params** argument).  The number of InputStates specified in the constructor
-   determines the number of items in the owner Mechanism's `variable <Mechanism_Base.variable>`, which supersedes
-   specification of the **variable** and/or **size** arguments in the constructor.
+    Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
+    Mechanism (i.e., those that it creates for itself by default).  If any of those need to be retained, they must be
+    explicitly specified in the list assigned to the **input_states** argument or the *INPUT_STATES* entry of
+    the parameter dictionary in the **params** argument).  This is **not** true for InputStates added using a
+    Mechanism's `add_states` attributes;  those are added to any that already belong to the Mechanism.
 
-   Assigning InputStates to a Mechanism using the Mechanism's `add_states` method **adds** the InputStates to any
-   that already belong to that Mechanism.  This also adds an item to the owner Mechanism's
-   `variable <Mechanism_Base.variable>` for each InputState added, superseding specification of the **variable**
-   and/or **size** arguments in the Mechanism's constructor.
-
-For a single InputState, the value can be any of the specifications listed below.  To create multiple InputStates, the
-value can be either a list, each item of which can be any of the specifications below;  or, it can be a dictionary, in
-which the key for each entry is a string specifying the name for the InputState to be created, and its value is
-one of the specifications below:
+Assigning InputStates to a Mechanism using the Mechanism's `add_states` method **adds** the InputStates to any
+that already belong to that Mechanism. For a single InputState, the value can be any of the specifications listed below.
+To create multiple InputStates, the value can be either a list, each item of which can be any of the specifications
+below;  or, it can be a dictionary, in which the key for each entry is a string specifying the name for the
+InputState to be created, and its value is one of the specifications below:
 
     * An existing **InputState object** or the name of one.  Its `value <InputState.value>` must be compatible with
       the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which it will be assigned.
@@ -124,22 +119,46 @@ COMMENT:
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
 COMMENT
 
-.. _InputStates_and_Mechanism_Variable:
+.. _InputStates_Mechanism_Variable_and_Function:
 
-Multiple InputStates and a Mechanism's `variable <Mechanism_Base.variable>` Attribute
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+InputStates and a Mechanism's `variable <Mechanism_Base.variable>` and `function <Mechanism_Base.function>` Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a Mechanism requires multiple InputStates (i.e., it's `variable <InputState.variable>` attribute has more than one
-item), it assigns the `value <InputState.value>` of each InputState to an item of its
-`variable <Mechanism_Base.variable>` (see `Mechanism Variable <Mechanism_Variable>`). Therefore, the number of
-InputStates specified must equal the number of items in the Mechanisms's `variable <Mechanism_Base.variable>`, with one
-exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned a
-single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same number of
-items as the Mechanisms's `variable <Mechanism_Base.variable>`.  For Mechanisms that have multiple InputStates, the
-order in which they are specified in Mechanism's constructor must parallel the order of the items to which they will be
-assigned in the Mechanism's `variable <Mechanism_Base.variable>`; furthermore, as noted above, the
-`value <InputState.value>` for each InputState must match (in number and types of elements) the item of
-`variable <Mechanism_Base.variable>` to which it will be assigned.
+A Mechanism must have one InputState for each item of its `variable <Mechanism_Base.variable>` (see
+`Mechanism <Mechanism_Variable>`).  The value specified in the **variable** or **size** arguments of the
+Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
+the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
+if any InputStates are specified in the constructor, the number of them must match the number of items in
+`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism's using `add_states` method;  this
+extends its `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates
+added, and each new item is assigned a value compatible with the `value <InputState.value>` of the corresponding
+InputState added.
+
+.. note::
+    Adding InputStates to a Mechanism using its `add_states` method may introduce an incompatibility with the
+    Mechanism's `function <Mechanism_Base.function>`, which takes the Mechanism's `variable <Mechanism_Base.variable>`
+    as its input; such an incompatibility will generate an error.  It is the user's responsibility to ensure that the
+    explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
+    `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
+    `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
+    function specified in the Mechanism's `function <Mechanism.function>` attribute  (i.e., its size along axis 0).
+
+
+COMMENT:
+However, if any InputStates are specified in its **input_states** argument or the *INPUT_STATES* entry of parameter
+dictionary assigned to its **params** argument, then the number of InputStates specified determines the number of
+items in the owner Mechanism's `variable <Mechanism_Base.variable>`, superseding any specification(s) in the
+**variable** and/or **size** arguments of the constructor.  Each item of the `variable <Mechanism_Base.variable>` is
+assigned a value compatible with the `value <InputState.value>` of the corresponding InputState). Similarly, if any
+InputStates are added to a Mechanism using its `add_states` method, then its `variable <Mechanism_Base.variable>`
+attribute is extended by a number of items equal to the number of InputStates added; and, again, each item is
+assigned a value compatible with the `value <InputState.value>` of the corresponding InputState.
+
+with one exception: If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be
+assigned a single InputState;  in that case, the `value <InputState.value>` of that InputState must have the same
+number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+COMMENT
+
 
 .. _InputState_Projections:
 
@@ -554,9 +573,9 @@ def _instantiate_input_states(owner, input_states=None, context=None):
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=input_states,
                                          state_type=InputState,
-                                         state_param_identifier=INPUT_STATES,
+                                         state_param_identifier=INPUT_STATE,
                                          constraint_value=owner.variable,
-                                         constraint_value_name="function variable",
+                                         constraint_value_name=VARIABLE,
                                          context=context)
 
 

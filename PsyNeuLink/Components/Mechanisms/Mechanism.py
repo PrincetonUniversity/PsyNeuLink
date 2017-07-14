@@ -212,7 +212,7 @@ InputStates
 These receive and represent the input to a Mechanism. A Mechanism usually has only one (**primary**) `InputState`, 
 identified by its `input_state <Mechanism_Base.input_state>`, attribute.  However some Mechanisms have
 more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its `sample` and another for its
-`target` input. If a Mechanism has more than one InputState, they are identified in a ContentAddressableList in the 
+`target` input. If a Mechanism has more than one InputState, they are listed in a ContentAddressableList in the
 Mechanism's `input_states <Mechanism_Base.input_states>` attribute (note the plural).  A specific InputState in the
 list can be accessed by using its name as the index for the list (e.g., ``my_mechanism['InputState name']``).
 
@@ -224,8 +224,8 @@ COMMENT
 
 Each InputState of a Mechanism can receive one or more Projections from other Mechanisms.  If the Mechanism is an
 `ORIGIN` Mechanism of a Process, it also receives a `Projection` from the `ProcessInputState <Process_Input_And_Output>`
-for that Process. Each InputState's :keyword:`function <InputState.InputState.function>` aggregates the values received
-from its Projections (usually by summing them), and assigns the result to the InputState's :keyword:`value` attribute.
+for that Process. Each InputState's `function <InputState.InputState.function>` aggregates the values received from its
+Projections (usually by summing them), and assigns the result to the InputState's `value <InputState.value>` attribute.
 
 .. _Mechanism_Variable:
 
@@ -233,10 +233,27 @@ The value of each InputState for the Mechanism is assigned as the value of an it
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as in a corresponding item of its
 `input_value <Mechanism_Base.input_value>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the
 input to the Mechanism's `function <Mechanism_Base.function>`, while its `input_value <Mechanism_Base.input_value>`
-provides a more convenient way of accessing its individual items.
+provides a more convenient way of accessing the value of its individual items.  Because there is a one-to-one
+correspondence between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, the number
+of each of these must be equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>`
+attribute (its size along axis 0) must equal the number of InputStates in its `input_states <Mechanism.input_states>`
+attribute. Therefore, if any InputStates are specified in the constructor, the number of them must match the number
+of items in `variable <Mechanism_Base.variable>`.  However, if InputStates are added using the Mechanism's `add_states`
+method, then its `variable <Mechanism_Base.variable>` is extended to accommodate the number of InputStates added
+(note that this must be coordinated with the Mechanism's `function <Mechanism_Base.funtion>`, which takes the
+Mechanism's `variable <Mechanism_Base.variable>` as its input -- see
+`InputState <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation). The order in which
+InputStates are specified in Mechanism's constructor, and/or added using its `add_states` method  determines the order
+of the items to which they are assigned assigned in he Mechanism's `variable <Mechanism_Base.variable>`.
+
 
 COMMENT:
-The number of input_states for the Mechanism must match the number of tems specified for the Mechanism's
+
+If more InputStates are specified than there are items in `variable <Mechanism_Base.variable>, the latter is extended
+to  match the former (see `InputState <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
+
+
+The number of input_states for the Mechanism must match the number of items specified for the Mechanism's
 ``variable`` (that is, its size along its first dimension, axis 0).  An exception is if the Mechanism's `variable``
 has more than one item, but only a single InputState;  in that case, the ``value`` of that InputState must have the
 same number of items as the Mechanisms's ``variable``.
@@ -1896,6 +1913,11 @@ class Mechanism_Base(Mechanism):
         assigning, or aborting.  If the name of a specified State is the same as an existing one of the same time,
         an index will be appended to its name, and incremented for each State added with the same name
         (see :ref:`naming conventions <LINK>`).
+
+        .. note::
+            Adding States to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
+            which may produce an incompatibility with its `function <Mechanism_Base.function>` (see
+            `InputStates <InputStates_Mechanism_Variable_and_Function>` for a more detailed explanation).
 
         Arguments
         ---------

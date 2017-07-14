@@ -35,6 +35,16 @@ my_input_state = InputState(
 
 Output_Layer.add_states(my_input_state)
 
+# my_test_mech = TransferMechanism(size=3,
+#                                  input_states=['test_1', 'test_2', 'test_3'])
+
+# my_test_mech = TransferMechanism(default_input_value=[[0],[0],[0]],
+#                                  input_states=['test_1', 'test_2'])
+
+my_test_mech = TransferMechanism(default_input_value=[[0],[0],[0]],
+                                 input_states=['test_1', 'test_2', 'test_3'])
+
+
 my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
                                 projections=Hidden_Layer_2)
                                 # params={PROJECTIONS:Hidden_Layer_2})

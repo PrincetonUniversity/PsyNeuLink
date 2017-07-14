@@ -818,7 +818,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     state_list = _instantiate_state_list(owner=owner,
                                          state_list=output_states,
                                          state_type=OutputState,
-                                         state_param_identifier=OUTPUT_STATES,
+                                         state_param_identifier=OUTPUT_STATE,
                                          constraint_value=constraint_value,
                                          constraint_value_name="output",
                                          context=context)
