@@ -14,7 +14,7 @@ import functools
 import uuid
 import os
 
-__module = ir.Module(name="PsyNeuLinkMmodule")
+__module = ir.Module(name="PsyNeuLinkModule")
 __int32_ty = ir.IntType(32)
 __double_ty = ir.DoubleType()
 
