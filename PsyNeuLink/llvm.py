@@ -61,9 +61,16 @@ def setup_mxv():
 
     # Create function
     function = ir.Function(__module, func_ty, name="mxv")
+    function.attributes.add('argmemonly')
+
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
     v, m, x, y, o = function.args
+
+    # Add function arg attributes
+    for a in v,m,o:
+        a.attributes.add('nonnull')
+        a.attributes.add('noalias')
 
     kwargs = {"array": o, "value": __double_ty(.0)}
 
