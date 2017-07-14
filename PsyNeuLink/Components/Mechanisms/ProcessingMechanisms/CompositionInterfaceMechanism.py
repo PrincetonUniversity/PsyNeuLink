@@ -20,7 +20,9 @@ Composition's origin mechanism via a projection.
 Creating an CompositionInterfaceMechanism
 -------------------------------
 
-A CompositionInterfaceMechanism is created automatically when an Origin mechanism is identified in a Composition.
+A CompositionInterfaceMechanism is created automatically when an Origin mechanism is identified in a Composition. When
+created, the CompositionInterfaceMechanism's outputState is set directly by the composition. This mechanism should never
+be executed, and should never be created by a user.
 
 .. _CompositionInterfaceMechanism_Structure
 
@@ -57,30 +59,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     prefs=None)
 
     Implements the CompositionInterfaceMechanism subclass of Mechanism.
-
-    COMMENT:
-        Description:
-            - DOCUMENT:
-
-        Class attributes:
-            + componentType (str): SigmoidLayer
-            + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
-            + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
-                                                                     kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
-                                                                     kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
-            + paramNames (dict): names as above
-
-        Class methods:
-            None
-
-        MechanismRegistry:
-           All instances of SigmoidLayer are registered in MechanismRegistry, which maintains an entry for the subclass,
-              a count for all instances of it, and a dictionary of those instances
-
-    COMMENT
 
     Arguments
     ---------
@@ -154,12 +132,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     variableClassDefault = [[0]]
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        # TIME_SCALE: TimeScale.TRIAL,
-        OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
-
-    })
-
+    paramClassDefaults.update({})
     paramNames = paramClassDefaults.keys()
 
     @tc.typecheck
