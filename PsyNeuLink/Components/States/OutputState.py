@@ -817,20 +817,9 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             # string, so check if it is the name of a standard_output_state and, if so, get its dict
             elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
                 # check if string matches the name entry of a dict in standard_output_states
-                # # MODIFIED 7/14/17 OLD:
-                # item = next((item for item in owner.standard_output_states.names if output_state is item), None)
-                # if item is not None:
-                #     # assign dict to owner's output_state list
-                #     owner.output_states[owner.output_states.index(output_state)] = \
-                #                                             owner.standard_output_states.get_dict(output_state)
-                # # # MODIFIED 7/17/17 NEW:
-                # item = next((item for item in owner.standard_output_states.names if output_state is item), None)
-                # if item is not None:
-                #     owner.output_states[i] = owner.standard_output_states.get_dict(output_state)
-                # MODIFIED 7/14/17 NEWER:
-                owner.output_states[i] = owner.standard_output_states.get_state_dict(output_state)
-                TEST = True
-                # MODIFIED 7/14/17 END
+                std_output_state = owner.standard_output_states.get_state_dict(output_state)
+                if std_output_state is not None:
+                    owner.output_states[i] = std_output_state
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
             # if isinstance(output_state, dict):
@@ -991,8 +980,9 @@ class StandardOutputStates():
         if next((item for item in self.names if name is item), None):
             # assign dict to owner's output_state list
             return self.data[self.names.index(name)].copy()
-        raise StandardOutputStatesError("{} not recognized as name of {} for {}".
-                                        format(name, StandardOutputStates.__class__.__name__, self.owner.name))
+        # raise StandardOutputStatesError("{} not recognized as name of {} for {}".
+        #                                 format(name, StandardOutputStates.__class__.__name__, self.owner.name))
+        return None
 
     # @tc.typecheck
     # def get_dict(self, name:str):

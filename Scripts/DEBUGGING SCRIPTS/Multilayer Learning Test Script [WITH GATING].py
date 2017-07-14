@@ -35,7 +35,7 @@ my_input_state = InputState(
 
 Output_Layer.add_states(my_input_state)
 
-# my_test_mech = TransferMechanism(size=3,
+# my_test_mech = TransferMechanism(size=[1,1,1],
 #                                  input_states=['test_1', 'test_2', 'test_3'])
 
 # my_test_mech = TransferMechanism(default_input_value=[[0],[0],[0]],

@@ -2208,7 +2208,9 @@ def _parse_state_type(owner, state_spec):
             #     # assign dict to owner's output_state list
             #     return owner.standard_output_states.get_dict(state_spec)
             # from PsyNeuLink.Components.States.OutputState import StandardOutputStates
-            return owner.standard_output_states.get_state_dict(state_spec)
+            if owner.standard_output_states.get_state_dict(state_spec):
+                from PsyNeuLink.Components.States.OutputState import OutputState
+                return OutputState
 
     # State specification dict
     if isinstance(state_spec, dict):
