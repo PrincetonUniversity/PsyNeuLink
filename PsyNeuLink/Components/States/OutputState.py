@@ -276,25 +276,22 @@ An OutputState also has two additional attributes that determine its operation, 
 
 * `index <OutputState.index>`: this determines the item of its owner Mechanism's
   `value <Mechanism.Mechanism_Base.value>` to which it is assigned.  By default, this is set to 0, which assigns it to
-  the first item of the Mechanism's `value <Mechanism.Mechanism_Base.value>`.  Its value must be equal to or less than
-  one minus the number of OutputStates in the Mechanism's `output_states <Mechanism.output_states>` attribute.  In
-  addition, the `variable <OutputState.variable>` of an OutputState must match (in the number and type of its elements)
-  the item of the Mechanism's `value <Mechanism.Mechanism_Base.value>` to which the index refers.
+  the first item of the Mechanism's `value <Mechanism.Mechanism_Base.value>`.  The `index <Mechanism.index>` must be
+  equal to or less than one minus the number of OutputStates listed in the Mechanism's
+  `output_states <Mechanism.output_states>` attribute.  The `variable <OutputState.variable>` of the
+  OutputState must also match (in the number and type of its elements) the item of the Mechanism's
+  `value <Mechanism.Mechanism_Base.value>` designated by the `index <OutputState.index>`.
 
 .. _OutputState_Calculate:
 
 * `calculate <OutputState.calculate>`:  this specifies a function used to convert the item of the owner Mechanism's
   `value <Mechanism.Mechanism_Base.value>` (designated by the OutputState's `index <OutputState.index>` attribute),
-  before assigning it as the OutputState's `value <OutputState.vaue>`.  The result is used as the input to the
-  OutputState's `function <OutputState.function>` attribute (which implements the effects of any
-  `GatingProjections` to the OutputState), the result of whch is assigned as the OutputState's
-  `value <OutputState.value>` (though see `note <OutputState_Function_Note_1>`). The 
-  `calculate  <OutputState.calculate>` attribute can be assigned any function that can take as its input the 
-  item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` designated by the OutputState's
-  `index <OutputState.index>` attribute, and the result of which can be used as the variable for the OutputState's
-  `function <OutputState.function>`.  The default is an identity function (`Linear` with **slope**\\ =1 and
-  **intercept**\\ =0), that simply assigns the specified item of the Mechanism's `value <Mechanism.Mechanism_Base.value>`
-  unmodified as the variable for OutputState's `function <OutputState.function>`.
+  before providing it to the OutputState's `function <OutputState.function>`.  The `calculate <OutputState.calculate>`
+  attribute can be assigned any function that accept the OutputState's `variable <OutputState.variable>` as its input,
+  and that generates a result that can be used the input for the OutputState's `function <OutputState.function>`.
+  The default is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply assigns the
+  specified item of the Mechanism's `value <Mechanism.Mechanism_Base.value>` unmodified as the input for OutputState's
+  `function <OutputState.function>`.
 
 
 .. _OutputState_Execution:
@@ -304,14 +301,14 @@ Execution
 
 An OutputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
 When the Mechanism is executed, it places the results of its execution in its `value <Mechanism.Mechanism_Base.value>`
-attribute. The OutputState's `index <OutputState.index>` attribute designates one item of the Mechanism's
+attribute. The OutputState's `index <OutputState.index>` attribute designates the item of the Mechanism's
 `value <Mechanism.Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
 specified by its `calculate <OutputState_Calculate>` attribute with the designated item of the Mechanism's
-`value <Mechanism.Mechanism_Base.value>` as its input.  This is possibly modified by the result of the OutputState's
-`function <OutputState.function>`. The final result is assigned as
-the OutputState's `value <OutputState.value>`, as well as to a corresponding item of the Mechanism's
-`output_values  <Mechanism.Mechanism_Base.output_values>` attribute. It is also used as the input to any projections for
-which the OutputState is the `sender <Projection.Projection.sender>`.
+`value <Mechanism.Mechanism_Base.value>` as its input.  This is used by the Mechanism's
+`function <Mechanism_Base.function>`, possibly under the influence of any `GatingProjections <GatingProjection>` it
+receives, to generate the `value <OutputState.value>` of the OutputState.  This is assigned to a corresponding item
+of the Mechanism's `output_values  <Mechanism.Mechanism_Base.output_values>` attribute, and is used as the
+input to any projections for which the OutputState is the `sender <Projection.Projection.sender>`.
 
 .. _OutputState_Class_Reference:
 
@@ -442,14 +439,13 @@ class OutputState(State_Base):
         specifies the template for the OutputState's `variable <OutputState.variable>`.
 
     size : int, list or np.ndarray of ints
-    specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-    if **variable** is specified, it takes precedence over the specification of **size**.
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : Function, function, or method : default LinearCombination(operation=SUM)
-        function used to aggregate the values of the projections received by the OutputState.
-        It must produce a result that has the same format (number and type of elements) as the item of the Mechanism's
-        `value <Mechanism.Mechanism_Base.value>` to which the OutputState is assigned (specified by its
-        **index** argument).
+        specifies the function used to transform the item of the owner Mechanism's `value <Mechanism_Base.value>`
+        designated by the OutputState's `index <OutputState.index>` attribute, under the possible influence of
+        `GatingProjections <GatingProjection>` received by the OutputState.
 
     index : int : default PRIMARY_OUTPUT_STATE
         specifies the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the
@@ -462,6 +458,10 @@ class OutputState(State_Base):
         before it is assigned as the OutputState's `value <OutputState.value>`.  The function must accept a value that
         has the same format (number and type of elements) as the item of the Mechanism's
         `value <Mechanism.Mechanism_Base.value>`.
+
+    projections : list of Projection specifications
+        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or any
+        `GatingProjection(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
@@ -493,24 +493,22 @@ class OutputState(State_Base):
         the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` used as input for the function
         specified by its `calculate <OutputState.calculate>` attribute.
 
-    calculate : function or method : default Linear
+    calculate : function or method : default Linear(slope=1, intercept=0))
         function used to convert the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` specified by
         the OutputState's `index <OutputState.index>` attribute.  The result is combined with the result of the
         OutputState's `function <OutputState.function>` to determine both the `value <OutputState.value>` of the
         OutputState, as well as the value of the corresponding item of the owner Mechanism's `output_values
         <Mechanism.Mechanism_Base.output_values>`. The default (`Linear`) transfers the value unmodified.
 
-    function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation  of the values of the projections received by the
-        OutputState.  The result is combined with the result of the function specified by
-        `calculate <OutputState.calculate>`, and assigned as both the OutputState's `value <OutputState.value>`
-        and the corresponding item of the owner's `output_values <Mechanism.Mechanism_Base.output_values>`.
+    function : TransferFunction : default Linear(slope=1, intercept=0))
+        function used to assign the result of the OutputState's `calculate <OutputState.calculate>` function,
+        under the possible influence of `GatingProjections <GatingProjection>` received by the OutputState,
+        to its `value <OutputState.value>`, as well as to the corresponding item of the owner's `output_values
+        <Mechanism.Mechanism_Base.output_values>` attribute.
 
     value : number, list or np.ndarray
-        assigned the result of `function <OutputState.function>`
-        (though see note under `function <OutputState.function>) combined with the result of the function specified
-        by `calculate <OutputState.calculate>`;  the same value is assigned to the corresponding item of the owner
-        Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
+        assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
+        of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
 
     efferents : Optional[List[Projection]]
         a list of the projections sent by the OutputState (i.e., for which the OutputState is a

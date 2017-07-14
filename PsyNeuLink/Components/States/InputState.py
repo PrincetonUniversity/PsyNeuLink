@@ -336,8 +336,9 @@ class InputState(State_Base):
 
     function : Function or method : default LinearCombination(operation=SUM)
         specifies the function used to aggregate the `values <Projection.value>` of the `Projections <Projection>`
-        received by the InputState.  It must produce a result that has the same format (number and type of elements)
-        as the item of its owern Mechanism's `variable <Mechanism.variable>` to which the InputState has been assigned.
+        received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
+        by the InputState.  It must produce a result that has the same format (number and type of elements) as the
+        item of its owner Mechanism's `variable <Mechanism.variable>` to which the InputState has been assigned.
 
     projections : list of Projection specifications
         species the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -374,12 +375,13 @@ class InputState(State_Base):
         each of which must match the format (number and types of elements) of the InputState's :keyword:`variable`.
 
     size : int, list or np.ndarray of ints
-    specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-    if **variable** is specified, it takes precedence over the specification of **size**.
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
 
     function : CombinationFunction : default LinearCombination(operation=SUM))
-        performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each
-        Projection received by the InputState.
+        performs an element-wise (Hadamard) aggregation of the `value <Projection.Projection.value>` of each Projection
+        received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
+        by the InputState.
 
     value : number, list or np.ndarray
         the aggregated value of the Projections received by the InputState; output of `function <InputState.function>`.
