@@ -142,11 +142,11 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
 <Projection_In_Context_Specification>`, or by a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
 in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
-Mechanism. If a Mechanism is specified, its primary InputState or OutputState  is used, as appropriate.  When a
-sender or receiver is used to specify the Projection, the type of Projection created is inferred from the State and
-the type of sender or receiver specified, as illustrated in the examples below.  Note that the State must be
-`assigned to an owner <State_Deferred_Initialization>` in order to be functional, irrespective of whether any
-`Projections <Projection>` have been assigned to it.
+Mechanism. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
+<OutputState_Primary>  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
+of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
+examples below.  Note that the State must be `assigned to an owner <State_Deferred_Initialization>` in order to be
+functional, irrespective of whether any `Projections <Projection>` have been assigned to it.
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A``::

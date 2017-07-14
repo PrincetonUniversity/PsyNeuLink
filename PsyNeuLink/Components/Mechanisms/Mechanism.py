@@ -200,7 +200,7 @@ The three types of States are shown schematically in the figure below, and descr
    :align: left
 
    **Schematic of a Mechanism showing its three types of States** (input, parameter and output). Every Mechanism has at
-   least one InputState (its `primary InputState <Mechanism_InputStates>` ) and one OutputState
+   least one InputState (its `primary InputState <InputState_Primary>` ) and one OutputState
    (its `primary OutputState <OutputState_Primary>`), and can have additional ones of each.  It also has one
    `ParameterState` for each of its parameters and the parameters of its `function <Mechanism.function>`.
 
@@ -231,8 +231,8 @@ Projections (usually by summing them), and assigns the result to the InputState'
 
 The value of each InputState for the Mechanism is assigned as the value of an item of the Mechanism's
 `variable <Mechanism_Base.variable>` attribute (a 2d np.array), as well as in a corresponding item of its
-`input_value <Mechanism_Base.input_value>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the
-input to the Mechanism's `function <Mechanism_Base.function>`, while its `input_value <Mechanism_Base.input_value>`
+`input_values <Mechanism_Base.input_values>` attribute (a list).  The `variable <Mechanism_Base.variable>` provides the
+input to the Mechanism's `function <Mechanism_Base.function>`, while its `input_values <Mechanism_Base.input_values>`
 provides a more convenient way of accessing the value of its individual items.  Because there is a one-to-one
 correspondence between a Mechanism's InputStates and the items of its `variable <Mechanism_Base.variable>`, the number
 of each of these must be equal;  that is, the number of items in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -293,10 +293,17 @@ OutputState is assigned as the first (and often only) item of the Mechanism's
 from the result of the Mechanism's `function <Mechanism.function>`.  Standard OutputStates are available for each
 type of Mechanism, and custom ones can also be configured (see `OutputState Specification <OutputState_Specification>`.
 These can be assigned in the **output_states** argument of the Mechanism's constructor.  All of the OutputStates of a
-Mechanism (including the primary one) are represented in its `output_states <Mechanism_Base.outputStates>` attribute 
+Mechanism (including the primary one) are lists in its `output_states <Mechanism_Base.outputStates>` attribute
 (note the plural), that contains a ContentAddressableList of the OutputStates.  A specific OutputState in the list can
 be accessed by using its name as the index for the list (e.g., ``my_mechanism['OutputState name']``).  This can also be
-used to assign additional OutputStates to the Mechanism after it has been created.
+used to assign additional OutputStates to the Mechanism after it has been created.  The values of the Mechanism's
+OutputStates are assigned as items in its `output_values <Mechanism.output_values>` attribute, in the same order in
+which they are listed in its `output_states <Mechanism.output_states>` attribute.  Note, however, that the
+`output_values <Mechanism.output_values>` attribute of a Mechanism is distinct from its `value
+<Mechanism_Base.value>` attribute, which contains the full and  unmodified results of its `function
+<Mechanism_Base.function>` (this is because OutputStates may modify the item of the Mechanism`s `value
+<Mechanism_Base.value>` to which they refer -- see `OutputStates <OutputState_Customization>`).
+
 
 .. _Mechanism_Parameters:
 
@@ -385,7 +392,7 @@ Mechanisms that are part of one or more Processes are assigned designations that
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
 any systems to which they belong. These designations are listed in the Mechanism's `processes` and `systems`
 attributes, respectively.  Any Mechanism designated as `ORIGIN` receives a Projection to its
-`primary InputState <Mechanism_InputStates>` from the Process(es) to which it belongs.  Accordingly, when the Process 
+`primary InputState <InputState_Primary>` from the Process(es) to which it belongs.  Accordingly, when the Process
 (or System of which the Process is a part) is executed, those Mechanisms receive the input provided to the Process
 (or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` 
 Mechanism for a Process is assigned as the `output` of that Process, and similarly for systems to which it belongs.
@@ -699,14 +706,14 @@ class Mechanism_Base(Mechanism):
     input_states : ContentAddressableList[str, InputState]
         a dictionary of the Mechanism's `input_states <Mechanism_InputStates>`.
         The key of each entry is the name of an InputState, and its value is the InputState.  There is always
-        at least one entry, which identifies the Mechanism's `primary InputState <Mechanism_InputStates>`
+        at least one entry, which identifies the Mechanism's `primary InputState <InputState_Primary>`
         (i.e., the one in the its `InputState <Mechanism_Base.input_state>` attribute).
 
-    input_value : List[List or 1d np.array] : default variableInstanceDefault
+    input_values : List[List or 1d np.array] : default variableInstanceDefault
         a list of values, one for each `InputState <Mechanism_InputStates>` in the Mechanism's
         `input_states <Mechanism_Base.input_states>` attribute.  The value of each item is the same as the corresponding
         item in the Mechanism's `variable <Mechanism_Base.variable>` attribute.  The latter is a 2d np.array;
-        the :keyword:`input_value` attribute provides this information in a simpler list format.
+        the `input_values <Mechanism_Base.input_values>` attribute provides this information in a simpler list format.
 
     _parameter_states : ContentAddressableList[str, ParameterState]
         a dictionary of ParameterStates, one for each of the specifiable parameters of the Mechanism and its function
@@ -1748,7 +1755,6 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-            # self.input_value[i] = state.value
         self.variable = np.array(self.input_values)
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):

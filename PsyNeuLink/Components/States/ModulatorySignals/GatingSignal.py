@@ -104,7 +104,7 @@ Examples
 ~~~~~~~~
 
 *Gate an InputState and OutputState*.  The following example configures a `GatingMechanism` to gate the
-`primary InputState <Mechanism_InputState>` of one mechanism, and the `primary OutputState <OutputState_Primary>`
+`primary InputState <InputState_Primary>` of one mechanism, and the `primary OutputState <OutputState_Primary>`
 of another::
 
     my_mechanism_A = TransferMechanism()
@@ -113,7 +113,7 @@ of another::
 
 Note that, in the **gating_signals** arg, the first item is reference to the ``my_mechanism_A`` rather than one of its
 states.  This is all that is necessary, the default for a `GatingSignal` is to modulate the
-`primary InputState <Mechanism_InputStates>` of a Mechanism.  The second item explicitly specifies the State to be
+`primary InputState <InputState_Primary>` of a Mechanism.  The second item explicitly specifies the State to be
 gated (since it is not a default).  This will generate two GatingSignals, each of which will multiplicatively modulate
 the value of the InputState to which it projects.  This is because, by default, the
 `modulation <GatingSignal.modulation>` attribute of a GatingSignal is the *MULTIPLICATIVE_PARAM* for the
@@ -156,14 +156,13 @@ GatingSignal.::
                                                            {NAME: 'GATING_SIGNAL_B',
                                                            GATE: [My_Hidden_Layer, My_Output_Layer]}])
 
-Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains
-an entry for the name of the GatingSignal, and a *GATE* entry that specifies the States to be gated
-(in this case, again exploiting the fact that the default is to modulate the primary InputState of a Mechanism).
-The first dict also contains a *MODULATION* entry that specifies the value of the
-`modulation <GatingSignal.modulation>` attribute for the GatingSignal.  The second one does not, so the default will
-be used (which, for a GatingSignal, is `ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``My_Input_Layer``
-will be additively modulated, while the InputState of ``My_Hidden_Layer`` will be multiplicatively modulated by their
-GatingSignals, respectively.
+Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains an entry
+for the name of the GatingSignal, and a *GATE* entry that specifies the States to be gated (in this case,  again
+exploiting the fact that the default is to modulate the `primary InputState <InputState_Primary>` of a Mechanism).
+The first dict also contains a *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>`
+attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
+`ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``My_Input_Layer`` will be additively modulated,
+while the InputState of ``My_Hidden_Layer`` will be multiplicatively modulated by their GatingSignals, respectively.
 
 Class Reference
 ---------------
