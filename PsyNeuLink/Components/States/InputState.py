@@ -613,28 +613,11 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          constraint_value_name=VARIABLE,
                                          context=context)
 
-
-    # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
-    #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
-    # if context and 'COMMAND_LINE' in context:
-    #     if owner.input_states:
-    #         owner.input_states.extend(state_list)
-    #     else:
-    #         owner.input_states = state_list
-    # else:
-    #     if owner._input_states:
-    #         owner._input_states.extend(state_list)
-    #     else:
-    #         owner._input_states = state_list
-
-    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
-    # FIX: Hack to prevent recursion in calls to setter and assign_params
-    # Call from Mechanism.add_states, so append rather than replace input_states
+    # Call from Mechanism.add_states, so add to rather than assign input_states (i.e., don't replace)
     if context and 'COMMAND_LINE' in context:
         owner.input_states.extend(state_list)
     else:
         owner._input_states = state_list
-
 
     # Check that number of input_states and their variables are consistent with owner.variable,
     #    and adjust the latter if not

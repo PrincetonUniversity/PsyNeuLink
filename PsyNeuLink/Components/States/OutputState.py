@@ -643,8 +643,12 @@ class OutputState(State_Base):
         if INDEX in target_set:
             try:
                 self.owner.value[target_set[INDEX]]
+            # The following exception occurs if add_states is called but owner Mechanism has not yet been executed
+            #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
+            except TypeError:
+                self.owner.output_values[target_set[INDEX]]
             except IndexError:
-                raise OutputStateError("Value of {} argument for {} is greater than the number of items in "
+                raise OutputStateError("Value of \`{}\` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
                                        format(INDEX, self.name, self.owner.output_values, self.owner.name))
 
@@ -657,13 +661,19 @@ class OutputState(State_Base):
                 else:
                     function = target_set[CALCULATE]
                 try:
+                    owner_val_for_err = self.owner.value
                     function(self.owner.value[target_set[INDEX]])
+                # The following exception occurs if add_states is called but owner Mechanism has not yet been executed
+                #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
+                except TypeError:
+                    owner_val_for_err = self.owner.output_values
+                    function(self.owner.output_values[target_set[INDEX]])
                 except:
                     raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
                                            "specified for the {} parameter of {} ({})".
                                            format(target_set[INDEX],
                                                   self.owner.name,
-                                                  self.owner.value[target_set[INDEX]],
+                                                  owner_val_for_err[target_set[INDEX]],
                                                   CALCULATE,
                                                   self.name,
                                                   target_set[CALCULATE]))
@@ -770,10 +780,17 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
     owner_value = owner.value
+
+    # The following is True if add_states is called but owner Mechanism has not yet been executed
+    #     (so Mechanism.value is None);  in that case, output_values *has* been assigned, so use that
+    # IMPLEMENTATION NOTE:  test for COMMAND_LINE to be sure call from add_states() is why Mechanism.value is None
+    if owner_value is None and context is COMMAND_LINE:
+        owner_value = np.atleast_2d(owner.output_values)
+
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
     #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-    if (isinstance(owner_value, list) and
+    elif (isinstance(owner_value, list) and
         (all(isinstance(item, np.ndarray) for item in owner_value) and
             all(
                     all(item.shape[i]==owner_value[0].shape[0]
@@ -819,7 +836,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                 # check if string matches the name entry of a dict in standard_output_states
                 std_output_state = owner.standard_output_states.get_state_dict(output_state)
                 if std_output_state is not None:
-                    owner.output_states[i] = std_output_state
+                    # owner.output_states[i] = std_output_state
+                    output_states[i] = std_output_state
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
             # if isinstance(output_state, dict):
@@ -853,13 +871,11 @@ def _instantiate_output_states(owner, output_states=None, context=None):
                                          constraint_value_name="output",
                                          context=context)
 
-    # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
-    # FIX: Hack to prevent recursion in calls to setter and assign_params
+    # Call from Mechanism.add_states, so add to rather than assign output_states (i.e., don't replace)
     if 'COMMAND_LINE' in context:
-        owner.output_states = state_list
+        owner.output_states.extend(state_list)
     else:
         owner._output_states = state_list
-
 
 
 class StandardOutputStatesError(Exception):

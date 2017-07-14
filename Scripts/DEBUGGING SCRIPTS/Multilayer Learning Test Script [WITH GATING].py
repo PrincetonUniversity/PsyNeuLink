@@ -43,7 +43,8 @@ Output_Layer.add_states(my_input_state)
 
 my_test_mech = TransferMechanism(default_input_value=[[0],[0],[0]],
                                  input_states=['test_1', 'test_2', 'test_3'],
-                                 output_states=[RESULT])
+                                 output_states=[RESULT],
+                                 name='my_test_mech')
 
 my_test_mech.add_states([MEAN])
 
