@@ -375,7 +375,8 @@ class InputState(State_Base):
 
     variable : number, list or np.ndarray
         the template for the `value <Projection.Projection.value>` of each Projection that the InputState receives,
-        each of which must match the format (number and types of elements) of the InputState's :keyword:`variable`.
+        each of which must match the format (number and types of elements) of the InputState's
+        `variable <InputState.variable>`.
 
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
