@@ -195,6 +195,7 @@ __pass_manager_builder.opt_level = 3 # Most aggressive optimizations
 
 __pass_manager = binding.ModulePassManager()
 
+__target_machine.add_analysis_passes(__pass_manager);
 __pass_manager_builder.populate(__pass_manager);
 
 __pass_manager.run(__mod)
