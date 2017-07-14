@@ -1490,7 +1490,7 @@ class System_Base(System):
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
-        # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
+        # FIX: ONLY CHECKS FIRST ITEM OF self._default_value (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
@@ -1498,7 +1498,7 @@ class System_Base(System):
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
                 mech._update_value
-                if not iscompatible(value, mech._value_template[0]):
+                if not iscompatible(value, mech._default_value[0]):
                     raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                       format(value, self.name, append_type_to_name(self)))
 

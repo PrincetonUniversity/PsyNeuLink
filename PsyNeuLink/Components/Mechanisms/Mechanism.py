@@ -744,7 +744,7 @@ class Mechanism_Base(Mechanism):
         which lists the values of its `OutputStates <Mechanism_Base.outputStates>`.
         The :keyword:`value` is `None` until the Mechanism has been executed at least once.
 
-        .. _value_template : 2d np.array : default None
+        .. _default_value : 2d np.array : default None
                set equal to the value attribute when the Mechanism is first initialized;
                maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
@@ -1017,6 +1017,10 @@ class Mechanism_Base(Mechanism):
                 raise MechanismError("{0} is not implemented in Mechanism class {1}".
                                      format(name, self.name))
 
+        try:
+            self._default_value = self.value.copy()
+        except AttributeError:
+            self._default_value = self.value
         self.value = self._old_value = None
         self._status = INITIALIZING
         self._receivesProcessInput = False

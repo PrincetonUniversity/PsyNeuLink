@@ -640,27 +640,13 @@ class OutputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if self.owner.value is not None:
-            value = self.owner.value
-        # The following is the case if add_states is called but owner Mechanism has not yet been executed
-        #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
-        #     and generate error if for some reason that is not the case
-        else:
-            try:
-                value = self.owner.output_values
-                if value is None:
-                    raise AttributeError
-            except AttributeError:
-                raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
-                                       format(self.owner.name))
-
         if INDEX in target_set:
             try:
-                value[target_set[INDEX]]
+                self.owner._default_value[target_set[INDEX]]
             except IndexError:
                 raise OutputStateError("Value of \`{}\` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
-                                       format(INDEX, self.name, self.owner.output_values, self.owner.name))
+                                       format(INDEX, self.name, self.owner._default_value, self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
@@ -671,14 +657,13 @@ class OutputState(State_Base):
                 else:
                     function = target_set[CALCULATE]
                 try:
-                    function(value[target_set[INDEX]])
+                    function(self.owner._default_value[target_set[INDEX]])
                 except:
                     raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
                                            "specified for the {} parameter of {} ({})".
                                            format(target_set[INDEX],
                                                   self.owner.name,
-                                                  # owner_val_for_err[target_set[INDEX]],
-                                                  value[target_set[INDEX]],
+                                                  self.owner._default_value[target_set[INDEX]],
                                                   CALCULATE,
                                                   self.name,
                                                   target_set[CALCULATE]))
@@ -784,24 +769,12 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner.value
-
-    # The following is True if add_states is called but owner Mechanism has not yet been executed
-    #     (so Mechanism.value is None);  in that case, output_values *has* been assigned, so use that
-    # IMPLEMENTATION NOTE:  test for COMMAND_LINE to be sure call from add_states() is why Mechanism.value is None
-    if owner_value is None and context is COMMAND_LINE:
-        try:
-            owner_value = np.atleast_2d(owner.output_values)
-            if owner_value is None:
-                raise AttributeError
-        except AttributeError:
-            raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
-                                   format(owner.name))
+    owner_value = owner._default_value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
     #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-    elif (isinstance(owner_value, list) and
+    if (isinstance(owner_value, list) and
         (all(isinstance(item, np.ndarray) for item in owner_value) and
             all(
                     all(item.shape[i]==owner_value[0].shape[0]
@@ -812,14 +785,14 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner.value
+            owner_value = owner._default_value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d
 
-    # This allows method to be called by Mechanism.add_input_states() with set of user-specified input_states,
-    #    while calls from init_methods continue to use owner.input_states (i.e., InputState specifications
-    #    assigned in the **input_states** argument of the Mechanism's constructor)
+    # This allows method to be called by Mechanism.add_input_states() with set of user-specified output_states,
+    #    while calls from init_methods continue to use owner.output_states (i.e., OutputState specifications
+    #    assigned in the **output_states** argument of the Mechanism's constructor)
     output_states = output_states or owner.output_states
 
     # Get the value of each OutputState
