@@ -640,13 +640,23 @@ class OutputState(State_Base):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
+        if self.owner.value is not None:
+            value = self.owner.value
+        # The following is the case if add_states is called but owner Mechanism has not yet been executed
+        #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
+        #     and generate error if for some reason that is not the case
+        else:
+            try:
+                value = self.owner.output_values
+                if value is None:
+                    raise AttributeError
+            except AttributeError:
+                raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
+                                       format(self.owner.name))
+
         if INDEX in target_set:
             try:
-                self.owner.value[target_set[INDEX]]
-            # The following exception occurs if add_states is called but owner Mechanism has not yet been executed
-            #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
-            except TypeError:
-                self.owner.output_values[target_set[INDEX]]
+                value[target_set[INDEX]]
             except IndexError:
                 raise OutputStateError("Value of \`{}\` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
@@ -661,19 +671,14 @@ class OutputState(State_Base):
                 else:
                     function = target_set[CALCULATE]
                 try:
-                    owner_val_for_err = self.owner.value
-                    function(self.owner.value[target_set[INDEX]])
-                # The following exception occurs if add_states is called but owner Mechanism has not yet been executed
-                #     (so owner.value is None);  in that case, output_values *has* been assigned, so use that
-                except TypeError:
-                    owner_val_for_err = self.owner.output_values
-                    function(self.owner.output_values[target_set[INDEX]])
+                    function(value[target_set[INDEX]])
                 except:
                     raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
                                            "specified for the {} parameter of {} ({})".
                                            format(target_set[INDEX],
                                                   self.owner.name,
-                                                  owner_val_for_err[target_set[INDEX]],
+                                                  # owner_val_for_err[target_set[INDEX]],
+                                                  value[target_set[INDEX]],
                                                   CALCULATE,
                                                   self.name,
                                                   target_set[CALCULATE]))
@@ -785,7 +790,13 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     #     (so Mechanism.value is None);  in that case, output_values *has* been assigned, so use that
     # IMPLEMENTATION NOTE:  test for COMMAND_LINE to be sure call from add_states() is why Mechanism.value is None
     if owner_value is None and context is COMMAND_LINE:
-        owner_value = np.atleast_2d(owner.output_values)
+        try:
+            owner_value = np.atleast_2d(owner.output_values)
+            if owner_value is None:
+                raise AttributeError
+        except AttributeError:
+            raise OutputStateError("PROGRAM ERROR:  {0}.value is \'None\' and {0}.output_values is unassigned".
+                                   format(owner.name))
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
