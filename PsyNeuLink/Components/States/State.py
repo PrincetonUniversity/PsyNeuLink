@@ -2187,17 +2187,45 @@ def _parse_state_type(owner, state_spec):
 
     Determine type from context and/or type of state_spec if the latter is not a `State` or `Mechanism`.
     """
+
+    # State class reference
     if isinstance(state_spec, State):
         return type(state_spec)
 
-    if isinstance(state_spec, str) and state_spec in state_type_keywords:
-        import sys
-        return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
+    # keyword for a State or name of a standard_output_state
+    if isinstance(state_spec, str):
 
+        # State keyword
+        if state_spec in state_type_keywords:
+            import sys
+            return getattr(sys.modules['PsyNeuLink.Components.States.'+state_spec], state_spec)
+
+        # standard_output_state
+        if hasattr(owner, STANDARD_OUTPUT_STATES):
+            # check if string matches the name entry of a dict in standard_output_states
+            # item = next((item for item in owner.standard_output_states.names if state_spec is item), None)
+            # if item is not None:
+            #     # assign dict to owner's output_state list
+            #     return owner.standard_output_states.get_dict(state_spec)
+            # from PsyNeuLink.Components.States.OutputState import StandardOutputStates
+            return owner.standard_output_states.get_state_dict(state_spec)
+
+    # State specification dict
+    if isinstance(state_spec, dict):
+        if STATE_TYPE in state_spec:
+            if not inspect.isclass(STATE_TYPE) and issubclass(state_spec[STATE_TYPE], State):
+                raise StateError("STATE entry of state specification for {} ({})"
+                                 "is not a State or type of State".
+                                 format(owner.name, state_spec[STATE]))
+            return state_spec[STATE]
+
+    # # Mechanism specification (State inferred from context)
     # if isinstance(state_spec, Mechanism):
 
+    # # Projection specification (State inferred from context)
     # if isinstance(state_spec, Projection):
 
+    # # 2-item specification (State inferred from context)
     # if isinstance(state_spec, tuple):
     #     _is_legal_state_spec_tuple(owner, state_spec)
     #     tuple_spec = state_spec[1]
@@ -2211,14 +2239,6 @@ def _parse_state_type(owner, state_spec):
     #     else:
     #         # Call recursively to handle other types of specs
     #         return _parse_state_type(owner, tuple_spec)
-
-    if isinstance(state_spec, dict):
-        if STATE_TYPE in state_spec:
-            if not inspect.isclass(STATE_TYPE) and issubclass(state_spec[STATE_TYPE], State):
-                raise StateError("STATE entry of state specification for {} ({})"
-                                 "is not a State or type of State".
-                                 format(owner.name, state_spec[STATE]))
-            return state_spec[STATE]
 
     raise StateError("{} is not a legal State specification for {}".format(state_spec, owner.name))
 

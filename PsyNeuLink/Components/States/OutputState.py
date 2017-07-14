@@ -817,12 +817,20 @@ def _instantiate_output_states(owner, output_states=None, context=None):
             # string, so check if it is the name of a standard_output_state and, if so, get its dict
             elif isinstance(output_state, str) and hasattr(owner, STANDARD_OUTPUT_STATES):
                 # check if string matches the name entry of a dict in standard_output_states
-                item = next((item for item in owner.standard_output_states.names if output_state is item), None)
-                if item is not None:
-                    # assign dict to owner's output_state list
-                    owner.output_states[owner.output_states.index(output_state)] = \
-                                                            owner.standard_output_states.get_dict(output_state)
-                    output_state = item
+                # # MODIFIED 7/14/17 OLD:
+                # item = next((item for item in owner.standard_output_states.names if output_state is item), None)
+                # if item is not None:
+                #     # assign dict to owner's output_state list
+                #     owner.output_states[owner.output_states.index(output_state)] = \
+                #                                             owner.standard_output_states.get_dict(output_state)
+                # # # MODIFIED 7/17/17 NEW:
+                # item = next((item for item in owner.standard_output_states.names if output_state is item), None)
+                # if item is not None:
+                #     owner.output_states[i] = owner.standard_output_states.get_dict(output_state)
+                # MODIFIED 7/14/17 NEWER:
+                owner.output_states[i] = owner.standard_output_states.get_state_dict(output_state)
+                TEST = True
+                # MODIFIED 7/14/17 END
 
             # specification dict, so get its INDEX attribute if specified, and apply calculate function if specified
             # if isinstance(output_state, dict):
@@ -862,6 +870,15 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         owner.output_states = state_list
     else:
         owner._output_states = state_list
+
+
+
+class StandardOutputStatesError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
 
 
 class StandardOutputStates():
@@ -904,7 +921,7 @@ class StandardOutputStates():
 
     Methods
     -------
-    get_dict(name)
+    get_state_dict(name)
         returns a copy of the designated OutputState specification dictionary
     """
 
@@ -917,7 +934,7 @@ class StandardOutputStates():
         # Validate that all items in output_state_dicts are dicts
         for item in output_state_dicts:
             if not isinstance(item, dict):
-                raise OutputStateError("All items of {} for {} must be dicts (but {} is not)".
+                raise StandardOutputStatesError("All items of {} for {} must be dicts (but {} is not)".
                                      format(self.__class__.__name__, owner.componentName, item))
         self.data = output_state_dicts.copy()
 
@@ -930,7 +947,7 @@ class StandardOutputStates():
         # OutputState
         if isinstance(indices, list):
             if len(indices) != len(output_state_dicts):
-                raise OutputStateError("Length of the list of indices provided to {} for {} ({}) "
+                raise StandardOutputStatesError("Length of the list of indices provided to {} for {} ({}) "
                                        "must equal the number of OutputStates dicts provided ({})"
                                        "length".format(self.__class__.__name__,
                                                        owner.name,
@@ -938,8 +955,9 @@ class StandardOutputStates():
                                                        len(output_state_dicts)))
 
             if not all(isinstance(item, int) for item in indices):
-                raise OutputStateError("All the items in the list of indices provided to {} for {} ({}) must be ints".
-                                       format(self.__class__.__name__, self.name, owner.name, index))
+                raise StandardOutputStatesError("All the items in the list of indices provided to {} for {} ({}) "
+                                               "must be ints".
+                                               format(self.__class__.__name__, self.name, owner.name, index))
 
             for index, state_dict in zip(indices, self.data):
                 state_dict[INDEX] = index
@@ -969,9 +987,17 @@ class StandardOutputStates():
             setattr(owner.__class__, state[NAME]+'_INDEX', make_readonly_property(state[INDEX]))
 
     @tc.typecheck
-    def get_dict(self, name:str):
-        return self.data[self.names.index(name)].copy()
-    
+    def get_state_dict(self, name:str):
+        if next((item for item in self.names if name is item), None):
+            # assign dict to owner's output_state list
+            return self.data[self.names.index(name)].copy()
+        raise StandardOutputStatesError("{} not recognized as name of {} for {}".
+                                        format(name, StandardOutputStates.__class__.__name__, self.owner.name))
+
+    # @tc.typecheck
+    # def get_dict(self, name:str):
+    #     return self.data[self.names.index(name)].copy()
+    #
     @property
     def names(self):
         return [item[NAME] for item in self.data]

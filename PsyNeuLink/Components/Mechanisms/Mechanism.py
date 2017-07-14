@@ -1907,7 +1907,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_states(self, states:tc.any(State, list), context=COMMAND_LINE):
+    def add_states(self, states, context=COMMAND_LINE):
         """
         add_states(states)
 
