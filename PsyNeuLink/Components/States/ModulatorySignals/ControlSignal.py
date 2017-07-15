@@ -169,12 +169,7 @@ ControlSignal to the `bias <Logistic.gain>` parameter of the `Logistic` Function
 Note that the ControlSignal is specified by it class.  This will create a default ControlSignal,
 with a ControlProjection that projects to the TransferMechanism's `ParameterState` for the `bias <Logistic.bias>`
 parameter of its `Logistic` Function.  The default value of a ControlSignal's `modulation <ControlSignal.modulation>`
-attribute is Modulation.MULTIPLICATIVE, so that it will multiply
-
-
-of the Control
-When the TransferMechanism executes, the Logistic Function will use the value of the ControlSignal as its
-gain parameter.
+attribute is Modulation.MULTIPLICATIVE, so that it will multiply the `bias` parameter.
 
 *Specify attributes of a ControlSignal*.  Ordinarily, ControlSignals modify the *MULTIPLICATIVE_PARAM* of a
 ParameterState's `function <ParameterState.function>` to modulate the parameter's value.
@@ -187,8 +182,10 @@ function::
 
 Note that the `ModulationParam` specified for the `ControlSignal` pertains to the function of a *ParameterState*
 for the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and *not* the Logistic function
-itself -- that is, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
-*not* its `variable <Logistic.variable>`).
+itself -- that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic
+function, *not* its `variable <Logistic.variable>`).  If the value of the ControlSignal's **modulation** argument
+had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have been used as (i.e., replaced) the
+value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
 
 COMMENT:
     MOVE THIS EXAMPLE TO EVCMechanism
@@ -212,7 +209,6 @@ COMMENT:
                                                       MODULATION:ModulationParam.ADDITIVE}],
                                     name='My EVC Mechanism')
 COMMENT
-
 
 *Modulate the parameters of several Mechanisms in a System*.  This shows::
 
