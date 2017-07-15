@@ -13,13 +13,12 @@
 Overview
 --------
 
-A ParameterState belongs to either a `Mechanism <Mechanism>` or a `MappingProjection` and is used to represent and
-possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
-receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
-modify the value of the parameter. The Projections received by a ParameterState are listed in its
-`path_afferents <ParameterState.path_afferents>` attribute. Its `function <ParameterState.function>` combines the
-values of those Projections, and uses the result to modify the value of the parameter that is used by the
-owner or its `function <Component.function>`.
+A ParameterState belongs to either a `Mechanism` or a `MappingProjection` and is used to represent and possibly modify
+the value of the parameter used by its owner or owner's `function <Component.function>`.  It can receive one or more
+`ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify the value of the
+parameter. The Projections received by a ParameterState are listed in its `mod_afferents <ParameterState.mod_afferents>`
+attribute. Its `function <ParameterState.function>` combines the values of those Projections, and uses the result to
+modify the value of the parameter that is used by the owner or that Component's `function <Component.function>`.
 
 
 .. _ParameterState_Creation:
@@ -27,12 +26,13 @@ owner or its `function <Component.function>`.
 Creating a ParameterState
 -------------------------
 
-A ParameterState can be created by calling its constructor, but in general this is not necessary or advisable as
-ParameterStates are created automatically when the Mechanism or Projection to which they belong is created.  The
+ParameterStates are created automatically when the `Mechanism` or `Projection` to which they belong is created.  The
 `owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism <Mechanism>` or `MappingProjection`.  One
 ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
-of the owner's `function <Component.function>`.  Each ParameterState is created using the value specified for the
-corresponding parameter, as described below.
+of the owner's `function <Component.function>` (the `configurable parameters <ParameterState_Configurable_Parameters>`
+of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
+dictionaries. Each ParameterState is created using the value specified for the corresponding parameter, as described
+below.
 
 .. _ParameterState_Specifying_Parameters:
 
@@ -42,20 +42,20 @@ Specifying Parameters
 Parameters can be specified in one of several places:
 
     * In the **argument for the parameter** of the constructor for the `Component` to which the parameter
-      belongs (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
+      belongs (see `Component_Specifying_Functions_and_Parameters` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
       Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
       (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
       `examples <ParameterState_Specification_Examples>` below). Parameters for a Component's
-      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*,
-      a value that is itself a parameter specification dictionary containing an entry for each of the
-      function's parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
-      it overrides any value assigned to the argument for the parameter in the Component's constructor.
+      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*, and a value that
+      is itself a parameter specification dictionary containing an entry for each of the function's parameters to be
+      specified.  When a value is assigned to a parameter in a specification dictionary, it overrides any value
+      assigned to the argument for the parameter in the Component's constructor.
     ..
-    * By direct assignment to the Component's attribute for the parameter (see below).
+    * By direct assignment to the Component's attribute for the parameter (see :ref:`below <LINK>`).
     ..
-    * In the `assign_params` method for the Component.
+    * In the `assign_params <Component.assign_params>` method for the Component.
     ..
     * When the Component is executed, in the **runtime_params** argument of a call to component's
       `execute <Mechanism.Mechanism_Base.execute>` method.
@@ -64,7 +64,7 @@ The value specified for a parameter (either explicitly or by default) is assigne
 Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
 name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example,
 the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
-``my_component.param``).
+``my_component.param``).  xxx
 
 When the Component is executed, it updates the ParameterState by calling the ParameterState's
 `function <ParameterState.function>` with the attribute's value for the parameter.  The result is
@@ -211,14 +211,16 @@ attribute value, which is then assigned as the ParameterState's `value <Paramete
   owner as the value of the parameter of its `function <Component.function>` for which the the ParameterState is
   responsible when the owner executes.
 
-All of the user-modifiable parameters of a Component are listed in its `user_params <Component.user_params>` attribute,
+.. _ParameterState_Configurable_Parameters:
+
+All of the configurable parameters of a Component are listed in its `user_params <Component.user_params>` attribute,
 which is a read-only dictionary with an entry for each parameter.  The parameters of a Component can be
 modified individually by assigning a value to the corresponding attribute, or in groups using the Component's
 `assign_params <Component.assign_params>` method.  The parameters for a Component's `function <Component.function>`
 are listed in its `function_params <Component.function_params>` attribute, which is a read-only dictionary with an 
 entry for each of its function's parameter.  The parameters of a Component's function can be modified by
 assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
-attribute (e.g., myMechanism.function_object.my_parameter), or in FUNCTION_PARAMS dict in a
+attribute (e.g., ``myMechanism.function_object.my_parameter``), or in FUNCTION_PARAMS dict in a
 parameter specification dictionary assigned to the **params** arg of a Component's constructor or its
 `assign_params <Component.assign_params>` method.
 

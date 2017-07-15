@@ -107,7 +107,7 @@ specify an OutputState:
       name is assigned based on the name of the Mechanism (see :ref:`naming conventions <LINK>`).
     ..
     * A **State specification dictionary**.  This creates the specified OutputState using the item of the owner
-      `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.  In addition to the
+      `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
       can have a *PROJECTIONS* entry, the value of which can be a `Projection`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that

@@ -745,7 +745,7 @@ class Mechanism_Base(Mechanism):
         The :keyword:`value` is `None` until the Mechanism has been executed at least once.
 
         .. _default_value : 2d np.array : default None
-               set equal to the value attribute when the Mechanism is first initialized;
+               set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized;
                maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
     output_state : OutputState : default default OutputState

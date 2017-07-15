@@ -3,15 +3,15 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
-      <env name="PYTHONUNBUFFERED" value="1" />
       <env name="PATH" value="~/anaconda/bin/:/users/jdc/bin:/Users/jdc/bin:/Users/jdc/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
+      <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
-    <option name="SDK_HOME" value="" />
+    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts/TEST SCRIPTS" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink" />
+    <module name="PsyNeuLink (Dropbox)" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/DEBUGGING SCRIPTS/Multilayer Learning Test Script [WITH GATING].py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />

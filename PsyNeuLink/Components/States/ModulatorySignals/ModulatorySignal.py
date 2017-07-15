@@ -8,15 +8,13 @@
 
 # ********************************************  ModulatorySignal *******************************************************
 
-# ***ADD mod_afferents TO STATE doscstring (IF NOT ALREADY THERE)
-# ***REFERENCE THIS DOCSTRING IN AdaptiveMechanism DOSCTRING, AND ITS SUBCLASSSES
-
 """
 Overview
 --------
+
 A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to
 `modulate <ModulatorySignal_Modulation>` the `value <State.value>` of one or more `States <State>` by of way one or
-more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a state by modifying a
+more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a State by modifying a
 parameter of the State's `function <State.function>`.  There are three types of ModulatorySignals, each of which is
 associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of a
 different type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
@@ -42,8 +40,8 @@ Creating a ModulatorySignal
 A ModulatorySignal is a base class, and cannot be instantiated directly.  However, the three types of ModulatorySignals
 listed above can be created directly, by calling the constructor for the desired type.  More commonly, however,
 ModulatorySignals are created automatically by the `AdaptiveMechanism` to which they belong, or by specifying them
-in the constructor for the `AdaptiveMechanism` to which it belongs (the details of which are described in the
-documentation for each type of ModulatorySignal).
+in the constructor for an `AdaptiveMechanism` (the details of which are described in the documentation for each type
+of ModulatorySignal).
 
 .. _ModulatorySignal_Structure:
 
@@ -63,17 +61,18 @@ Modulation
 
 A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the State's `function
 <State.function>` (which determines the State's `value <State.value>`), or by assigning a value to the State directly.
-The `function <State.function>` of every state designates one of its parameters as its *MULTIPLICATIVE_PARAM* and
-another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal
-determines which of these two parameters should be assigned its value, or which of two other actions to take when the
-State updates its `value <State.value>`.  It is specified using a value of `ModulationParam <Function.ModulationParam>`.
-The default for `ControlSignals <ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`,
-which multiplies the State's `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal
-before passing it to the State's `function <State.function>`.  The default for `LearningSignals <LearningSignal>` is
-`ModulationParam.ADDITIVE`, which adds the `value <LearningSignal.value>` of the LearningSignal (i.e., the weight
-changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current weight
-`matrix <MappingProjection.matrix>` for the `MappingProjection` being learned).  The
-`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** arg of the
+The `function <State.function>` of every State designates one of its parameters as its *MULTIPLICATIVE_PARAM* and
+another as its *MULTIPLICATIVE_PARAM*;  some may also designate other modulatory parameters. The
+`modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these parameters
+are assigned its value, or which of two other actions to take when the State updates its `value <State.value>`.  It
+is specified using a value of `ModulationParam <Function.ModulationParam>`. The default for `ControlSignals
+<ControlSignal>` and `GatingSignals <GatingSignal>` is `ModulationParam.MULTIPLICATIVE`, which multiplicatively
+modifies the State's `variable <State.variable>` by the `value <ModulatorySignal>` of the ModulatorySignal before
+passing it to the State's `function <State.function>`.  The default for `LearningSignals <LearningSignal>` is
+`ModulationParam.ADDITIVE`, which additively modifies the `value <LearningSignal.value>` of the LearningSignal (i.e.,
+the weight changes computed by the `LearningMechanism`) to the State's `variable <State.variable>` (i.e., the current
+weight `matrix <MappingProjection.matrix>` for the `MappingProjection` being learned).  The
+`modulation <ModulatorySignal.modulation>` attribute can be specified in the **modulation** argument of the
 ModulatorySignal's constructor, or in a *MODULATION* entry of a `State specification dictionary <State_Specification>`
 used to create the ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the
 value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the `AdaptiveMechanism` to which it belongs.
@@ -92,9 +91,9 @@ value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the 
    :scale: 150 %
 
    **Three types of Modulatory Components and the States they modulate**.
-   The table below lists the default ModulatoryParam for each type of ModulatorySignal, and the default Function
-   and modulated parameter of its recipient State.  The figure below shows a detailed view of how
-   ModulatorySignals modulate the parameters of a State's function.
+   The table below lists the default `ModulatoryParam` for each type of ModulatorySignal, and the default Function
+   and modulated parameter of its recipient State.  The figure shows a detailed view of how ModulatorySignals
+   modulate the parameters of a State's `function <State.function>`.
 
    +--------------------+-----------------------+--------------------------------------+------------------------------+
    |     Modulatory     |Default ModulationParam|                                      | Default Function (mod param) |
@@ -113,12 +112,12 @@ value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the 
    :alt: Modulation_Detail
    :scale: 150 %
 
-   How a ModulatorySignal signal influences the value of a state is determined by its
+   How a ModulatorySignal signal influences the value of a State is determined by its
    `modulation <ModulatorySignal.modulation>` attribute, which is specified as a value of `ModulationParam`:
    *ADDITIVE* and *MULTIPLICATIVE* specify that the `value <ModulatorySignal.value>` of the ModulatorySignal
    be assigned to the correspondingly designated parameter of the State's function;  *OVERRIDE* specifies
-   that ModulatorySignal's `value <ModulatorySignal.value>` by assigned directly as the State's
-   `value <State.value>`, in effect ignoring its `variable <State.variable>` and `function <State.function>`.
+   that the ModulatorySignal's `value <ModulatorySignal.value>` be assigned directly as the State's
+   `value <State.value>`, in effect ignoring the State's `variable <State.variable>` and `function <State.function>`.
 
 
 .. _ModulatorySignal_Execution:
@@ -129,12 +128,14 @@ Execution
 ModulatorySignals cannot be executed.  They are updated when the `AdaptiveMechanism` to which they belong is executed.
 When a ModulatorySignal is updated, it calculates its value, which is then made available to the
 `ModulatoryProjections <ModulatoryProjection>` listed in its `efferents <ModulatorySignal.efferents>` attribute.
-When those Projections execute, they convey the ModulatorySignal's value to the function of the `State` to which they
-project.  The State's `function <State.function>` then uses that value for the parameter designated by the
-`modulation <ModulatorySignal.modulation>` attribute of the ModulatorySignal when the State is updated.  For example,
-consider a `ControlSignal` that modulates the `bias <Logistic.bias>` parameter of a `Logistic` Function used by a
-`TransferMechanism`; and assume that the `ParameterState` for the bias parameter (to which the ControlSignal projects)
-uses a `Linear` function to update its value (which is the default for a ParameterState).  If the
+When those Projections execute, they convey the ModulatorySignal's `value <ModulatorySignal.value>` to the
+`function <State.function>` of the `State` to which they project.  The State's `function <State.function>` then uses
+that value for the parameter designated by the `modulation <ModulatorySignal.modulation>` attribute of the
+ModulatorySignal when the State is updated.
+
+For example, consider a `ControlSignal` that modulates the `bias f<Logistic.bias>` parameter of a `Logistic` Function
+used by a `TransferMechanism, and assume that the `ParameterState` for the bias parameter (to which the ControlSignal
+projects) uses a `Linear` function to update its value (which is the default for a ParameterState).  If the
 `modulation  <ModulatorySignal.modulation>` attribute of the `ControlSignal` is `ModulationParam.MULTIPLICATIVE`,
 then it will be assigned to the `slope <Linear>` parameter of the ParameterState's `function <ParameterState.function>`.
 Accordingly, when the ParameterState is updated it will multiply the bias parameter's value by the value of the

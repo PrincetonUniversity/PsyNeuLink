@@ -116,6 +116,8 @@ Every Component has the following set of core attributes that govern its operati
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
 
+.. _Component_Function_Params:
+
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
   for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
   its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
@@ -156,7 +158,7 @@ Every Component has the following set of core attributes that govern its operati
 
 * **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
   the Component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-  value to the attribute directly, or using the Component's `assign_params` method.
+  value to the attribute directly, or using the Component's `assign_params <Component.assign_params>` method.
 ..
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
@@ -165,13 +167,20 @@ COMMENT:
     * **paramInstanceDefaults**
 COMMENT
 
+.. _Component_Value:
+
 * **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
   `function <Component.function>` after the function is called.
 ..
+
+.. _Component_Name:
+
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
   If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
   conventions used in assigning default names and handling of duplicate names).
 ..
+
+.. _Component_Prefs:
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
@@ -180,7 +189,6 @@ COMMENT
 COMMENT:
 * **log**
 COMMENT
-
 
 .. _Component_Methods:
 
@@ -305,7 +313,6 @@ component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, 
 
 class ResetMode(Enum):
     """
-
     .. _Component_ResetMode:
 
     ResetModes used for **reset_params**:
@@ -436,6 +443,7 @@ class ComponentError(Exception):
 class Component(object):
     """Implement parent class for Components used by Process, Mechanism, State, and Projection class categories
 
+    COMMENT:
         Every Component is associated with:
          - child class componentName
          - type
@@ -554,6 +562,38 @@ class Component(object):
 
     Instance methods:
         + function (implementation is optional; aliased to params[FUNCTION] by default)
+    COMMENT
+
+    Attributes
+    ----------
+
+    variable : 2d np.array
+        see `variable <Component_Function>`
+
+    size : int or array of ints
+        see `size <Component_Size>`
+
+    function : Function, function or method
+        see `variable <Component_Function>`
+
+    function_params : Dict[param_name: param_value]
+        see `function_params <Component_Function_Params>`
+
+    function_object : Function
+        see `function_object <Component_Function_Object>`
+
+    user_params : Dict[param_name: param_value]
+        see `user_params <Component_User_Params>`
+
+    value : 2d np.array
+        see `value <Component_Value>`
+
+    name : str
+        see `name <Component_Name>`
+
+    prefs : PreferenceSet
+        see `prefs <Component_Prefs>`
+
     """
 
     #CLASS ATTRIBUTES
@@ -2391,8 +2431,10 @@ class Component(object):
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         try:
+            # Could be mutable, so assign copy
             self._default_value = self.value.copy()
         except AttributeError:
+            # Immutable, so just assign value
             self._default_value = self.value
 
     def _instantiate_attributes_after_function(self, context=None):
