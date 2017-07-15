@@ -642,11 +642,11 @@ class OutputState(State_Base):
 
         if INDEX in target_set:
             try:
-                self.owner._default_value[target_set[INDEX]]
+                self.owner.default_value[target_set[INDEX]]
             except IndexError:
                 raise OutputStateError("Value of \`{}\` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
-                                       format(INDEX, self.name, self.owner._default_value, self.owner.name))
+                                       format(INDEX, self.name, self.owner.default_value, self.owner.name))
 
         # IMPLEMENT: VALIDATE THAT CALCULATE FUNCTION ACCEPTS VALUE CONSISTENT WITH
         #            CORRESPONDING ITEM OF OWNER MECHANISM'S VALUE
@@ -657,13 +657,13 @@ class OutputState(State_Base):
                 else:
                     function = target_set[CALCULATE]
                 try:
-                    function(self.owner._default_value[target_set[INDEX]])
+                    function(self.owner.default_value[target_set[INDEX]])
                 except:
                     raise OutputStateError("Item {} of value for {} ({}) is not compatible with the function "
                                            "specified for the {} parameter of {} ({})".
                                            format(target_set[INDEX],
                                                   self.owner.name,
-                                                  self.owner._default_value[target_set[INDEX]],
+                                                  self.owner.default_value[target_set[INDEX]],
                                                   CALCULATE,
                                                   self.name,
                                                   target_set[CALCULATE]))
@@ -769,7 +769,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
 
     # Get owner.value
     # IMPLEMENTATION NOTE:  ?? IS THIS REDUNDANT WITH SAME TEST IN Mechanism.execute ?  JUST USE RETURN VALUE??
-    owner_value = owner._default_value
+    owner_value = owner.default_value
 
     # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
     #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -785,7 +785,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
         converted_to_2d = np.atleast_2d(owner.value)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
-            owner_value = owner._default_value
+            owner_value = owner.default_value
         # Otherwise, use value converted to 2d np.array
         else:
             owner_value = converted_to_2d

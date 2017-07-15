@@ -744,9 +744,10 @@ class Mechanism_Base(Mechanism):
         which lists the values of its `OutputStates <Mechanism_Base.outputStates>`.
         The :keyword:`value` is `None` until the Mechanism has been executed at least once.
 
-        .. _default_value : 2d np.array : default None
-               set equal to the value attribute when the Mechanism is first initialized;
-               maintains its value even when value is reset to None when (re-)initialized prior to execution.
+    default_value : 2d np.array : variableClassDefault
+       read-only attribute set to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized;
+       maintains its original value even when the `value <Mechanism_Base.value>` attribute of the Mechanism is reset to
+       `None` when (re-)initialized prior to `execution <Mechanism_Exection>` or assigned during execution.
 
     output_state : OutputState : default default OutputState
         primary `OutputState <Mechanism_OutputStates>` for the Mechanism;  same as first entry of its
@@ -2012,6 +2013,10 @@ class Mechanism_Base(Mechanism):
         #         (log_pref is LogLevel.VALUE_ASSIGNMENT and (EXECUTING in context and kwAssign in context))):
         #     self.log.entries[self.name] = LogEntry(CurrentTime(), context, assignment)
         # # MODIFIED 1/28/17 END
+
+    @property
+    def default_value(self):
+        return self._default_value
 
     @property
     def input_state(self):
