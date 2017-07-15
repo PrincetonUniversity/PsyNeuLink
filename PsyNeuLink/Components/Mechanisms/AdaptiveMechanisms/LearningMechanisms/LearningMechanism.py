@@ -89,7 +89,7 @@ names and roles (shown in the `figure below <LearningMechanism_Single_Layer_Lear
   `error_source <LearningMechanism_Additional_Attributes>` (that is, the output of the *ProcessingMechanism* to which
   the MappingProjection being learned projects).  By default, this uses the `primary OutputState <OutputState_Primary>`
   of the `error_source`.  However, a different OutputState can be designated in the constructor for the `error_source`,
-  by assigning a `parameter specification dictionary <ParameterState_Specifying_Parameters>` to its **params**
+  by assigning a `parameter specification dictionary <ParameterState_Specification>` to its **params**
   argument with an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the desired
   OutputState(s) as its value.  The :keyword:`value` of the *ACTIVATION_OUTPUT* InputState is assigned as the
   second item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
@@ -537,7 +537,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `learning_rate <LearningMechanism.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.

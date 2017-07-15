@@ -441,7 +441,7 @@ def system(default_input_value=None,
         for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 

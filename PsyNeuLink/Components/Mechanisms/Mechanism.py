@@ -146,7 +146,7 @@ so its constructor does not have a :keyword:`function` argument.  However, it do
 argument, that is used to set the LinearCombination function's `operation` parameter.
 
 For Mechanisms that offer a selection of functions, if all of the functions use the same parameters then those
-parameters can also be specified as entries in a `parameter dictionary <ParameterState_Specifying_Parameters>`
+parameters can also be specified as entries in a `parameter dictionary <ParameterState_Specification>`
 used for the `params` argument of the Mechanism's constructor;  in such cases, values specified in the parameter
 dictionary will override any specified within the constructor for the function itself (see `DDM_Parameters` for an
 example). The parameters of a Mechanism's primary function (i.e., assigned to is `function <Mechanism_Base.function>`
@@ -277,7 +277,7 @@ of a `ControlMechanism` that is used to modify parameter values in response to t
 processing.  A parameter value (and the value of its associated ParameterState) can be specified when a Mechanism or
 its function is first created  using the corresponding argument in the object's constructor.  Parameter values can
 also be assigned later, by direct assignment of a value to the corresponding attribute, or by using the Mechanism's 
-`assign_param` method (the safest means;  see `ParameterState_Specifying_Parameters`).  All of the Mechanism's
+`assign_param` method (the safest means;  see `ParameterState_Specification`).  All of the Mechanism's
 parameters are list in a dict in its `user_params` attribute; the dict contains a `function_params` entry which
 in turn contains a dict of the parameters for the Mechanism's `function <Mechanism.function>`.
 
@@ -322,7 +322,7 @@ COMMENT
 
 Most Mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
 attribute of the Mechanisms (e.g., myMechanism.attribute), in a 
-`parameter dictionary <ParameterState_Specifying_Parameters>` assigned to `params` argument in the Mechanism's
+`parameter dictionary <ParameterState_Specification>` assigned to `params` argument in the Mechanism's
 constructor, or with the Mechanism's `assign_params` method, using the following keywords:
 
     * *INPUT_STATES* - specifies specialized input_states required by a Mechanism subclass
@@ -333,7 +333,7 @@ constructor, or with the Mechanism's `assign_params` method, using the following
     ..
     * *FUNCTION_PARAMS* - a specification dictionary of parameters for the Mechanism's :keyword:`function`;
       the key for each entry must be the name of one of the function's parameters;  its value can be any of the
-      following (see :ref:`ParameterState_Specifying_Parameters` for details):
+      following (see :ref:`ParameterState_Specification` for details):
 
       * the value of the parameter itself;
       |
@@ -351,7 +351,7 @@ constructor, or with the Mechanism's `assign_params` method, using the following
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in Mechanism's constructor.
          Any values specified in the `FUNCTION__PARAMS` entry of a 
-         `parameter specification dictionary <ParameterState_Specifying_Parameters>` for the Mechanism take precedence 
+         `parameter specification dictionary <ParameterState_Specification>` for the Mechanism take precedence
          over values assigned to parameter-specific arguments in its (or its function's) constructor.
 
     * *OUTPUT_STATES* - specifies specialized OutputStates required by a Mechanism subclass
@@ -431,7 +431,7 @@ Runtime Parameters
    This is an advanced feature, and is generally not required for most applications.
 
 The parameters of a Mechanism are usually specified when the Mechanism is created.  However, these can be overridden
-when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` 
+when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specification>`
 assigned to the **runtime_param** argument of the Mechanism's `execute <Mechanism_Base.execute>` method, or in a
 `tuple with the Mechanism <Process_Mechanisms>` in the `pathway` of a `Process`.  Any value assigned to a
 parameter in a **runtime_params** dictionary will override the current value of that parameter for the (and *only* the)
@@ -441,12 +441,12 @@ unless the `runtimeParamStickyAssignmentPref` is set for the component to which 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of
 which is for a parameter of the Mechanism or its  function, or for one of the Mechanism's `States <State>`.
 Entries for parameters of the Mechanism or its function use the standard format for
-`parameter specification dictionaries <ParameterState_Specifying_Parameters>`. Entries for the Mechanism's States can
+`parameter specification dictionaries <ParameterState_Specification>`. Entries for the Mechanism's States can
 be used to specify runtime parameters of the corresponding State, its function, or any of the Projections to that State.
 Each State entry uses a key corresponding to the type of State (*INPUT_STATE_PARAMS*, *OUTPUT_STATE_PARAMS* or
 *PARAMETER_STATE_PARAMS*), and the value is a subdictionary containing a dictionary with the runtime  parameter
 specifications for all States of that type). Within that subdictionary, specification of parameters for the State or
-its function use the  standard format for `parameter dictionaries <ParameterState_Specifying_Parameters>`.  Parameters
+its function use the  standard format for `parameter dictionaries <ParameterState_Specification>`.  Parameters
 for all of the State's Projections can be specified in an entry with the key *PROJECTION_PARAMS*, and a subdictionary
 that contains the parameter specifications;  parameters for Projections of a particular type can be placed in an
 entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
@@ -553,7 +553,7 @@ def mechanism(mech_spec=None, params=None, context=None):
         base for the name and adding an indexed suffix:  componentType-n.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism and/or its function, and/or a custom function and its parameters.  It is passed to the relevant
         subclass to instantiate the Mechanism. Its entries can be used to specify any parameters described in
         `Mechanism_Parameters` that are relevant to the Mechanism's subclass, and/or defined specifically by that
@@ -741,7 +741,7 @@ class Mechanism_Base(Mechanism):
         `value <Mechanism_Base.value>` attribute.
 
     function_params : Dict[str, value]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` of the parameters for the Mechanism's primary
+        a `parameter dictionary <ParameterState_Specification>` of the parameters for the Mechanism's primary
         function.  The key of each entry is the name of a function parameter, and its value is the parameter's value.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor for the function.

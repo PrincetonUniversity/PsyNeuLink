@@ -406,7 +406,7 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an `outputState <OutputState>` with a name based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to the constructor for the
+        a `parameter dictionary <ParameterState_Specification>` passed to the constructor for the
         `prediction_mechanism_type` mechanism. The same one is passed to all
         `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` created for the EVCMechanism.
 
@@ -444,7 +444,7 @@ class EVCMechanism(ControlMechanism_Base):
         values in `EVC_values`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -493,7 +493,7 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an `outputState <OutputState>` with a name based on the same
 
     prediction_mechanism_params : Dict[param key, param value] : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to `prediction_mechanism_type` when
+        a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
         the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
 
@@ -602,7 +602,7 @@ class EVCMechanism(ControlMechanism_Base):
         examples <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the
         `LinearCombination` function, respectively. If the default `outcome_function` is called by a custom
         `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
-        entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the `params` argument of
+        entry of a `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of
         the `LinearCombination` function. The length of each array must equal the number of (and values be listed in
         the same order as) the outputStates in the EVCMechanism's `monitored_output_states` attribute.  These
         specifications will supercede any made for individual outputStates in the `monitor_for_control` argument or
@@ -622,7 +622,7 @@ class EVCMechanism(ControlMechanism_Base):
         called by a custom `value_function`, the weights and/or exponents parameters of the function can be used,
         respectively, to scale and/or exponentiate the contribution of each ControlSignal's cost to the aggregated
         value.  These must be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS` entry of a
-        `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the `params` argument of the
+        `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of the
         `LinearCombination` function; the length of each array must equal the number of (and the values listed in the
         same order as) the ControlSignals in the EVCMechanism's `control_signals` attribute, and be in the same order.
         The default function can also be replaced with any
@@ -638,7 +638,7 @@ class EVCMechanism(ControlMechanism_Base):
         default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
         the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>`
+        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specification>`
         assigned to the function's `params` argument; each array must have two elements, the first for the outcome
         and second for the cost. The default function can also be replaced with any
         `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with

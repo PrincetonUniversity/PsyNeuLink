@@ -466,7 +466,7 @@ def process(process_spec=None,
         It must be the same length as the `TERMINAL` Mechanism's output.
 
     params : Optional[Dict[param keyword, param value]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
         the parameter's name is used as the keyword for its entry. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -2028,7 +2028,7 @@ class Process_Base(Process):
             specifies whether Mechanisms are executed for a single time step or a trial.
 
         params : Dict[param keyword, param value] :  default None
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters used
+            a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters used
             as arguments to instantiate the object. Use parameter's name as the keyword for its entry.  Values specified
             for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 

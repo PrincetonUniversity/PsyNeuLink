@@ -26,7 +26,7 @@ Creating a ControlProjection
 ----------------------------
 
 A ControlProjection can be created using any of the standard ways to `create a Projection <Projection_Creation>`,
-or by including it in a tuple that `specifies a parameter <ParameterState_Specifying_Parameters>` for a `Mechanism`,
+or by including it in a tuple that `specifies a parameter <ParameterState_Specification>` for a `Mechanism`,
 `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection is created
 using its constructor on its own, the `receiver <ControlProjection.receiver>` argument must be specified.  If it is
 included in a parameter specification, the ParameterState for the parameter being specified will be assigned as the
@@ -166,12 +166,12 @@ class ControlProjection(ModulatoryProjection_Base):
         `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
         
     control_signal_params : Dict[param keyword, param value]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the `ControlSignal` that is the sender of the Projection (see `ControlSignal_Structure` for a description
         of ControlSignal parameters). 
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.

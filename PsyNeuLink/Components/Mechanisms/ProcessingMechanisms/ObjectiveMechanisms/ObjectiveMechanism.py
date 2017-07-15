@@ -327,7 +327,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
         constructor.

@@ -56,7 +56,7 @@ Core Configurable Attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every Component has the following set of core attributes that govern its operation, and that can be specified in
-corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specifying_Parameters`):
+corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
 
 .. _Component_Variable:
 
@@ -115,7 +115,7 @@ corresponding arguments of its constructor, or by assigning them directly (see `
         more than one Component, without being assigned simultaneously to multiple Components.
 
   A `function <Component.function>` can also be specified in an entry of a
-  `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+  `parameter specification dictionary <ParameterState_Specification>` assigned to the
   **params** argument of the constructor for the Component, with the keyword *FUNCTION* as its key, and one of the
   specifications above as its value, as in the following example::
 
@@ -184,7 +184,7 @@ COMMENT
     `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
     as arguments in the constructor of the Component itself, which can be used to set their values.
 
-  * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+  * in an entry of a `parameter specification dictionary <ParameterState_Specification>` assigned to the
     **params** argument of the constructor for the Component.  The entry must use the keyword
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
     The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
@@ -193,7 +193,7 @@ COMMENT
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  See `ParameterState_Specifying_Parameters` for details concerning different ways in which the value of a parameter
+  See `ParameterState_Specification` for details concerning different ways in which the value of a parameter
   can be specified.
 
 COMMENT:
@@ -241,7 +241,7 @@ COMMENT:
 
       * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the
         constructor for the Component (whether they are made directly in the argument for a parameter, or in a
-        `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass,
+        `parameter specification dictionary <ParameterState_Specification>`.  If it is overridden by a subclass,
         customized validation should generally be performed *after* the call to super().
 
     * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of Component attributes.
@@ -274,7 +274,7 @@ COMMENT
 .. _Component_Assign_Params:
 
 * **assign_params** - assign the value of one or more parameters of a Component.  Each parameter is specified
-  as an entry in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` in the **request_set**
+  as an entry in a `parameter specification dictionary <ParameterState_Specification>` in the **request_set**
   argument;  parameters for the Component's `function <Component.function>` are specified as entries in a
   *FUNCTION_PARAMS* dict within **request_set** dict.
 ..

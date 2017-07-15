@@ -103,7 +103,7 @@ class ModulatoryProjection_Base(Projection_Base):
     sender : Optional[OutputState or Mechanism] : default None
         specifies the component from which the ModulatoryProjection projects.
     params : Optional[Dict[param keyword, param value]] : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.

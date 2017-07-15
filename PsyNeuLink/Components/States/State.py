@@ -19,25 +19,26 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
 `MappingProjections <MappingProjection>`, and that are subject to modulation by `ModulatorySignals <ModulatorySignal>`,
 as summarized in the table below:
 
-+------------------+-------------------+---------------------------+-----------------------+---------------------------+
-| *State Type:*    |  Owner:           |      *Description*        |    *Modulated by*     |      *Specification*      |
-+==================+===================+===========================+=======================+===========================+
-| `InputState`     |  `Mechanism'      |receives input from        | `GatingSignal`        |`InputState` constructor;  |
-|                  |                   |`MappingProjection` \(s)   |                       |`Mechanism` constructor or |
-|                  |                   |                           |                       |its `add_states` method    |
-+------------------+-------------------+---------------------------+-----------------------+---------------------------+
-|`ParameterState`  |  `Mechanism` or   |represents parameter       |`LearningSignal`       |Implicitly whenever a      |
-|                  |  `Projection`     |value of a `Component`     |and/or `ControlSignal` |parameter value is         |
-|                  |                   |or its function            |                       |specified                  |
-+------------------+-------------------+---------------------------+-----------------------+---------------------------+
-| `OutputState`    |  `Mechanism'      |provides output to         | `GatingSignal`        |`OutputState` constructor; |
-|                  |                   |`MappingProjection` \(s)   |                       |`Mechanism` constructor or |
-|                  |                   |                           |                       |its `add_states` method    |
-+------------------+-------------------+---------------------------+-----------------------+---------------------------+
-|`ModulatorySignal`|`AdaptiveMechanism'|provides value for         |                       |`AdaptiveMechanism`        |
-|                  |                   |`ModulatoryProjection` \(s)|                       |constructor; tuple in State|
-|                  |                   |                           |                       |or parameter specification |
-+------------------+-------------------+---------------------------+-----------------------+---------------------------+
++------------------+-------------------+------------------------+-----------------------+-------------------------------+
+| *State Type:*    |  Owner:           |      *Description*     |    *Modulated by*     |      *Specification*          |
++==================+===================+========================+=======================+===============================+
+| `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`        |`InputState` constructor;      |
+|                  |                   |`MappingProjection` \   |                       |`Mechanism` constructor or     |
+|                  |                   |(s)                     |                       |its `add_states` method        |
++------------------+-------------------+------------------------+-----------------------+-------------------------------+
+|`ParameterState`  |  `Mechanism` or   |represents parameter    |`LearningSignal`       |Implicitly whenever a          |
+|                  |  `Projection`     |value for a `Component` |and/or `ControlSignal` |parameter value is             |
+|                  |                   |or its function         |                       |`specified                     |
+|                  |                   |                        |                       |<ParameterState_Specification>`|
++------------------+-------------------+------------------------+-----------------------+-------------------------------+
+| `OutputState`    |  `Mechanism`      |provides output to      | `GatingSignal`        |`OutputState` constructor;     |
+|                  |                   |`MappingProjection` \   |                       |`Mechanism` constructor or     |
+|                  |                   |(s)                     |                       |its `add_states` method        |
++------------------+-------------------+------------------------+-----------------------+-------------------------------+
+|`ModulatorySignal`|`AdaptiveMechanism`|provides value for      |                       |`AdaptiveMechanism`            |
+|                  |                   |`ModulatoryProjection` \|                       |constructor; tuple in State    |
+|                  |                   |(s)                     |                       |or parameter specification     |
++------------------+-------------------+------------------------+-----------------------+-------------------------------+
 
 
 COMMENT:

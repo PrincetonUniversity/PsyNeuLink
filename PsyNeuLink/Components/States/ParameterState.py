@@ -36,7 +36,7 @@ of a Component are listed in its `user_params <Component.user_params>` and funct
 dictionaries. Each ParameterState is created using the value specified for the corresponding parameter, as described
 below.
 
-.. _ParameterState_Specifying_Parameters:
+.. _ParameterState_Specification:
 
 Specifying Parameters
 ~~~~~~~~~~~~~~~~~~~~~
@@ -328,7 +328,7 @@ class ParameterState(State_Base):
         `variable <ParameterState.variable>`) to the ParameterState's `value <ParameterState.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
