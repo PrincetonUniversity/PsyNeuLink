@@ -96,21 +96,25 @@ be specified in either of the ways mentioned above, or using one of the followin
     For example, `LearningMechanisms <LearningMechanism>` (and associated `LearningProjections <LearningProjection>`)
     are created automatically when `learing <Process_Learning>` is specified for a Process.
 
-.. _Mechanism_Creation_States:
+.. _Mechanism_State_Specification:
+
+Specifying States
+~~~~~~~~~~~~~~~~~
 
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and
-`OutputStates <OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send Projections,
-and to execute its `function <Mechanism_Function>`).  When a Mechanism is created, it automatically creates the
+`OutputStates <OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send `Projections`,
+and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
 ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`.
 It also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
-OutputStates, and corresponding Projections, can also be specified in **input_states** and **output_state** arguments
-of the Mechanism's constructor, or in its params dictionary using entries with the keys *INPUT_STATES* and
-*OUTPUT_STATES*, respectively. The value of each entry can be of the allowable forms for
-`specifying a state <State_Specification>`. InputStates and OutputStates can also be added to an existing Mechanism
-using its `add_states` method, although this is generally not needed and therefore an uncommon practice.
+OutputStates, and corresponding Projections or `ModulatorySignals <ModulatorySignal>` can also be specified explicitly
+in **input_states** and **output_state** arguments of the Mechanism's constructor, or in a dictionary assigned to its
+**params** argument using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively. The value of each
+entry can be any of the allowable forms for `specifying a state <State_Creation>`. InputStates and OutputStates can
+also be added to an existing Mechanism using its `add_states` method, although this is generally not needed and
+therefore an uncommon practice.
 
 The following is an example that creates an instance of a TransferMechanism that names the default InputState
-``MY_INPUT``, and assigns three `standard <OutputState_Standard>` OutputStates::
+``MY_INPUT``, and assigns three `standard OutputStates <OutputState_Standard>`::
  
      my_mech = TransferMechanism(input_states=['MY_INPUT'], output_states=[RESULT, MEAN, VARIANCE])
 
@@ -186,9 +190,10 @@ States
 ~~~~~~
 
 Every Mechanism has one or more of each of three types of States:  `InputState(s) <InputState>`,
-`ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are
-created automatically when the `Mechanism is created <Mechanism_Creation_States>`.  However, InputStates and
-OutputStates can be added to an existing Mechanism using its `add_states` method.
+`ParameterState(s) <ParameterState>`, `and OutputState(s) <OutputState>`.  Generally, these are created automatically
+when the Mechanism is created.  InputStates and OutputStates (but not ParameterStates) can also be specified explicitly
+for a Mechanism, or added to an existing Mechanism using its `add_states` method, as described
+`above <Mechanism_State_Specification>`).
 
 The three types of States are shown schematically in the figure below, and described briefly in the following sections.
 
@@ -339,7 +344,7 @@ constructor, or with the Mechanism's `assign_params` method, using the following
       |
       * a tuple with exactly two items: the parameter value and a `Projection specificadtion <LINK>`.  The Projection
         specification can be either a `ModulatoryProjection`, `ModulatorySignal`, or the name of the class one.
-          
+
         either a `Projection`, Projection type (specifying a
         `LearningProjection`, `ControlProjection` or `GatingProjection`, or the corresponding ModulatorySignal
       |

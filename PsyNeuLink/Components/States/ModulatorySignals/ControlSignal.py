@@ -43,17 +43,21 @@ Specifying ControlSignals
 When a ControlSignal is specified in context (e.g., the **control_signals** argument of the constructor for a
 `ControlMechanism`, the specification can take any of the following forms:
 
-  * a *ParameterState* of the Mechanism to which the parameter belongs;
-  |
-  * a *tuple*, with the *name* of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
+  * a **ParameterState** of the Mechanism to which the parameter belongs;
+  ..
+  * a **tuple**, with the name of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
-  |
-  * a *specification dictionary*, that must contain at least the following two entries:
+  ..
+  * a **specification dictionary**, that must contain at least the following two entries:
 
-    * *NAME*:str - a string that is the name of the parameter to be controlled;
-    * *MECHANISM*:Mechanism - the Mechanism to which the parameter belongs; 
-      (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+    * *NAME*: str
+        a string that is the name of the parameter to be controlled;
+
+    * *MECHANISM*: Mechanism
+        the Mechanism must be the one to the which the parameter belongs.
+        (note: the Mechanism itself should be specified even if the parameter belongs to its function).
+
     The dictionary can also contain entries for any other ControlSignal attributes to be specified
     (e.g., a MODULATION and/or an ALLOCATION_SAMPLES entry; see `below <ControlSignal_Structure>` for a
     description of ControlSignal attributes).

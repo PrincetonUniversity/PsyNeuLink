@@ -42,23 +42,28 @@ Specifying LearningSignals
 When a LearningSignal is specified in context (e.g., the **learning_signals** argument of the constructor for a
 `LearningMechanism`, the specification can take any of the following forms:
 
-  * a *ParameterState* of the Projection to which the parameter belongs;
-  |
-  * a *Projection*, which must be either a `LearningProjection`, or a `MappingProjection` to which the 
+  * a **ParameterState** of the Projection to which the parameter belongs;
+  ..
+  * a **Projection**, which must be either a `LearningProjection`, or a `MappingProjection` to which the
     LearningSignal should send a `LearningProjection`.  In both cases, it is assumed that the LearningProjection
     projects to the *MATRIX* ParameterState of a `MappingProjection`. 
-  |
-  * a *tuple*, with the *name* of the parameter as its 1st item. and the *projection* to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+  ..
+  * a **tuple**, with the name of the parameter as its 1st item. and the *projection* to which it belongs as the 2nd;
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <LearningSignal_Structure>` for the LearningSignal.
-  |
-  * a *specification dictionary*, that must contain at least the following two entries:
+  ..
+  * a **specification dictionary**, that must contain at least the following two entries:
 
-    * *NAME*:str - a string that is the name of the parameter to be controlled;
-    * *PROJECTION*:Projection - the Projection to which the parameter belongs; 
-      (note: the Projection itself should be specified even if the parameter belongs to its function).
+    * *NAME*:str
+        the string must be the name of the `MappingProjection` to be learned; the LearningSignal will named by
+        appending "_LearningSignal" to the name of the Projection.
+
+    * *PROJECTION*:Projection
+        the Projection must be the one to be learned.
+
     The dictionary can also contain entries for any other LearningSignal attributes to be specified
-    (e.g., a LEARNING_RATE entry; see `below <ControlSignal_Structure>` for a description of LearningSignal attributes).
+    (e.g., a LEARNING_RATE entry; see `below <LearningSignal_Structure>` for a description of LearningSignal
+    attributes).
 
 .. _LearningSignal_Structure:
 

@@ -44,13 +44,14 @@ from the GatingMechanism to the specified state.
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState
-can be specified for gating by assigning it a `GatingProjection` or a `GatingSignal` in the **input_states** or
-**output_states** arguments of the constructor for the Mechanism to which it belongs (see `Mechanism_States <LINK>`).
-The InputStates and OutputStates to be gated by a GatingMechanism can also be specified in the  **gating_signals**
-argument of the constructor for a GatingMechanism.  The **gating_signals** argument must be a list, each item of
-which must refer to one or more states to be gated by that GatingSignal.  The specification for each item in the list
-can use any of the forms used to `specify a GatingSignal <GatingSignal_Specification>`.
+GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
+be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
+or its ModulatorySignals `can be specified <State_Creation>`. They can also be specified in the  **gating_signals**
+argument of the constructor for a GatingMechanism.  The **gating_signals** argument must be a list, each item of which
+must refer to one or more States (or the Mechanisms to which they belong) to be gated by that GatingSignal.  The
+specification for each item in the list can use any of the forms used to
+`specify a GatingSignal <GatingSignal_Specification>`.
+
 
 .. _GatingMechanism_GatingSignals:
 
@@ -419,7 +420,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # - get constraint for OutputState's value
             output_state_constraint_value = self.gating_policy[output_state_index]
 
-            # gating_signal_params.update({GATED_STATE:state_name})
+            # gating_signal_params.update({GATE:state_name})
             gating_signal_params.update(gating_signal_spec[PARAMS])
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??

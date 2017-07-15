@@ -60,8 +60,6 @@ are listed in the State's `mod_afferents` attribute.
 Execution
 ---------
 
-.. _ModulatoryProjection_Class_Reference:
-
 A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `State` to
 which it projects — its `receiver <Projection.receiver>` — is updated;  that occurs when the State's owner Mechanism
 is executed.  When a ModulatoryProjection executes, it conveys both the value of the `ModulatorySignal` from which it
