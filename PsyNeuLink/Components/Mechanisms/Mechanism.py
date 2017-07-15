@@ -337,8 +337,11 @@ constructor, or with the Mechanism's `assign_params` method, using the following
       * a ControlProjection or LearningProjection specification (see `Projection_Creation`),
         that assigns the parameter its default value, and a Projection to it's ParameterState of the specified type;
       |
-      * a tuple with exactly two items: the parameter value and a Projection type specifying a
-        `LearningProjection`, `ControlProjection` or `GatingProjection`.
+      * a tuple with exactly two items: the parameter value and a `Projection specificadtion <LINK>`.  The Projection
+        specification can be either a `ModulatoryProjection`, `ModulatorySignal`, or the name of the class one.
+          
+        either a `Projection`, Projection type (specifying a
+        `LearningProjection`, `ControlProjection` or `GatingProjection`, or the corresponding ModulatorySignal
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in Mechanism's constructor.

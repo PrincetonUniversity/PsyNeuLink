@@ -226,8 +226,9 @@ When an OutputState is created, it can be assigned one or more `Projections <Pro
 **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
 the key *PROJECTIONS*.  An OutputState can be assigned either `MappingProjection(s) <MappingProjection>` or
 `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputState.efferents>`
-attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See `State_Projections`
-for additional details concerning the specification of Projections when creating a State.
+attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See
+`State Projections <State_Projections>` for additional details concerning the specification of Projections when
+creating a State.
 
 
 .. _OutputState_Structure:

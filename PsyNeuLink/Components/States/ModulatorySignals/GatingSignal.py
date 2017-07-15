@@ -16,8 +16,7 @@ A GatingSignal is a type of `ModulatorySignal` that is specialized for use with 
 `GatingProjection`, to modify the `value <State.value> of the InputState(s) and/or OutputState(s) of one or more
 `Mechanisms <Mechanism>`. A GatingSignal receives a value specified by the the `function <GatingMechanism.function>`
 of the GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
-each of which projects to one or more InputState(s) and/or OutputState(s) to be gated, and is used to modulate the
-`value <State.value>` of those states.
+each of which projects to an InputState or OutputState and is used to modulate the `value <State.value>` of that state.
 
 
 .. _GatingSignal_Creation:
@@ -25,38 +24,54 @@ each of which projects to one or more InputState(s) and/or OutputState(s) to be 
 Creating a GatingSignal
 -----------------------
 
-A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` are
-`specified for gating <GatingMechanism_Gating_Signals>`.  GatingSignals can also be specified in the 
-**gating_signals** argument of the constructor for a `GatingMechanism`, using any of the formats described 
-`below <GatingSignal_Specification>`.  Although a GatingSignal can be created directly using its constructor 
-(or any of the other ways for `creating an OutputState <OutputStates_Creation>`),  this is neither necessary
-nor advisable, as a GatingSignal has dedicated components and requirements for configuration that must be met 
-for it to function properly.
+A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` is specified for
+gating.  This can be done either in the **gating_signals** argument of the constructor for a
+`GatingMechanism <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to
+the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
+other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
+GatingSignal has dedicated components and requirements for configuration that must be met for it to function properly.
 
 .. _GatingSignal_Specification:
 
 Specifying GatingSignals
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a GatingSignal is specified in context (e.g., the **gating_signals** argument of the constructor for a
-`GatingMechanism`, the specification can take any of the following forms:
+When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
+InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
-  * an *InputState* or *OutputState* of a Mechanism;
-  * a *Mechanism*, in which case its `primary inputState <Mechanism_InputStates>` will be used;
-  * a *tuple*, with the *name* of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
+  * an **InputState** or **OutputState** of a Mechanism;
+  ..
+  * a **Mechanism**, in which case its `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>`
+    is used;
+  ..
+  * a **tuple**, with the *name* of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
     but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
-  * a *specification dictionary*, that can take either of the following two forms:
+  ..
+  COMMENT:
+      REFERENCE TO STATE SPECIFICATION DICTIONARY HERE
+  COMMENT
+  * a **State specification dictionary**, that can take either of the following two forms:
+
     * for a single state, the dictionary must have the following two entries:
-        * *NAME*: str - a string that is the name of the state to be gated;
-        * *MECHANISM*: Mechanism - the Mechanism to which the state belongs;
-    In this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
+
+        * *NAME*: str
+            the string must be the name of the State to be gated; the GatingSignal will named by appending
+            "_GatingSignal" to the name of the State.
+
+        * *MECHANISM*: Mechanism
+            the Mechanism must be the one to the which the State to be gated belongs.
+
     * for multiple states, the dictionary must have the following entry:
-        * <str>:list - where the string used for the key specifies the name to be used for the GatingSignal,
-          and the value is a list, each item of which is a `specification of a state <LINK>` to be gated by 
-          the GatingSignal (and that will receive a `GatingProjection` from it).
-    In either case, the dictionary can also contain a *MODULATION* entry, the value of which must be a `Modulation` 
-    value that determines how that particular GatingSignal will modulate the value of all of the states that it gates.
+
+        * <str>:list
+            the string used as the key specifies the name to be used for the GatingSignal,
+            and each item of the list must be a `specification of a State <State_Creation>` to be
+            gated by the GatingSignal (and that will receive a `GatingProjection` from it).
+
+    In either case, the dictionary can also contain a *MODULATION* entry, the value of which must be a value of
+    `ModulationParam` that determines how the GatingSignal will modulate the `value <State.value>` of the State(s)
+    that it gates.
 
 .. _GatingSignal_Structure:
 

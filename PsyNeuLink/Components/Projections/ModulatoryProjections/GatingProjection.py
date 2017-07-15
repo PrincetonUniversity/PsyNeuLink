@@ -56,7 +56,7 @@ from which it projects as its own `value <GatingProjection.value>`. This is used
 to which the GatingProjection projects to modulate its own `value <State.value>`.
 
 .. note::
-   The changes in an InputState or OutputState's `value <State.value >`in response to the execution of a
+   The changes in an InputState or OutputState's `value <State.value >` in response to the execution of a
    GatingProjection are not applied until the Mechanism to which the State belongs is next executed;
    see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 

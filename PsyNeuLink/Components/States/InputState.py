@@ -194,8 +194,8 @@ When an InputState is created, it can be assigned one or more `Projections <Proj
 the key *PROJECTIONS*.  An InputState can be assigned either `MappingProjection(s) <MappingProjection>` or
 `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its
 `pathway_afferents <InputState.pathway_afferents>` attribute and GatingProjections to its
-`mod_afferents <InputState.mod_afferents>` attribute.  See `State_Projections` for additional details concerning
-the specification of Projections when creating a State.
+`mod_afferents <InputState.mod_afferents>` attribute.  See `State Projections <State_Projections>` for additional
+details concerning the specification of Projections when creating a State.
 
 
 .. _InputState_Structure:

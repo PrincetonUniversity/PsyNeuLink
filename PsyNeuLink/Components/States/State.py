@@ -72,13 +72,16 @@ in any of the following forms:
       entries, in addition to those specific to a particular State subtype (see subtype documentation):
 
       ..
-      * *NAME*:<str> - the string is used as the name of the State;
+      * *NAME*:<str>
+          the string is used as the name of the State;
       
       ..
-      * *STATE_TYPE*:<State type> - specifies type of State to create (necessary if it cannot be determined from the
-        the context of the other entries or in which it is being created)
+      * *STATE_TYPE*:<State type>
+          specifies type of State to create (necessary if it cannot be determined from the
+          the context of the other entries or in which it is being created)
       ..
-      * *VALUE*:<value> - the value is used as the default value of the State;
+      * *VALUE*:<value>
+          the value is used as the default value of the State;
 
       COMMENT:
           ..
@@ -88,16 +91,15 @@ in any of the following forms:
       COMMENT
       ..
 
-      * *str*:<List> - the key is used as the name of the State, and the list must contain specifications for
-        one or more `Projections <Projection_In_Context_Specification>` to or from the State,
-        depending on the type of State and the context in which it is specified;
+      * *str*:<List>
+          the key is used as the name of the State, and the list must contain specifications for
+          one or more `Projections <Projection_In_Context_Specification>` to or from the State,
+          depending on the type of State and the context in which it is specified;
         ..
 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
-
-COMMENT:
 
 .. _State_Deferred_Initialization:
 
@@ -140,13 +142,20 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
-<Projection_In_Context_Specification>`, or by a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
-in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
-Mechanism. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
-<OutputState_Primary>  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
+<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
+in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State` or a
+`Mechanism`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
+<OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
-examples below.  Note that the State must be `assigned to an owner <State_Deferred_Initialization>` in order to be
-functional, irrespective of whether any `Projections <Projection>` have been assigned to it.
+examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
+irrespective of whether any `Projections <Projection>` have been assigned to it.
+
+COMMENT:
+    ADD TABLE HERE SHOWING COMBINATIONS OF ALLOWABLE SPECIFICATIONS AND THEIR OUTCOMES
+COMMENT
+
+Examples
+^^^^^^^^
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A``::
@@ -160,8 +169,6 @@ and assigns it to a ``my_gating_mech``::
     my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
 
 The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_B`` and ``mech_C``.
-
-COMMENT
 
 .. _State_Structure:
 

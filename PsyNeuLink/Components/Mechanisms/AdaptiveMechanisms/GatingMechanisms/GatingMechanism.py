@@ -44,14 +44,13 @@ from the GatingMechanism to the specified state.
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`.
-An InputState or OutputState can be specified for gating by assigning it a `GatingProjection` in the
-**input_states** or **output_states** arguments of the constructor for the Mechanism to which it belongs
-(see `Mechanism_States <LINK>`).  The InputStates and OutputStates to be gated by a GatingMechanism can also be
-specified in the  **gating_signals**  argument of the constructor for a GatingMechanism.  The **gating_signals** 
-argument must be a list, each item of which must refer to one or more states to be gated by that GatingSignal.  
-The specification for each item in the list can use any of the forms used to 
-`specify a GatingSignal <GatingSignal_Specification>`.
+GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState
+can be specified for gating by assigning it a `GatingProjection` or a `GatingSignal` in the **input_states** or
+**output_states** arguments of the constructor for the Mechanism to which it belongs (see `Mechanism_States <LINK>`).
+The InputStates and OutputStates to be gated by a GatingMechanism can also be specified in the  **gating_signals**
+argument of the constructor for a GatingMechanism.  The **gating_signals** argument must be a list, each item of
+which must refer to one or more states to be gated by that GatingSignal.  The specification for each item in the list
+can use any of the forms used to `specify a GatingSignal <GatingSignal_Specification>`.
 
 .. _GatingMechanism_GatingSignals:
 
