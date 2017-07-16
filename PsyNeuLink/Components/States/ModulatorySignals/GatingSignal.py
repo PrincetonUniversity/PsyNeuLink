@@ -164,7 +164,7 @@ are updated, the value of the GatingSignal will be assigned as the `intercept` o
 `value <InputStat.value>`.
 
 **Gate InputStates differentially**.  In the example above, the InputStates for all of the Mechanisms were gated
-using a single GatingSignal.  In the example below, a different GatingSignal is assined to the InputState of each
+using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
 Mechanism::
 
     My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
@@ -317,6 +317,7 @@ class GatingSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = OUTPUT_STATES
+    componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -587,9 +588,15 @@ def _parse_gating_signal_spec(owner, state_spec):
 
                 # GatingSignal projects to a single state (named in NAME entry)
                 if not MECHANISM in state_spec:
-                    raise GatingSignalError("Specification dict for state to be gated by {} of {} ({}) must have a "
-                                               "MECHANISM entry specifying the mechanism to which the state belongs".
-                                               format(GATING_SIGNAL, owner.name, state_name))
+                    # raise GatingSignalError("Specification dict for State to be gated by {} of {} ({}) must have a "
+                    #                            "MECHANISM entry specifying the mechanism to which the state belongs".
+                    #                            format(GATING_SIGNAL, owner.name, state_name))
+                    raise GatingSignalError("Use of \'NAME\' entry ({0}) in specification dict for "
+                                            "{1} of {2} is ambiguous: "
+                                            "it must be accompanied by either a \'MECHANISM\' entry "
+                                            "(to be interpreted as the name of a State, "
+                                            "or a \'PROJECTIONS\' entry (to interpreted as the name of the {1})".
+                                            format(state_name, GatingSignal.componentName, owner.name))
                 mech = state_spec[MECHANISM]
 
         # Check that all of the other entries in the dict are for valid GatingSignal params
@@ -625,9 +632,9 @@ def _parse_gating_signal_spec(owner, state_spec):
             state_type = OUTPUT_STATE
             state = mech.output_states[state_name]
         else:
-            raise GatingSignalError("{} (in specification of {}  {}) is not an "
+            raise GatingSignalError("{} (in specification of {} for {}) is not the name of an "
                                        "InputState or OutputState of {}".
-                                        format(state_name, GATING_SIGNAL, owner.name, mech))
+                                        format(state_name, GatingSignal.componentName, owner.name, mech))
         # Check that the Mechanism is in GatingMechanism's system
         # if not owner.system and not mech in owner.system.mechanisms:
         # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)
