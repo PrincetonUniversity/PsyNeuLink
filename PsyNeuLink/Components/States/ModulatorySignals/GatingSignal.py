@@ -142,13 +142,13 @@ the `InputState` of all the layers in a 3-layered feedforward neural network.  O
 *MULTIPLICATIVE_PARAM* of an InputState's `function <InputState.function>`.  In the example, this is changed so that
 it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputState.value>` of each InputState::
 
-    My_Input_Layer = TransferMechanism(size=3)
-    My_Hidden_Layer = TransferMechanism(size=5)
-    My_Output_Layer = TransferMechanism(size=2)
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[
-                                            {'GATE_ALL': [My_Input_Layer,
-                                                          My_Hidden_Layer,
-                                                          My_Output_Layer]},
+    my_input_layer = TransferMechanism(size=3)
+    my_hidden_layer = TransferMechanism(size=5)
+    my_output_layer = TransferMechanism(size=2)
+    my_gating_mechanism = GatingMechanism(gating_signals=[
+                                            {'GATE_ALL': [my_input_layer,
+                                                          my_hidden_layer,
+                                                          my_output_layer]},
                                              modulation=ModulationParam.ADDITIVE)
 
 Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
@@ -167,20 +167,36 @@ are updated, the value of the GatingSignal will be assigned as the `intercept` o
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
 Mechanism::
 
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
-                                                           GATE: My_Input_Layer,
-                                                           MODULATION: ModulationParam.ADDITIVE},
+    my_gating_mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
+                                                           MODULATION: ModulationParam.ADDITIVE,
+                                                           PROJECTIONS: my_input_layer},
                                                           {NAME: 'GATING_SIGNAL_B',
-                                                           GATE: [My_Hidden_Layer, My_Output_Layer]}])
+                                                           PROJECTIONS: [my_hidden_layer,
+                                                                         my_output_layer]}])
 
-Here, two GatingSignals are specified as `specification dictionaries <_GatingSignal_Specification>`, each of which
-contains an entry for the name of the GatingSignal, and a *GATE* entry that specifies the States to be gated (in this
-case,  again exploiting the fact that the default is to modulate the `primary InputState <InputState_Primary>` of a
-Mechanism).
-The first dict also contains a *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>`
-attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
-`ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``My_Input_Layer`` will be additively modulated,
-while the InputState of ``My_Hidden_Layer`` will be multiplicatively modulated by their GatingSignals, respectively.
+Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
+contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
+GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the 
+default is to gate the `primary InputState <InputState_Primary>` of a Mechanism, so those are what are referenced. The 
+first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>` 
+attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is 
+`ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``my_input_layer`` will be additively modulated by
+``GATING_SIGNAL_A``, while the InputStates of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicatively 
+modulated by ``GATING_SIGNAL_B``.
+
+**Creating and assigning stand-alone GatingSignals**.  GatingSignals can also be created on their own, and then later
+assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
+created directly and then assigned to ``my_gating_mechanism``::
+
+    my_gating_signal_A = GatingSignal(name='GATING_SIGNAL_A',
+                                      modulation=ModulationParams.ADDITIVE,
+                                      projections=my_input_layer)
+    my_gating_signal_B = GatingSignal(name='GATING_SIGNAL_B',
+                                      projections=my_hidden_layer,
+                                                  my_output_layer)
+    my_gating_mechanism = GatingMechanism(gating_signals=[my_gating_signal_A,
+                                                          my_gating_signal_B])
+
 
 Class Reference
 ---------------
