@@ -65,7 +65,7 @@ mySystem.show()
 #EVC comments on documentation
 #how do I import what is required for EVC? in general in documentation how do I know which pieces of PsyNeuLink to import? #copy from other scripts, if not recognized 
 #not clear to me syntax: monitor_for_control (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES)
-# class EVC.EVCMechanism.ControlSignalCostOptions; "An enumeration" what does this mean? a number?
+# class EVC.EVCMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
 #when EVC appears in a yellow box but is also part of an example command it isn't clear if there should or shouldn't be a space in that command, noticed this in code
 #for example this line looks like: my_linear_ transfer _mechanism =  Transfer Mechanism (function=Linear), then when I copy and paste its my_linear_transfer_mechanism = TransferMechanism(function=Linear)
 
@@ -108,7 +108,7 @@ mySystem.show()
 #EVC comments on documentation
 #how do I import what is required for EVC? in general in documentation how do I know which pieces of PsyNeuLink to import? #copy from other scripts, if not recognized 
 #not clear to me syntax: monitor_for_control (List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES)
-# class EVC.EVCMechanism.ControlSignalCostOptions; "An enumeration" what does this mean? a number?
+# class EVC.EVCMechanism.ControlSignalCosts; "An enumeration" what does this mean? a number?
 #when EVC appears in a yellow box but is also part of an example command it isn't clear if there should or shouldn't be a space in that command, noticed this in code
 #for example this line looks like: my_linear_ transfer _mechanism =  Transfer Mechanism (function=Linear), then when I copy and paste its my_linear_transfer_mechanism = TransferMechanism(function=Linear)
 

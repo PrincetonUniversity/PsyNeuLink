@@ -136,8 +136,8 @@ A ControlSignal also has the following standard and specialized attributes:
 .. _ControlSignal_Costs:
 
 * *Costs*.  A ControlSignal has three **cost attributes**, the values of which are calculated from its `intensity` to
-  determine the total cost.  Each of these is calculated using a corresponding **cost function**.  Each of these
-  functions can be customized, and the first three can be `enabled or disabled <ControlSignal_Toggle_Costs>`:
+  determine the total cost.  Each of these is calculated using a corresponding cost function (described in the
+  (`next section <ControlSignal_Cost_Function>`).
 
     * `intensity_cost - calculated by the `intensity_cost_function` based on the current `intensity` of the
       ControlSignal.
@@ -151,7 +151,11 @@ A ControlSignal also has the following standard and specialized attributes:
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
       enabled (as described in the following section).
 
-    .. _ControlSignal_Cost_Functions:
+.. _ControlSignal_Cost_Functions:
+
+* *Cost functions*.
+    LIST COST_OPTIONS FUNCTIONS AND THEIR KEYWORDS HERE (USED WITH TOGGLE_COSTS)
+    ENHANCE toggle_costs TO USE COST OPTIONS
 
     .. _ControlSignal_Toggle_Costs:
 
@@ -288,8 +292,8 @@ from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
-CONTROL_SIGNAL_COST_OPTIONS = 'control_signal_cost_options'
-class ControlSignalCostOptions(IntEnum):
+COST_OPTIONS = 'costs'
+class ControlSignalCosts(IntEnum):
     """Options for selecting `Cost functions <ControlSignal_Cost_Functions>` to be used by a ControlSignal.
 
     These can be used alone or in combination with one another, by `enabling or disabling <_ControlSignal_Toggle_Costs>`
@@ -337,11 +341,13 @@ class ControlSignalError(Exception):
         return repr(self.error_value)
 
 
+
 class ControlSignal(ModulatorySignal):
     """
     ControlSignal(                                       \
         owner,                                           \
         function=LinearCombination(operation=SUM),       \
+        costs=ControlSignalCosts.DEFAULTS,               \
         intensity_cost_function=Exponential,             \
         adjustment_cost_function=Linear,                 \
         duration_cost_function=Integrator,               \
@@ -388,6 +394,9 @@ class ControlSignal(ModulatorySignal):
 
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
+
+    costs : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS
+        specifies the costs to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
         specifies the function used to calculate the contribution of the ControlSignal's `intensity` to its `cost`.
@@ -461,6 +470,10 @@ class ControlSignal(ModulatorySignal):
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
+
+    cost_options : int
+        boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
+        ControlSignal's constructor;  can be modified using the `assign_cost_options` method.
 
     intensity_cost_function : TransferFunction : default default Exponential
         calculates `intensity_cost` from the current value of `intensity`. It can be any `TransferFunction`, or any
@@ -536,7 +549,7 @@ class ControlSignal(ModulatorySignal):
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
         CONTROLLED_PARAM:None,
-        CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCostOptions.DEFAULTS
+        COST_OPTIONS:ControlSignalCosts.DEFAULTS
     })
     #endregion
 
@@ -550,6 +563,7 @@ class ControlSignal(ModulatorySignal):
                  index=PRIMARY_OUTPUT_STATE,
                  calculate=Linear,
                  function=LinearCombination(operation=SUM),
+                 cost_options:tc.any(ControlSignalCosts, list)=ControlSignalCosts.DEFAULTS,
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
@@ -568,6 +582,7 @@ class ControlSignal(ModulatorySignal):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(function=function,
+                                                  cost_options=cost_options,
                                                   intensity_cost_function=intensity_cost_function,
                                                   adjustment_cost_function=adjustment_cost_function,
                                                   duration_cost_function=duration_cost_function,
@@ -593,6 +608,7 @@ class ControlSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
+        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -719,7 +735,7 @@ class ControlSignal(ModulatorySignal):
 
             self.paramsCurrent[cost_function_name] = cost_function
 
-        self.control_signal_cost_options = self.paramsCurrent[CONTROL_SIGNAL_COST_OPTIONS]
+        self.control_signal_cost_options = self.paramsCurrent[COST_OPTIONS]
 
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
@@ -814,17 +830,17 @@ class ControlSignal(ModulatorySignal):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        if self.control_signal_cost_options & ControlSignalCostOptions.INTENSITY_COST:
+        if self.control_signal_cost_options & ControlSignalCosts.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
-        if self.control_signal_cost_options & ControlSignalCostOptions.ADJUSTMENT_COST:
+        if self.control_signal_cost_options & ControlSignalCosts.ADJUSTMENT_COST:
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
-        if self.control_signal_cost_options & ControlSignalCostOptions.DURATION_COST:
+        if self.control_signal_cost_options & ControlSignalCosts.DURATION_COST:
             duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -941,11 +957,11 @@ class ControlSignal(ModulatorySignal):
         """
 
         if cost_function_name == INTENSITY_COST_FUNCTION:
-            cost_option = ControlSignalCostOptions.INTENSITY_COST
+            cost_option = ControlSignalCosts.INTENSITY_COST
         elif cost_function_name == DURATION_COST_FUNCTION:
-            cost_option = ControlSignalCostOptions.DURATION_COST
+            cost_option = ControlSignalCosts.DURATION_COST
         elif cost_function_name == ADJUSTMENT_COST_FUNCTION:
-            cost_option = ControlSignalCostOptions.ADJUSTMENT_COST
+            cost_option = ControlSignalCosts.ADJUSTMENT_COST
         elif cost_function_name == COST_COMBINATION_FUNCTION:
             raise ControlSignalError("{} cannot be disabled".format(COST_COMBINATION_FUNCTION))
         else:
@@ -961,21 +977,21 @@ class ControlSignal(ModulatorySignal):
 
     # def set_intensity_cost(self, assignment=ON):
     #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options |= ControlSignalCosts.INTENSITY_COST
     #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.INTENSITY_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCosts.INTENSITY_COST
     #
     # def set_adjustment_cost(self, assignment=ON):
     #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options |= ControlSignalCosts.ADJUSTMENT_COST
     #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.ADJUSTMENT_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCosts.ADJUSTMENT_COST
     #
     # def set_duration_cost(self, assignment=ON):
     #     if assignment:
-    #         self.control_signal_cost_options |= ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options |= ControlSignalCosts.DURATION_COST
     #     else:
-    #         self.control_signal_cost_options &= ~ControlSignalCostOptions.DURATION_COST
+    #         self.control_signal_cost_options &= ~ControlSignalCosts.DURATION_COST
     #
     def get_costs(self):
         """Return three-element list with the values of ``intensity_cost``, ``adjustment_cost`` and ``duration_cost``
