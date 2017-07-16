@@ -80,13 +80,24 @@ Structure
 A GatingSignal is owned by a `GatingMechanism`, and associated with one or more `GatingProjections <GatingProjection>`, 
 each of which projects to the InputState or OutputState that it gates.  
 
+.. _GatingSignal_Projections:
+
+Projections
+~~~~~~~~~~~
+
+When a GatingSignal is created, it can be assigned one or more `GatingProjections <GatingProjection>`, using either
+the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
+with the key *PROJECTIONS*.  These will be assigned to its `efferents  <GatingSignal.efferents>` attribute.  See
+`State Projections <State_Projections>` for additional details concerning the specification of Projections when
+creating a State.
+
 .. _GatingSignal_Modulation:
 
 Modulation
 ~~~~~~~~~~
 
-Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingProjection 
-is used by the State to which it projects to modify its `value <State.value>` (see `ModulatorySignal_Modulation`
+Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its GatingProjections
+are used by the States to which they project to modify their `value <State.value>` \s (see `ModulatorySignal_Modulation`
 for an explanation of how this attribute is specified and used to modulate the `value <State.value>` of a State).
 The `modulation <GatingSignal.modulation>` can be specified in the **modulation** argument of the constructor for a
 GatingSignal, or in a specification dictionary as described `above <GatingSignal_Specification>`.  The value must be

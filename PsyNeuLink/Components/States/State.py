@@ -20,7 +20,7 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
 as summarized in the table below:
 
 +------------------+-------------------+------------------------+----------------------+-------------------------------+
-| *State Type:*    |  Owner:           |      *Description*     |    *Modulated by*    |      *Specification*          |
+| *State Type*     | *Owner*           |      *Description*     |    *Modulated by*    |      *Specification*          |
 +==================+===================+========================+======================+===============================+
 | `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`       |`InputState` constructor;      |
 |                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
