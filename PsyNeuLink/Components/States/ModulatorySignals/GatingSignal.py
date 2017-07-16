@@ -28,8 +28,9 @@ A GatingSignal is created automatically whenever an `InputState` or `OutputState
 gating.  This can be done either in the **gating_signals** argument of the constructor for a
 `GatingMechanism <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to
 the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
-other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
-GatingSignal has dedicated components and requirements for configuration that must be met for it to function properly.
+other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable,
+as a GatingSignal has dedicated components and requirements for configuration that must be met for it to function
+properly.
 
 .. _GatingSignal_Specification:
 

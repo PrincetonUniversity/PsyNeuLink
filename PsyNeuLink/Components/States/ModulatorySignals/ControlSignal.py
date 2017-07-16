@@ -13,14 +13,14 @@ Overview
 --------
 
 A ControlSignal is a type of `ModulatorySignal`, specialized for use with a `ControlMechanism` and a
-`ControlProjection`, to modify the parameter of a `Mechanism` or its `function <Mechanism.function>`, that in turn
-controls the `value <Mechanisms.value>` of that Mechanism. A ControlSignal receives an `allocation` value from the
-ControlMechanism to which it belongs, and uses that to compute an `intensity` that is assigned as the `value
-<ControlProjection.ControlProjection.value>` of its ControlProjection.  The ControlProjection conveys its value to
-the `ParameterState` for the parameter of a `Mechanism` or its `function <Mechanism.function>`, which uses that value
-to `control <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
-calculates a `cost`, based on its `intensity` and/or its time course, that is used by the ControlMechanism to adapt
-its `allocation` in the future.
+`ControlProjection`, to modify the parameter of a `Mechanism` or its `function <Mechanism_Base.function>`. A
+ControlSignal receives an `allocation <ControlSignal.allocation>` value from the ControlMechanism to which it
+belongs, and uses that to compute an `intensity` that is assigned as the
+`value <ControlProjection.ControlProjection.value>` of its ControlProjection. The ControlProjection conveys its value
+to the `ParameterState` for the parameter it controls, which uses that value to `modulate <ModulatorySignal_Modulation>`
+the `value <ParameterState.value>` of the parameter.  A ControlSignal also calculates a `cost`, based on its `intensity`
+and/or its time course, that may be used by the ControlMechanism to adapt the ControlSignal's
+`allocation <ControlSignal.allocation>` in the future.
 
 .. _ControlSignal_Creation:
 
@@ -28,12 +28,11 @@ Creating a ControlSignal
 ------------------------
 
 A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function
-is `specified for control <ControlMechanism_Control_Signals>` and the Mechanism belongs to a System for which
-an `ControlMechanism` is the `controller`.  ControlSignals can also be specified in the **control_signals**
-argument of the constructor for a `ControlMechanism`.  Although a ControlSignal can be created directly using its 
-constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is neither 
-necessary nor advisable, as a ControlSignal has dedicated components and requirements for configuration that must be 
-met for it to function properly.
+is `specified for control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the
+**control_signals** argument of the constructor for a `ControlMechanism`.  Although a ControlSignal can be created
+directly using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`),
+this is usually not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for
+configuration that must be met for it to function properly.
 
 .. _ControlSignal_Specification:
 
