@@ -199,7 +199,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         (see `control_signals <ControlMechanism_Base.control_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation used by the ControlMechanism's ControlSignals,
+        specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -229,6 +229,11 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL* 
         `input_state <Mechanism.input_state>`.
 
+    monitored_output_states : List[OutputState]
+        each item is an `OutputState` of a `Mechanism` specified in the **monitor_for_control** argument of the
+        ControlMechanism's constructor, the `value <OutputState.value>` \s of which serve as the items of the
+        ControlMechanism's `variable <Mechanism.variable>`.
+
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls (same as ControlMechanism's
@@ -243,10 +248,14 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         `allocation_policy <ControlMechanism_Base.allocation_policy>`.
 
     allocation_policy : 2d np.array
-        each item is the value assigned as the `allocation <ControlSignal.allocation>` for corresponding
-        ControlSignal in listed in the `control_signals` attribute;  the allocation_policy is the same as the
+        each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
+        ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism.value>` attribute).
         
+    modulation : ModulationParam
+        the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
+        unless they are `individually specified <ControlSignal_Specification>`.
+
     """
 
     componentType = "ControlMechanism"
@@ -295,6 +304,13 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                     name=name,
                                                     prefs=prefs,
                                                     context=self)
+
+        try:
+            self.monitored_output_states
+        except AttributeError:
+            raise ControlMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
+                                              format(self.__class__.__name__,
+                                                     self.__class__.__bases__[0].__name__))
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

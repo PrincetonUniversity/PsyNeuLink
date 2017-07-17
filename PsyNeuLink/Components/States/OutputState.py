@@ -514,7 +514,7 @@ class OutputState(State_Base):
 
     value : number, list or np.ndarray
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
-        of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
+        of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>` attribute.
 
     efferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState

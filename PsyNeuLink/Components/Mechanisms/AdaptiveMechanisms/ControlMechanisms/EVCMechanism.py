@@ -768,12 +768,6 @@ class EVCMechanism(ControlMechanism_Base):
         self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_monitoring_mechanism(context=context)
 
-        # # MODIFIED 2/9/17 NEW:
-        # # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
-        # self.system._instantiate_processes(input=self.system.variable, context=context)
-        # self.system._instantiate_graph(context=context)
-        # # MODIFIED 2/9/17 END
-
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
 
@@ -871,7 +865,7 @@ class EVCMechanism(ControlMechanism_Base):
     # FIX: MOVE THIS TO ControlMechanism??
     def _instantiate_monitoring_mechanism(self, context=None):
         """
-        Assign inputState to controller for each state to be monitored;
+        Assign InputState to ControlMechanism for each OutputState to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()

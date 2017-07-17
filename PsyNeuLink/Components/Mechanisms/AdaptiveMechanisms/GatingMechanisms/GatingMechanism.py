@@ -185,8 +185,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation used by the GatingMechanism's GatingSignals, unless
-        they are `individually specified <GatingSignal_Specification>`.
+        specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
+        unless they are `individually specified <GatingSignal_Specification>`.
         
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -222,8 +222,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         Default is a single item used by all of the `gating_signals`. 
 
     modulation : ModulationParam
-        the default form of modulation used by the GatingMechanism's GatingSignals, unless they are 
-        `individually specified <GatingSignal_Specification>`.
+        the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
+        unless they are `individually specified <GatingSignal_Specification>`.
         
     """
 
