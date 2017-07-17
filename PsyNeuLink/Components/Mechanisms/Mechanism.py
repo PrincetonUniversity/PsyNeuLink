@@ -2038,6 +2038,10 @@ class Mechanism_Base(Mechanism):
         # # MODIFIED 1/28/17 END
 
     @property
+    def default_value(self):
+        return self._default_value
+
+    @property
     def input_state(self):
         return self.input_states[0]
 
