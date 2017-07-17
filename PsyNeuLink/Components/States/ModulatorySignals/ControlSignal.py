@@ -136,7 +136,6 @@ functions;  three of these compute different components of the cost, and the fou
 THEY CAN ALL BE TURNED ON OR OFF
 HOW THEY ARE COMBINED CAN BE CONFIGURED
 
-
 * *Costs*.  A ControlSignal has three **cost attributes**, the values of which are calculated from its `intensity` to
   determine the total cost.  Each of these is calculated using a corresponding cost function (described in the
   (`next section <ControlSignal_Cost_Function>`).
