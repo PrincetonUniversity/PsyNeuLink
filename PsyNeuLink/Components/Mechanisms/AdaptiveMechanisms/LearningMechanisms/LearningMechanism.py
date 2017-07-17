@@ -631,7 +631,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     output_values : 2d np.array
         the initial item(s) is/are the value(s) of the LearningMechanism's LearningSignal(s);  the next is 
         the value of its *ERROR_SIGNAL* OutputState (same as `error_signal`);  subsequent items are the value of
-        the corresponding OutputStates in the `output_states <ControlMechanism.outputStates>` attribute.
+        the corresponding OutputStates in the `output_states <Mechanism_Base.outputStates>` attribute.
 
     name : str : default LearningProjection-<index>
         the name of the LearningMechanism.

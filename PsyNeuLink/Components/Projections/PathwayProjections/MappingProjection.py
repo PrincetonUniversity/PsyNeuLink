@@ -54,9 +54,9 @@ appropriate to the circumstance:
     InputState of the ObjectiveMechanism (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines
     the appropriate matrix by context).
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the ObjectiveMechanism that provides it with the outcome of the
+  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that provides it with the outcome of the
     OutputStates that it monitors, and from those OutputStates (listed in its
-    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute) to
+    `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute) to
     the ObjectiveMechanism (an `IDENTITY_MATRIX` is used for all of these);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning

@@ -237,7 +237,8 @@ class GatingSignal(ModulatorySignal):
     GatingSignal(                                   \
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
-        modulation=ModulationParam.MULTIPLICATIVE   \
+        modulation=ModulationParam.MULTIPLICATIVE,  \
+        projections=None,                           \
         params=None,                                \
         name=None,                                  \
         prefs=None)
@@ -282,6 +283,11 @@ class GatingSignal(ModulatorySignal):
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <GatingSignal.value>` the GatingSignal is used to modify the `value
         <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
+
+    projections : list of Projection specifications
+        specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
+        listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
+        details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for

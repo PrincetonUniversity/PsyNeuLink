@@ -461,8 +461,10 @@ class OutputState(State_Base):
         `value <Mechanism.Mechanism_Base.value>`.
 
     projections : list of Projection specifications
-        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or any
-        `GatingProjection(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details).
+        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or
+        `GatingProjections(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details);
+        these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputState.mod_afferents>`
+        attributes, respectively (see `OutputState_Projections` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -489,7 +491,7 @@ class OutputState(State_Base):
     mod_afferents : List[GatingProjection]
         a list of the `GatingProjections <GatingProjection>` received by the InputState.
 
-    variable : number, list or np.ndarray
+    variable : value, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` specified by the
         OutputState's `index <OutputState.index>` attribute.
 

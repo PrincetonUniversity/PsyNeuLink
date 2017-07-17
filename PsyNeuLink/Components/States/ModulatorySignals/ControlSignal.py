@@ -37,7 +37,7 @@ configuration that must be met for it to function properly.
 .. _ControlSignal_Specification:
 
 Specifying ControlSignals
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlSignal is specified in context (e.g., the **control_signals** argument of the constructor for a
 `ControlMechanism`, the specification can take any of the following forms:
@@ -92,8 +92,8 @@ for an explanation of how this attribute is specified and used to modulate the `
 The `modulation <ControlSignal.modulation>` parameter can be specified in the **modulation** argument of the
 constructor for a ControlSignal, or in a specification dictionary as described `above <ControlSignal_Specification>`.
 The value must be a value of `ModulationParam`;  if it is not specified, its default is the value of the
-`modulation <ControlMechanism.modulation>` attribute of the ControlMechanism to which the ControlSignal belongs (which
-is the same for all of the ControlSignals belonging to that ControlMechanism).  The value of the
+`modulation <ControlMechanism_Base.modulation>` attribute of the ControlMechanism to which the ControlSignal belongs (
+which is the same for all of the ControlSignals belonging to that ControlMechanism).  The value of the
 `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by all of the
 `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
@@ -125,10 +125,10 @@ attribute, which serves as the ControlSignal's `value <ControlSignal.value>`.  T
 The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`; its value from the previous
 `TRIAL` is assigned to the `last_intensity` attribute.
 
-.. _ControlSignal_Costs
+.. _ControlSignal_Costs:
 
-Costs
-~~~~~
+Costs and Cost Functions
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
 belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
@@ -142,7 +142,7 @@ computes a different component of the cost, and a function that combines them, a
       `intensity` from its last value;
     ..
     * `duration_cost - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
-    `cost <ControlSignal.cost>`;
+      `cost <ControlSignal.cost>`;
     ..
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
       enabled.
@@ -171,18 +171,17 @@ the enabled cost components are summed, however this can be modified by specifyi
 Execution
 ---------
 
-XXX NEED EXPLANATION HERE (OR IN PARAMETER STATE) FOR HOW PARAMETER VALUES ARE MODULATED AND ASSIGNED
-    REFERENCE DISCUSSION IN ParameterState
-
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
-executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation`, that is used by its
-`function <ControlSignal.function>` to compute its `intensity` for that `TRIAL`.  The `intensity` is used
-by its associated `ControlProjection` to set the :keyword:`value` of the `ParameterState <ParameterState>` to which it
-projects. The ParameterState uses that value, in turn, to modify the value of the Mechanism or function parameter
-being controlled.  The ControlSignal's `intensity` is also used by its `cost functions <ControlSignal_Cost_Functions>`
-to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
-to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the
-ControlSignal's `allocation` for the next `TRIAL`.
+executed.  When this occurs, the ControlMechanism provides the ControlSignal with an
+`allocation <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its
+`intensity` for that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>`
+to set the `value <ParameterState.value>` \(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal
+projects. Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal
+controls. See `ModulatorySignal_Modulation` for a more detailed descriptio of how modulation operates).  The
+ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its
+`cost` attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples`
+attribute, to evaluate an `allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's
+`allocation <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
@@ -291,7 +290,7 @@ DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
 COST_OPTIONS = 'cost_options'
 class ControlSignalCosts(IntEnum):
-    """Options for selecting `Cost functions <ControlSignal_Cost_Functions>` to be used by a ControlSignal.
+    """Options for selecting `cost functions <ControlSignal_Costs>` to be used by a ControlSignal.
 
     These can be used alone or in combination with one another, by `enabling or disabling <_ControlSignal_Toggle_Costs>`
     each using the ControlSignal's `toggle_cost_function` method.
@@ -303,8 +302,8 @@ class ControlSignalCosts(IntEnum):
         ControlSignal's `cost` is not computed.
 
     INTENSITY_COST
-        `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost` based its
-        current `intensity` value.
+        `intensity_cost_function` is used to calculate a contribution to the ControlSignal's `cost <ControlSignal.cost>`
+        based its current `intensity` value.
 
     ADJUSTMENT_COST
         `adjustment_cost_function` is used to calculate a contribution to the `cost` based on the change in its
@@ -312,13 +311,14 @@ class ControlSignalCosts(IntEnum):
 
     DURATION_COST
         `duration_cost_function` is used to calculate a contribitution to the `cost` based on an integral of the
-        ControlSignal's `cost` (i.e., it accumulated value over multiple executions).
+        ControlSignal's `cost <ControlSignal.cost>` (i.e., it accumulated value over multiple executions).
 
     ALL
-        all of the `cost functions <ControlSignal_Cost_Functions> are used to calculate the ControlSignal's `cost`.
+        all of the `cost functions <ControlSignal_Costs> are used to calculate the ControlSignal's
+        `cost <ControlSignal.cost>`.
 
     DEFAULTS
-        assign default set of `cost functions <ControlSignal_Cost_Functions>` (currently set to `INTENSITY_COST`).
+        assign default set of `cost functions <ControlSignal_Costs>` (currently set to `INTENSITY_COST`).
 
     """
     NONE               = 0
@@ -344,13 +344,14 @@ class ControlSignal(ModulatorySignal):
     ControlSignal(                                       \
         owner,                                           \
         function=LinearCombination(operation=SUM),       \
-        costs=ControlSignalCosts.DEFAULTS,               \
+        costs_options=ControlSignalCosts.DEFAULTS,       \
         intensity_cost_function=Exponential,             \
         adjustment_cost_function=Linear,                 \
         duration_cost_function=Integrator,               \
         cost_combination_function=Reduce(operation=SUM), \
         allocation_samples=DEFAULT_ALLOCATION_SAMPLES,   \
         modulation=ModulationParam.MULTIPLICATIVE        \
+        projections=None                                 \
         params=None,                                     \
         name=None,                                       \
         prefs=None)
@@ -413,14 +414,16 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
+        `allocation_policy <ControlMechanism_Base.allocation_policy>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
         the parameter(s) that it controls.
 
-    projections
-    Xxxxxxxxxxxxxxxx
+    projections : list of Projection specifications
+        specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
+        listed in its `efferents <ControlSignal.efferents>` attribute (see `ControlSignal_Projections` for additional
+        details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -457,7 +460,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
         set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <ControlMechanism.allocation_policy>`.
+        `allocation_policy <ControlMechanism_Base.allocation_policy>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -506,7 +509,7 @@ class ControlSignal(ModulatorySignal):
         It can be any function that takes an array and returns a scalar value.
 
     cost : float
-        combined result of all `cost functions <ControlSignal_Cost_Functions>` that are `enabled <>`.
+        combined result of all `cost functions <ControlSignal_Costs>` that are enabled.
 
     modulation : ModulationParam
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of

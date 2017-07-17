@@ -349,6 +349,9 @@ class ParameterState(State_Base):
     owner : Mechanism or MappingProjection
         the `Mechanism` or `MappingProjection` to which the ParameterState belongs.
 
+    mod_afferents : List[GatingProjection]
+        a list of the `GatingProjections <GatingProjection>` received by the ParameterState.
+
     variable : number, list or np.ndarray
         the parameter's attribute value — that is, the value of the attribute of the
         ParameterState's owner or its `function <Component.function>` assigned to the parameter.
@@ -368,7 +371,7 @@ class ParameterState(State_Base):
         `mod_afferents <ParameterState.mod_afferents>` attribute.  The result is assigned as the ParameterState's
         `value <ParameterState>`.
 
-    value : number, list or np.ndarray
+    value : number, List[number] or np.ndarray
         the result returned by the ParameterState's `function <ParameterState.function>`, and used by the
         ParameterState's owner or its `function <Component.function>` as the value of the parameter for which the
         ParmeterState is responsible.  Note that this is not necessarily the same as the parameter's attribute value

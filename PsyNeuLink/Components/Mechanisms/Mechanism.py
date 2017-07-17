@@ -78,15 +78,19 @@ be specified in either of the ways mentioned above, or using one of the followin
     These should take the following form:
 
       * *MECHANISM_TYPE*: <name of a Mechanism type>
-
           if this entry is absent, a `default_mechanism <Mechanism_Base.default_mechanism>` will be created.
 
-      * <name of parameter>:<value>
+      * *NAME*: <str>
+          the string will be used as the `name <Mechanism_Base.name>` of the Mechanism;  if this entry is absent,
+          the name will be the name of the Mechanism's type, suffixed with an index if there are any others of the
+          same type for which a default name has been assigned.
 
+      * <name of parameter>:<value>
           this can contain any of the standard parameters for instantiating a Mechanism
           (see `Mechanism_Parameters`) or ones specific to a particular type of Mechanism
           (see documentation for the subclass).  The key must be the name of the argument used to specify
-          the parameter in the Mechanism's constructor, and the value must be a legal value for that parameter.
+          the parameter in the Mechanism's constructor, and the value must be a legal value for that parameter,
+          and use any of the ways allowed for `specifying a parameter <ParameterState_Specification>`.
           The parameter values specified will be used to instantiate the Mechanism.  These can be overridden
           during execution by specifying `Mechanism_Runtime_Parameters`, either when calling the Mechanism's
           `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
@@ -699,11 +703,17 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : 2d np.array : default variableInstanceDefault
+    variable : ndarray : default variableInstanceDefault
         value used as input to the Mechanism's `function <Mechanism_Base.function>`, each item of which corresponds to
-        a `value <InputState.value>` of one of the InputStates in its `input_states <Mechanism.input_states>`
-        attribute.  When specified in the **variable** argument of the constructor for the Mechanism,  it is used as
-        a template to define the format (length and type of elements) and default value of the function's input.
+        a `value <InputState.value>` of one of the InputStates.  It is always at least a 2d np.array, with each item of
+        axis 0 corresponding to the values of the Mechanism's `InputStates <OutputState>` (in the order they are listed
+        in its `input_states <Mechanism.input_states>` attribute, and the `primary InputState <InputState_Primary>`
+        referring to the first item (i.e., item 0) along axis 0.  When specified in the **variable** argument of the
+        constructor for the Mechanism,  it is used as a template to define the format (length and type of elements)
+        and of the input the Mechanism's `function <Mechanism_Base.function>`.
+        COMMENT:
+         and its `default_variable <Mechanism_Base.default_value>`.
+        COMMENT
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
 
@@ -746,15 +756,21 @@ class Mechanism_Base(Mechanism):
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor for the function.
 
-    value : 2d np.array : default None
-        output of the Mechanism's `function <Mechanism_Base.function>`.
-        Note: this is not necessarily the same as the Mechanism's `output_values <Mechanism_Base.output_values>` attribute,
-        which lists the values of its `OutputStates <Mechanism_Base.outputStates>`.
-        The :keyword:`value` is `None` until the Mechanism has been executed at least once.
+    value : ndarray : default None
+        output of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
+        items of axis 0 corresponding to the values referenced by the `index <OutputState.index>` attributes of the
+        Mechanism's `OutputStates <OutputState>`, and the `primary OutputState <OutputState_Primary>` referring to
+        the first item (i.e., item 0) along axis 0.  The `value <Mechanism_Base.value>` is `None` until the Mechanism
+        has been executed at least once.
 
-        .. _default_value : 2d np.array : default None
-               set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized;
-               maintains its value even when value is reset to None when (re-)initialized prior to execution.
+        .. note::
+           the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
+           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>` \s
+           of its `OutputStates <Mechanism_Base.outputStates>`.
+
+    default_value : ndarray : default None
+        set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized;
+        maintains its value even when value is reset to None when (re-)initialized prior to execution.
 
     output_state : OutputState : default default OutputState
         primary `OutputState <Mechanism_OutputStates>` for the Mechanism;  same as first entry of its
