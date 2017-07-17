@@ -66,7 +66,7 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        self._assign_args_to_param_dicts(auto=auto, cross=cross, params=params)
+        params = self._assign_args_to_param_dicts(auto=auto, cross=cross, params=params)
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -81,14 +81,13 @@ class AutoAssociativeProjection(MappingProjection):
         """
 
         super()._instantiate_attributes_after_function(context=context)
-        print("self.params: ", self.params)
         auto = self.params[AUTO]
         cross = self.params[CROSS]
         if auto is not None and cross is not None:
             a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * auto
             c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * cross
             self.matrix = a + c
-        if auto is not None:
+        elif auto is not None:
             self.matrix = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * auto
-        if cross is not None:
+        elif cross is not None:
             self.matrix = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * cross

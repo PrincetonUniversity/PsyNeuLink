@@ -63,7 +63,7 @@ Modulation
 
 A ModulatorySignal modulates the value of a `State` either by modifying a parameter of the State's `function
 <State.function>` (which determines the State's `value <State.value>`), or by assigning a value to the State directly.
-The `function <State.function>` of every state designates one of its parameters as its *MULTIPLICATIVE_PARAM* and
+The `function <State.function>` of every state designates one of its parameters as its *ADDITIVE_PARAM* and
 another as its *MULTIPLICATIVE_PARAM*.  The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal
 determines which of these two parameters should be assigned its value, or which of two other actions to take when the
 State updates its `value <State.value>`.  It is specified using a value of `ModulationParam <Function.ModulationParam>`.

@@ -390,11 +390,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None:
             output_states = [RESULT]
 
-        # if auto is not None and cross is not None:
-        #     matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
-        # elif auto is not None:
-        # elif cross is not None:
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   initial_value=initial_value,
@@ -498,9 +493,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
             c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
             self.matrix = a + c
-        if self.auto is not None:
+        elif self.auto is not None:
             self.matrix = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
-        if self.cross is not None:
+        elif self.cross is not None:
             self.matrix = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
 
         if isinstance(self.matrix, MappingProjection):

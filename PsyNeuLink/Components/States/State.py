@@ -207,7 +207,7 @@ Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that 
 that specifies how it should modulate the State's `value <State.value>` when the State is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
 State's `function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one
-of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
 the State uses it `function <State.function>` to calculate its `value  <State.value>`.  However, the ModulatorySignal
 can also be configured to override the State's `value <State.value>` (i.e., assign it directly), or to disable
