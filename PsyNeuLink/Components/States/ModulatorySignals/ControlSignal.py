@@ -86,7 +86,7 @@ creating a State.
 Modulation
 ~~~~~~~~~~
 
-Each ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlProjections
+A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlProjections
 are used by the States to which they project to modify their `value <State.value>` \s (see `ModulatorySignal_Modulation`
 for an explanation of how this attribute is specified and used to modulate the `value <State.value>` of a State).
 The `modulation <ControlSignal.modulation>` parameter can be specified in the **modulation** argument of the
@@ -102,7 +102,7 @@ is the same for all of the ControlSignals belonging to that ControlMechanism).  
 Allocation, Function and Intensity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Allocation (variable)*. Each ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
+*Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
 which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
 which to use (such as the `EVCMechanism <EVC_Calculation>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
@@ -130,36 +130,30 @@ The ControlSignal's `intensity` attribute  reflects its value for the current `T
 Costs
 ~~~~~
 
-A ControlSignal also has a `cost <ControlSignal.cost>`, that is computed based on its intensity using four costs
-functions;  three of these compute different components of the cost, and the fourth combines these.
+A ControlSignal has a `cost <ControlSignal.cost>` attribute that may be used by the ControlMechanism to which it
+belongs to determine its future `allocation <ControlSignal.allocation>`.  The value of the `cost <ControlSignal.cost>`
+is computed from the ControlSignal's `intensity` using one or more of three cost functions, each of which
+computes a different component of the cost, and a function that combines them, as listed below:
 
-THEY CAN ALL BE TURNED ON OR OFF
-HOW THEY ARE COMBINED CAN BE CONFIGURED
-
-* *Costs*.  A ControlSignal has three **cost attributes**, the values of which are calculated from its `intensity` to
-  determine the total cost.  Each of these is calculated using a corresponding cost function (described in the
-  (`next section <ControlSignal_Cost_Function>`).
-
-    * `intensity_cost - calculated by the `intensity_cost_function` based on the current `intensity` of the
-      ControlSignal.
-    |
+    * `intensity_cost` - calculated by the `intensity_cost_function` based on the current `intensity` of the
+      ControlSignal;
+    ..
     * `adjustment_cost` - calculated by the `adjustment_cost_function` based on a change in the ControlSignal's
-      `intensity` from its last value.
-    |
+      `intensity` from its last value;
+    ..
     * `duration_cost - calculated by the `duration_cost_function` based on an integral of the the ControlSignal's
-    `cost`.
-    |
+    `cost <ControlSignal.cost>`;
+    ..
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
-      enabled (as described in the following section).
+      enabled.
 
-COMMENT:
+The components used to determine the ControlSignal's `cost <ControlSignal.cost>` can be specified in the
+**costs_options** argument of its constructor, or using its `enable_costs`, `disable_costs` and `assign_costs`
+methods.  All of these take one or more values of `ControlSignalCosts`, each of which specifies a cost component.
+How the enabled components are combined is determined by the `cost_combination_function`.  By default, the values of
+the enabled cost components are summed, however this can be modified by specifying the `cost_combination_function`.
 
-.. _ControlSignal_Cost_Functions:
-
-* *Cost functions*.
-    LIST COST_OPTIONS FUNCTIONS AND THEIR KEYWORDS HERE (USED WITH TOGGLE_COSTS)
-    ENHANCE toggle_costs TO USE COST OPTIONS
-
+    COMMENT:
     .. _ControlSignal_Toggle_Costs:
 
     *Enabling and Disabling Cost Functions*.  Any of the cost functions (except the `cost_combination_function`) can
@@ -167,10 +161,10 @@ COMMENT:
     component of the cost is not included in the ControlSignal's `cost` attribute.  A cost function  can  also be
     permanently disabled for the ControlSignal by assigning it's attribute `None`.  If a cost function is permanently
     disabled for a ControlSignal, it cannot be re-enabled using `toggle_cost_function`.
+    COMMENT
 
-  .. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
-            attributes of a ControlSignal are automatically assigned and should not be modified.
-COMMENT
+.. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
+        attributes of a ControlSignal are automatically assigned and should not be modified.
 
 .. _ControlSignal_Execution:
 
@@ -398,22 +392,24 @@ class ControlSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
 
-    costs : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS
-        specifies the costs to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
+    cost_options : ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS
+        specifies the cost components to include in the computation of the ControlSignal's `cost <ControlSignal.cost>`.
 
     intensity_cost_function : Optional[TransferFunction] : default Exponential
-        specifies the function used to calculate the contribution of the ControlSignal's `intensity` to its `cost`.
+        specifies the function used to calculate the contribution of the ControlSignal's `intensity` to its
+        `cost <ControlSignal.cost>`.
 
     adjustment_cost_function : Optional[TransferFunction] : default Linear
         specifies the function used to calculate the contribution of the change in the ControlSignal's `intensity`
-        (from its `last_intensity` value) to its `cost`.
+        (from its `last_intensity` value) to its `cost <ControlSignal.cost>`.
 
     duration_cost_function : Optional[IntegratorFunction] : default Integrator
-        specifies the function used to calculate the contribution of the ControlSignal's duration to its `cost`.
+        specifies the function used to calculate the contribution of the ControlSignal's duration to its
+        `cost <ControlSignal.cost>`.
 
-    cost_combination_function : function : default :py:class:`Reduce(operation=SUM) <Function.Reduce>`
-        speciies the function used to combine the results of any cost functions that are enabled, the result of
-        whihc is assigned as the ControlSignal's `cost`.
+    cost_combination_function : function : default `Reduce(operation=SUM) <Function.Reduce>`
+        specifies the function used to combine the results of any cost functions that are enabled, the result of
+        which is assigned as the ControlSignal's `cost <ControlSignal.cost>` attribute.
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
@@ -422,6 +418,9 @@ class ControlSignal(ModulatorySignal):
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
         the parameter(s) that it controls.
+
+    projections
+    Xxxxxxxxxxxxxxxx
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
