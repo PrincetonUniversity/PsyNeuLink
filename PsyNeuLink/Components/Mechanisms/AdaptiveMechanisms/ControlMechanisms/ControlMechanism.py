@@ -96,13 +96,14 @@ COMMENT
 Execution
 ---------
 
-A ControlMechanism that is a system's `controller` is always the last Mechanism to be executed (see `System Control
-<System_Execution_Control>`).  Its `function <ControlMechanism.function>` takes as its input the value in its 
-*ERROR_SIGNAL* `input_state <ControlMechanism.input_state>`, and use that to determine its 
-`allocation_policy <ControlMechanism.allocation_policy>` that specifies the value assigned to each of its   
-`ControlSignals <ControlSignal>`.  Each of those is used by its associated `ControlProjection` to set the
-value of the ParameterState for the parameter it controls.  In the subsequent `TRIAL`,
-those parameter values are used by the Mechanism when it executes.
+A ControlMechanism that is a System's `controller` is always the last Mechanism to be executed in a `TRIAL` for that
+System (see `System Control <System_Execution_Control>`).  The ControlMechanism's `function <ControlMechanism.function>`
+takes as its input the `value <InputState.value>` of its *ERROR_SIGNAL* `input_state <ControlMechanism.input_state>`,
+and uses that to determine its `allocation_policy <ControlMechanism.allocation_policy>` which specifies the value
+assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
+ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
+`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterState(s) for the parameter(s)
+it controls, which are then used in the subsequent `TRIAL` of execution.
 
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism

@@ -45,7 +45,7 @@ When a ControlSignal is specified in context (e.g., the **control_signals** argu
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
   * a **tuple**, with the name of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
   * a **specification dictionary**, that must contain at least the following two entries:
@@ -97,43 +97,45 @@ is the same for all of the ControlSignals belonging to that ControlMechanism).  
 `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by all of the
 `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
-.. _ControlSignal_Attributes:
+.. _ControlSignal_Allocation_and_Intensity
 
-Additional Attributes
-~~~~~~~~~~~~~~~~~~~~~
+Allocation, Function and Intensity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlSignal also has the following standard and specialized attributes:
+*Allocation (variable)*. Each ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
+which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
+which to use (such as the `EVCMechanism <EVC_Calculation>`);  in those cases, they use each ControlSignal's
+`allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
+of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
+ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
+at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
+`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
+`last_allocation` attribute.
 
-.. _ControlSignal_Allocation:
+*Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
+and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
+<ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \=1 and
+`intercept <Linear.intercept>`\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
+ControlSignal's `intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned
+(e.g., `Exponential`), or any other function that takes and returns a scalar value or 1d array.
 
-* `allocation` - same as the ControlSignal's `variable <ControlSignal.variable>` attribute;  it is assigned to the
-  ControlSignal by the ControlMechanism to which it belongs, and converted to its `intensity` by its `function
-  <ControlSignal.function>`. Its value corresponds to the current `TRIAL` in which the the ControlMechanism was
-  executed.  The value in the previous `TRIAL` can be accessed using the ControlSignal's `last_allocation` attribute.
+*Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
+attribute, which serves as the ControlSignal's `value <ControlSignal.value>`.  The `intensity` is used by its
+`ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the ControlSignal is responsible.
+The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`; its value from the previous
+`TRIAL` is assigned to the `last_intensity` attribute.
 
-.. _ControlSignal_Allocation_Samples:
+.. _ControlSignal_Costs
 
-* `allocation_samples` - a list of the `allocation <ControlSignal.allocation>` values to be sampled by the
-  `ControlMechanism` to which the ControlSignal belongs, if that ControlMechanism determines its
-  `allocation_policy <ControlMechanism.allocation_policy>` by sampling.
+Costs
+~~~~~
 
-.. _ControlSignal_Function:
+A ControlSignal also has a `cost <ControlSignal.cost>`, that is computed based on its intensity using four costs
+functions;  three of these compute different components of the cost, and the fourth combines these.
 
-* `function <ControlSignal.function>` - converts the ControlSignal's `allocation` to its `intensity`.  By default this
-  is an identity function (`Linear` with `slope <Linear.slope>` \=1 and `intercept <Linear.intercept>`\=0), that
-  simply uses the `allocation <ControlSignal.allocation>` as the `intensity <ControlSignal.intensity>`.  However,
-  the `function <ControlSignal.function>` can be assigned another `TransferFunction` (e.g., `Exponential`),
-  or any other function that takes and returns a scalar value or 1d array.
+THEY CAN ALL BE TURNED ON OR OFF
+HOW THEY ARE COMBINED CAN BE CONFIGURED
 
-.. _ControlSignal_Intensity:
-
-* `intensity` - same as the ControlSignal's `value <ControlSignal.value>` attribute;  the result of the ControlSignal`s
-  `function <ControlSignal.function>` applied to its `allocation <ControlSignal.allocation>`, and used to modify the
-  value of the parameter for which the ControlSignal is responsible.  Its value corresponds to the most recent `TRIAL`
-  in which the ControlMechanism (to which the ControlSignal belongs) was executed.  The value for the previous `TRIAL`
-  can be accessed using the ControlSignal's `last_intensity` attribute.
-
-.. _ControlSignal_Costs:
 
 * *Costs*.  A ControlSignal has three **cost attributes**, the values of which are calculated from its `intensity` to
   determine the total cost.  Each of these is calculated using a corresponding cost function (described in the
@@ -151,6 +153,8 @@ A ControlSignal also has the following standard and specialized attributes:
     * `cost` - calculated by the `cost_combination_function` that combines the results of any cost functions that are
       enabled (as described in the following section).
 
+COMMENT:
+
 .. _ControlSignal_Cost_Functions:
 
 * *Cost functions*.
@@ -167,7 +171,7 @@ A ControlSignal also has the following standard and specialized attributes:
 
   .. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
             attributes of a ControlSignal are automatically assigned and should not be modified.
-
+COMMENT
 
 .. _ControlSignal_Execution:
 
@@ -184,7 +188,7 @@ by its associated `ControlProjection` to set the :keyword:`value` of the `Parame
 projects. The ParameterState uses that value, in turn, to modify the value of the Mechanism or function parameter
 being controlled.  The ControlSignal's `intensity` is also used by its `cost functions <ControlSignal_Cost_Functions>`
 to compute its `cost` attribute. That is used, along with its `allocation_samples` attribute, by the ControlMechanism
-to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the 
+to evaluate the current `allocation_policy <ControlMechanism.allocation_policy>`, and (possibly) adjust the
 ControlSignal's `allocation` for the next `TRIAL`.
 
 .. note::
@@ -292,7 +296,7 @@ from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 # defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value
 DEFAULT_ALLOCATION_SAMPLES = np.arange(0.1, 1.01, 0.3)
 
-COST_OPTIONS = 'costs'
+COST_OPTIONS = 'cost_options'
 class ControlSignalCosts(IntEnum):
     """Options for selecting `Cost functions <ControlSignal_Cost_Functions>` to be used by a ControlSignal.
 
@@ -548,8 +552,7 @@ class ControlSignal(ModulatorySignal):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: CONTROL_PROJECTION,
-        CONTROLLED_PARAM:None,
-        COST_OPTIONS:ControlSignalCosts.DEFAULTS
+        CONTROLLED_PARAM:None
     })
     #endregion
 
@@ -608,7 +611,6 @@ class ControlSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
-        TEST = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate allocation_samples and control_signal cost functions
@@ -735,8 +737,6 @@ class ControlSignal(ModulatorySignal):
 
             self.paramsCurrent[cost_function_name] = cost_function
 
-        self.control_signal_cost_options = self.paramsCurrent[COST_OPTIONS]
-
         # Assign instance attributes
         self.allocation_samples = self.paramsCurrent[ALLOCATION_SAMPLES]
 
@@ -830,17 +830,17 @@ class ControlSignal(ModulatorySignal):
         # compute cost(s)
         new_cost = intensity_cost = adjustment_cost = duration_cost = 0
 
-        if self.control_signal_cost_options & ControlSignalCosts.INTENSITY_COST:
+        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
             intensity_cost = self.intensity_cost = self.intensity_cost_function(self.intensity)
             if self.prefs.verbosePref:
                 print("++ Used intensity cost")
 
-        if self.control_signal_cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
             adjustment_cost = self.adjustment_cost = self.adjustment_cost_function(intensity_change)
             if self.prefs.verbosePref:
                 print("++ Used adjustment cost")
 
-        if self.control_signal_cost_options & ControlSignalCosts.DURATION_COST:
+        if self.cost_options & ControlSignalCosts.DURATION_COST:
             duration_cost = self.duration_cost = self.duration_cost_function([self.last_duration_cost, new_cost])
             if self.prefs.verbosePref:
                 print("++ Used duration cost")
@@ -950,12 +950,83 @@ class ControlSignal(ModulatorySignal):
         #     for observer in self.observers[kpIntensity]:
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
+    @tc.typecheck
+    def assign_costs(self, costs:tc.any(ControlSignalCosts, list)):
+        """assign_costs(costs)
+        Assigns specified costs; all others are disabled.
+
+        Arguments
+        ---------
+        costs: ControlSignalCost or List[ControlSignalCosts]
+            cost or list of costs to be used;  all other will be disabled.
+        Returns
+        -------
+        cost_options :  boolean combination of ControlSignalCosts
+            current value of `cost_options`.
+
+        """
+        if isinstance(costs, ControlSignalCosts):
+            costs = [costs]
+        self.cost_options = ControlSignalCosts.NONE
+        return self.enable_costs(costs)
+
+    @tc.typecheck
+    def enable_costs(self, costs:tc.any(ControlSignalCosts, list)):
+        """enable_costs(costs)
+        Enables specified costs; settings for all other costs are left intact.
+
+        Arguments
+        ---------
+        costs: ControlSignalCost or List[ControlSignalCosts]
+            cost or list of costs to be enabled, in addition to any that are already enabled.
+        Returns
+        -------
+        cost_options :  boolean combination of ControlSignalCosts
+            current value of `cost_options`.
+
+        """
+        if isinstance(costs, ControlSignalCosts):
+            options = [costs]
+        for cost in costs:
+            self.cost_options |= cost
+        return self.cost_options
+
+    @tc.typecheck
+    def disable_costs(self, costs:tc.any(ControlSignalCosts, list)):
+        """disable_costs(costs)
+        Disables specified costs; settings for all other costs are left intact.
+
+        Arguments
+        ---------
+        costs: ControlSignalCost or List[ControlSignalCosts]
+            cost or list of costs to be disabled.
+        Returns
+        -------
+        cost_options :  boolean combination of ControlSignalCosts
+            current value of `cost_options`.
+
+        """
+        if isinstance(costs, ControlSignalCosts):
+            options = [costs]
+        for cost in costs:
+            self.cost_options &= ~cost
+        return self.cost_options
+
+    def get_cost_options(self):
+        options = []
+        if self.cost_options & ControlSignalCosts.INTENSITY_COST:
+            options.append(INTENSITY_COST)
+        if self.cost_options & ControlSignalCosts.ADJUSTMENT_COST:
+            options.append(ADJUSTMENT_COST)
+        if self.cost_options & ControlSignalCosts.DURATION_COST:
+            options.append(DURATION_COST)
+        return
+
     def toggle_cost_function(self, cost_function_name, assignment=ON):
         """Enables/disables use of a cost function.
 
         ``cost_function_name`` should be a keyword (list under :ref:`Structure <ControlProjection_Structure>`).
         """
-
         if cost_function_name == INTENSITY_COST_FUNCTION:
             cost_option = ControlSignalCosts.INTENSITY_COST
         elif cost_function_name == DURATION_COST_FUNCTION:
@@ -971,9 +1042,9 @@ class ControlSignal(ModulatorySignal):
             if not self.paramsCurrent[cost_function_name]:
                 raise ControlSignalError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
-            self.control_signal_cost_options |= cost_option
+            self.cost_options |= cost_option
         else:
-            self.control_signal_cost_options &= ~cost_option
+            self.cost_options &= ~cost_option
 
     # def set_intensity_cost(self, assignment=ON):
     #     if assignment:

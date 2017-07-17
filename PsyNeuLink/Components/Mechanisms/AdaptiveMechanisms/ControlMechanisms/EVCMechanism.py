@@ -172,22 +172,23 @@ COMMENT
 ControlSignals
 ~~~~~~~~~~~~~~
 
-A `ControlSignal` is used to regulate the parameter of a mechanism or its function. An EVCMechanism has one
-ControlSignal for each parameter that it controls.  One `outputState <OutputState>` of the EVCMechanism is dedicated to
-each of its ControlSignals, and the value of that outputState is the ControlSignal's `intensity`.  When an EVCMechanism
-is `created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has been
-specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see `Mechanism_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `control_signals`
-attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
-`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
-`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals. The
-`allocation` for a given ControlSignal determines that ControlSignal's `intensity`, which is then assigned as the
-value of the ControlSignal's ControlProjection.  The value of the ControlProjection is then used by the parameterState
+A `ControlSignal` is used to regulate the parameter of a Mechanism or its function. An EVCMechanism has one
+ControlSignal for each parameter that it controls (ControlSignal is a special class of `OutputState` used by a
+`ConrolMechanism`). When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, it creates a ControlSignal
+for each parameter that has been specified for control in the System (a parameter is specified  for control by assigning
+it a `ControlProjection` or `ControlSignal`; see `ParameterState_Specification`).  The ControlSignals of an EVCMechanism
+are listed in it `control_signals <EVCMechanism.control_signals>` attribute. Each ControlSignal is associated with a
+`ControlProjection` that projects to the `ParameterState` for the parameter controlled by that ControlSignal. The
+EVCMechanism's `function <EVCMechanism.function>` assigns an `allocation <ControlSignal.allocation>` value to each of
+its ControlSignals. The `allocation <ControlSignal.allocadtion>` for a given ControlSignal determines that
+ControlSignal's `intensity`, which is then assigned as the `value <ConrolProjection.value>` of the ControlSignal's
+ControlProjection.  The  `value <ControlProjection>` of the ControlProjection is then used by the ParameterState
 to which it projects to modify the value of the parameter for which it is responsible.  A ControlSignal also
-calculates a `cost`, based on its `intensity` and/or its time course. The `cost` is included in the evaluation that the
-EVCMechanism carries out for a given `allocation_policy`, and that it uses to adapt the ControlSignal's `allocation` in
-the future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
-ControlSignal's `allocation_samples` attribute.
+calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>` and/or its time course.
+The `cost <ControlSignal.cost>` is included in the evaluation that the EVCMechanism carries out for a given
+`allocation_policy`, and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the
+future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
+ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribute.
 
 .. _EVCMechanism_Prediction_Mechanisms:
 
@@ -306,7 +307,12 @@ EXPONENT_INDEX = 2
 
 ALLOCATION_POLICY = 'allocation_policy'
 
-# ControlProjection Function Names
+# ControlSignal Costs
+INTENSITY_COST = 'INTENSITY COST'
+ADJUSTMENT_COST = 'ADJUSTMENT COST'
+DURATION_COST = 'DURATION COST'
+
+# ControlSignal Cost Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
