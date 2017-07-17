@@ -35,23 +35,23 @@ types of Mechanisms in PsyNeuLink:
 
     * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other Mechanisms, and/or the
       input to the the `Process` or `System` to which they belong, transform it in some way, and
-      provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or 
+      provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
     ..
     * `AdaptiveMechanisms <AdaptiveMechanism>` monitor the output of one or more other Mechanisms, and use this
       to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
-      
-      * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the 
-        output of a Mechanism to generate learning signals that are used to modify 
+
+      * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the
+        output of a Mechanism to generate learning signals that are used to modify
         `MappingProjection <MappingProjections>` (see `learning <Process_Learning>`).
-      
-      * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and 
-        generate control signals used to modify the parameters of those or other Mechanisms.  
-      
-      * `GatingMechanisms <GatingMechanism>` - these receive input, and use this to determine whether and how to 
+
+      * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
+        generate control signals used to modify the parameters of those or other Mechanisms.
+
+      * `GatingMechanisms <GatingMechanism>` - these receive input, and use this to determine whether and how to
         modify the value of the InputState(s) and/or OutputState(s) of other Mechanisms.
-      
+
       Each type of AdaptiveMechanism is associated with a corresponding type of Projection (`LearningProjection`,
       `ControlProjection` and `GatingProjection`, respectively).
 
@@ -218,7 +218,7 @@ The three types of States are shown schematically in the figure below, and descr
 InputStates
 ^^^^^^^^^^^
 
-These receive and represent the input to a Mechanism. A Mechanism usually has only one (**primary**) `InputState`, 
+These receive and represent the input to a Mechanism. A Mechanism usually has only one (**primary**) `InputState`,
 identified by its `input_state <Mechanism_Base.input_state>`, attribute.  However some Mechanisms have
 more  than one InputState. For example, a `ComparatorMechanism` has one InputState for its `sample` and another for its
 `target` input. If a Mechanism has more than one InputState, they are listed in a ContentAddressableList in the
@@ -291,12 +291,12 @@ OutputStates
 ^^^^^^^^^^^^
 These represent the output(s) of a Mechanism. A Mechanism can have several `OutputStates <OutputState>`, and each can
 send Projections that transmit its value to other Mechanisms and/or the output of the `Process` or `System` to which
-the Mechanism belongs.  Every Mechanism has at least one OutputState, referred to as its 
+the Mechanism belongs.  Every Mechanism has at least one OutputState, referred to as its
 `primary OutputState <OutputState_Primary>`.  If OutputStates are not explicitly specified for a Mechanism, a primary
 OutputState is automatically created and assigned to its `OutputState <Mechanism.Mechanism_Base.outputState>`
 attribute (note the singular), and also to the first entry of the Mechanism's `OutputStates
-<Mechanism.Mechanism_Base.outputStates>` attribute (note the plural).  The `value <OutputState.value>` of the primary 
-OutputState is assigned as the first (and often only) item of the Mechanism's 
+<Mechanism.Mechanism_Base.outputStates>` attribute (note the plural).  The `value <OutputState.value>` of the primary
+OutputState is assigned as the first (and often only) item of the Mechanism's
 `output_value <Mechanism.Mechanism_Base.output_value>`, which is the result of the Mechanism's
 `function <Mechanism.Mechanism_Base.function>`.  Additional OutputStates can be assigned to represent values derived
 from the result of the Mechanism's `function <Mechanism.function>`.  Standard OutputStates are available for each
@@ -406,7 +406,7 @@ any systems to which they belong. These designations are listed in the Mechanism
 attributes, respectively.  Any Mechanism designated as `ORIGIN` receives a Projection to its
 `primary InputState <InputState_Primary>` from the Process(es) to which it belongs.  Accordingly, when the Process
 (or System of which the Process is a part) is executed, those Mechanisms receive the input provided to the Process
-(or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` 
+(or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL`
 Mechanism for a Process is assigned as the `output` of that Process, and similarly for systems to which it belongs.
 
 .. note:: A Mechanism can be the `ORIGIN` or `TERMINAL` of a Process but not of a System to which that
@@ -511,6 +511,7 @@ import logging
 from collections import OrderedDict
 from inspect import isclass
 
+from PsyNeuLink.Components.Component import ExecutionStatus
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Globals.Registry import register_category
 
@@ -1168,7 +1169,7 @@ class Mechanism_Base(Mechanism):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate TimeScale, INPUT_STATES, FUNCTION_PARAMS, OUTPUT_STATES and MONITOR_FOR_CONTROL
-        
+
         Go through target_set params (populated by Component._validate_params) and validate values for:
             + TIME_SCALE:  <TimeScale>
             + INPUT_STATES:
@@ -1176,7 +1177,7 @@ class Mechanism_Base(Mechanism):
                 specification dict for one, 2-item tuple, or numeric value(s)>;
                 if it is missing or not one of the above types, it is set to self.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
-                ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric 
+                ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
                 if invalid, default (from paramInstanceDefaults or paramClassDefaults) is assigned
             + OUTPUT_STATES:
@@ -1498,9 +1499,9 @@ class Mechanism_Base(Mechanism):
             its function, or Projection(s) to any of its States.  Any value assigned to a parameter will override
             the current value of that parameter for the (and only the current) execution of the Mechanism, and will
             return to its previous value following execution (unless the `runtimeParamStickyAssignmentPref` is set
-            for the component to which the parameter belongs).  See `runtime_params <Mechanism_Runtime_Parameters>` 
+            for the component to which the parameter belongs).  See `runtime_params <Mechanism_Runtime_Parameters>`
             above for details concerning specification.
-              
+
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether the Mechanism is executed for a single time_step or a trial.
 
@@ -1612,6 +1613,7 @@ class Mechanism_Base(Mechanism):
         else:
             if context is NO_CONTEXT:
                 context = EXECUTING + ' ' + append_type_to_name(self)
+                self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.variableInstanceDefault
             self._assign_input(input)
@@ -2101,7 +2103,7 @@ def _is_mechanism_spec(spec):
 #
 # MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
 
-from collections import UserList, Iterable
+from collections import Iterable, UserList
 class MechanismList(UserList):
     """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
 

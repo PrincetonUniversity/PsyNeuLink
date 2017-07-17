@@ -273,6 +273,7 @@ from collections import OrderedDict
 
 from toposort import *
 
+from PsyNeuLink.Components.Component import ExecutionStatus
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
@@ -1948,6 +1949,7 @@ class System_Base(System):
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
+            self.execution_status = ExecutionStatus.EXECUTING
 
         # Update execution_id for self and all mechanisms in graph (including learning) and controller
         from PsyNeuLink.Globals.Run import _get_unique_id

@@ -325,24 +325,20 @@ Class Reference
 
 """
 
-import math
 import re
 
 import PsyNeuLink.Components
-import PsyNeuLink.Components
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+
+from PsyNeuLink.Components.Component import ExecutionStatus
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
-    ObjectiveMechanism
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
-    _is_learning_spec
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _is_projection_subclass, \
-    _add_projection_to
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _is_projection_spec, _is_projection_subclass
 from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _instantiate_state_list, _instantiate_state
+from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
 from PsyNeuLink.Globals.Registry import register_category
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -2054,6 +2050,7 @@ class Process_Base(Process):
 
         if not context:
             context = EXECUTING + " " + PROCESS + " " + self.name
+            self.execution_status = ExecutionStatus.EXECUTING
 
         from PsyNeuLink.Globals.Run import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()

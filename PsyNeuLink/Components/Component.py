@@ -316,9 +316,11 @@ COMMENT
 
 """
 
-from collections import OrderedDict, Iterable
-from PsyNeuLink.Globals.Utilities import *
+from collections import Iterable, OrderedDict
+from enum import Enum, IntEnum
+
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+from PsyNeuLink.Globals.Utilities import *
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
@@ -354,6 +356,12 @@ class ResetMode(Enum):
 #     def __init__(self, **kwargs):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
+
+
+class ExecutionStatus(Enum):
+    INITIALIZING = 1
+    EXECUTING = 2
+    VALIDATING = 3
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -540,7 +548,7 @@ class Component(object):
         # Prevent recursive calls from setters
         if self.prev_context == context:
             return
-        
+
 
     Class methods:
         - _handle_size(size, variable)
@@ -677,6 +685,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
+        self.execution_status = ExecutionStatus.INITIALIZING
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = None
