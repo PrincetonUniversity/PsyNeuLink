@@ -389,6 +389,7 @@ class OutputState(State_Base):
     function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
+    projections=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None,                                \

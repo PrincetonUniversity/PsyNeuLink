@@ -94,7 +94,8 @@ creating a State.
 .. note::
    Although a GatingSignal can be assigned more than one `GatingProjection`, all of those Projections will convey
    the same `gating_signal <LearningMechanism>` (received from the GatingMechanism to which the GatingSignal
-   belongs).  This can be useful for implementing broadly projecting modulatory effects.
+   belongs), and use the same form of `modulation <GatingSignal_Modulation>`.  This can be useful for implementing
+   broadly projecting modulatory effects.
 
 .. _GatingSignal_Modulation:
 

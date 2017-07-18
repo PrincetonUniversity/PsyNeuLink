@@ -66,9 +66,9 @@ When a ControlSignal is specified in context (e.g., the **control_signals** argu
 Structure
 ---------
 
-A ControlSignal is owned by an `ControlMechanism`, and associated with one or more
-`ControlProjections <ControlProjection>` that project to the `ParameterState <ParameterState>` associated with the
-parameter(s) to be controlled.
+A ControlSignal is owned by an `ControlMechanism`, and controls the parameters of one or more Components by modulating
+the `function <ParameterState.function>` of the `ParameterState` that determines the value of each of the parameters
+that it control.  Its operation is governed by several attributes of the ControlSignal, that are described below.
 
 .. _ControlSignal_Projections:
 
@@ -80,6 +80,13 @@ the **projections** argument of its constructor, or in an entry of a dictionary 
 with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ControlSignal.efferents>` attribute.  See
 `State Projections <State_Projections>` for additional details concerning the specification of Projections when
 creating a State.
+
+.. note::
+   Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
+   the same `value <ControlProjection.value>` (based on the `intensity` of that ControlSignal), and use the same
+   form of `modulation <ControlSignal_Modulation>`.  Thus, for them to be meaningful, they should project to
+   ParameterStates for parameters that are meaningfully related to one another (for example, the threshold parameter
+   of multiple `DDM` Mechanisms).
 
 .. _ControlSignal_Modulation:
 

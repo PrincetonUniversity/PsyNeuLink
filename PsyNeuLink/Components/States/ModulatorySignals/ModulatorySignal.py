@@ -54,6 +54,34 @@ received by a `State` are listed in its `mod_afferents` attribute. The method by
 modulates a State's `value <State.value>` is determined by the ModulatorySignal's
 `modulation <ModulatorySignal.modulation>` attribute, as described below.
 
+COMMENT:
+    ADD ADDITIONAL NOTE HERE ABOUT THE USE OF MULTIPE ModulatorySignals IN A SINGLE AdapativeMechanism VS.
+    MULTIPLE ModulatoryProjections FOR A SINGLE ModulatorySignal (AS DESCRIBED BELOW).
+COMMENT
+
+.. _ModulatorySignal_Projections:
+
+Projections
+~~~~~~~~~~~
+
+A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
+using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
+**params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>`
+attribute.  See `State Projections <State_Projections>` for additional details concerning the specification of
+Projections when creating a State.
+
+.. note::
+   Although a ModulatorySignal can be assigned more than one `ModulatoryProjection`, all of those Projections will
+   receive and convey the same modulatory value (received from the `AdaptiveMechanism` to which the ModulatorySignal
+   belongs), and use the same form of `modulation <ModulatorySignal_Modulation>`.  This is a common use for some
+   ModulatorySignals (e.g., the use of a single `GatingSignal` to gate multiple `InputState(s) <InputState>` or
+   `OutputState(s) <OutputState>`), but requires more specialized circumstances for others (e.g., the use of a single
+   `LearningSignal` for more than one `MappingProjection`, or a single `ControlSignal` for the parameters of more than
+   one Mechanism).
+
+.. _ModulatorySignal_Execution:
+
+
 .. _ModulatorySignal_Modulation:
 
 Modulation
@@ -119,26 +147,6 @@ value of the `modulation <AdaptiveMechanism_Base.modulation>` attribute for the 
    that the ModulatorySignal's `value <ModulatorySignal.value>` be assigned directly as the State's
    `value <State.value>`, in effect ignoring the State's `variable <State.variable>` and `function <State.function>`.
 
-
-.. _ModulatorySignal_Projections:
-
-Projections
-~~~~~~~~~~~
-
-A ModulatorySignal can be assigned one or more `ModulatoryProjections <ModulatoryProjection>`,
-using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
-**params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents  <OutputState.efferents>`
-attribute.  See `State Projections <State_Projections>` for additional
-details concerning the specification of Projections when creating a State.
-
-.. note::
-   Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
-   the same `learning_signal <LearningMechanism>` (received from the LearningMechanism to which the LearningSignal
-   belongs).  Thus, for them to be meaningful, they should project to MappingProjections that are responsible for a
-   identical or systematically-related `error signals <>`, such as in `convolutional networks <html LINK>`_.
-
-.. _ModulatorySignal_Execution:
-
 Execution
 ---------
 
@@ -190,6 +198,7 @@ class ModulatorySignal(OutputState):
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
         modulation=ModulationParam.MULTIPLICATIVE   \
+        projections=None,                           \
         params=None,                                \
         name=None,                                  \
         prefs=None)

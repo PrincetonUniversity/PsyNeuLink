@@ -633,6 +633,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the value of its *ERROR_SIGNAL* OutputState (same as `error_signal`);  subsequent items are the value of
         the corresponding OutputStates in the `output_states <Mechanism_Base.outputStates>` attribute.
 
+    modulation : ModulationParam
+        the default form of modulation used by the LearningMechanism's `LearningSignals <LearningSignal>`,
+        unless they are `individually specified <LearningSignal_Specification>`.
+
     name : str : default LearningProjection-<index>
         the name of the LearningMechanism.
         Specified in the **name** argument of the constructor for the Projection;

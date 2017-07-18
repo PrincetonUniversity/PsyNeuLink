@@ -73,11 +73,11 @@ specified.  This can take any of the following forms:
 Structure
 ---------
 
-A LearningSignal is owned by an `LearningMechanism`, and associated with one or more 
-`LearningProjections <LearningProjection>` that project to the `ParameterStates <ParameterState>` associated with
-the parameter(s) to be learned.
+A LearningSignal is owned by an `LearningMechanism`, and "trains" one or more `MappingProjections <MappingProjection>`
+by modulating the value of their `matrix <MappingProjection.matrix>` parameters.  This is governed by three
+attributes of the LearningSignal, as described below.
 
-.. _LearnidngSignal_Projections:
+.. _LearningSignal_Projections:
 
 Projections
 ~~~~~~~~~~~
@@ -91,8 +91,9 @@ details concerning the specification of Projections when creating a State.
 .. note::
    Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
    the same `learning_signal <LearningMechanism>` (received from the LearningMechanism to which the LearningSignal
-   belongs).  Thus, for them to be meaningful, they should project to MappingProjections that are responsible for a
-   identical or systematically-related `error signals <>`, such as in `convolutional networks <html LINK>`_.
+   belongs).  Thus, for them to be meaningful, they should project to MappingProjections that are responsible for
+   identical or systematically-related `error signals <LearningMechanism.error_signal>` (e.g., as in `convolutional
+   networks <html LINK>`_.
 
 .. _LearningSignal_Modulation:
 
@@ -100,20 +101,24 @@ Modulation
 ~~~~~~~~~~
 
 A LearningSignal has a `modulation <LearningSignal.modulation>` attribute that determines how the LearningSignal's
-`value <LearningSignal.value>` is used by the ParameterState(s) to which it projects to modify the
-`matrix <MappingProjection.matrix>` parameter(s) of their MappingProjection(s) (see `ModulatorySignal_Modulation` for
-an explanation of how the modulation is specified and used to modulate the value of a parameter). The default value
-is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the LearningMechanism to which
-the LearningSignal belongs;  this is the same for all of the LearningSignals belonging to that LearningMechanism.
-However, the `modulation <LearningSignal.modulation>` can be specified individually for a LearningSignal using a
-specification dictionary where the LearningSignal is specified, as described `above <LearningSignal_Specification>`.
-The `modulation <LearningSignal.modulation>` value of a LearningSignal is used by all of the
-`LearningProjections <LearningProjection>` that project from that LearningSignal.
-
-
-XXXXXX
+`value <LearningSignal.value>` (i.e., its `learning_signal <LearningSignal.learning_signal>`) is used by the
+ParameterState(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
+MappingProjection(s) (see `ModulatorySignal_Modulation` for an explanation of how the modulation is specified and
+used to modulate the value of a parameter).  The default value is set to the value of the `modulation
+<LearningMechanism.modulation>` attribute of the LearningMechanism to which the LearningSignal belongs;  this is the
+same for all of the LearningSignals belonging to that LearningMechanism. The default value of
+`modulation <LearningMechanism.modulation>` for a LearningMechanism is `ADDITIVE`, which causes the
+`learning_signal <LearningSignal.learning_signal>` (i.e., its matrix of weight changes) to be added to the
+`matrix <MappingProjection.matrix>` parameter of the MappingProjection being learned.  The
+`modulation <LearningSignal.modulation>` can be individually specified for a LearningSignal using a
+specification dictionary where the LearningSignal itself is specified, as described
+`above <LearningSignal_Specification>`. The `modulation <LearningSignal.modulation>` value of a LearningSignal is
+used by all of the `LearningProjections <LearningProjection>` that project from that LearningSignal.
 
 .. _LearningSignal_Learning_Rate:
+
+Learning Rate
+~~~~~~~~~~~~~
 
 * `learning_rate <LearningSignal.learning_rate>`: the learning_rate for a LearningSignal is used to specify the
   `learning_rate <LearningProjection.learning_rate>` parameter for its `LearningProjection(s) <LearningProjection>`
@@ -183,6 +188,7 @@ class LearningSignal(ModulatorySignal):
         modulation=ModulationParam.MULTIPLICATIVE        \
         learning_rate=None                               \
         params=None,                                     \
+        projections=None,                                \
         name=None,                                       \
         prefs=None)
 
@@ -236,6 +242,11 @@ class LearningSignal(ModulatorySignal):
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
+    projections : list of Projection specifications
+        specifies the `LearningProjection(s) <GatingProjection>` to be assigned to the LearningSignal, and that will be
+        listed in its `efferents <LearningSignal.efferents>` attribute (see `LearningSignal_Projections` for additional
+        details).
+
     name : str : default OutputState-<index>
         a string used for the name of the OutputState.
         If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
@@ -269,7 +280,10 @@ class LearningSignal(ModulatorySignal):
         `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details.
 
     value : number, list or np.ndarray
-        result of `function <ControlSignal.function>`; same as `learning_signal <Learning.learning_signal>`.
+        result of `function <ControlSignal.function>`; same as `learning_signal <LearningSignal.learning_signal>`.
+
+    learning_signal : number, list or np.ndarray
+        result of `function <ControlSignal.function>`; same as `value <LearningSignal.value>`.
 
     efferents : [List[ControlProjection]]
         a list of the `LearningProjections <LearningProjection>` assigned to (i.e., that project from) the
