@@ -17,15 +17,16 @@ one or more `ProcessingMechanisms`.   Its function takes a value
 COMMENT:
     ??FROM WHERE?
 COMMENT
-and uses that to calculate a `gating_policy`:  a list of `gating <LINK>` values, one for each of states that it 
-gates.  Each of these values is assigned as the value of a `GatingSignal` (a subclass of `OutputState`) in the
-GatingMechanism, and used by an associated `GatingProjection` to modulate the value of the state to which it projects.  
-A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
+and uses that to calculate a `gating_policy`:  a list of `gating_signal <GatingMechainsm.gating_signal>` values,
+one for each of each `GatingSignals <GatingSignal>`.  Each of these values is assigned as the value of
+the corresponding `GatingSignal` (a subclass of `OutputState`) in the GatingMechanism, and used by the associated
+`GatingProjections <GatingProjection>` to modulate the value of the State(s) to which they project.   A GatingMechanism
+can regulate only the parameters of Mechanisms in the `System` to which it belongs.
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
 COMMENT
-The gating components of a System are executed after all `Proces singMechanisms <ProcessingMechanism>`,
+The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
 `LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
 
 
@@ -208,6 +209,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
     Attributes
     ----------
 
+    variable :
+
     gating_signals : List[GatingSignal]
         list of `GatingSignals <ControlSignals>` for the GatingMechanism, each of which sends a `GatingProjection`
         to the `InputState` or `OutputState` that it gates (same as GatingMechanism's
@@ -215,6 +218,10 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     gating_projections : List[GatingProjection]
         list of `GatingProjections <GatingProjection>`, one for each `GatingSignal` in `gating_signals`.
+
+    value :
+
+    gating_signal : number or ndarray
 
     gating_policy : 2d np.array
         each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`;
