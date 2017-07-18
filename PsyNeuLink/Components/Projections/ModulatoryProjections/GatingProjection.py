@@ -67,13 +67,21 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 
-# from PsyNeuLink.Components import DefaultGatingMechanism
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink import FunctionOutputType
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
-
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
@@ -101,7 +109,7 @@ class GatingProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The GatingProjection class is a type in the Projection category of Component.
-            It implements a projection to the inputState or outputState of a mechanism that modulates the value of 
+            It implements a projection to the inputState or outputState of a mechanism that modulates the value of
             that state
             It:
                - takes a scalar as its input (sometimes referred to as a "gating signal")
@@ -130,7 +138,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     sender : Optional[Mechanism or GatingSignal]
         specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
-        `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism` 
+        `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism`
         for the system to which the receiver belongs will be assigned.
 
     receiver : Optional[Mechanism or ParameterState]
@@ -246,7 +254,7 @@ class GatingProjection(ModulatoryProjection_Base):
                          context=self)
 
     def _instantiate_sender(self, params=None, context=None):
-        """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism 
+        """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism
         """
 
         # A Process can't be the sender of a GatingProjection

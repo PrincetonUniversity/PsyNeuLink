@@ -48,7 +48,7 @@ Parameters can be specified in one of several places:
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
       Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-      (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
+      (or a corresponding keyword) as its key, and the parameter's specification as its value (see
       `examples <ParameterState_Specification_Examples>` below). Parameters for a Component's
       `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*, and a value that
       is itself a parameter specification dictionary containing an entry for each of the function's parameters to be
@@ -244,9 +244,19 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state
+import inspect
+
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import Component, function_type, method_type, parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Linear, get_param_value_for_keyword
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
+from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state, state_type_keywords
+from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
 
 state_type_keywords = state_type_keywords.update({PARAMETER_STATE})
 
@@ -517,7 +527,7 @@ class ParameterState(State_Base):
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
 
-        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs. 
+        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         Update its value in call to state's function.
         """
 
@@ -607,7 +617,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     # FIX: UPDATE WITH MODULATION_MODS
     # FIX:    CHANGE TO Integrator FUnction ONCE LearningProjection MODULATES ParameterState Function:
-    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection) 
+    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
 

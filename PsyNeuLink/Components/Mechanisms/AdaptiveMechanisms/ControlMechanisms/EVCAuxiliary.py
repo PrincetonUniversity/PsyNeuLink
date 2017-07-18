@@ -6,12 +6,18 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
+
 # *************************************************  EVCAuxiliary ******************************************************
 
+import numpy as np
+import typecheck as tc
 
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import Function_Base
-
+from PsyNeuLink.Globals.Defaults import MPI_IMPLEMENTATION, defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CLOCK, COMBINE_OUTCOME_AND_COST_FUNCTION, CONTEXT, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, PARAMS, SAVE_ALL_VALUES_AND_POLICIES, TIME_SCALE, VALUE_FUNCTION, VARIABLE, kwPreferenceSetName, kwProgressBarChar
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 PY_MULTIPROCESSING = False
 

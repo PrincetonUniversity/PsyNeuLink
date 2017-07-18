@@ -57,6 +57,8 @@ which it belongs.  All of the `LearningMechanisms <LearningMechanism>` are then 
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
 
 class AdpativeMechanismError(Exception):
     def __init__(self, error_value):

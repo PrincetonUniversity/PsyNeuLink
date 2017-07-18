@@ -513,7 +513,11 @@ from inspect import isclass
 
 from PsyNeuLink.Components.Component import ExecutionStatus
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Globals.Defaults import timeScaleSystemDefault
+from PsyNeuLink.Globals.Keywords import CHANGED, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import AutoNumber, append_type_to_name, kwCompatibilityNumeric
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 MechanismRegistry = {}

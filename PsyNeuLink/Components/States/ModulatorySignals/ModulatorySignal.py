@@ -177,9 +177,9 @@ Class Reference
 ---------------
 """
 
-from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.OutputState import OutputState
-
+from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION
 
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):
@@ -276,7 +276,7 @@ class ModulatorySignal(OutputState):
     value : number, list or np.ndarray
         result of `function <ModulatorySignal.function>`, and is the value used to determine the `value <State.value>`
         of the State(s) being modulated.
-    
+
     modulation : ModulationParam
         determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
 

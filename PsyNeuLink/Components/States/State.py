@@ -300,12 +300,25 @@ Class Reference
 """
 
 import inspect
-import copy
-import collections
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Functions.Function import _get_modulated_param
-from PsyNeuLink.Components.Projections.Projection import projection_keywords, _is_projection_spec
+import numbers
+import warnings
+
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import Component, ComponentError, component_keywords, function_type
+from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
+from PsyNeuLink.Globals.Keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, \
+    STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from PsyNeuLink.Globals.Log import LogEntry, LogLevel
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, MODULATION_OVERRIDE, Modulation, append_type_to_name, convert_to_np_array, get_class_attributes, is_value_spec, iscompatible, merge_param_dicts, type_match
+from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 state_keywords = component_keywords.copy()
 state_keywords.update({STATE_VALUE,
@@ -484,7 +497,7 @@ class State_Base(State):
 
     base_value : number, list or np.ndarray
         value with which the State was initialized.
-    
+
     all_afferents : Optional[List[Projection]]
         list of all Projections received by the State (i.e., for which it is a `receiver <Projection.receiver>`.
 
@@ -893,9 +906,6 @@ class State_Base(State):
             import PathwayProjection_Base
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection \
             import ModulatoryProjection_Base
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
         # If specification is not a list, wrap it in one for consistency of treatment below
@@ -1764,9 +1774,9 @@ def _instantiate_state_list(owner,
                              each item of which must be a:
                                  string (used as name)
                                  value (used as constraint value)
-                                 # ??CORRECT: (state_spec, params_dict) tuple  
+                                 # ??CORRECT: (state_spec, params_dict) tuple
                                      SHOULDN'T IT BE: (state_spec, projection) tuple?
-                                 dict (key=name, value=constraint_value or param dict) 
+                                 dict (key=name, value=constraint_value or param dict)
                          if None, instantiate a single default State using constraint_value as state_spec
     - state_param_identifier (str): kw used to identify set of States in params;  must be one of:
         - INPUT_STATE
@@ -2010,7 +2020,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
         a default State of specified type is instantiated using constraint_value as value
 
     If state_params is specified, include as params arg with instantiation of State
-    
+
     Returns a State or None
     """
 
@@ -2303,22 +2313,20 @@ def _parse_state_spec(owner,
                       force_dict=False):
 
     """Return either State object or State specification dict for state_spec
-    
+
     If state_spec is or resolves to a State object:
         if force_dict is False:  return State object
         if force_dict is True: parse into State specification_dictionary
-            (replacing any components with their id to avoid problems with deepcopy)   
+            (replacing any components with their id to avoid problems with deepcopy)
     Otherwise, return State specification dictionary using arguments provided as defaults
     Warn if variable is assigned the default value, and verbosePref is set on owner.
     **value** arg should generally be a constraint for the value of the State;
         if state_spec is a Projection, and method is being called from:
-            InputState, value should be the projection's value; 
-            ParameterState, value should be the projection's value; 
+            InputState, value should be the projection's value;
+            ParameterState, value should be the projection's value;
             OutputState, value should be the projection's variable
     Any entries with keys other than XXX are moved to entries of the dict in the PARAMS entry
     """
-
-    from PsyNeuLink.Components.Projections.Projection import projection_keywords
 
     # # IMPLEMENTATION NOTE:  ONLY CALLED IF force_dict=True;  CAN AVOID BY NEVER SETTING THAT OPTION TO True
     # #                       STILL NEEDS WORK: SEEMS TO SET PARAMS AND SO CAUSES CALL TO assign_params TO BAD EFFECT

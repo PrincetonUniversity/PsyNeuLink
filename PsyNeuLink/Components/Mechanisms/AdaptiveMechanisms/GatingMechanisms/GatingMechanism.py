@@ -17,13 +17,13 @@ one or more `ProcessingMechanisms`.   Its function takes a value
 COMMENT:
     ??FROM WHERE?
 COMMENT
-and uses that to calculate a `gating_policy`:  a list of `gating <LINK>` values, one for each of states that it 
+and uses that to calculate a `gating_policy`:  a list of `gating <LINK>` values, one for each of states that it
 gates.  Each of these values is assigned as the value of a `GatingSignal` (a subclass of `OutputState`) in the
-GatingMechanism, and used by an associated `GatingProjection` to modulate the value of the state to which it projects.  
+GatingMechanism, and used by an associated `GatingProjection` to modulate the value of the state to which it projects.
 A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
-`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
+`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
 COMMENT
 The gating components of a System are executed after all `Proces singMechanisms <ProcessingMechanism>`,
 `LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
@@ -35,7 +35,7 @@ Creating A GatingMechanism
 ---------------------------
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
-A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
+A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an
 InputState or OutputState, in which case a `GatingProjection` is also automatically created that projects
 from the GatingMechanism to the specified state.
 
@@ -58,11 +58,11 @@ specification for each item in the list can use any of the forms used to
 GatingSignals
 ^^^^^^^^^^^^^
 
-A `GatingSignal` is created for each item listed in **gating_signals**, and all of the GatingSignals for a  
-GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
+A `GatingSignal` is created for each item listed in **gating_signals**, and all of the GatingSignals for a
+GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is
 assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or OutputState(s) it gates.
-GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's 
-`output_states <GatingMechanism.outut_states>` attribute.  
+GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's
+`output_states <GatingMechanism.outut_states>` attribute.
 
 .. _GatingMechanism_Modulation:
 
@@ -70,10 +70,10 @@ Modulation
 ^^^^^^^^^^
 
 Each GatingMechanism has a `modulation <GatingSignal.modulation>` attribute, that provides a default for the way
-in which its GatingSignals modulate the value of the states they gate 
-(see `modulation <ModulatoryProjection.modulation>` for an explanation of how this attribute is specified and used to 
-modulate the value of a state).  Each GatingSignal uses this value, unless its value is 
-`individually specified <GatingSignal_Modulation>`. 
+in which its GatingSignals modulate the value of the states they gate
+(see `modulation <ModulatoryProjection.modulation>` for an explanation of how this attribute is specified and used to
+modulate the value of a state).  Each GatingSignal uses this value, unless its value is
+`individually specified <GatingSignal_Modulation>`.
 
 .. _GatingMechanism_Execution:
 
@@ -85,19 +85,19 @@ A GatingMechanism executes in the same way as a ProcessingMechanism, based on it
 the effects of a GatingMechanism and its projections will generally not be applied in the first `TRIAL` (see
 `initialization <System_Execution_Input_And_Initialization>` for a description of how to configure the initialization
 of feedback loops in a System).  When executed, a GatingMechanism uses its input to determine the value of its
-`GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
+`GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent
 `TRIAL`, each GatingProjection's value is used by the State to which it projects to modulate the `value <State.value>`
 of that State.
 
 When a GatingMechanism executes, the value of each item in its `gating_policy` is assigned as the value of each of
 the corresponding GatingSignals in its `gating_signals` attribute.  These, in turn, are used by their associated
 `GatingProjections` to modulate the value of the state to which they project.  This is done by assigning the
-GatingSignal's value to a parameter of the state's function, as specified by the GatingSignal's `modulation` 
-parameter (see `GatingSignal_Execution` for details). 
+GatingSignal's value to a parameter of the state's function, as specified by the GatingSignal's `modulation`
+parameter (see `GatingSignal_Execution` for details).
 
 .. note::
    A state that receives a `GatingProjection` does not update its value until its owner Mechanism executes
-   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a GatingMechanism 
+   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a GatingMechanism
    has executed, a state that it gates will not assume its new value until the state's owner has executed.
 
 .. _GatingMechanism_Class_Reference:
@@ -110,13 +110,23 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
+import typecheck as tc
+import numpy as np
+
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
+
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
+from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 GatingMechanismRegistry = {}
 
@@ -183,11 +193,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         the number of items must equal the length of the **default_gating_policy** arg;
         if a Mechanism is specified, its `primary InputState <InputState_Primary>` will be used
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
-        
+
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
-        
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
@@ -219,12 +229,12 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_policy : 2d np.array
         each item is the value assigned to the corresponding GatingSignal listed in `gating_signals`;
         (same as the GatingMechanism's `value <Mechanism.value>` attribute).
-        Default is a single item used by all of the `gating_signals`. 
+        Default is a single item used by all of the `gating_signals`.
 
     modulation : ModulationParam
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
-        
+
     """
 
     componentType = "GatingMechanism"
@@ -283,7 +293,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       context=context)
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-            
+
             if not isinstance(target_set[GATING_SIGNALS], list):
                 raise GatingMechanismError("{} arg of {} must be list".
                                            format(GATING_SIGNAL, self.name))
@@ -324,8 +334,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     [NOTE: this is a convenience format;
                            it precludes specification of GatingSignal params (e.g., MODULATION_OPERARATION)]
             - GatingSignal specification dictionary, from gating_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries; 
-                           it can also include a PARAMS entry with a params dict containing GatingSignal params] 
+                    [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries;
+                           it can also include a PARAMS entry with a params dict containing GatingSignal params]
         * State._parse_state_spec() is used to parse gating_signal arg
         * params are expected to be for (i.e., to be passed to) GatingSignal;
         * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,

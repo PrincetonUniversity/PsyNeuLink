@@ -265,25 +265,32 @@ Class Reference
 
 """
 
+import inspect
 import logging
 import math
+import numbers
 import re
-
+import warnings
 from collections import OrderedDict
 
-from toposort import *
+import numpy as np
+import typecheck as tc
+from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import ExecutionStatus
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-    # PARAMS_ITEM, PHASE_ITEM
-from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+    import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
+from PsyNeuLink.Globals.Keywords import COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, MATRIX, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 
@@ -2761,7 +2768,6 @@ class System_Base(System):
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         import graphviz as gv
-        import numpy as np
 
         system_graph = self.graph
         learning_graph=self.learningGraph
