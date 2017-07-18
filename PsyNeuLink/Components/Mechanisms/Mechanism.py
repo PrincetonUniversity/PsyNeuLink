@@ -1942,7 +1942,7 @@ class Mechanism_Base(Mechanism):
         Add one or more `States <State>` to the MechanismOnly `InputStates <InputState> and `OutputStates <OutputState>`
         can be added; `ParameterStates <ParameterState>` cannot be added to a Mechanism after it has been constructed.
 
-        If the `owner <State.owner>` of a State specified in the **states** argument is not the same as the
+        If the `owner <State_Base.owner>` of a State specified in the **states** argument is not the same as the
         Mechanism to which it is being added, user is given option of reassigning to owner, making a copy and
         assigning, or aborting.  If the name of a specified State is the same as an existing one of the same time,
         an index will be appended to its name, and incremented for each State added with the same name

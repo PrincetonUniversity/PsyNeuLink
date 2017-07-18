@@ -15,7 +15,7 @@ Overview
 A ControlSignal is a type of `ModulatorySignal` that is specialized for use with a `ControlMechanism` and one or more
 `ControlProjections <ControlProjection>`, to modify the parameter(s) of one or more `Components <Component>`. A
 ControlSignal receives an `allocation <ControlSignal.allocation>` value from the ControlMechanism to which it
-belongs, and uses that to compute an `intensity` that is assigned as the
+belongs, and uses that to compute an `intensity` (also referred to as a `control_signal`) that is assigned as the
 `value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each ControlProjection conveys its value
 to the `ParameterState` for the parameter it controls, which uses that value to `modulate <ModulatorySignal_Modulation>`
 the `value <ParameterState.value>` of the parameter.  A ControlSignal also calculates a `cost`, based on its `intensity`
@@ -94,9 +94,9 @@ Modulation
 ~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State.value>` \s
+`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <State.value>` of a State). The `modulation <ControlSignal.modulation>`
+specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism_Base.modulation>` attribute of the
@@ -127,10 +127,10 @@ ControlSignal's `intensity <ControlSignal.intensity>`. However, another `Transfe
 (e.g., `Exponential`), or any other function that takes and returns a scalar value or 1d array.
 
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
-attribute, which serves as the ControlSignal's `value <ControlSignal.value>`.  The `intensity` is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the ControlSignal is responsible.
-The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`; its value from the previous
-`TRIAL` is assigned to the `last_intensity` attribute.
+attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
+The `intensity` is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the
+ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`;
+its value from the previous `TRIAL` is assigned to the `last_intensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -473,15 +473,19 @@ class ControlSignal(ModulatorySignal):
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
         assigns the ControlSignal's `allocation` as its `intensity`.
 
-    intensity : float
-        result of `function <ControlSignal.function>`;  assigned as the value of the ControlSignal's ControlProjection,
-        and used to modify the value of the parameter to which the ControlSignal is assigned.
-
     value : number, list or np.ndarray
-        result of `function <ControlSignal.function>`; same as `intensity`.
+        result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity` and `control_signal`.
+
+    intensity : float
+        result of the ControlSignal's `function <ControlSignal.function>`;
+        assigned as the value of the ControlSignal's ControlProjection, and used to modify the value of the parameter
+        to which the ControlSignal is assigned; same as `control_signal <ControlSignal.control_signal>`.
 
     last_intensity : float
         the `intensity` of the ControlSignal on the previous execution of its `owner <ControlSignal.owner>`.
+
+    control_signal : float
+        result of the ControlSignal's `function <ControlSignal.function>`; same as `intensity`.
 
     cost_options : int
         boolean combination of currently assigned ControlSignalCosts. Specified initially in **costs** argument of
@@ -957,6 +961,10 @@ class ControlSignal(ModulatorySignal):
         # if len(self.observers[kpIntensity]):
         #     for observer in self.observers[kpIntensity]:
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
+
+    @property
+    def control_signal(self):
+        return self.value
 
     @tc.typecheck
     def assign_costs(self, costs:tc.any(ControlSignalCosts, list)):

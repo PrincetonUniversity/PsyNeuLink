@@ -36,19 +36,19 @@ needed to transmit that information to the `InputState` of another Mechanism (it
     `pathway` of a `Process`.
 ..
 * `ControlProjection`
-    This takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
+    takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
     of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
     that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
     in the context of a `System`.
 ..
 * `LearningProjection`
-    This takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
+    takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
     `ParameterState` of a `MappingProjection` which uses this to modify its
     `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
     learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
 ..
 * `GatingProjection`
-    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
     a GatingMechanism and conveys it to the `InputState` or `OutputState` of a
     `ProcessingMechanism` for use by the state's `function` in modulating its
     `value`.
@@ -144,10 +144,9 @@ In addition to its `function <Projection.function>`, a Projection has two primar
 Sender
 ~~~~~~
 
-This must be an `OutputState`.  The Projection is assigned to the OutputState's
-`efferents <State.State_Base.efferents>` list, and OutputState's `value
-<OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's `function <Projection.function>`.
-A sender can be specified as:
+This must be an `OutputState`.  The Projection is assigned to the OutputState's `efferents <State_Base.efferents>`
+list, and OutputState's `value <OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's
+`function <Projection.function>`.  A sender can be specified as:
 
   * an **OutputState**, in any of the ways used to `specify an OutputState <OutputState_Specification>`.
   ..
@@ -189,7 +188,7 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The Projection is assigned to the receiver's
-`path_afferents <State.State_Base.path_afferents>` list, and the output of the Projection's
+`path_afferents <State_Base.path_afferents>` list, and the output of the Projection's
 `function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
 can be specified as:
 
