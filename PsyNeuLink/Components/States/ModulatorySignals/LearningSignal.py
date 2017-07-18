@@ -77,7 +77,7 @@ A LearningSignal is owned by an `LearningMechanism`, and associated with one or 
 `LearningProjections <LearningProjection>` that project to the `ParameterStates <ParameterState>` associated with
 the parameter(s) to be learned.
 
-.. _LearningSignal_Projections:
+.. _LearnidngSignal_Projections:
 
 Projections
 ~~~~~~~~~~~
@@ -87,6 +87,12 @@ using either the **projections** argument of its constructor, or in an entry of 
 **params** argument with the key *PROJECTIONS*.  These will be assigned to its
 `efferents  <LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional
 details concerning the specification of Projections when creating a State.
+
+.. note::
+   Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
+   the same `learning_signal <LearningMechanism>` (received from the LearningMechanism to which the LearningSignal
+   belongs).  Thus, for them to be meaningful, they should project to MappingProjections that are responsible for a
+   identical or systematically-related `error signals <>`, such as in `convolutional networks <html LINK>`_.
 
 .. _LearningSignal_Modulation:
 
