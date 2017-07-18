@@ -507,7 +507,6 @@ GATING_SIGNAL = 'gating_signal'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
-GATED_STATE = "gated_state"
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_POLICY = 'gating_policy'
 

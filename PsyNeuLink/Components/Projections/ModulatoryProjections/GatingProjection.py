@@ -56,7 +56,7 @@ from which it projects as its own `value <GatingProjection.value>`. This is used
 to which the GatingProjection projects to modulate its own `value <State.value>`.
 
 .. note::
-   The changes in an InputState or OutputState's `value <State.value >`in response to the execution of a
+   The changes in an InputState or OutputState's `value <State.value >` in response to the execution of a
    GatingProjection are not applied until the Mechanism to which the State belongs is next executed;
    see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
@@ -142,7 +142,7 @@ class GatingProjection(ModulatoryProjection_Base):
         `sender <GatingProjection.sender>`  to its own `value <GatingProjection.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the projection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.

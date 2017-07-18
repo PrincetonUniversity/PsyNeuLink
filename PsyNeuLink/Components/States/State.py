@@ -16,8 +16,31 @@ Overview
 A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
 provide by them.  The value of a State can be modulated by a `ModulatoryProjection`. There are three primary types of
 States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
-`MappingProjections <MappingProjection>`, and all of which are subject to modulation by
-`ModulatorySignals <ModulatorySignal>`, as summarized below:
+`MappingProjections <MappingProjection>`, and that are subject to modulation by `ModulatorySignals <ModulatorySignal>`,
+as summarized in the table below:
+
++------------------+-------------------+------------------------+----------------------+-------------------------------+
+| *State Type*     | *Owner*           |      *Description*     |    *Modulated by*    |      *Specification*          |
++==================+===================+========================+======================+===============================+
+| `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`       |`InputState` constructor;      |
+|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
+|                  |                   |(s)                     |                      |its `add_states` method        |
++------------------+-------------------+------------------------+----------------------+-------------------------------+
+|`ParameterState`  |  `Mechanism` or   |represents parameter    |`LearningSignal`      |Implicitly whenever a          |
+|                  |  `Projection`     |value for a `Component` |and/or `ControlSignal`|parameter value is             |
+|                  |                   |or its function         |                      |`specified                     |
+|                  |                   |                        |                      |<ParameterState_Specification>`|
++------------------+-------------------+------------------------+----------------------+-------------------------------+
+| `OutputState`    |  `Mechanism`      |provides output to      | `GatingSignal`       |`OutputState` constructor;     |
+|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
+|                  |                   |(s)                     |                      |its `add_states` method        |
++------------------+-------------------+------------------------+----------------------+-------------------------------+
+|`ModulatorySignal`|`AdaptiveMechanism`|provides value for      |                      |`AdaptiveMechanism`            |
+|                  |                   |`ModulatoryProjection` \|                      |constructor; tuple in State    |
+|                  |                   |(s)                     |                      |or parameter specification     |
++------------------+-------------------+------------------------+----------------------+-------------------------------+
+
+COMMENT:
 
 * `InputState`:
     used by a Mechanism to receive input from `MappingProjections <MappingProjection>`;
@@ -46,19 +69,31 @@ States, all of which are used by `Mechanisms <Mechanism>`, one of which is used 
     Modulation is discussed further `below <State_Modulation>`, and described in detail under
     `ModulatorySignals <ModulatorySignal_Modulation>`.
 
+COMMENT
+
 .. _State_Creation:
 
 Creating a State
 ----------------
 
 In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
-or by specifying the State in the constructor for its owner.  For example, `InputStates <InputState>` and
-`OutputStates <OutputState>` can be specified in the **input_states** and **output_states** arguments, respectively,
-of the constructor for a `Mechanism`; and a `ParameterState` can be specified in the argument of the constructor for
-a function of a Mechanism or Projection, where its parameters are specified.  A State can be specified in those cases
-in any of the following forms:
+or by specifying the State in the constructor for its owner.  For example, unless otherwise specified,
+when a `Mechanism` is created it creates a default `InputState` and `OutputState` for itself, and whenever any
+Component is created, it automatically creates a `ParameterState` for each of its
+`configurable parameters <Component_Configurable_Attributes>` and those of its `function <Component_Function>`.
+States are also created in response to explicit specifications.  For example, InputStates and OutputStates can be
+specified in the constructor for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method;
+and a ParameterState is specified in effect when the value of a parameter for any Component or its
+`function <Component.function>` is specified in its constructor.  InputStates and OutputStates (but not
+ParameterStates) can also be created directly using their constructors;  however, Parameter States cannot be created
+in this way; they are always and only created when the Component to which a parameter belongs is created.
 
 .. _State_Specification:
+
+Specifying a State
+~~~~~~~~~~~~~~~~~~
+
+Wherever a State is specified, it can be done using any of the following:
 
     * an existing **State** object;
     ..
@@ -72,32 +107,36 @@ in any of the following forms:
       entries, in addition to those specific to a particular State subtype (see subtype documentation):
 
       ..
-      * *NAME*:<str> - the string is used as the name of the State;
+      * *NAME*:<str>
+          the string is used as the name of the State;
       
       ..
-      * *STATE_TYPE*:<State type> - specifies type of State to create (necessary if it cannot be determined from the
-        the context of the other entries or in which it is being created)
+      * *STATE_TYPE*:<State type>
+          specifies type of State to create (necessary if it cannot be determined from the
+          the context of the other entries or in which it is being created)
       ..
-      * *VALUE*:<value> - the value is used as the default value of the State;
-
-      COMMENT:
-          ..
-          * *PROJECTIONS*:<List> - the list must contain specifications for one or more
-            `projections <Projection_In_Context_Specification> to or from the State,
-            depending the type of State and the context in which it is specified;
-      COMMENT
+      * *VALUE*:<value>
+          the value is used as the default value of the State;
       ..
-
-      * *str*:<List> - the key is used as the name of the State, and the list must contain specifications for
-        one or more `Projections <Projection_In_Context_Specification>` to or from the State,
-        depending on the type of State and the context in which it is specified;
+      * *PROJECTIONS*:<List>
+          the list must contain specifications for one or more
+          `projections <Projection_In_Context_Specification> to or from the State, and/or
+          `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
+          the type of Projections it can send and/or receive depends the type of State and
+          the context in which it is specified;
+          COMMENT:
+              REFER TO TABLE OF STATES AND TYPES OF PREOJCTIONS THEY CAN RECEIVE
+          COMMENT
+      ..
+      * *str*:<List>
+          the key is used as the name of the State, and the list must contain specifications for
+          one or more `Projections <Projection_In_Context_Specification>` to or from the State
+          depending on the type of State and the context in which it is specified;
         ..
 
     * a **2-item tuple** - the first item must be a value, used as the default value for the State,
       and the second item must be a specification for a `Projection <Projection_In_Context_Specification>`
       to or from the State, depending on the type of State and the context in which it is specified;
-
-COMMENT:
 
 .. _State_Deferred_Initialization:
 
@@ -140,13 +179,20 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
-<Projection_In_Context_Specification>`, or by a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
-in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a State or a
-Mechanism. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
-<OutputState_Primary>  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
+<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
+in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State` or a
+`Mechanism`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
+<OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
-examples below.  Note that the State must be `assigned to an owner <State_Deferred_Initialization>` in order to be
-functional, irrespective of whether any `Projections <Projection>` have been assigned to it.
+examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
+irrespective of whether any `Projections <Projection>` have been assigned to it.
+
+COMMENT:
+    ADD TABLE HERE SHOWING COMBINATIONS OF ALLOWABLE SPECIFICATIONS AND THEIR OUTCOMES
+COMMENT
+
+Examples
+^^^^^^^^
 
 The following creates an InputState ``my_input_state`` with a `MappingProjection` to it from the
 `primary OutputState <OutputState_Primary>` of ``mech_A``::
@@ -160,8 +206,6 @@ and assigns it to a ``my_gating_mech``::
     my_gating_mech = GatingMechanism(gating_signals=[my_gating_signal]
 
 The GatingMechanism created will now gate the `primaryInputStates <Mechanism_InputStates>` of ``mech_B`` and ``mech_C``.
-
-COMMENT
 
 .. _State_Structure:
 

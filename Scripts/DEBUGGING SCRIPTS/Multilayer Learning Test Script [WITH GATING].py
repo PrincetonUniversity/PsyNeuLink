@@ -69,7 +69,10 @@ Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                        Hidden_Layer_1,
                                        # Hidden_Layer_2,
                                        my_gating_signal,
-                                       Output_Layer
+                                       # Output_Layer
+                                       {NAME: 'TEST_GATING_SIGNAL',
+                                        # PROJECTIONS: Output_Layer
+                                        }
                                    ])
 
 

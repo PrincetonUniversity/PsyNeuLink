@@ -44,14 +44,14 @@ from the GatingMechanism to the specified state.
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`.
-An InputState or OutputState can be specified for gating by assigning it a `GatingProjection` in the
-**input_states** or **output_states** arguments of the constructor for the Mechanism to which it belongs
-(see `Mechanism_States <LINK>`).  The InputStates and OutputStates to be gated by a GatingMechanism can also be
-specified in the  **gating_signals**  argument of the constructor for a GatingMechanism.  The **gating_signals** 
-argument must be a list, each item of which must refer to one or more states to be gated by that GatingSignal.  
-The specification for each item in the list can use any of the forms used to 
+GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
+be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
+or its ModulatorySignals `can be specified <State_Creation>`. They can also be specified in the  **gating_signals**
+argument of the constructor for a GatingMechanism.  The **gating_signals** argument must be a list, each item of which
+must refer to one or more States (or the Mechanisms to which they belong) to be gated by that GatingSignal.  The
+specification for each item in the list can use any of the forms used to
 `specify a GatingSignal <GatingSignal_Specification>`.
+
 
 .. _GatingMechanism_GatingSignals:
 
@@ -185,11 +185,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         (see `gating_signals <GatingMechanism.gating_signals>` for details).
         
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation used by the GatingMechanism's GatingSignals, unless
-        they are `individually specified <GatingSignal_Specification>`.
+        specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
+        unless they are `individually specified <GatingSignal_Specification>`.
         
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -222,8 +222,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         Default is a single item used by all of the `gating_signals`. 
 
     modulation : ModulationParam
-        the default form of modulation used by the GatingMechanism's GatingSignals, unless they are 
-        `individually specified <GatingSignal_Specification>`.
+        the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
+        unless they are `individually specified <GatingSignal_Specification>`.
         
     """
 
@@ -420,7 +420,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # - get constraint for OutputState's value
             output_state_constraint_value = self.gating_policy[output_state_index]
 
-            # gating_signal_params.update({GATED_STATE:state_name})
+            # gating_signal_params.update({GATE:state_name})
             gating_signal_params.update(gating_signal_spec[PARAMS])
 
             # FIX 5/23/17: CALL super()_instantiate_output_states ??

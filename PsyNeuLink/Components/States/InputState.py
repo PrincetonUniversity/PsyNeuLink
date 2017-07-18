@@ -194,8 +194,8 @@ When an InputState is created, it can be assigned one or more `Projections <Proj
 the key *PROJECTIONS*.  An InputState can be assigned either `MappingProjection(s) <MappingProjection>` or
 `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its
 `pathway_afferents <InputState.pathway_afferents>` attribute and GatingProjections to its
-`mod_afferents <InputState.mod_afferents>` attribute.  See `State_Projections` for additional details concerning
-the specification of Projections when creating a State.
+`mod_afferents <InputState.mod_afferents>` attribute.  See `State Projections <State_Projections>` for additional
+details concerning the specification of Projections when creating a State.
 
 
 .. _InputState_Structure:
@@ -285,6 +285,7 @@ class InputState(State_Base):
     reference_value=None,                      \
     function=LinearCombination(operation=SUM), \
     value=None,                                \
+    projections=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -342,10 +343,12 @@ class InputState(State_Base):
 
     projections : list of Projection specifications
         species the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
-        received by the InputState (see `InputState_Projections` for additional details).
+        received by the InputState, and that will be listed in its `path_afferents <InputState.path_afferents>` and
+        `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Projections` for additional
+        details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -373,7 +376,7 @@ class InputState(State_Base):
     mod_afferents : List[GatingProjection]
         a list of the `GatingProjections <GatingProjection>` received by the InputState.
 
-    variable : number, list or np.ndarray
+    variable : value, list or np.ndarray
         the template for the `value <Projection.Projection.value>` of each Projection that the InputState receives,
         each of which must match the format (number and types of elements) of the InputState's
         `variable <InputState.variable>`.
@@ -387,8 +390,10 @@ class InputState(State_Base):
         received by the InputState, under the possible influence of any `GatingProjections <GatingProjection>` received
         by the InputState.
 
-    value : number, list or np.ndarray
+    value : value or ndarray
         the aggregated value of the Projections received by the InputState; output of `function <InputState.function>`.
+        If it is an ndarray, the full array is assigned as the value of an item of the owner Mechanism's
+        `variable <Mechamism_Base.variable>`.
 
     name : str : default <State subclass>-<index>
         the name of the InputState.

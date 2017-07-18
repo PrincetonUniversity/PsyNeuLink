@@ -26,9 +26,14 @@ Creating a Component
 
 A Component is never created by calling the constructor for the Component base class.  However, its ``__init__()``
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
-(listed `below <Component_Methods>`) as part of the initialization procedure.
+(listed `below <Component_Methods>`) as part of the initialization procedure.  Every Component has a core set of
+configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
+that provide information about its contents and/or state (see `Component_Attributes` below).
 
 .. _Component_Deferred_Init:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
 `State <State.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its full
@@ -45,37 +50,37 @@ of a `Process`), as appropriate.
 Component Structure
 -------------------
 
-.. _Component_Attributes:
+.. _Component_Configurable_Attributes:
 
-Component Attributes
-~~~~~~~~~~~~~~~~~~~~
+Core Configurable Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core attributes that govern its operation:
+Every Component has the following set of core attributes that govern its operation, and that can be specified in
+corresponding arguments of its constructor, or by assigning them directly (see `ParameterState_Specification`):
 
 .. _Component_Variable:
 
-* **variable** - the value of the `variable <Component.variable>` attribute is used as the input to its
-  `function <Component.function>`.  Specification of the **variable** argument in the constructor for a Component
-  determines both its format (e.g., whether its value is numeric, its dimensionality and shape if it is an array,
-  etc.) as well as its default value (the value used when the Component is executed and no input is provided), and
-  takes precedence over the specification of `size <Component_Size>`.
+* **variable** - used as the input to its `function <Component_Function>`.  Specification of the **variable**
+  argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
+  dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
+  is executed and no input is provided), and takes precedence over the specification of `size <Component_Size>`.
 
 .. _Component_Size:
 
 * **size** - the dimension of the `variable <Component.variable>` attribute.  The **size** argument of the
-  constructor for a Component can be used as a convenient method for specifying the `variable <Component>`, attribute
-  in which case it will be assigned as an array of zeros of the specified size.  For example, setting  **size** = 3 is
-  equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent to setting
-  **variable* = [[0, 0, 0, 0], [0, 0, 0]].
+  constructor for a Component can be used as a convenient method for specifying the `variable <Component_Variable>`,
+  attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
+  setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
+  to setting **variable* = [[0, 0, 0, 0], [0, 0, 0]].
 
 .. _Component_Function:
 
-* **function** - the `function <Component.function>` attribute determines the computation that a Component carries out.
-  It is always a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink Component).
+* **function** - determines the computation that a Component carries out. It is always a PsyNeuLink
+  `Function <Function>` object (itself a PsyNeuLink Component).
 
   .. note::
-     The `function <Component.function>` of a Component can be assigned either a `Function <Function>` object or any
-     other callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
+     The `function <Component.function>` of a Component can be assigned either a `Function` object or any other
+     callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
 
   All Components have a default `function <Component.function>` (with a default set of parameters), that is used if it
   is not otherwise specified.  The `function <Component.function>` can be specified in the
@@ -110,11 +115,57 @@ Every Component has the following set of core attributes that govern its operati
         more than one Component, without being assigned simultaneously to multiple Components.
 
   A `function <Component.function>` can also be specified in an entry of a
-  `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+  `parameter specification dictionary <ParameterState_Specification>` assigned to the
   **params** argument of the constructor for the Component, with the keyword *FUNCTION* as its key, and one of the
   specifications above as its value, as in the following example::
 
         my_component = SomeComponent(params={FUNCTION:SomeFunction(some_param=1)})
+
+.. _Component_Value:
+
+* **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
+  `function <Component.function>` after the function is called.
+..
+
+.. _Component_Name:
+
+* **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
+  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
+  conventions used in assigning default names and handling of duplicate names).
+..
+
+.. _Component_Prefs:
+* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
+  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
+  Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
+  preference (see `PreferenceSet <LINK>` for details).
+
+.. _Component_Informational_Attributes:
+
+Core Informational Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _Component_User_Params:
+
+* **user_params** - this contains a dictionary of all of the configurable attributes for a given Component.
+  The dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
+  value to the attribute directly (see <>), or using the Component's `assign_params <Component.assign_params>` method.
+..
+COMMENT:
+  INCLUDE IN DEVELOPERS' MANUAL
+    * **paramClassDefaults**
+
+    * **paramInstanceDefaults**
+COMMENT
+
+.. _Component_Function_Object:
+
+* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
+  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
+  Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
+  those parameters (see `function_params <Component.function_params>` above).
+
+.. _Component_Function_Params:
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
   for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
@@ -133,7 +184,7 @@ Every Component has the following set of core attributes that govern its operati
     `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
     as arguments in the constructor of the Component itself, which can be used to set their values.
 
-  * in an entry of a `parameter specification dictionary <ParameterState_Specifying_Parameters>` assigned to the
+  * in an entry of a `parameter specification dictionary <ParameterState_Specification>` assigned to the
     **params** argument of the constructor for the Component.  The entry must use the keyword
     FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
     The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
@@ -142,40 +193,8 @@ Every Component has the following set of core attributes that govern its operati
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  See `ParameterState_Specifying_Parameters` for details concerning different ways in which the value of a parameter
+  See `ParameterState_Specification` for details concerning different ways in which the value of a parameter
   can be specified.
-
-.. _Component_Function_Object:
-
-* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
-  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
-  Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-  those parameters (see `function_params <Component.function_params>` above).
-
-.. _Component_User_Params:
-
-* **user_params** - the `user_params` attribute contains a dictionary of all of the user-modifiable attributes for the
-  the Component.  This dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-  value to the attribute directly, or using the Component's `assign_params` method.
-..
-COMMENT:
-  INCLUDE IN DEVELOPERS' MANUAL
-    * **paramClassDefaults**
-
-    * **paramInstanceDefaults**
-COMMENT
-
-* **value** - the `value <Component.value>` attribute contains the result (return value) of the Component's
-  `function <Component.function>` after the function is called.
-..
-* **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
-  conventions used in assigning default names and handling of duplicate names).
-..
-* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
-  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-  Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).
 
 COMMENT:
 * **log**
@@ -222,7 +241,7 @@ COMMENT:
 
       * `_validate_params <Component._validate_params>` validates the value of any parameters specified in the
         constructor for the Component (whether they are made directly in the argument for a parameter, or in a
-        `parameter specification dictionary <ParameterState_Specifying_Parameters>`.  If it is overridden by a subclass,
+        `parameter specification dictionary <ParameterState_Specification>`.  If it is overridden by a subclass,
         customized validation should generally be performed *after* the call to super().
 
     * **Instantiation methods** create, assign, and/or perform *semantic* checks on the values of Component attributes.
@@ -255,7 +274,7 @@ COMMENT
 .. _Component_Assign_Params:
 
 * **assign_params** - assign the value of one or more parameters of a Component.  Each parameter is specified
-  as an entry in a `parameter specification dictionary <ParameterState_Specifying_Parameters>` in the **request_set**
+  as an entry in a `parameter specification dictionary <ParameterState_Specification>` in the **request_set**
   argument;  parameters for the Component's `function <Component.function>` are specified as entries in a
   *FUNCTION_PARAMS* dict within **request_set** dict.
 ..
@@ -436,6 +455,7 @@ class ComponentError(Exception):
 class Component(object):
     """Implement parent class for Components used by Process, Mechanism, State, and Projection class categories
 
+    COMMENT:
         Every Component is associated with:
          - child class componentName
          - type
@@ -554,6 +574,38 @@ class Component(object):
 
     Instance methods:
         + function (implementation is optional; aliased to params[FUNCTION] by default)
+    COMMENT
+
+    Attributes
+    ----------
+
+    variable : 2d np.array
+        see `variable <Component_Variable>`
+
+    size : int or array of ints
+        see `size <Component_Size>`
+
+    function : Function, function or method
+        see `variable <Component_Function>`
+
+    function_params : Dict[param_name: param_value]
+        see `function_params <Component_Function_Params>`
+
+    function_object : Function
+        see `function_object <Component_Function_Object>`
+
+    user_params : Dict[param_name: param_value]
+        see `user_params <Component_User_Params>`
+
+    value : 2d np.array
+        see `value <Component_Value>`
+
+    name : str
+        see `name <Component_Name>`
+
+    prefs : PreferenceSet
+        see `prefs <Component_Prefs>`
+
     """
 
     #CLASS ATTRIBUTES
@@ -2391,8 +2443,10 @@ class Component(object):
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         try:
+            # Could be mutable, so assign copy
             self._default_value = self.value.copy()
         except AttributeError:
+            # Immutable, so just assign value
             self._default_value = self.value
 
     def _instantiate_attributes_after_function(self, context=None):

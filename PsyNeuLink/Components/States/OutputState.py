@@ -107,7 +107,7 @@ specify an OutputState:
       name is assigned based on the name of the Mechanism (see :ref:`naming conventions <LINK>`).
     ..
     * A **State specification dictionary**.  This creates the specified OutputState using the item of the owner
-      `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.  In addition to the
+      `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
       can have a *PROJECTIONS* entry, the value of which can be a `Projection`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
@@ -226,8 +226,9 @@ When an OutputState is created, it can be assigned one or more `Projections <Pro
 **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
 the key *PROJECTIONS*.  An OutputState can be assigned either `MappingProjection(s) <MappingProjection>` or
 `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its `efferents <OutputState.efferents>`
-attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See `State_Projections`
-for additional details concerning the specification of Projections when creating a State.
+attribute and GatingProjections to its `mod_afferents <OutputState.mod_afferents>` attribute.  See
+`State Projections <State_Projections>` for additional details concerning the specification of Projections when
+creating a State.
 
 
 .. _OutputState_Structure:
@@ -388,6 +389,7 @@ class OutputState(State_Base):
     function=LinearCombination(operation=SUM), \
     index=PRIMARY_OUTPUT_STATE,                \
     calculate=Linear,                          \
+    projections=None,                          \
     params=None,                               \
     name=None,                                 \
     prefs=None,                                \
@@ -460,11 +462,13 @@ class OutputState(State_Base):
         `value <Mechanism.Mechanism_Base.value>`.
 
     projections : list of Projection specifications
-        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or any
-        `GatingProjection(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details).
+        species the `MappingProjection(s) <MappingProjection>` to be sent by the OutputState, and/or
+        `GatingProjections(s) <GatingProjection>` to be received (see `OutputState_Projections` for additional details);
+        these will be listed in its `efferents <OutputState.efferents>` and `mod_afferents <InputState.mod_afferents>`
+        attributes, respectively (see `OutputState_Projections` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the OutputState, its function, and/or a custom function and its parameters. Values specified for parameters
         in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -488,7 +492,7 @@ class OutputState(State_Base):
     mod_afferents : List[GatingProjection]
         a list of the `GatingProjections <GatingProjection>` received by the InputState.
 
-    variable : number, list or np.ndarray
+    variable : value, list or np.ndarray
         assigned the item of the owner Mechanism's `value <Mechanism.Mechanism_Base.value>` specified by the
         OutputState's `index <OutputState.index>` attribute.
 
@@ -511,7 +515,7 @@ class OutputState(State_Base):
 
     value : number, list or np.ndarray
         assigned the result of `function <OutputState.function>`;  the same value is assigned to the corresponding item
-        of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>`.
+        of the owner Mechanism's `output_values <Mechanism.Mechanism_Base.output_values>` attribute.
 
     efferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` sent by the OutputState (i.e., for which the OutputState

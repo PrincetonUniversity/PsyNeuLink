@@ -129,7 +129,7 @@ Execution
 Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
-`parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the
+`parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
 `runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
 
@@ -457,7 +457,7 @@ class Function_Base(Function):
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -642,7 +642,7 @@ class ArgumentTherapy(Function_Base):
         specifies therapeutic consistency
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -811,7 +811,7 @@ class ArgumentTherapy(Function_Base):
            an assertion to which a therapeutic response is made.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -885,7 +885,7 @@ class UserDefinedFunction(Function_Base):
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1061,7 +1061,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         (see `offset <Reduce.offset>` for details)
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1162,7 +1162,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
            a list or np.array of numeric values.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1289,7 +1289,7 @@ class LinearCombination(
         (see `offset <LinearCombination.offset>` for details)
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1552,7 +1552,7 @@ class LinearCombination(
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1768,7 +1768,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1864,7 +1864,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
            a single value or array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1978,7 +1978,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2060,7 +2060,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
            a single value or array to be exponentiated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2129,7 +2129,7 @@ class Logistic(
         but before logistic transformation.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2213,7 +2213,7 @@ class Logistic(
            a single value or array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2280,7 +2280,7 @@ class SoftMax(TransferFunction):
         (see `output <SoftMax.output>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2373,7 +2373,7 @@ class SoftMax(TransferFunction):
            an array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2539,7 +2539,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     bounds : None
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2861,7 +2861,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3046,7 +3046,7 @@ class Integrator(
         `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3355,7 +3355,7 @@ class SimpleIntegrator(
         `variable_default <SimpleIntegrator.variable_default>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3480,7 +3480,7 @@ class SimpleIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3581,7 +3581,7 @@ class ConstantIntegrator(
         `variable_default <ConstantIntegrator.variable_default>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3717,7 +3717,7 @@ class ConstantIntegrator(
         ---------
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3805,7 +3805,7 @@ class AdaptiveIntegrator(
         `variable_default <AdaptiveIntegrator.variable_default>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3998,7 +3998,7 @@ class AdaptiveIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4090,7 +4090,7 @@ class DriftDiffusionIntegrator(
         `variable_default <DriftDiffusionIntegrator.variable_default>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4224,7 +4224,7 @@ class DriftDiffusionIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4321,7 +4321,7 @@ class OrnsteinUhlenbeckIntegrator(
         <OrnsteinUhlenbeckIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4457,7 +4457,7 @@ class OrnsteinUhlenbeckIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4552,7 +4552,7 @@ class AccumulatorIntegrator(
         `variable_default <ConstantIntegrator.variable_default>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4767,7 +4767,7 @@ class AccumulatorIntegrator(
         ---------
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4885,7 +4885,7 @@ class BogaczEtAl(
         elements must be floats from 0 to 1.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4985,7 +4985,7 @@ class BogaczEtAl(
             ignored.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -5180,7 +5180,7 @@ class NavarroAndFuss(IntegratorFunction):
         elements must be floats from 0 to 1.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5287,7 +5287,7 @@ class NavarroAndFuss(IntegratorFunction):
             ignored.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -5348,7 +5348,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5370,7 +5370,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5448,7 +5448,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5467,7 +5467,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5545,7 +5545,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5567,7 +5567,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5648,7 +5648,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5670,7 +5670,7 @@ class GammaDist(DistributionFunction):
         The scale of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5752,7 +5752,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -5774,7 +5774,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -5884,7 +5884,7 @@ class Stability(ObjectiveFunction):
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5918,7 +5918,7 @@ class Stability(ObjectiveFunction):
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6133,7 +6133,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6158,7 +6158,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6359,7 +6359,7 @@ class Reinforcement(
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6506,7 +6506,7 @@ class Reinforcement(
            `error_signal <Reinforcement.error_signal>` (1d np.array).
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -6616,7 +6616,7 @@ class BackPropagation(LearningFunction):
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6834,7 +6834,7 @@ class BackPropagation(LearningFunction):
            `error_signal <BackPropagation.error_signal>` (1d np.array).
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

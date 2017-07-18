@@ -168,7 +168,7 @@ method of the relevant `Scheduler` (see `System_Execution_Processing` and `Syste
 executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
 the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
 met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
-`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
+`processing <System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
 `control <System_Execution_Control>`, each of which is described below.
 
 
@@ -441,7 +441,7 @@ def system(default_input_value=None,
         for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 

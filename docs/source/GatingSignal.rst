@@ -1,5 +1,5 @@
 GatingSignal
-==============
+============
 
 .. automodule:: ModulatorySignals.GatingSignal
    :members:
