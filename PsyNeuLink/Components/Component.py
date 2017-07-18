@@ -36,7 +36,7 @@ Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
-`State <State.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its full
+`State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its full
 initialization is deferred until its the information is available (e.g., the `State` is assigned to a `Mechanism`, or
 a `Projection` is assigned its `sender <Projection.sender>` and `receiver <Projection.receiver>`).  This allows
 Components to be created before all of the information they require is available (e.g., at the beginning of a script).

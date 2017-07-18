@@ -94,9 +94,9 @@ Modulation
 ~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State.value>` \s
+`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
-specified and used to modulate the `value <State.value>` of a State). The `modulation <ControlSignal.modulation>`
+specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
 is not specified, its default is the value of the `modulation <ControlMechanism_Base.modulation>` attribute of the

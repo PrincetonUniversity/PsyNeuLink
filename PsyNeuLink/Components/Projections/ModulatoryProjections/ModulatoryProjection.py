@@ -65,7 +65,7 @@ which it projects — its `receiver <Projection.receiver>` — is updated;  tha
 is executed.  When a ModulatoryProjection executes, it conveys both the value of the `ModulatorySignal` from which it
 projects, and the ModulatorySignal's `modulation <ModulatorySignal.modulation>` attribute, to the State that receives
 the Projection.  The State assigns the value to the parameter of the State's Function specified by the `modulation`
-attribute, and then calls the function to determine the `value <State.value>` of the state.
+attribute, and then calls the function to determine the `value <State_Base.value>` of the state.
 
 .. note::
    The change made to the parameter of the State's Function in response to the execution of a ModulatoryProjection
@@ -121,8 +121,8 @@ class ModulatoryProjection_Base(Projection_Base):
     Attributes
     ----------
     receiver : MATRIX ParameterState of a MappingProjection
-        the state to which the ModulatoryProjection projects, the `function <State.function>` of which is modulated
-        by it.
+        the state to which the ModulatoryProjection projects, the `function <State_Base.function>` of which is
+        modulated by it.
     sender : LEARNING_SIGNAL OutputState of a LearningMechanism
         the `ModulatorySignal` from which the ModulatoryProjection projects.
     variable : 2d np.array

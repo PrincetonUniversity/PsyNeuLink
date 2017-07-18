@@ -13,22 +13,17 @@ Overview
 --------
 
 A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the InputState(s) and/or OutputState(s) of
-one or more `ProcessingMechanisms`.   Its function takes a value
-COMMENT:
-    ??FROM WHERE?
-COMMENT
-and uses that to calculate a `gating_policy`:  a list of values, one for each of each `GatingSignals <GatingSignal>`.
-Each of these values is assigned as the value of
-the corresponding `GatingSignal` (a subclass of `OutputState`) in the GatingMechanism, and used by the associated
-`GatingProjections <GatingProjection>` to modulate the value of the State(s) to which they project.   A GatingMechanism
-can regulate only the parameters of Mechanisms in the `System` to which it belongs.
+one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the GatingMechanism's
+`variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values, one for each of its
+`GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal <GatingSignal.gating_signal>`
+used by its `GatingProjections <GatingProjection>` to modulate the value of the State(s) to which they project.   A
+GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
 COMMENT
 The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
 `LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
-
 
 .. _GatingMechanism_Creation:
 
@@ -37,8 +32,8 @@ Creating A GatingMechanism
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
-InputState or OutputState, in which case a `GatingProjection` is also automatically created that projects
-from the GatingMechanism to the specified state.
+`InputState`, `OutputState` or `Mechanism`, in which case a `GatingProjection` is automatically created that
+projects from the GatingMechanism to the specified target
 
 .. _GatingMechanism_Specifying_Gating:
 
@@ -47,10 +42,11 @@ Specifying gating
 
 GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
-or its ModulatorySignals `can be specified <State_Creation>`. They can also be specified in the  **gating_signals**
-argument of the constructor for a GatingMechanism.  The **gating_signals** argument must be a list, each item of which
-must refer to one or more States (or the Mechanisms to which they belong) to be gated by that GatingSignal.  The
-specification for each item in the list can use any of the forms used to
+or its ModulatorySignals `can be specified <State_Creation>`.  A `Mechanism` can also be specified for gating, in which
+case the `primary InputState <InputState_Primary>` of the specified Mechanism is used.  States (and/or Mechanisms) can
+also be specified in the  **gating_signals** argument of the constructor for a GatingMechanism. The **gating_signals**
+argument must be a list, each item of which must refer to one or more States (or the Mechanism(s) to which they
+belong) to be gated by that GatingSignal.  The specification for each item in the list can use any of the forms used to
 `specify a GatingSignal <GatingSignal_Specification>`.
 
 
@@ -59,11 +55,11 @@ specification for each item in the list can use any of the forms used to
 GatingSignals
 ^^^^^^^^^^^^^
 
-A `GatingSignal` is created for each item listed in **gating_signals**, and all of the GatingSignals for a  
-GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.  Each GatingSignal is 
-assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or OutputState(s) it gates.
-GatingSignals are a type of `OutputState`, and so they are also listed in the GatingMechanism's 
-`output_states <GatingMechanism.outut_states>` attribute.  
+A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
+GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
+Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
+OutputState(s) it gates. GatingSignals are a type of `OutputState`, and so they are also listed in the
+GatingMechanism's `output_states <GatingMechanism.outut_states>` attribute.
 
 .. _GatingMechanism_Modulation:
 
@@ -71,35 +67,31 @@ Modulation
 ^^^^^^^^^^
 
 Each GatingMechanism has a `modulation <GatingSignal.modulation>` attribute, that provides a default for the way
-in which its GatingSignals modulate the value of the states they gate 
-(see `modulation <ModulatoryProjection.modulation>` for an explanation of how this attribute is specified and used to 
-modulate the value of a state).  Each GatingSignal uses this value, unless its value is 
-`individually specified <GatingSignal_Modulation>`. 
+in which its GatingSignals modulate the value of the States they gate
+(see `modulation <ModulatorySignal_Modulation>` for an explanation of how this attribute is specified and used to
+modulate the value of a State).  Each GatingSignal uses this value, unless its value is
+`individually specified <GatingSignal_Modulation>`.
 
 .. _GatingMechanism_Execution:
 
 Execution
 ---------
 
-A GatingMechanism executes in the same way as a ProcessingMechanism, based on its place in the System's
-`graph <System.graph>`.  Because GatingProjections are likely to introduce cycles (loops) in the graph,
-the effects of a GatingMechanism and its projections will generally not be applied in the first `TRIAL` (see
+A GatingMechanism executes in the same way as a `ProcessingMechanism`, based on its place in the System's
+`graph <System_Base.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles (loops) in
+the graph, the effects of a GatingMechanism and its projections will generally not be applied in the first `TRIAL` (see
 `initialization <System_Execution_Input_And_Initialization>` for a description of how to configure the initialization
 of feedback loops in a System).  When executed, a GatingMechanism uses its input to determine the value of its
-`GatingSignals <GatingSignal>` and their corresponding `GatingProjections <GatingProjection>`.  In the subsequent 
-`TRIAL`, each GatingProjection's value is used by the State to which it projects to modulate the `value <State.value>`
-of that State.
-
-When a GatingMechanism executes, the value of each item in its `gating_policy` is assigned as the value of each of
-the corresponding GatingSignals in its `gating_signals` attribute.  These, in turn, are used by their associated
-`GatingProjections` to modulate the value of the state to which they project.  This is done by assigning the
-GatingSignal's value to a parameter of the state's function, as specified by the GatingSignal's `modulation` 
-parameter (see `GatingSignal_Execution` for details). 
+`gating_policy <GatingMechanism.gating_policy>`, each item of which is used by a corresponding `GatingSignal` to
+determine its `gating_signal <GatingSignal.gating_signal>` and the `value <GatingProjection.value>` of its
+`GatingProjections <GatingProjection>`.  In the subsequent `TRIAL`, each GatingProjection's value is used by the
+State to which it projects to modulate the `value <State_Base.value>` of that State
+(see `modulation <ModulatorySignal_Modulation>` fon an explanation of how the value of a State is modulated).
 
 .. note::
-   A state that receives a `GatingProjection` does not update its value until its owner Mechanism executes
-   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a GatingMechanism 
-   has executed, a state that it gates will not assume its new value until the state's owner has executed.
+   A State that receives a `GatingProjection` does not update its `value <State_Base.value>` (and therefore does not
+   reflect the influence of its `GatingSignal`) until that State's owner Mechanism executes
+   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _GatingMechanism_Class_Reference:
 

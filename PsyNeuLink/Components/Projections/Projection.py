@@ -144,10 +144,9 @@ In addition to its `function <Projection.function>`, a Projection has two primar
 Sender
 ~~~~~~
 
-This must be an `OutputState`.  The Projection is assigned to the OutputState's
-`efferents <State.State_Base.efferents>` list, and OutputState's `value
-<OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's `function <Projection.function>`.
-A sender can be specified as:
+This must be an `OutputState`.  The Projection is assigned to the OutputState's `efferents <State_Base.efferents>`
+list, and OutputState's `value <OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's
+`function <Projection.function>`.  A sender can be specified as:
 
   * an **OutputState**, in any of the ways used to `specify an OutputState <OutputState_Specification>`.
   ..
@@ -189,7 +188,7 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The Projection is assigned to the receiver's
-`path_afferents <State.State_Base.path_afferents>` list, and the output of the Projection's
+`path_afferents <State_Base.path_afferents>` list, and the output of the Projection's
 `function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
 can be specified as:
 
