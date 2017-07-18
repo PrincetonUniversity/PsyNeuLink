@@ -117,30 +117,30 @@ used by all of the `LearningProjections <LearningProjection>` that project from 
 
 .. _LearningSignal_Learning_Rate:
 
-Learning Rate
-~~~~~~~~~~~~~
+Learning Rate and Function
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* `learning_rate <LearningSignal.learning_rate>`: the learning_rate for a LearningSignal is used to specify the
-  `learning_rate <LearningProjection.learning_rate>` parameter for its `LearningProjection(s) <LearningProjection>`
-  (i.e., those listed in its `efferents <LearningSignal.efferents>` attribute).  If specified, it is applied
-  multiplicatively to the LearningProjection`s `learning_signal <LearningProjection.learning_signal>` and thus can be
-  used to modulate the learning_rate in addition to (and on top of) one specified for the `LearningMechanism` or its
-  `function <LearningMechanism.function>`.  Specification of the `learning_rate <LearningSignal.learning_rate> for a
-  LearningSignal supercedes any specification(s) of the `learning_rate <LearningProjection.learning_rate>` for its
-  LearningProjections, as well as for any `Process <Process.Process_Base.learning_rate>` and/or
-  `System <System.System_Base.learning_rate>` to which the LearningSignal's owner belongs
-  (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
+A LearningSignal has a `learning_rate <LearningSignal.learning_rate>` attribute that can be used to specify the
+`learning_rate <LearningProjection.learning_rate>` parameter for its `LearningProjection(s) <LearningProjection>`
+(i.e., those listed in its `efferents <LearningSignal.efferents>` attribute).  If specified, it is applied
+multiplicatively to the LearningProjection`s `learning_signal <LearningProjection.learning_signal>` and thus can be
+used to modulate the learning_rate in addition to (and on top of) one specified for the `LearningMechanism` or its
+`function <LearningMechanism.function>`.  Specification of the `learning_rate <LearningSignal.learning_rate>` for a
+LearningSignal supersedes the `learning_rate <LearningProjection.learning_rate>` for its LearningProjections,
+as well the `learning_rate <Process_Base.learning_rate>` for any Process(es) and/or the
+`learning_rate <System_Base.learning_rate>` for any System(s) to which the LearningSignal's owner belongs
+(see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
-.. _LearningSignal_Function:
+The `function <LearningSignal.function>` of a LearningSignal converts the
+`learning_signal <LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its
+`value <LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By
+default this is an identity function ((`Linear` with **slope**\\ =1 and **intercept**\\ =0)), that simply uses the
+LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its own.  However, the LearningSignal's
+`function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
+scalar, ndarray or matrix and returns a similar value.
 
-* `function <LearningSignal.function>`: converts the `learning_signal <LearningMechanism.learning_signal>` it receives
-  from the LearningMechanism to which it belongs to its `value <LearningSignal.value>`. By default this is an identity 
-  function (:keyword:`Linear(slope=1, intercept=0))`), that simply uses the `learning_signal` as its 
-  `value <LearningSignal.value>`.  However, :keyword:`function` can be assigned another `TransferFunction`, or any 
-  other function that takes a 2d array or matrix and returns a similar value.
-
-  .. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
-            attributes of a LearningSignal are automatically assigned and should not be modified.
+.. note:: The `index <OutputState.OutputState.index>` and `calculate <OutputState.OutputState.calculate>`
+        attributes of a LearningSignal are automatically assigned and should not be modified.
 
 
 .. _LearningSignal_Execution:
@@ -149,13 +149,15 @@ Execution
 ---------
 
 A LearningSignal cannot be executed directly.  It is executed whenever the `LearningMechanism` to which it belongs is
-executed.  When this occurs, the LearningMechanism provides the LearningSignal with a `learning_signal`, that is used
-by its `function <LearningSignal.function>` to compute its `value <LearningSignal.value>` for that `TRIAL`.
-That is used by its associated `LearningProjection` to modify the :keyword:`value` of the `matrix
-<MappingProjection.matrix>` parameter of the `MappingProjection` being learned.
+executed.  When this occurs, the LearningMechanism provides the LearningSignal with a
+`learning_signal <LearningMechanism.learning_signal>`, that is used by its `function <LearningSignal.function>` to
+compute its `value <LearningSignal.value>` (i.e., its own `learning_signal <LearningSignal.learning_signal>` for that
+`TRIAL`. That value is used by its `LearningProjection(s) <LearningProjection>` to modify the `matrix
+<MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` to which the LearningSignal
+projects.
 
 .. note::
-   The changes in a MappingProjection's matrix parameter in response to the execution of a LearningMechanism are not
+   The changes in a MappingProjection's matrix parameter in response to the execution of a LearningSignal are not
    applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
    "lazy" updating).
 
@@ -192,20 +194,20 @@ class LearningSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of OutputState that represents the ControlSignal of a `ControlMechanism` provided to a 
-    `ControlProjection`.
+    A subclass of OutputState that represents the LearningSignal of a `LearningMechanism` provided to a
+    `LearningProjection`.
 
     COMMENT:
 
         Description
         -----------
-            The ControlSignal class is a subtype of the OutputState type in the State category of Component,
-            It is used as the sender for ControlProjections
+            The LearningSignal class is a subtype of the OutputState type in the State category of Component,
+            It is used as the sender for LearningProjections
             Its FUNCTION updates its value:
                 note:  currently, this is the identity function, that simply maps variable to self.value
 
         Class attributes:
-            + componentType (str) = CONTROL_SIGNAL
+            + componentType (str) = LEARNING_SIGNAL
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS   (Operation.PRODUCT)
@@ -223,24 +225,26 @@ class LearningSignal(ModulatorySignal):
     Arguments
     ---------
 
-    owner : ControlMechanism
-        specifies the `ControlMechanism` to which to assign the ControlSignal.
+    owner : LearningMechanism
+        specifies the `LearningMechanism` to which to assign the LearningSignal.
 
     function : Function or method : default Linear
-        specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
+        specifies the function used by the LearningSignal to generate its
+        `learning_signal <LearningSignal.learning_signal>`.
     
     learning_rate : float or None : default None
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
-        specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value          of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection` to which the LearningSignal's
-        `LearningProjection(s) <LearningProjection>` project.
+        specifies the way in which the `value <LearningSignal.value>` of the LearningSignal is used to modify the value
+        of the `matrix <MappingProjection.matrix>` parameter for the `MappingProjection(s) <MappingProjection>` to which
+        the LearningSignal's `LearningProjection(s) <LearningProjection>` project.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
+        a `parameter specification dictionary <ParameterState_Specification>` that can be used to specify the
+        parameters for the LearningSignal and/or a custom function and its parameters. Values specified for
+        parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     projections : list of Projection specifications
         specifies the `LearningProjection(s) <GatingProjection>` to be assigned to the LearningSignal, and that will be
@@ -261,8 +265,8 @@ class LearningSignal(ModulatorySignal):
     Attributes
     ----------
 
-    owner : ControlMechanism
-        the `ControlMechanism` to which the ControlSignal belongs.
+    owner : LearningMechanism
+        the `LearningMechanism` to which the LearningSignal belongs.
 
     variable : number, list or np.ndarray
         used by `function <LearningSignal.function>` to generate the LearningSignal's
@@ -275,17 +279,17 @@ class LearningSignal(ModulatorySignal):
 
     learning_rate : float : None
         determines the learning rate for the LearningSignal.  It is used to specify the 
-        `learning_rate <LearningProjection.learning_rate>` parameter for the LearningProjection(s) listed in the
-        `efferents <LearningSignal.efferents>` attribute (i.e., that project from the LearningSignal). See
-        `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details.
+        `learning_rate <LearningProjection.learning_rate>` parameter for its LearningProjection(s) (listed in the
+        `efferents <LearningSignal.efferents>` attribute). See `LearningSignal_Learning_Rate` for additional details.
 
     value : number, list or np.ndarray
-        result of `function <ControlSignal.function>`; same as `learning_signal <LearningSignal.learning_signal>`.
+        result of the LearningSignal's `function <LearningSignal.function>`; same as its
+        `learning_signal <LearningSignal.learning_signal>`.
 
-    learning_signal : number, list or np.ndarray
-        result of `function <ControlSignal.function>`; same as `value <LearningSignal.value>`.
+    learning_signal : number, ndarray or matrix
+        result of the LearningSignal's `function <LearningSignal.function>`; same as its `value <LearningSignal.value>`.
 
-    efferents : [List[ControlProjection]]
+    efferents : [List[LearningProjection]]
         a list of the `LearningProjections <LearningProjection>` assigned to (i.e., that project from) the
         LearningSignal.
 
@@ -358,8 +362,8 @@ class LearningSignal(ModulatorySignal):
 
         # FIX: 5/26/16
         # IMPLEMENTATION NOTE:
-        # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
-        #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
+        # Consider adding self to owner.outputStates here (and removing from LearningProjection._instantiate_sender)
+        #  (test for it, and create if necessary, as per OutputStates in LearningProjection._instantiate_sender),
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super().__init__(owner=owner,

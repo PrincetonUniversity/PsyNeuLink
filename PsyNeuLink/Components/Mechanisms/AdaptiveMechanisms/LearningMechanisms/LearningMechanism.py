@@ -205,7 +205,7 @@ components being learned and/or its operation:
 * `learning_rate <LearningMechanism.learning_rate>` - the learning rate for the LearningMechanism.  This is used to
   specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
   `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
-  its `function <LearningMechanism.function>` before conveying these to the `LearningProjection` used to modify the
+  its `function <LearningMechanism.function>` before conveying these to the `LearningSignal` used to modify the
   MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifying the
   `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
   of its `function <LearningMechanism.function>` directly) supersedes any specification of the :keyword:`learning_rate`
@@ -464,7 +464,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
             It implements a Mechanism that calculates changes to a Projection's parameters.
             It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
-            learning_signal (2d arry of parameter changes) to be used by the recipient of a LearningProjection
+            learning_signal (ndarray of parameter changes) to be used by the recipient of a LearningProjection
             that projects from the LearningMechanism to a MappingProjection.
 
         # DOCUMENT: ??NOT SURE WHETHER THIS IS STILL RELEVANT
@@ -607,11 +607,18 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see description of `learning_rate <LearningMechanism_Learning_Rate>` above for additional details).
 
     error_signal : 1d np.array
-        the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
+        one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
         `single layer learning <LearningMechanism_Single_Layer>`, this is the same as the value received in the
         LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` InputState;  for `multilayer
         learning <LearningMechanism_Multi_Layer>`, it is a modified version of the value received, that takes
         account of the contribution to the error signal received, made by the learned_projection and its input.
+
+    learning_signal : number, ndarray or matrix
+        one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`,
+        that provides the changes to the `matrix <MappingProjection.matrix>` parameter(s) of the
+        `MappingProjection(s) <MappingProjection>` being learned (and listed in
+        `learned_projections <LearningMechanism.learned_projections>`) required to reduce the
+        `error_signal <LearningMechanism.error_signal>`.
 
     learning_signals : List[LearningSignal]
         list of `LearningSignals <LearningSignals>` for the LearningMechanism, each of which sends a 
