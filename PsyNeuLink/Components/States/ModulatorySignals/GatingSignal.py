@@ -14,10 +14,10 @@ Overview
 
 A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and one or more
 `GatingProjections <GatingProjection>`, to modify the `value <State.value>` \(s) of the InputState(s) and/or
-OutputState(s) to which they project. A GatingSignal receives the value of a
-`gating_signal <GatingMechanism.gating_signal>` from the GatingMechanism to which it belongs, and assigns that to its
-`GatingProjection(s) <GatingProjection>`, each of which projects to an InputState or OutputState and is used to
-modulate the `value <State.value>` of that State.
+OutputState(s) to which they project. A GatingSignal receives the value from the
+`gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs, and assigns that as
+the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s) <GatingProjection>`,
+each of which projects to an InputState or OutputState and is used to modulate the `value <State.value>` of that State.
 
 
 .. _GatingSignal_Creation:
@@ -122,17 +122,17 @@ Execution
 ---------
 
 A GatingSignal cannot be executed directly.  It is executed whenever the `GatingMechanism` to which it belongs is
-executed.  When this occurs, the GatingMechanism provides the GatingSignal with the value of a
-`gating_signal <GatingMechanism.gating_signal>` that is used by its `GatingProjection(s) <GatingProjection>` to
-modulate the `value <State.value>` of the states to which they project. Those States use the
-`value <GatingProjection.value>` of the `GatingProjection` they receive to modify a parameter of
-their function.  How the modulation is executed is determined by the GatingSignal's
-`modulation <GatingSignal.modulation>` attribute (see `above <GatingSigna_Modulation>`, and
-`ModulatorySignal_Modulation` for a more detailed explanation of how modulation operates).
+executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
+`gating_policy <GatingMechanism.gating_signal>`, that is used by its `function <GatingSignal.function>` to generate its
+the value of its `gating_signal <GatingSignal.gating_signal>`.  That, in turn, is used by its `GatingProjection(s)
+<GatingProjection>` to modulate the `value <State.value>` of the States to which they project. How the modulation is
+executed is determined by the GatingSignal's `modulation <GatingSignal.modulation>` attribute
+(see `above <GatingSigna_Modulation>`, and `ModulatorySignal_Modulation` for a more detailed explanation of how
+modulation operates).
 
 .. note::
    The change in the `value <State.value>` of InputStates and OutputStates in response to the execution of a
-   GatingMechanism are not applied until the Mechanism(s) to which those states belong are next executed;
+   GatingSignal are not applied until the Mechanism(s) to which those states belong are next executed;
    see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _GatingSignal_Examples:

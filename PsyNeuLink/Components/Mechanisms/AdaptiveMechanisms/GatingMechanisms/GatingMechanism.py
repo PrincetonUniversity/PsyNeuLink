@@ -17,8 +17,8 @@ one or more `ProcessingMechanisms`.   Its function takes a value
 COMMENT:
     ??FROM WHERE?
 COMMENT
-and uses that to calculate a `gating_policy`:  a list of `gating_signal <GatingMechainsm.gating_signal>` values,
-one for each of each `GatingSignals <GatingSignal>`.  Each of these values is assigned as the value of
+and uses that to calculate a `gating_policy`:  a list of values, one for each of each `GatingSignals <GatingSignal>`.
+Each of these values is assigned as the value of
 the corresponding `GatingSignal` (a subclass of `OutputState`) in the GatingMechanism, and used by the associated
 `GatingProjections <GatingProjection>` to modulate the value of the State(s) to which they project.   A GatingMechanism
 can regulate only the parameters of Mechanisms in the `System` to which it belongs.
@@ -560,7 +560,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
         #                               time_scale=time_scale,
         #                               context=context)
         # return gating_policy
-
 
     def show(self):
 
