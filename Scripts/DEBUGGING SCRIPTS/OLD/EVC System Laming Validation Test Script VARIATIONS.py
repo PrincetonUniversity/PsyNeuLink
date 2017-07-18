@@ -22,7 +22,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 
 # Mechanisms:
 Input = TransferMechanism(name='Input',
-                default_input_value=[0,0]
+                default_variable=[0,0]
                  # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]}
                  )
 Reward = TransferMechanism(name='Reward',
@@ -44,13 +44,13 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 
 # Processes:
 TaskExecutionProcess = process(
-    default_input_value=[0,0],
+    default_variable=[0,0],
     pathway=[(Input, 0), FULL_CONNECTIVITY_MATRIX, (Decision, 0)],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')

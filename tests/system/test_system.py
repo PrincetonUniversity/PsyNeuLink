@@ -48,19 +48,19 @@ def test_danglingControlledMech():
 
     # Processes:
     ColorNamingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output, Decision],
         name='Color Naming Process',
     )
 
     WordReadingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output, Decision],
         name='Word Reading Process',
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         name='RewardProcess',
     )
@@ -108,7 +108,7 @@ def test_danglingControlledMech():
 class TestGraphAndInput:
 
     def test_branch(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
@@ -134,8 +134,8 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
 
     def test_bypass(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
@@ -160,7 +160,7 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
 
     def test_chain(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
@@ -188,10 +188,10 @@ class TestGraphAndInput:
         assert e.systems[s] == TERMINAL
 
     def test_convergent(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
-        c = TransferMechanism(name='c', default_input_value=[0])
+        c = TransferMechanism(name='c', default_variable=[0])
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
@@ -217,8 +217,8 @@ class TestGraphAndInput:
         assert e.systems[s] == TERMINAL
 
     def cyclic_one_process(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
 
         p1 = process(pathway=[a, b, a], name='p1')
 
@@ -238,9 +238,9 @@ class TestGraphAndInput:
         assert b.systems[s] == INITIALIZE_CYCLE
 
     def cyclic_two_processes(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
-        c = TransferMechanism(name='c', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
+        c = TransferMechanism(name='c', default_variable=[0, 0])
 
         p1 = process(pathway=[a, b, a], name='p1')
         p2 = process(pathway=[a, c, a], name='p2')
@@ -262,11 +262,11 @@ class TestGraphAndInput:
         assert c.systems[s] == INITIALIZE_CYCLE
 
     def cyclic_extended_loop(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
-        e = TransferMechanism(name='e', default_input_value=[0])
+        e = TransferMechanism(name='e', default_variable=[0])
         f = TransferMechanism(name='f')
 
         p1 = process(pathway=[a, b, c, d], name='p1')

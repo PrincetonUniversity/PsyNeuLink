@@ -171,10 +171,10 @@ def mechanisms():
     # endregion
 
     # region ObjectiveMechanism
-    my_action_select_mech = TransferMechanism(default_input_value=[0, 0, 0],
+    my_action_select_mech = TransferMechanism(default_variable=[0, 0, 0],
                                               function=SoftMax(output=PROB))
-    my_reward_mech = TransferMechanism(default_input_value=[0])
-    # FIXME: ObjectiveMechanism has no `default_input_value` keyword
+    my_reward_mech = TransferMechanism(default_variable=[0])
+    # FIXME: ObjectiveMechanism has no `default_variable` keyword
     # FIXME: PROGRAM ERROR: call to State._parse_state_spec() for OutputState
     #  of ObjectiveMechanism should have returned dict or State, but returned
     #  str instead
@@ -190,7 +190,7 @@ def mechanisms():
     # region ComparatorMechanism
     # FIXME: TypeError: object of type 'int' has no len()
     my_action_select_mech = TransferMechanism(function=SoftMax(output=PROB))
-    my_reward_mech = TransferMechanism(default_input_value=[0])
+    my_reward_mech = TransferMechanism(default_variable=[0])
     # FIXME: ObjectiveMechanismError: "PROGRAM ERROR: call to
     # State._parse_state_spec() for OutputState of ComparatorMechanism-1
     # should have returned dict or State, but returned <class 'str'> instead"
@@ -238,7 +238,7 @@ def states():
     # endregion
 
     # region OutputStates
-    my_mech = TransferMechanism(default_input_value=[0, 0], function=Logistic(),
+    my_mech = TransferMechanism(default_variable=[0, 0], function=Logistic(),
                                 output_states=[TRANSFER_OUTPUT.RESULT,
                                                TRANSFER_OUTPUT.MEAN,
                                                TRANSFER_OUTPUT.VARIANCE])

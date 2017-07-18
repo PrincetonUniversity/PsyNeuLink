@@ -12,15 +12,15 @@ import random
 random.seed(0)
 np.random.seed(0)
 
-input_layer = TransferMechanism(default_input_value=[0,0,0],
+input_layer = TransferMechanism(default_variable=[0,0,0],
                        name='Input Layer')
 
-action_selection = TransferMechanism(default_input_value=[0,0,0],
+action_selection = TransferMechanism(default_variable=[0,0,0],
                             function=SoftMax(output=PROB,
                                              gain=1.0),
                             name='Action Selection')
 
-p = process(default_input_value=[0, 0, 0],
+p = process(default_variable=[0, 0, 0],
             pathway=[input_layer,action_selection],
             learning=LearningProjection(learning_function=Reinforcement(learning_rate=.05)),
             target=0)

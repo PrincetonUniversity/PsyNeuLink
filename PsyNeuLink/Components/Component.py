@@ -647,7 +647,7 @@ class Component(object):
     prev_context = None
 
     def __init__(self,
-                 variable_default,
+                 default_variable,
                  param_defaults,
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  name=None,
@@ -656,7 +656,7 @@ class Component(object):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
 
         Initialization arguments:
-        - variable_default (anything): establishes type for the variable, used for validation
+        - default_variable (anything): establishes type for the variable, used for validation
         - size (int or list/array of ints): if specified, establishes variable if variable was not already specified
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
@@ -764,14 +764,14 @@ class Component(object):
             except TypeError:
                 pass
 
-        # If 'variable_default' was not specified, _handle_size() tries to infer 'variable_default' based on 'size'
-        variable_default = self._handle_size(size, variable_default)
+        # If 'default_variable' was not specified, _handle_size() tries to infer 'default_variable' based on 'size'
+        default_variable = self._handle_size(size, default_variable)
 
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
         # By calling with assign_missing, this also populates any missing params with ones from paramClassDefaults
-        self._instantiate_defaults(variable=variable_default,
+        self._instantiate_defaults(variable=default_variable,
                request_set=param_defaults,            # requested set
                assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
                target_set=self.paramInstanceDefaults, # destination set to which params are being assigned
@@ -853,8 +853,8 @@ class Component(object):
             try:
                 if variable is not None:
                     variable = np.atleast_2d(variable)
-                    # 6/30/17 (CW): Previously, using variable or default_input_value to create
-                    # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
+                    # 6/30/17 (CW): Previously, using variable or default_variable to create
+                    # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
                     # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
                     if isinstance(variable[0], list) or isinstance(variable[0], np.ndarray):
                         allLists = True
@@ -896,7 +896,7 @@ class Component(object):
                         variable.append(np.zeros(s))
                     variable = np.array(variable)
                 except:
-                    raise ComponentError("variable (possibly default_input_value) was not specified, but PsyNeuLink "
+                    raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or an array or list of integers. Either size or "
                                          "variable must be specified.".format(size))
@@ -2340,7 +2340,7 @@ class Component(object):
                                 function_param_specs[param_name] =  param_spec[VALUE]
 
                 # Instantiate function from class specification
-                function_instance = function(variable_default=self.variable,
+                function_instance = function(default_variable=self.variable,
                                              params=function_param_specs,
                                              # IMPLEMENTATION NOTE:
                                              #    Don't bother with this, since it has to be assigned explicitly below

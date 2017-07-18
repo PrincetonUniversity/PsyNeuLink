@@ -505,13 +505,13 @@ class Projection_Base(Projection):
         # MODIFIED 4/21/17 END
 
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
+# FIX: SHOULDN'T default_variable HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
-        super(Projection_Base, self).__init__(variable_default=variable,
+        super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
                                               name=self.name,
                                               prefs=prefs,

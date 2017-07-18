@@ -77,32 +77,32 @@ Reward = TransferMechanism(name='Reward')
 
 # Processes:
 TargetControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
 Flanker1ControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker1_Stim, Flanker1_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 2 Control Process')
 
 Flanker2ControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker2_Stim, Flanker2_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 1 Control Process')
 
 # TargetAutomaticProcess = process(
-#     default_input_value=[0],
+#     default_variable=[0],
 #     pathway=[Target_Stim, Automatic_Component, Decision],
 #     prefs = process_prefs,
 #     name = 'Target Automatic Process')
 
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')

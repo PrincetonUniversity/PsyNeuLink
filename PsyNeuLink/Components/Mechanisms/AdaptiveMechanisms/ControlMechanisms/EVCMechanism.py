@@ -398,7 +398,7 @@ class EVCMechanism(ControlMechanism_Base):
         system : System
             system for which the EVCMechanism is the controller;  this is a required parameter.
 
-        default_input_value : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
+        default_variable : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
 
     COMMENT
 
@@ -707,7 +707,7 @@ class EVCMechanism(ControlMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  system=None,
-                 # default_input_value=None,
+                 # default_variable=None,
                  # size=None,
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
@@ -745,7 +745,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
+        super(EVCMechanism, self).__init__(# default_variable=default_variable,
                                            # size=size,
                                            monitor_for_control=monitor_for_control,
                                            control_signals=control_signals,
@@ -818,8 +818,8 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                                                             name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                                                            default_input_value = origin_mech.input_state.variable,
-                                                            # default_input_value=variables,
+                                                            default_variable = origin_mech.input_state.variable,
+                                                            # default_variable=variables,
                                                             # INPUT_STATES=state_names,
                                                             params = prediction_mechanism_params,
                                                             context=context)
@@ -1382,7 +1382,7 @@ class EVCMechanism(ControlMechanism_Base):
         Arguments
         ----------
 
-        inputs : List[input] or ndarray(input) : default default_input_value
+        inputs : List[input] or ndarray(input) : default default_variable
             the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
             should be the `value <Mechanism.Mechanism_Base.value> for each
             `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `predictionMechanisms`
