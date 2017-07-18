@@ -371,7 +371,7 @@ class ProcessError(Exception):
 # Process factory method:
 @tc.typecheck
 def process(process_spec=None,
-            default_input_value=None,
+            default_variable=None,
             size=None,
             pathway=None,
             initial_values:dict={},
@@ -388,7 +388,7 @@ def process(process_spec=None,
     """
     process(                                                \
     process_spec=None,                                      \
-    default_input_value=None,                               \
+    default_variable=None,                               \
     pathway=None,                                           \
     initial_values=None,                                    \
     clamp_input=None,                                       \
@@ -420,7 +420,7 @@ def process(process_spec=None,
         will be named by using the Process' `componentType <Process_Base.componentType>` attribute as the base and
         adding an indexed suffix: componentType-n.
 
-    default_input_value : List[values] or ndarray :  default default input value of ORIGIN Mechanism
+    default_variable : List[values] or ndarray :  default default input value of ORIGIN Mechanism
         the input to the Process used if none is provided in a call to the `execute <Process_Base.execute>` or `run
         <Process_Base.run>` method. This must be the same length as the `ORIGIN` Mechanism's input.
 
@@ -435,7 +435,7 @@ def process(process_spec=None,
         a dictionary of values used to initialize the specified Mechanisms. The key for each entry must be a Mechanism
         object, and the value must be a number, list or np.array that must be compatible with the format of
         the Mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be initialized
-        with their `default_input_value <Mechanism.Mechanism_Base.default_input_value>`.
+        with their `default_variable <Mechanism.Mechanism_Base.default_variable>`.
 
     clamp_input : Optional[keyword] : default None
         specifies whether the input to the Process continues to be applied to the `ORIGIN` Mechanism after
@@ -507,7 +507,7 @@ def process(process_spec=None,
 
     # Called without a specification, so return Process with default Mechanism
     elif process_spec is None:
-        return Process_Base(default_input_value=default_input_value,
+        return Process_Base(default_variable=default_variable,
                             size=size,
                             pathway=pathway,
                             initial_values=initial_values,
@@ -537,7 +537,7 @@ from PsyNeuLink.Components.States.OutputState import OutputState
 class Process_Base(Process):
     """
     Process_Base(process_spec=None,                         \
-    default_input_value=None,                               \
+    default_variable=None,                               \
     pathway=None,                                           \
     initial_values={},                                      \
     clamp_input:=None,                                      \
@@ -666,7 +666,7 @@ class Process_Base(Process):
         a dictionary of values used to initialize the specified Mechanisms. The key for each entry is a Mechanism
         object, and the value is a number, list or np.array that must be compatible with the format of
         the Mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be
-        initialized with their `default_input_value <Mechanism.Mechanism_Base.default_input_value>`.
+        initialized with their `default_variable <Mechanism.Mechanism_Base.default_variable>`.
 
     value: 2d. np.array
         the value of the `primary OutputState <OutputState_Primary>` of the `TERMINAL` Mechanism of the Process.
@@ -836,7 +836,7 @@ class Process_Base(Process):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  pathway=default_pathway,
                  initial_values=None,
@@ -871,7 +871,7 @@ class Process_Base(Process):
             # context = self.__class__.__name__
             context = INITIALIZING + self.name + kwSeparator + PROCESS_INIT
 
-        super(Process_Base, self).__init__(variable_default=default_input_value,
+        super(Process_Base, self).__init__(default_variable=default_variable,
                                            size=size,
                                            param_defaults=params,
                                            name=self.name,
@@ -2237,7 +2237,7 @@ class Process_Base(Process):
         Arguments
         ---------
 
-        inputs : List[input] or ndarray(input) : default default_input_value for a single execution
+        inputs : List[input] or ndarray(input) : default default_variable for a single execution
             input for each in a sequence of executions (see :doc:`Run` for a detailed description of formatting
             requirements and options).
 

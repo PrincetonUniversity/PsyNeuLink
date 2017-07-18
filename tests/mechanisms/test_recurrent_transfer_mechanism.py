@@ -55,7 +55,7 @@ def test_recurrent_mech_inputs_list_of_ints():
 
     R = RecurrentTransferMechanism(
         name='R',
-        default_input_value=[0, 0, 0, 0]
+        default_variable=[0, 0, 0, 0]
     )
     val = R.execute([10, 10, 10, 10]).tolist()
     assert val == [[10.0, 10.0, 10.0, 10.0]]
@@ -116,7 +116,7 @@ def test_recurrent_mech_inputs_list_of_strings():
     with pytest.raises(UtilitiesError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             time_scale=TimeScale.TIME_STEP
         )
         R.execute(["one", "two", "three", "four"]).tolist()
@@ -131,7 +131,7 @@ def test_recurrent_mech_var_list_of_strings():
     with pytest.raises(UtilitiesError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=['a', 'b', 'c', 'd'],
+            default_variable=['a', 'b', 'c', 'd'],
             time_scale=TimeScale.TIME_STEP
         )
     assert "has non-numeric entries" in str(error_text.value)
@@ -315,7 +315,7 @@ def test_recurrent_mech_normal_fun():
     with pytest.raises(TransferError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=NormalDist(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -332,7 +332,7 @@ def test_recurrent_mech_reinforcement_fun():
     with pytest.raises(TransferError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Reinforcement(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -349,7 +349,7 @@ def test_recurrent_mech_integrator_fun():
     with pytest.raises(TransferError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=ConstantIntegrator(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -366,7 +366,7 @@ def test_recurrent_mech_reduce_fun():
     with pytest.raises(TransferError) as error_text:
         R = RecurrentTransferMechanism(
             name='R',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Reduce(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -387,7 +387,7 @@ def test_recurrent_mech_reduce_fun():
 def test_recurrent_mech_time_constant_0_8():
     R = RecurrentTransferMechanism(
         name='R',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         time_constant=0.8,
         time_scale=TimeScale.TIME_STEP
@@ -402,7 +402,7 @@ def test_recurrent_mech_time_constant_0_8():
 # def test_recurrent_mech_time_constant_0_8_initial_0_5():
 #     R = RecurrentTransferMechanism(
 #         name='R',
-#         default_input_value=[0, 0, 0, 0],
+#         default_variable=[0, 0, 0, 0],
 #         function=Linear(),
 #         time_constant=0.8,
 #         initial_value=np.atleast_2d([0.5, 0.5, 0.5, 0.5]),

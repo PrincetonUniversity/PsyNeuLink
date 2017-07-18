@@ -12,12 +12,12 @@ from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 def test_reinforcement():
     input_layer = TransferMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='Input Layer',
     )
 
     action_selection = TransferMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         function=SoftMax(
             output=PROB,
             gain=1.0,
@@ -26,7 +26,7 @@ def test_reinforcement():
     )
 
     p = process(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         size=3,
         pathway=[input_layer, action_selection],
         learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),

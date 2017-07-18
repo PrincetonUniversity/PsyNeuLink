@@ -145,7 +145,7 @@ defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STA
 predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
 These can be used in the list of OutputStates specified for a TransferMechanism object, as in the following example::
 
-    my_mech = TransferMechanism(default_input_value=[0,0],
+    my_mech = TransferMechanism(default_variable=[0,0],
                                 function=Logistic(),
                                 output_states=[TRANSFER_OUTPUT.RESULT, 
                                                TRANSFER_OUTPUT.MEAN,

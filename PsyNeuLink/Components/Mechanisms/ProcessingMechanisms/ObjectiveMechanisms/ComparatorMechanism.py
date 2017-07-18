@@ -102,7 +102,7 @@ TARGET InputStates in the **input_states** argument of the ComparatorMechanism's
     my_action_selection_mech = TransferMechanism(size=5,
                                                  function=SoftMax(output=PROB))
 
-    my_reward_mech = TransferMechanism(default_input_value = [0])
+    my_reward_mech = TransferMechanism(default_variable = [0])
 
     my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
                                              target=my_reward_mech,
@@ -251,7 +251,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     ----------
 
     COMMENT:
-    default_input_value : Optional[List[array] or 2d np.array]
+    default_variable : Optional[List[array] or 2d np.array]
     COMMENT
 
     sample : OutputState

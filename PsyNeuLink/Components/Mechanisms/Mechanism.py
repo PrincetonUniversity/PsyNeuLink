@@ -907,8 +907,8 @@ class Mechanism_Base(Mechanism):
 
         NOTES:
         * Since Mechanism is a subclass of Component, it calls super.__init__
-            to validate size and variable_default and param_defaults, and assign params to paramInstanceDefaults;
-            it uses INPUT_STATE as the variable_default
+            to validate size and default_variable and param_defaults, and assign params to paramInstanceDefaults;
+            it uses INPUT_STATE as the default_variable
         * registers Mechanism with MechanismRegistry
 
         """
@@ -991,7 +991,7 @@ class Mechanism_Base(Mechanism):
         else:
             context = context + SEPARATOR_BAR + INITIALIZING + self.name
 
-        super(Mechanism_Base, self).__init__(variable_default=variable,
+        super(Mechanism_Base, self).__init__(default_variable=variable,
                                              size=size,
                                              param_defaults=params,
                                              prefs=prefs,
@@ -1688,7 +1688,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        inputs : List[input] or ndarray(input) : default default_input_value
+        inputs : List[input] or ndarray(input) : default default_variable
             the inputs used for each in a sequence of executions of the Mechanism (see `Run_Inputs` for a detailed
             description of formatting requirements and options).
 

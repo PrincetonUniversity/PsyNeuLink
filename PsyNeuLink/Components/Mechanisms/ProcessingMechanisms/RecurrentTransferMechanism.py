@@ -143,7 +143,7 @@ class RECURRENT_OUTPUT():
 class RecurrentTransferMechanism(TransferMechanism):
     """
     RecurrentTransferMechanism(        \
-    default_input_value=None,          \
+    default_variable=None,          \
     size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
@@ -173,7 +173,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
@@ -367,7 +367,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  input_states: tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
@@ -411,7 +411,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(default_input_value=default_input_value,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=function,

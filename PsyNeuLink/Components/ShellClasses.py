@@ -54,7 +54,7 @@ class ShellClass(Component):
 class System(ShellClass):
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  size=None,
                  param_defaults=None,
                  name=None,
@@ -62,7 +62,7 @@ class System(ShellClass):
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'system()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
                          name=name,
@@ -78,7 +78,7 @@ class System(ShellClass):
 
 class Process(ShellClass):
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  size=None,
                  param_defaults=None,
                  name=None,
@@ -86,7 +86,7 @@ class Process(ShellClass):
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'process()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
                          name=name,
@@ -99,7 +99,7 @@ class Process(ShellClass):
 class Mechanism(ShellClass):
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  size=None,
                  param_defaults=None,
                  name=None,
@@ -107,7 +107,7 @@ class Mechanism(ShellClass):
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'mechanism()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=param_defaults,
                          name=name,

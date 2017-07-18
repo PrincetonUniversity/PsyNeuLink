@@ -172,7 +172,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     size : int, list or np.ndarray of ints
         specifies default_gating_policy as array(s) of zeros if **default_gating_policy** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to transform input to `gating_policy` to value;  the default is an identity function

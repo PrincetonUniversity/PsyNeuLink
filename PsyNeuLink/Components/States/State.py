@@ -612,7 +612,7 @@ class State_Base(State):
             self._mod_proj_values[getattr(ModulationParam,attrib)] = []
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
-        super(State_Base, self).__init__(variable_default=variable,
+        super(State_Base, self).__init__(default_variable=variable,
                                          size=size,
                                          param_defaults=params,
                                          name=name,
@@ -665,7 +665,7 @@ class State_Base(State):
                 try:
                     variable = np.zeros(size)
                 except:
-                    raise ComponentError("variable (perhaps default_input_value) was not specified, but PsyNeuLink "
+                    raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
                                          " an integer or able to be converted to an integer. Either size or "
                                          "variable must be specified.".format(size))

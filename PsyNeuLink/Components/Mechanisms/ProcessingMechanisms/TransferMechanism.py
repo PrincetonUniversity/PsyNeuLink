@@ -168,7 +168,7 @@ class TransferError(Exception):
 class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(           \
-    default_input_value=None,    \
+    default_variable=None,    \
     size=None,                   \
     function=Linear,             \
     initial_value=None,          \
@@ -210,7 +210,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
@@ -218,8 +218,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         of the mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -372,7 +372,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function=Linear,
@@ -389,10 +389,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences and call super.__init__
         """
 
-        if default_input_value is None and size is None:
-            default_input_value = [[0]]
+        if default_variable is None and size is None:
+            default_variable = [[0]]
 
-        self.variableClassDefault = default_input_value
+        self.variableClassDefault = default_variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -411,7 +411,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super(TransferMechanism, self).__init__(variable=default_input_value,
+        super(TransferMechanism, self).__init__(variable=default_variable,
                                                 size=size,
                                                 params=params,
                                                 name=name,
@@ -480,7 +480,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         format(range, self.name))
 
         # self.integrator_function = Integrator(
-        #     # variable_default=self.default_input_value,
+        #     # default_variable=self.default_variable,
         #                                       initializer = self.variable,
         #                                       noise = self.noise,
         #                                       rate = self.time_constant,

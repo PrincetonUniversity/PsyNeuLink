@@ -259,7 +259,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
@@ -278,7 +278,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                   # modulation=modulation,
                                                   params=params)
 
-        super(ControlMechanism_Base, self).__init__(variable=default_input_value,
+        super(ControlMechanism_Base, self).__init__(variable=default_variable,
                                                     size=size,
                                                     modulation=modulation,
                                                     params=params,
