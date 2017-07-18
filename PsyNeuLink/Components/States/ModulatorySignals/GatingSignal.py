@@ -12,11 +12,11 @@
 Overview
 --------
 
-A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and a
-`GatingProjection`, to modify the `value <State.value> of the InputState(s) and/or OutputState(s) of one or more
-`Mechanisms <Mechanism>`. A GatingSignal receives a value specified by the the `function <GatingMechanism.function>`
-of the GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
-each of which projects to an InputState or OutputState and is used to modulate the `value <State.value>` of that state.
+A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and one or more
+`GatingProjections <GatingProjection>`, to modify the `value <State.value>` \(s) of the InputState(s) and/or
+OutputState(s) to which they project. A GatingSignal receives a value from the GatingMechanism to which it belongs,
+and assigns that to its `GatingProjection(s) <GatingProjection>`, each of which projects to an InputState or
+OutputState and is used to modulate the `value <State.value>` of that State.
 
 
 .. _GatingSignal_Creation:
@@ -70,7 +70,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     The dictionary can also contain entries for any other GatingSignal attributes to be specified
     (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
     `value <State.value>` of the State(s) that it gates); see `below <GatingSignal_Structure>`
-    for a description of GatingSignal attributes).
+    for a description of GatingSignal attributes.
 
 .. _GatingSignal_Structure:
 
@@ -96,16 +96,16 @@ creating a State.
 Modulation
 ~~~~~~~~~~
 
-Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its GatingProjections
-are used by the States to which they project to modify their `value <State.value>` \s (see `ModulatorySignal_Modulation`
-for an explanation of how this attribute is specified and used to modulate the `value <State.value>` of a State).
-The `modulation <GatingSignal.modulation>` can be specified in the **modulation** argument of the constructor for a
-GatingSignal, or in a specification dictionary as described `above <GatingSignal_Specification>`.  The value must be
-a value of `ModulationParam`;  if it is not specified, its default is the value of the
-`modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the GatingSignal belongs (which
-is the same for all of the GatingSignals belonging to that GatingMechanism).  The value of the
-`modulation <GatingSignal.modulation>` attribute of a GatingSignal is used by all of the
-`GatingProjections <GatingProjection>` that project from that GatingSignal.
+Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingSignal's
+`value <GatingSignal.value>` is used by the States to which it projects to modify their `value <State.value>` \s
+(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <GatingSignal.modulation>` attribute is
+specified and used to modulate the `value <State.value>` of a State). The `modulation <GatingSignal.modulation>`
+attribute can be specified in the **modulation** argument of the constructor for a GatingSignal, or in a specification
+dictionary as described `above <GatingSignal_Specification>`.  The value must be a value of `ModulationParam`;  if it
+is not specified, its default is the value of the `modulation <GatingMechanism.modulation>` attribute of the
+GatingMechanism to which the GatingSignal belongs (which is the same for all of the GatingSignals belonging to that
+GatingMechanism).  The value of the `modulation <GatingSignal.modulation>` attribute of a GatingSignal is used by all
+of the `GatingProjections <GatingProjection>` that project from that GatingSignal.
 
 
 .. _GatingSignal_Execution:

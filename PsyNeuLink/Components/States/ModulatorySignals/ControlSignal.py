@@ -12,11 +12,11 @@
 Overview
 --------
 
-A ControlSignal is a type of `ModulatorySignal`, specialized for use with a `ControlMechanism` and a
-`ControlProjection`, to modify the parameter of a `Mechanism` or its `function <Mechanism_Base.function>`. A
+A ControlSignal is a type of `ModulatorySignal` that is specialized for use with a `ControlMechanism` and one or more
+`ControlProjections <ControlProjection>`, to modify the parameter(s) of one or more `Components <Component>`. A
 ControlSignal receives an `allocation <ControlSignal.allocation>` value from the ControlMechanism to which it
 belongs, and uses that to compute an `intensity` that is assigned as the
-`value <ControlProjection.ControlProjection.value>` of its ControlProjection. The ControlProjection conveys its value
+`value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each ControlProjection conveys its value
 to the `ParameterState` for the parameter it controls, which uses that value to `modulate <ModulatorySignal_Modulation>`
 the `value <ParameterState.value>` of the parameter.  A ControlSignal also calculates a `cost`, based on its `intensity`
 and/or its time course, that may be used by the ControlMechanism to adapt the ControlSignal's
@@ -58,8 +58,8 @@ When a ControlSignal is specified in context (e.g., the **control_signals** argu
         (note: the Mechanism itself should be specified even if the parameter belongs to its function).
 
     The dictionary can also contain entries for any other ControlSignal attributes to be specified
-    (e.g., a MODULATION and/or an ALLOCATION_SAMPLES entry; see `below <ControlSignal_Structure>` for a
-    description of ControlSignal attributes).
+    (e.g., a *MODULATION* and/or *ALLOCATION_SAMPLES* entry); see `below <ControlSignal_Structure>` for a
+    description of ControlSignal attributes.
 
 .. _ControlSignal_Structure:
 
@@ -86,16 +86,16 @@ creating a State.
 Modulation
 ~~~~~~~~~~
 
-A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlProjections
-are used by the States to which they project to modify their `value <State.value>` \s (see `ModulatorySignal_Modulation`
-for an explanation of how this attribute is specified and used to modulate the `value <State.value>` of a State).
-The `modulation <ControlSignal.modulation>` parameter can be specified in the **modulation** argument of the
-constructor for a ControlSignal, or in a specification dictionary as described `above <ControlSignal_Specification>`.
-The value must be a value of `ModulationParam`;  if it is not specified, its default is the value of the
-`modulation <ControlMechanism_Base.modulation>` attribute of the ControlMechanism to which the ControlSignal belongs (
-which is the same for all of the ControlSignals belonging to that ControlMechanism).  The value of the
-`modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by all of the
-`ControlProjections <ControlProjection>` that project from that ControlSignal.
+A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
+`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State.value>` \s
+(see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
+specified and used to modulate the `value <State.value>` of a State). The `modulation <ControlSignal.modulation>`
+attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
+dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
+is not specified, its default is the value of the `modulation <ControlMechanism_Base.modulation>` attribute of the
+ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
+ControlMechanism).  The value of the `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by
+all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
 
 .. _ControlSignal_Allocation_and_Intensity
 

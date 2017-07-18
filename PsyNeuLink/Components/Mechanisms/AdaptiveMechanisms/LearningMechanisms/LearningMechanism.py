@@ -802,7 +802,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                             mapping_proj,
                                                             MAPPING_PROJECTION))
 
-                # ControlSignal specification dictionary, must have the following entries:
+                # LearningSignal specification dictionary, must have the following entries:
                 #    NAME:str - must be the name of an attribute of PROJECTION
                 #    PROJECTION:Projection - must be a MappingProjection
                 #                            and have an attribute and corresponding ParameterState named NAME
@@ -887,8 +887,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Instantiate LearningSignals if they are specified, and assign to self._output_states
         # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
         #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals will be inserted into _output_states at the beginning of the list
-        #       leaving ERROR_SIGNAL as the last entry
+        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
         if self.learning_signals:
             # Delete default LEARNING_SIGNAL item in output_states
             del self._output_states[1]
@@ -1108,7 +1107,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                 constraint_value_name='Default control allocation',
                                                 context=context)
 
-        # VALIDATE OR INSTANTIATE LearningProjection(s) TO LearningSignal  -------------------------------------------
+        # VALIDATE OR INSTANTIATE LearningProjection(s) FROM LearningSignal  -------------------------------------------
 
         # Validate learning_projection (if specified) and get receiver's name
         if learning_projection:
@@ -1129,15 +1128,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             else:
                 learning_projection.sender = learning_signal
 
-        # # Instantiate LearningProjection
-        # else:
-        #     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        #     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        #     learning_projection = LearningProjection(sender=learning_signal,
-        #                                              receiver=parameter_state,
-        #                                              name=LEARNING_PROJECTION + learning_signal_name)
-
-            # Add LearningProjection to list of OutputState's outgoing Projections
+            # Add LearningProjection to list of LearningSignal's outgoing Projections
             # (note: if it was deferred, it just added itself, skip)
             if not learning_projection in learning_signal.efferents:
                 learning_signal.efferents.append(learning_projection)
@@ -1176,21 +1167,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # # TEST PRINT:
-        # print("\n@@@ EXECUTED: {}".format(self.name))
-
         self.value = [self.learning_signal, self.error_signal]
         return self.value
 
-    # # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
-    # @property
-    # def learned_projection(self):
-    #     learning_projections = self.output_states[LEARNING_SIGNAL].efferents
-    #     if learning_projections:
-    #         return learning_projections[0].receiver.owner
-    #     else:
-    #         return None
-    #
     @property
     def learning_rate(self):
         return self.function_object.learning_rate
@@ -1201,8 +1180,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learned_projections(self):
-        # learned_projections = []
-        # return [learned_projections.append(learning_signal.efferents) for learning_signal in self.learning_signals]
         return [lp.receiver.owner for lp in self.learning_projections]
 
 
