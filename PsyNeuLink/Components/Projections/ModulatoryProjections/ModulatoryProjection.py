@@ -20,18 +20,18 @@ modulate the function of the `state <State>` to which it projects.  There are th
 that modulate different types of components and their states:
 
 * `LearningProjection`
-    This takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a LearningMechanism,
+    takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a LearningMechanism,
     and conveys it to the *MATRIX* `ParameterState` of a `MappingProjection`, for use by its
     `function <ParameterState.function>` in modulating the value of the MappingProjection's
     `matrix <MappingProjection.matrix>` parameter.
 ..
 * `GatingProjection`
-    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a GatingMechanism,
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a GatingMechanism,
     and conveys it to the `inputState <InputState>` or `outputState <OutputState>` of a `ProcessingMechanism`
     for use by the state's :keyword:`function` in modulating its :keyword:`value`.
 ..
 * `ControlProjection`
-    This takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a ControlMechanism,
+    takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a ControlMechanism,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism` or its
     `function <Mechanism.function>`, for use in modulating the value of the parameter.
 

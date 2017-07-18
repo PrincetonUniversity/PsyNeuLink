@@ -248,11 +248,11 @@ attribute.
 
 Like all PsyNeuLink components, an OutputState has the three following core attributes:
 
-* `variable <OutputState.variable>`:  this is the item of its owner Mechanism's `value <Mechanism.Mechanism_Base.value>`
+* `variable <OutputState.variable>`:  the item of its owner Mechanism's `value <Mechanism.Mechanism_Base.value>`
   to which it is assigned (designated by its `index <OutputState.index>` attribute);  it must match the value of that
   item (both in the number and types of its elements).
 ..
-* `function <OutputState.function>`: this takes the OutputState's `variable <OutputState.variable>` as its input, and
+* `function <OutputState.function>`: takes the OutputState's `variable <OutputState.variable>` as its input, and
   generates the OutpuState's `value <OutputState.value>` as its result.  The default function is `Linear` that simply
   assigns the OutputState's `variable <OutputState.variable>` as its `value <OutputState.value>`.  However, the
   parameters of the `function <OutputState.function>` -- and thus the `value <OutputState.value>` of the OutputState --
@@ -260,7 +260,7 @@ Like all PsyNeuLink components, an OutputState has the three following core attr
   `mod_afferents <OutputState.mod_afferents>` attribute.  A custom function can also be specified, so long as it can
   take as its input a value that is compatiable with the OutputState's `variable <OutputState.variable>`.
 ..
-* `value <OutputState.value>`:  this is assigned the result of the function specified by the
+* `value <OutputState.value>`:  assigned the result of the function specified by the
   `calculate <OutputState.calculate>` attribute, possibly modified by the result of the OutputState`s
   `function <OutputState.function>` and any `GatingProjections <GatingProjection>` received by the OutputState.
   It is used as the input to any projections that the OutputStatue sends.

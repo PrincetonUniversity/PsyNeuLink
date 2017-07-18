@@ -13,24 +13,37 @@ Overview
 --------
 
 A ModulatorySignal is a subclass of `OutputState` that belongs to an `AdaptiveMechanism`, and is used to
-`modulate <ModulatorySignal_Modulation>` the `value <State_Base.value>` of one or more `States <State>` by of way one
-or more `ModulatoryProjections <ModulatoryProjection>`.  ModulatorySignals modulate the value of a State by modifying
+`modulate <ModulatorySignal_Modulation>` the `value <State_Base.value>` of one or more `States <State>` by way of one
+or more `ModulatoryProjections <ModulatoryProjection>` (see `ModulatorySignal_Naming` for conventions on how
+modulatory components are named). A ModulatorySignal modulates the value of a State by modifying
 a parameter of the State's `function <State_Base.function>`.  There are three types of ModulatorySignals, each of
 which is associated with a particular type of `AdaptiveMechanism` and `ModulatoryProjection`, and modifies the value of
 a different type of State, as described below (and shown in the `figure <ModulatorySignal_Anatomy_Figure>`):
 
 * `LearningSignal`
-    This takes the `value <LearningSignal.value>` assigned to it by the `LearningMechanism` to which it belongs,
+    takes the `value <LearningSignal.value>` assigned to it by the `LearningMechanism` to which it belongs,
     and uses it to modulate the parameter of a `PathwayProjection` -- usually the `matrix <MappingProjection.matrix>`
     parameter of a `MappingProjection`.
 ..
 * `ControlSignal`
-    This takes the `value <ControlSignal.value>` assigned to it by the `ControlMechanism` to which it belongs,
+    takes the `value <ControlSignal.value>` assigned to it by the `ControlMechanism` to which it belongs,
     and uses it to modulate the parameter of a `Mechanism` or its `function <Mechanism.function>`.
 ..
 * `GatingSignal`
-    This takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,
+    takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,
     and uses it to modulate the value of the `InputState` or `OutputState` of a `Mechanism`.
+
+.. _ModulatorySignal_Naming:
+
+Modulatory Components and their attributes are named according to the category of modulation:
+
+    - AdaptiveMechanism name: <*Category*>Mechanism (e.g., ControlMechanism)
+    - ModulatorySignal name: <*Category*>Signal (e.g., ControlSignal)
+    - ModulatoryProjection name: <*Category*>Projection (e.g., ControlProjection)
+    - List of an AdaptiveMechanism's ModulatorySignals: <*CategoryMechanism*>.category_signals
+      (e.g., ControlMechanism_Base.control_signals)
+    - Value of a ModulatorySignal: <*CategorySignal*>.category_signal (e.g., ControlSignal.control_signal)
+
 
 .. _ModulatorySignal_Creation:
 

@@ -13,7 +13,7 @@ Overview
 --------
 
 A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more
-`Components <Component>`. Its `function <ControlMechanism_Base.function>` takes a value (usually the
+`Components <Component>`. Its `function <ControlMechanism_Base.function>` takes an evaluative signal (usually the
 output of an `ObjectiveMechanism`) and uses that to calculate an
 `allocation_policy <ControlMechanism_Base.allocation_policy>`:  a list of `allocation <ControlSignal.allocation>`
 values for each of its `ControlSignals <ControlSignal>`.  This is used by each ControlSignal to calculate its

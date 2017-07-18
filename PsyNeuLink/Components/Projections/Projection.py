@@ -36,19 +36,19 @@ needed to transmit that information to the `InputState` of another Mechanism (it
     `pathway` of a `Process`.
 ..
 * `ControlProjection`
-    This takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
+    takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
     of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
     that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
     in the context of a `System`.
 ..
 * `LearningProjection`
-    This takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
+    takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
     `ParameterState` of a `MappingProjection` which uses this to modify its
     `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
     learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
 ..
 * `GatingProjection`
-    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
     a GatingMechanism and conveys it to the `InputState` or `OutputState` of a
     `ProcessingMechanism` for use by the state's `function` in modulating its
     `value`.
