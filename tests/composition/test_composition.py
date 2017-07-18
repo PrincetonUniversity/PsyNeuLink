@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Unit tests for each function of the Composition class #######################
 # Unit tests for Composition.Composition()
+@pytest.mark.skip
 class TestConstructor:
 
     def test_no_args(self):
@@ -49,6 +50,7 @@ class TestConstructor:
 
 
 # Unit tests for Composition.add_mechanism
+@pytest.mark.skip
 class TestAddMechanism:
 
     def test_add_once(self):
@@ -87,6 +89,7 @@ comp = Composition()
 
 
 # Unit tests for Composition.add_projection
+@pytest.mark.skip
 class TestAddProjection:
 
     def test_add_once(self):
@@ -140,6 +143,7 @@ comp.add_mechanism(B)
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
 
+@pytest.mark.skip
 class TestAnalyzeGraph:
 
     def test_empty_call(self):
@@ -218,6 +222,7 @@ class TestAnalyzeGraph:
         assert C in comp.get_mechanisms_by_role(MechanismRole.RECURRENT_INIT)
 
 
+@pytest.mark.skip
 class TestValidateFeedDict:
 
     def test_empty_feed_dicts(self):
@@ -451,6 +456,7 @@ class TestValidateFeedDict:
         comp._validate_feed_dict(feed_dict_terminal, comp.get_mechanisms_by_role(MechanismRole.TERMINAL), "terminal")
 
 
+@pytest.mark.skip
 class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
@@ -484,8 +490,10 @@ class TestGetMechanismsByRole:
             comp.get_mechanisms_by_role(None)
 
 
+@pytest.mark.skip
 class TestGraph:
 
+    @pytest.mark.skip
     class TestProcessingGraph:
 
         def test_all_mechanisms(self):
@@ -692,6 +700,7 @@ class TestGraph:
             ])
 
 
+@pytest.mark.skip
 class TestRun:
 
     def test_run_2_mechanisms_default_input_1(self):
@@ -1057,6 +1066,7 @@ class TestRun:
         assert 250 == output[0][0]
 
 
+@pytest.mark.skip
 class TestCallBeforeAfterTimescale:
 
     def test_call_before_record_timescale(self):
