@@ -22,7 +22,7 @@ COMMENT:
         PROCESS & SYSTEM:
           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
           • Use only one ObjectiveMechanism for all levels with the following args:
-                default_input_value[[ACTIVITY][ERROR]]
+                default_variable[[ACTIVITY][ERROR]]
                 monitored_values: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
                 names: [[ACTIVITY][ERROR]]
                 function:  ErrorDerivative(variable, derivative)
@@ -394,7 +394,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     ACTIVATION FUNCTION AND/OR LEARNING RATE
-        learning_function = Reinforcement(variable_default=[activation_input,activation_output,error_signal],
+        learning_function = Reinforcement(default_variable=[activation_input, activation_output, error_signal],
                                           activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
@@ -436,7 +436,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
         # FIX: GET AND PASS ANY PARAMS ASSIGNED IN LearningProjection.learning_function ARG:
         # FIX:     DERIVATIVE, LEARNING_RATE, ERROR_MATRIX
-        learning_function = BackPropagation(variable_default=[activation_input,
+        learning_function = BackPropagation(default_variable=[activation_input,
                                                               activation_output,
                                                               # error_output,
                                                               error_signal],
@@ -460,7 +460,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Instantiate ObjectiveMechanism
             # Notes:
             # * MappingProjections for ObjectiveMechanism's input_states will be assigned in its own call to Composition
-            # * Need to specify both default_input_value and monitored_values since they may not be the same
+            # * Need to specify both default_variable and monitored_values since they may not be the same
             #    sizes (e.g., for RL the monitored_value for the sample may be a vector, but its input_value must be scalar)
             # SAMPLE inputState for ObjectiveMechanism should come from activation_mech_output
             # TARGET inputState for ObjectiveMechanism should be specified by string (TARGET),

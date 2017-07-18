@@ -11,19 +11,19 @@ from PsyNeuLink.Components.System import system
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
-                       default_input_value = np.zeros((4,)))
+                       default_variable = np.zeros((4,)))
 
 Task_Layer = TransferMechanism(name='Task Layer',
                        function=Logistic(),
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 Hidden_Layer = TransferMechanism(name='Hidden Layer',
                           function=Logistic(),
-                          default_input_value = np.zeros((5,)))
+                          default_variable = np.zeros((5,)))
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
-                        default_input_value = [0,0])
+                        default_variable = [0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -51,7 +51,7 @@ Task_Output_Weights = MappingProjection(name='Task-Output Weights',
 
 # set up processes
 
-stimulus_process = process(default_input_value=[0, 0, 0, 0],
+stimulus_process = process(default_variable=[0, 0, 0, 0],
             pathway=[Input_Layer,
                      Input_Hidden_Weights,
                      Hidden_Layer,
@@ -62,13 +62,13 @@ stimulus_process = process(default_input_value=[0, 0, 0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-taskHidden_process = process(default_input_value=[0, 0],
+taskHidden_process = process(default_variable=[0, 0],
                              pathway=[Task_Layer,
                                       Task_Hidden_Weights,
                                       Hidden_Layer],
                              learning=LearningProjection)
 
-taskOutput_process = process(default_input_value=[0, 0],
+taskOutput_process = process(default_variable=[0, 0],
                              pathway=[Task_Layer,
                                       Task_Output_Weights,
                                       Output_Layer],

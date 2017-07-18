@@ -14,15 +14,15 @@ from PsyNeuLink.Components.System import system
 
 input_layer = TransferMechanism(name='Input Layer',
                        function=Linear,
-                       default_input_value = np.zeros((3,)))
+                       default_variable = np.zeros((3,)))
 
 hidden_layer = TransferMechanism(name='Hidden Layer', 
                                  function = Logistic,
-                                 default_input_value =[0, 0, 0])
+                                 default_variable =[0, 0, 0])
 
 output_layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value =[0])
+                        default_variable =[0])
 
 input_hidden_weights = MappingProjection(name='Input-Hidden Weights',
                                          matrix = np.random.uniform(-3, 3,(3,3)))
@@ -32,7 +32,7 @@ hidden_output_weights = MappingProjection(name='Hidden-Output Weights',
 
 LearningRate = 0.3
 
-xor_process = process(default_input_value=[0, 0, 1],
+xor_process = process(default_variable=[0, 0, 1],
                                    pathway=[input_layer,
                                             input_hidden_weights,
                                             hidden_layer,

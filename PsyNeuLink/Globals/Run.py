@@ -397,7 +397,7 @@ def run(object,
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_input_value for a single `TRIAL`
+    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL`
         the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
         requirements and options).
 

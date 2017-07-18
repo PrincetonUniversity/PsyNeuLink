@@ -12,26 +12,26 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 from PsyNeuLink.Components.System import *
 
 #helpful commands! .show()   .excute()
-color_word_combine = TransferMechanism(name='color_word_combine', function = Linear()) #default_input_value = [1], #JON HOW TO MAKE THIS A SUBTRACTION? 
+color_word_combine = TransferMechanism(name='color_word_combine', function = Linear()) #default_variable = [1], #JON HOW TO MAKE THIS A SUBTRACTION?
 decision_DDM = DDM(function=BogaczEtAl(drift_rate = (1.0), threshold = (1.0, ControlProjection(function = Linear)), starting_point = 0.0)) #if this DDM is using output of color_word_combine do I need to specify drift rate here also? do I need to make reference to the variable
                     
 #color process 
 #color input       ## ?Mapping Projection    ORIGIN
-color_input_linear_transfer_mechanism = TransferMechanism(default_input_value = [1], function = Linear(), name = "Color_Input") #1 means red 
+color_input_linear_transfer_mechanism = TransferMechanism(default_variable = [1], function = Linear(), name = "Color_Input") #1 means red
 #color transfer mechanism, EVC regulates bias   ##TransferMechanism
 color_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain = 1, bias = ControlProjection(function = Linear)), name = "Color_Transfer") #JON SHOULD I CHANGE GAIN OF COLOR RELATIVE TO WORD PROCESSES?  #range 0 to 1? 
 color_process = process(pathway=[color_input_linear_transfer_mechanism, color_logistic_transfer_mechanism, color_word_combine])
 
 #word process 
 #word input        ## ?Mapping Projection    ORIGIN 
-word_input_linear_transfer_mechanism = TransferMechanism(default_input_value = [1], function=Linear(), name = "Word_Input") #1 means red, -1 means green   #DID I NEED AN OUTPUT PROJECTION HERE?
+word_input_linear_transfer_mechanism = TransferMechanism(default_variable = [1], function=Linear(), name = "Word_Input") #1 means red, -1 means green   #DID I NEED AN OUTPUT PROJECTION HERE?
 word_logistic_transfer_mechanism = TransferMechanism(function = Logistic(gain = 1, bias = ControlProjection(function = Linear)), name = "Word_Transfer") #?bias = control_signal_bias   #range 0 to 1? 
 word_process = process(pathway=[word_input_linear_transfer_mechanism, word_logistic_transfer_mechanism, color_word_combine, decision_DDM]) #, color_word_combine
 #word_process = process(pathway=[word_input_linear_transfer_mechanism, word_logistic_transfer_mechanism, color_word_combine]) #, color_word_combine
 
 #added to try to get control? 
 Reward = TransferMechanism(name='Reward')
-RewardProcess = process(default_input_value=[1], pathway=[(Reward, 1)], name = 'RewardProcess')
+RewardProcess = process(default_variable=[1], pathway=[(Reward, 1)], name = 'RewardProcess')
 #mySystem = system(processes = [color_process, word_process])
 mySystem = system(processes = [color_process, word_process, RewardProcess], controller = EVCMechanism, enable_controller = True, monitor_for_control=[Reward, (DDM_DECISION_VARIABLE,1,1), (DDM_RESPONSE_TIME, -1, 1)], name='Stroop Model') #output, difference between color / word unit activation  #output_values attribute?
 mySystem.execute(input=[[1],[-1],[1]])

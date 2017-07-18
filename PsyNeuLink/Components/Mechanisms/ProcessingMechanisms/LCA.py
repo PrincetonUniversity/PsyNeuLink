@@ -165,7 +165,7 @@ class LCA_OUTPUT():
 class LCA(RecurrentTransferMechanism):
     """
     LCA(                                   \
-        default_input_value=None,          \
+        default_variable=None,          \
         size=None,                         \
         function=Logistic,                 \
         initial_value=None,                \
@@ -193,7 +193,7 @@ class LCA(RecurrentTransferMechanism):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
@@ -391,7 +391,7 @@ class LCA(RecurrentTransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
@@ -415,27 +415,27 @@ class LCA(RecurrentTransferMechanism):
 
         # this may be problematic
         # IMPLEMENTATION NOTE: parts of this region may be redundant with code in ProcessingMechanism.__init__()
-        # region Fill in and infer default_input_value and size if they aren't specified in args
-        if default_input_value is None and size is None:
-            default_input_value = self.variableClassDefault
+        # region Fill in and infer default_variable and size if they aren't specified in args
+        if default_variable is None and size is None:
+            default_variable = self.variableClassDefault
             size = [1]
 
         # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
-        # default_input_value are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
-        # region Convert default_input_value (if given) to a 2D array, and size (if given) to a 1D integer array
+        # default_variable are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
+        # region Convert default_variable (if given) to a 2D array, and size (if given) to a 1D integer array
 
         try:
-            if default_input_value is not None:
-                default_input_value = np.atleast_2d(default_input_value)
-                if len(np.shape(default_input_value)) > 2:  # number of dimensions of default_input_value > 2
-                    warnings.warn("default_input_value had more than two dimensions (had {} dimensions) "
+            if default_variable is not None:
+                default_variable = np.atleast_2d(default_variable)
+                if len(np.shape(default_variable)) > 2:  # number of dimensions of default_variable > 2
+                    warnings.warn("default_variable had more than two dimensions (had {} dimensions) "
                                   "so only the first element of its second-highest-numbered axis will be"
-                                  " used".format(len(np.shape(default_input_value))))
-                    while len(np.shape(default_input_value)) > 2:  # reduce the dimensions of default_input_value
-                        default_input_value = default_input_value[0]
+                                  " used".format(len(np.shape(default_variable))))
+                    while len(np.shape(default_variable)) > 2:  # reduce the dimensions of default_variable
+                        default_variable = default_variable[0]
         except:
-            raise TransferError("Failed to convert default_input_value (of type {})"
-                                " to a 2D array".format(type(default_input_value)))
+            raise TransferError("Failed to convert default_variable (of type {})"
+                                " to a 2D array".format(type(default_variable)))
 
         try:
             if size is not None:
@@ -455,44 +455,44 @@ class LCA(RecurrentTransferMechanism):
             raise TransferError("Failed to convert an element in size to an integer.")
         # endregion
 
-        # region If default_input_value is None, make it a 2D array of zeros each with length=size[i]
+        # region If default_variable is None, make it a 2D array of zeros each with length=size[i]
         # IMPLEMENTATION NOTE: perhaps add setting to enable user to change
-        # default_input_value's default value, which is an array of zeros at the moment
-        if default_input_value is None and size is not None:
+        # default_variable's default value, which is an array of zeros at the moment
+        if default_variable is None and size is not None:
             try:
-                default_input_value = []
+                default_variable = []
                 for s in size:
-                    default_input_value.append(np.zeros(s))
-                default_input_value = np.array(default_input_value)
+                    default_variable.append(np.zeros(s))
+                default_variable = np.array(default_variable)
             except:
-                raise TransferError("default_input_value was not specified, but PsyNeuLink was unable to "
-                                    "infer default_input_value from the size argument, {}. size should be"
+                raise TransferError("default_variable was not specified, but PsyNeuLink was unable to "
+                                    "infer default_variable from the size argument, {}. size should be"
                                     " an integer or an array or list of integers. Either size or "
-                                    "default_input_value must be specified.".format(size))
+                                    "default_variable must be specified.".format(size))
         # endregion
 
-        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_input_value[i])
+        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_variable[i])
         if size is None:
             size = []
             try:
-                for input_vector in default_input_value:
+                for input_vector in default_variable:
                     size.append(len(input_vector))
                 size = np.array(size)
             except:
                 raise TransferError("size was not specified, but PsyNeuLink was unable to infer size from "
-                                    "the default_input_value argument, {}. default_input_value can be an array,"
+                                    "the default_variable argument, {}. default_variable can be an array,"
                                     " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                                    " default_input_value must be specified.".format(default_input_value))
+                                    " default_variable must be specified.".format(default_variable))
         # endregion
 
-        # region If length(size) = 1 and default_input_value is not None, then expand size to length(default_input_value)
-        if len(size) == 1 and len(default_input_value) > 1:
-            new_size = np.empty(len(default_input_value))
+        # region If length(size) = 1 and default_variable is not None, then expand size to length(default_variable)
+        if len(size) == 1 and len(default_variable) > 1:
+            new_size = np.empty(len(default_variable))
             new_size.fill(size[0])
             size = new_size
         # endregion
 
-        # IMPLEMENTATION NOTE: if default_input_value and size are both specified as arguments, they will be checked
+        # IMPLEMENTATION NOTE: if default_variable and size are both specified as arguments, they will be checked
         # against each other in Component.py, during _instantiate_defaults().
         # endregion
 
@@ -512,7 +512,7 @@ class LCA(RecurrentTransferMechanism):
                                                                indices=PRIMARY_OUTPUT_STATE)
 
 
-        super().__init__(default_input_value=default_input_value,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          matrix=matrix,
