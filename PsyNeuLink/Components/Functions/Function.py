@@ -268,18 +268,18 @@ class ModulationParam():
 
     MULTIPLICATIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State.function>`
+        of the State's `function <State_Base.function>`
 
     ADDITIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State.function>`
+        of the State's `function <State_Base.function>`
 
     OVERRIDE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`)
+        `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
 
     DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State.value>`
+        ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
     """
     MULTIPLICATIVE = MultiplicativeParam
     # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,

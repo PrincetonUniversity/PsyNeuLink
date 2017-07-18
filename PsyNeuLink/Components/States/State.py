@@ -101,7 +101,7 @@ Wherever a State is specified, it can be done using any of the following:
       corresponding type will be created, using a default value for the State that is determined by the context
       in which it is specified.
     ..
-    * a **value**.  This creates a default State using the specified value as its default `value <State.value>`.
+    * a **value**.  This creates a default State using the specified value as its default `value <State_Base.value>`.
     ..
     * a **State specification dictionary**; every State specification can contain the following: *KEY*:<value>
       entries, in addition to those specific to a particular State subtype (see subtype documentation):
@@ -217,35 +217,35 @@ Structure
 Owner
 ~~~~~
 
-Every State has an `owner <State.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the owner
-must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.  For
-`ModulatorySignals`, it must be an `AdaptiveMechanism`.  When a State is created as part of another Component, its
-`owner <State.owner>` is assigned automatically to that Component.  It is also assigned automatically when the State
-is assigned to a `Mechanism` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly
-in the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be
-`deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
+Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
+owner must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.
+For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism`.  When a State is created as part of
+another Component, its `owner <State_Base.owner>` is assigned automatically to that Component.  It is also assigned
+automatically when the State is assigned to a `Mechanism` using that Mechanism's `add_states` method.  Otherwise, it
+must be specified explicitly in the **owner** argument of the constructor for the State.  If it is not, the State's
+initialization will be `deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition, like all PsyNeuLink Components, it also has the three following core attributes:
 
-    * `variable <State.variable>`:  for an `InputState` and `ParameterState`,
+    * `variable <State_Base.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
-      its `path_afferents <State.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
+      its `path_afferents <State_Base.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
       Mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
-    * `function <State.function>`:  for an `InputState` this aggregates the values of the Projections that the State
-      receives (the default is `LinearCombination` that sums the values), under the potential influence of a
+    * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
+      State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
       potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its
-      `output_values <Mechanism.output_values>` attribute, under the potential influence of a `GatingSignal`.
-      See `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated
-      with each type for a description of how they can be used to modulate the `function <State.function>` of a State.
+      `output_values <Mechanism.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
+      `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
+      each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..
-    * `value <State.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
+    * `value <State_Base.value>`:  for an `InputState` this is the aggregated value of the `PathwayProjections` it
       receives;  for a `ParameterState`, this represents the value of the parameter that will be used by the
       State's owner or its `function <Component.function>`; for an `OutputState`, it is the item of the  owner
       Mechanism's `value <Mechanisms.value>` to which the OutputState is assigned, possibly modified by its
@@ -257,17 +257,17 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 Modulation
 ~~~~~~~~~~
 
-Every type of State has a `mod_afferents <State.mod_afferents>` attribute, that lists the
+Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the
 `ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
-that specifies how it should modulate the State's `value <State.value>` when the State is updated (see
+that specifies how it should modulate the State's `value <State_Base.value>` when the State is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
-State's `function <State.function>` to modulate its `value <State.value>`.  The function of every State assigns one
-of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
-`modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when
-the State uses it `function <State.function>` to calculate its `value  <State.value>`.  However, the ModulatorySignal
-can also be configured to override the State's `value <State.value>` (i.e., assign it directly), or to disable
-modulation, using one of the values of `ModulationParam` for its `modulation <ModulatorySignal.modulation>` attribute
-(see `ModulatorySignal_Modulation` for a more detailed discussion).
+State's `function <State_Base.function>` to modulate its `value <State_Base.value>`.  The function of every State
+assigns one of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+`modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
+State uses it `function <State_Base.function>` to calculate its `value  <State_Base.value>`.  However, the
+ModulatorySignal can also be configured to override the State's `value <State_Base.value>` (i.e., assign it directly),
+or to disable modulation, using one of the values of `ModulationParam` for its
+`modulation <ModulatorySignal.modulation>` attribute (see `ModulatorySignal_Modulation` for a more detailed discussion).
 
 .. _State_Execution:
 
@@ -275,17 +275,17 @@ Execution
 ---------
 
 States cannot be executed.  They are updated when the Component to which they belong is executed.  InputStates and
-ParameterStates belonging to a Mechanism are updated before the Mechanism's function is called.  OutputStates
-are updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that
-project to it (listed in its `all_afferents <State.all_afferents>` attribute.  It uses the values it receives from any
-`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its `function <State.function>`.
-It then executes all of the ModulatoryProjections it receives.  Different ModulatorySignals may call for different
-forms of modulation (see `ModulatorySignal_Modulation`).  Accordingly, it separately sums the values specified
-by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its `function <State.function>`, and similarly for the
-*ADDITIVE_PARAM*.  It then applies the summed value for each to the corresponding parameter of its
-`function <State.function>`.  If any of the ModulatorySignals specifies *OVERRIDE*, then the value of that
-ModulatorySignal is used as the State's `value <State.value>`. Finally, the State calls its
-`function <State.function>` to determine its `value <State.value>`.
+ParameterStates belonging to a Mechanism are updated before the Mechanism's function is called.  OutputStates are
+updated after the Mechanism's function is called.  When a State is updated, it executes any Projections that project
+to it (listed in its `all_afferents <State_Base.all_afferents>` attribute.  It uses the values it receives from any
+`PathWayProjections` (listed in its `path_afferents` attribute) as the variable for its
+`function <State_Base.function>`. It then executes all of the ModulatoryProjections it receives.  Different
+ModulatorySignals may call for different forms of modulation (see `ModulatorySignal_Modulation`).  Accordingly,
+it separately sums the values specified by any ModulatorySignals for the *MULTIPLICATIVE_PARAM* of its
+`function <State_Base.function>`, and similarly for the *ADDITIVE_PARAM*.  It then applies the summed value for each
+to the corresponding parameter of its `function <State_Base.function>`.  If any of the ModulatorySignals specifies
+*OVERRIDE*, then the value of that ModulatorySignal is used as the State's `value <State_Base.value>`. Finally,
+the State calls its `function <State_Base.function>` to determine its `value <State_Base.value>`.
 
 .. note::
    The change in the value of a `State` does not occur until the Mechanism to which the State belongs is next
@@ -518,7 +518,7 @@ class State_Base(State):
         `ModulatoryProjection <ModulatoryProjection_Structure>`.
 
     value : number, list or np.ndarray
-        current value of the State (updated by `update <State.update>` method).
+        current value of the State (updated by `update <State_Base.update>` method).
 
     name : str : default <State subclass>-<index>
         the name of the State.
