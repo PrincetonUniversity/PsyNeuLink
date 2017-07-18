@@ -419,6 +419,10 @@ class GatingSignal(ModulatorySignal):
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
 
+    @property
+    def gating_signal(self):
+        return self.value
+
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
 

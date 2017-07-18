@@ -958,6 +958,10 @@ class ControlSignal(ModulatorySignal):
         #     for observer in self.observers[kpIntensity]:
         #         observer.observe_value_at_keypath(kpIntensity, old_value, new_value)
 
+    @property
+    def control_signal(self):
+        return self.value
+
     @tc.typecheck
     def assign_costs(self, costs:tc.any(ControlSignalCosts, list)):
         """assign_costs(costs)
