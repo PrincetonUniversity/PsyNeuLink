@@ -168,7 +168,7 @@ class TransferError(Exception):
 class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(           \
-    default_input_value=None,    \
+    default_variable=None,    \
     size=None,                   \
     function=Linear,             \
     initial_value=None,          \
@@ -196,7 +196,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + variableClassDefault (value):  Transfer_DEFAULT_BIAS
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
-            + paramNames (dict): names as above
 
         Class methods
         -------------
@@ -211,7 +210,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
@@ -219,8 +218,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         of the mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -250,7 +249,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         `range <TransferMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -369,13 +368,11 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    paramNames = paramClassDefaults.keys()
-
     variableClassDefault = [[0]]
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function=Linear,
@@ -392,10 +389,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences and call super.__init__
         """
 
-        if default_input_value is None and size is None:
-            default_input_value = [[0]]
+        if default_variable is None and size is None:
+            default_variable = [[0]]
 
-        self.variableClassDefault = default_input_value
+        self.variableClassDefault = default_variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
@@ -414,7 +411,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super(TransferMechanism, self).__init__(variable=default_input_value,
+        super(TransferMechanism, self).__init__(variable=default_variable,
                                                 size=size,
                                                 params=params,
                                                 name=name,
@@ -453,6 +450,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             initial_value = target_set[INITIAL_VALUE]
             if initial_value is not None:
                 if not iscompatible(initial_value, self.variable):
+                    raise Exception("initial_value is {}, type {}\nself.variable is {}, type {}".
+                                    format(initial_value, type(initial_value), self.variable, type(self.variable)))
                     raise TransferError("The format of the initial_value parameter for {} ({}) "
                                         "must match its input ({})".
                                         format(append_type_to_name(self), initial_value, self.variable[0]))
@@ -481,7 +480,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         format(range, self.name))
 
         # self.integrator_function = Integrator(
-        #     # variable_default=self.default_input_value,
+        #     # default_variable=self.default_variable,
         #                                       initializer = self.variable,
         #                                       noise = self.noise,
         #                                       rate = self.time_constant,
@@ -546,7 +545,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        self.initial_value = self.initial_value or self.variableInstanceDefault
+        if self.initial_value is None:
+            self.initial_value = self.variableInstanceDefault
 
     def _execute(self,
                  variable=None,
@@ -596,10 +596,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
         # Use self.variable to initialize state of input
 
-
-        if INITIALIZING in context:
-            self.previous_input = self.variable
-
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         time_scale = self.time_scale
 
@@ -623,7 +619,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
                 self.integrator_function = AdaptiveIntegrator(
                                             self.variable,
-                                            initializer = self.previous_input,
+                                            initializer = self.initial_value,
                                             noise = self.noise,
                                             rate = self.time_constant
                                             )
@@ -653,7 +649,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 else:
                     noise = noise()
             # formerly: current_input = self.input_state.value + noise
-            current_input = self.variable[0] + noise
+            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
+            # when the input is given as a string.
+            if (np.array(noise) != 0).any():
+                current_input = self.variable[0] + noise
+            else:
+                current_input = self.variable[0]
         else:
             raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 

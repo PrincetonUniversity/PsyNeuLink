@@ -249,7 +249,7 @@ def test_DDM_input_list_len_2():
         stim = [10, 10]
         T = DDM(
             name='DDM',
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,
@@ -364,7 +364,7 @@ def test_DDM_input_rate_negative():
     stim = [10]
     T = DDM(
         name='DDM',
-        default_input_value=[0],
+        default_variable=[0],
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -394,7 +394,7 @@ def test_DDM_rate_fn():
         stim = [10]
         T = DDM(
             name='DDM',
-            default_input_value=[0],
+            default_variable=[0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,

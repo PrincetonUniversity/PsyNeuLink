@@ -50,19 +50,19 @@ class TestInit:
 
         # Processes:
         ColorNamingProcess = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[Color_Input, Color_Hidden, Output, Decision],
             name='Color Naming Process',
         )
 
         WordReadingProcess = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[Word_Input, Word_Hidden, Output, Decision],
             name='Word Reading Process',
         )
 
         RewardProcess = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[Reward],
             name='RewardProcess',
         )
@@ -99,14 +99,14 @@ class TestLinear:
     def test_one_run_twice(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5,
             )
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A],
             name='p'
         )
@@ -135,7 +135,7 @@ class TestLinear:
     def test_two_AAB(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -143,12 +143,12 @@ class TestLinear:
 
         B = TransferMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, B],
             name='p'
         )
@@ -181,20 +181,20 @@ class TestLinear:
     def test_two_ABB(self):
         A = TransferMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, B],
             name='p'
         )
@@ -231,7 +231,7 @@ class TestBranching:
     def test_three_ABAC(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -239,23 +239,23 @@ class TestBranching:
 
         B = TransferMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
         C = TransferMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='q'
         )
@@ -295,7 +295,7 @@ class TestBranching:
     def test_three_ABACx2(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -303,23 +303,23 @@ class TestBranching:
 
         B = TransferMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
         C = TransferMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, B],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='q'
         )
@@ -359,7 +359,7 @@ class TestBranching:
     def test_three_2_ABC(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -367,7 +367,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -375,18 +375,18 @@ class TestBranching:
 
         C = TransferMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, C],
             name='q'
         )
@@ -422,7 +422,7 @@ class TestBranching:
     def test_three_2_ABCx2(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -430,7 +430,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -438,18 +438,18 @@ class TestBranching:
 
         C = TransferMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, C],
             name='q'
         )
@@ -485,7 +485,7 @@ class TestBranching:
     def test_three_integrators(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -493,7 +493,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -501,20 +501,20 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, C],
             name='q'
         )
@@ -557,13 +557,13 @@ class TestBranching:
     def test_four_ABBCD(self):
         A = TransferMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -571,7 +571,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -579,18 +579,18 @@ class TestBranching:
 
         D = TransferMechanism(
             name='D',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=1.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, B, D],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C, D],
             name='q'
         )
@@ -628,7 +628,7 @@ class TestBranching:
     def test_four_integrators_mixed(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -636,7 +636,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -644,7 +644,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -652,32 +652,32 @@ class TestBranching:
 
         D = IntegratorMechanism(
             name='D',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C],
             name='p'
         )
 
         p1 = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, D],
             name='p1'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, C],
             name='q'
         )
 
         q1 = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, D],
             name='q1'
         )
@@ -724,19 +724,19 @@ class TestBranching:
     def test_five_ABABCDE(self):
         A = TransferMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         B = TransferMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=.5
             )
@@ -744,24 +744,24 @@ class TestBranching:
 
         D = TransferMechanism(
             name='D',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=1.0),
         )
 
         E = TransferMechanism(
             name='E',
-            default_input_value=[0],
+            default_variable=[0],
             function=Linear(slope=2.0),
         )
 
         p = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[A, C, D],
             name='p'
         )
 
         q = process(
-            default_input_value=[0],
+            default_variable=[0],
             pathway=[B, C, E],
             name='q'
         )
@@ -809,7 +809,7 @@ class TestBranching:
     def test_six_integrators_threelayer_mixed(self):
         A = IntegratorMechanism(
             name='A',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -817,7 +817,7 @@ class TestBranching:
 
         B = IntegratorMechanism(
             name='B',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -825,7 +825,7 @@ class TestBranching:
 
         C = IntegratorMechanism(
             name='C',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -833,7 +833,7 @@ class TestBranching:
 
         D = IntegratorMechanism(
             name='D',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -841,7 +841,7 @@ class TestBranching:
 
         E = IntegratorMechanism(
             name='E',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -849,7 +849,7 @@ class TestBranching:
 
         F = IntegratorMechanism(
             name='F',
-            default_input_value=[0],
+            default_variable=[0],
             function=SimpleIntegrator(
                 rate=1
             )
@@ -857,42 +857,42 @@ class TestBranching:
 
         p = [
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[A, C, E],
                 name='p'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[A, C, F],
                 name='p1'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[A, D, E],
                 name='p2'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[A, D, F],
                 name='p3'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[B, C, E],
                 name='q'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[B, C, F],
                 name='q1'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[B, D, E],
                 name='q2'
             ),
             process(
-                default_input_value=[0],
+                default_variable=[0],
                 pathway=[B, D, F],
                 name='q3'
             )

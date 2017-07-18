@@ -54,9 +54,9 @@ appropriate to the circumstance:
     InputState of the ObjectiveMechanism (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines
     the appropriate matrix by context).
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the ObjectiveMechanism that provides it with the outcome of the
+  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that provides it with the outcome of the
     OutputStates that it monitors, and from those OutputStates (listed in its
-    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute) to
+    `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute) to
     the ObjectiveMechanism (an `IDENTITY_MATRIX` is used for all of these);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
@@ -220,7 +220,7 @@ class MappingProjection(PathwayProjection_Base):
 
     receiver: Optional[InputState or Mechanism]
         specifies the destination of the Projection's output.  If a mechanism is specified, its
-        `primary InputState <Mechanism_InputStates>` will be used. If it is not specified, it will be assigned in
+        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -228,7 +228,7 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.

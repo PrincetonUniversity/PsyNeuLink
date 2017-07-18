@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 o = TransferMechanism(
     name='origin',
-    default_input_value = [0],
+    default_variable = [0],
     function=Linear(slope=.5),
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
@@ -31,13 +31,13 @@ ddm = DDM(
 
 term = TransferMechanism(
     name='terminal',
-    default_input_value = [0],
+    default_variable = [0],
     function=Linear(slope=2.0),
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(True,PreferenceLevel.INSTANCE)}
 )
 
 p = process(
-    default_input_value = [0],
+    default_variable = [0],
     pathway = [o, ddm, term],
     name = 'p',
 )

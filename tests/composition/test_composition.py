@@ -306,8 +306,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1, 2], name='A')
-        B = TransferMechanism(default_input_value=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -319,8 +319,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_feed_dict_len_2(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1, 2], name='A')
-        B = TransferMechanism(default_input_value=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -332,8 +332,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_2_feed_dict_len_3(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1], name='A')
-        B = TransferMechanism(default_input_value=[0, 1], name='B')
+        A = TransferMechanism(default_variable=[0, 1], name='A')
+        B = TransferMechanism(default_variable=[0, 1], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -345,8 +345,8 @@ class TestValidateFeedDict:
 
     def test_feed_dict_includes_mechs_of_correct_and_incorrect_types(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0], name='A')
-        B = TransferMechanism(default_input_value=[0], name='B')
+        A = TransferMechanism(default_variable=[0], name='A')
+        B = TransferMechanism(default_variable=[0], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -357,8 +357,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_brackets_extra_1(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1, 2], name='A')
-        B = TransferMechanism(default_input_value=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -370,8 +370,8 @@ class TestValidateFeedDict:
 
     def test_input_state_len_3_brackets_missing_1(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0, 1, 2], name='A')
-        B = TransferMechanism(default_input_value=[0, 1, 2], name='B')
+        A = TransferMechanism(default_variable=[0, 1, 2], name='A')
+        B = TransferMechanism(default_variable=[0, 1, 2], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -383,8 +383,8 @@ class TestValidateFeedDict:
 
     def test_empty_feed_dict_for_empty_type(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0], name='A')
-        B = TransferMechanism(default_input_value=[0], name='B')
+        A = TransferMechanism(default_variable=[0], name='A')
+        B = TransferMechanism(default_variable=[0], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -395,7 +395,7 @@ class TestValidateFeedDict:
 
     def test_mech_in_feed_dict_for_empty_type(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0])
+        A = TransferMechanism(default_variable=[0])
         B = TransferMechanism(name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -408,7 +408,7 @@ class TestValidateFeedDict:
 
     def test_one_mech_1(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0])
+        A = TransferMechanism(default_variable=[0])
         comp.add_mechanism(A)
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
@@ -417,7 +417,7 @@ class TestValidateFeedDict:
 
     def test_one_mech_2(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[0])
+        A = TransferMechanism(default_variable=[0])
         comp.add_mechanism(A)
         comp._analyze_graph()
         feed_dict_origin = {A: [[0]]}
@@ -426,8 +426,8 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_1(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[[0, 1, 2]], name='A')
-        B = TransferMechanism(default_input_value=[[0, 1, 2]], name='B')
+        A = TransferMechanism(default_variable=[[0, 1, 2]], name='A')
+        B = TransferMechanism(default_variable=[[0, 1, 2]], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -439,8 +439,8 @@ class TestValidateFeedDict:
 
     def test_multiple_time_steps_2(self):
         comp = Composition()
-        A = TransferMechanism(default_input_value=[[0, 1, 2]], name='A')
-        B = TransferMechanism(default_input_value=[[0, 1, 2]], name='B')
+        A = TransferMechanism(default_variable=[[0, 1, 2]], name='A')
+        B = TransferMechanism(default_variable=[[0, 1, 2]], name='B')
         comp.add_mechanism(A)
         comp.add_mechanism(B)
         comp.add_projection(A, MappingProjection(), B)
@@ -696,7 +696,7 @@ class TestRun:
 
     def test_run_2_mechanisms_default_input_1(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -710,7 +710,7 @@ class TestRun:
 
     def test_run_2_mechanisms_input_5(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -799,7 +799,7 @@ class TestRun:
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self):
         comp = Composition()
 
-        A = IntegratorMechanism(name="A [integrator]", default_input_value=2.0, function=SimpleIntegrator(rate=1.0))
+        A = IntegratorMechanism(name="A [integrator]", default_variable=2.0, function=SimpleIntegrator(rate=1.0))
         # (1) value = 0 + (5.0 * 1.0) + 0  --> return 5.0
         # (2) value = 5.0 + (5.0 * 1.0) + 0  --> return 10.0
         B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
@@ -877,7 +877,7 @@ class TestRun:
 
     def test_run_2_mechanisms_reuse_input(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -894,7 +894,7 @@ class TestRun:
 
     def test_run_2_mechanisms_incorrect_trial_spec(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -912,7 +912,7 @@ class TestRun:
 
     def test_run_2_mechanisms_double_trial_specs(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -929,7 +929,7 @@ class TestRun:
 
     def test_execute_composition(self):
         comp = Composition()
-        A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
         B = TransferMechanism(function=Linear(slope=5.0))
         comp.add_mechanism(A)
         comp.add_mechanism(B)
@@ -1302,7 +1302,7 @@ class TestCallBeforeAfterTimescale:
     # when self.sched is ready:
     # def test_run_default_scheduler(self):
     #     comp = Composition()
-    #     A = IntegratorMechanism(default_input_value=1.0, function=Linear(slope=5.0))
+    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
     #     B = TransferMechanism(function=Linear(slope=5.0))
     #     comp.add_mechanism(A)
     #     comp.add_mechanism(B)
@@ -1319,25 +1319,25 @@ class TestCallBeforeAfterTimescale:
     #     Input_Layer = TransferMechanism(
     #         name='Input Layer',
     #         function=Logistic,
-    #         default_input_value=np.zeros((2,)),
+    #         default_variable=np.zeros((2,)),
     #     )
     #
     #     Hidden_Layer_1 = TransferMechanism(
     #         name='Hidden Layer_1',
     #         function=Logistic(),
-    #         default_input_value=np.zeros((5,)),
+    #         default_variable=np.zeros((5,)),
     #     )
     #
     #     Hidden_Layer_2 = TransferMechanism(
     #         name='Hidden Layer_2',
     #         function=Logistic(),
-    #         default_input_value=[0, 0, 0, 0],
+    #         default_variable=[0, 0, 0, 0],
     #     )
     #
     #     Output_Layer = TransferMechanism(
     #         name='Output Layer',
     #         function=Logistic,
-    #         default_input_value=[0, 0, 0],
+    #         default_variable=[0, 0, 0],
     #     )
     #
     #     Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
@@ -1367,7 +1367,7 @@ class TestCallBeforeAfterTimescale:
     #     )
     #
     #     # p = process(
-    #     #     default_input_value=[0, 0],
+    #     #     default_variable=[0, 0],
     #     #     pathway=[
     #     #         Input_Layer,
     #     #         # The following reference to Input_Weights is needed to use it in the pathway

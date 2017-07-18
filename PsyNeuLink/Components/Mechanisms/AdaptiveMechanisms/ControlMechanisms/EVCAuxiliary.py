@@ -71,7 +71,7 @@ class EVCAuxiliaryFunction(Function_Base):
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
-        super().__init__(variable_default=variable,
+        super().__init__(default_variable=variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -126,7 +126,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     componentName = CONTROL_SIGNAL_GRID_SEARCH_FUNCTION
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  params=None,
                  function=None,
                  owner=None,

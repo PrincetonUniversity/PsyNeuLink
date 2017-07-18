@@ -56,14 +56,14 @@ def test_EVC():
 
     # Processes:
     TaskExecutionProcess = process(
-        # default_input_value=[0],
+        # default_variable=[0],
         size=1,
         pathway=[(Input), IDENTITY_MATRIX, (Decision)],
         name='TaskExecutionProcess',
     )
 
     RewardProcess = process(
-        # default_input_value=[0],
+        # default_variable=[0],
         size=1,
         pathway=[(Reward)],
         name='RewardProcess',
@@ -269,35 +269,35 @@ def test_EVC_gratton():
 
     # Processes:
     TargetControlProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Target_Stim, Target_Rep, Decision],
         prefs=process_prefs,
         name='Target Control Process'
     )
 
     FlankerControlProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Flanker_Stim, Flanker_Rep, Decision],
         prefs=process_prefs,
         name='Flanker Control Process'
     )
 
     TargetAutomaticProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Target_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Target Automatic Process'
     )
 
     FlankerAutomaticProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Flanker_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Flanker1 Automatic Process'
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         prefs=process_prefs,
         name='RewardProcess'
@@ -490,13 +490,13 @@ def test_laming_validation_specify_control_signals():
 
     # Processes:
     TaskExecutionProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Input, IDENTITY_MATRIX, Decision],
         name='TaskExecutionProcess'
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         name='RewardProcess'
     )

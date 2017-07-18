@@ -172,22 +172,23 @@ COMMENT
 ControlSignals
 ~~~~~~~~~~~~~~
 
-A `ControlSignal` is used to regulate the parameter of a mechanism or its function. An EVCMechanism has one
-ControlSignal for each parameter that it controls.  One `outputState <OutputState>` of the EVCMechanism is dedicated to
-each of its ControlSignals, and the value of that outputState is the ControlSignal's `intensity`.  When an EVCMechanism
-is `created automatically <EVCMechanism_Creation>`, it creates a ControlSignal for each parameter that has been
-specified for control in the system (a parameter is specified  for control by assigning it a ControlProjection;
-see `Mechanism_Parameters`).  The ControlSignals of an EVCMechanism are listed in it `control_signals`
-attribute. Each ControlSignal is associated with a `ControlProjection` that projects to the
-`parameterState <ParameterState>` for the parameter controlled by that ControlSignal. The EVCMechanism's
-`function <EVCMechanism.function>` assigns an `allocation` value to each of its ControlSignals. The
-`allocation` for a given ControlSignal determines that ControlSignal's `intensity`, which is then assigned as the
-value of the ControlSignal's ControlProjection.  The value of the ControlProjection is then used by the parameterState
+A `ControlSignal` is used to regulate the parameter of a Mechanism or its function. An EVCMechanism has one
+ControlSignal for each parameter that it controls (ControlSignal is a special class of `OutputState` used by a
+`ConrolMechanism`). When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, it creates a ControlSignal
+for each parameter that has been specified for control in the System (a parameter is specified  for control by assigning
+it a `ControlProjection` or `ControlSignal`; see `ParameterState_Specification`).  The ControlSignals of an EVCMechanism
+are listed in it `control_signals <EVCMechanism.control_signals>` attribute. Each ControlSignal is associated with a
+`ControlProjection` that projects to the `ParameterState` for the parameter controlled by that ControlSignal. The
+EVCMechanism's `function <EVCMechanism.function>` assigns an `allocation <ControlSignal.allocation>` value to each of
+its ControlSignals. The `allocation <ControlSignal.allocadtion>` for a given ControlSignal determines that
+ControlSignal's `intensity`, which is then assigned as the `value <ConrolProjection.value>` of the ControlSignal's
+ControlProjection.  The  `value <ControlProjection>` of the ControlProjection is then used by the ParameterState
 to which it projects to modify the value of the parameter for which it is responsible.  A ControlSignal also
-calculates a `cost`, based on its `intensity` and/or its time course. The `cost` is included in the evaluation that the
-EVCMechanism carries out for a given `allocation_policy`, and that it uses to adapt the ControlSignal's `allocation` in
-the future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
-ControlSignal's `allocation_samples` attribute.
+calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>` and/or its time course.
+The `cost <ControlSignal.cost>` is included in the evaluation that the EVCMechanism carries out for a given
+`allocation_policy`, and that it uses to adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the
+future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
+ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribute.
 
 .. _EVCMechanism_Prediction_Mechanisms:
 
@@ -306,7 +307,12 @@ EXPONENT_INDEX = 2
 
 ALLOCATION_POLICY = 'allocation_policy'
 
-# ControlProjection Function Names
+# ControlSignal Costs
+INTENSITY_COST = 'INTENSITY COST'
+ADJUSTMENT_COST = 'ADJUSTMENT COST'
+DURATION_COST = 'DURATION COST'
+
+# ControlSignal Cost Function Names
 INTENSITY_COST_FUNCTION = 'intensity_cost_function'
 ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
 DURATION_COST_FUNCTION = 'duration_cost_function'
@@ -392,7 +398,7 @@ class EVCMechanism(ControlMechanism_Base):
         system : System
             system for which the EVCMechanism is the controller;  this is a required parameter.
 
-        default_input_value : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
+        default_variable : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
 
     COMMENT
 
@@ -406,7 +412,7 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an `outputState <OutputState>` with a name based on the same.
 
     prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to the constructor for the
+        a `parameter dictionary <ParameterState_Specification>` passed to the constructor for the
         `prediction_mechanism_type` mechanism. The same one is passed to all
         `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` created for the EVCMechanism.
 
@@ -444,7 +450,7 @@ class EVCMechanism(ControlMechanism_Base):
         values in `EVC_values`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -493,7 +499,7 @@ class EVCMechanism(ControlMechanism_Base):
         and assigned an `outputState <OutputState>` with a name based on the same
 
     prediction_mechanism_params : Dict[param key, param value] : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` passed to `prediction_mechanism_type` when
+        a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
         the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
 
@@ -602,7 +608,7 @@ class EVCMechanism(ControlMechanism_Base):
         examples <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the
         `LinearCombination` function, respectively. If the default `outcome_function` is called by a custom
         `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
-        entry of a `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the `params` argument of
+        entry of a `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of
         the `LinearCombination` function. The length of each array must equal the number of (and values be listed in
         the same order as) the outputStates in the EVCMechanism's `monitored_output_states` attribute.  These
         specifications will supercede any made for individual outputStates in the `monitor_for_control` argument or
@@ -622,7 +628,7 @@ class EVCMechanism(ControlMechanism_Base):
         called by a custom `value_function`, the weights and/or exponents parameters of the function can be used,
         respectively, to scale and/or exponentiate the contribution of each ControlSignal's cost to the aggregated
         value.  These must be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS` entry of a
-        `parameter dictionary <ParameterState_Specifying_Parameters>` specified for the `params` argument of the
+        `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of the
         `LinearCombination` function; the length of each array must equal the number of (and the values listed in the
         same order as) the ControlSignals in the EVCMechanism's `control_signals` attribute, and be in the same order.
         The default function can also be replaced with any
@@ -638,7 +644,7 @@ class EVCMechanism(ControlMechanism_Base):
         default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
         exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
         the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specifying_Parameters>`
+        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specification>`
         assigned to the function's `params` argument; each array must have two elements, the first for the outcome
         and second for the cost. The default function can also be replaced with any
         `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
@@ -701,7 +707,7 @@ class EVCMechanism(ControlMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  system=None,
-                 # default_input_value=None,
+                 # default_variable=None,
                  # size=None,
                  prediction_mechanism_type=IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
@@ -739,7 +745,7 @@ class EVCMechanism(ControlMechanism_Base):
                                                   save_all_values_and_policies=save_all_values_and_policies,
                                                   params=params)
 
-        super(EVCMechanism, self).__init__(# default_input_value=default_input_value,
+        super(EVCMechanism, self).__init__(# default_variable=default_variable,
                                            # size=size,
                                            monitor_for_control=monitor_for_control,
                                            control_signals=control_signals,
@@ -761,12 +767,6 @@ class EVCMechanism(ControlMechanism_Base):
 
         self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_monitoring_mechanism(context=context)
-
-        # # MODIFIED 2/9/17 NEW:
-        # # Re-instantiate system with predictionMechanism Process(es) and monitoringMechanism added
-        # self.system._instantiate_processes(input=self.system.variable, context=context)
-        # self.system._instantiate_graph(context=context)
-        # # MODIFIED 2/9/17 END
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
@@ -818,8 +818,8 @@ class EVCMechanism(ControlMechanism_Base):
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
                                                             name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                                                            default_input_value = origin_mech.input_state.variable,
-                                                            # default_input_value=variables,
+                                                            default_variable = origin_mech.input_state.variable,
+                                                            # default_variable=variables,
                                                             # INPUT_STATES=state_names,
                                                             params = prediction_mechanism_params,
                                                             context=context)
@@ -865,7 +865,7 @@ class EVCMechanism(ControlMechanism_Base):
     # FIX: MOVE THIS TO ControlMechanism??
     def _instantiate_monitoring_mechanism(self, context=None):
         """
-        Assign inputState to controller for each state to be monitored;
+        Assign InputState to ControlMechanism for each OutputState to be monitored;
             uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
@@ -1382,7 +1382,7 @@ class EVCMechanism(ControlMechanism_Base):
         Arguments
         ----------
 
-        inputs : List[input] or ndarray(input) : default default_input_value
+        inputs : List[input] or ndarray(input) : default default_variable
             the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
             should be the `value <Mechanism.Mechanism_Base.value> for each
             `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `predictionMechanisms`

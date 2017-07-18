@@ -40,10 +40,10 @@ DDM function parameters)::
 
 COMMENT:
 .. _DDM_Input:
-**Input**.  The `default_input_value` argument specifies the default value to use as the stimulus component of the
+**Input**.  The `default_variable` argument specifies the default value to use as the stimulus component of the
 :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-**Input**.  The ``default_input_value`` argument specifies the default value to use as the stimulus component of the
+**Input**.  The ``default_variable`` argument specifies the default value to use as the stimulus component of the
 :ref:`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
 and the corresponding format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
 single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
@@ -77,7 +77,7 @@ integrates the path of the decision variable (see `Execution <DDM_Execution>` be
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 The DDM mechanism implements a general form of the decision process.  A DDM mechanism assigns one **inputState** to
-each item in the `default_input_value` argument, corresponding to each of the decision processes implemented
+each item in the `default_variable` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
@@ -399,7 +399,7 @@ class DDM(ProcessingMechanism_Base):
     #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
     DDM(                       \
-    default_input_value=None,  \
+    default_variable=None,  \
     size=None,                 \
     function=BogaczEtAl,       \
     params=None,               \
@@ -441,7 +441,6 @@ class DDM(ProcessingMechanism_Base):
                                                           DDM_PROBABILITY_LOWER_THRESHOLD,
                                                           DDM_RT_CORRECT_MEAN,
                                                           DDM_RT_CORRECT_VARIANCE,
-            + paramNames (dict): names as above
         Class methods
         -------------
             - plot() : generates a dynamic plot of the DDM
@@ -453,15 +452,15 @@ class DDM(ProcessingMechanism_Base):
 
     Arguments
     ---------
-    default_input_value : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
+    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
         the input to the mechanism to use if none is provided in a call to its
         :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
         and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
         of greater than 1 is handled).
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
     function : IntegratorFunction : default BogaczEtAl
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
         `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine
@@ -563,12 +562,9 @@ class DDM(ProcessingMechanism_Base):
         TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES: None})
 
-    # Set default input_value to default bias for DDM
-    paramNames = paramClassDefaults.keys()
-
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
@@ -594,13 +590,13 @@ class DDM(ProcessingMechanism_Base):
 
         self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
-        # IMPLEMENTATION NOTE: this manner of setting default_input_value works but is idiosyncratic
+        # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
-        if default_input_value is None and size is None:
+        if default_variable is None and size is None:
             try:
-                default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+                default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
             except:
-                default_input_value = 0.0
+                default_variable = 0.0
 
         # # Conflict with above
         # self.size = size
@@ -609,7 +605,7 @@ class DDM(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
-        super(DDM, self).__init__(variable=default_input_value,
+        super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,
                                   params=params,
                                   name=name,
@@ -731,7 +727,7 @@ class DDM(ProcessingMechanism_Base):
             raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
                            "input states, which is currently not supported in DDM, but may be supported"
                            " in the future under a multi-process DDM. Please use a single numeric "
-                           "item as the default_input_value, or use size = 1.".format(variable))
+                           "item as the default_variable, or use size = 1.".format(variable))
         # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
         if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))

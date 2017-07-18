@@ -180,7 +180,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     + PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                     + PROJECTION_TYPE: LEARNING_PROJECTION
 
-            + paramNames (dict)
             + classPreference (PreferenceSet): LearningProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
@@ -208,7 +207,7 @@ class LearningProjection(ModulatoryProjection_Base):
         from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.

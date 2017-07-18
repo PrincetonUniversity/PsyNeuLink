@@ -30,7 +30,7 @@ constructor with parameter values::
 
     my_time_averaging_mechanism = IntegratorMechanism(function=AdaptiveIntegrator(rate=0.5))
 
-The **default_input_value** argument specifies the format of its input (i.e., whether it is a single scalar or an
+The **default_variable** argument specifies the format of its input (i.e., whether it is a single scalar or an
 array), as well as the value to use if none is provided when mechanism is executed.  Alternatively, the **size**
 argument can be used to specify the length of the array, in which case it will be initialized with all zeros.
 
@@ -54,11 +54,11 @@ Execution
 
 When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
 result to the `value <IntegratorMechanism.value>` of its `primary OutputState <OutputState_Primary>`.  For the default
-function (`Integrator`), if the value specified for **default_input_value** is a list or array, or **size** is greater
+function (`Integrator`), if the value specified for **default_variable** is a list or array, or **size** is greater
 than 1, each element of the array is independently integrated.  If its `rate <Integrator.rate>` parameter is a
 single value,  that rate will be used for integrating each element.  If the `rate <Integrator.rate>` parameter is a
 list or array, then each element will be used as the rate for the corresponding element of the input (in this case,
-`rate <Integrator.rate>` must be the same length as the value specified for **default_input_value** or **size**).
+`rate <Integrator.rate>` must be the same length as the value specified for **default_variable** or **size**).
 
 
 .. _IntegratorMechanism_Class_Reference:
@@ -84,7 +84,7 @@ class IntegratorMechanismError(Exception):
 class IntegratorMechanism(ProcessingMechanism_Base):
     """
     IntegratorMechanism(                            \
-    default_input_value=None,                               \
+    default_variable=None,                               \
     size=None,                                              \
     function=AdaptiveIntegrator(rate=0.5), \
     time_scale=TimeScale.TRIAL,                             \
@@ -107,8 +107,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                           FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                      kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
                                                                      kwSigmoidLayer_Bias: SigmoidLayer_DEFAULT_BIAS}}
-            + paramNames (dict): names as above
-
         Class methods:
             None
 
@@ -121,7 +119,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray
+    default_variable : number, list or np.ndarray
         the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <IntegratorMechanism.variable>` for
@@ -129,8 +127,8 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         mechanism.
 
     size : int, list or np.ndarray of ints
-        specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
-        if **default_input_value** is specified, it takes precedence over the specification of **size**.
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : IntegratorFunction : default Integrator
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
@@ -141,7 +139,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, parameters for its `function <IntegratorMechanism.function>`, and/or a custom function and its
         parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
@@ -196,14 +194,11 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
     })
 
-    # Set default input_value to default bias for SigmoidLayer
-    paramNames = paramClassDefaults.keys()
-
     from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  function=AdaptiveIntegrator(rate=0.5),
                  time_scale=TimeScale.TRIAL,
@@ -214,20 +209,20 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """Assign type-level preferences, default input value (SigmoidLayer_DEFAULT_BIAS) and call super.__init__
         """
 
-        if default_input_value is None and size is None:
-            default_input_value = self.variableClassDefault
+        if default_variable is None and size is None:
+            default_variable = self.variableClassDefault
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        # self.variableClassDefault = default_input_value or [[0]]
+        # self.variableClassDefault = default_variable or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 
-        # if default_input_value is NotImplemented:
-        #     default_input_value = SigmoidLayer_DEFAULT_NET_INPUT
+        # if default_variable is NotImplemented:
+        #     default_variable = SigmoidLayer_DEFAULT_NET_INPUT
 
         # self.size = size
 
-        super(IntegratorMechanism, self).__init__(variable=default_input_value,
+        super(IntegratorMechanism, self).__init__(variable=default_variable,
                                                   size=size,
                                                   params=params,
                                                   name=name,

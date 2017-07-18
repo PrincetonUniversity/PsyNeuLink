@@ -77,7 +77,7 @@ print([val, val2] == [10.0, 5.0])
 def test_mechanisms_without_system_or_process_no_input():
     I = IntegratorMechanism(
             name='IntegratorMechanism',
-            default_input_value= 10,
+            default_variable= 10,
             function=SimpleIntegrator(
             ),
             time_scale=TimeScale.TIME_STEP

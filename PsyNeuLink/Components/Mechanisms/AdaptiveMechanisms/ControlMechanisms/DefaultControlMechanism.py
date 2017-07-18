@@ -39,6 +39,11 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.Contr
 from PsyNeuLink.Components.ShellClasses import *
 
 
+class DefaultControlMechanismError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+
 class DefaultControlMechanism(ControlMechanism_Base):
     """Implements the DefaultControlMechanism
 
@@ -90,7 +95,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
     from PsyNeuLink.Components.Functions.Function import Linear
     @tc.typecheck
     def __init__(self,
-                 # default_input_value=None,
+                 # default_variable=None,
                  # size=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
@@ -99,7 +104,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        super(DefaultControlMechanism, self).__init__(# default_input_value=default_input_value,
+        super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
                                                     # size=size,
                                                     monitor_for_control=monitor_for_control,
                                                     control_signals=control_signals,
@@ -120,19 +125,26 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_value, inputState and input_states attributes (in case they are referenced).
-        Otherwise, no need to do anything, as DefaultControllerMechanism only adds input_states
-        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state to do so.
+        Instantiate input_states attribute (in case they are referenced) and
+            assign any OutputStates that project to them to monitored_output_states
 
+        IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
+                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              method should be implemented that also implements an _instantiate_monitored_output_states
+                              method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
+
+        self.monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
-        # if self.input_states is None:
-        #     self.input_value = None
+        elif self.input_states:
+            for input_state in self.input_states:
+                for projection in input_state.path_afferents:
+                    self.monitored_output_states.append(projection.sender)
 
     def _instantiate_control_signal(self, control_signal, context=None):
-        """Instantiate requested controlProjection and associated inputState
+        """Instantiate requested ControlSignal, ControlProjection and associated InputState
         """
 
         if isinstance(control_signal, dict):
@@ -152,7 +164,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # Call super to instantiate ControlSignal
         # Note: any params specified with ControlProjection for the control_signal
         #           should be in PARAMS entry of dict passed in control_signal arg
-        super()._instantiate_control_signal(control_signal=control_signal, context=context)
+        control_signal = super()._instantiate_control_signal(control_signal=control_signal, context=context)
 
     def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
@@ -196,12 +208,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # Other than on initialization (handled above), it is a PROGRAM ERROR if
         #    the number of input_states is not equal to the number of items in self.variable
         elif len(self.variable) != len(self.input_states):
-            raise ControlMechanismError("PROGRAM ERROR:  The number of input_states ({}) does not match "
-                                        "the number of items found for the variable attribute ({}) of {}"
-                                        "when creating {}".
-                                        format(len(self.input_states),
-                                               len(self.variable),
-                                               self.name,input_state_name))
+            raise DefaultControlMechanismError("PROGRAM ERROR:  The number of input_states ({}) does not match "
+                                               "the number of items found for the variable attribute ({}) of {}"
+                                               "when creating {}".
+                                               format(len(self.input_states),
+                                                      len(self.variable),
+                                                      self.name,input_state_name))
 
         # Extend self.variable to accommodate new inputState
         else:

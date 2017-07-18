@@ -168,7 +168,7 @@ method of the relevant `Scheduler` (see `System_Execution_Processing` and `Syste
 executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
 the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
 met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
-`processing <_System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
+`processing <System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
 `control <System_Execution_Control>`, each of which is described below.
 
 
@@ -335,7 +335,7 @@ from PsyNeuLink.Components.Process import process
 
 # System factory method:
 @tc.typecheck
-def system(default_input_value=None,
+def system(default_variable=None,
            size=None,
            processes:list=[],
            scheduler=None,
@@ -353,7 +353,7 @@ def system(default_input_value=None,
            context=None):
     """
     system(                                   \
-    default_input_value=None,                 \
+    default_variable=None,                 \
     processes=None,                           \
     initial_values=None,                      \
     controller=SystemDefaultControlMechanism, \
@@ -369,7 +369,7 @@ def system(default_input_value=None,
     COMMENT:
        VERSION WITH learning
         system(                                   \
-        default_input_value=None,                 \
+        default_variable=None,                 \
         processes=None,                           \
         initial_values=None,                      \
         controller=SystemDefaultControlMechanism, \
@@ -394,7 +394,7 @@ def system(default_input_value=None,
     Arguments
     ---------
 
-    default_input_value : list or ndarray of values : default default input for `ORIGIN` Mechanism of each Process
+    default_variable : list or ndarray of values : default default input for `ORIGIN` Mechanism of each Process
         the input to the System if none is provided in a call to the `execute <System_Base.execute>` or
         `run <System_Base.run>` methods. Should contain one item corresponding to the input of each `ORIGIN` Mechanism
         in the System.
@@ -441,7 +441,7 @@ def system(default_input_value=None,
         for each of the corresponding `TARGET` Mechanisms.
 
     params : dict : default None
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can include any of the parameters above;
+        a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
         the parameter's name should be used as the key for its entry. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -468,7 +468,7 @@ def system(default_input_value=None,
     if not processes:
         processes = [process()]
 
-    return System_Base(default_input_value=default_input_value,
+    return System_Base(default_variable=default_variable,
                        size=size,
                        processes=processes,
                        controller=controller,
@@ -490,7 +490,7 @@ class System_Base(System):
     """
 
     System_Base(                                  \
-        default_input_value=None,                 \
+        default_variable=None,                 \
         processes=None,                           \
         initial_values=None,                      \
         controller=SystemDefaultControlMechanism, \
@@ -506,7 +506,7 @@ class System_Base(System):
     COMMENT:
         VERSION WITH learning
         System_Base(                              \
-        default_input_value=None,                 \
+        default_variable=None,                 \
         processes=None,                           \
         initial_values=None,                      \
         controller=SystemDefaultControlMechanism, \
@@ -776,7 +776,7 @@ class System_Base(System):
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  processes=None,
                  initial_values=None,
@@ -823,7 +823,7 @@ class System_Base(System):
             # context = INITIALIZING + self.name
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
-        super().__init__(variable_default=default_input_value,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          param_defaults=params,
                          name=self.name,
@@ -1085,7 +1085,7 @@ class System_Base(System):
                     # Provide self as context, so that Process knows it is part of a System (and which one)
                     # Note: this is used by Process._instantiate_pathway() when instantiating first Mechanism
                     #           in Pathway, to override instantiation of projections from Process.input_state
-                    process = Process(default_input_value=process_input,
+                    process = Process(default_variable=process_input,
                                       learning_rate=self.learning_rate,
                                       context=self)
                 elif isinstance(process, dict):
@@ -1490,7 +1490,7 @@ class System_Base(System):
 
         # Validate initial values
         # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
-        # FIX: ONLY CHECKS FIRST ITEM OF self._value_template (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
+        # FIX: ONLY CHECKS FIRST ITEM OF self._default_value (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
@@ -1498,7 +1498,7 @@ class System_Base(System):
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
                 mech._update_value
-                if not iscompatible(value, mech._value_template[0]):
+                if not iscompatible(value, mech.default_value[0]):
                     raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
                                       format(value, self.name, append_type_to_name(self)))
 
@@ -2263,7 +2263,7 @@ class System_Base(System):
         Arguments
         ---------
 
-        inputs : List[input] or ndarray(input) : default default_input_value for a single execution
+        inputs : List[input] or ndarray(input) : default default_variable for a single execution
             the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
             requirements and options).
 

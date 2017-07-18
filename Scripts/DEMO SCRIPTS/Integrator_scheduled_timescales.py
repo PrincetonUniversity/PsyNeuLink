@@ -17,14 +17,14 @@ process_prefs = {
 
 A = TransferMechanism(
     name='A',
-    default_input_value = [0],
+    default_variable = [0],
     function=Linear(slope=2.0),
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 B = IntegratorMechanism(
     name='B',
-    default_input_value = [0],
+    default_variable = [0],
     function=Integrator(
         rate=.5,
         integration_type=SIMPLE
@@ -34,7 +34,7 @@ B = IntegratorMechanism(
 
 C = IntegratorMechanism(
     name='C',
-    default_input_value = [0],
+    default_variable = [0],
     function=Integrator(
         rate=.5,
         integration_type=SIMPLE
@@ -44,19 +44,19 @@ C = IntegratorMechanism(
 
 D = TransferMechanism(
     name='D',
-    default_input_value = [0],
+    default_variable = [0],
     function=Linear(slope=1.0),
     prefs={REPORT_OUTPUT_PREF: PreferenceEntry(False,PreferenceLevel.INSTANCE)}
 )
 
 p = process(
-    default_input_value = [0],
+    default_variable = [0],
     pathway = [A, B, D],
     name = 'p'
 )
 
 q = process(
-    default_input_value = [0],
+    default_variable = [0],
     pathway = [A, C, D],
     name = 'q',
     prefs=process_prefs
