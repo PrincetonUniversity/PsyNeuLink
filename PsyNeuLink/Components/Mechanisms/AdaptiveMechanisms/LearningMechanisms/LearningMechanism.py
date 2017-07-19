@@ -14,19 +14,14 @@
 Overview
 --------
 
-A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies a parameter (usually the `matrix
-<MappingProjection.matrix>`) of a `MappingProjection`.  Its function takes an `error_signal` (usually the output of
-an `ObjectiveMechanism` or another `LearningMechanism`) and generates a `learning_signal` that is used to modify the
-MappingProjection by way of a `LearningProjection`.  The MappingProjection(s) modified by a LearningMechanism must
-link `ProcessingMechanisms <ProcessingMechanism>` that belong to the same `System` or `Process`. The learning
-components of a System can be displayed using the System's `show_graph` method with its **show_learning** argument
-assigned :keyword:`True`.  LearningMechanisms are executed after all of the ProcessingMechanisms in that System or
-Process have been executed, and before any `control components <ControlMechanism>` of the System have been executed.
-
-COMMENT:
-  AT PRESENT, LearningMechanisms SUPPORT MODIFICATION OF ONLY A SINGLE MappingProjection;  FUTURE VERSIONS MAY
-  ALLOW MODIFICATION OF MULTIPLE MappingProjections (USING MULTIPLE CORRESPONDING error_signals).
-COMMENT
+A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies `matrix <MappingProjection.matrix>`
+of a `MappingProjection`.  Its function takes an `error_signal` (usually the output of an `ObjectiveMechanism` or
+another `LearningMechanism`) and generates a `learning_signal` that is used to modify the MappingProjection by way of
+a `LearningProjection`.  The MappingProjection(s) modified by a LearningMechanism must project from one
+`ProcessingMechanism` to another in same `System` or `Process`. The learning components of a System can be displayed
+using the System's `show_graph` method with its **show_learning** argument assigned :keyword:`True`. LearningMechanisms
+are executed after all of the ProcessingMechanisms in a System or Process have been executed, and before any
+`ControlMechanisms <ControlMechanism>` of the System have been executed.
 
 .. _LearningMechanism_Creation:
 
