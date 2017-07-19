@@ -12,9 +12,14 @@
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
 """
+import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Globals.Defaults import SystemDefaultInputValue
+from PsyNeuLink.Globals.Keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+
 
 # **************************************** DefaultProcessingMechanism ******************************************************
 

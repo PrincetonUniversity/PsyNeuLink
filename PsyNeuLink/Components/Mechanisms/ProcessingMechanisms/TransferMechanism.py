@@ -93,14 +93,20 @@ Class Reference
 ---------------
 
 """
-
-# from numpy import sqrt, random, abs, tanh, exp
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, AdaptiveIntegrator, NormalDist
-# from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.States.OutputState \
-    import StandardOutputStates, standard_output_states, PRIMARY_OUTPUT_STATE
+import inspect
 import numbers
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import Component, function_type, method_type
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np, standard_output_states
+from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, MEAN, MEDIAN, NOISE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -437,7 +443,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function.__self__.__class__
                 transfer_function_name = transfer_function.__self__.__class__.__name__
             # FUNCTION is a class
-            elif isclass(transfer_function):
+            elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
                 transfer_function_name = transfer_function.__name__
 

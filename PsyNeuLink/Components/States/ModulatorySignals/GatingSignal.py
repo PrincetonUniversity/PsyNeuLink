@@ -224,10 +224,17 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal, modulatory_signal_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 
 class GatingSignalError(Exception):
@@ -286,7 +293,7 @@ class GatingSignal(ModulatorySignal):
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
     function : Function or method : default Linear
-        specifies the function used to determine the value of the GatingSignal from the value of its 
+        specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
@@ -326,7 +333,7 @@ class GatingSignal(ModulatorySignal):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that
-        passes the input to the GatingMechanism as value for the GatingSignal. 
+        passes the input to the GatingMechanism as value for the GatingSignal.
 
     value : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>`
@@ -449,26 +456,26 @@ def _parse_gating_signal_spec(owner, state_spec):
                 NAME:str - used as name of GatingSignal
                 STATES:List[tuple, dict] - each item must be state specification tuple or dict
                 <PARAM_KEYWORD>:<GatingSignal param value>
-    
+
     Each state specification must be a:
         - (str, Mechanism) tuple
         - {NAME:str, MECHANISM:Mechanism} dict
         where:
             str is the name of an InputState or OutputState of the Mechanism,
-            Mechanism is a reference to an existing that belongs to self.system 
-    
+            Mechanism is a reference to an existing that belongs to self.system
+
     Checks for duplicate state specifications within state_spec or with any existing GatingSignal of the owner
         (i.e., states that will receive more than one GatingProjection from the owner)
-        
-    If state_spec is already a GatingSignal, it is returned (in the GATING_SIGNAL entry) along with its parsed elements 
-    
+
+    If state_spec is already a GatingSignal, it is returned (in the GATING_SIGNAL entry) along with its parsed elements
+
     Returns dictionary with the following entries:
         NAME:str - name of either the gated state (if there is only one) or the GatingSignal
         STATES:list - list of states to be gated
         GATING_SIGNAL:GatingSignal or None
         PARAMS:dict - params dict if any were included in the state_spec
     """
-    
+
     from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
     from PsyNeuLink.Components.Projections.Projection import _validate_receiver
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection

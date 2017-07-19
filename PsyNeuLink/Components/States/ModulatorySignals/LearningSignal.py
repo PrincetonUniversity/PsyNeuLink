@@ -166,11 +166,16 @@ Class Reference
 
 """
 
-# import Components
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import *
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Globals.Keywords import LEARNED_PARAM, LEARNING_PROJECTION, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SUM
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import parameter_spec
 
 
 class LearningSignalError(Exception):

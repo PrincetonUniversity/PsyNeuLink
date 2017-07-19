@@ -86,10 +86,19 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, RECEIVER, SENDER
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({CONTROL_PROJECTION, CONTROL})
 projection_keywords.update({CONTROL_PROJECTION, CONTROL})
@@ -151,9 +160,9 @@ class ControlProjection(ModulatoryProjection_Base):
     sender : Optional[Mechanism or OutputState]
         specifies the source of the input for the ControlProjection;  usually an `OutputState <OutputState>` of a
         `ControlMechanism <ControlMechanism>`, and commonly the `ControlSignal` of an `EVCMechanism`.  If it is not
-        specified, the ControlProjection will 
+        specified, the ControlProjection will
         COMMENT:
-        remain in DEFER_INITIALIZATION status, and will 
+        remain in DEFER_INITIALIZATION status, and will
         COMMENT
         be ignored during execution.
 
@@ -164,11 +173,11 @@ class ControlProjection(ModulatoryProjection_Base):
     function : TransferFunction : default Linear
         specifies the function used to convert the :keyword:`value` of the ControlProjection's
         `sender <ControlProjection.sender>`  to its own `value <ControlProjection.value>`.
-        
+
     control_signal_params : Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the `ControlSignal` that is the sender of the Projection (see `ControlSignal_Structure` for a description
-        of ControlSignal parameters). 
+        of ControlSignal parameters).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for

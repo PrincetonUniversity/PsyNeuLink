@@ -222,11 +222,21 @@ Class Reference
 ---------------
 
 """
+import warnings
+
+import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import standard_output_states, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, standard_output_states
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 ROLE = 'role'
 MONITORED_VALUES = 'monitored_values'
@@ -570,8 +580,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
         """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
-        
-        Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states. 
+
+        Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states.
         Re-specify corresponding items of variable to match the values of the InputStates in input_states.
         Update self.input_state and self.input_states.
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
@@ -645,12 +655,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 def _validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg
 
-    Validate that each item of monitored_value arg is: 
+    Validate that each item of monitored_value arg is:
         * OutputState
-        * Mechanism, 
-        * string, or 
+        * Mechanism,
+        * string, or
         * MonitoredOutpuStatesOption value.
-    
+
     Called by both self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states()
     """
     from PsyNeuLink.Components.States.OutputState import OutputState

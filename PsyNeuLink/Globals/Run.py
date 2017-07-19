@@ -295,7 +295,7 @@ Class Reference
 
 from collections import Iterable
 
-from PsyNeuLink.Components.Component import function_type
+from PsyNeuLink.Components.Component import ExecutionStatus, function_type
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.System import System
@@ -588,6 +588,7 @@ def run(object,
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(input=input,
                                     execution_id=execution_id,
                                     clock=clock,

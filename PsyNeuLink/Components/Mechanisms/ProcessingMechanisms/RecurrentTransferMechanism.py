@@ -18,21 +18,21 @@
 Overview
 --------
 
-A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent 
+A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
 referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
-  
+
 .. _Recurrent_Transfer_Creation:
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the 
-`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its 
+A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
+`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its
 **mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the Mechanism's
-constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is 
-`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a 
+constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is
+`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a
 standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Structure:
@@ -40,7 +40,7 @@ standard `TransferMechanism`.
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
+The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`
 parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the Mechanism's
 `primary OutputState <OutputState_Primary>` back to it `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
@@ -51,20 +51,20 @@ executed.  It also has two additional OutputStates:  an ENERGY OutputState and, 
 `function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
 OutputState, that each report the respective values of the vector in it its
 `primary (RESULTS) OutputState <OutputState_Primary>`.
- 
+
 .. _Recurrent_Transfer_Execution:
 
 Execution
 ---------
 
-When a RecurrentTransferMechanism executes, it includes in its input the value of its 
+When a RecurrentTransferMechanism executes, it includes in its input the value of its
 `primary OutputState <OutputState_Primary>` from its last execution.
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
 `function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
-if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it 
+if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it
 decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
-specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
+specified factor.  It then transforms its input (including from the recurrent projection) using the specified
 function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
 
 .. _Recurrent_Transfer_Class_Reference:
@@ -75,10 +75,18 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, Stability
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np
+from PsyNeuLink.Globals.Keywords import ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Utilities import is_matrix, is_numeric_or_none
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
 class RecurrentTransferError(Exception):
@@ -92,7 +100,7 @@ DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-    
+
     """
         .. _RecurrentTransferMechanism_Standard_OutputStates:
 
@@ -164,7 +172,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     COMMENT:
         Description
         -----------
-            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type 
+            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
             of the Mechanism Category of the Component class.
             It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
             In all other respects, it is identical to a TransferMechanism.
@@ -307,7 +315,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as first item of
-        `output_values <TransferMechanism.output_values>`.    
+        `output_values <TransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -322,11 +330,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `ENERGY`, the :keyword:`value` of which is the energy of the result, 
+        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
           calculated using the `Stability` Function with the ENERGY metric;
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric; 
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
+          calculated using the `Stability` Function with the ENTROPY metric;
+          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function).
 
     output_values : List[array(float64), float, float]

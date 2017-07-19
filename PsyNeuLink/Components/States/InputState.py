@@ -249,10 +249,18 @@ Class Reference
 ---------------
 
 """
+import warnings
 
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state_list
-from PsyNeuLink.Components.Functions.Function import *
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination
+from PsyNeuLink.Components.ShellClasses import Mechanism
+from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, WEIGHT, VARIABLE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
 
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
@@ -484,13 +492,13 @@ class InputState(State_Base):
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weights and exponents
-        
+
         This needs to be done here, since paramClassDefault declarations assign None as default
             (so that they can be ignored if not specified here or in the function)
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-        
+
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
                 raise InputStateError("{} parameter of {} for {} ({}) must be an int or float".
