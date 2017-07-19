@@ -453,7 +453,7 @@ def run(object,
     if targets:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
 
     if object_type in {MECHANISM, PROCESS}:
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
@@ -661,7 +661,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     """
 
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
 
     # Stimuli in Sequence format
     if isinstance(stimuli, (list, np.ndarray)):
@@ -686,7 +686,7 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
     return stim_list_array
 
 def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
 
     # Check for header
     headers = None
@@ -767,7 +767,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
 
 def _construct_from_stimulus_dict(object, stimuli, is_target):
 
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
 
     # Stimuli are inputs:
     #    validate that there is a one-to-one mapping of input entries to origin mechanisms in the process or system.
@@ -914,7 +914,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             stim_list.append(stimuli_in_execution)
 
     else:
-        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by _get_obect_type ".
+        raise RunError("PROGRAM ERROR: illegal type for run ({}); should have been caught by _get_object_type ".
                        format(object_type))
 
     try:
@@ -948,7 +948,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
     returns number of input_sets (one per execution)
     """
 
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
 
     if object_type is PROCESS:
 
@@ -1075,7 +1075,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
     num_targets_sets = number sets of targets (one for each execution) in targets;  must match num_input_sets
     """
 
-    object_type = _get_obect_type(object)
+    object_type = _get_object_type(object)
     num_target_sets = None
 
     if isinstance(targets, function_type):
@@ -1205,7 +1205,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
     return num_target_sets
 
-def _get_obect_type(object):
+def _get_object_type(object):
     if isinstance(object, Mechanism):
         return MECHANISM
     elif isinstance(object, Process):
