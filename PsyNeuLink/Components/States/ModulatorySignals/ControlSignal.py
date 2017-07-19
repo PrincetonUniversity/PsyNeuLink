@@ -39,8 +39,8 @@ configuration that must be met for it to function properly.
 Specifying ControlSignals
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ControlSignal is specified in context (e.g., the **control_signals** argument of the constructor for a
-`ControlMechanism`, the specification can take any of the following forms:
+When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism`,
+the parameter to be controlled must be specified.  This can take any of the following forms:
 
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
@@ -379,8 +379,8 @@ class ControlSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of OutputState that represents the ControlSignal of a `ControlMechanism` provided to a
-    `ControlProjection`.
+    A subclass of `ModulatorySignal` used by a `ControlMechanism` to modulate the parameter(s)
+    of one or more other `Mechanisms <Mechanism>`.
 
     COMMENT:
 

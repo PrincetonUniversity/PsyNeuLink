@@ -217,7 +217,11 @@ class ModulatorySignal(OutputState):
         name=None,                                  \
         prefs=None)
 
-    A subclass of OutputState that represents the value of a ModulatorySignal provided to a `GatingProjection`.
+    Subclass of `OutputState` used by an `AdaptiveMechanism` to modulate the value of one more `States <State>`.
+
+    .. note::
+       ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <ModulatorySignal_Subtypes>`.
 
     COMMENT:
 

@@ -167,7 +167,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Implements RecurrentTransferMechanism subclass of `TransferMechanism`.
+    Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
 
     COMMENT:
         Description

@@ -179,7 +179,7 @@ class LCA(RecurrentTransferMechanism):
         name=None,                         \
         prefs=None)
 
-    Implements LCA subclass of `RecurrentTransferMechanism`.
+    Subclass of `RecurrentTransferMechanism` that implements a Leaky Competitive Accumulator.
 
     COMMENT:
         Description

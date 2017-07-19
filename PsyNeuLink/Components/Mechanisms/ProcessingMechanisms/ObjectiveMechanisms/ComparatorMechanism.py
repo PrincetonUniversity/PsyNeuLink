@@ -182,7 +182,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         name=None,                                      \
         prefs=None)
 
-    Implements the ComparatorMechanism subclass of `ObjectiveMechanism`.
+    Subclass of `ObjectiveMechanism` that compares the values of two `OutputStates <OutputState>`.
 
     COMMENT:
         Description:
