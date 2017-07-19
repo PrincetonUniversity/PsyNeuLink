@@ -462,8 +462,10 @@ class MappingProjection(PathwayProjection_Base):
         frequent cases (i.e., *no* learningSignal).
 
         """
-
-        # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
+        # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
+        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
+        if "System" not in str(self.sender.owner):
+            self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
         # Check whether error_signal has changed
         if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
@@ -511,11 +513,23 @@ class MappingProjection(PathwayProjection_Base):
                                "an np.matrix, a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
 
+        matrix = np.array(matrix)
+
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         # self.function.__self__.matrix = matrix
         self.function_object.matrix = matrix
+
+        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
+        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
+        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
+        # fix this bug and make setting myMappingProjection.matrix effective.
+        if MATRIX in self._parameter_states.key_values:
+            if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
+                self._parameter_states[MATRIX].function_object.variable = matrix
+                self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
+        # NOTE: what about if the matrix parameter state uses a different function?
 
     @property
     def _matrix_spec(self):

@@ -77,6 +77,7 @@ Class Reference
 
 from PsyNeuLink.Components.Functions.Function import get_matrix, Stability
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
 
@@ -371,8 +372,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                  size=None,
                  input_states: tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
-                 auto: is_numeric_or_none=None,
-                 cross: is_numeric_or_none=None,
+                 auto=None,
+                 cross=None,
                  function=Linear,
                  initial_value=None,
                  decay: is_numeric_or_none=None,
@@ -489,22 +490,17 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if self.auto is not None and self.cross is not None:
-            a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
-            c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
-            self.matrix = a + c
-        elif self.auto is not None:
-            self.matrix = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
-        elif self.cross is not None:
-            self.matrix = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
-
+        # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, MappingProjection):
             self.recurrent_projection = self.matrix
 
         else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix, context=context)
+            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, cross=self.cross,
+                                                                          matrix=self.matrix, context=context)
 
         self._matrix = self.recurrent_projection.matrix
+        if self._matrix is not self.recurrent_projection.matrix:
+            raise Exception('hi!')
 
         if ENERGY in self.output_states.names:
             energy = Stability(self.variable[0],
@@ -546,7 +542,11 @@ class RecurrentTransferMechanism(TransferMechanism):
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 @tc.typecheck
 def _instantiate_recurrent_projection(mech:Mechanism_Base,
-                                      matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
+                                      auto=None,
+                                      cross=None,
+                                      # this typecheck was failing, I didn't want to fix (7/19/17 CW)
+                                      # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
+                                      matrix=FULL_CONNECTIVITY_MATRIX,
                                       context=None):
     """Instantiate a MappingProjection from mech to itself
 
@@ -556,8 +556,14 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
         size = len(mech.variable[0])
         matrix = get_matrix(matrix, size, size)
 
-    return MappingProjection(sender=mech,
-                             receiver=mech,
-                             matrix=matrix,
-                             name = mech.name + ' recurrent projection')
+    return AutoAssociativeProjection(owner=mech,
+                                     auto=auto,
+                                     cross=cross,
+                                     matrix=matrix,
+                                     name=mech.name + ' recurrent projection')
+
+    # return MappingProjection(sender=mech,
+    #                          receiver=mech,
+    #                          matrix=matrix,
+    #                          name = mech.name + ' recurrent projection')
 
