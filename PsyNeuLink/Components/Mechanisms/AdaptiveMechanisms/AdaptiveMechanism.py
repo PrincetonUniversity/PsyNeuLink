@@ -45,6 +45,7 @@ GatingMechanisms are executed in the same manner as ProcessingMechanisms;  howev
 introduce recurrent connections, care must be given to their `initialization and/or scheduling
 <GatingMechanism_Execution>`).
 
+
 COMMENT:
 AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
 `System` to which they belong have been executed, with all LearningMechanisms executed first, then GatingMechanisms,
