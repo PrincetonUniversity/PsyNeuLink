@@ -68,7 +68,7 @@ and so they are also listed in the ControlMechanism's `output_states <ControlMec
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When an ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and 
+When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
 evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor. 
 The **monitor_for_control** argument must be a list, each item of which must refer to a Mechanism or the OutputState
 of one.  These are assigned to the ObjectiveMechanism's `monitored_values <ObjectiveMechanism>` attribute, and the

@@ -1443,7 +1443,7 @@ class Component(object):
 
         # ASSIGN SHAPE TO VARIABLE if specified
 
-        elif hasattr(self, 'shape') and self.shape is not None:
+        if hasattr(self, 'shape') and self.shape is not None:
             # IMPLEMENTATION NOTE 6/23/17 (CW): this test is currently unused by all components. To confirm this, we
             # may add an exception here (raise ComponentError("Oops this is actually used")), then run all tests.
             # thus, we should consider deleting this validation

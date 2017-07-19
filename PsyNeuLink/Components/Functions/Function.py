@@ -1889,7 +1889,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # region Type conversion (specified by outputType):
         # Convert to 2D array, irrespective of variable type:
         if outputType is FunctionOutputType.NP_2D_ARRAY:
-            result = np.atleast2d(result)
+            result = np.atleast_2d(result)
 
         # Convert to 1D array, irrespective of variable type:
         # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception

@@ -17,10 +17,10 @@ An AdaptiveMechanism is a type of `Mechanism <Mechanisms>` that uses its input t
 other PsyNeuLink components.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
 this need not be the case. There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that
 modify the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that
-modify the  parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
+modify the parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
 ProcessingMechanisms in the `Process` or `System` to which they belong have been executed, with all LearningMechanisms
 then executed before all ControlMechanisms. Both types of AdaptiveMechanisms are executed before the next `TRIAL`,
-so that the modifications they make are available during the  `TRIAL` run for the Process or System.
+so that the modifications they make are available during the `TRIAL` run for the Process or System.
 
 .. _AdaptiveMechanism_Creation:
 
