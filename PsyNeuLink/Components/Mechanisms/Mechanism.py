@@ -615,13 +615,13 @@ def mechanism(mech_spec=None, params=None, context=None):
 
 
 class Mechanism_Base(Mechanism):
-    """Abstract class for Mechanism
+    """Base class for Mechanism.
 
     .. note::
-       Mechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
-       by calling the constructor for the desired subclass, or using other methods for specifying a Mechanism in
-       context (see :ref:`Mechanism_Creation`).
+       Mechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
+       by calling the constructor for a subclass, or using other methods for specifying a Mechanism in context
+       (see `Mechanism_Creation`).
 
     COMMENT:
         Description

@@ -1,6 +1,8 @@
 ModulatoryProjection
 ====================
 
+.. _ModulatoryProjection_Subtypes:
+
 .. toctree::
    :maxdepth: 2
 

@@ -194,8 +194,8 @@ class LearningSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of OutputState that represents the LearningSignal of a `LearningMechanism` provided to a
-    `LearningProjection`.
+    A subclass of `ModulatorySignal` used by a `LearningMechanism` to modify the `matrix <MappingProjection.matrix>`
+    parameter of one more more `MappingProjection(s) <MappingProjection>`.
 
     COMMENT:
 

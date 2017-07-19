@@ -150,11 +150,11 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         name=None,                                 \
         prefs=None)
 
-    Abstract class for ControlMechanism.
+    Subclass of `AdaptiveMechanism` that modulates the parameter(s) of one or more `Component(s) <Component>`.
 
     .. note::
-       ControlMechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the constructor for a :doc:`subclass <ControlMechanism>`.
+       ControlMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the constructor for a `subclass <ControlMechanism_Subtypes>`.
 
     COMMENT:
         Description:

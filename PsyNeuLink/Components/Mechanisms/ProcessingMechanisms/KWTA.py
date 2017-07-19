@@ -23,6 +23,8 @@ class KWTAError(Exception):
         return repr(self.error_value)
 
 class KWTA(RecurrentTransferMechanism):
+    """Subclass of `RecurrentTransferMechanism` that dynamically regulates the values the "activity" of its elements.
+    """
 
     componentType = KWTA
 

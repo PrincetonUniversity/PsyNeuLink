@@ -272,8 +272,9 @@ class ParameterState(State_Base):
     name=None,                                                   \
     prefs=None)
 
-    Implements a subclass of `State` that represents and possibly modifies the value of a parameter for a Mechanism,
-    Projection, or function.
+    Subclass of `State` that represents and possibly modifies the parameter of
+    a `Mechanism`, `Projection`, or its `Function`.
+
 
     COMMENT:
 

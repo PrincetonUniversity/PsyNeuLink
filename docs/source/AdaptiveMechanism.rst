@@ -1,8 +1,10 @@
 Adaptive Mechanism
 ==================
 
+.. _AdaptiveMechanism_Subtypes:
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    LearningMechanism
    ControlMechanism
@@ -10,4 +12,4 @@ Adaptive Mechanism
 
 .. automodule:: AdaptiveMechanisms.AdaptiveMechanism
    :members:
-   :exclude-members: AdaptiveMechanism_Base, Linear, random
+   :exclude-members: Linear, random

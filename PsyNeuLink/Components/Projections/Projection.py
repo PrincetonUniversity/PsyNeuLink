@@ -292,12 +292,12 @@ class Projection_Base(Projection):
     name=None,        \
     prefs=None)
 
-    Abstract class definition for
+    Base class for all Projections.
 
     .. note::
-       Projections should NEVER be instantiated by a direct call to the base class.
-       They should be created by calling the constructor for the desired subclass or by using any of the other
-       methods for :ref:`specifying a Projection <Projection_In_Context_Specification>`.
+       Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be created by calling the constructor for a subclass` or by using any of the other methods for
+       `specifying a Projection <Projection_In_Context_Specification>`.
 
 
     COMMENT:

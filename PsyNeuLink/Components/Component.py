@@ -453,7 +453,11 @@ class ComponentError(Exception):
 
 
 class Component(object):
-    """Implement parent class for Components used by Process, Mechanism, State, and Projection class categories
+    """Base class for Component.
+
+    .. note::
+       Component is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the constructor for a subclass.
 
     COMMENT:
         Every Component is associated with:

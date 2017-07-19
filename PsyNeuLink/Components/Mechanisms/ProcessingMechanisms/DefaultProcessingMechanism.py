@@ -21,7 +21,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import *
 
 # class DefaultProcessingMechanism_Base(ProcessingMechanism_Base):
 class DefaultProcessingMechanism_Base(Mechanism_Base):
-    """Use to implement SystemDefaultInputMechanism, DefaultControlMechanism, and SystemDefaultOutputMechanism
+    """Subclass of `ProcessingMechanism` used to implement SystemDefaultInputMechanism, DefaultControlMechanism,
+    and SystemDefaultOutputMechanism.
 
     Description:
         Implements "dummy" mechanism used to implement default input, control signals, and outputs to other mechanisms

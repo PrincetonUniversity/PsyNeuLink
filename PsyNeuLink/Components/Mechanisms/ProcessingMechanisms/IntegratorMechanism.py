@@ -92,7 +92,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     name=None,                                              \
     prefs=None)
 
-    Implements the IntegratorMechanism subclass of Mechanism.
+    Subclass of `ProcessingMechanism` that integrates its input.
 
     COMMENT:
         Description:

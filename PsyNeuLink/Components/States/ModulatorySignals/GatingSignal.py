@@ -252,7 +252,8 @@ class GatingSignal(ModulatorySignal):
         name=None,                                  \
         prefs=None)
 
-    A subclass of OutputState that represents the value of a GatingSignal provided to a `GatingProjection`.
+    A subclass of `ModulatorySignal` used by a `GatingMechanism` to modulate the value(s)
+    of one more `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>`.
 
     COMMENT:
 

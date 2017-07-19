@@ -154,7 +154,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  name=None,           \
                  prefs=None)
 
-    Implements a Projection that modifies the matrix parameter of a MappingProjection.
+    Subclass of `ModulatoryProjection` that modulates the value of a `ParameterState` for the
+    `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     COMMENT:
         Description:

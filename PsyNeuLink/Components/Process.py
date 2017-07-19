@@ -550,11 +550,11 @@ class Process_Base(Process):
     prefs=None,                                             \
     context=None)
 
-    Abstract class for Process.
+    Base class for Process.
 
     .. note::
-       Processes should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :class:`process` factory method (see it for description of parameters).
+       Process is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the :class:`process` factory method (see it for description of parameters).
 
     COMMENT:
         Description

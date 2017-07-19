@@ -395,7 +395,7 @@ class OutputState(State_Base):
     prefs=None,                                \
     context=None)
 
-    Implements a subclass of `State` that represents an output of a Mechanism.
+    Subclass of `State` that calculates and represents an output of a `Mechanism`.
 
     COMMENT:
 

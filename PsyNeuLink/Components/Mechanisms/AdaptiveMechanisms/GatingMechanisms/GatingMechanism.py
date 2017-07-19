@@ -134,11 +134,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         name=None,                                  \
         prefs=None)
 
-    Abstract class for GatingMechanism.
-
-    .. note::
-       GatingMechanisms should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the constructor for a :doc:`subclass <GatingMechanism>`.
+    Subclass of `AdaptiveMechanism` that gates (modulates) the value(s) of one or more `States <State>`.
 
     COMMENT:
         Description:

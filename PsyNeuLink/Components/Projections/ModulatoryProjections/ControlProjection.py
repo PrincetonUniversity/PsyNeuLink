@@ -114,7 +114,7 @@ class ControlProjection(ModulatoryProjection_Base):
      name=None,            \
      prefs=None)
 
-     Implements a projection that controls the parameter of a mechanism or its :keyword:`function`.
+    Subclass of `ModulatoryProjection` that modulates the value of a `ParameterState` of a `Mechanism`.
 
     COMMENT:
         Description:
