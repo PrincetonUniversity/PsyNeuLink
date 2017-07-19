@@ -17,9 +17,9 @@ OutputState(s) represent the result(s) of executing a Mechanism.  This may be th
 `function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
 Mechanism's `output_value <Mechanism.Mechanism_Base.output_value>` attribute.  OutputStates are used to represent
 individual items of the Mechanism's `value <Mechanism.Mechanism_Base.value>`, and/or useful quantities derived from
-them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates 
+them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
 a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputStates
-that represent its mean, variance or other derived values.  In contrast, the `function <DDM.DDM.function>` 
+that represent its mean, variance or other derived values.  In contrast, the `function <DDM.DDM.function>`
 of a `DDM` Mechanism generates several results (such as decision accuracy and response time), each of which can be
 assigned as the `value <OutputState.value>` of a different OutputState.  The OutputState(s) of a Mechanism can serve
 as the input to other  Mechanisms (by way of `projections <Projections>`), or as the output of a Process and/or
@@ -135,7 +135,7 @@ of the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `be
 .. _OutputState_Standard:
 
 Standard OutputStates
-^^^^^^^^^^^^^^^^^^^^^  
+^^^^^^^^^^^^^^^^^^^^^
 
 Most types of Mechanisms have a `standard_output_states` class attribute, that contains a list of predefined
 OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
@@ -147,13 +147,13 @@ These can be used in the list of OutputStates specified for a TransferMechanism 
 
     my_mech = TransferMechanism(default_variable=[0,0],
                                 function=Logistic(),
-                                output_states=[TRANSFER_OUTPUT.RESULT, 
+                                output_states=[TRANSFER_OUTPUT.RESULT,
                                                TRANSFER_OUTPUT.MEAN,
                                                TRANSFER_OUTPUT.VARIANCE)
 
 In this example, ``my_mech`` is configured with three OutputStates;  the first will be named *RESULT* and will
-represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean 
-of the result (i.e., of its two elements); and the third will be named *VARIANCE* and contain the variance of the 
+represent logistic transform of the 2-element input vector;  the second will be named  *MEAN* and will represent mean
+of the result (i.e., of its two elements); and the third will be named *VARIANCE* and contain the variance of the
 result.
 
 .. _OutputState_Customization:
@@ -170,7 +170,7 @@ specifying its `index <OutputState.index>` attribute. An OutputState can also be
 the value of the item, by specifying a function for its `calculate <OutputState.calculate>` attribute; the result
 will then be assigned as the OutputState's `value <OutputState.value>`.  An OutputState's `index <OutputState.index>`
 and `calculate <OutputState.calculate>` attributes can be assigned when the OutputState is assigned to a Mechanism,
-by including *INDEX* and *CALCULATE* entries in a  `specification dictionary <OutputState_Specification>` for the 
+by including *INDEX* and *CALCULATE* entries in a  `specification dictionary <OutputState_Specification>` for the
 OutputState, as in the following example::
 
     my_mech = DDM(function=BogaczEtAl(),
@@ -185,7 +185,7 @@ COMMENT:
 COMMENT
 
 In this example, ``my_mech`` is configured with three OutputStates.  The first two are standard OutputStates that
-represent the decision variable of the DDM and the probability of it crossing of the upper (vs. lower) threshold.  the 
+represent the decision variable of the DDM and the probability of it crossing of the upper (vs. lower) threshold.  the
 third is a custom OutputState, that computes the entropy of the probability of crossing the upper threshold.  It uses
 the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, and *INDEX* is assigned ``2`` to
 reference the third item of the DDM's `value <DDM.value>` attribute (items are indexed starting with 0), which contains
@@ -319,10 +319,19 @@ Class Reference
 
 """
 
-# import Components
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state_list
-from PsyNeuLink.Components.Functions.Function import *
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import Component
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, is_function_type
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.ShellClasses import Mechanism
+from PsyNeuLink.Components.States.State import State_Base, _instantiate_state_list, state_type_keywords
+from PsyNeuLink.Globals.Keywords import CALCULATE, DEFERRED_INITIALIZATION, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import iscompatible, type_match
+from PsyNeuLink.Globals.Utilities import UtilitiesError
 
 state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 
@@ -331,7 +340,6 @@ state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 #     TIME_STAMP      = 1 << 0
 #     ALL = TIME_STAMP
 #     DEFAULTS = NONE
-
 
 PRIMARY_OUTPUT_STATE = 0
 SEQUENTIAL = 'SEQUENTIAL'

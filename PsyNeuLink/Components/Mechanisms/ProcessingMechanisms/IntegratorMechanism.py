@@ -67,8 +67,14 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
+from PsyNeuLink.Components import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Globals.Keywords import INTEGRATOR_MECHANISM, OUTPUT_STATES, PREDICTION_MECHANISM_OUTPUT, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 # IntegratorMechanism parameter keywords:
 DEFAULT_RATE = 0.5

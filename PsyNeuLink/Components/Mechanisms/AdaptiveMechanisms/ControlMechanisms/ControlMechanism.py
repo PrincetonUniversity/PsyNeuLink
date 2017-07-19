@@ -24,8 +24,8 @@ for a more detailed description of how modulation operates).  A ControlMechanism
 Components in the System for which it is the `controller <System_Execution_Control>`.  The control Components of a
 system can be displayed using the System's `show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
-The control components of a system can be displayed using the system's 
-`show_graph` method with its **show_control** argument assigned as :keyword:``True`.  
+The control components of a system can be displayed using the system's
+`show_graph` method with its **show_control** argument assigned as :keyword:``True`.
 COMMENT
 
 The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
@@ -41,7 +41,7 @@ A ControlMechanism is also created automatically whenever a `System is created <
 the `controller <System_Execution_Control>` for that System. The values to be monitored by the ControlMechanism are
 specified in the **monitor_for_control** argument of its constructor, and the parameters it controls are specified in
 the **control_signals** argument.  When the ControlMechanism is created, it automatically creates
-an ObjectiveMechanism (used to monitor and evaluate the values specified in **monitor_for_control**) 
+an ObjectiveMechanism (used to monitor and evaluate the values specified in **monitor_for_control**)
 as well as `ControlSignals <ControlSignal>` and `ControlProjections <ControlProjection>` used to control the parameters
 specified in **control_signals**, as described below. The kind of ObjectiveMechanism created by a ControlMechanism,
 and how it evaluates the values it monitors, depends on the :ref:`subclass <LINK>` of ControlMechanism.
@@ -120,16 +120,18 @@ Class Reference
 ---------------
 
 """
-
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Functions.Function import _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MONITOR_FOR_CONTROL, OWNER, PARAMETER_STATE, REFERENCE_VALUE, SYSTEM
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 ControlMechanismRegistry = {}
 
@@ -159,7 +161,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     COMMENT:
         Description:
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
-               If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple) 
+               If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
                    it is flagged for deferred_init() in its __init__ method
                When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
                    its _assign_as_controller method is called in _instantiate_attributes_after_function;
@@ -204,7 +206,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
-        
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
@@ -510,8 +512,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     [NOTE: this is a convenience format;
                            it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
             - ControlSignal specification dictionary, from control_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries; 
-                           it can also include a PARAMS entry with a params dict containing ControlSignal params] 
+                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
+                           it can also include a PARAMS entry with a params dict containing ControlSignal params]
         * State._parse_state_spec() is used to parse control_signal arg
         * params are expected to be for (i.e., to be passed to) ControlSignal;
         * wait to instantiate deferred_init() Projections until after ControlSignal is instantiated,

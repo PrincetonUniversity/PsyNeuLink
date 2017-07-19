@@ -191,9 +191,9 @@ Class Reference
 ---------------
 """
 
-from PsyNeuLink.Components.States.State import *
 from PsyNeuLink.Components.States.OutputState import OutputState
-
+from PsyNeuLink.Components.States.State import *
+from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION
 
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):

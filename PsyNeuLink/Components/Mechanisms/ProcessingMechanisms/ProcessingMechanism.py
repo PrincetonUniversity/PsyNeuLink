@@ -48,9 +48,9 @@ system to which it belongs.
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 # ControlMechanismRegistry = {}
 
