@@ -1,11 +1,14 @@
 Control Mechanism
 =================
 
-.. toctree::
-   :maxdepth: 2
+.. _ControlMechanism_Subtypes:
 
-   AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism
-   AdaptiveMechanisms.ControlMechanisms.EVCMechanism
+
+.. toctree::
+   :maxdepth: 1
+
+   DefaultControlMechanism
+   EVCMechanism
 
 .. automodule:: AdaptiveMechanisms.ControlMechanisms.ControlMechanism
    :members:
