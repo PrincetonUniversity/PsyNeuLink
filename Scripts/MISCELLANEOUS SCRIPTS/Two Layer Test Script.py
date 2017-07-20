@@ -8,11 +8,11 @@ from PsyNeuLink.Components.System import system
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Linear,
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
-                        default_input_value = [0])
+                        default_variable = [0])
 
 # Weights_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 # Weights_matrix = (np.arange(1*2).reshape((1, 2)) + 1)/(2*5)
@@ -25,7 +25,7 @@ Weights = MappingProjection(name='Weights',
                         matrix=Weights_matrix
                         )
 
-my_process = process(default_input_value=[0, 0],
+my_process = process(default_variable=[0, 0],
                      # pathway=[Input_Layer, Weights, Output_Layer],
                      pathway=[Input_Layer, Output_Layer],
                      # clamp_input=SOFT_CLAMP,

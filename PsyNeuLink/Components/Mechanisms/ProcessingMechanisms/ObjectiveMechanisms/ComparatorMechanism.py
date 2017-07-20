@@ -12,8 +12,8 @@
 Overview
 --------
 
-A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares 
-them using its `function <ComparatorMechanism.function>`, and generates as its output an 
+A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
+them using its `function <ComparatorMechanism.function>`, and generates as its output an
 `error_signal <Comparator.error_signal>` that is the discrepancy between them.
 
 .. _ComparatorMechanism_Creation:
@@ -21,21 +21,21 @@ them using its `function <ComparatorMechanism.function>`, and generates as its o
 Creating a ComparatorMechanism
 ------------------------------
 
-ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as 
-`LearningMechanisms <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling 
+ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
+`LearningMechanisms <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
-sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their 
-specification, which are special versions of an ObjectiveMechanism's **monitored_values** argument).  When the 
+sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
+specification, which are special versions of an ObjectiveMechanism's **monitored_values** argument).  When the
 ComparatorMechanism is created, two InputStates are created, one each for its sample and target inputs (and named,
 by default, *SAMPLE* and *TARGET*). Each is assigned a MappingProjection from the corresponding OutputState specified
 in the **sample** and **target** arguments.
 
 It is important to recognize that the value of the *SAMPLE* and *TARGET* InputStates must have the same length and type,
-so that they can be compared using the ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default, 
+so that they can be compared using the ComparatorMechanism's `function <ComparatorMechanism.function>`.  By default,
 they use the format of the OutputStates specified in the **sample** and **target** arguments, respectively,
-and the `MappingProjection` to each uses an `IDENTITY_MATRIX`.  Therefore, for the default configuration, the 
+and the `MappingProjection` to each uses an `IDENTITY_MATRIX`.  Therefore, for the default configuration, the
 OutputStates specified in the **sample** and **target** arguments must have values of the same length and type.
-If these differ, the **input_states** argument can be used to explicitly specify the format of the ComparatorMechanism's 
+If these differ, the **input_states** argument can be used to explicitly specify the format of the ComparatorMechanism's
 *SAMPLE* and *TARGET* InputStates, to insure they are compatible with one another (as well as to customize their
 names, if desired).  If the **input_states** argument is used, *both* the sample and target InputStates must be
 specified.  Any of the formats for `specifying InputStates <InputState_Specification>` can be used in the argument.
@@ -44,9 +44,9 @@ also be compatible with the value of the OutputStates specified in the **sample*
 the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
 MappingProjection created uses a `FULL_CONNECTIVITY` matrix.  Thus, OutputStates of differing lengths can be mapped
 to the sample and target InputStates of a ComparatorMechanism (see the `example <ComparatorMechanism_Example>` below),
-so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, 
-this can be specified using the *PROJECTION* entry of a `state specification dictionary <LINK>`
-for the InputState in the **input_states** argument.
+so long as the latter are of the same length.  If a projection other than a `FULL_CONNECTIVITY` matrix is needed, this
+can be specified using the *PROJECTION* entry of a `State specification dictionary <State_Specification>` for the
+InputState in the **input_states** argument.
 
 .. _ComparatorMechanism_Structure:
 
@@ -58,12 +58,12 @@ A ComparatorMechanism has two `InputStates <ComparatorMechanism.input_states>`, 
 arguments of its constructor.  The InputStates are listed in the Mechanism's
 `input_states <ComparatorMechanism.input_States>` attribute.  The OutputStates from which they receive their
 projections (specified in the **sample** and **target** arguments) are listed in the Mechanism's
-`sample` and `target` attributes as well as in its `monitored_values <Comparator.monitored_values>` attribute.  
-The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and target 
+`sample` and `target` attributes as well as in its `monitored_values <Comparator.monitored_values>` attribute.
+The ComparatorMechanism's `function <ComparatorMechanism.function>` compares the value of the sample and target
 InputStates.  By default, it uses a `LinearCombination` function, assigning the sample InputState a
-`weight <LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the 
-sample is subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so 
-long as it is replaced with one that takes two arrays with the same format as its inputs, and generates a similar 
+`weight <LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the
+sample is subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so
+long as it is replaced with one that takes two arrays with the same format as its inputs, and generates a similar
 array as its result.  The result is assigned as the value of the Comparator Mechanism's *ERROR_SIGNAL*
 (`primary <OutputState_Primary>`) OutputState.
 
@@ -76,7 +76,7 @@ When an ComparatorMechanism is executed, it updates its input_states with the va
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
 compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *ERROR_SIGNAL*
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
-`output_value <ComparatorMechanism.output_value>` attribute. 
+`output_value <ComparatorMechanism.output_value>` attribute.
 
 .. _ComparatorMechanism_Example:
 
@@ -92,7 +92,7 @@ of a ComparatorMechanism.  This can be useful when one or both of these must be 
 OutputState(s) specified in the **sample** and **target** arguments. For example, for `Reinforcement Learning
 <Reinforcement>`, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
 this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
-`TransferMechanism` that uses the `SoftMax` function (and the `PROB <Softmax.PROB>` as its output format) to select 
+`TransferMechanism` that uses the `SoftMax` function (and the `PROB <Softmax.PROB>` as its output format) to select
 an action.  This generates a vector with a single non-zero value (the selected action). Because the output is a vector,
 specifying it as the ComparatorMechanism's **sample** argument will generate a corresponding InputState with a vector
 as its value.  This will not match the reward signal specified in the ComparatorMechanism's **target** argument, the
@@ -102,20 +102,20 @@ TARGET InputStates in the **input_states** argument of the ComparatorMechanism's
     my_action_selection_mech = TransferMechanism(size=5,
                                                  function=SoftMax(output=PROB))
 
-    my_reward_mech = TransferMechanism(default_input_value = [0])
+    my_reward_mech = TransferMechanism(default_variable = [0])
 
     my_comparator_mech = ComparatorMechanism(sample=my_action_selection_mech,
                                              target=my_reward_mech,
                                              input_states = [[0],[0]])
 
 Note that ``my_action_selection_mechanism`` is specified to take an array of length 5 as its input, and therefore
-generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample** 
+generate one of the same length as its `primary output <OutputState_Primary>`.  Since it is assigned as the **sample**
 of the ComparatorMechanism, by default this will create a *SAMPLE* InputState of length 5, that will not match the
 length of the *TARGET* InputState (which is 1).  This is taken care of, by specifying the **input_states** argument
 as an array with two single-value arrays (corresponding to the *SAMPLE* and *TARGET* InputStates). (In this
 example, the **sample** and **target** arguments are specified as Mechanisms since, by default, each has only a single
 (`primary <OutputState_Primary>`) OutputState, that will be used;  if either had more than one OutputState, and
-one of those was desired, it would have had to be specified explicitly in the **sample** or **target** argument).    
+one of those was desired, it would have had to be specified explicitly in the **sample** or **target** argument).
 
 .. _ComparatorMechanism_Class_Reference:
 
@@ -124,13 +124,19 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import LinearCombination
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, MONITORED_VALUES, ERROR_SIGNAL
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Components.States.OutputState import OutputState, StandardOutputStates, PRIMARY_OUTPUT_STATE
+import typecheck as tc
 
+from PsyNeuLink.Components.Functions.Function import LinearCombination
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
+from PsyNeuLink.Components.ShellClasses import Mechanism
+from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates, np
+from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'
 MSE = 'MSE'
@@ -180,7 +186,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     COMMENT:
         Description:
-            ComparatorMechanism is a subtype of the ObjectiveMechanism Subtype of the ProcssingMechanism Type 
+            ComparatorMechanism is a subtype of the ObjectiveMechanism Subtype of the ProcssingMechanism Type
             of the Mechanism Category of the Component class.
             By default, it's function uses the LinearCombination Function to compare two input variables.
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
@@ -194,7 +200,6 @@ class ComparatorMechanism(ObjectiveMechanism):
             + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
-            + paramNames (dict): names as above
 
         Class methods:
             None
@@ -220,12 +225,12 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     function:  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
-         
+
     output_states:  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
         specifies the OutputStates for the Mechanism;
 
     params:  Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -252,7 +257,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     ----------
 
     COMMENT:
-    default_input_value : Optional[List[array] or 2d np.array]
+    default_variable : Optional[List[array] or 2d np.array]
     COMMENT
 
     sample : OutputState
@@ -260,7 +265,7 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     target : OutputState
         determines the value with which `sample` is compared by the `function <ComparatorMechanism.function>`.
-        
+
     input_states : ContentAddressableList[InputState, InputState]
         contains the two InputStates named, by default, *SAMPLE* and *TARGET*, each of which receives a
         `MappingProjection` from the OutputStates referenced by the `sample` and `target` attributes.
@@ -315,8 +320,6 @@ class ComparatorMechanism(ObjectiveMechanism):
         TIME_SCALE: TimeScale.TRIAL,
         MONITORED_VALUES: None})
 
-    paramNames = paramClassDefaults.keys()
-
     standard_output_states = ObjectiveMechanism.standard_output_states.copy()
     standard_output_states.extend([{NAME:SSE,
                                     CALCULATE:lambda x: np.sum(x*x)},
@@ -369,7 +372,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """If sample and target values are specified, validate that they are compatible 
+        """If sample and target values are specified, validate that they are compatible
         """
 
         if INPUT_STATES in request_set:

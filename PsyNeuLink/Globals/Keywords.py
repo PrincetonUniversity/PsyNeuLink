@@ -142,8 +142,8 @@ HOLLOW_MATRIX = "HollowMatrix"
 FULL_CONNECTIVITY_MATRIX = "FullConnectivityMatrix"
 RANDOM_CONNECTIVITY_MATRIX = "RandomConnectivityMatrix"
 AUTO_ASSIGN_MATRIX = 'AutoAssignMatrix'
-# DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
-DEFAULT_MATRIX = IDENTITY_MATRIX
+DEFAULT_MATRIX = AUTO_ASSIGN_MATRIX
+# DEFAULT_MATRIX = IDENTITY_MATRIX
 
 MATRIX_KEYWORDS = MatrixKeywords()
 MATRIX_KEYWORD_SET = MATRIX_KEYWORDS._set()
@@ -307,7 +307,7 @@ AUTO_ASSOCIATIVE_PROJECTION = "AutoAssociativeProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
-PATHWAY_PROJECTION = "TransmissiveProjection"
+PATHWAY_PROJECTION = "PathwayProjection"
 MODULATORY_PROJECTION = "ModulatoryProjection"
 
 
@@ -340,6 +340,7 @@ LCA = "LCA"
 KWTA = "KWTA"
 INTEGRATOR_MECHANISM = "IntegratorMechanism"
 DDM_MECHANISM = "DDM"
+COMPOSITION_INTERFACE_MECHANISM = "CompositionInterfaceMechanism"
 
 # Functions:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
@@ -509,7 +510,6 @@ GATING_SIGNAL = 'gating_signal'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
-GATED_STATE = "gated_state"
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_POLICY = 'gating_policy'
 
@@ -520,6 +520,7 @@ GATING_POLICY = 'gating_policy'
 STATE = "State"
 # These are used as keys in State specification dictionaries
 STATES = "STATES"
+STATE_TYPE = "state_type"
 PROJECTIONS = "projections"  # Used to specify projection list to State
 kwStateName = "StateName"
 kwStatePrefs = "StatePrefs"

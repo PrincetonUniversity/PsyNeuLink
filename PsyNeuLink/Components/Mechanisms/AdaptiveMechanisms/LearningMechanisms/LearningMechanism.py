@@ -89,7 +89,7 @@ names and roles (shown in the `figure below <LearningMechanism_Single_Layer_Lear
   `error_source <LearningMechanism_Additional_Attributes>` (that is, the output of the *ProcessingMechanism* to which
   the MappingProjection being learned projects).  By default, this uses the `primary OutputState <OutputState_Primary>`
   of the `error_source`.  However, a different OutputState can be designated in the constructor for the `error_source`,
-  by assigning a `parameter specification dictionary <ParameterState_Specifying_Parameters>` to its **params**
+  by assigning a `parameter specification dictionary <ParameterState_Specification>` to its **params**
   argument with an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the desired
   OutputState(s) as its value.  The :keyword:`value` of the *ACTIVATION_OUTPUT* InputState is assigned as the
   second item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
@@ -205,7 +205,7 @@ components being learned and/or its operation:
 * `learning_rate <LearningMechanism.learning_rate>` - the learning rate for the LearningMechanism.  This is used to
   specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
   `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
-  its `function <LearningMechanism.function>` before conveying these to the `LearningProjection` used to modify the
+  its `function <LearningMechanism.function>` before conveying these to the `LearningSignal` used to modify the
   MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifying the
   `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
   of its `function <LearningMechanism.function>` directly) supersedes any specification of the :keyword:`learning_rate`
@@ -392,14 +392,21 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import BackPropagation
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-    import ObjectiveMechanism, ERROR_SIGNAL
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec, _validate_receiver
+from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
+from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, DEFERRED_INITIALIZATION, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_numeric, parameter_spec
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # Params:
 
@@ -464,7 +471,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
             It implements a Mechanism that calculates changes to a Projection's parameters.
             It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
-            learning_signal (2d arry of parameter changes) to be used by the recipient of a LearningProjection
+            learning_signal (ndarray of parameter changes) to be used by the recipient of a LearningProjection
             that projects from the LearningMechanism to a MappingProjection.
 
         # DOCUMENT: ??NOT SURE WHETHER THIS IS STILL RELEVANT
@@ -495,7 +502,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 + FUNCTION (Function): (default: BP)
                 + FUNCTION_PARAMS:
                     + LEARNING_RATE (value): (default: 1)
-            + paramNames (dict)
             + classPreference (PreferenceSet): LearningSignalPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
@@ -534,11 +540,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see `function <LearningMechanism.function>` for details).
 
     learning_rate : float
-        specifies the learning rate for this LearningMechanism 
+        specifies the learning rate for this LearningMechanism
         (see `learning_rate <LearningMechanism.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -596,7 +602,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     learned_projections : List[Projections]
         the Projections, the parameters of which are modified by the LearningMechanism.  Usually this is a single
-        `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.  
+        `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     function : LearningFunction or function : default BackPropagation
         specifies function used to compute the `learning_signal`.  Must take the following arguments:
@@ -608,21 +614,28 @@ class LearningMechanism(AdaptiveMechanism_Base):
         (see description of `learning_rate <LearningMechanism_Learning_Rate>` above for additional details).
 
     error_signal : 1d np.array
-        the error signal returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
+        one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
         `single layer learning <LearningMechanism_Single_Layer>`, this is the same as the value received in the
         LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` InputState;  for `multilayer
         learning <LearningMechanism_Multi_Layer>`, it is a modified version of the value received, that takes
         account of the contribution to the error signal received, made by the learned_projection and its input.
 
+    learning_signal : number, ndarray or matrix
+        one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`,
+        that provides the changes to the `matrix <MappingProjection.matrix>` parameter(s) of the
+        `MappingProjection(s) <MappingProjection>` being learned (and listed in
+        `learned_projections <LearningMechanism.learned_projections>`) required to reduce the
+        `error_signal <LearningMechanism.error_signal>`.
+
     learning_signals : List[LearningSignal]
-        list of `LearningSignals <LearningSignals>` for the LearningMechanism, each of which sends a 
+        list of `LearningSignals <LearningSignals>` for the LearningMechanism, each of which sends a
         `LearningProjection` to the `ParameterState` for the parameter it controls.
-        The value of each LearningSignal generally contains a 2d np.array or matrix of changes to be used by recipient 
-        of a `LearningProjection` from the LearningMechanism, to adjust its parameters (e.g., matrix weights, in which 
-        rows correspond to sender, and columns to receiver).  Since LearningSignals are OutputStates, these are also 
-        listed in the ControlMechanism's `output_states <Mechanism.output_states>` attribute, along with its 
-        *ERROR_SIGNAL* OutputState, and any others it may have.                
-        
+        The value of each LearningSignal generally contains a 2d np.array or matrix of changes to be used by recipient
+        of a `LearningProjection` from the LearningMechanism, to adjust its parameters (e.g., matrix weights, in which
+        rows correspond to sender, and columns to receiver).  Since LearningSignals are OutputStates, these are also
+        listed in the ControlMechanism's `output_states <Mechanism.output_states>` attribute, along with its
+        *ERROR_SIGNAL* OutputState, and any others it may have.
+
     output_states : ContentAddressableList[OutputState]
         contains list of OutputStates for the LearningMechanism, including: its LearningSignal(s) which appear(s) at
         the begining of the list; its *ERROR_SIGNAL* OutputState, which appears after the LearningSignal(s); any
@@ -630,9 +643,13 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)
     output_values : 2d np.array
-        the initial item(s) is/are the value(s) of the LearningMechanism's LearningSignal(s);  the next is 
+        the initial item(s) is/are the value(s) of the LearningMechanism's LearningSignal(s);  the next is
         the value of its *ERROR_SIGNAL* OutputState (same as `error_signal`);  subsequent items are the value of
-        the corresponding OutputStates in the `output_states <ControlMechanism.outputStates>` attribute.
+        the corresponding OutputStates in the `output_states <Mechanism_Base.outputStates>` attribute.
+
+    modulation : ModulationParam
+        the default form of modulation used by the LearningMechanism's `LearningSignals <LearningSignal>`,
+        unless they are `individually specified <LearningSignal_Specification>`.
 
     name : str : default LearningProjection-<index>
         the name of the LearningMechanism.
@@ -803,7 +820,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                             mapping_proj,
                                                             MAPPING_PROJECTION))
 
-                # ControlSignal specification dictionary, must have the following entries:
+                # LearningSignal specification dictionary, must have the following entries:
                 #    NAME:str - must be the name of an attribute of PROJECTION
                 #    PROJECTION:Projection - must be a MappingProjection
                 #                            and have an attribute and corresponding ParameterState named NAME
@@ -888,8 +905,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Instantiate LearningSignals if they are specified, and assign to self._output_states
         # Note: if any LearningSignals are specified they will replace the default LEARNING_SIGNAL OutputState
         #          in the OUTPUT_STATES entry of paramClassDefaults;
-        #       the LearningSignals will be inserted into _output_states at the beginning of the list
-        #       leaving ERROR_SIGNAL as the last entry
+        #       the LearningSignals are appended to _output_states, leaving ERROR_SIGNAL as the first entry.
         if self.learning_signals:
             # Delete default LEARNING_SIGNAL item in output_states
             del self._output_states[1]
@@ -917,7 +933,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                     [NOTE: this is a convenience format;
                            it precludes specification of LearningSignal params (??e.g., LEARNING_RATE)]
             - LearningSignal specification dictionary, from learning_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries; 
+                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
                            it can also include a PARAMS entry with a params dict containing LearningSignal params]
             * NOTE: ParameterState must be for a Projection, and generally for MATRIX parameter of a MappingProjection;
                     however, LearningSignal is implemented to be applicable for any ParameterState of any Projection.
@@ -976,9 +992,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
             mapping_projection = learning_signal_spec.owner
             if not isinstance(mapping_projection, MappingProjection):
                 raise LearningMechanismError("{} specified for {} of {} ({}) must be a {}".
-                                             format(PARAMETER_STATE, 
-                                                    LEARNING_SIGNAL, 
-                                                    self.name, 
+                                             format(PARAMETER_STATE,
+                                                    LEARNING_SIGNAL,
+                                                    self.name,
                                                     mapping_projection,
                                                     PROJECTION))
             param_name = learning_signal_spec.name
@@ -1109,7 +1125,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                 constraint_value_name='Default control allocation',
                                                 context=context)
 
-        # VALIDATE OR INSTANTIATE LearningProjection(s) TO LearningSignal  -------------------------------------------
+        # VALIDATE OR INSTANTIATE LearningProjection(s) FROM LearningSignal  -------------------------------------------
 
         # Validate learning_projection (if specified) and get receiver's name
         if learning_projection:
@@ -1130,15 +1146,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             else:
                 learning_projection.sender = learning_signal
 
-        # # Instantiate LearningProjection
-        # else:
-        #     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        #     from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-        #     learning_projection = LearningProjection(sender=learning_signal,
-        #                                              receiver=parameter_state,
-        #                                              name=LEARNING_PROJECTION + learning_signal_name)
-
-            # Add LearningProjection to list of OutputState's outgoing Projections
+            # Add LearningProjection to list of LearningSignal's outgoing Projections
             # (note: if it was deferred, it just added itself, skip)
             if not learning_projection in learning_signal.efferents:
                 learning_signal.efferents.append(learning_projection)
@@ -1177,21 +1185,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
         if not INITIALIZING in context and self.reportOutputPref:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.learning_signal))
 
-        # # TEST PRINT:
-        # print("\n@@@ EXECUTED: {}".format(self.name))
-
         self.value = [self.learning_signal, self.error_signal]
         return self.value
 
-    # # IMPLEMENTATION NOTE: Assumes that the LearningMechanism projects to and modifies only a single MappingProjection
-    # @property
-    # def learned_projection(self):
-    #     learning_projections = self.output_states[LEARNING_SIGNAL].efferents
-    #     if learning_projections:
-    #         return learning_projections[0].receiver.owner
-    #     else:
-    #         return None
-    #
     @property
     def learning_rate(self):
         return self.function_object.learning_rate
@@ -1202,8 +1198,6 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     @property
     def learned_projections(self):
-        # learned_projections = []
-        # return [learned_projections.append(learning_signal.efferents) for learning_signal in self.learning_signals]
         return [lp.receiver.owner for lp in self.learning_projections]
 
 

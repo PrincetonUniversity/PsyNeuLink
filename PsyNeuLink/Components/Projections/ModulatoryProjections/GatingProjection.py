@@ -27,7 +27,7 @@ A GatingProjection can be created using any of the standard ways to `create a pr
 by including it in the specification of an `InputState` or `OutputState` .  If a GatingProjection is created using its
 constructor on its own, the **receiver** argument must be specified.  It can be specified as a particular InputState
 or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, the Mechanism's
-`primary InputState <Mechanism_InputStates>` will be used. If the GatingProjection is included in an InputState or
+`primary InputState <InputState_Primary>` will be used. If the GatingProjection is included in an InputState or
 OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
 If a GatingProjection's `sender <GatingProjection.sender>` is not specified, the `sender <GatingProjection.sender>`
 is assigned to the OutputState of a `DefaultGatingMechanism`.
@@ -53,10 +53,10 @@ projects is updated.  Note that this only occurs when the ProcessingMechanism to
 :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 When a GatingProjection is executed, its `function <GatingProjection.function>` assigns the value of the `GatingSignal`
 from which it projects as its own `value <GatingProjection.value>`. This is used by the InputState or OutputState
-to which the GatingProjection projects to modulate its own `value <State.value>`.
+to which the GatingProjection projects to modulate its own `value <State_Base.value>`.
 
 .. note::
-   The changes in an InputState or OutputState's `value <State.value >`in response to the execution of a
+   The changes in an InputState or OutputState's `value <State_Base.value >` in response to the execution of a
    GatingProjection are not applied until the Mechanism to which the State belongs is next executed;
    see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
@@ -67,13 +67,21 @@ Class Reference
 ---------------
 
 """
+import typecheck as tc
 
-# from PsyNeuLink.Components import DefaultGatingMechanism
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink import FunctionOutputType
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
-
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
+from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({GATING_PROJECTION, GATING})
 projection_keywords.update({GATING_PROJECTION, GATING})
@@ -101,7 +109,7 @@ class GatingProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The GatingProjection class is a type in the Projection category of Component.
-            It implements a projection to the inputState or outputState of a mechanism that modulates the value of 
+            It implements a projection to the inputState or outputState of a mechanism that modulates the value of
             that state
             It:
                - takes a scalar as its input (sometimes referred to as a "gating signal")
@@ -122,7 +130,6 @@ class GatingProjection(ModulatoryProjection_Base):
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
                 PROJECTION_SENDER: DefaultGatingMechanism, # GatingProjection (assigned to class ref in __init__ module)
                 PROJECTION_SENDER_VALUE: [defaultGatingSignal]
-            + paramNames = paramClassDefaults.keys()
     COMMENT
 
 
@@ -131,7 +138,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     sender : Optional[Mechanism or GatingSignal]
         specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
-        `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism` 
+        `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism`
         for the system to which the receiver belongs will be assigned.
 
     receiver : Optional[Mechanism or ParameterState]
@@ -143,7 +150,7 @@ class GatingProjection(ModulatoryProjection_Base):
         `sender <GatingProjection.sender>`  to its own `value <GatingProjection.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the projection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
@@ -247,7 +254,7 @@ class GatingProjection(ModulatoryProjection_Base):
                          context=self)
 
     def _instantiate_sender(self, params=None, context=None):
-        """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism 
+        """Check that sender is not a process and that, if specified as a Mechanism, it is a GatingMechanism
         """
 
         # A Process can't be the sender of a GatingProjection

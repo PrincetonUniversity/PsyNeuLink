@@ -13,13 +13,14 @@
 Overview
 --------
 
-A ParameterState belongs to either a `Mechanism <Mechanism>` or a `MappingProjection` and is used to represent and
-possibly modify the value of the parameter used by its owner or owner's `function <Component.function>`.  It can
-receive one or more `ControlProjections <ControlProjection>` and/or `LearningProjections <LearningProjection>` that
-modify the value of the parameter. The Projections received by a ParameterState are listed in its
-`path_afferents <ParameterState.path_afferents>` attribute. Its `function <ParameterState.function>` combines the
-values of those Projections, and uses the result to modify the value of the parameter that is used by the
-owner or its `function <Component.function>`.
+ParameterStates belong to either a `Mechanism` or a `MappingProjection` and are used to represent, and possibly modify
+the, values of all of the configurable parameters of a `Component` or its `function <Component.function>`. A
+ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
+`LearningProjections <LearningProjection>` that modify the value of the parameter. The Projections received by a
+ParameterState are listed in its `mod_afferents <ParameterState.mod_afferents>` attribute. The ParameterState's
+`function <ParameterState.function>` combines the values of those Projections, and uses the result to
+modify the value of the parameter, that is then used by the Component or its `function <Component.function>` when
+it executes.
 
 
 .. _ParameterState_Creation:
@@ -27,95 +28,89 @@ owner or its `function <Component.function>`.
 Creating a ParameterState
 -------------------------
 
-A ParameterState can be created by calling its constructor, but in general this is not necessary or advisable as
-ParameterStates are created automatically when the Mechanism or Projection to which they belong is created.  The
+ParameterStates are created automatically when the `Mechanism` or `Projection` to which they belong is created.  The
 `owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism <Mechanism>` or `MappingProjection`.  One
 ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
-of the owner's `function <Component.function>`.  Each ParameterState is created using the value specified for the
-corresponding parameter, as described below.
+of the owner's `function <Component.function>` (the `configurable parameters <ParameterState_Configurable_Parameters>`
+of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
+dictionaries. Each ParameterState is created using the value specified for the corresponding parameter, as described
+below.
 
-.. _ParameterState_Specifying_Parameters:
+.. _ParameterState_Specification:
 
 Specifying Parameters
 ~~~~~~~~~~~~~~~~~~~~~
 
 Parameters can be specified in one of several places:
 
-    * In the **argument for the parameter** of the constructor for the `Component` to which the parameter
-      belongs (see :ref:`Component_Specifying_Functions_and_Parameters` for additional details).
+    * In the **argument** of the constructor for the `Component` to which the parameter belongs
+      (see `Component_Configurable_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
       Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-      (or a corresponding keyword) as its key, and the parameter's specification as its value (see 
+      (or a corresponding keyword) as its key, and the parameter's specification as its value (see
       `examples <ParameterState_Specification_Examples>` below). Parameters for a Component's
-      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*,
-      a value that is itself a parameter specification dictionary containing an entry for each of the
-      function's parameters to be specified.  When a value is assigned to a parameter in a specification dictionary,
-      it overrides any value assigned to the argument for the parameter in the Component's constructor.
+      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*, and a value that
+      is itself a parameter specification dictionary containing an entry for each of the function's parameters to be
+      specified.  When a value is assigned to a parameter in a specification dictionary, it overrides any value
+      assigned to the argument for the parameter in the Component's constructor.
     ..
-    * By direct assignment to the Component's attribute for the parameter (see below).
+    * By direct assignment to the Component's attribute for the parameter
+      (see `below <ParameterState_Configurable_Parameters>`).
     ..
-    * In the `assign_params` method for the Component.
+    * In the `assign_params <Component.assign_params>` method for the Component.
     ..
-    * When the Component is executed, in the **runtime_params** argument of a call to component's
-      `execute <Mechanism.Mechanism_Base.execute>` method.
-
-The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the
-Component or its `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same
-name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example,
-the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
-``my_component.param``).
-
-When the Component is executed, it updates the ParameterState by calling the ParameterState's
-`function <ParameterState.function>` with the attribute's value for the parameter.  The result is
-assigned as the ParameterState's `value <ParameterState.value>`, which is used by the owner
-of the ParameterState as the value of the corresponding parameter of its own `function <Component.function>`.
-
-.. note::
-   It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
-   and the `function <Component.function>` of its **owner.**  The former is used to determine the value of a parameter
-   used by the latter (see `figure <ModulatorySignals_Figure>`, and `State_Execution` for additional details).
+    * In the **runtime_params** argument of a call to component's `execute <Mechanism.Mechanism_Base.execute>` method.
 
 The specification of the initial value of a parameter can take any of the following forms:
 
-    * A **value**.  This must be a valid value for the parameter. It creates a default ParameterState,
+    .. _ParameterState_Value_Assignment:
+
+    * A **value** - this must be a valid value for the parameter. It creates a default ParameterState,
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
     ..
-    * A reference to an existing **ParameterState** object.  Its name must be the name of a parameter of the
-      owner or its `function <Component.function>`, and its value must be a valid one for the parameter.
+    * A reference to an existing **ParameterState** object - its name must be the name of a parameter of the
+      owner or of its `function <Component.function>`, and its value must be a valid one for the parameter.
 
       .. note::
           This capability is provided for generality and potential
           future use, but its current use is not advised.
     ..
-    * A Modulatory specification.  This can be an existing `ControlSignal` or `ControlProjection` object, a
-      `LearningSignal` or `LearningProjection` object, a constructor or the class name for any of these, or the
+    .. _ParameterState_Modulatory_Specification:
+
+    * A Modulatory specification -  this can be an existing `ControlSignal` or `ControlProjection`, a
+      `LearningSignal` or `LearningProjection`, a constructor or the class name for any of these, or the
       keywords *CONTROL* or *LEARNING*.  Any of these create a default ParameterState, assign the parameter's default
       value as the ParameterState's `value <ParameterState.value>`, and assign the parameter's name as the name of the
       ParameterState.  They also create and/or assign the corresponding ModulatorySignal and ModulatoryProjection,
       and assign the ParameterState as the ModulatoryProjection's `receiver <Projection.Projection.receiver>`.
       If the ModulatorySignal and/or ModulatoryProjection already exist, their value(s) must be valid one(s) for the
       parameter.  Note that only Control and Learning Modulatory components can be assigned to a ParameterState
-      (Gating components cannot -- they can only be assgined to InputStates or OutputStates).
+      (Gating components cannot be used -- they can only be assigned to `InputStates <InputState>`
+      and `OutputStates <OutputState>`).
     ..
-    * A 2-item (value, Modulatory specification) **tuple**.  This creates a default
-      ParameterState, uses the value (1st) item of the tuple as ParameterState's
-      `base_value <ParameterState.base_value>`, and assigns the parameter's name as the name of the ParameterState.
-      The Projection (2nd) item of the tuple is used to create and/or assign the specified Projection, that is assigned
-      the ParameterState as its `receiver <Projection.Projection.receiver>`.  The Projection must be a
-      `ControlProjection` or `LearningProjection`, and its value must be a valid one for the parameter.
+    * A 2-item (value, Modulatory specification) **tuple**.  This creates a default ParameterState, uses the value
+      (1st) item of the tuple as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
+      parameter's name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
+      ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
+      is assigned as the `receiver <Projection.Projection.receiver>` for the corresponding `ModulatoryProjection`.
 
       .. note::
           Currently, the `function <Component.function>` of a Component, although it can be specified as a
           parameter value, cannot be assigned a `ModulatorySignal` or modified in the **runtime_params** argument of
           a call to a Mechanism's `execute <Mechanism.execute>` method. This may change in the future.
 
-The **default value** assigned to a ParameterState is the default value of the argument for the corresponding parameter
-in the constructor for the parameter's owner.  If the value of a parameter is specified as `None`, `NotImplemented`,
-or any other non-numeric value that is not one of those listed above, then no ParameterState is created and the
-parameter cannot be modified by a `ModulatorySignal` or in the **runtime_params** argument of a call to a
-Mechanism's `execute <Mechanism.execute>` method.
+The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
+of the Component's `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same name as
+the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example, the value of a
+parameter named *param* is assigned to an attribute named ``param`` that can be referenced as ``my_component.param``).
+The parameter's value is assigned as the **default value** for the ParameterState.
+
+.. note::
+   If the value of a parameter is specified as `None`, `NotImplemented`, or any other non-numeric value that is not one
+   of those listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal`
+   or in the **runtime_params** argument of a call to a Mechanism's `execute <Mechanism.execute>` method.
 
 
 .. _ParameterState_Specification_Examples:
@@ -185,53 +180,62 @@ Structure
 
 Every ParameterState is owned by a `Mechanism` or `MappingProjection`. It can receive one or more
 `ControlProjections <ControlProjection>` or `LearningProjections <LearningProjection>`, that are listed in its
-`mod_afferents <ParameterState.mod_afferents>` attribute.  However, the `value <ModulatoryProjection.value>` of each
-must be compatible with (i.e., have the number and type of elements as) the value of the parameter for which the
-ParameterState is responsible.  A ParameterState cannot receive `PathwayProjections <PathwayProjection>` or
-`GatingProjections <GatingProjection>`.  When the ParameterState is updated (i.e., its owner is executed), it uses
-the values of its ControlProjections and LearningProjections to determine whether and how to modify its parameter's
-attribute value, which is then assigned as the ParameterState's `value <ParameterState.value>`
-(see `ParameterState_Execution` for addition details). ParameterStates have the following core attributes:
+`mod_afferents <ParameterState.mod_afferents>` attribute.  A ParameterState cannot receive
+`PathwayProjections <PathwayProjection>` or `GatingProjections <GatingProjection>`.  When the ParameterState is
+updated (i.e., its owner is executed), it uses the values of its ControlProjections and LearningProjections to
+determine whether and how to modify its parameter's attribute value, which is then assigned as the ParameterState's
+`value <ParameterState.value>` (see `ParameterState_Execution` for addition details). ParameterStates have the
+following core attributes:
 
-* `variable <ParameterState.variable>`:  the parameter's attribute value -- that is, the value assigned to the
-  attribute of the ParameterState's owner for the parameter;  it can be thought of as the parameter's "base" value.
-  It is used by `function <ParameterState.function>` to determine the *ParameterState's* `value <ParameterState.value>`.
-  It must match the format (the number and type of elements) of the parameter's attribute value.
+* `variable <ParameterState.variable>` - the parameter's attribute value; that is, the value assigned to the
+  attribute for the parameter of the ParameterState's owner;  it can be thought of as the parameter's "base" value.
+  It is used by its `function <ParameterState.function>` to determine the ParameterState's
+  `value <ParameterState.value>`.  It must match the format (the number and type of elements) of the parameter's
+  attribute value.
 
-* `mod_afferents <ParameterState.mod_afferents>`: lists the `ModulatoryProjections <ModulationProjection>` that
-  project to the ParameterState.  These specify either the value of the ParameterState's
-  `function <ParameterState.function>`, the `value <ParameterState.value>` of the ParameterState itself
-  (see `ModulatorySignals_Modulation`).
+* `mod_afferents <ParameterState.mod_afferents>` - lists the `ModulatoryProjections <ModulationProjection>` received
+  by the ParameterState.  These specify either modify the ParameterState's `function <ParameterState.function>`, or
+  directly assign the `value <ParameterState.value>` of the ParameterState itself (see `ModulatorySignals_Modulation`).
 
-* `function <ParameterState.function>`:  takes `variable <Parameter.variable>` as its input, and the values
-  specified for the function's parameters by any `ModulatoryProjections` (listed in `mod_afferents
-  <ParameterState.mod_afferents>`, and assigns its result to the ParameterState's `value <ParameterState.value>`.
+* `function <ParameterState.function - takes the parameter's attribute value as its input, modifies it under the
+  influence of any `ModulatoryProjections` it receives (listed in `mod_afferents <ParameterState.mod_afferents>`,
+  and assigns the result as the ParameterState's `value <ParameterState.value>` which is used as the parameter's
+  "actual" value.
 
-* `value <ParameterState.value>`: the result of `function <ParameterState.function>`; used by the ParameterState's
-  owner as the value of the parameter of its `function <Component.function>` for which the the ParameterState is
-  responsible when the owner executes.
+* `value <ParameterState.value>` - the result of `function <ParameterState.function>`; used by the ParameterState's
+  owner as the value of the parameter for which the the ParameterState is responsible.
 
-All of the user-modifiable parameters of a Component are listed in its `user_params <Component.user_params>` attribute,
-which is a read-only dictionary with an entry for each parameter.  The parameters of a Component can be
-modified individually by assigning a value to the corresponding attribute, or in groups using the Component's
-`assign_params <Component.assign_params>` method.  The parameters for a Component's `function <Component.function>`
-are listed in its `function_params <Component.function_params>` attribute, which is a read-only dictionary with an 
-entry for each of its function's parameter.  The parameters of a Component's function can be modified by
-assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
-attribute (e.g., myMechanism.function_object.my_parameter), or in FUNCTION_PARAMS dict in a
-parameter specification dictionary assigned to the **params** arg of a Component's constructor or its
-`assign_params <Component.assign_params>` method.
+.. _ParameterState_Configurable_Parameters:
+
+All of the configurable parameters of a Component -- that is, for which it has ParameterStates -- are listed in its
+`user_params <Component.user_params>` attribute, which is a read-only dictionary with an entry for each parameter.
+The parameters for a Component's `function <Component.function>` are listed both in a *FUNCTION_PARAMS* entry of the
+`user_params <Component.user_params>` dictionary, and in their own `function_params <Component.function_params>`
+attribute, which is also a read-only dictionary (with an entry for each of its function's parameters).
+In addition to being assigned an initial value in a constructor, and modified by ModulatoryProjections,
+parameter values can be modified directly by a assigning a value to the corresponding attribute, or in groups using the
+Component's `assign_params <Component.assign_params>` method. The parameters of a Component's function can be modified
+by assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
+attribute (e.g., ``myMechanism.function_object.my_parameter``), or in *FUNCTION_PARAMS* dict in a call to the
+Component's `assign_params <Component.assign_params>` method.
 
 .. _ParameterState_Execution:
 
 Execution
 ---------
 
-A ParameterState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
+A ParameterState cannot be executed directly.  It is executed when the Component to which it belongs is executed.
 When this occurs, the ParameterState executes any `ModulatoryProjections` it receives, the values of which
 modulate parameters of the ParameterState's `function <ParameterState.function>`.  The ParameterState then calls
-its `function <ParameterState.function>` and the result is used as the value of the parameter of its owner's function
-when that executes.
+its `function <ParameterState.function>` and the result is assigned as its `value <ParameterState.value>`.  The
+ParameterState's `value <ParameterState.value>` is used as the value of the corresponding parameter by the Component,
+or by its own `function <Component.function>`.
+
+.. note::
+   It is important to note the distinction between the `function <ParameterState.function>` of a ParameterState,
+   and the `function <Component.function>` of the Component to which it belongs. The former is used to determine the
+   value of a parameter used by the latter (see `figure <ModulatorySignal_Anatomy_Figure>`, and `State_Execution` for
+   additional details).
 
 .. _ParameterState_Class_Reference:
 
@@ -240,9 +244,22 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Components.States.State import _instantiate_state
+import inspect
+
+import typecheck as tc
+import numpy as np
+
+from PsyNeuLink.Components.Component import Component, function_type, method_type, parameter_keywords
+from PsyNeuLink.Components.Functions.Function import Linear, get_param_value_for_keyword
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
+from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state, state_type_keywords
+from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, FUNCTION, FUNCTION_PARAMS, MECHANISM, PARAMETER_STATE, PARAMETER_STATES, PARAMETER_STATE_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTION_TYPE, VALUE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, is_numeric, is_value_spec, iscompatible
+
+state_type_keywords = state_type_keywords.update({PARAMETER_STATE})
 
 
 class ParameterStateError(Exception):
@@ -284,7 +301,6 @@ class ParameterState(State_Base):
             + paramClassDefaults (dict)
                 + FUNCTION (Linear)
                 + PROJECTION_TYPE (CONTROL_PROJECTION)
-            + paramNames (dict)
 
         Class methods
         -------------
@@ -323,7 +339,7 @@ class ParameterState(State_Base):
         `variable <ParameterState.variable>`) to the ParameterState's `value <ParameterState.value>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ParameterState or its function, and/or a custom function and its parameters.  Values specified for
         parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -344,6 +360,9 @@ class ParameterState(State_Base):
     owner : Mechanism or MappingProjection
         the `Mechanism` or `MappingProjection` to which the ParameterState belongs.
 
+    mod_afferents : List[GatingProjection]
+        a list of the `GatingProjections <GatingProjection>` received by the ParameterState.
+
     variable : number, list or np.ndarray
         the parameter's attribute value — that is, the value of the attribute of the
         ParameterState's owner or its `function <Component.function>` assigned to the parameter.
@@ -363,7 +382,7 @@ class ParameterState(State_Base):
         `mod_afferents <ParameterState.mod_afferents>` attribute.  The result is assigned as the ParameterState's
         `value <ParameterState>`.
 
-    value : number, list or np.ndarray
+    value : number, List[number] or np.ndarray
         the result returned by the ParameterState's `function <ParameterState.function>`, and used by the
         ParameterState's owner or its `function <Component.function>` as the value of the parameter for which the
         ParmeterState is responsible.  Note that this is not necessarily the same as the parameter's attribute value
@@ -509,7 +528,7 @@ class ParameterState(State_Base):
     def _execute(self, function_params, context):
         """Call self.function with current parameter value as the variable
 
-        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs. 
+        Get backingfield ("base") value of param of function of Mechanism to which the ParameterState belongs.
         Update its value in call to state's function.
         """
 
@@ -599,7 +618,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
             i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
     # FIX: UPDATE WITH MODULATION_MODS
     # FIX:    CHANGE TO Integrator FUnction ONCE LearningProjection MODULATES ParameterState Function:
-    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection) 
+    If param_name is FUNCTION_PARAMS and param is a matrix (presumably for a MappingProjection)
         modify ParameterState's function to be LinearCombination (rather Linear which is the default)
     """
 

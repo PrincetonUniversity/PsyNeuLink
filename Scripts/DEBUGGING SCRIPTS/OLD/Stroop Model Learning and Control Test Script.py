@@ -13,23 +13,23 @@ process_prefs = {REPORT_OUTPUT_PREF: True,
 system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
-colors = TransferMechanism(default_input_value=[0,0],
+colors = TransferMechanism(default_variable=[0,0],
                         function=Linear,
                         name="Colors")
 
-words = TransferMechanism(default_input_value=[0,0],
+words = TransferMechanism(default_variable=[0,0],
                           function=Linear,
                           name="Words")
 
-hidden = TransferMechanism(default_input_value=[0,0],
+hidden = TransferMechanism(default_variable=[0,0],
                            function=Logistic(gain=(1.0, CONTROL)),
                            name="Hidden")
 
-response = TransferMechanism(default_input_value=[0,0],
+response = TransferMechanism(default_variable=[0,0],
                            function=Logistic(),
                            name="Response")
 
-output = TransferMechanism(default_input_value=[0,0],
+output = TransferMechanism(default_variable=[0,0],
                            function=Logistic,
                            name="Output")
 
@@ -48,7 +48,7 @@ HO_Weights = MappingProjection(name='Hidden-Output Weights',
                         )
 
 color_naming_process = process(
-    default_input_value=[1, 2.5],
+    default_variable=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
     learning=LEARNING,
     target=[2,2],
@@ -56,7 +56,7 @@ color_naming_process = process(
     prefs=process_prefs)
 
 word_reading_process = process(
-    default_input_value=[.5, 3],
+    default_variable=[.5, 3],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
     learning=LEARNING,

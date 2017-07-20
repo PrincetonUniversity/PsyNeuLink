@@ -9,20 +9,20 @@ process_prefs = {REPORT_OUTPUT_PREF: True,
 system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
-colors = TransferMechanism(default_input_value=[0,0],
+colors = TransferMechanism(default_variable=[0,0],
                         function=Linear,
                         name="Colors")
 
-words = TransferMechanism(default_input_value=[0,0],
+words = TransferMechanism(default_variable=[0,0],
                         function=Linear,
                         name="Words")
 
-response = TransferMechanism(default_input_value=[0,0],
+response = TransferMechanism(default_variable=[0,0],
                            function=Logistic,
                            name="Response")
 
 color_naming_process = process(
-    default_input_value=[1, 2.5],
+    default_variable=[1, 2.5],
     # pathway=[(colors, 0), FULL_CONNECTIVITY_MATRIX, (response,0)],
     pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
     learning=LEARNING_PROJECTION,
@@ -32,7 +32,7 @@ color_naming_process = process(
 )
 
 word_reading_process = process(
-    default_input_value=[.5, 3],
+    default_variable=[.5, 3],
     pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
     name='Word Reading',
     learning=LEARNING_PROJECTION,

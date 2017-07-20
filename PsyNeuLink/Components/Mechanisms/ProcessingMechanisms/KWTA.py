@@ -33,7 +33,7 @@ class KWTA(RecurrentTransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  gain=1,
@@ -60,10 +60,10 @@ class KWTA(RecurrentTransferMechanism):
         kwta_log_function = Logistic(gain=gain, bias=bias)
 
         # IMPLEMENTATION NOTE: parts of this region may be redundant with code in Component._handle_size()
-        # region Fill in and infer default_input_value and size if they aren't specified in args
-        if default_input_value is None and size is None:
+        # region Fill in and infer default_variable and size if they aren't specified in args
+        if default_variable is None and size is None:
             if matrix is None:
-                default_input_value = [[0]]
+                default_variable = [[0]]
                 size=[1]
             else:
                 try: # TODO: make this match the matrix handling in _validate_params() of RecurrentTransferMechanism
@@ -94,27 +94,27 @@ class KWTA(RecurrentTransferMechanism):
             return int_x
 
         # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
-        # default_input_value are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
-        # region Convert default_input_value (if given) to a 2D array, and size (if given) to a 1D integer array
+        # default_variable are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
+        # region Convert default_variable (if given) to a 2D array, and size (if given) to a 1D integer array
         try:
-            if default_input_value is not None:
-                default_input_value = np.atleast_2d(default_input_value)
-                # 6/30/17 (CW): Previously, using default_input_value or default_input_value to create
-                # input states of differing lengths (e.g. default_input_value = [[1, 2], [1, 2, 3]])
+            if default_variable is not None:
+                default_variable = np.atleast_2d(default_variable)
+                # 6/30/17 (CW): Previously, using default_variable or default_variable to create
+                # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
                 # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                if isinstance(default_input_value[0], list) or isinstance(default_input_value[0], np.ndarray):
+                if isinstance(default_variable[0], list) or isinstance(default_variable[0], np.ndarray):
                     allLists = True
-                    for i in builtins.range(len(default_input_value[0])):
-                        if isinstance(default_input_value[0][i], (list, np.ndarray)):
-                            default_input_value[0][i] = np.array(default_input_value[0][i])
+                    for i in builtins.range(len(default_variable[0])):
+                        if isinstance(default_variable[0][i], (list, np.ndarray)):
+                            default_variable[0][i] = np.array(default_variable[0][i])
                         else:
                             allLists = False
                             break
                     if allLists:
-                        default_input_value = default_input_value[0]
+                        default_variable = default_variable[0]
         except:
-            raise ComponentError("Failed to convert default_input_value (of type {}) to a 2D array.".
-                                 format(type(default_input_value)))
+            raise ComponentError("Failed to convert default_variable (of type {}) to a 2D array.".
+                                 format(type(default_variable)))
 
         try:
             if size is not None:
@@ -133,92 +133,92 @@ class KWTA(RecurrentTransferMechanism):
             size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
         # endregion
 
-        # region If default_input_value is None, make it a 2D array of zeros each with length=size[i]
+        # region If default_variable is None, make it a 2D array of zeros each with length=size[i]
         # implementation note: for good coding practices, perhaps add setting to enable
-        # easy change of default_input_value's default value, which is an array of zeros at the moment
+        # easy change of default_variable's default value, which is an array of zeros at the moment
         # added 6/22/17
-        if default_input_value is None and size is not None:
+        if default_variable is None and size is not None:
             try:
-                default_input_value = []
+                default_variable = []
                 for s in size:
-                    default_input_value.append(np.zeros(s))
-                default_input_value = np.array(default_input_value)
+                    default_variable.append(np.zeros(s))
+                default_variable = np.array(default_variable)
             except:
-                raise ComponentError("default_input_value was not specified, but PsyNeuLink was unable to "
-                                     "infer default_input_value from the size argument, {}. size should be"
+                raise ComponentError("default_variable was not specified, but PsyNeuLink was unable to "
+                                     "infer default_variable from the size argument, {}. size should be"
                                      " an integer or an array or list of integers. Either size or "
-                                     "default_input_value must be specified.".format(size))
+                                     "default_variable must be specified.".format(size))
         # endregion
 
-        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_input_value[i])
+        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_variable[i])
         # added 6/22/17
-        if size is None and default_input_value is not None:
+        if size is None and default_variable is not None:
             size = []
             try:
-                for input_vector in default_input_value:
+                for input_vector in default_variable:
                     size.append(len(input_vector))
                 size = np.array(size)
             except:
                 raise ComponentError(
                     "size was not specified, but PsyNeuLink was unable to infer size from "
-                    "the default_input_value argument, {}. default_input_value can be an array,"
+                    "the default_variable argument, {}. default_variable can be an array,"
                     " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                    " default_input_value must be specified.".format(default_input_value))
+                    " default_variable must be specified.".format(default_variable))
         # endregion
 
-        # region If length(size) = 1 and default_input_value is not None,
-        # then expand size to length(default_input_value)
-        if len(size) == 1 and len(default_input_value) > 1:
-            new_size = np.empty(len(default_input_value))
+        # region If length(size) = 1 and default_variable is not None,
+        # then expand size to length(default_variable)
+        if len(size) == 1 and len(default_variable) > 1:
+            new_size = np.empty(len(default_variable))
             new_size.fill(size[0])
             size = new_size
         # endregion
 
-        # check if default_input_value and size are compatible, if not, then give
-        # warning and set size based on default_input_value
-        if default_input_value is not None and size is not None:
+        # check if default_variable and size are compatible, if not, then give
+        # warning and set size based on default_variable
+        if default_variable is not None and size is not None:
             # If they conflict, give warning
-            if len(size) != len(default_input_value):
+            if len(size) != len(default_variable):
                 if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                     warnings.warn("The size arg of {} conflicts with the length of its "
-                                  "default_input_value arg ({}) at element {}: default_input_value takes precedence".
-                                  format(self.name, size[i], default_input_value[i], i))
+                                  "default_variable arg ({}) at element {}: default_variable takes precedence".
+                                  format(self.name, size[i], default_variable[i], i))
                 size = []
                 try:
-                    for input_vector in default_input_value:
+                    for input_vector in default_variable:
                         size.append(len(input_vector))
                     size = np.array(size)
                 except:
                     raise ComponentError(
                         "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the default_input_value argument, {}. default_input_value can be an array,"
+                        "the default_variable argument, {}. default_variable can be an array,"
                         " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " default_input_value must be specified.".format(default_input_value))
+                        " default_variable must be specified.".format(default_variable))
             else:
                 for i in builtins.range(len(size)):
-                    if size[i] != len(default_input_value[i]):
+                    if size[i] != len(default_variable[i]):
                         if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                             warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                          "of its default_input_value arg ({}) at element {}: default_input_value takes precedence".
-                                          format(self.name, size[i], default_input_value[i], i))
+                                          "of its default_variable arg ({}) at element {}: default_variable takes precedence".
+                                          format(self.name, size[i], default_variable[i], i))
                         size = []
                         try:
-                            for input_vector in default_input_value:
+                            for input_vector in default_variable:
                                 size.append(len(input_vector))
                             size = np.array(size)
                         except:
                             raise ComponentError(
                                 "size was not specified, but PsyNeuLink was unable to infer size from "
-                                "the default_input_value argument, {}. default_input_value can be an array,"
+                                "the default_variable argument, {}. default_variable can be an array,"
                                 " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                                " default_input_value must be specified.".format(default_input_value))
+                                " default_variable must be specified.".format(default_variable))
         # endregion
 
-        # if default_input_value was passed as a 1D vector, append an array of zeros to it.
-        if len(default_input_value) == 1:
-            d = list(default_input_value)
-            d.append(np.zeros(len(default_input_value[0])))
-            default_input_value = np.array(d)
+        # if default_variable was passed as a 1D vector, append an array of zeros to it.
+        if len(default_variable) == 1:
+            d = list(default_variable)
+            d.append(np.zeros(len(default_variable[0])))
+            default_variable = np.array(d)
 
         # region set up the additional input_state that will represent inhibition
         # convert input_states to a list, if it was a dict before: this makes working with it easier
@@ -244,7 +244,7 @@ class KWTA(RecurrentTransferMechanism):
         if matrix is None:
             matrix = np.full((size[0], size[0]), -1) * get_matrix(HOLLOW_MATRIX, size[0], size[0])
 
-        super().__init__(default_input_value=default_input_value,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=kwta_log_function,
@@ -275,7 +275,7 @@ class KWTA(RecurrentTransferMechanism):
         state_list = _instantiate_state_list(owner=owner,
                                              state_list=owner.input_states,
                                              state_type=InputState,
-                                             state_param_identifier=INPUT_STATES,
+                                             state_param_identifier=INPUT_STATE,
                                              constraint_value=self.variable,
                                              constraint_value_name="kwta-extended function variable",
                                              context=context)

@@ -129,7 +129,7 @@ Execution
 Functions are not executable objects, but their `function <Function_Base.function>` can be called.   This can be done
 directly.  More commonly, however, they are called when their `owner <Function_Base.owner>` is executed.  The parameters
 of the `function <Function_Base.function>` can be modified when it is executed, by assigning a
-`parameter specification dictionary <ParameterState_Specifying_Parameters>` to the **params** argument in the
+`parameter specification dictionary <ParameterState_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.  For `Mechanisms <Mechanism>`, this can also be done by specifying
 `runtime_params <Mechanism_Runtime_Parameters>` for the Mechanism when it is `executed <Mechanism_Base.execute>`.
 
@@ -157,17 +157,26 @@ Class Reference
 #            'BackPropagation',
 #            'FunctionError',
 #            "FunctionOutputType"]
+import numbers
+import warnings
 
-from functools import reduce
-from operator import *
+from collections import namedtuple
+from enum import Enum, IntEnum
 from random import randint
+
+import numpy as np
+import typecheck as tc
 
 from numpy import abs, exp, tanh
 
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
+from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import is_matrix
+from PsyNeuLink.Globals.Utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 EPSILON = np.finfo(float).eps
 
@@ -259,18 +268,18 @@ class ModulationParam():
 
     MULTIPLICATIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *MULTIPLICATIVE_PARAM*
-        of the State's `function <State.function>`
+        of the State's `function <State_Base.function>`
 
     ADDITIVE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal to the *ADDITIVE_PARAM*
-        of the State's `function <State.function>`
+        of the State's `function <State_Base.function>`
 
     OVERRIDE
         assign the `value <ModulatorySignal.value>` of the ModulatorySignal directly to the State's
-        `value <State.value>` (ignoring its `variable <State.variable>` and `function <State.function>`)
+        `value <State_Base.value>` (ignoring its `variable <State_Base.variable>` and `function <State_Base.function>`)
 
     DISABLE
-        ignore the ModulatorySignal when calculating the State's `value <State.value>`
+        ignore the ModulatorySignal when calculating the State's `value <State_Base.value>`
     """
     MULTIPLICATIVE = MultiplicativeParam
     # MULTIPLICATIVE = ModulationType(MULTIPLICATIVE_PARAM,
@@ -368,7 +377,7 @@ def get_param_value_for_function(owner, function):
 class Function_Base(Function):
     """
     Function_Base(           \
-         variable_default,   \
+         default_variable,   \
          params=None,        \
          owner=None,         \
          name=None,          \
@@ -457,7 +466,7 @@ class Function_Base(Function):
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -520,7 +529,7 @@ class Function_Base(Function):
     })
 
     def __init__(self,
-                 variable_default,
+                 default_variable,
                  params,
                  owner=None,
                  name=None,
@@ -529,11 +538,11 @@ class Function_Base(Function):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
-        - variable_default (anything): establishes type for the variable, used for validation
+        - default_variable (anything): establishes type for the variable, used for validation
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
-        :param variable_default: (anything but a dict) - value to assign as variableInstanceDefault
+        :param default_variable: (anything but a dict) - value to assign as variableInstanceDefault
         :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)
@@ -554,7 +563,7 @@ class Function_Base(Function):
         else:
             self.owner_name = ''
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          param_defaults=params,
                          name=name,
                          prefs=prefs,
@@ -642,7 +651,7 @@ class ArgumentTherapy(Function_Base):
         specifies therapeutic consistency
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -708,7 +717,7 @@ class ArgumentTherapy(Function_Base):
                                })
 
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  propensity=10.0,
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
@@ -727,7 +736,7 @@ class ArgumentTherapy(Function_Base):
         # NOTES:
         #    * paramsCurrent can be changed by including params in call to function
         #    * paramInstanceDefaults can be changed by calling assign_default
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -811,7 +820,7 @@ class ArgumentTherapy(Function_Base):
            an assertion to which a therapeutic response is made.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -885,7 +894,7 @@ class UserDefinedFunction(Function_Base):
         specifies the format and a default value for the input to `function <Function>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -949,7 +958,7 @@ class UserDefinedFunction(Function_Base):
         params = self._assign_args_to_param_dicts(params=params)
         self.user_defined_function = function
 
-        super().__init__(variable_default=variable,
+        super().__init__(default_variable=variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -980,11 +989,11 @@ class CombinationFunction(Function_Base):
     componentType = COMBINATION_FUNCTION_TYPE
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, variable_default,
-                         params,
-                         owner,
-                         prefs,
-                         context):
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
 
         if not hasattr(self, MULTIPLICATIVE_PARAM):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -994,7 +1003,7 @@ class CombinationFunction(Function_Base):
             raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
                                 format(self.__class__.__name__, ADDITIVE_PARAM))
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1023,7 +1032,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
     Reduce(                                     \
-         variable_default=variableClassDefault, \
+         default_variable=variableClassDefault, \
          operation=SUM,                         \
          scale=1.0,                             \
          offset=0.0,                            \
@@ -1045,7 +1054,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     Arguments
     ---------
 
-    variable_default : list or np.array : default variableClassDefault
+    default_variable : list or np.array : default variableClassDefault
         specifies a template for the value to be transformed and its default value;  all entries must be numeric.
 
     operation : SUM or PRODUCT : default SUM
@@ -1061,7 +1070,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         (see `offset <Reduce.offset>` for details)
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1076,7 +1085,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     Attributes
     ----------
 
-    variable_default : list or np.array
+    default_variable : list or np.array
         contains array(s) to be reduced.
 
     operation : SUM or PRODUCT
@@ -1113,7 +1122,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  operation: tc.enum(SUM, PRODUCT) = SUM,
                  scale: parameter_spec = 1.0,
                  offset: parameter_spec = 0.0,
@@ -1128,7 +1137,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1162,7 +1171,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
            a list or np.array of numeric values.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1203,7 +1212,7 @@ class LinearCombination(
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
     """
     LinearCombination(     \
-         variable_default, \
+         default_variable, \
          weights=None,     \
          exponents=None,   \
          operation=SUM,    \
@@ -1289,7 +1298,7 @@ class LinearCombination(
         (see `offset <LinearCombination.offset>` for details)
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1381,7 +1390,7 @@ class LinearCombination(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  # IMPLEMENTATION NOTE - these don't check whether every element of np.array is numerical:
                  # weights:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
                  # exponents:tc.optional(tc.any(int, float, tc.list_of(tc.any(int, float)), np.ndarray))=None,
@@ -1414,7 +1423,7 @@ class LinearCombination(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1552,7 +1561,7 @@ class LinearCombination(
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1696,11 +1705,11 @@ class TransferFunction(Function_Base):
     componentType = TRANSFER_FUNCTION_TYPE
 
     # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, variable_default,
-                         params,
-                         owner,
-                         prefs,
-                         context):
+    def __init__(self, default_variable,
+                 params,
+                 owner,
+                 prefs,
+                 context):
 
         if not hasattr(self, BOUNDS):
             raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
@@ -1714,7 +1723,7 @@ class TransferFunction(Function_Base):
             raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
                                 format(self.__class__.__name__, ADDITIVE_PARAM))
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1740,7 +1749,7 @@ class TransferFunction(Function_Base):
 class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     Linear(                \
-         variable_default, \
+         default_variable, \
          slope=1.0,        \
          intercept=0.0,    \
          params=None,      \
@@ -1768,7 +1777,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1828,7 +1837,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  slope: parameter_spec = 1.0,
                  intercept: parameter_spec = 0.0,
                  params=None,
@@ -1841,7 +1850,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                                                   intercept=intercept,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -1864,7 +1873,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
            a single value or array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1952,7 +1961,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
     """
     Exponential(           \
-         variable_default, \
+         default_variable, \
          scale=1.0,        \
          rate=1.0,         \
          params=None,      \
@@ -1978,7 +1987,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         specifies a value by which to multiply the exponentiated value of `variable <Exponential.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2027,7 +2036,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  rate: parameter_spec = 1.0,
                  scale: parameter_spec = 1.0,
                  params=None,
@@ -2039,7 +2048,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
                                                   scale=scale,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -2060,7 +2069,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
            a single value or array to be exponentiated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2102,7 +2111,7 @@ class Logistic(
     TransferFunction):  # ------------------------------------------------------------------------------------
     """
     Logistic(              \
-         variable_default, \
+         default_variable, \
          gain=1.0,         \
          bias=0.0,         \
          params=None,      \
@@ -2129,7 +2138,7 @@ class Logistic(
         but before logistic transformation.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2180,7 +2189,7 @@ class Logistic(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  gain: parameter_spec = 1.0,
                  bias: parameter_spec = 0.0,
                  params=None,
@@ -2192,7 +2201,7 @@ class Logistic(
                                                   bias=bias,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -2213,7 +2222,7 @@ class Logistic(
            a single value or array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2252,7 +2261,7 @@ class Logistic(
 class SoftMax(TransferFunction):
     """
     SoftMax(               \
-         variable_default, \
+         default_variable, \
          gain=1.0,         \
          output=ALL,       \
          params=None,      \
@@ -2269,7 +2278,7 @@ class SoftMax(TransferFunction):
     Arguments
     ---------
 
-    variable_default : 1d np.array : default variableClassDefault
+    default_variable : 1d np.array : default variableClassDefault
         specifies a template for the value to be transformed.
 
     gain : float : default 1.0
@@ -2280,7 +2289,7 @@ class SoftMax(TransferFunction):
         (see `output <SoftMax.output>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2335,7 +2344,7 @@ class SoftMax(TransferFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  gain: parameter_spec = 1.0,
                  output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
                  params: tc.optional(dict) = None,
@@ -2350,7 +2359,7 @@ class SoftMax(TransferFunction):
         if output is MAX_VAL:
             bounds = None
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -2373,7 +2382,7 @@ class SoftMax(TransferFunction):
            an array to be transformed.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2485,7 +2494,7 @@ class SoftMax(TransferFunction):
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
     LinearMatrix(          \
-         variable_default, \
+         default_variable, \
          matrix=None,      \
          params=None,      \
          owner=None,       \
@@ -2539,7 +2548,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     bounds : None
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2599,7 +2608,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  matrix:tc.optional(is_matrix) = None,
                  params=None,
                  owner=None,
@@ -2612,8 +2621,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
-        # super(LinearMatrix, self).__init__(variable_default=variable_default,
-        super().__init__(variable_default=variable_default,
+        # super(LinearMatrix, self).__init__(default_variable=default_variable,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -2861,7 +2870,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             array to be transformed;  length must equal the number of rows of 'matrix <LinearMatrix.matrix>`.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3007,7 +3016,7 @@ class Integrator(
     IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     Integrator(                 \
-        variable_default=None,  \
+        default_variable=None,  \
         rate=1.0,               \
 
         noise=0.0,              \
@@ -3025,13 +3034,13 @@ class Integrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <Integrator.variable_default>` (see `rate <Integrator.rate>` for details).
+        `variable <Integrator.default_variable>` (see `rate <Integrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <Integrator.function>`. (see
@@ -3043,10 +3052,10 @@ class Integrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <Integrator.variable_default>` (see `initializer <Integrator.initializer>` for details).
+        `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3074,7 +3083,7 @@ class Integrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <Integrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If noise is
+        If noise is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If noise is
         specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
         will be executed separately for each variable element.
@@ -3090,7 +3099,7 @@ class Integrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <Integrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <Integrator.variable_default>`. If
+        If initializer is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If
         initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
         array, initializer will be applied to each variable element. In the case of an initializer function, this means
         that the function will be executed separately for each variable element.
@@ -3120,7 +3129,7 @@ class Integrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  initializer=variableClassDefault,
@@ -3139,7 +3148,7 @@ class Integrator(
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -3318,7 +3327,7 @@ class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     SimpleIntegrator(                 \
-        variable_default=None,  \
+        default_variable=None,  \
         rate=1.0,               \
         noise=0.0,              \
         initializer,            \
@@ -3338,13 +3347,13 @@ class SimpleIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <SimpleIntegrator.variable_default>` (see `rate <SimpleIntegrator.rate>` for details).
+        `variable <SimpleIntegrator.default_variable>` (see `rate <SimpleIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <SimpleIntegrator.function>`. (see
@@ -3352,10 +3361,10 @@ class SimpleIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <SimpleIntegrator.variable_default>` (see `initializer <SimpleIntegrator.initializer>` for details).
+        `default_variable <SimpleIntegrator.default_variable>` (see `initializer <SimpleIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3382,7 +3391,7 @@ class SimpleIntegrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <SimpleIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.variable_default>`.
+        If noise is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
 
         If noise is specified as a single float or function, while `variable <SimpleIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
@@ -3398,7 +3407,7 @@ class SimpleIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <SimpleIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <SimpleIntegrator.default_variable>`.
 
         TBI:
 
@@ -3437,7 +3446,7 @@ class SimpleIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  offset=None,
@@ -3454,7 +3463,7 @@ class SimpleIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -3480,7 +3489,7 @@ class SimpleIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3543,7 +3552,7 @@ class ConstantIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
-        variable_default=None,          \
+        default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
@@ -3564,13 +3573,13 @@ class ConstantIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.variable_default>` (see `rate <ConstantIntegrator.rate>` for details).
+        `variable <ConstantIntegrator.default_variable>` (see `rate <ConstantIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <ConstantIntegrator.function>`. (see
@@ -3578,10 +3587,10 @@ class ConstantIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <ConstantIntegrator.variable_default>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3612,7 +3621,7 @@ class ConstantIntegrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <ConstantIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
         If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
@@ -3628,7 +3637,7 @@ class ConstantIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
         TBI:
 
@@ -3670,7 +3679,7 @@ class ConstantIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  # rate: parameter_spec = 1.0,
                  rate=0.0,
                  noise=0.0,
@@ -3693,7 +3702,7 @@ class ConstantIntegrator(
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -3717,7 +3726,7 @@ class ConstantIntegrator(
         ---------
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3770,7 +3779,7 @@ class AdaptiveIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     AdaptiveIntegrator(                 \
-        variable_default=None,          \
+        default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
@@ -3788,13 +3797,13 @@ class AdaptiveIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <AdaptiveIntegrator.variable_default>` (see `rate <AdaptiveIntegrator.rate>` for details).
+        `variable <AdaptiveIntegrator.default_variable>` (see `rate <AdaptiveIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`. (see
@@ -3802,10 +3811,10 @@ class AdaptiveIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <AdaptiveIntegrator.variable_default>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
+        `default_variable <AdaptiveIntegrator.default_variable>` (see `initializer <AdaptiveIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -3835,7 +3844,7 @@ class AdaptiveIntegrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <AdaptiveIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable_default>`.
+        If noise is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
 
         If noise is specified as a single float or function, while `variable <AdaptiveIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
@@ -3851,7 +3860,7 @@ class AdaptiveIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <AdaptiveIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <AdaptiveIntegrator.default_variable>`.
 
         TBI:
 
@@ -3890,7 +3899,7 @@ class AdaptiveIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset= 0.0,
@@ -3907,7 +3916,7 @@ class AdaptiveIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -3998,7 +4007,7 @@ class AdaptiveIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4050,7 +4059,7 @@ class DriftDiffusionIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     DriftDiffusionIntegrator(           \
-        variable_default=None,          \
+        default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
@@ -4069,13 +4078,13 @@ class DriftDiffusionIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <DriftDiffusionIntegrator.variable_default>` (see `rate <DriftDiffusionIntegrator.rate>` for details).
+        `variable <DriftDiffusionIntegrator.default_variable>` (see `rate <DriftDiffusionIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <DriftDiffusionIntegrator.function>`. (see
@@ -4087,10 +4096,10 @@ class DriftDiffusionIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <DriftDiffusionIntegrator.variable_default>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
+        `default_variable <DriftDiffusionIntegrator.default_variable>` (see `initializer <DriftDiffusionIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4129,7 +4138,7 @@ class DriftDiffusionIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <DriftDiffusionIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
 
         TBI:
 
@@ -4168,7 +4177,7 @@ class DriftDiffusionIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
@@ -4190,7 +4199,7 @@ class DriftDiffusionIntegrator(
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4224,7 +4233,7 @@ class DriftDiffusionIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4279,7 +4288,7 @@ class OrnsteinUhlenbeckIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     OrnsteinUhlenbeckIntegrator(                 \
-        variable_default=None,          \
+        default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
@@ -4298,13 +4307,13 @@ class OrnsteinUhlenbeckIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <OrnsteinUhlenbeckIntegrator.variable_default>` (see `rate <OrnsteinUhlenbeckIntegrator.rate>` for
+        `variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `rate <OrnsteinUhlenbeckIntegrator.rate>` for
         details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
@@ -4317,11 +4326,11 @@ class OrnsteinUhlenbeckIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <OrnsteinUhlenbeckIntegrator.variable_default>` (see `initializer
+        `default_variable <OrnsteinUhlenbeckIntegrator.default_variable>` (see `initializer
         <OrnsteinUhlenbeckIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4360,7 +4369,7 @@ class OrnsteinUhlenbeckIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.default_variable>`.
 
         TBI:
 
@@ -4399,7 +4408,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset: parameter_spec = 0.0,
@@ -4423,7 +4432,7 @@ class OrnsteinUhlenbeckIntegrator(
         # Assign here as default, for use in initialization of function
         self.previous_value = self.paramClassDefaults[INITIALIZER]
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4457,7 +4466,7 @@ class OrnsteinUhlenbeckIntegrator(
            a single value or array of values to be integrated.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4514,7 +4523,7 @@ class AccumulatorIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
     ConstantIntegrator(                 \
-        variable_default=None,          \
+        default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
@@ -4535,13 +4544,13 @@ class AccumulatorIntegrator(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
         specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.variable_default>` (see `rate <ConstantIntegrator.rate>` for details).
+        `variable <ConstantIntegrator.default_variable>` (see `rate <ConstantIntegrator.rate>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         specifies random value to be added in each call to `function <ConstantIntegrator.function>`. (see
@@ -4549,10 +4558,10 @@ class AccumulatorIntegrator(
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `variable_default <ConstantIntegrator.variable_default>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4583,7 +4592,7 @@ class AccumulatorIntegrator(
     noise : float, function, list, or 1d np.array
         specifies random value to be added in each call to `function <ConstantIntegrator.function>`.
 
-        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
         If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
         noise will be applied to each variable element. In the case of a noise function, this means that the function
@@ -4599,7 +4608,7 @@ class AccumulatorIntegrator(
         determines the starting value for integration (i.e., the value to which
         `previous_value <ConstantIntegrator.previous_value>` is set.
 
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.variable_default>`.
+        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
 
         TBI:
 
@@ -4641,7 +4650,7 @@ class AccumulatorIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  # rate: parameter_spec = 1.0,
                  rate=None,
                  noise=0.0,
@@ -4660,7 +4669,7 @@ class AccumulatorIntegrator(
                                                   params=params)
 
         super().__init__(
-            # variable_default=variable_default,
+            # default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4767,7 +4776,7 @@ class AccumulatorIntegrator(
         ---------
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -4839,7 +4848,7 @@ class BogaczEtAl(
     IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     BogaczEtAl(                                 \
-        variable_default=variableCLassDefault,  \
+        default_variable=variableCLassDefault,  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -4858,34 +4867,34 @@ class BogaczEtAl(
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
         independently for each element.
 
     drift_rate : float, list or 1d np.array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     threshold : float, list or 1d np.array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     starting_point : float, list or 1d np.array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     noise : float, list or 1d np.array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `variable_default <BogaczEtAl.variable_default>` and all elements must be floats from 0 to 1.
+        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d np.array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `variable_default <BogaczEtAl.variable_default>` and all
+        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -4901,7 +4910,7 @@ class BogaczEtAl(
     ----------
 
     variable : number or 1d np.array
-        holds initial value assigned to :keyword:`variable_default` argument;
+        holds initial value assigned to :keyword:`default_variable` argument;
         ignored by `function <BogaczEtal.function>`.
 
     drift_rate : float or 1d np.array
@@ -4944,7 +4953,7 @@ class BogaczEtAl(
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  drift_rate:parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -4963,7 +4972,7 @@ class BogaczEtAl(
                                                   t0=t0,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -4985,7 +4994,7 @@ class BogaczEtAl(
             ignored.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -5130,7 +5139,7 @@ class NF_Results(AutoNumber):
 class NavarroAndFuss(IntegratorFunction):
     """
     NavarroAndFuss(                             \
-        variable_default=variableCLassDefault,  \
+        default_variable=variableCLassDefault,  \
         drift_rate=1.0,                         \
         threshold=1.0,                          \
         starting_point=0.0,                     \
@@ -5153,34 +5162,34 @@ class NavarroAndFuss(IntegratorFunction):
     Arguments
     ---------
 
-    variable_default : number, list or np.array : default variableClassDefault
+    default_variable : number, list or np.array : default variableClassDefault
         specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
         independently for each element.
 
     drift_rate : float, list or 1d np.array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     threshold : float, list or 1d np.array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     starting_point : float, list or 1d np.array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `variable_default <BogaczEtAl.variable_default>`.
+        array, it must be the same length as `default_variable <BogaczEtAl.default_variable>`.
 
     noise : float, list or 1d np.array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `variable_default <BogaczEtAl.variable_default>` and all elements must be floats from 0 to 1.
+        `default_variable <BogaczEtAl.default_variable>` and all elements must be floats from 0 to 1.
 
     t0 : float, list or 1d np.array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `variable_default <BogaczEtAl.variable_default>` and all
+        list or array, it must be the same length as  `default_variable <BogaczEtAl.default_variable>` and all
         elements must be floats from 0 to 1.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5196,7 +5205,7 @@ class NavarroAndFuss(IntegratorFunction):
     ----------
 
     variable : number or 1d np.array
-        holds initial value assigned to :keyword:`variable_default` argument;
+        holds initial value assigned to :keyword:`default_variable` argument;
         ignored by `function <NovarroAndFuss.function>`.
 
     drift_rate : float or 1d np.array
@@ -5239,7 +5248,7 @@ class NavarroAndFuss(IntegratorFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  drift_rate: parameter_spec = 1.0,
                  starting_point: parameter_spec = 0.0,
                  threshold: parameter_spec = 1.0,
@@ -5257,7 +5266,7 @@ class NavarroAndFuss(IntegratorFunction):
                                                   t0=t0,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5287,7 +5296,7 @@ class NavarroAndFuss(IntegratorFunction):
             ignored.
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -5348,7 +5357,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5370,7 +5379,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5392,7 +5401,7 @@ class NormalDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  mean=0.0,
                  standard_dev=1.0,
                  params=None,
@@ -5404,7 +5413,7 @@ class NormalDist(DistributionFunction):
                                                   standard_dev=standard_dev,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5448,7 +5457,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5467,7 +5476,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5488,7 +5497,7 @@ class ExponentialDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  beta=1.0,
                  params=None,
                  owner=None,
@@ -5498,7 +5507,7 @@ class ExponentialDist(DistributionFunction):
         params = self._assign_args_to_param_dicts(beta=beta,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5545,7 +5554,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5567,7 +5576,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5588,7 +5597,7 @@ class UniformDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  low=0.0,
                  high=1.0,
                  params=None,
@@ -5600,7 +5609,7 @@ class UniformDist(DistributionFunction):
                                                   high=high,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5648,7 +5657,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5670,7 +5679,7 @@ class GammaDist(DistributionFunction):
         The scale of the gamma distribution. Should be greater than zero.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5692,7 +5701,7 @@ class GammaDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  scale=1.0,
                  dist_shape=1.0,
                  params=None,
@@ -5704,7 +5713,7 @@ class GammaDist(DistributionFunction):
                                                   dist_shape=dist_shape,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5752,7 +5761,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -5774,7 +5783,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Optional[Dict[param keyword, param value]]
-         a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -5796,7 +5805,7 @@ class WaldDist(DistributionFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  scale=1.0,
                  mean=1.0,
                  params=None,
@@ -5808,7 +5817,7 @@ class WaldDist(DistributionFunction):
                                                   mean=mean,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -5846,7 +5855,7 @@ class ObjectiveFunction(Function_Base):
 class Stability(ObjectiveFunction):
     """
     Stability(                                  \
-        variable_default=variableCLassDefault,  \
+        default_variable=variableCLassDefault,  \
         matrix=HOLLOW_MATRIX,                   \
         metric=ENERGY                           \
         transfer_fct=None                       \
@@ -5884,7 +5893,7 @@ class Stability(ObjectiveFunction):
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5918,7 +5927,7 @@ class Stability(ObjectiveFunction):
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -5941,7 +5950,7 @@ class Stability(ObjectiveFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  matrix:tc.any(is_matrix, MappingProjection, ParameterState)=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric:tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)=ENERGY,
@@ -5958,7 +5967,7 @@ class Stability(ObjectiveFunction):
                                                   normalize=normalize,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -6108,7 +6117,7 @@ class Stability(ObjectiveFunction):
 class Distance(ObjectiveFunction):
     """
     Distance(                                  \
-       variable_default=variableCLassDefault,  \
+       default_variable=variableCLassDefault,  \
        metric=EUCLIDEAN                        \
        normalize=False,                        \
        params=None,                            \
@@ -6133,7 +6142,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6158,7 +6167,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6178,7 +6187,7 @@ class Distance(ObjectiveFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
@@ -6190,7 +6199,7 @@ class Distance(ObjectiveFunction):
                                                   normalize=normalize,
                                                   params=params)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -6292,8 +6301,8 @@ class LearningFunction(Function_Base):
 
     componentType = LEARNING_FUNCTION_TYPE
 
-    # def __init__(self, variable_default, params, owner, prefs, context):
-    #     super().__init__(variable_default=variable_default,
+    # def __init__(self, default_variable, params, owner, prefs, context):
+    #     super().__init__(default_variable=default_variable,
     #                      params=params,
     #                      owner=owner,
     #                      prefs=prefs,
@@ -6311,7 +6320,7 @@ class Reinforcement(
     LearningFunction):  # -------------------------------------------------------------------------------
     """
     Reinforcement(                                       \
-        variable_default=variableClassDefault,           \
+        default_variable=variableClassDefault,           \
         activation_function=SoftMax,                     \
         learning_rate=None,                              \
         params=None,                                     \
@@ -6359,7 +6368,7 @@ class Reinforcement(
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6430,7 +6439,7 @@ class Reinforcement(
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     def __init__(self,
-                 variable_default=variableClassDefault,
+                 default_variable=variableClassDefault,
                  activation_function: tc.any(SoftMax, tc.enum(SoftMax)) = SoftMax,  # Allow class or instance
                  learning_rate: tc.optional(parameter_spec) = None,
                  params=None,
@@ -6445,7 +6454,7 @@ class Reinforcement(
 
         # self.return_val = ReturnVal(None, None)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -6506,7 +6515,7 @@ class Reinforcement(
            `error_signal <Reinforcement.error_signal>` (1d np.array).
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -6566,7 +6575,7 @@ WT_MATRIX_RECEIVERS_DIM = 1
 class BackPropagation(LearningFunction):
     """
     BackPropagation(                                     \
-        variable_default=variableClassDefault,           \
+        default_variable=variableClassDefault,           \
         activation_derivative_fct=Logistic().derivative, \
         error_derivative_fct=Logistic().derivative,      \
         error_matrix=None,                               \
@@ -6616,7 +6625,7 @@ class BackPropagation(LearningFunction):
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -6690,8 +6699,8 @@ class BackPropagation(LearningFunction):
 
     @tc.typecheck
     def __init__(self,
-                 variable_default=variableClassDefault,
-                 # variable_default:tc.any(list, np.ndarray),
+                 default_variable=variableClassDefault,
+                 # default_variable:tc.any(list, np.ndarray),
                  activation_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_derivative_fct: tc.optional(tc.any(function_type, method_type)) = Logistic().derivative,
                  error_matrix=None,
@@ -6710,7 +6719,7 @@ class BackPropagation(LearningFunction):
 
         # self.return_val = ReturnVal(None, None)
 
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -6834,7 +6843,7 @@ class BackPropagation(LearningFunction):
            `error_signal <BackPropagation.error_signal>` (1d np.array).
 
         params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 

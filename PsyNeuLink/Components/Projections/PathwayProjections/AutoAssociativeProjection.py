@@ -19,10 +19,12 @@ that my matrix (with which I multiply my input to produce my output) is a square
 primary input state and output state of my owner. But you can specify the input and output state as well.
 """
 
+from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, CROSS, CHANGED, PARAMS_CURRENT
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
@@ -66,6 +68,9 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
+        if isinstance(cross, list):
+            cross = np.array(cross)
+
         params = self._assign_args_to_param_dicts(auto=auto, cross=cross, function_params={MATRIX: matrix}, params=params)
 
         super().__init__(sender=sender,
@@ -76,6 +81,10 @@ class AutoAssociativeProjection(MappingProjection):
                          prefs=prefs,
                          context=context)
 
+    def _instantiate_attributes_before_function(self, context=None):
+
+        super()._instantiate_attributes_before_function(context=context)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
         """
@@ -85,12 +94,33 @@ class AutoAssociativeProjection(MappingProjection):
         cross = self.params[CROSS]
         if auto is not None and cross is not None:
             a = get_auto_matrix(auto, size=self.size[0])
+            if a is None:
+                raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
+                                           "2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, auto, type(auto)))
             c = get_cross_matrix(cross, size=self.size[0])
+            if c is None:
+                raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+                                           "length one, 2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, cross, type(cross)))
             self.matrix = a + c
         elif auto is not None:
             self.matrix = get_auto_matrix(auto, size=self.size[0])
+            if self.matrix is None:
+                raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
+                                           "2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, auto, type(auto)))
+
         elif cross is not None:
             self.matrix = get_cross_matrix(cross, size=self.size[0])
+            if self.matrix is None:
+                raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+                                           "length one, 2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, cross, type(cross)))
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """

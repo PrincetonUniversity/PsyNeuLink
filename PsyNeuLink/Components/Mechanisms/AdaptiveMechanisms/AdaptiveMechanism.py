@@ -13,14 +13,45 @@
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism <Mechanisms>` that uses its input to modify the parameters of one or more
-other PsyNeuLink components.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
-this need not be the case. There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that
-modify the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that
-modify the parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
-ProcessingMechanisms in the `Process` or `System` to which they belong have been executed, with all LearningMechanisms
-then executed before all ControlMechanisms. Both types of AdaptiveMechanisms are executed before the next `TRIAL`,
-so that the modifications they make are available during the `TRIAL` run for the Process or System.
+An AdaptiveMechanism is a type of `Mechanism` that uses its input to modify the parameters of one or more other
+`Components <Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
+this need not be the case. There are three types of AdaptiveMechanism (see
+`ModulatorySignal <ModulatorySignal_Naming>` for the conventions used in naming Modulatory components):
+
+* `LearningMechanism`
+    takes an error signal (generally received from an `ObjectiveMechanism`) and generates a `learning_signal
+    <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s) <LearningSignal>`, and used
+    by their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
+    of a `MappingProjection`.
+..
+* `ControlMechanism`
+    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
+    `allocation_policy <ControlMechanism_Base.allocation_policy>`, each item of which is assigned to one of its
+    `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
+    that is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter of a Component.
+..
+* `GatingMechanism`
+    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
+    `gating_policy <GatingMechanism.gating_policy>`, each item of which is assigned to one of its
+    `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
+    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
+    `OutputState` of a `Mechanism`.
+
+LearningMechanisms and ControlMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in
+the `Process` or `System` to which they belong have been executed, with all LearningMechanisms executed first, and
+then ControlMechanisms.  Both types of Mechanism are executed before the next `TRIAL`, so that the modifications they
+make are available during the next `TRIAL` run for the Process or System (see `System Execution <System_Execution>`).
+GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
+introduce recurrent connections, care must be given to their `initialization and/or scheduling
+<GatingMechanism_Execution>`).
+
+
+COMMENT:
+AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
+`System` to which they belong have been executed, with all LearningMechanisms executed first, then GatingMechanisms,
+ControlMechanisms. All three types of AdaptiveMechanisms are executed before the next `TRIAL`, so that the
+modifications they make are available during the next `TRIAL` run for the Process or System.
+COMMENT
 
 .. _AdaptiveMechanism_Creation:
 
@@ -57,6 +88,8 @@ which it belongs.  All of the `LearningMechanisms <LearningMechanism>` are then 
 
 from PsyNeuLink.Components.Mechanisms.Mechanism import *
 from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
 
 class AdpativeMechanismError(Exception):
     def __init__(self, error_value):
