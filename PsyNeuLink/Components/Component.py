@@ -2697,9 +2697,10 @@ def make_property(name, default_value):
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
         if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
             param_state_owner._parameter_states[name].variable = val
-            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED at the moment. You can test this by
-            # putting a nonsense value instead of `val` in the line above. The tests should all still pass. Consider
-            # removing this line of code, then.
+            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED in the current tests. You can test this by
+            # putting a nonsense value instead of `val` in the line above (the tests should all still pass). Consider
+            # writing tests for this functionality, then. In particular, this functionality would probably be used if a
+            # user created a mechanism, then manually changed a function parameter
 
     # Create the property
     prop = property(getter).setter(setter)
