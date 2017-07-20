@@ -94,7 +94,11 @@ class ModulatoryProjection_Base(Projection_Base):
         prefs=None,                \
         context=None)
 
-    Implements a projection that modulates the value of a `State`.
+    Subclass of `Projection` that modulates the value of a `State`.
+
+    .. note::
+       ModulatoryProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <ModulatoryProjection_Subtypes>`.
 
     Arguments
     ---------

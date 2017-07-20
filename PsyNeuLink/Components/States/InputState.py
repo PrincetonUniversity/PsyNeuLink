@@ -298,7 +298,8 @@ class InputState(State_Base):
     name=None,                                 \
     prefs=None)
 
-    Implements a subclass of State that calculates and represents the input to a Mechanism.
+    Subclass of `State` that calculates and represents the input to a `Mechanism` from one or more
+    `PathwayProjection <PathwayProjection>`.
 
     COMMENT:
 

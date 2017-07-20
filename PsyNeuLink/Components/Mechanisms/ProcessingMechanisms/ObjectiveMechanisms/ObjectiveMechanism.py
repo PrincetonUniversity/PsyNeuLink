@@ -279,7 +279,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         name=None,                    \
         prefs=None)
 
-    Implements the ObjectiveMechanism subclass of `ProcessingMechanism`.
+    Subclass of `ProcessingMechanism` that evaluates the value(s) of one or more `OutputStates <OutputState>`.
 
     COMMENT:
         Description:

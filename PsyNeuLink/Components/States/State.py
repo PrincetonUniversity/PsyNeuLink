@@ -391,12 +391,12 @@ class State_Base(State):
     name=None,         \
     prefs=None)
 
-    Abstract class for State.
+    Base class for State.
 
     .. note::
-       States should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated by calling the constructor for the desired subclass,
-       or using other methods for specifying a State (see :ref:`State_Creation`).
+       State is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <State_Subtypes>`.
+
 
     COMMENT:
         Description

@@ -104,7 +104,7 @@ class GatingProjection(ModulatoryProjection_Base):
      name=None,        \
      prefs=None)
 
-     Implements a projection that modulates the value of the inputState or outputState of a ProcessingMechanism.
+    Subclass of `ModulatoryProjection` that modulates the value of an `InputState` or `OutputState`.
 
     COMMENT:
         Description:

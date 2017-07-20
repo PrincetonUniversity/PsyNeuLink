@@ -10,13 +10,14 @@
 
 """
 
+.. _AdaptiveMechanism_Overview:
+
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism` that uses its input to modify the parameters of one or more other
-`Components <Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
-this need not be the case. There are three types of AdaptiveMechanism (see
-`ModulatorySignal <ModulatorySignal_Naming>` for the conventions used in naming Modulatory components):
+An AdaptiveMechanism is a type of `Mechanism` that modifies the parameters of one or more other `Components
+<Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
+this need not be the case. There are three types of AdaptiveMechanism:
 
 * `LearningMechanism`
     takes an error signal (generally received from an `ObjectiveMechanism`) and generates a `learning_signal
@@ -37,14 +38,8 @@ this need not be the case. There are three types of AdaptiveMechanism (see
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
     `OutputState` of a `Mechanism`.
 
-LearningMechanisms and ControlMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in
-the `Process` or `System` to which they belong have been executed, with all LearningMechanisms executed first, and
-then ControlMechanisms.  Both types of Mechanism are executed before the next `TRIAL`, so that the modifications they
-make are available during the next `TRIAL` run for the Process or System (see `System Execution <System_Execution>`).
-GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
-introduce recurrent connections, care must be given to their `initialization and/or scheduling
-<GatingMechanism_Execution>`).
 
+See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
 
 COMMENT:
 AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
@@ -59,10 +54,13 @@ Creating an AdaptiveMechanism
 ------------------------------
 
 An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-AdaptiveMechanisms of the appropriate subtype are also created automatically when a :ref:`system
-<System.System_Creation>` is created,  and/or learning is  specified for a :ref:`system <System.System_Learning>`,
-a `process <Process_Learning>`, or any `projection <LearningProjection_Automatic_Creation>` within one.  See the
-documentation for the individual subtypes of AdaptiveMechanisms for more specific information about how to create them.
+AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
+require them, or a form of modulation is specified for them. For example, a `ControlMechanism` is automatically created
+as part of a `System <System.System_Creation>` (for use as its `controller <System_Base.controller>`), or when
+`control is specified <ControlMechanism_Control_Signals>` for the parameter of a `Mechanism`; and one or more
+`LearningMechanisms <LearningMechanism>` are created when learning is specified for a `System <System_Learning>` or a
+`Process <Process_Learning>` (see the documentation for `subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms
+for more specific information about how to create them).
 
 .. _AdaptiveMechanism_Structure:
 
@@ -71,18 +69,27 @@ Structure
 
 An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every AdaptiveMechanism
 has a `modulation <AdpativeMechanism.modulation>` attribute, that determines the default method by which its
-ModulatorySignals modify the value of objects that they modulate (see the `modulation <ModulatorySignal_Modulation>`
-for a description of how modulation operates, and the documentation for individual subtypes of AdaptiveMechanism for
-more specific information about their structure and modulatory operation).
+`ModulatorySignals <ModulatorySignal>` modify the value of the Components that they modulate (see the `modulation
+<ModulatorySignal_Modulation>` for a description of how modulation operates, and the documentation for individual
+subtypes of AdaptiveMechanism for more specific information about their structure and modulatory operation).
 
-.. _Comparator_Execution:
+.. _AdaptiveMechanism_Execution:
 
 Execution
 ---------
 
-An AdaptiveMechanism always executes after execution of all of the ProcessingMechanisms in the process or system to
-which it belongs.  All of the `LearningMechanisms <LearningMechanism>` are then executed, followed by all of the
-`ControlMechanisms <ControlMechanism>`.
+LearningMechanisms and ControlMechanisms are always executed at the end of a `TRIAL`, after all `ProcessingMechanisms
+<ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed; all LearningMechanisms
+executed first, and then ControlMechanisms.  All modifications made are available during the next `TRIAL`.
+GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
+introduce recurrent connections, care must be given to their `initialization and/or scheduling
+<GatingMechanism_Execution>`).
+
+
+.. _AdaptiveMechanism_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
@@ -97,8 +104,19 @@ class AdpativeMechanismError(Exception):
 
 
 class AdaptiveMechanism_Base(Mechanism_Base):
-    # IMPLEMENT: consider moving any properties of adaptive mechanisms not used by control mechanisms to here
-    """An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+    """Subclass of `Mechanism` that modulates the value(s) of one or more other `Component(s) <Component>`.
+
+    .. note::
+       AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       They should be instantiated using the constructor for a `subclass <AdaptiveMechanism_Subtypes>`.
+
+    COMMENT:
+
+    Description:
+        An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+
+    COMMENT
+
 
     Attributes
     ----------

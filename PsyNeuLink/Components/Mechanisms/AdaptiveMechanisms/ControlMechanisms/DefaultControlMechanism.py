@@ -52,7 +52,7 @@ class DefaultControlMechanismError(Exception):
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
-    """Implements the DefaultControlMechanism
+    """Subclass of `ControlMechanism` that implements a DefaultControlMechanism.
 
     COMMENT:
         Description:

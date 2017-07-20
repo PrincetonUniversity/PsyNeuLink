@@ -1,6 +1,8 @@
 PathwayProjection
 =================
 
+.. _PathwayProjection_Subtypes:
+
 .. toctree::
    :maxdepth: 2
 

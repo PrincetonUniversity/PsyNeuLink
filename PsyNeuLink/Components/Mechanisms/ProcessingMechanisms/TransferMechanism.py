@@ -186,7 +186,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     name=None,                   \
     prefs=None)
 
-    Implements TransferMechanism subclass of `Mechanism`.
+    Subclass of `ProcessingMechanism` that performs a simple transform of its input.
 
     COMMENT:
         Description

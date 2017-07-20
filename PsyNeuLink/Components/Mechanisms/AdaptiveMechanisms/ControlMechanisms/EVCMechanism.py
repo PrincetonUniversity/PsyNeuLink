@@ -368,7 +368,7 @@ class EVCMechanism(ControlMechanism_Base):
     name=None,                                                         \
     prefs=None)
 
-    Optimizes the `ControlSignals <ControlSignal>` for a sysem <System>`.
+    Subclass of `ControlMechanism` that optimizes the `ControlSignals <ControlSignal>` for a `System`.
 
     COMMENT:
         Class attributes:

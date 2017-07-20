@@ -527,11 +527,11 @@ class System_Base(System):
         prefs=None)
     COMMENT
 
-    Abstract class for System.
+    Base class for System.
 
     .. note::
-       Systems should NEVER be instantiated by a direct call to the base class.
-       They should be instantiated using the :func:`system` factory method (see it for description of parameters).
+       System is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the :func:`system` factory method (see it for description of parameters).
 
     COMMENT:
         Description
