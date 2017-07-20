@@ -76,7 +76,7 @@ of one.  These are assigned to the ObjectiveMechanism's `monitored_values <Objec
 ObjectiveMechanism is referenced by the ControlMechanism's
 `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism monitors each
 Mechanism and/or OutputState listed in the ControlMechanism's
-`monitor_for_control <ControlMechanism_Base.monitor_for_control>` attribute, and evaluates them using the its
+`monitor_for_control <ControlMechanism_Base.monitor_for_control>` attribute, and evaluates them using its
 `function <ControlMechanism_Base.function>`. This information is used to set the `allocation <ControlSignal.allocation>`
  for each of the ControlMechanism's ControlSignals.
 

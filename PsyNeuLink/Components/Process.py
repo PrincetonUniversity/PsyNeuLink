@@ -158,7 +158,7 @@ automatically created to transmit the Process' input to its `ORIGIN` Mechanism, 
     a ProcessInputState is created for each input item, and all project to the `ORIGIN` Mechanism's InputState;
 
 * otherwise, if the **input** has more than one item and the `ORIGIN` Mechanism has more than one InputState,
-  but the numbers are not equal, an error message is generated indicating that the there is an ambiguous mapping from
+  but the numbers are not equal, an error message is generated indicating that there is an ambiguous mapping from
   the Process' **input** value to `ORIGIN` Mechanism's InputStates.
 
 The output of a Process is a 2d np.array containing the values of its `TERMINAL` Mechanism's OutputStates.
