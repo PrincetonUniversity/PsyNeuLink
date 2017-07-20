@@ -24,6 +24,8 @@ from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.States.State import _instantiate_state
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
@@ -82,11 +84,50 @@ class AutoAssociativeProjection(MappingProjection):
                          context=context)
 
     def _instantiate_attributes_before_function(self, context=None):
+        """
+        """
 
         super()._instantiate_attributes_before_function(context=context)
 
+        # using `matrix`, instantiate ParameterStates for auto and cross if they haven't already been instantiated
+        # this can occur if auto and cross were None in the initialization call
+        param_keys = self._parameter_states.key_values
+        specified_matrix = get_matrix(self.params[FUNCTION_PARAMS]['matrix'], self.size[0], self.size[0])
+
+        if AUTO not in param_keys:
+            d = np.diagonal(specified_matrix).copy()
+            state = _instantiate_state(owner=self,
+                                       state_type=ParameterState,
+                                       state_name=AUTO,
+                                       state_spec=d,
+                                       state_params=None,
+                                       constraint_value=d,
+                                       constraint_value_name=AUTO,
+                                       context=context)
+            if state is not None:
+                self._parameter_states[AUTO] = state
+            else:
+                raise AutoAssociativeError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
+                                           format(self.__class__.__name__, self.name))
+        if CROSS not in param_keys:
+            m = specified_matrix.copy()
+            np.fill_diagonal(m, 0.0)
+            state = _instantiate_state(owner=self,
+                                       state_type=ParameterState,
+                                       state_name=CROSS,
+                                       state_spec=m,
+                                       state_params=None,
+                                       constraint_value=m,
+                                       constraint_value_name=CROSS,
+                                       context=context)
+            if state is not None:
+                self._parameter_states[CROSS] = state
+            else:
+                raise AutoAssociativeError("Failed to create ParameterState for `cross` attribute for {} \"{}\"".
+                                           format(self.__class__.__name__, self.name))
+
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
+        """Create self.matrix based on auto and cross, if specified
         """
 
         super()._instantiate_attributes_after_function(context=context)
