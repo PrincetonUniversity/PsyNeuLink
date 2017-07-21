@@ -1,0 +1,335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Adaptive Mechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+        <link rel="up" title="Mechanism" href="Mechanism.html"/>
+        <link rel="next" title="Learning Mechanism" href="LearningMechanism.html"/>
+        <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Adaptive Mechanism</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
+          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+      
+    <li>Adaptive Mechanism</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/AdaptiveMechanism.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="adaptive-mechanism">
+<h1>Adaptive Mechanism<a class="headerlink" href="#adaptive-mechanism" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound" id="adaptivemechanism-subtypes">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
+</ul>
+</div>
+<span class="target" id="module-AdaptiveMechanisms.AdaptiveMechanism"></span><div class="section" id="overview">
+<span id="adaptivemechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An AdaptiveMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modifies the parameters of one or more other <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  In general, an AdaptiveMechanism receives its input from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, however
+this need not be the case. There are three types of AdaptiveMechanism:</p>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a></dt>
+<dd><p class="first last">takes an error signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates a <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> that is provided to its <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal(s)</span></a>, and used
+by their <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to modulate the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter
+of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
+<dd><p class="first last">takes an evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates an
+<a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, each item of which is assigned to one of its
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.control_signal" title="ModulatorySignals.ControlSignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>
+that is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the parameter of a Component.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<ul>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a></dt>
+<dd><p class="first last">takes an evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates a
+<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>, each item of which is assigned to one of its
+<a class="reference internal" href="ControlSignal.html"><span class="doc">GatingSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.control_signal" title="ModulatorySignals.ControlSignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>
+that is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">GatingProjection(s)</span></a> to modulate the value of the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>See <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-naming"><span class="std std-ref">ModulatorySignal</span></a> for conventions used for the names of Modulatory components.</p>
+</div>
+<div class="section" id="creating-an-adaptivemechanism">
+<span id="adaptivemechanism-creation"></span><h2>Creating an AdaptiveMechanism<a class="headerlink" href="#creating-an-adaptivemechanism" title="Permalink to this headline">¶</a></h2>
+<p>An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
+AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
+require them, or a form of modulation is specified for them. For example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> is automatically created
+as part of a <code class="xref any docutils literal"><span class="pre">System</span></code> (for use as its <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>), or when
+<a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">control is specified</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and one or more
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are created when learning is specified for a <code class="xref any docutils literal"><span class="pre">System</span></code> or a
+<a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> (see the documentation for <a class="reference internal" href="#adaptivemechanism-subtypes"><span class="std std-ref">subtypes</span></a> of AdaptiveMechanisms
+for more specific information about how to create them).</p>
+</div>
+<div class="section" id="structure">
+<span id="adaptivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>An AdaptiveMechanism has the same basic structure as a <code class="xref any docutils literal"><span class="pre">Mechanism</span></code>.  In addition, every AdaptiveMechanism
+has a <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute, that determines the default method by which its
+<a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> modify the value of the Components that they modulate (see the <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> for a description of how modulation operates, and the documentation for individual
+subtypes of AdaptiveMechanism for more specific information about their structure and modulatory operation).</p>
+</div>
+<div class="section" id="execution">
+<span id="adaptivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>LearningMechanisms and ControlMechanisms are always executed at the end of a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed; all LearningMechanisms
+executed first, and then ControlMechanisms.  All modifications made are available during the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.
+GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
+introduce recurrent connections, care must be given to their <a class="reference internal" href="GatingMechanism.html#gatingmechanism-execution"><span class="std std-ref">initialization and/or scheduling</span></a>).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="adaptivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base">
+<em class="property">class </em><code class="descclassname">AdaptiveMechanisms.AdaptiveMechanism.</code><code class="descname">AdaptiveMechanism_Base</code><span class="sig-paren">(</span><em>variable</em>, <em>size</em>, <em>modulation</em>, <em>params</em>, <em>name</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+They should be instantiated using the constructor for a <a class="reference internal" href="#adaptivemechanism-subtypes"><span class="std std-ref">subclass</span></a>.</p>
+</div>
+<dl class="attribute">
+<dt id="AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation">
+<code class="descname">modulation</code><a class="headerlink" href="#AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ModulationParam</em> &#8211; determines how the output of the AdaptiveMechanism&#8217;s <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal(s)</span></a> are used to
+modulate the value of the State(s) to which their <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a> project.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LearningMechanism.html" class="btn btn-neutral float-right" title="Learning Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ComparatorMechanism.html" class="btn btn-neutral" title="ComparatorMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
