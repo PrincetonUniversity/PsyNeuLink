@@ -153,7 +153,8 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
 
   **Multiple LearningSignals and LearningProjections.** Though not common, it is possible for a LearningMechanism to
   have more than one LearningSignal, and/or its LearningSignal(s) to have more than one LearningProjection. This allows
-  the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that all will
+  the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that all of
+  them will
   use the same `learning_signal <LearningMechanism.learning_signal>` (this can be useful, for example, in implementing
   certain forms of `convolutional neural networks <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_
   If all of the LearningProjections are used to implement the same form of `modulation <ModulatorySignal_Modualtion>`,
@@ -185,14 +186,16 @@ In addition to its `input_states <LearningMechanism.input_states>`, `function <L
 and `learning_projections <LearningMechanism.learning_projections>` attributes, a LearningMechanism has the following
 additional attributes that refer to the Components being learned and/or its operation:
 
-* `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is, the one with
-  the `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies;
+* `learned_projection` - the MappingProjection(s) for which the LearningMechanism is responsible;  that is,
+  the one with the `matrix <MappingProjection.matrix>` parameter(s) that the LearningMechanism modifies;
 ..
 * `error_source` - the Mechanism that receives the `learned_projection`;  that is, the one that generates the output
-  used to calculate the error signal that the LearningMechanism attempts to reduce.
+  used to calculate the `error_signal <LearningMechanism.error_signal>` that the LearningMechanism attempts to reduce.
 ..
-* `modulation` - this specifies the way in which the `learning_signal <LearningMechanism.learning_signal>` is used
-  to modify the `matrix <MappingProjection.matrix>` parameter of the `learned_projection`.  By default its value is
+* `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
+  `LearningSignals <LearningSignal>` for which it is not explicitly specified;  this determines the way in which the
+  `learning_signal <LearningMechanism.learning_signal>` is used to modify the `matrix <MappingProjection.matrix>`
+  parameter of the `learned_projection`.  By default its value is
   Modulation.ADD, which causes the weight changes in the `learning_signal` to be added to the current value of the
   `matrix <MappingProjection.matrix>` parameter (see `LearningMechanism_Execution` for a description of how the
   modifications are executed).
