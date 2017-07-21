@@ -1178,7 +1178,7 @@ class Component(object):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
-                        if self.verbosePref:
+                        if hasattr(self, '_prefs') and self.verbosePref:
                             warnings.warn("{} is not a PsyNeuLink Function, "
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:

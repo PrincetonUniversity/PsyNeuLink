@@ -34,6 +34,7 @@ COMMENT
 """
 
 import typecheck as tc
+import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanismError, ControlMechanism_Base
 from PsyNeuLink.Components.States.InputState import InputState
@@ -44,6 +45,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 
 
 class DefaultControlMechanismError(Exception):
@@ -162,6 +164,13 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         elif isinstance(control_signal, tuple):
             input_name = 'DefaultControlAllocation for ' + control_signal[0] + '_ControlSignal'
+
+        elif isinstance(control_signal, ParameterState):
+            input_name = 'DefaultControlAllocation for ' + control_signal.name + '_ControlSignal'
+
+        else:
+            raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterState".
+                                               format(control_signal))
 
         # Instantiate input_states and allocation_policy attribute for control_signal allocations
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)

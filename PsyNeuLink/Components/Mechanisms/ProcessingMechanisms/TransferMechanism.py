@@ -394,6 +394,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                  context=componentType+INITIALIZING):
         """Assign type-level preferences and call super.__init__
         """
+        # MODIFIED 7/21/17 CW: Removed output_states = [RESULT] from initialization, due to potential bugs with
+        # mutable default arguments (see: bit.ly/2uID3s3)
+        if output_states is None:
+            output_states = [RESULT]
 
         if default_variable is None and size is None:
             default_variable = [[0]]
