@@ -149,7 +149,7 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   `value <LearningSignal.value>` is assigned as the value of the LearningMechanism's `learning_signal` attribute, and
   as the second item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.  It is
   also assigned as the `sender <LearningProjection.sender>` of the `LearningProjection` that projects to the
-  `MappingProjection` being learned.  Though not common, it is possible for a LearningMechanism to have more than one
+  `MappingProjection` being learned. Though not common, it is possible for a LearningMechanism to have more than one
   LearningSignal, and/or for and of its LearningSignal(s) to have more than one LearningProjection.  This allows
   the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that they
   will all use the same `learning_signal <LearningMechanism.learning_signal>` (this can be useful, for example, in
@@ -161,10 +161,10 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   then multipole LearningSignals should be implemented (one for each type of modulation), and LearningProjection(s)
   assigned to the relevvant LearningSignals.  Multiple LearningSignals can be specified for a LearningMechanism
   by including them in a list assigned to the **learning_signals** argument of the LearningMechanism's
-  constructor.  Each LearningSignal can be assigned multiple LearningProjections, to different MappingProjections,
-  in the **projections** argument of its constructor (or a *PROJECTIONS* entry of a dictionary assigned to its
-  **params** argument);  however, the `matrix <MappingProjection.matrix>` parameter for all of them must have the same
-  shape. The `learning_rate <LearningSignal.learning_rate>` for each LearningSignal, and the
+  constructor.  Each LearningSignal can be assigned multiple LearningProjections in the **projections** argument of
+  its constructor, or the *PROJECTIONS* entry of a dictionary assigned to its **params** argument); however, the
+  `matrix <MappingProjection.matrix>` parameter for all of them must have the same shape. The `learning_rate
+  <LearningSignal.learning_rate>` for each LearningSignal, and the
   `learning_rate <LearningProjection.learning_rate>` for each LearningProjection of a LearningSignal, call all be
   assigned different values (with the latter taking precedence over the former).  If none of these are specified,
   the `learning_rate <LearningMechanism.learning_rate>` of the LearningMechanism is used. All of the LearningSignals
