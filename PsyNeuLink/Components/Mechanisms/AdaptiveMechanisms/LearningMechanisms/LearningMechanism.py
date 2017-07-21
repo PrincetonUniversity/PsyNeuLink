@@ -143,18 +143,19 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
 
 * `LearningSignals <LearningSignal>` - these are a special type of OutputState, that receive the matrix of weight
   changes calculated by a LearningMechanism's `function <LearningMechanism.function>`, and use this to modify the
-  `matrix <MappingProjection.matrix>` parameter of the `MappingProjection(s) MappingProjection` being learned.
+  `matrix <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` being learned.
   By default, a LearningMechanism has just one LearningSignal.  It is assigned as the second item in the list of the
   LearningMechanism's OutputStates (i.e., in its `output_states <LearningMechanism.output_states>` attribute).  Its
   `value <LearningSignal.value>` is assigned as the value of the LearningMechanism's `learning_signal` attribute, and
   as the second item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.  It is
   also assigned as the `sender <LearningProjection.sender>` of the `LearningProjection` that projects to the
-  `MappingProjection` being learned. Though not common, it is possible for a LearningMechanism to have more than one
-  LearningSignal, and/or for and of its LearningSignal(s) to have more than one LearningProjection.  This allows
-  the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that they
-  will all use the same `learning_signal <LearningMechanism.learning_signal>` (this can be useful, for example, in
-  implementing certain forms of `convolutional neural networks
-  <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_
+  `MappingProjection` being learned.
+
+  **Multiple LearningSignals and LearningProjections.** Though not common, it is possible for a LearningMechanism to
+  have more than one LearningSignal, and/or its LearningSignal(s) to have more than one LearningProjection. This allows
+  the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that all will
+  use the same `learning_signal <LearningMechanism.learning_signal>` (this can be useful, for example, in implementing
+  certain forms of `convolutional neural networks <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_
   If all of the LearningProjections are used to implement the same form of `modulation <ModulatorySignal_Modualtion>`,
   (determined by their LearningSignals' `modulation <LearningSignal.modulation>` attribute), then a single
   LearningSignal should be assigned multiple LearningProjections;  if different forms of modulation are required,
@@ -164,30 +165,26 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   constructor.  Each LearningSignal can be assigned multiple LearningProjections in the **projections** argument of
   its constructor, or the *PROJECTIONS* entry of a dictionary assigned to its **params** argument); however, the
   `matrix <MappingProjection.matrix>` parameter for all of them must have the same shape. The `learning_rate
-  <LearningSignal.learning_rate>` for each LearningSignal, and the
-  `learning_rate <LearningProjection.learning_rate>` for each LearningProjection of a LearningSignal, call all be
-  assigned different values (with the latter taking precedence over the former).  If none of these are specified,
-  the `learning_rate <LearningMechanism.learning_rate>` of the LearningMechanism is used. All of the LearningSignals
-  of a LearningMechanism are listed in its `learning_signals` attribute (in addition to its
-  `output_states <LearningMechanism.output_states>` attribute), and all of their LearningProjections are listed in the
-  LearningMechanism's `learning_projections` attribute.
+  <LearningSignal.learning_rate>` for each LearningSignal, and the `learning_rate <LearningProjection.learning_rate>`
+  for each LearningProjection of a LearningSignal, call all be assigned different values (with the latter taking
+  precedence over the former).  If none of these are specified, the `learning_rate <LearningMechanism.learning_rate>`
+  of the LearningMechanism is used. All of the LearningSignals of a LearningMechanism are listed in its
+  `learning_signals` attribute (in addition to its `output_states <LearningMechanism.output_states>` attribute),
+  and all of their LearningProjections are listed in the LearningMechanism's `learning_projections` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to its State and function, a LearningMechanism has the following attributes that refer to the
-components being learned and/or its operation:
+In addition to its `States <State>` and `function <LearningMechanism.function>`, a LearningMechanism has the following
+additonal attributes that refer to the Components being learned and/or its operation:
 
 * `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is, the one with
   the `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies;
 ..
 * `error_source` - the Mechanism that receives the `learned_projection`;  that is, the one that generates the output
   used to calculate the error signal that the LearningMechanism attempts to reduce.
-..
-* `learning_signals` - the list of all of the LearningMechanism's LearningSignals that have been assigned to the
-  LearningMechanism in the **learning_signals** argument of its constructor.
 ..
 * `learning_projections` - the list of LearningProjections for all of the LearningMechanism's LearningSignals;
 ..
