@@ -1,0 +1,549 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>GatingSignal &mdash; PsyNeuLink 0.3.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+        <link rel="up" title="ModulatorySignal" href="ModulatorySignal.html"/>
+        <link rel="next" title="Functions" href="Function.html"/>
+        <link rel="prev" title="LearningSignal" href="LearningSignal.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">GatingSignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#creating-a-modulatorysignal">Creating a ModulatorySignal</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="Component.html">Component</a> &raquo;</li>
+      
+          <li><a href="State.html">State</a> &raquo;</li>
+      
+          <li><a href="ModulatorySignal.html">ModulatorySignal</a> &raquo;</li>
+      
+    <li>GatingSignal</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/GatingSignal.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-ModulatorySignals.GatingSignal">
+<span id="gatingsignal"></span><h1>GatingSignal<a class="headerlink" href="#module-ModulatorySignals.GatingSignal" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A GatingSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> and one or more
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, to modify the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (s) of the InputState(s) and/or
+OutputState(s) to which they project. A GatingSignal receives the value from the
+<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> of the GatingMechanism to which it belongs, and assigns that as
+the value of its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="ModulatorySignals.GatingSignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> to its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>, each
+of which projects to an InputState or OutputState and is used to modulate the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of that State.</p>
+</div>
+<div class="section" id="creating-a-gatingsignal">
+<span id="gatingsignal-creation"></span><h2>Creating a GatingSignal<a class="headerlink" href="#creating-a-gatingsignal" title="Permalink to this headline">¶</a></h2>
+<p>A GatingSignal is created automatically whenever an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified for
+gating.  This can be done either in the <strong>gating_signals</strong> argument of the constructor for a
+<a class="reference internal" href="GatingMechanism.html#gatingmechanism-gatingsignals"><span class="std std-ref">GatingMechanism</span></a>, or in the <a class="reference internal" href="State.html#state-projections"><span class="std std-ref">specification of projections</span></a> to
+the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
+other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an OutputState</span></a>), this is usually not necessary nor is it advisable,
+as a GatingSignal has dedicated components and requirements for configuration that must be met for it to function
+properly.</p>
+<div class="section" id="specifying-gatingsignals">
+<span id="gatingsignal-specification"></span><h3>Specifying GatingSignals<a class="headerlink" href="#specifying-gatingsignals" title="Permalink to this headline">¶</a></h3>
+<p>When a GatingSignal is specified in the <strong>gating_signals</strong> argument of the constructor for a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, the
+InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:</p>
+<blockquote>
+<div><ul class="simple">
+<li>an <strong>InputState</strong> or <strong>OutputState</strong> of a Mechanism;</li>
+</ul>
+<ul class="simple">
+<li>a <strong>Mechanism</strong>, in which case its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary `InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">OutputState</span></a>
+is used;</li>
+</ul>
+<ul class="simple">
+<li>a <strong>tuple</strong>, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
+note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
+but precludes specification of any <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">parameters</span></a> for the GatingSignal.</li>
+</ul>
+<ul>
+<li><p class="first">a <strong>specification dictionary</strong>, that can take either of the following two forms:</p>
+<ul>
+<li><p class="first">for a single state, the dictionary must have the following two entries:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt><em>NAME</em>: str</dt>
+<dd><p class="first last">the string must be the name of the State to be gated; the GatingSignal will named by appending
+&#8220;_GatingSignal&#8221; to the name of the State.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt><em>MECHANISM</em>: Mechanism</dt>
+<dd><p class="first last">the Mechanism must be the one to the which the State to be gated belongs.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">for multiple states, the dictionary must have the following entry:</p>
+<blockquote>
+<div><ul>
+<li><dl class="first docutils">
+<dt>&lt;str&gt;:list</dt>
+<dd><p class="first last">the string used as the key specifies the name to be used for the GatingSignal,
+and each item of the list must be a <a class="reference internal" href="State.html#state-creation"><span class="std std-ref">specification of a State</span></a> to be
+gated by the GatingSignal (and that will receive a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> from it).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>The dictionary can also contain entries for any other GatingSignal attributes to be specified
+(e.g., a <em>MODULATION</em> entry, the value of which determines how the GatingSignal modulates the
+<a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) that it gates); see <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">below</span></a>
+for a description of GatingSignal attributes.</p>
+</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="structure">
+<span id="gatingsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A GatingSignal is owned by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and associated with one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>,
+each of which projects to the InputState or OutputState that it gates.</p>
+<div class="section" id="projections">
+<span id="gatingsignal-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
+<p>When a GatingSignal is created, it can be assigned one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, using either
+the <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the <strong>params</strong> argument
+with the key <em>PROJECTIONS</em>.  These will be assigned to its <code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute.  See
+<a class="reference internal" href="State.html#state-projections"><span class="std std-ref">State Projections</span></a> for additional details concerning the specification of Projections when
+creating a State.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although a GatingSignal can be assigned more than one <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>, all of those Projections will convey
+the same <a class="reference internal" href="LearningMechanism.html"><span class="doc">gating_signal</span></a> (received from the GatingMechanism to which the GatingSignal
+belongs), and use the same form of <a class="reference internal" href="#gatingsignal-modulation"><span class="std std-ref">modulation</span></a>.  This can be useful for implementing
+broadly projecting modulatory effects.</p>
+</div>
+</div>
+<div class="section" id="modulation">
+<span id="gatingsignal-modulation"></span><h3>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
+<p>Each GatingSignal has a <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute that determines how the GatingSignal&#8217;s
+<a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (i.e., its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="ModulatorySignals.GatingSignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>) is used by the States to which it
+projects to modify their <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> s (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for an explanation of how the
+<code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute is specified and used to modulate the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a
+State). The <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute can be specified in the <strong>modulation</strong> argument of the
+constructor for a GatingSignal, or in a specification dictionary as described <a class="reference internal" href="#gatingsignal-specification"><span class="std std-ref">above</span></a>.
+The value must be a value of <a class="reference internal" href="Function.html#Function.ModulationParam" title="Function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a>;  if it is not specified, its default is the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of the GatingMechanism to which the GatingSignal belongs (which is the same
+for all of the GatingSignals belonging to that GatingMechanism).  The value of the
+<code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute of a GatingSignal is used by all of the
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project from that GatingSignal.</p>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="gatingsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A GatingSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which it belongs is
+executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
+<code class="xref any docutils literal"><span class="pre">gating_policy</span></code>, that is used by its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.function" title="ModulatorySignals.GatingSignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate its
+the value of its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="ModulatorySignals.GatingSignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>.  That, in turn, is used by its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to modulate the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the States to which they project. How the modulation
+is executed is determined by the GatingSignal&#8217;s <code class="xref any docutils literal"><span class="pre">modulation</span></code> attribute
+(see <code class="xref any docutils literal"><span class="pre">above</span></code>, and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed explanation of how
+modulation operates).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The change in the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of InputStates and OutputStates in response to the execution of a
+GatingSignal are not applied until the Mechanism(s) to which those states belong are next executed;
+see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating).</p>
+</div>
+<p class="rubric" id="gatingsignal-examples">Examples</p>
+<p><strong>Gate an InputState and OutputState</strong>.  In the following example, <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> is configured to gate the
+<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of one Mechanism, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a>
+of another:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mechanism_A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
+<span class="n">my_mechanism_B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
+<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_mechanism_A</span><span class="p">,</span> <span class="n">my_mechanism_B</span><span class="o">.</span><span class="n">output_state</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that, in the <strong>gating_signals</strong> argument, the first item references a Mechanism (<code class="docutils literal"><span class="pre">my_mechanism_A</span></code>) rather than
+one of its states &#8211; this is all that is necessary, since the default for a <a class="reference internal" href="#"><span class="doc">GatingSignal</span></a> is to modulate the
+<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of a Mechanism.  The second item explicitly specifies the State to be gated,
+since it is an OutputState.  This will generate two GatingSignals, each of which will multiplicatively modulate the
+value of the State to which it projects.  This is because, by default, the <code class="xref any docutils literal"><span class="pre">modulation</span></code>
+attribute of a GatingSignal is the <em>MULTIPLICATIVE_PARAM</em> for the <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the State to which
+it projects.  For an InputState, the default <a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> and its <em>MULTIPLICATIVE_PARAM</em>
+is its <a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a> parameter.  Thus, the value of the GatingSignal is assigned to the slope, which multiplies
+the State`s <code class="xref any docutils literal"><span class="pre">variable</span></code> (i.e., its input(s)) to determine its <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+<p><strong>Modulate the InputStates of several Mechanisms</strong>.  In next example, a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> is created that modulates
+the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of all the layers in a 3-layered feedforward neural network.  Ordinarily, gating modulates the
+<em>MULTIPLICATIVE_PARAM</em> of an InputState&#8217;s <a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  In the example, this is changed so that
+it adds the <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#"><span class="doc">GatingSignal</span></a> to the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputState:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">my_hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">my_output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span>
+                                        <span class="p">{</span><span class="s1">&#39;GATE_ALL&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">my_input_layer</span><span class="p">,</span>
+                                                      <span class="n">my_hidden_layer</span><span class="p">,</span>
+                                                      <span class="n">my_output_layer</span><span class="p">]},</span>
+                                         <span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that, again, the <strong>gating_signals</strong> are listed as Mechanisms, since in this case it is their primary InputStates
+that are to be gated. Since they are all listed in a single entry of a
+<code class="xref any docutils literal"><span class="pre">specification</span> <span class="pre">dictionary</span></code>, they will all be gated by a single GatingSignal named
+<code class="docutils literal"><span class="pre">GATE_ALL</span></code>, that will send a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the InputState of each of the Mechanisms listed (the next example
+shows how different InputStates can be differentially gated by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>). Finally, note that the
+<a class="reference internal" href="Function.html#Function.ModulationParam" title="Function.ModulationParam"><code class="xref any py py-class docutils literal"><span class="pre">ModulationParam</span></code></a> specified for the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> (and therefore the default for its GatingSignals, pertains to
+the <a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>. By default that is a <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function, the <em>ADDITIVE_PARAM</em>
+of which is its <a class="reference internal" href="Function.html#Function.Linear.intercept" title="Function.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> parameter. Therefore, in the example above, each time the InputStates
+are updated, the value of the GatingSignal will be assigned as the <a class="reference internal" href="Function.html#Function.Linear.intercept" title="Function.Linear.intercept"><code class="xref any py py-attr docutils literal"><span class="pre">intercept</span></code></a> of each InputState&#8217;s
+<a class="reference internal" href="InputState.html#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, thus adding that amount to the input to the State before determining its
+<code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+<p><strong>Gate InputStates differentially</strong>.  In the example above, the InputStates for all of the Mechanisms were gated
+using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
+Mechanism:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+                                                       <span class="n">MODULATION</span><span class="p">:</span> <span class="n">ModulationParam</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
+                                                       <span class="n">PROJECTIONS</span><span class="p">:</span> <span class="n">my_input_layer</span><span class="p">},</span>
+                                                      <span class="p">{</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+                                                       <span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_hidden_layer</span><span class="p">,</span>
+                                                                     <span class="n">my_output_layer</span><span class="p">]}])</span>
+</pre></div>
+</div>
+<p>Here, two GatingSignals are specified as <a class="reference internal" href="#gatingsignal-specification"><span class="std std-ref">specification dictionaries</span></a>, each of which
+contains an entry for the name of the GatingSignal, and a <em>PROJECTIONS</em> entry that specifies the States to which the
+GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the
+default is to gate the <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> of a Mechanism, so those are what are referenced. The
+first dict also contains a  <em>MODULATION</em> entry that specifies the value of the <code class="xref any docutils literal"><span class="pre">modulation</span></code>
+attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
+<a class="reference internal" href="Function.html#Function.ModulationParam.MULTIPLICATIVE" title="Function.ModulationParam.MULTIPLICATIVE"><code class="xref any py py-attr docutils literal"><span class="pre">ModulationParam.MULTIPLICATIVE</span></code></a>).  Thus, the InputState of <code class="docutils literal"><span class="pre">my_input_layer</span></code> will be additively modulated by
+<code class="docutils literal"><span class="pre">GATING_SIGNAL_A</span></code>, while the InputStates of <code class="docutils literal"><span class="pre">my_hidden_layer</span></code> and <code class="docutils literal"><span class="pre">my_output_layer</span></code> will be multiplicatively
+modulated by <code class="docutils literal"><span class="pre">GATING_SIGNAL_B</span></code>.</p>
+<p><strong>Creating and assigning stand-alone GatingSignals</strong>.  GatingSignals can also be created on their own, and then later
+assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
+created directly and then assigned to <code class="docutils literal"><span class="pre">my_gating_mechanism</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_gating_signal_A</span> <span class="o">=</span> <span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_A&#39;</span><span class="p">,</span>
+                                  <span class="n">modulation</span><span class="o">=</span><span class="n">ModulationParams</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">,</span>
+                                  <span class="n">projections</span><span class="o">=</span><span class="n">my_input_layer</span><span class="p">)</span>
+<span class="n">my_gating_signal_B</span> <span class="o">=</span> <span class="n">GatingSignal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;GATING_SIGNAL_B&#39;</span><span class="p">,</span>
+                                  <span class="n">projections</span><span class="o">=</span><span class="n">my_hidden_layer</span><span class="p">,</span>
+                                              <span class="n">my_output_layer</span><span class="p">)</span>
+<span class="n">my_gating_mechanism</span> <span class="o">=</span> <span class="n">GatingMechanism</span><span class="p">(</span><span class="n">gating_signals</span><span class="o">=</span><span class="p">[</span><span class="n">my_gating_signal_A</span><span class="p">,</span>
+                                                      <span class="n">my_gating_signal_B</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="class-reference">
+<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal">
+<em class="property">class </em><code class="descclassname">ModulatorySignals.GatingSignal.</code><code class="descname">GatingSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to modulate the value(s)
+of one more <a class="reference internal" href="InputState.html"><span class="doc">InputState(s)</span></a> and/or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the GatingSignal.</li>
+<li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the value of the GatingSignal from the value of its
+<code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
+<li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the way in which the <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> the GatingSignal is used to modify the
+<a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) to which the GatingSignal&#8217;s
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> project.</li>
+<li><strong>projections</strong> (<em>list of Projection specifications</em>) &#8211; specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to be assigned to the GatingSignal, and that will be
+listed in its <code class="xref any docutils literal"><span class="pre">efferents</span></code> attribute (see <a class="reference internal" href="#gatingsignal-projections"><span class="std std-ref">Projections</span></a> for additional
+details).</li>
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
+override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) &#8211; a string used for the name of the OutputState.
+If not is specified, a default is assigned by the StateRegistry of the mechanism to which the OutputState
+belongs (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the OutputState.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal.owner">
+<code class="descname">owner</code><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>GatingMechanism</em> &#8211; the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which the GatingSignal belongs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal.variable">
+<code class="descname">variable</code><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; used by <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.function" title="ModulatorySignals.GatingSignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute the GatingSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal.function">
+<code class="descname">function</code><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction :  default Linear(slope=1, intercept=0)</em> &#8211; provides the GatingSignal&#8217;s <a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.value" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; the default is an identity function that
+passes the input to the GatingMechanism as value for the GatingSignal.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal.value">
+<code class="descname">value</code><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; result of the GatingSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.function" title="ModulatorySignals.GatingSignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+(same as its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="ModulatorySignals.GatingSignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatorySignals.GatingSignal.GatingSignal.gating_signal">
+<code class="descname">gating_signal</code><a class="headerlink" href="#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> &#8211; result of the GatingSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.function" title="ModulatorySignals.GatingSignal.GatingSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (same as its <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>).</p>
+</dd></dl>
+
+<dl class="docutils">
+<dt>modulation</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">ModulationParam</span><dd>determines the way in the which <a class="reference internal" href="#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the GatingSignal is used to modify the
+<a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State(s) to which the GatingSignal&#8217;s
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> project.</dd>
+<dt>efferents</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">[List[GatingProjection]]</span><dd>a list of the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> assigned to (i.e., that project from) the GatingSignal.</dd>
+<dt>name</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &lt;State subclass&gt;-&lt;index&gt;</span><dd><p class="first">name of the OutputState.
+Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
+assigned by the StateRegistry of the mechanism to which the OutputState belongs
+(see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+<div class="last admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Unlike other PsyNeuLink components, state names are &#8220;scoped&#8221; within a mechanism, meaning that states with
+the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
+mechanism: states within a mechanism with the same base name are appended an index in the order of their
+creation.</p>
+</div>
+</dd>
+<dt>prefs</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">State.classPreferences</span><dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the OutputState.
+Specified in the <strong>prefs</strong> argument of the constructor for the projection;  if it is not specified, a default is
+assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref doc">PreferenceSet</span> for details).</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Function.html" class="btn btn-neutral float-right" title="Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="LearningSignal.html" class="btn btn-neutral" title="LearningSignal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

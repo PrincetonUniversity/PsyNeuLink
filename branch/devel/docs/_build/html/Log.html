@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Log &mdash; PsyNeuLink 0.3.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Log</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Log.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="log">
+<h1>Log<a class="headerlink" href="#log" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Log</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-logs-and-entries">Creating Logs and Entries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logging-entries">Logging Entries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<span class="target" id="module-Log"></span><div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A Log object is used to record information about PsyNeuLink components during their &#8220;life cycle&#8221; (i.e., as they are
+created, validated and executed).  Every component has a log object &#8211; assigned to its <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute
+when the component is created &#8211; that maintains a dictionary with entries for each attribute of the component that
+has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
+component is initialized, validated, or executed), which can be designated by a <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specification in the
+component&#8217;s preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
+which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
+information can be displayed using the log&#8217;s <a class="reference internal" href="#Log.Log.print_entries" title="Log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method.</p>
+</div>
+<div class="section" id="creating-logs-and-entries">
+<h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
+<p>Whenever any PsyNeuLink component is created, a log object is also automatically created and assigned to the
+component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute.  Entries are made to the log based on the <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specified in the
+<code class="xref any docutils literal"><span class="pre">logPref</span></code> item of the component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">prefs</span></code> attribute.</p>
+<p>Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict</p>
+<p>An attribute is logged if:</p>
+<ul class="simple">
+<li>it is one <code class="xref any docutils literal"><span class="pre">automatically</span> <span class="pre">included</span></code> in logging;</li>
+</ul>
+<ul class="simple">
+<li>it is included in the LOG_ENTRIES entry of a
+<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> (<code class="docutils literal"><span class="pre">params[LOG_ENTRIES]</span></code>) assigned to
+the <strong>params</strong> argument of the constructor for the component;</li>
+</ul>
+<ul class="simple">
+<li>the context of the assignment is above the LogLevel specified in the logPref setting of the owner object</li>
+</ul>
+<p>Entry values are added by the setter method for the attribute being logged.</p>
+<dl class="docutils">
+<dt>The following entries are automatically included in self.entries for a Mechanism object:</dt>
+<dd><ul class="first simple">
+<li>the value attribute of every State for which the Mechanism is an owner</li>
+</ul>
+<p class="last">[TBI: - value of every projection that sends to those States]
+- the system variables defined in SystemLogEntries (see declaration above)
+- any variables listed in the params[LOG_ENTRIES] of a Mechanism</p>
+</dd>
+</dl>
+<p>DEFAULT LogLevel FOR ALL COMPONENTS IS VALUE_ASSIGNMENT</p>
+</div>
+<div class="section" id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Each entry of log.entries has:</dt>
+<dd><ul class="first last">
+<li><p class="first">a key that is the name of the attribute being logged</p>
+</li>
+<li><p class="first">a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</p>
+</li>
+<li><dl class="first docutils">
+<dt>each tuple has three items:</dt>
+<dd><ul class="first last simple">
+<li>time (CentralClock): when it was recorded in the run</li>
+<li>context (str): the context in which it was recorded (i.e., where the attribute value was assigned)</li>
+<li>value (value): the value assigned to the attribute</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>The LogLevel class (see declaration above) defines six levels of logging:</dt>
+<dd><ul class="first simple">
+<li>OFF: No logging for attributes of the owner object</li>
+<li>VALUE_ASSIGNMENT: Log values only when final value assignment has been made during execution</li>
+<li>EXECUTION: Log values for all assignments during execution (e.g., including aggregation of projections)</li>
+<li>VALIDATION: Log value assignments during validation as well as execution and initialization</li>
+<li>ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)</li>
+</ul>
+<p class="last">Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons</p>
+</dd>
+<dt>Entries can also be added programmatically by:</dt>
+<dd><ul class="first last simple">
+<li>including them in the logPref of a PreferenceSet</li>
+<li>using the add_entries() method (see below)</li>
+<li>using the log_entries() method (see below)</li>
+</ul>
+</dd>
+<dt>The owner.prefs.logPref setting contains a list of entries to actively record</dt>
+<dd><ul class="first">
+<li><dl class="first docutils">
+<dt>when entries are added to an object&#8217;s logPref list, the log.add_entries() method is called,</dt>
+<dd><p class="first last">which validates the entries against the object&#8217;s attributes and SystemLogEntries</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>if entries are removed from the object&#8217;s logPref list, they still remain in the log dict;</dt>
+<dd><p class="first last">they can be deleted from the log dict using the remove_log_entries() method</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>data is recorded in an entry using the log_entries() method, which records data to all entries</dt>
+<dd><p class="first last">in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
+of Category classes in the Function hierarchy (e.g., Process, Mechanism and Projection)
+on each cycle of the execution sequence;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>log_entries() adds entries to the self.owner.prefs.logPrefs list,</dt>
+<dd><p class="first last">which will record data for those attributes when logging is active;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>suspend_entries() removes entries from the self.owner.prefs.logPrefs list;</dt>
+<dd><p class="first last">data will not be recorded for those entries when logging is active</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p class="last">Notes:
+* A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="logging-entries">
+<h2>Logging Entries<a class="headerlink" href="#logging-entries" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="class-reference">
+<span id="log-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Log.LogLevel">
+<em class="property">class </em><code class="descclassname">Log.</code><code class="descname">LogLevel</code><a class="headerlink" href="#Log.LogLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies levels of logging, as descrdibed below.</p>
+<dl class="attribute">
+<dt id="Log.LogLevel.OFF">
+<code class="descname">OFF</code><em class="property"> = &lt;LogLevel.OFF: 0&gt;</em><a class="headerlink" href="#Log.LogLevel.OFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>No recording.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogLevel.VALUE_ASSIGNMENT">
+<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = &lt;LogLevel.VALUE_ASSIGNMENT: 1&gt;</em><a class="headerlink" href="#Log.LogLevel.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record only final value assignments during execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogLevel.EXECUTION">
+<code class="descname">EXECUTION</code><em class="property"> = &lt;LogLevel.EXECUTION: 2&gt;</em><a class="headerlink" href="#Log.LogLevel.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments during execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogLevel.VALIDATION">
+<code class="descname">VALIDATION</code><em class="property"> = &lt;LogLevel.VALIDATION: 3&gt;</em><a class="headerlink" href="#Log.LogLevel.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignemnts during validation and execution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogLevel.ALL_ASSIGNMENTS">
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = &lt;LogLevel.ALL_ASSIGNMENTS: 4&gt;</em><a class="headerlink" href="#Log.LogLevel.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record all value assignments during initialization, validation and execution.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Log.LogEntry">
+<em class="property">class </em><code class="descclassname">Log.</code><code class="descname">LogEntry</code><span class="sig-paren">(</span><em>time</em>, <em>context</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.LogEntry" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="Log.LogEntry.context">
+<code class="descname">context</code><a class="headerlink" href="#Log.LogEntry.context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogEntry.time">
+<code class="descname">time</code><a class="headerlink" href="#Log.LogEntry.time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Log.LogEntry.value">
+<code class="descname">value</code><a class="headerlink" href="#Log.LogEntry.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Log.EntriesDict">
+<em class="property">class </em><code class="descclassname">Log.</code><code class="descname">EntriesDict</code><span class="sig-paren">(</span><em>owner</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.EntriesDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add setter method for entries that checks owner mechanism&#8217;s prefs to see whether entry is currently recording</p>
+<p>If entry is in owner mechanism&#8217;s prefs.logPref.setting list, then append attribute value to entry&#8217;s list
+Otherwise, either initialize or just update entry with value</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Log.Log">
+<em class="property">class </em><code class="descclassname">Log.</code><code class="descname">Log</code><span class="sig-paren">(</span><em>owner</em>, <em>entries=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maintain a log for an object, which contains a dictionary of attributes being logged and their value(s).</p>
+<dl class="docutils">
+<dt>Description:</dt>
+<dd><p class="first">Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
+Each entry of self.entries has:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">a key that is the name of the attribute being logged</p>
+</li>
+<li><p class="first">a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</p>
+</li>
+<li><dl class="first docutils">
+<dt>each tuple has three items:</dt>
+<dd><ul class="first last simple">
+<li>time (CentralClock): when it was recorded in the run</li>
+<li>context (str): the context in which it was recorded (i.e., where the attribute value was assigned)</li>
+<li>value (value): the value assigned to the attribute</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>An attribute is recorded if:</dt>
+<dd><ul class="first last simple">
+<li>it is one automatically included in logging (see below)</li>
+<li>it is included in params[LOG_ENTRIES] of the owner object</li>
+<li>the context of the assignment is above the LogLevel specified in the logPref setting of the owner object</li>
+</ul>
+</dd>
+</dl>
+<p>Entry values are added by the setter method for the attribute being logged
+The following entries are automatically included in self.entries for a Mechanism object:</p>
+<blockquote>
+<div><ul class="simple">
+<li>the value attribute of every State for which the Mechanism is an owner</li>
+</ul>
+<p>[TBI: - value of every projection that sends to those States]
+- the system variables defined in SystemLogEntries (see declaration above)
+- any variables listed in the params[LOG_ENTRIES] of a Mechanism</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>The LogLevel class (see declaration above) defines five levels of logging:</dt>
+<dd><ul class="first simple">
+<li>OFF: No logging for attributes of the owner object</li>
+<li>VALUE_ASSIGNMENT: Log values only when final value assignment has been during execution</li>
+<li>EXECUTION: Log values for all assignments during exeuction (e.g., including aggregation of projections)</li>
+<li>VALIDATION: Log value assignments during validation as well as execution</li>
+<li>ALL_ASSIGNMENTS:  Log all value assignments (e.g., including initialization)</li>
+</ul>
+<p class="last">Note: LogLevel is an IntEnum, and thus its values can be used directly in numerical comparisons</p>
+</dd>
+</dl>
+<p># Entries can also be added programmtically by:
+#     - including them in the logPref of a PreferenceSet
+#     - using the add_entries() method (see below)
+#     - using the log_entries() method (see below)
+# The owner.prefs.logPref setting contains a list of entries to actively record
+#     - when entries are added to an object&#8217;s logPref list, the log.add_entries() method is called,
+#         which validates the entries against the object&#8217;s attributes and SystemLogEntries
+#     - if entries are removed from the object&#8217;s logPref list, they still remain in the log dict;
+#         they can be deleted from the log dict using the remove_log_entries() method
+#     - data is recorded in an entry using the log_entries() method, which records data to all entries
+#         in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
+#         of Category classes in the Function hierarchy (e.g., Process, Mechanism and Projection)
+#         on each cycle of the execution sequence;
+#     - log_entries() adds entries to the self.owner.prefs.logPrefs list,
+#         which will record data for those attributes when logging is active;
+#     - suspend_entries() removes entries from the self.owner.prefs.logPrefs list;
+#         data will not be recorded for those entries when logging is active</p>
+<p class="last">Notes:
+* A list of viable entries should be defined as the classLogEntries class attribute of a Function subclass</p>
+</dd>
+<dt>Instantiation:</dt>
+<dd><dl class="first docutils">
+<dt>A Log object is automatically instantiated for a Function object by Function.__init__(), which assigns to it</dt>
+<dd>any entries specified in the logPref of the prefs arg used to instantiate the owner object</dd>
+</dl>
+<p class="last">Adding an item to self.owner.prefs.logPref will validate and add an entry for that attribute to the log dict</p>
+</dd>
+<dt>Initialization arguments:</dt>
+<dd><ul class="first last simple">
+<li>entries (list): list of keypaths for attributes to be logged</li>
+</ul>
+</dd>
+<dt>Class Attributes:</dt>
+<dd><ul class="first last simple">
+<li>log (dict)</li>
+</ul>
+</dd>
+<dt>Class Methods:</dt>
+<dd><ul class="first">
+<li><p class="first">add_entries(entries) - add entries to log dict</p>
+</li>
+<li><p class="first">delete_entries(entries, confirm) - delete entries from log dict; confirm=True requires user confirmation</p>
+</li>
+<li><dl class="first docutils">
+<dt>reset_entries(entries, confirm) - delete all data from entries but leave them in log dict;</dt>
+<dd><p class="first last">confirm=True requires user confirmation</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p class="last">-&nbsp;log_entries(entries) - activate recording of data for entries (adds them to self.owner.prefs.logPref)
+-&nbsp;suspend_entries(entries) - halt recording of data for entries (removes them from self.owner.prefs.logPref)
+-&nbsp;log_entries(entries) - logs the current values of the attributes corresponding to entries
+-&nbsp;print_entries(entries) - prints entry values
+-&nbsp;[TBI: save_log - save log to disk]</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="Log.Log.add_entries">
+<code class="descname">add_entries</code><span class="sig-paren">(</span><em>entries</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.add_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that a list of entries are attributes of owner or in SystemLogEntries, and then add to self.entries</p>
+<p>entries should be a single keypath or list of keypaths for attribute(s) of the owner
+Note: adding an entry does not mean data will be recorded;</p>
+<blockquote>
+<div>to activate recording, the log_entries() method must be called</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entry</strong> &#8211; (str)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Log.Log.delete_entry">
+<code class="descname">delete_entry</code><span class="sig-paren">(</span><em>entries</em>, <em>confirm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.delete_entry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete entry for attribute from self.entries</p>
+<p>If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
+Note: deleting the entry will delete all the data recorded within it
+Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+Notes:
+* only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+* deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entries</strong> &#8211; (str, list, or ALL_LOG_ENTRIES)</li>
+<li><strong>confirm</strong> &#8211; (bool)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Log.Log.reset_entries">
+<code class="descname">reset_entries</code><span class="sig-paren">(</span><em>entries</em>, <em>confirm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.reset_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset one or more entries by removing all data, but leaving entries in log dict</p>
+<p>If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
+Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+Notes:
+* only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+* resetting an entry deletes ALL the data recorded within it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entries</strong> &#8211; (list, str or ALL_LOG_ENTRIES)</li>
+<li><strong>confirm</strong> &#8211; (bool)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Log.Log.suspend_entries">
+<code class="descname">suspend_entries</code><span class="sig-paren">(</span><em>entries</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.suspend_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Suspend recording the values of attributes corresponding to entries even if logging is on</p>
+<p>Remove entries from self.owner.prefs.logPref (but leave in log dict, i.e., self.entries)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> &#8211; (str or list)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="Log.Log.print_entries">
+<code class="descname">print_entries</code><span class="sig-paren">(</span><em>entries=None</em>, <em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.print_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print values of entries</p>
+<p>If entries is the keyword ALL_ENTRIES, print all entries in the self.owner.prefs.logPref list
+Issue a warning if an entry is not in the log dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> &#8211; (str, list, or ALL_ENTRIES)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

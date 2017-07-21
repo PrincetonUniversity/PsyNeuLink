@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Component &mdash; PsyNeuLink 0.3.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+        <link rel="next" title="Mechanism" href="Mechanism.html"/>
+        <link rel="prev" title="Quick Reference" href="QuickReference.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-component">Creating a Component</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#deferred-initialization">Deferred Initialization</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#component-structure">Component Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core-configurable-attributes">Core Configurable Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#core-informational-attributes">Core Informational Attributes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#component-methods">Component Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">PsyNeuLink</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Component</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Component.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="component">
+<h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+</div>
+<span class="target" id="module-Component"></span><div class="section" id="overview">
+<span id="component-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Component is the base class for all of the objects used to create <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> in PsyNeuLink.
+It defines a common set of attributes possessed, and methods used by all Component objects.</p>
+</div>
+<div class="section" id="creating-a-component">
+<span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Permalink to this headline">¶</a></h2>
+<p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal"><span class="pre">__init__()</span></code>
+method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
+(listed <a class="reference internal" href="#component-methods"><span class="std std-ref">below</span></a>) as part of the initialization procedure.  Every Component has a core set of
+configurable parameters that can be specified in the arguments of the constructor, as well as additional attributes
+that provide information about its contents and/or state (see <code class="xref any docutils literal"><span class="pre">Component_Attributes</span></code> below).</p>
+<div class="section" id="deferred-initialization">
+<span id="component-deferred-init"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
+<p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a
+<a class="reference internal" href="State.html#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">State</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its full
+initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="State.html"><span class="doc">State</span></a> is assigned to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or
+a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  This allows
+Components to be created before all of the information they require is available (e.g., at the beginning of a script).
+However, for the Component to be operational, initialization must be completed its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method must be
+called.  This is usually done automatically when the Component is assigned to another Component to which it belongs
+(e.g., assigning a State to a Mechanism) or to a Composition (e.g., a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>)
+of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
+</div>
+</div>
+<div class="section" id="component-structure">
+<span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="core-configurable-attributes">
+<span id="component-configurable-attributes"></span><h3>Core Configurable Attributes<a class="headerlink" href="#core-configurable-attributes" title="Permalink to this headline">¶</a></h3>
+<p>Every Component has the following set of core attributes that govern its operation, and that can be specified in
+corresponding arguments of its constructor, or by assigning them directly (see <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a>):</p>
+<ul class="simple" id="component-variable">
+<li><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>variable</strong>
+argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
+dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
+is executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</li>
+</ul>
+<ul class="simple" id="component-size">
+<li><strong>size</strong> - the dimension of the <a class="reference internal" href="#Component.Component.variable" title="Component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.  The <strong>size</strong> argument of the
+constructor for a Component can be used as a convenient method for specifying the <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a>,
+attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
+setting  <strong>size</strong> = 3 is equivalent to setting <strong>variable</strong> = [0, 0, 0] and setting <strong>size</strong> = [4, 3] is equivalent
+to setting <a href="#id2"><span class="problematic" id="id3">**</span></a>variable* = [[0, 0, 0, 0], [0, 0, 0]].</li>
+</ul>
+<ul id="component-function">
+<li><p class="first"><strong>function</strong> - determines the computation that a Component carries out. It is always a PsyNeuLink
+<a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (itself a PsyNeuLink Component).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component can be assigned either a <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> object or any other
+callable object in python.  If the latter is assigned, it will be &#8220;wrapped&#8221; in a <a class="reference internal" href="Function.html#Function.UserDefinedFunction" title="Function.UserDefinedFunction"><code class="xref any py py-class docutils literal"><span class="pre">UserDefinedFunction</span></code></a>.</p>
+</div>
+<p>All Components have a default <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (with a default set of parameters), that is used if it
+is not otherwise specified.  The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in the
+function argument of the constructor for the Component, using one of the following:</p>
+<blockquote>
+<div><ul>
+<li><p class="first"><strong>class</strong> - this must be a subclass of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, as in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create a default instance of the specified subclass, using default values for its parameters.</p>
+</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul>
+<li><p class="first"><strong>Function</strong> - this can be either an existing <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object or the constructor for one, as in the
+following examples:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">)</span>
+
+<span class="ow">or</span>
+
+<span class="n">some_function</span> <span class="o">=</span> <span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">some_function</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The specified Function will be used as a template to create a new Function object that is assigned to the
+<a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute of the Component, the <code class="xref any docutils literal"><span class="pre">function</span></code> of which will be assigned as
+the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">In the current implementation of PsyNeuLink, if a <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (or the constructor for one) is
+used to specify the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of a Component, the Function object specified (or
+created) is used to determine attributes of the Function object created for and assigned to the Component, but
+is not <em>itself</em> assigned to the Component.  This is so that <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can be used as templates for
+more than one Component, without being assigned simultaneously to multiple Components.</p>
+</div>
+</li>
+</ul>
+</div></blockquote>
+<p>A <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can also be specified in an entry of a
+<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the
+<strong>params</strong> argument of the constructor for the Component, with the keyword <em>FUNCTION</em> as its key, and one of the
+specifications above as its value, as in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">FUNCTION</span><span class="p">:</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">)})</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<ul class="simple" id="component-value">
+<li><strong>value</strong> - the <a class="reference internal" href="#Component.Component.value" title="Component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute contains the result (return value) of the Component&#8217;s
+<a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> after the function is called.</li>
+</ul>
+<ul class="simple" id="component-name">
+<li><strong>name</strong> - the <a class="reference internal" href="#Component.Component.name" title="Component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
+If it was not specified, a default is assigned by the registry for subclass (see <span class="xref doc">Registry</span> for
+conventions used in assigning default names and handling of duplicate names).</li>
+</ul>
+<ul class="simple">
+<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> assigned to the Component when
+it was created.  If it was not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
+preference (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+</ul>
+</div>
+<div class="section" id="core-informational-attributes">
+<span id="component-informational-attributes"></span><h3>Core Informational Attributes<a class="headerlink" href="#core-informational-attributes" title="Permalink to this headline">¶</a></h3>
+<ul class="simple" id="component-user-params">
+<li><strong>user_params</strong> - this contains a dictionary of all of the configurable attributes for a given Component.
+The dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
+value to the attribute directly (see &lt;&gt;), or using the Component&#8217;s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
+</ul>
+<ul class="simple" id="component-function-object">
+<li><strong>function_object</strong> - the <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the Component;
+The Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> is assigned to the <a class="reference internal" href="#"><span class="doc">function</span></a> attribute of the
+Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
+those parameters (see <a class="reference internal" href="#Component.Component.function_params" title="Component.Component.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> above).</li>
+</ul>
+<ul id="component-function-params">
+<li><p class="first"><strong>function_params</strong> - the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute contains a dictionary of the parameters
+for the Component&#8217;s <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values.  Each entry is the name of a parameter, and
+its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function&#8217;s
+parameters must be made by assigning a value to the corresponding attribute of the Component&#8217;s
+<a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g., myMechanism.function_object.my_parameter),
+or in a FUNCTION_PARAMS dict using its <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The parameters for the function can be specified
+when the Component is created in one of the following ways:</p>
+<ul>
+<li><p class="first">in the <strong>constructor</strong> for a Function &#8211; if that is used to specify the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument,
+as in the following example:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">some_param</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">in an argument of the <strong>Component&#8217;s constructor</strong> &#8211; if all of the allowable functions for a Component&#8217;s
+<a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> share some or all of their parameters in common, the shared paramters may appear
+as arguments in the constructor of the Component itself, which can be used to set their values.</p>
+</li>
+<li><p class="first">in an entry of a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the
+<strong>params</strong> argument of the constructor for the Component.  The entry must use the keyword
+FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
+The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
+parameter&#8217;s value, as in the example below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span>
+                             <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">FUNCTION_PARAMS</span><span class="p">:{</span><span class="n">SOME_PARAM</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">SOME_OTHER_PARAM</span><span class="o">=</span><span class="mi">2</span><span class="p">}})</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>See <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a> for details concerning different ways in which the value of a parameter
+can be specified.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="component-methods">
+<span id="id4"></span><h3>Component Methods<a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
+<ul class="simple" id="component-assign-params">
+<li><strong>assign_params</strong> - assign the value of one or more parameters of a Component.  Each parameter is specified
+as an entry in a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> in the <strong>request_set</strong>
+argument;  parameters for the Component&#8217;s <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> are specified as entries in a
+<em>FUNCTION_PARAMS</em> dict within <strong>request_set</strong> dict.</li>
+</ul>
+<ul class="simple">
+<li><strong>reset_params</strong> - reset the value of all user_params to a set of default values as specified in its <strong>mode</strong>
+argument, using a value of <a class="reference internal" href="#component-resetmode"><span class="std std-ref">ResetMode</span></a>.</li>
+</ul>
+</div>
+</div>
+<div class="section" id="execution">
+<span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>Calls the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method of the subclass that, in turn, calls its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Component.ResetMode">
+<em class="property">class </em><code class="descclassname">Component.</code><code class="descname">ResetMode</code><a class="headerlink" href="#Component.ResetMode" title="Permalink to this definition">¶</a></dt>
+<dd><p id="component-resetmode">ResetModes used for <strong>reset_params</strong>:</p>
+<dl class="docutils" id="current-to-instance-defaults">
+<dt><em>CURRENT_TO_INSTANCE_DEFAULTS</em></dt>
+<dd><ul class="first last simple">
+<li>resets all paramsCurrent values to paramInstanceDefaults values.</li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils" id="instance-to-class">
+<dt><em>INSTANCE_TO_CLASS</em></dt>
+<dd><ul class="first last simple">
+<li>resets all paramInstanceDefaults values to paramClassDefaults values.</li>
+</ul>
+</dd>
+</dl>
+<dl class="docutils" id="all-to-class-defaults">
+<dt><em>ALL_TO_CLASS_DEFAULTS</em></dt>
+<dd><ul class="first last simple">
+<li>resets all paramsCurrent and paramInstanceDefaults values to paramClassDefafults values</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="Component.ExecutionStatus">
+<em class="property">class </em><code class="descclassname">Component.</code><code class="descname">ExecutionStatus</code><a class="headerlink" href="#Component.ExecutionStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="Component.Component">
+<em class="property">class </em><code class="descclassname">Component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Component.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Component.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Component is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+It should be instantiated using the constructor for a subclass.</p>
+</div>
+<dl class="attribute">
+<dt id="Component.Component.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Component.Component.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; see <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.size">
+<code class="descname">size</code><a class="headerlink" href="#Component.Component.size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int or array of ints</em> &#8211; see <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.function">
+<code class="descname">function</code><a class="headerlink" href="#Component.Component.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function, function or method</em> &#8211; see <a class="reference internal" href="#component-function"><span class="std std-ref">variable</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.function_params">
+<code class="descname">function_params</code><a class="headerlink" href="#Component.Component.function_params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param_name: param_value]</em> &#8211; see <a class="reference internal" href="#component-function-params"><span class="std std-ref">function_params</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.function_object">
+<code class="descname">function_object</code><a class="headerlink" href="#Component.Component.function_object" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> &#8211; see <a class="reference internal" href="#component-function-object"><span class="std std-ref">function_object</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.user_params">
+<code class="descname">user_params</code><a class="headerlink" href="#Component.Component.user_params" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[param_name: param_value]</em> &#8211; see <a class="reference internal" href="#component-user-params"><span class="std std-ref">user_params</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.value">
+<code class="descname">value</code><a class="headerlink" href="#Component.Component.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; see <a class="reference internal" href="#component-value"><span class="std std-ref">value</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.name">
+<code class="descname">name</code><a class="headerlink" href="#Component.Component.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> &#8211; see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Component.Component.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Component.Component.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet</em> &#8211; see <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Component.Component.assign_params">
+<code class="descname">assign_params</code><span class="sig-paren">(</span><em>request_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Component.Component.assign_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary</p>
+<p>Call _instantiate_defaults with context = COMMAND_LINE, and &#8220;validated_set&#8221; as target_set.
+Update paramInstanceDefaults with validated_set so that any instantiations (below) are done in proper context.
+Instantiate any items in request set that require it (i.e., function or states).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="Component.Component.reset_params">
+<code class="descname">reset_params</code><span class="sig-paren">(</span><em>mode=&lt;ResetMode.INSTANCE_TO_CLASS: 1&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#Component.Component.reset_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset current and/or instance defaults</p>
+<dl class="docutils">
+<dt>If called with:</dt>
+<dd><ul class="first last simple">
+<li>CURRENT_TO_INSTANCE_DEFAULTS all current param settings are set to instance defaults</li>
+<li>INSTANCE_TO_CLASS all instance defaults are set to class defaults</li>
+<li>ALL_TO_CLASS_DEFAULTS all current and instance param settings are set to class defaults</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mode</strong> &#8211; (ResetMode) - determines which params are reset</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return none:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="QuickReference.html" class="btn btn-neutral" title="Quick Reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
