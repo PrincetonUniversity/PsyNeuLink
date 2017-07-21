@@ -278,7 +278,7 @@ class LearningProjection(ModulatoryProjection_Base):
         `learning_rate <LearningProjection.learning_rate>` for LearningProjection supercedes any specification(s) of
         the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
         `System <System.System_Base.learning_rate>` to which the LearningMechanism from which it projects belongs.
-        (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
+        See `learning_rate <LearningMechanism_Learning_Rate>` for additional details.
 
     weight_change_matrix : 2d np.array
         matrix of changes to be made to the `mappingWeightMatrix`, after learning_rate has been applied to the

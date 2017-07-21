@@ -159,7 +159,7 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   If all of the LearningProjections are used to implement the same form of `modulation <ModulatorySignal_Modualtion>`,
   (determined by their LearningSignals' `modulation <LearningSignal.modulation>` attribute), then a single
   LearningSignal should be assigned multiple LearningProjections;  if different forms of modulation are required,
-  then multipole LearningSignals should be implemented (one for each type of modulation), and LearningProjection(s)
+  then multiple LearningSignals should be implemented (one for each type of modulation), and LearningProjection(s)
   assigned to the relevvant LearningSignals.  Multiple LearningSignals can be specified for a LearningMechanism
   by including them in a list assigned to the **learning_signals** argument of the LearningMechanism's
   constructor.  Each LearningSignal can be assigned multiple LearningProjections in the **projections** argument of
@@ -177,9 +177,10 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to its `input_states <LearningMechanism.input_states>`
-States <State>` and `function <LearningMechanism.function>`, a LearningMechanism has the following
-additonal attributes that refer to the Components being learned and/or its operation:
+In addition to its `input_states <LearningMechanism.input_states>`, `function <LearningMechanism.function>`,
+`output_states <LearningMechanism.output_states>` and `learning_signals <LearningMechanism.learning_signals>`
+attributes a LearningMechanism has the following additonal attributes that refer to the Components being learned
+and/or its operation:
 
 * `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is, the one with
   the `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies;
