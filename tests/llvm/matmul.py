@@ -6,11 +6,12 @@ import PsyNeuLink.llvm as pnlvm
 import timeit
 
 ITERATIONS=100
-DIM=1000
+DIM_X=1000
+DIM_Y=2000
 
-matrix = np.random.rand(DIM, DIM)
-vector = np.random.rand(DIM)
-llvm_res = np.random.rand(DIM)
+matrix = np.random.rand(DIM_X, DIM_Y)
+vector = np.random.rand(DIM_X)
+llvm_res = np.random.rand(DIM_Y)
 
 start = timeit.default_timer()
 for _ in range(ITERATIONS):
