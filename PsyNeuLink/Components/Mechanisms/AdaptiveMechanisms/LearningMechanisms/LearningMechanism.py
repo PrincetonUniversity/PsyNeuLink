@@ -75,21 +75,21 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   `error_source <LearningMechanism_Additional_Attributes>` (that is, the output of the *ProcessingMechanism* to which
   the MappingProjection being learned projects).  By default, the `primary OutputState <OutputState_Primary>` of the
   `error_source` is used.  However, a different OutputState can be designated in the constructor for the `error_source`,
-  by assigning a `parameter specification dictionary <ParameterState_Specification>` to its **params** argument with
-  an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the desired OutputState(s) as its value.
-  The `value <InputState.value>` of the *ACTIVATION_OUTPUT* InputState is assigned as the second item of the
-  LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+  by assigning a `parameter specification dictionary <ParameterState_Specification>` to the **params** argument of its
+  constructor, with an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the desired
+  OutputState(s) as its value. The `value <InputState.value>` of the *ACTIVATION_OUTPUT* InputState is assigned as
+  the second item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Input_Error_Signal:
 
 * *ERROR_SIGNAL* - receives the value of an `error_signal <LearningMechanism.error_signal>` from either an
-  `ObjectiveMechanism` or another LearningMechanism. If the MappingProjection being learned projects to the `TERMINAL`
+  `ComparatorMechanism` or another LearningMechanism. If the MappingProjection being learned projects to the `TERMINAL`
   Mechanism of the Process or System being learned, or is not part of a
-  `multilayer learning sequence <LearningMechanism_Multi_Layer>`, then the `error_signal` comes from an
-  ObjectiveMechanism. If the MappingProjection being learned is part of a multilayer learning sequence,
-  then the `error_signal` comes from the next LearningMechanism in the sequence (i.e., the layer "above"
-  the current one).  The value of the *ERROR_SIGNAL* InputState is assigned as the third item of the LearningMechanism's
-  `variable <LearningMechanism.variable>` attribute.
+  `multilayer learning sequence <LearningMechanism_Multi_Layer>`, then the `error_signal` comes from a
+  ComparatorMechanism. If the MappingProjection being learned is part of a multilayer learning sequence,
+  then the `error_signal` comes from the next LearningMechanism in the sequence (i.e., the one associated with the
+  `error_source`).  The `value <InputState.value>` of the *ERROR_SIGNAL* InputState is assigned as the third item of
+  the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
    .. note::
       The value of a LearningMechanism's *ERROR_SIGNAL* InputState is distinct from its
