@@ -15,12 +15,16 @@ Overview
 --------
 
 A LearningMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the `matrix <MappingProjection.matrix>`
-of a `MappingProjection`.  Its function takes an `error_signal` (usually the output of an `ObjectiveMechanism` or
-another `LearningMechanism`) and generates a `learning_signal` that is used to modify the MappingProjection by way of
-a `LearningProjection`.  The MappingProjection(s) modified by a LearningMechanism must project from one
+of one or more `MappingProjections <MappingProjection>`.  Its function takes an `error_signal` (usually the output of
+a `ComparatorMechanism` or another `LearningMechanism`) and generates a `learning_signal` that is used to modify the
+MappingProjection(s) by way of `LearningProjection(s) <LearningProjection>`.  Typically, a LearningMechanism is used
+to "train" a single MappingProjection, using the output of the mechanism to which that MappingProjection projects as
+the source of the error it attempts to reduce.  However, a LearningMechanism can be assigned multiple
+LearningProjections that are used to  train multiple MappingProjections;  however, they will all be trained using the
+same error_source.  All of the MappingProjection(s) modified by a LearningMechanism must project from one
 `ProcessingMechanism` to another in same `System` or `Process`. The learning components of a System can be displayed
-using the System's `show_graph` method with its **show_learning** argument assigned `True`. LearningMechanisms
-are executed after all of the ProcessingMechanisms in a System or Process have been executed, and before any
+using the System's `show_graph` method with its **show_learning** argument assigned `True`. LearningMechanisms are
+executed after all of the ProcessingMechanisms in a System or Process have been executed, and before any
 `ControlMechanisms <ControlMechanism>` of the System have been executed (see `System Execution <System_Execution>`).
 
 .. _LearningMechanism_Creation:
@@ -28,8 +32,8 @@ are executed after all of the ProcessingMechanisms in a System or Process have b
 Creating a LearningMechanism
 ----------------------------
 
-LearningMechanisms can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
-More commonly, however, they are created automatically when:
+A LearningMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
+More commonly, however, LearningMechanisms are created automatically when:
 
 * the learning attribute is specified for a `System <System_Execution_Learning>` or `Process <Process_Learning>`;
 ..
@@ -39,7 +43,7 @@ More commonly, however, they are created automatically when:
 ..
 * a `LearningProjection` is created without specifying its `sender <LearningProjection.sender>` attribute.
 
-In these instances, an `ObjectiveMechanism`, `LearningProjection <LearningProjection>`, and any additional Projections
+In these instances, a `ComparatorMechanism`, `LearningProjection <LearningProjection>`, and any additional Projections
 required to implement learning that do not already exist are also instantiated.  This is described below, under
 `Learning Configurations <LearningMechanism_Learning_Configurations>`.
 
@@ -65,31 +69,31 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Activation_Input:
 
-* *ACTIVATION_INPUT* - receives the value of the input to the MappingProjection being learned (that is, the
-  `value <MappingProjection.value>` of the MappingProjection's `sender <MappingProjection.sender>`).
+* *ACTIVATION_INPUT* - receives the value of the input to the primary MappingProjection being learned (that is, the
+  `value <MappingProjection.value>` of that MappingProjection's `sender <MappingProjection.sender>`).
   The value is assigned as the first item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Activation_Output:
 
 * *ACTIVATION_OUTPUT* - receives the value of the LearningMechanism's
   `error_source <LearningMechanism_Additional_Attributes>` (that is, the output of the *ProcessingMechanism* to which
-  the MappingProjection being learned projects).  By default, the `primary OutputState <OutputState_Primary>` of the
-  `error_source` is used.  However, a different OutputState can be designated in the constructor for the `error_source`,
-  by assigning a `parameter specification dictionary <ParameterState_Specification>` to the **params** argument of its
-  constructor, with an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the desired
-  OutputState(s) as its value. The `value <InputState.value>` of the *ACTIVATION_OUTPUT* InputState is assigned as
-  the second item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+  the `primary_learned_projection` projects).  By default, the `primary OutputState <OutputState_Primary>`
+  of the `error_source` is used.  However, a different OutputState can be designated in the constructor for the
+  `error_source`, by assigning a `parameter specification dictionary <ParameterState_Specification>` to the **params**
+  argument of its constructor, with an entry that uses *MONITOR_FOR_LEARNING* as its key and a list containing the
+  desired OutputState(s) as its value. The `value <InputState.value>` of the *ACTIVATION_OUTPUT* InputState is
+  assigned as the second item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Input_Error_Signal:
 
 * *ERROR_SIGNAL* - receives the value of an `error_signal <LearningMechanism.error_signal>` from either a
-  `ComparatorMechanism` or another LearningMechanism. If the MappingProjection being learned projects to the `TERMINAL`
+  `ComparatorMechanism` or another LearningMechanism. If the `primary_learned_projection` projects to the `TERMINAL`
   Mechanism of the Process or System being learned, or is not part of a
   `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from a
-  ComparatorMechanism. If the MappingProjection being learned is part of a `multilayer learning sequence
-  <_LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from the next LearningMechanism in the sequence
-  (i.e., the one associated with the `error_source`).  The `value <InputState.value>` of the *ERROR_SIGNAL* InputState
-  is assigned as the third item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+  ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer learning sequence
+  <LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from the next LearningMechanism in the
+  sequence (i.e., the one associated with the `error_source`).  The `value <InputState.value>` of the *ERROR_SIGNAL*
+  InputState is assigned as the third item of the LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
    .. note::
       The value of a LearningMechanism's *ERROR_SIGNAL* InputState is distinct from its
@@ -105,11 +109,11 @@ Learning Function
 The `function <LearningMechanism.function>` of a LearningMechanism uses the three values received by the Mechanism's
 InputStates (described `above <LearningMechanism_InputStates>` to calculate the value of its `learning_signal
 <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  The
-`learning_signal` is the set of changes to the `matrix <MappingProjection.matrix>` parameter of the `MappingProjection`
-being learned, calculated to reduce the value of the LearningMechanism's *ERROR_SIGNAL* InputState .  In `multilayer
-learning <LearningMechanism_Multilayer_Learning>`, the `error_signal` reflects the contribution made to value of the
-*ERROR_SIGNAL* InputState by the input to the MappingProjection being learned, weighted by the current value of its
-`matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified). The default `function
+`learning_signal` is the set of changes to the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections
+<MappingProjection>` being learned, calculated to reduce the value of the LearningMechanism's *ERROR_SIGNAL* InputState.
+In `multilayer learning <LearningMechanism_Multilayer_Learning>`, the `error_signal` reflects the contribution made
+to value of the *ERROR_SIGNAL* InputState by the input to the `primary_learned_projection`, weighted by the current
+value of its `matrix <MappingProjection.matrix>` parameter (i.e., before it has been modified). The default `function
 <LearningMechanism.function>` of a LearningMechanism is `BackPropagation` (also known as the *Generalized Delta Rule*;
 see `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_).  However, it can be
 assigned any other PsyNeuLink `LearningFunction`, or any other Python function that takes as its input a value with
@@ -124,14 +128,14 @@ OutputStates
 
 By default, a LearningMechanism has two OutputStates that receive, respectively, the values of the
 `error_signal <LearningMechanism.error_signal>` and  `learning_signal <LearningMechanism.learning_signal>` attributes
-(returned by the LearningMechanism's `function <LearningMechanism.function>`).
+(returned by the LearningMechanism's `function <LearningMechanism.function>`), as described below:
 
 .. _LearningMechanism_Output_Error_Signal:
 
 * *ERROR_SIGNAL* - this receives the value of the `error_signal <LearningMechanism.error_signal>` used to calculate
   the `learning_signal <LearningMechanism.learning_signal>`, which is the `value <InputState.value>` of the
   LearningMechanism's *ERROR_SIGNAL* InputState (see `above <LearningMechanism_Input_Error_Signal>`) possibly weighted
-  by the contribution of the MappingProjection being learned and the output of the `error_source`.  This is always a
+  by the contribution of the `primary_learned_projection` and the output of the `error_source`.  This is always a
   LearningMechanism's first (i.e., `primary <OutputState_Primary>`) OutputState, and is always named *ERROR_SIGNAL*.
   Its value is assigned as the first item of the LearningMechanism's `output_values <LearningMechanism.output_values>`
   attribute.  If the LearningMechanism is part of a `multilayer learning sequence
@@ -144,19 +148,23 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
 * `LearningSignals <LearningSignal>` - these are a special type of OutputState, that receive the matrix of weight
   changes calculated by a LearningMechanism's `function <LearningMechanism.function>`, and use this to modify the
   `matrix <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` being learned.
-  By default, a LearningMechanism has just one LearningSignal.  It is assigned as the second item in the list of the
-  LearningMechanism's OutputStates (i.e., in its `output_states <LearningMechanism.output_states>` attribute).  Its
-  `value <LearningSignal.value>` is assigned as the value of the LearningMechanism's `learning_signal` attribute, and
-  as the second item of the LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.  It is
-  also assigned as the `sender <LearningProjection.sender>` of the `LearningProjection` that projects to the
-  `MappingProjection` being learned.
+  By default, a LearningMechanism has just one LearningSignal (with a `LearningProjection` to the
+  `primary_learned_projection`). It is assigned as the second item in the list of the LearningMechanism's OutputStates
+  (i.e., in its `output_states <LearningMechanism.output_states>` attribute).  Its `value <LearningSignal.value>` is
+  assigned as the value of the LearningMechanism's `learning_signal` attribute, and as the second item of the
+  LearningMechanism's `output_values <LearningMechanism.output_values>` attribute.
 
   **Multiple LearningSignals and LearningProjections.** Though not common, it is possible for a LearningMechanism to
-  have more than one LearningSignal, and/or its LearningSignal(s) to have more than one LearningProjection. This allows
-  the learning of multiple MappingProjections to be governed by a single LearningMechanism; note, however, that all of
-  them will
-  use the same `learning_signal <LearningMechanism.learning_signal>` (this can be useful, for example, in implementing
-  certain forms of `convolutional neural networks <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_
+  be assigned more than one LearningSignal, and/or more than one LearningProjection to its LearningSignal(s). This
+  allows the learning of multiple MappingProjections to be governed by a single LearningMechanism. Note, however,
+  that all of the LearningSignals (and therefore LearningProjections) of a LearningMechanism use the same
+  `learning_signal <LearningMechanism.learning_signal>`, that computed based on the LearningMechanism's
+  `primary_learned_projection` and the `error_source` associated with that.  This can be useful in some settings
+  (for example, in implementing certain forms of
+  `convolutional neural networks <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_.
+
+xxx
+
   If all of the LearningProjections are used to implement the same form of `modulation <ModulatorySignal_Modualtion>`,
   (determined by their LearningSignals' `modulation <LearningSignal.modulation>` attribute), then a single
   LearningSignal should be assigned multiple LearningProjections;  if different forms of modulation are required,
@@ -186,7 +194,7 @@ In addition to its `input_states <LearningMechanism.input_states>`, `function <L
 and `learning_projections <LearningMechanism.learning_projections>` attributes, a LearningMechanism has the following
 additional attributes that refer to the Components being learned and/or its operation:
 
-* `learned_projection` - the MappingProjection(s) for which the LearningMechanism is responsible;  that is,
+* `learned_projections` - the MappingProjection(s) for which the LearningMechanism is responsible;  that is,
   the one with the `matrix <MappingProjection.matrix>` parameter(s) that the LearningMechanism modifies;
 ..
 * `error_source` - the Mechanism that receives the `learned_projection`;  that is, the one that generates the output
