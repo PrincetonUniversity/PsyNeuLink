@@ -74,6 +74,7 @@ Class Reference
 
 """
 
+from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, HOLLOW_MATRIX
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_vs_avg
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -434,7 +435,7 @@ class LCA(RecurrentTransferMechanism):
                     while len(np.shape(default_variable)) > 2:  # reduce the dimensions of default_variable
                         default_variable = default_variable[0]
         except:
-            raise TransferError("Failed to convert default_variable (of type {})"
+            raise LCAError("Failed to convert default_variable (of type {})"
                                 " to a 2D array".format(type(default_variable)))
 
         try:
@@ -446,13 +447,13 @@ class LCA(RecurrentTransferMechanism):
                     while len(np.shape(size)) > 1:  # reduce the dimensions of size
                         size = size[0]
         except:
-            raise TransferError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
+            raise LCAError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
 
         try:
             if size is not None:
                 map(lambda x: int(x), size)  # convert all elements of size to int
         except:
-            raise TransferError("Failed to convert an element in size to an integer.")
+            raise LCAError("Failed to convert an element in size to an integer.")
         # endregion
 
         # region If default_variable is None, make it a 2D array of zeros each with length=size[i]
@@ -465,7 +466,7 @@ class LCA(RecurrentTransferMechanism):
                     default_variable.append(np.zeros(s))
                 default_variable = np.array(default_variable)
             except:
-                raise TransferError("default_variable was not specified, but PsyNeuLink was unable to "
+                raise LCAError("default_variable was not specified, but PsyNeuLink was unable to "
                                     "infer default_variable from the size argument, {}. size should be"
                                     " an integer or an array or list of integers. Either size or "
                                     "default_variable must be specified.".format(size))
@@ -479,7 +480,7 @@ class LCA(RecurrentTransferMechanism):
                     size.append(len(input_vector))
                 size = np.array(size)
             except:
-                raise TransferError("size was not specified, but PsyNeuLink was unable to infer size from "
+                raise LCAError("size was not specified, but PsyNeuLink was unable to infer size from "
                                     "the default_variable argument, {}. default_variable can be an array,"
                                     " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
                                     " default_variable must be specified.".format(default_variable))
