@@ -177,7 +177,8 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to its `States <State>` and `function <LearningMechanism.function>`, a LearningMechanism has the following
+In addition to its `input_states <LearningMechanism.input_states>`
+States <State>` and `function <LearningMechanism.function>`, a LearningMechanism has the following
 additonal attributes that refer to the Components being learned and/or its operation:
 
 * `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is, the one with
