@@ -76,7 +76,7 @@ def setup_mxv():
 
     # zero the output array
     zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = __for_loop(builder, __int32_ty(0), x, __int32_ty(1), zero_array, "zero-")
+    builder = __for_loop(builder, __int32_ty(0), y, __int32_ty(1), zero_array, "zero-")
 
     # Multiplication
 
@@ -93,7 +93,7 @@ def setup_mxv():
     builder.branch(outer_cond_block)
     with builder.goto_block(outer_cond_block):
         tmp = builder.load(index_i_var);
-        cond = builder.icmp_signed("<", tmp, y)
+        cond = builder.icmp_signed("<", tmp, x)
         builder.cbranch(cond, outer_body_block, outer_out_block).set_weights([99,1])
 
     # Loop body
