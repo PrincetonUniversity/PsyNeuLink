@@ -5,7 +5,7 @@ from PsyNeuLink.Globals.Keywords import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -361,7 +361,6 @@ import numpy as np
 # print = Linear(variable=[[1,1],[2,2]])
 #endregion
 
-
 #region TEST 2 Mechanisms and a Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -375,7 +374,6 @@ import numpy as np
 # my_mech_B.execute(context=EXECUTING)
 #
 #endregion
-
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -423,6 +421,35 @@ import numpy as np
 #                                                   MECHANISM: My_Mech_B,
 #                                                   MODULATION:ModulationParam.ADDITIVE}],
 #                    name='My Test System')
+
+#endregion
+
+#region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+    import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+    import LearningMechanism
+from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+
+my_Mech_A = TransferMechanism(size=10)
+my_Mech_B = TransferMechanism(size=10)
+my_Mech_C = TransferMechanism(size=10)
+my_mapping = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
+                                    input_states=[{NAME:SAMPLE,
+                                                   VARIABLE:my_Mech_B.output_state.value,
+                                                   WEIGHT:-1
+                                                   },
+                                                  {NAME:TARGET,
+                                                   VARIABLE:my_Mech_B.output_state.value,
+                                                   # WEIGHT:1
+                                                   }],
+                                    )
+my_learning = LearningMechanism(variable=[my_Mech_A, my_Mech_B, my_comparator],
+                                learning_signals=[my_mapping])
 
 #endregion
 
