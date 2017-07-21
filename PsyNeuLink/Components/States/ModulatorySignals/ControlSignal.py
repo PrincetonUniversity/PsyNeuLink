@@ -272,14 +272,30 @@ Class Reference
 
 """
 
+import inspect
+import warnings
+
+from enum import IntEnum
+
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import function_type, method_type
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import *
-from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
-
+from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, ModulationParam, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
+from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, np
+from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from PsyNeuLink.Globals.Log import LogEntry, LogLevel
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):
 #     NONE            = 0
@@ -364,7 +380,7 @@ class ControlSignal(ModulatorySignal):
         prefs=None)
 
     A subclass of `ModulatorySignal` used by a `ControlMechanism` to modulate the parameter(s)
-    of one more other `Mechanisms <Mechanism>`.
+    of one or more other `Mechanisms <Mechanism>`.
 
     COMMENT:
 

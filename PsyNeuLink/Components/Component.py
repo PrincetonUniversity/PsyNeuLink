@@ -315,10 +315,20 @@ It also contains:
 COMMENT
 
 """
+import inspect
+import numbers
+import numpy as np
+import typecheck as tc
+import warnings
 
-from collections import OrderedDict, Iterable
-from PsyNeuLink.Globals.Utilities import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+from collections import Iterable, OrderedDict
+from enum import Enum, IntEnum
+
+from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from PsyNeuLink.Globals.Log import Log
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref, ComponentPreferenceSet
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
 
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
@@ -354,6 +364,12 @@ class ResetMode(Enum):
 #     def __init__(self, **kwargs):
 #         for arg in kwargs:
 #             self.__setattr__(arg, kwargs[arg])
+
+
+class ExecutionStatus(Enum):
+    INITIALIZING = 1
+    EXECUTING = 2
+    VALIDATING = 3
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -544,7 +560,7 @@ class Component(object):
         # Prevent recursive calls from setters
         if self.prev_context == context:
             return
-        
+
 
     Class methods:
         - _handle_size(size, variable)
@@ -681,6 +697,7 @@ class Component(object):
         #         # del self.init_args['__class__']
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
+        self.execution_status = ExecutionStatus.INITIALIZING
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = None

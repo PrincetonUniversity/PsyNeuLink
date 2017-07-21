@@ -10,10 +10,10 @@
 
 """
 
-The DefaultControlMechanism is created for a `System` if no other controller type is specified. The 
-DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses 
-`defaultControlAllocation` as the value for the control signal.  By default,  :py:data:`defaultControlAllocation` =  1, 
-so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be 
+The DefaultControlMechanism is created for a `System` if no other controller type is specified. The
+DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses
+`defaultControlAllocation` as the value for the control signal.  By default,  :py:data:`defaultControlAllocation` =  1,
+so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be
 used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
 `defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
 created, executed and their attributes.
@@ -33,10 +33,17 @@ COMMENT
 
 """
 
-from collections import OrderedDict
+import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.States.InputState import InputState
+
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, MONITOR_FOR_CONTROL, NAME, SLOPE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
 class DefaultControlMechanismError(Exception):
@@ -92,7 +99,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                MODULATION:None,
                                })
 
-    from PsyNeuLink.Components.Functions.Function import Linear
     @tc.typecheck
     def __init__(self,
                  # default_variable=None,

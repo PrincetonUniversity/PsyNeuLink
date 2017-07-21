@@ -20,7 +20,7 @@ used by its `GatingProjections <GatingProjection>` to modulate the value of the 
 GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
-`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.  
+`show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
 COMMENT
 The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
 `LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
@@ -106,13 +106,23 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
+import typecheck as tc
+import numpy as np
+
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
+
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
+from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 GatingMechanismRegistry = {}
 
@@ -180,7 +190,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
-        
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
         for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
@@ -235,7 +245,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
-        
+
     """
 
     componentType = "GatingMechanism"
@@ -335,8 +345,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
                     [NOTE: this is a convenience format;
                            it precludes specification of GatingSignal params (e.g., MODULATION_OPERARATION)]
             - GatingSignal specification dictionary, from gating_signals arg of constructor
-                    [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries; 
-                           it can also include a PARAMS entry with a params dict containing GatingSignal params] 
+                    [NOTE: this must have at least NAME:str (state name) and MECHANISM:Mechanism entries;
+                           it can also include a PARAMS entry with a params dict containing GatingSignal params]
         * State._parse_state_spec() is used to parse gating_signal arg
         * params are expected to be for (i.e., to be passed to) GatingSignal;
         * wait to instantiate deferred_init() projections until after GatingSignal is instantiated,
