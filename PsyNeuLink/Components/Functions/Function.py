@@ -636,7 +636,7 @@ class ArgumentTherapy(Function_Base):
 
     .. _ArgumentTherapist:
 
-    Return :keyword:`True` or :keyword:`False` according to the manner of the therapist.
+    Return `True` or :keyword:`False` according to the manner of the therapist.
 
     Arguments
     ---------
@@ -749,7 +749,7 @@ class ArgumentTherapy(Function_Base):
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
+        Note: this method (or the class version) is called only if the parameter_validation attribute is `True`
 
         :param variable: (anything but a dict) - variable to be validated:
         :param context: (str)
@@ -767,7 +767,7 @@ class ArgumentTherapy(Function_Base):
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
-        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
+        Note: this method (or the class version) is called only if the parameter_validation attribute is `True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params
@@ -2652,7 +2652,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
-        Note: this method (or the class version) is called only if the parameter_validation attribute is :keyword:`True`
+        Note: this method (or the class version) is called only if the parameter_validation attribute is `True`
 
         :param request_set: (dict) - params to be validated
         :param target_set: (dict) - destination of validated params

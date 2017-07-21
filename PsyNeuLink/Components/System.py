@@ -2277,11 +2277,11 @@ class System_Base(System):
             the input for each in a sequence of executions (see :doc:`Run` for detailed description of formatting
             requirements and options).
 
-        reset_clock : bool : default :keyword:`True`
+        reset_clock : bool : default `True`
             if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default :keyword:`False`
-            if :keyword:`True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
+            if `True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
             sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default `None`
@@ -2292,7 +2292,7 @@ class System_Base(System):
         learning : bool :  default `None`
             enables or disables learning during execution.
             If it is not specified, the current state is left intact.
-            If it is :keyword:`True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
+            If it is `True`, learning is forced on; if it is :keyword:`False`, learning is forced off.
 
         call_before_trial : Function : default= `None`
             called before each trial in the sequence is executed.

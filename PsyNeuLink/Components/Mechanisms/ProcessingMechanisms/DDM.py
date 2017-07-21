@@ -93,7 +93,7 @@ COMMENT:
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
 If only a single decision process was run, then the value of each outputState is the corresponding output of
 the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
-the content of the outputStates is determined by the ``average_output_states`` argument.  If it is :keyword:`True`,
+the content of the outputStates is determined by the ``average_output_states`` argument.  If it is `True`,
 then each outputState (and item of ``output_values``) contains a single value, which is the average of the output
 values of that type over all of the processes run.  If ``average_output_states`` is :keyword:`False` (the default),
 then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the

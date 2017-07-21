@@ -2263,7 +2263,7 @@ class Process_Base(Process):
         learning : bool :  default None
             enables or disables learning during execution.
             If it is not specified, current state is left intact.
-            If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
+            If `True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
         call_before_trial : Function : default None
             called before each trial in the sequence is executed.

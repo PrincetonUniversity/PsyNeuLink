@@ -18,7 +18,7 @@ A LearningProjection is a subclass of `ModulatoryProjection` that projects from 
 MATRIX `parameterState <ParameterState>` of a `MappingProjection` and modifies the value of the
 `matrix <MappingProjection.matrix>` parameter of that MappingProjection.  All of the LearningProjections in a System,
 along with its other `learning components <LearningMechanism>`, can be displayed using the System's `show_graph` method
-with its **show_learning** argument assigned as :keyword:`True`.
+with its **show_learning** argument assigned as `True`.
 
 .. _LearningProjection_Creation:
 

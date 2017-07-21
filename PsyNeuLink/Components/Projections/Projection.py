@@ -776,7 +776,7 @@ class Projection_Base(Projection):
 def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
 
-    Return :keyword:`true` if spec is any of the following:
+    Return `True` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
     + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
