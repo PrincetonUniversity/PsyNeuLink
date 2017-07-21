@@ -1,0 +1,825 @@
+Metadata-Version: 1.1
+Name: PsyNeuLink
+Version: 0.0.1.dev1
+Summary: Integrated Cognitive Modeling Environment
+Home-page: https://github.com/PrincetonUniversity/PsyNeuLink
+Author: Jonathan Cohen, Princeton University, Intel
+Author-email: jdc@princeton.edu
+License: Apache
+Description: Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+             http://www.apache.org/licenses/LICENSE-2.0
+        Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+        on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and limitations under the License.
+
+
+# PsyNeuLink
+
+## ARCHITECTURE OVERVIEW
+
+#### System
+
+     Set of processes, made up of chains of mechanisms connected by projections, and
+     managed by a budget of control signals (that control the mechanisms of each process)
+
+     Each process is defined by a pathway that is single-threaded and executed in sequence;  however:
+     Processes can overlap at the systems level
+     What “executed in sequence” means depends on time-scale
+         trial = truly sequential
+         time_step (“realtime”) = cascaded
+
+     - Process
+         Component that takes an input, processes it through an ordered list of mechanisms (and projections)
+         and generates an output
+
+         - Mechanism
+             Component that converts an input state representation into an output state representation
+             Parameters that determine its operation, under the influence of projections
+
+         - Projection
+             Component that takes a source, possibly transforms it, and uses it to
+             determine the operation of a mechanism;  three primary types:
+
+             + MappingProjection
+                 Takes output state of sender, possibly transforms it,
+                     and provides it as input state to receiver
+
+             + ControlSignal
+                 Takes an allocation (scalar), possibly transforms it,
+                 and uses it to modulate the internal parameter of a mechanism
+
+             + GatingSignal
+                 Takes a source, possibly transforms it, and uses it to
+                 modulate the input and/or output state of a mechanism
+
+             + Learning
+                 Takes an input from objection function (Function)
+                 and modulates params (e.g., weights) of projection execute method
+                 + Vectorial: modifies mapping projections
+                 + Evaluative: modifies control projections
+
+## SOFTWARE ARCHITECTURE
+
+ PsyNeuLink package dependencies:
+    numpy
+    typecheck-decorator
+    toposort.py - graph analysis
+    mpi4py.py  - Parallelization using MPI
+    wfpt.py - Wald first passage times for DDM
+
+ Python Object Classes (and Initialization Arguments):
+
+     CLASS HIERARCHY:
+
+     Format:
+     - Class(required_arg, [optional_args]) # comment
+
+     Hierarchy:
+     - Component: abstract class - cannot be instantiated directly
+         - Category: abstract classes - cannot be instantiated directly
+             - Type: cannot be instantiated
+                 - Subtype: can be instantiated
+                    <instances>
+
+     Component(variable, params, name, prefs, context)
+         System_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
+         Process_Base([default_input, params, name, prefs, context]) # sequence of mechanisms to execute
+         Mechanism_Base([variable,                                   # default: DDM
+                         params,
+                         name,
+                         prefs,
+                         context])
+             ProcessingMechanism
+                 DDM([default_input,                                     # default mechanism
+                      params,
+                      name,
+                      prefs])
+                 [TBI: PDP]
+             MonitoringMechanism
+                 ComparatorMechanism
+             ControlMechanism
+                 DefaultControlMechanism
+                 EVCMechanism
+         State_Base(owner, [value, params, name, prefs, context, **kargs])
+             InputState(owner, [reference_value, value, params, name, prefs])
+                        # input to mechanism execute method
+             ParameterState(owner, [reference_value, value, params, name, prefs])
+                        # param values for mechanisms, their functions, or mappingProjections (for learning)
+             OutputState(owner, [reference_value, params, name, prefs])
+                        # output of mechanism function
+         Projection_Base(receiver, [sender, params, name, prefs, context])
+             MappingProjection([sender, receiver, params, name, prefs])
+                        # outputState -> inputState of mechanism
+             ControlProjection([sender, receiver, function, control_signal, params, name, prefs, context])
+                        # outputState -> parameterState of mechanism
+             LearningProjection()]
+                        # outputState -> parameterState of projection
+             [TBI: - Gating()]
+                        # outputState -> inputState/outputState of mechanism
+         Function_Base(variable_default, param_defaults, [name, prefs, context])
+             ExampleFunction
+                 Contradiction([variable_default, param_defaults, prefs, context])    # example function
+             UserDefinedfunction
+             CombinationFunction
+                 Reduce
+                 LinearCombination   # combines values/vectors
+                 [TBI: Polynomial()]
+             TransferFunction() # converts values/vectors
+                 Linear([variable_default, param_defaults, prefs, context])       # returns linear transform of variable
+                 Exponential([variable_default, param_defaults, prefs, context])  # returns exponential transform of var.
+                 Logistic
+                 SoftMax
+                 LinearMatrix([variable_default, param_defaults, prefs, context]) # maps var. to output using wt. matrix
+             IntegratorFunction
+                 Integrator([variable_default, param_defaults, prefs, context])   # returns accumulated value of variable
+                 BogaczEtAl
+                 NavarroAndFuss
+             LearningFunction
+                 Reinforcement
+                 BackPropagation
+             EVCAuxiliaryFunction
+                 ControlSignalGridSearch
+                 ValueFunction
+             [TBI:] DistributionFunction
+
+
+     MODULES:
+
+     [NEEDS UPDATING:]
+
+                 CLASS:                                               MODULE:
+
+     Component(Object)............................................[PsyNeuLink.Components.Component]
+
+         System(Component)........................................[PsyNeuLink.Components.ShellClassses]
+             System_Base(System)..................................[PsyNeuLink.Components.System]
+
+         Process(Component).......................................[PsyNeuLink.Components.ShellClassses]
+             Process_Base(Process)................................[PsyNeuLink.Components.Process]
+
+         Mechanism(Component).....................................[PsyNeuLink.Components.ShellClasses]
+             Mechanism_Base(Mechanism)...........................[PsyNeuLink.Components.Mechanisms.Mechanism]
+             ProcessingMechanisms
+                 ProcessingMechanism_Base(Mechanism_Base)...[PsyNeuLink.Components.Mechanisms.ProcessingMechanism]
+                 DefaultProcessingMechanism(Mechanism_Base).[PsyNeuLink.Components.Mechanisms.DefaultProcessingMechanism]
+                 DDM(ProcessingMechanism)...................[PsyNeuLink.Components.Mechanisms.DDM]
+                 TransferMechanism(ProcessingMechanism).............[PsyNeuLink.Components.Mechanisms.Mechanism]
+                 IntegratorMechanism(ProcessingMechanism).............[PsyNeuLink.Components.Mechanisms.Mechanism]
+             ControlMechanisms
+                 ControlMechanism(
+                 DefaultControlMechanism
+                 EVCMechanism
+             MonitoringMechanisms
+                 MonitoringMechanism
+                 DefaultMonitoringMechanism
+                 ComparatorMechanism
+                 WeightedErrorMechanism
+         State(Component)................................[PsyNeuLink.Components.ShellClasses]
+             State_Base(State).............[PsyNeuLink.Components.States.State]
+             InputState(State_Base)........[PsyNeuLink.Components.States.InputState]
+             ParameterState(State_Base)....[PsyNeuLink.Components.States.ParameterState]
+             OutputState(State_Base).......[PsyNeuLink.Components.States.OutputState]
+
+         Projection(Component)...................................[PsyNeuLink.Components.ShellClasses]
+             Projection_Base(Projection).........................[PsyNeuLink.Components.Projections.Projection]
+             MappingProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.MappingProjection]
+             ControlProjection(Projection_Base)..............[PsyNeuLink.Components.Projections.ControlProjection]
+             LearningProjection(Projection_Base).............[PsyNeuLink.Components.Projections.LearningProjection]
+
+         Function(Component).......................................[PsyNeuLink.Components.ShellClasses]
+             Function_Base(Function)...............................[PsyNeuLink.Components.Functions.Function]
+             UserDefinedfunction
+             Contradiction(Function_Base).....................[PsyNeuLink.Components.Functions.Function]
+             Reduce
+             LinearCombination(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+             Linear(Function_Base)............................[PsyNeuLink.Components.Functions.Function]
+             Exponential(Function_Base).......................[PsyNeuLink.Components.Functions.Function]
+             Logistic
+             SoftMax
+             LinearMatrix(Function_Base)......................[PsyNeuLink.Components.Functions.Function]
+             Integrator(Function_Base)........................[PsyNeuLink.Components.Functions.Function]
+             BogaczEtAl
+             NavarroAndFuss
+             Reinforcement
+             BackPropagation
+             ControlSignalGridSearch
+             ValueFunction
+
+     Requirements:
+
+     - Projection subclasses must see (particular) State subclasses in order to assign kwProjectionSender
+     - State subclasses must see (particular) Projection subclasses in order to assign PROJECTION_TYPE
+     - Process must see Mechanism subclasses to assign PsyNeuLink.Components.DefaultMechanism
+     - Would like Mechanism, Projection (and possible State) classes to be extensible:
+         developers shoud be able to create, register and refer to subclasses (plug-ins), without modifying core code
+
+
+## DESIGN PATTERNS / PRINCIPLES
+
+Keep components simple; put any necessary complexity (to make it easier for the user) in "wizzard" methods
+
+### Components:
+     Everything is a Component
+     Every call (for both initialization and execution) has five standard arguments
+     - variable (value):
+         as an arg in __init__, formats and establishes a default for the variable
+         as an arg in a function call, serves as the input to the function
+     - params (dict):
+         as an arg in __init__, instantiates and establishes instance-specific defaults for function parameters;
+         as an arg in a function call, used to override instance defaults for that call only
+     - name (str): used to the name the function:
+         function names have three levels (separated by spaces):  category, class, and instance
+         classes index default instance names or if an existing name is provided
+     - prefs (dict):
+         contains user PreferenceSet (settings and logging)
+     - context (str):
+         used to license initialization calls to abstract super classes (by legitimate subclasses)
+     Every instance has a function, that is referenced either by params[FUNCTION] param OR self.function
+         this is the function that is called when executing the class to which the instance belongs:
+         Process: executes the list of mechanisms in its pathway
+         Mechanism:  executes the States instantiating its inputState, params, and outputState
+         MechanismClass: executes each projection for which it is a receiver, and aggregates them if there are several
+         Projection: translates the value of its sender and provides it for use as the value of its receiver
+     Every subclass of Component MUST either:
+         - reference a function in paramClassDefauts[FUNCTION] OR
+         - implement its own method that then MUST be called "function" (i.e., <class>.function);
+         FUNCTION takes precedence (i.e., supercedes any subclass implementation of self.function)
+         FUNCTION can be either:
+             a reference to an instantiated function, or
+             a class of one (in this case, it will be instantiated using FUNCTION_PARAMS if provided)
+         if a valid FUNCTION is instantiated, self.function will be aliased to it
+         if FUNCTION is missing or invalid, it will be assigned to self.function
+         if neither exists, an exception is raised
+         NOTE:
+             * As described above, the function of a class is referenced (and can be called) by both
+                self.function and self.paramsCurrent[FUNCTION]:
+                - this is done for convenience (self.function) and flexibility (self.paramsCurrent[FUNCTION])
+                - when executing the function, it is generally safer and a best practice to call <instance>.function
+     validate_xxx methods are all called (usually in super.__init__) before any instantiate_xxx methods
+         validate_xxx methods perform a (syntactic) check to:
+             - determine if required items are present
+             - determine if items are of the correct type relative to instance or class default
+             - assign defaults where appropriate for invalid entries, with warning if in VERBOSE mode
+             - NOT whether items are compatible with other entities (i.e., it is not a "semantic" check)
+               (this is because often some objects have not yet been instantiated until instantiate_xxx method)
+         instantiate_xxx methods perform a (semantic) check to:
+             - determine if item is compatible with others
+                 (e.g., variable or output of one is compatible with value of another)
+
+     self.variable is sometimes yoked/aliased to other attributes (for semantic reasons);  for example:
+         variable -> value (for States)
+                  -> input or default_input_value (for Mechanism and Process)
+		    -> TBI: size or shape (for Mechanism, Projection, and State)
+     param values can, in some cases, be specified as numbers, but will be converted to a single-item list
+             as the "lingua-franca" for variables
+             (which they are, for the receiver's inputState function)
+
+### States and Projections:
+
+     - Every mechanism has three types (subclasses) of State associated with it:
+         - a single InputState:
+              its value serves as the input to the mechanism
+              it receives one or more MappingProjections from other mechanisms
+         - one or more ParameterStates:
+             their values serve as the parameters of the mechanism's FUNCTION (self.execute),
+             each of which receives typically one (but possibly more) ControlSignal projections
+         - a single OutputState:
+              its value serves as the output to the mechanism,
+              and is typically assinged as the sender for other mechanisms' MappingProjection(s)
+     - State:
+         every instance of State has a single value attribute (that represents its "state"; = self.variable)
+         every instance of State must be explicitly assigned an existing <state>.ownerMechanism (Mechanism)
+         default projections can be implemented for a state (using <state>.defaultProjectionType);
+             if their sender is not specified, a default one will be created (see Projection below)
+         <state>.afferents is consulted when a State's update function is executed,
+             and <state>.value is updated based on those
+         subclasses must implement defaultProjectionType
+     - Projection:
+         every projection must be explicitly assigned an existing <projection>.receiver (State)
+         default states can be implemented for a projection's sender (using paramsCurrent[kwProjectionSender])
+         subclasses must implement paramClassDefaults[kwProjectionSender]
+
+     Mechcanisms and Projections are "receiver-oriented":
+     - this the reason for the extra arg in __init__ for State (owner) and Projection (receiver)
+
+### Value Compatibility Constraints and Equivalences:
+
+     Constraints
+         "x <: y [<module.method>]" indicates x constrains y (y must be (compatiable with) x value or type),
+                  implemented in module.method
+
+         Main.iscompatible() is used to test for compatiblity
+
+     1) Mechanism <: States
+             a) self <: State.ownerMechanism
+                 [Mechanism.instantiate_state]
+             b) self.inputState.value (InputState value) <: self.variable (function variable)
+                 [Mechanism._instantiate_attributes_before_function /
+                 instantiate_input_states; InputState._validate_variable]
+             c) self.paramsCurrent[param] <: ParameterState.value
+                 [Mechanism._instantiate_attributes_before_function  /
+                  _instantiate_parameter_states]
+             d) output of self.function <: self.outputState.value (OutputState value)
+                 [Mechanism._instantiate_attributes_after_function/_instantiate_output_states;
+                  OutputState._validate_variable]
+
+     2) States value <: execute method
+             Note: execute method simply updates value, so variable, output and value should all be compatible
+             a) self.value <: self.variable (function variable)
+                 [InputState._validate_variable]
+             b) if number of mechanism.inputStates > 1:
+                 number of mechanism.inputStates == length of self.variable
+                 [State.instantiate_state_list]
+             c) if number of mechanism.outputStates > 1:
+                 number of mechanism.outstates == length of self.value
+                 [State.instantiate_state_list]
+
+     3) States : Projections:
+             Note: any incompatibilities between projection output and receiver value raises an
+             exception that must be corrected by the user (since can't force a modification in
+             projection's execute method)
+             a) State <: projections.receiver;
+                 [Process._instantiate_pathway, State.instantiate_projection,
+                  Projection.validate_states, ControlSignal.assign_states, MappingProjection.assign_states]
+            b) self.sender.value : self.variable (function variable)
+                [Projection._instantiate_attributes_before_function / _instantiate_sender]
+            c) self.receiver.value = self.value
+                [State.instantiate_projections_to_state, Projection._instantiate_function]
+
+     Equivalences (implied from above constraints):
+         == equal values
+         ~ compatible values or types (depends on constraint);  values may not be equal
+     a) State execute method variable ~ output ~ State value
+          note: State execute methods serve as update functions,
+                so input, output, and value should all be the same format;
+                however, they may not be equivalent in value, depending upon the update states of the mechanism
+     b) Mechanism execute method variable == InputState value
+     c) InputState value ~ InputState execute method variable
+     d) OutputState value == OutputState variable
+     e) ParameterState value ~ ParameterState execute method variable
+
+### Parameters:
+
+     paramClassDefaults:
+
+         - Dictionary used to provide defaults for params of Component class and all of its subclasses
+         - Subclasses should inherit super's paramClassDefaults, and their own
+         - Entries added by one subclass should subclass-specific (i.e., not represented in sibling classes)
+         - Subclasses should implement their copy of paramClassDefaults as follows:
+
+          class SuperClass:
+             paramClassDefaults = {<Parent’s defaults>}
+
+         class SubClass(SuperClass):
+             paramClassDefaults = SuperClass.paramClassDefaults.copy()
+             paramClassDefaults.update({<SubClass additions>})
+
+     #    - If a class requires a param to be implemented, it should enforce this in _validate_params
+         - If a class requires a param to be implemented, it should also include
+
+     requiredParamClassDefaultTypes:
+
+         - Dictionary used to specify params that are required for a given class and all subclasses
+             and for which there is no default value to assign to paramClassDefaults
+         - An exception is generated if a class fails to comply
+
+         class SubClass(SuperClass):
+             requiredParamClassDefaultTypes = SuperClass.requiredParamClassDefaultTypes.copy()
+             requiredParamClassDefaultTypes.update({<required entries>})
+
+     Parameter specification:
+         - All Component objects have three sets of parameter values that determine how their execute method operates:
+              + defaults defined for all parameters of the object's class, stored in paramClassDefaults (see above)
+              + instance-specific values, stored in paramInstanceDefaults (if specified override paramClassDefaults)
+              + current parameter values, stored in paramsCurrent, that are in effect for the current call to the object
+         - Parameters are always specified as entries in a dict, with a:
+              + key that identifies the parameter set
+              + value that itself is a dict, the entries of which have a:
+                  key that identifies the param
+                  value that specifies the value to assign to the parmeter
+              + example: INPUT_STATE_PARAMS:{<param_name>:value, <param_name>:value...}
+         - Parameters can be specified:
+             + on instantiation, in a dict passed as the params arg of the instantiation call:
+                 the value(s) of the param(s) specified will be assigned to paramInstanceDefaults
+                 they will override the value(s) in paramClassDefaults in all calls/references to the object
+             + at runtime, in a dict passed as the params arg of the call to the object's execute method:
+                 they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
+                 the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
+             + at runtime, in a dict passed as the second item of a (mechanism, params) in a pathway list:
+                 they will override the value(s) in paramInstanceDefaults ONLY FOR THE CURRENT CALL to the object
+                 the value(s) in paramInstanceDefaults will be preserved, and used in subsequent calls
+                 note: this can only be used for State and function params
+         - As noted above, all params determine the operation of the object's execute method;
+             + these are specified in a set identified by the keyword FUNCTION_PARAMS
+             + this can be included as the entry of the dict:
+                 - in the params arg of a call to instantiate the object
+                 - in the params arg of a call to execute the object's method
+                 - in a (mechanism, params) tuple of a pathway list
+                     in this case, the FUNCTION_PARAMS entry must be contained in a dict that specifies the type of
+                     object for which the params should be used;  this can be one of the following:
+                         INPUT_STATE_PARAMS:  will be used for the execute method of the mechanism's inputState(s)
+                         OUTPUT_STATE_PARAMS:  will be used for the execute method of the mechanism's outputState(s)
+                         PARAMETER_STATE_PARAMS: will be used for the parameters of the mechanism's execute method
+                     FUNCTION_PARAMS can also be specified for projections to any of the states above, by including
+                         FUNCTION_PARAMS as an entry in one of the following dicts, that itself must be included in
+                         one of the kw<state_type>Params dicts listed above:
+                             kwProjectionParams: will apply for all projections to the specified state_type
+                             kwMappingParams: will apply only to MappingProjections for the specified state_type
+                             kwControlSignalParams: will apply only to ControlSignal projections for the specified state_type
+                             kwLearningSignalParams: will apply only to LearningSignal projections for the specified state_type
+                             <projection_name>: will apply only to projections with the specified name for the state_type
+
+### Instantiation Sequence:
+
+     Note: methods not implemented by subclass are shown in brackets (to see place in sequence)
+
+     A) Component:
+         1) Assign name
+         2) Assign prefs
+         3) Assign log
+         4) Enforce implementation of variableClassDefault
+         5) Enforce implementation of paramClassDefaults specified in requiredParamClassDefaultTypes
+	 6) _handle_size infers variable from the size argument (see Notes On Size)
+         7) _instantiate_defaults
+             a) _validate_variable
+                 - get value from ParamValueProjection tuple
+                 - resolve function object or reference to current value
+                 - ensure variable is compatible with variableClassDefault (if variableClassDefault_locked == True)
+                 - assign self.variable = variable
+             b) assign missing params (if assign_missing == True)
+             c) _validate_params
+                 - checks that each param is listed in paramClassDefaults
+                 - checks that value is compatible with on in paramClassDefauts
+         8) Set self.variable = variableInstanceDefault
+         9) Set self.paramsCurrent = paramInstanceDefaults
+         10) _validate_function
+             - checks for valid method reference in paramsCurrent, paramInstanceDefaults, paramClassDefaults, and
+                 finally self.execute;  if none present or valid, an exception is raised
+         11) _instantiate_attributes_before_function: stub for subclasses
+         12) _instantiate_function
+             - instantiate params[FUNCTION] if present and assign to self.execute
+             - else, instantiate self.execute; if it is not implemented, raise exception
+             - call execute method to determine its output and type and assign to self.value
+         13) _instantiate_attributes_after_function: stub for subclasses
+
+     B) Process:
+         1) Assign name
+         2) Register category
+         3) Assign prefs
+         4) Assign log
+         5) super.__init__:
+             a) _instantiate_attributes_after_function
+                 i) _instantiate_pathway:
+                     PATHWAY:  must be a list of mechanism (object, class, or specification dict)
+                 ii) super._instantiate_function
+         6) Set up log
+
+     C) Mechanism:
+         1) Validate that call is from subclass
+         2) Assign name
+         3) Register category
+         4) Assign prefs
+         5) Assign log
+         6) super.__init__:
+             a) _validate_variable (for function)
+                 insure that it is a value, consistent with variableClassDefault if variableClassDefault_locked is set
+             b) _validate_params:
+                 kwTimeScale: must be TimeScale
+                 kwInputStates;  must be a list or ordered dict, each item/entry of which is a:
+                     InputState or Projection object or class ref, specification dict for one,
+                     ParamValueProjection, or numberic value(s)
+                 FUNCTION_PARAMS; must be a dict, each entry of which must be a:
+                     ParameterState or Projection object or class, specification dict for one,
+                     ParamProjection tuple, or a value compatible with paramInstanceDefaults
+                 kwOutputStates; must be a dict, each entry of which must be a:
+                     InputState object or class, specification dict for one, or numeric value(s)
+             [super: _validate_function]
+             c) _instantiate_attributes_before_function
+                 i) instantiate_inputStates
+                     - inputState.value must be compatible with mechanism's variable (input to its function)
+                     - State.instantiate_states_list:
+                         - assigns self.inputState (first/only state) and self.inputStates (OrderedDict of states)
+                         - if number of inputStates > 1, must equal length of mechanism's variable
+                             each state is assigned to an item of the mechanism's variable
+                             if there is only one state, it is assigned to the full variable
+                 ii) _instantiate_parameter_states
+                     - assigns parameter state for each param in user_params (including ones in function_params)
+             [super: _instantiate_function]
+             d) _instantiate_attributes_after_function
+                 i) instantiate_outputStates - implement using kwOutputStates
+                     - outputState.value must be compatible with output of mechanism's function
+                     - State.instantiate_states_list:
+                         - assigns self.outputState (first/only state) and self.outputStates (OrderedDict of states)
+                         - if number of outputStates > 1, must equal length of output of mechanism's function
+                             each state is assigned an item of the output of the mechanism's function
+                             if there is only one state, full output of mechanism's function is assigned to it
+         7) Enforce class methods
+
+     D) State:
+         1) Validate that call is from subclass
+         2) Assign name
+         3) Register category
+         4) Assign prefs
+         5) Assign log
+         6) Assign ownerMechanism
+         7) super.__init__:
+             a) _validate_variable:
+                 insures that it is a number of list or tuple of numbers
+                 assigns self.value to self.variable
+             b) _validate_params:
+                 STATE_PROJECTIONS:
+                     must be a Projection object or class, or specification dict for one
+                     specification dict must have the following entries::
+                         PROJECTION_TYPE:<Projection class>
+                         kwProjectionParams:<dict> - params for PROJECTION_TYPE
+             c) _instantiate_function:
+                 insures that output of function is compatible with state's value
+         8) instantiate_projections_to_state:
+             - each must be a Projection class or object or a specification dict for one
+             - insures output of projection function is compatible with state.value
+             - insures receiver for each projection is state
+             - if spec is not valid, default is created of type determined by paramsCurrent[PROJECTION_TYPE]
+             - adds each to state.afferents
+         9) Assign observers
+
+     E) Projection:
+         1) Validate subclass
+         2) Assign name
+         3) Register category
+         4) Assign prefs
+         5) Assign log
+         6) Assign self.sender to sender arg
+         7) Assign self.receiver to receiver arg
+         8) super.__init__:
+             [super: _validate_variable]
+             a) _validate_params:
+                 - kwProjectionSender and/or sender arg:
+                     must be Mechanism or State
+                 - gives precedence to kwProjectionSender, then sender arg, then default
+             [super: _validate_function]
+             b) _instantiate_attributes_before_function:
+                 - calls _instantiate_sender and _instantiate_receiver (which both must be done before _validate_function)
+                 i) _instantiate_sender:
+                     insures that projection's variable is compabitible with the output of the sender's function
+                     if it is not, reassigns self.variable
+                 ii) _instantiate_receiver:
+                     assigns (reference to) receiver's inputState to projection's receiver attribute
+             c) _instantiate_function:
+                 insures that output of projection's function is compatible with receiver's value
+                 (it if it is a number of len=1, it tries modifying the output of function to match receiver)
+                 checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
+             [super: _instantiate_attributes_after_function]
+
+          E.1) LearningSignal:
+             1) Assign name
+             2) super.__init__:
+                 a) Assign self.sender to sender arg
+                 b) Assign self.receiver to receiver arg
+                 [super: _validate_variable]
+                 c) _validate_params:
+                     super():
+                         - assign self.sender to sender arg or params[kwProjectionSender]
+                         - gives precedence to kwProjectionSender, then sender arg, then paramClassDefaults
+                         - validate that self.sender is Mechanism or State
+                     LearningSignal:
+                         - validate that self.sender is OutputState of MonitoringMechanism or ProcessingMechanism
+                             or MonitoringMechanism class ref (assigned by paramClassDefaults)
+
+                         ** DOCUMENT ??? GET kwParameterStates OR SET TO None??
+
+
+                 [super: _validate_function]
+                 d) _instantiate_attributes_before_function:
+                     - calls _instantiate_receiver and _instantiate_sender (which both must be done before _validate_function)
+                         * _instantiate_receiver must be called before _instantiate_sender since the latter requires access to
+                             self.receiver to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
+                     i) _instantiate_receiver:
+                         * doesn't call super() since that assumes self.receiver.owner is a Mechanism and calls _add_projection_to_mechanism
+
+        """Instantiate and/or assign the parameterState of the projection to be modified by learning
+
+        If receiver is specified as a MappingProjection, it is assigned to parameterStates[kwWeightMatrix]
+            for the projection;  if that does not exist, it is instantiated and assigned as the receiver
+        If specified as a ParameterState, validate that it is parameterStates[kwWeightMatrix]
+        Validate that the LearningSignal's error matrix is the same shape as the recevier's weight matrix
+
+        Note:
+        * This must be called before _instantiate_sender since that requires access to self.receiver
+            to determine whether to use a comparatorMechanism mechanism or <MappingProjection>.receiverError for error signals
+        * Doesn't call super()._instantiate_receiver since that assumes self.receiver.owner is a Mechanism
+                              and calls _add_projection_to_mechanism
+
+                     ii) _instantiate_sender:
+
+                         insures that projection's variable is compabitible with the output of the sender's function
+                         if it is not, reassigns self.variable
+
+        """Assign self.variable to MonitoringMechanism output or self.receiver.receiverErrorSignals
+
+        Call this after _instantiate_receiver, as the latter may be needed to identify the MonitoringMechanism
+
+        If sender arg or kwProjectionSender was specified, it has been assigned to self.sender
+            and has been validated as a MonitoringMechanism, so:
+            - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
+            - assign its outputState.value as self.variable
+        If sender was not specified (remains MonitoringMechanism_Base as specified in paramClassDefaults):
+           if the owner of the MappingProjection projects to a MonitoringMechanism, then
+               - validate that the length of its outputState.value is the same as the width (# columns) of MATRIX
+               - assign its outputState.value as self.variable
+           otherwise, if self.receiver.owner has an receiverError attribute, as that as self.variable
+               (error signal for hidden units by BackPropagation Component)
+           [TBI: otherwise, implement default MonitoringMechanism]
+           otherwise, raise exception
+
+
+
+                 e) _instantiate_function:
+                     insures that output of projection's function is compatible with receiver's value
+                     (it if it is a number of len=1, it tries modifying the output of function to match receiver)
+                     checks if FUNCTION is specified, then if self.execute implemented; raises exception if neither
+                 [super: _instantiate_attributes_after_function]
+
+
+### Execution Sequence:
+
+     - Process.execute calls mechanism.update for each mechanism in its pathway in sequence
+         - input specified as arg in execution of Process is provided as input to the first mechanism in pathway
+         - output of last mechanism in pathway is assigned as Process.ouputState.value
+         - DefaultController is executed before execution of each mechanism in the pathway
+         - notes:
+             * the same mechanism can be listed more than once in a pathway, inducing recurrent processing
+             * if it is the first mechanism, it will receive its input from the Process only once (first execution)
+     - Mechanism.update_states_and_execute:
+         [TBI: calls each of the functions in its executionSequence (see Mechanism.execute):
+         - calls self.inputState.() for each entry in self.inputStates, which:
+             + executes every self.inputState.afferents.[<Projection>.execute()...]
+                 note:  for the first mechanism in the pathway, this includes a projection with Process input
+             + aggregates them using self.inputState.params[FUNCTION]()
+             + applies any runtime kwMechansimInputStateParams specified with mechanism in a tuple in the pathway
+             + stores result in self.inputState.value
+         - calls self._update_parameter_states, which calls every self.params[<ParameterState>].execute(),
+             each of which:
+             + executes self.params[<ParameterState>].afferents.[<Projection>.execute()...]
+                 (usually this absent, or is a single ControlSignal projection from DefaultController)
+                 with any runtime kwMechansimParameterStateParams specified with mechanism in tupel in pathway
+             + aggregates results using self.params[<ParameterState>].params[FUNCTION]()
+             + applies the result to self.params[<ParameterState>].baseValue
+                 using self.params[<ParameterState>].paramsCurrent[PARAMETER_MODULATION_OPERATION] or runtime spec
+         - calls subclass' self.update, which:
+             + uses for each item of its variable the value of the corresponding state in mechanism's self.inputStates
+             + uses self.params[<ParameterState>].value for each corresponding param of subclass' function
+             + calls mechanism.function that carries out mechanism-specific computations
+             + assigns each item of its output as the value of the corresponding state in mechanisms's self.outputStates
+         - [TBI: calls self.outputState.execute() (output gating) to update self.outputState.value]
+
+### Preferences:
+
+     DOCUMENT: ADD DETAILS TO PREF DESCRIPTIONS BELOW
+         - PreferenceSets:
+             Each object has a prefs attribute that is assigned a PreferenceSet object specifying its preferences
+             Preference objects have a set of preference attributes, one for each preference
+             In addition to objects, every class in the Component hierarchy is assigned a:
+             + PreferenceLevel: used to specify preferences for objects at that class level and below
+             + PreferenceSet: preference settings for the corresponding level of specification (see PreferenceLevels below)
+
+     - Standard preferences:
+         Component objects and Mechanism subclass objects have the following preferences:
+         Format:  pref_name (type): [Class]
+         * note: "Class" refers to the class (and all subclasses) for which the preference is defined
+
+         + verbose_pref (bool):  [Component]
+             determines whether non-execute-related actions (e.g., initialization) and non-fatal warnings are reported
+
+         + paramValidation_pref (bool):  [Component]
+             determines whether the parameters of an object's function are validated prior to execution
+
+         + reportOutput_pref (bool):  [Component]
+             determines whether output of execute-related actions is reported to the console (see Process and Mechanism)
+
+         + log_pref (LogPreferences): [Component]
+             determines whether activity of the object is recorded in its log (see Logging)
+
+         + functionRuntimeParams_pref (ModulationOperation): [Mechanism]
+             determines whether and, if so, how parameters passed to a mechanism at runtime influence its execution
+
+     - PreferenceEntry:
+         Each attribute of a PreferenceSet is a PreferenceEntry(setting, level) tuple:
+         + setting (value):
+             specifies the value of the preference, which must be of the type noted above
+         + level (PreferenceLevel):
+             specifies the level that will be used to determine that setting
+             specifying a given level causes the value assigned at that level to be returned
+             when a request is made for the value of the preference for that PreferenceSet
+
+     - PreferenceLevels:
+         There are four PreferenceLevels defined for the Component hierarchy:
+         + System:  reserved for the Component class
+         + Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+         + Type: Category subclasses (e.g., MappingProjection and ControlSignal subclasses of Projection, Function subclasses)
+         + Instance: an instance of an object of any class
+
+     - Setting preferences:
+         + Preferences settings can be assigned individually or in a PreferenceSet
+             when instantiating or executing an object using the prefs arg, which can be:
+             - a PreferenceSet, or
+             - a specification dict with entries for each of the preferences to be set; for each entry the:
+                 key must be a keyPath for a preference attribute
+                     (kpVerbose, kpParamValidation, kpReportOutput, kpLog, kpFunctionRuntimeParams)
+                 value must be one of the following:
+                     a PreferenceEntry(setting, level) tuple
+                     a value that is valid for the setting of the corresponding attribute
+                     a PreferenceLevel specification
+         + a PreferenceSet can also be assigned directly to the preferences attirbute of an object or a class:
+             <Object>.prefs = <PreferenceSet>
+             <Class>.classPreferences = <PreferenceSet>
+                Note:  if an assignment is made to a class, the class must be provided as the owner arg
+                       in the call to instantiate the class (e.g.: my_pref_set = PreferenceSet(... owner=class... );
+                       otherwise, an error will occur whenever the settings for the PreferenceSet are accessed
+                       This is not required for objects; the owner of an object is determined automatically on assignment
+
+         [TBI: + when specifying a pathway, in a (mechanism, params) tuple;  params must have:]
+
+     - Show preferences:
+         + Preferences for an object or class can be displayed by using show() method of a PreferenceSet:
+             <object>.prefs.show(type) or <class>.classPreferences.show(type);
+             both the base and current values of the setting are shown
+             Note: these can be different if the PreferenceLevel is set to a value other than:
+                INSTANCE for an object
+                <class>.classLevel for a class
+
+### Defaults:
+
+     - System-wide:
+         #Identifier (kwXXX):           # Class:                                 #Object:
+         [TBI: SystemDefaultSender                                               ProcessDefaultInput]
+         [TBI: SystemDefaultReceiver                                             ProcessDefaultOutput]
+         kwDefaultProcessingMechanism       DefaultProcessingMechanism_Base              DefaultProcessingMechanism (in __init__.py)
+         kwProcessDefaultMechanism      defaultMechanism (in Mechanism_Base)     Mechanism_Base.defaultMechanism
+         kwSystemDefaultController      DefaultControlMechanism            DefaultController(in __init__.py)
+
+     - Process:
+         Single Default Mechanism (DDM)
+
+     - Mechanism:
+         DDM:
+             InputState:
+                 projections:
+                     MappingProjection
+                         sender: SystemDefaultSender
+             OutputState:
+                 [TBI: sender for projection to SystemDefaultReceiver]
+
+     - State:
+         ParameterState
+             Projection:
+                 ControlSignal
+                     sender:  DefaultController)
+
+### Key Value Observing (KVO):
+
+     Observed object must implement the following:
+
+     - a dictionary (in its __init__ method) of observers with an entry for each attribute to be observed:
+         key should be string identifying attribute name
+         value should be empty list
+         TEMPLATE:
+             self.observers = {<kpAttribute>: []}  # NOTE: entry should be empty here
+
+     - a method that allows other objects to register to observe the observable attributes:
+         TEMPLATE:
+             def add_observer_for_keypath(self, object, keypath):
+                 self.observers[keypath].append(object)
+
+     - a method that sets the value of each attribute to be observed with the following format
+         TEMPLATE:
+             def set_attribute(self, new_value):
+                 old_value = self.<attribute>
+                 self.<attribute> = new_value
+                 if len(self.observers[<kpAttribute>]):
+                     for observer in self.observers[<kpAttribute>]:
+                         observer.observe_value_at_keypath(<kpAttribute>, old_value, new_value)
+
+     Observing object must implement a method that receives notifications of changes in the observed objects:
+         TEMPLATE
+             def observe_value_at_keypath(keypath, old_value, new_value):
+                 [specify actions to be taken for each attribute (keypath) observed]
+
+### Notes on Size:
+
+The size attribute is purely used for instantiating PsyNeuLink Components (and subclasses, such as Mechanism and State). Size is simply a substitute for variable (or default_input_value) and causes variable to become a correctly-sized array of zeros. For example, initializing a Mechanism with size=4 will result in _handle_size() setting variable to be equal to [[0, 0, 0, 0]]; initializing with size=[1, 2, 3] will result in variable being equal to [[0], [0, 0], [0, 0, 0]] where the three vectors of zeros represent the default inputs to 3 different input-states for that Mechanism.
+
+_handle_size() is the function within Component.__init__() which does the following:
+	-If size is None and variable is None: Do nothing
+	-Convert variable and size to the proper dimensionality (for Mechanisms, size is a 1D array)
+	-If variable is None and size is not None: infer variable based on size (a.k.a. make it a 2D array of zeros, where the length of the i-th array is equal to the i-th entry in size)
+	-If size is None and variable is not None: infer size based on variable (a.k.a. measure the lengths of each entry in variable, and make size a 1D array holding those lengths)
+	-Check that size and variable are compatible with each other (useful if the user for some reason specifies both size and variable)
+
+Note that _handle_size operates differently for different kinds of objects: at time of writing (7/9/17), _handle_size converts variable to a 1D array if the object being initialized is a State, and converts variable to a 2D array if the object is a Mechanism. This is because Mechanisms may take differently-formatted inputs (so long as the user specifies a function that can handle this), so Mechanisms need a way to specify different variable-formats for each InputState. However, States only ever receive input in one specific format, even if they are getting input from multiple sources. So, their variable is 1-dimensional.
+In terms of software architecture, this is done by having the Mechanism (2D variable) version of _handle_size() written in Component.py, and State.py overrides _handle_size() with the 1D variable version.
+
+Note that size is a property, NOT an internally stored attribute or parameter. After initialization of an object is complete, users aren’t allowed to change its size. Size is not stored, so when a user ‘gets’ the size of a Component, the size is dynamically calculated based on the Component’s variable.
+
+Known bug: size may fail if you try to use inputs that are matrices, or other unorthodox values. Needs to be fixed, and fixing this might also make it easier to override the _handle_size function.
+Debugging tip: If your program faces bugs related to dimensionality, _handle_size may be a likely culprit because _handle_size() messes with the dimensionality of ‘variable’.
