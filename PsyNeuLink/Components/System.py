@@ -2863,7 +2863,9 @@ class System_Base(System):
             # outgoing edges
             for output_state in controller.control_signals:
                 for projection in output_state.efferents:
-                    edge_name
+                    # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
+                    # I commented it out.
+                    # edge_name
                     rcvr_name = projection.receiver.owner.name
                     G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
 

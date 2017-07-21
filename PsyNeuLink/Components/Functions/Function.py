@@ -1205,8 +1205,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         return result
 
 
-class LinearCombination(
-    CombinationFunction):  # ------------------------------------------------------------------------
+class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -2107,8 +2106,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return self.rate * input
 
 
-class Logistic(
-    TransferFunction):  # ------------------------------------------------------------------------------------
+class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -3012,8 +3010,7 @@ class IntegratorFunction(Function_Base):
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(
-    IntegratorFunction):  # --------------------------------------------------------------------------------
+class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
