@@ -15,7 +15,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
@@ -27,10 +27,10 @@ sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms'))
 # sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/MonitoringMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms/ObjectiveMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdpativeMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdpativeMechanisms/LearningMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdpativeMechanisms/ControlMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdpativeMechanisms/GatingMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/LearningMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/ControlMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/GatingMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/PathwayProjections'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/ModulatoryProjections'))
