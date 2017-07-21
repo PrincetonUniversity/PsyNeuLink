@@ -19,13 +19,11 @@ that my matrix (with which I multiply my input to produce my output) is a square
 primary input state and output state of my owner. But you can specify the input and output state as well.
 """
 
-from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, CROSS, CHANGED, PARAMS_CURRENT
+from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, CROSS, CHANGED
 from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
@@ -70,9 +68,6 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        if isinstance(cross, list):
-            cross = np.array(cross)
-
         params = self._assign_args_to_param_dicts(auto=auto, cross=cross, function_params={MATRIX: matrix}, params=params)
 
         super().__init__(sender=sender,
@@ -89,79 +84,11 @@ class AutoAssociativeProjection(MappingProjection):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        # using `matrix`, instantiate ParameterStates for auto and cross if they haven't already been instantiated
-        # this can occur if auto and cross were None in the initialization call
-        param_keys = self._parameter_states.key_values
-        specified_matrix = get_matrix(self.params[FUNCTION_PARAMS]['matrix'], self.size[0], self.size[0])
-
-        if AUTO not in param_keys:
-            d = np.diagonal(specified_matrix).copy()
-            state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
-                                       state_name=AUTO,
-                                       state_spec=d,
-                                       state_params=None,
-                                       constraint_value=d,
-                                       constraint_value_name=AUTO,
-                                       context=context)
-            if state is not None:
-                self._parameter_states[AUTO] = state
-            else:
-                raise AutoAssociativeError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
-                                           format(self.__class__.__name__, self.name))
-        if CROSS not in param_keys:
-            m = specified_matrix.copy()
-            np.fill_diagonal(m, 0.0)
-            state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
-                                       state_name=CROSS,
-                                       state_spec=m,
-                                       state_params=None,
-                                       constraint_value=m,
-                                       constraint_value_name=CROSS,
-                                       context=context)
-            if state is not None:
-                self._parameter_states[CROSS] = state
-            else:
-                raise AutoAssociativeError("Failed to create ParameterState for `cross` attribute for {} \"{}\"".
-                                           format(self.__class__.__name__, self.name))
-
     def _instantiate_attributes_after_function(self, context=None):
         """Create self.matrix based on auto and cross, if specified
         """
 
         super()._instantiate_attributes_after_function(context=context)
-        auto = self.params[AUTO]
-        cross = self.params[CROSS]
-        if auto is not None and cross is not None:
-            a = get_auto_matrix(auto, size=self.size[0])
-            if a is None:
-                raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_cross_matrix(cross, size=self.size[0])
-            if c is None:
-                raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, cross, type(cross)))
-            self.matrix = a + c
-        elif auto is not None:
-            self.matrix = get_auto_matrix(auto, size=self.size[0])
-            if self.matrix is None:
-                raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, auto, type(auto)))
-
-        elif cross is not None:
-            self.matrix = get_cross_matrix(cross, size=self.size[0])
-            if self.matrix is None:
-                raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, cross, type(cross)))
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
@@ -179,28 +106,37 @@ class AutoAssociativeProjection(MappingProjection):
 
         self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
-        param_keys = self._parameter_states.key_values
+        #
+        # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
+        if isinstance(self.sender, OutputState):
+            owner_mech = self.sender.owner
+        elif isinstance(self.sender, Mechanism):
+            owner_mech = self.sender
+        else:
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or State: currently")
+
+        param_keys = owner_mech._parameter_states.key_values
         if AUTO not in param_keys or CROSS not in param_keys:
             raise AutoAssociativeError("Auto or Cross ParameterState not found in {} \"{}\"; here are names of the "
-                                       "current ParameterStates for {}: {}".format(self.__class__.__name__, self.name,
-                                                                           self.name, param_keys))
+                                       "current ParameterStates for {}: {}".format(owner_mech.__class__.__name__, owner_mech.name,
+                                                                                   owner_mech.name, param_keys))
 
         # read auto and cross from their ParameterStates, and put them into `auto_matrix` and `cross_matrix`
-        raw_auto = self._parameter_states[AUTO].value
-        auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=self.size[0])
+        raw_auto = owner_mech._parameter_states[AUTO].value
+        auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
         if auto_matrix is None:
             raise AutoAssociativeError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
                                        "type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                        "2d array, 2d list, or numpy matrix".
-                                       format(self.__class__.__name__, self.name, raw_auto, type(raw_auto)))
+                                       format(owner_mech.__class__.__name__, owner_mech.name, raw_auto, type(raw_auto)))
 
-        raw_cross = self._parameter_states[CROSS].value
-        cross_matrix = get_cross_matrix(raw_cross = raw_cross, size = self.size[0])
+        raw_cross = owner_mech._parameter_states[CROSS].value
+        cross_matrix = get_cross_matrix(raw_cross=raw_cross, size=owner_mech.size[0])
         if cross_matrix is None:
             raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
                                        "type {}. Instead, the `cross` parameter should be a number, 1D array of "
                                        "length one, 2d array, 2d list, or numpy matrix".
-                                       format(self.__class__.__name__, self.name, raw_cross, type(raw_cross)))
+                                       format(owner_mech.__class__.__name__, owner_mech.name, raw_cross, type(raw_cross)))
         self.matrix = auto_matrix + cross_matrix
 
         # Check whether error_signal has changed
@@ -252,6 +188,7 @@ def get_cross_matrix(raw_cross, size):
         return np.array(raw_cross)
     else:
         return None
+
 
 # similar to get_cross_matrix() above
 def get_auto_matrix(raw_auto, size):

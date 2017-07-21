@@ -80,13 +80,15 @@ import typecheck as tc
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np
-from PsyNeuLink.Globals.Keywords import ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, FUNCTION_PARAMS, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Globals.Utilities import is_matrix, is_numeric_or_none
+from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
@@ -399,6 +401,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None:
             output_states = [RESULT]
 
+        if isinstance(cross, (list, np.matrix)):
+            cross = np.array(cross)
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   initial_value=initial_value,
@@ -488,15 +493,84 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              format(DECAY, self.name, decay))
 
     def _instantiate_attributes_before_function(self, context=None):
-        """
+        """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
+        ParameterStates for auto and cross if they haven't already been instantiated. This is useful if auto and
+        cross were None in the initialization call.
         """
         super()._instantiate_attributes_before_function(context=context)
+
+        param_keys = self._parameter_states.key_values
+        specified_matrix = get_matrix(self.params['matrix'], self.size[0], self.size[0])
+
+        if AUTO not in param_keys:
+            d = np.diagonal(specified_matrix).copy()
+            state = _instantiate_state(owner=self,
+                                       state_type=ParameterState,
+                                       state_name=AUTO,
+                                       state_spec=d,
+                                       state_params=None,
+                                       constraint_value=d,
+                                       constraint_value_name=AUTO,
+                                       context=context)
+            if state is not None:
+                self._parameter_states[AUTO] = state
+            else:
+                raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
+                                           format(self.__class__.__name__, self.name))
+        if CROSS not in param_keys:
+            m = specified_matrix.copy()
+            np.fill_diagonal(m, 0.0)
+            state = _instantiate_state(owner=self,
+                                       state_type=ParameterState,
+                                       state_name=CROSS,
+                                       state_spec=m,
+                                       state_params=None,
+                                       constraint_value=m,
+                                       constraint_value_name=CROSS,
+                                       context=context)
+            if state is not None:
+                self._parameter_states[CROSS] = state
+            else:
+                raise RecurrentTransferError("Failed to create ParameterState for `cross` attribute for {} \"{}\"".
+                                           format(self.__class__.__name__, self.name))
 
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
         """
 
         super()._instantiate_attributes_after_function(context=context)
+
+        auto = self.params[AUTO]
+        cross = self.params[CROSS]
+        if auto is not None and cross is not None:
+            a = get_auto_matrix(auto, size=self.size[0])
+            if a is None:
+                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
+                                           "2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, auto, type(auto)))
+            c = get_cross_matrix(cross, size=self.size[0])
+            if c is None:
+                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+                                           "length one, 2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, cross, type(cross)))
+            self.matrix = a + c
+        elif auto is not None:
+            self.matrix = get_auto_matrix(auto, size=self.size[0])
+            if self.matrix is None:
+                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
+                                           "2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, auto, type(auto)))
+
+        elif cross is not None:
+            self.matrix = get_cross_matrix(cross, size=self.size[0])
+            if self.matrix is None:
+                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+                                           "length one, 2d array, 2d list, or numpy matrix".
+                                           format(self.__class__.__name__, self.name, cross, type(cross)))
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, MappingProjection):
