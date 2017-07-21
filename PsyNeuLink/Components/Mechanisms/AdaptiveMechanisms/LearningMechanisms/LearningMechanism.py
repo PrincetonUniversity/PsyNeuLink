@@ -166,11 +166,14 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   its constructor, or the *PROJECTIONS* entry of a dictionary assigned to its **params** argument); however, the
   `matrix <MappingProjection.matrix>` parameter for all of them must have the same shape. The `learning_rate
   <LearningSignal.learning_rate>` for each LearningSignal, and the `learning_rate <LearningProjection.learning_rate>`
-  for each LearningProjection of a LearningSignal, call all be assigned different values (with the latter taking
+  for each LearningProjection of a LearningSignal, can all be assigned different values (with the latter taking
   precedence over the former).  If none of these are specified, the `learning_rate <LearningMechanism.learning_rate>`
-  of the LearningMechanism is used. All of the LearningSignals of a LearningMechanism are listed in its
-  `learning_signals` attribute (in addition to its `output_states <LearningMechanism.output_states>` attribute),
-  and all of their LearningProjections are listed in the LearningMechanism's `learning_projections` attribute.
+  of the LearningMechanism is used (see `below <LearningMechanism_Learning_Rate>`).
+
+  All of the LearningSignals of a LearningMechanism are listed in its `learning_signals` attribute.  Because these
+  are `OutputStates <OutputState>`, they are also listed in the `output_states <LearningMechanism.output_states>`
+  attribute, after the *ERROR_SIGNAL* OutputState.  All of the LearningMechanism's LearningProjections (that is,
+  belonging to all of its LearningSignals) are listed in its `learning_projections` attribute.
 
 .. _LearningMechanism_Additional_Attributes:
 
@@ -178,17 +181,15 @@ Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `input_states <LearningMechanism.input_states>`, `function <LearningMechanism.function>`,
-`output_states <LearningMechanism.output_states>` and `learning_signals <LearningMechanism.learning_signals>`
-attributes a LearningMechanism has the following additonal attributes that refer to the Components being learned
-and/or its operation:
+`output_states <LearningMechanism.output_states>`, `learning_signals <LearningMechanism.learning_signals>`,
+and `learning_projections <LearningMechanism.learning_projections>` attributes, a LearningMechanism has the following
+additional attributes that refer to the Components being learned and/or its operation:
 
 * `learned_projection` - the MappingProjection for which the LearningMechanism is responsible;  that is, the one with
   the `matrix <MappingProjection.matrix>` parameter that the LearningMechanism modifies;
 ..
 * `error_source` - the Mechanism that receives the `learned_projection`;  that is, the one that generates the output
   used to calculate the error signal that the LearningMechanism attempts to reduce.
-..
-* `learning_projections` - the list of LearningProjections for all of the LearningMechanism's LearningSignals;
 ..
 * `modulation` - this specifies the way in which the `learning_signal <LearningMechanism.learning_signal>` is used
   to modify the `matrix <MappingProjection.matrix>` parameter of the `learned_projection`.  By default its value is
@@ -217,10 +218,11 @@ and/or its operation:
   `learning_projection <LearningMechanism.learned_projection>`
   (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
 
-COMMENT:
-@@@ THE FOLLOWING SECTION SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
-COMMENT
 .. _LearningMechanism_Learning_Configurations:
+
+COMMENT:
+@@@ THE FOLLOWING SECTIONS SHOULD BE MOVED TO THE "USER'S MANUAL" WHEN THAT IS WRITTEN
+COMMENT
 
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
