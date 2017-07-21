@@ -211,18 +211,19 @@ see `example <Condition_Recurrent_Example>`).
 
 Learning
 ~~~~~~~~
-The System will execute learning if it is specified for any `Process` in the System.  The System's `learning` attribute
-indicates whether learning is enabled for the System. `Learning <Process_Learning>` is executed for any components
-(individual Projections or Processes) for which it is specified after the `processing <System_Execution_Processing>` of
-each `TRIAL` has completed, but before the `controller is executed <System_Execution_Control>`.  The learning components
-of a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned
-:keyword:`True`. The stimuli used for learning (both inputs and targets) can be specified in either of two formats,
-Sequence or Mechanism, that are described in the :doc:`Run` module; see `Run_Inputs` and `Run_Targets`).  Both
-formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
-<System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
-or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
-in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
-format <Run_Targets_Function_Format>`, which generates a target for each execution of the Mechanism.
+The System will execute learning if it is specified for any `Process <Process_Learning>` in the System.  The System's
+`learning` attribute indicates whether learning is enabled for the System. `Learning <Process_Learning>` is executed
+for any components (individual Projections or Processes) for which it is specified after the  `processing
+<System_Execution_Processing>` of each `TRIAL` has completed, but before the `controller is executed
+<System_Execution_Control>`.  The learning components of a System can be displayed using the System's `show_graph`
+method with its **show_learning** argument assigned `True`. The stimuli used for learning (both inputs and targets) can
+be specified in either of two formats, Sequence or Mechanism, that are described in the :doc:`Run` module; see
+`Run_Inputs` and `Run_Targets`).  Both formats require that an input be provided for each `ORIGIN` Mechanism of the
+System (listed in its `origin_mechanisms <System_Base.origin_mechanisms>` attribute).  If the targets are specified
+in `Sequence <Run_Targets_Sequence_Format>` or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be
+provided for each `TARGET` Mechanism (listed in its `target_mechanisms <System_Base.target_mechanisms>` attribute).
+Targets can also be specified in a `function format <Run_Targets_Function_Format>`, which generates a target for each
+execution of the Mechanism.
 
 .. note::
    A `target_mechanism <Process.Process_Base.target_mechanism>` of a Process is not necessarily one of the

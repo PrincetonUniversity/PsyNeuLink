@@ -31,9 +31,9 @@ Creating an InputState
 
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
-being created within the `pathway <Process.pathway` of a `Process`, its InputState will be created and  assigned as
-the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
-`pathway <Process.pathway>`.
+being created within the `pathway <Process_Base.pathway` of a `Process`, its InputState will be created and  assigned
+as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
+`pathway <Process_Base.pathway>`.
 
 An InputState must be owned by a `Mechanism`.  When InputState is specified in the constructor for a `Mechanism`
 (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
