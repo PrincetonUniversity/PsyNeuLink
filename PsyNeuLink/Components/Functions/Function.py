@@ -6776,8 +6776,8 @@ class BackPropagation(LearningFunction):
             from PsyNeuLink.Components.States.ParameterState import ParameterState
             from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
             if not isinstance(error_matrix, (list, np.ndarray, np.matrix, ParameterState, MappingProjection)):
-                raise FunctionError("The {} arg for {} must be a list, 2d np.array, ParamaterState or "
-                                    "MappingProjection".format(ERROR_MATRIX, self.name))
+                raise FunctionError("The {} arg for {} ({}) must be a list, 2d np.array, ParamaterState or "
+                                    "MappingProjection".format(ERROR_MATRIX, self.__class__.__name__, error_matrix))
 
             if isinstance(error_matrix, MappingProjection):
                 try:
@@ -6786,7 +6786,7 @@ class BackPropagation(LearningFunction):
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
                                         "paramaterState that has been assigned a 2d array or matrix".
-                                        format(ERROR_MATRIX, self.name, error_matrix.shape, MATRIX))
+                                        format(ERROR_MATRIX, self.__class__.__name__, error_matrix.shape, MATRIX))
 
             elif isinstance(error_matrix, ParameterState):
                 try:
@@ -6795,7 +6795,7 @@ class BackPropagation(LearningFunction):
                 except KeyError:
                     raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
                                         "must be a 2d array or matrix".
-                                        format(MATRIX, ERROR_MATRIX, self.name, error_matrix.shape))
+                                        format(MATRIX, ERROR_MATRIX, self.__class__.__name__, error_matrix.shape))
 
             else:
                 param_type_string = "array or matrix"

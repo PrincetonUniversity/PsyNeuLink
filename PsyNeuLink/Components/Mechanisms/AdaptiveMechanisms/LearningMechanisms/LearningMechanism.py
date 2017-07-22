@@ -773,8 +773,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         if ERROR_SOURCE in target_set:
             if not isinstance(target_set[ERROR_SOURCE], (ObjectiveMechanism, LearningMechanism)):
-                raise LearningMechanismError("{} arg for {} must be an ObjectiveMechanism or another LearningMechanism".
-                                             format(ERROR_SOURCE, self.name))
+                raise LearningMechanismError("{} arg for {} ({}) must be an ObjectiveMechanism or another "
+                                             "LearningMechanism".
+                                             format(ERROR_SOURCE, self.name, target_set[ERROR_SOURCE]))
 
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
@@ -1018,7 +1019,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
             param_name = learning_signal_spec.name
             parameter_state = _get_parameter_state(self, LEARNING_SIGNAL, param_name, mapping_projection)
 
-        # Specification was tuple or dict, and parsed into a dict
+        # Specification was projection, tuple or dict, and parsed into a dict
         elif isinstance(learning_signal_spec, dict):
             param_name = learning_signal_spec[NAME]
             learning_signal_params = learning_signal_spec[PARAMS]
@@ -1031,7 +1032,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 del learning_signal_params[PROJECTION]
                 parameter_state = _get_parameter_state(self, LEARNING_SIGNAL, param_name, mapping_projection)
 
-            # Specification was originally a tuple, either in parameter specification or learning_signal arg;
+            # Specification either a projection
+            # or originally a tuple (either in parameter specification or learning_signal arg):
             #    1st item was either assigned to the NAME entry of the learning_signal_spec dict
             #        (if tuple was a (param_name, Projection tuple) for learning_signal arg;
             #        or used as param value, if it was a parameter specification tuple
@@ -1056,8 +1058,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 if isinstance(spec, LearningSignal):
                     learning_signal_spec = spec
 
+                # Projection
                 else:
-                    # Projection
                     # IMPLEMENTATION NOTE: Projection was placed in list in PROJECTIONS entry by _parse_state_spec
                     if isinstance(spec, list) and isinstance(spec[0], Projection):
                         if isinstance(spec[0], MappingProjection):
@@ -1067,6 +1069,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
                                                                    LEARNING_SIGNAL,
                                                                    param_name,
                                                                    mapping_projection)
+                            # MODIFIED 7/21/17 NEW:
+                            learning_projection = LearningProjection(receiver=parameter_state)
+                            # MODIFIED 7/21/17 END
                         elif isinstance(spec[0], LearningProjection):
                             learning_projection = spec[0]
                             if learning_projection.value is DEFERRED_INITIALIZATION:
@@ -1149,7 +1154,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         # Validate learning_projection (if specified) and get receiver's name
         if learning_projection:
-            _validate_receiver(self, learning_projection, MappingProjection, LEARNING_SIGNAL,context=context)
+            _validate_receiver(self, learning_projection, MappingProjection, LEARNING_SIGNAL, context=context)
 
             from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
             if not isinstance(learning_projection, LearningProjection):

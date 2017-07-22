@@ -3,6 +3,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Run import run
+from PsyNeuLink.Components.Functions.Function import *
 
 # import random
 # random.seed(0)

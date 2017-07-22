@@ -61,9 +61,11 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-While PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
-disparate existing models into a single, integrated system in which interactions among them can be examined, it is
-*not* currently as well suited to other kinds of efforts, such as:
+PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+disparate existing models into a single, integrated system in which interactions among them can be examined.
+While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
+kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
+currenty does not support, such as:
 
  - extensive model fitting
  - large scale simulations
@@ -85,7 +87,7 @@ stages of development) in tension with efficiency (think:  interpreted vs. compi
 development is to make PsyNeuLink more computationally efficient.  At present, however, it is best suited to
 developing simpler models, or taking complex or highly detailed models that have been developed --
 or subjected to extensive parameter fitting -- in other frameworks, and re-expressing them in a form that is amenable
-to integration, documentation, dissemination, and reproduction.
+to integration, documentation, and dissemination.
 
 .. _Overview_and_Sampler:
 

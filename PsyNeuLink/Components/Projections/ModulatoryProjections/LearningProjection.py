@@ -110,6 +110,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjectio
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState, np
+from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, OPERATION, PARAMETER_STATES, PROJECTION_SENDER, PROJECTION_TYPE, SLOPE, SUM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -357,8 +358,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
 
-        Insure `sender <LearningProjection>` is an ObjectiveMechanism or the outputState of one.
-        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix parameterState of one.
+        Insure `sender <LearningProjection>` is a LearningMechanism or the OutputState of one.
+        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix ParameterState of one.
         """
 
         # IMPLEMENTATION NOTE: IS TYPE CHECKING HERE REDUNDANT WITH typecheck IN __init__??
@@ -374,22 +375,22 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   "which is not currently supported".format(sender.name))
                 sender = self.sender = sender.learning_signals[0]
 
-            if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
+            if any(s in {OutputState, LearningSignal, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a LearningMechanism, check that it is a list or 1D np.array
                 if isinstance(sender, OutputState):
                     if not isinstance(sender.value, (list, np.ndarray)):
                         raise LearningProjectionError("Sender for \'{}\' (OutputState of LearningMechanism \'{}\') "
                                                       "must be a list or 1D np.array".format(self.name, sender.name))
-                    if not np.array(sender.value).ndim == 1:
-                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\')"
-                                                      " must be an 1D np.array".format(sender.owner.name, self.name))
+                    if not np.array(sender.value).ndim >= 1:
+                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\') must be "
+                                                      "an ndarray with dim >= 1".format(sender.owner.name, self.name))
                 # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
                 elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
                     pass
 
             else:
-                raise LearningProjectionError("The sender arg for {} ({}) must be an LearningMechanism, "
-                                              "the OutputState of one, or a reference to the class"
+                raise LearningProjectionError("The sender arg for {} ({}) must be a LearningMechanism, "
+                                              "the OutputState or LearningSignal of one, or a reference to the class"
                                               .format(self.name, sender.name))
 
 

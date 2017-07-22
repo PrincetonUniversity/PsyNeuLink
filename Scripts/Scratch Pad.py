@@ -437,8 +437,11 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 my_Mech_A = TransferMechanism(size=10)
 my_Mech_B = TransferMechanism(size=10)
 my_Mech_C = TransferMechanism(size=10)
-my_mapping = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+my_mapping_AB = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+my_mapping_AC = MappingProjection(sender=my_Mech_A, receiver=my_Mech_C)
+
 my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
+                                    # FIX: DOESN'T WORK WITHOUT EXPLICITY SPECIFIYING input_states, BUT SHOULD
                                     input_states=[{NAME:SAMPLE,
                                                    VARIABLE:my_Mech_B.output_state.value,
                                                    WEIGHT:-1
@@ -446,10 +449,21 @@ my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
                                                   {NAME:TARGET,
                                                    VARIABLE:my_Mech_B.output_state.value,
                                                    # WEIGHT:1
-                                                   }],
+                                                   }]
                                     )
-my_learning = LearningMechanism(variable=[my_Mech_A, my_Mech_B, my_comparator],
-                                learning_signals=[my_mapping])
+my_learning = LearningMechanism(variable=[my_Mech_A.output_state.value,
+                                          my_Mech_B.output_state.value,
+                                          my_comparator.output_state.value],
+                                error_source=my_comparator,
+                                function=BackPropagation(default_variable=[my_Mech_A.output_state.value,
+                                                                           my_Mech_B.output_state.value,
+                                                                           my_Mech_B.output_state.value],
+                                                         activation_derivative_fct=my_Mech_A.function_object.derivative,
+                                                         error_derivative_fct=my_Mech_A.function_object.derivative,
+                                                         error_matrix=my_mapping_AB.matrix),
+                                learning_signals=[my_mapping_AB, my_mapping_AC])
+
+TEST = True
 
 #endregion
 
