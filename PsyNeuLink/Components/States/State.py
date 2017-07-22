@@ -2380,7 +2380,8 @@ def _parse_state_spec(owner,
     # - if force_dict is False, return the primary state object
     # - if force_dict is True, get primary state's attributes and return their values in a state specification dict
     if isinstance(state_spec, Mechanism):
-        primary_state = owner._get_primary_state(state_type)
+        # primary_state = owner._get_primary_state(state_type)
+        primary_state = state_spec._get_primary_state(state_type)
         # if force_dict:
         #     return _state_dict(primary_state)
         # else:

@@ -159,7 +159,7 @@ By default, a LearningMechanism has two OutputStates that receive, respectively,
   **Multiple LearningSignals and LearningProjections.** Though not common, it is possible for a LearningMechanism to
   be assigned more than one LearningSignal, and/or more than one LearningProjection to its LearningSignal(s). This
   allows the learning of multiple MappingProjections to be governed by a single LearningMechanism. Note, however,
-  that all of the LearningSignals (and therefore LearningProjections) of a LearningMechanism use the same
+  that all of the LearningSignals of a LearningMechanism (and therefore its LearningProjections) use the same
   `learning_signal <LearningMechanism.learning_signal>`, that is calculated based on the LearningMechanism's
   `primary_learned_projection` and its associated `error_source`.  This can be useful in some settings, such as for
   certain forms of`convolutional neural networks <https://en.wikipedia.org/wiki/Convolutional_neural_network>`_.
