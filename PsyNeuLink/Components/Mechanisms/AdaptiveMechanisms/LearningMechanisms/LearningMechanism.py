@@ -153,11 +153,11 @@ LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` and `e
 OutputStates
 ~~~~~~~~~~~~
 
-By default, a LearningMechanism has two OutputStates, the first of which is named *ERROR_SIGNAL* and receives the
-`error_signal <LearningMechanism.error_signal>` returned by the LearningMechanism's `function
-<LearningMechanism.function>`), and the second of which is a `LearningSignal` and receives the `learning_signal
-<LearningMechanism.learning_signal>` returned by the `function <LearningMechanism.function>.  They are each described
-below:
+By default, a LearningMechanism has two `OutputStates <OutputState>`, the first of which is named *ERROR_SIGNAL* and
+is assigned the value of the `error_signal <LearningMechanism.error_signal>` returned by the LearningMechanism's
+`function <LearningMechanism.function>`, and the second of which is a `LearningSignal` and is assigned the value of the
+`learning_signal <LearningMechanism.learning_signal>` returned by the `function <LearningMechanism.function>`.
+They are each described below:
 
 .. _LearningMechanism_Output_Error_Signal:
 
