@@ -711,13 +711,14 @@ class LearningMechanism(AdaptiveMechanism_Base):
         after it *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>`.
 
     learning_projections : List[LearningProjection]
-        list of all of the LearningProjections of LearningMechanism, listed in the order of the LearningSignals to
-        which they belong (that is, in the order they are listed in `learning_signals`).
+        list of all of the LearningProjections <LearningProject>` from the LearningMechanism, in the order of
+        the `LearningSignals <LearningSignal>` to which they belong (that is, in the order they are listed in
+        the `learning_signals <LearningMechanism>` attribute).
 
     output_states : ContentAddressableList[OutputState]
-        contains list of OutputStates for the LearningMechanism, including: its LearningSignal(s) which appear(s) at
-        the begining of the list; its *ERROR_SIGNAL* OutputState, which appears after the LearningSignal(s); any
-        additional (e.g., user-specified) OutputStates, which appear at the end of the list.
+        contains list of `OutputStates <OutputState>` for the LearningMechanism, including: its *ERROR_SIGNAL*
+        OutputState, followed by its `LearningSignal(s) <LearningSignal>`.  Any additional (e.g., user-specified)
+        OutputStates appear at the end of the list, after the LearningSignals.
 
     COMMENT:
        #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)\
