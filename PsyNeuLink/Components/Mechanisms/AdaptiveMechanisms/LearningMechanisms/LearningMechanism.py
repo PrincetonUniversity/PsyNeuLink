@@ -228,8 +228,8 @@ refer to the Components being learned and/or its operation:
   listed first in LearningMechanism's `learned_projections` attribute.
 ..
 * `learned_projections` - a list of all of the MappingProjections to which the LearningMechanism sends a
-  `LearningProjection`; that is, all of the LearningProjections assigned to all of the LearningSignals listed in the
-  LearningMechanism's `learning_signals` attribute.
+  `LearningProjection`, listed in the order of the `LearningSignal(s) <LearningSignal>` to which they belong,
+  as those are listed in the LearningMechanism's `learning_signals <LearningMechanism.learning_signals>` attribute.
 ..
 * `input_source` - the `Mechanism` that sends the `primary_learned_projection`, and projects to the
   LearningMechanism's *ACTIVATION_INPUT* `InputState <LearningMechanism_Activation_Input>`.
@@ -241,32 +241,30 @@ refer to the Components being learned and/or its operation:
   LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Error_Signal>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
-  `LearningSignals <LearningSignal>` for which it is not explicitly specified;  this determines the way in which the
-  `learning_signal <LearningMechanism.learning_signal>` is used to modify the `matrix <MappingProjection.matrix>`
-  parameter of the `learned_projection`.  By default its value is
+  LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
+  This determines the way in which the `learning_signal <LearningMechanism.learning_signal>` is used to modify the
+  `matrix <MappingProjection.matrix>` parameter of the `learned_projections`.  By default its value is
   Modulation.ADD, which causes the weight changes in the `learning_signal` to be added to the current value of the
   `matrix <MappingProjection.matrix>` parameter (see `LearningMechanism_Execution` for a description of how the
   modifications are executed).
 ..
 .. _LearningMechanism_Learning_Rate:
 
-* `learning_rate <LearningMechanism.learning_rate>` - the learning rate for the LearningMechanism.  This is used to
-  specify the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.  In general, the
-  `learning_rate <LearningMechanism.learning_rate>` multiplies the weight changes provided by the LearningMechanism to
-  its `function <LearningMechanism.function>` before conveying these to the `LearningSignal` used to modify the
-  MappingProjection's `matrix <MappingProjection.matrix>` parameter. Specifying the
-  `learning_rate <LearningMechanism.learning_rate>` for LearningMechanism (or the :keyword:`learning_rate` parameter
-  of its `function <LearningMechanism.function>` directly) supersedes any specification of the :keyword:`learning_rate`
-  for any `Process <Process.Process_Base.learning_rate>` and/or `System <System.System_Base.learning_rate>` to which
-  the LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate <LearningMechanism>`
-  attribute is `None`, in which case the LearningMechanism (and its `function <LearningMechanism.function>`) inherit
-  the specification of the `learning_rate <Process.Process_Base.learning_rate>` for the Process in which the
-  LearningMechanism is executed. If that is `None`, then it inherits it from the System in which it is executed.  If
-  that is also `None`, then it uses the default value assigned by its `function <LearningMechanism.function>`.
-  Learning rate can also be specified individually for `LearningSignals <LearningSignal>` and/or their associated
-  `LearningProjections <LearningProjection>`.  Those have a direct multiplicative effect on the
-  LearningProjection's `learning_signal <LearningProjection.learning_signal>` used to modify the weight matrix of the
-  `learning_projection <LearningMechanism.learned_projection>`
+* `learning_rate <LearningMechanism.learning_rate>` - specifies the :keyword:`learning_rate` parameter used by the
+  LearningMechanism's `function <LearningMechanism.function>`, which uses it to multiply the weight change matrix
+  before returning it as the `learning_signal <LearningMechanism.learning_signal>`.  This can be specified in the
+  **learning_rate** argument of the LearningMechanism's constructor (or the constructor for its `function
+  <LearningMechanism.function>`;  doing so supersedes specification of the `learning_rate <Process_Base.learning_rate>`
+  for any `Process`, and/or the `learning_rate <System_Base.learning_rate>` for any `System` to which the
+  LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate
+  <LearningMechanism.learning_rate>` attribute is `None`, in which case the LearningMechanism (and its `function
+  <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process_Base.learning_rate>` for
+  the Process in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
+  <System_Base.learning_rate>` specification of the System in which it is executed.  If that is also `None`, then it
+  uses the default value of the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.
+  A :keyword:`learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or
+  their associated `LearningProjections <LearningProjection>`.  Those have a direct multiplicative effect on the
+  `learning_signal <LearningProjection.learning_signal>` of the LearningSignal and/or it LearningProjections
   (see `LearningSignal learning_rate <LearningSignal_Learning_Rate>` for additional details).
 
 .. _LearningMechanism_Learning_Configurations:
@@ -278,39 +276,37 @@ COMMENT
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is specified for a `MappingProjection`, a `Process <Process_Learning>`, or a
-`System <System_Execution_Learning>`, PsyNeuLink automatically creates all of the components required for the
-`MappingProjections <MappingProjection>` between `ProcessingMechanisms <ProcessingMechanism>` in that composition to
-be learned.  The type of components that are generated depends on the :ref:`learning function <LearningFunction>`
-specified, and the configuration of the composition.  All of the learning components of a System can be displayed
-using the System's `show_graph` method with its **show_learning** argument assigned `True`.
+When learning is specified for a `MappingProjection <Mapping_Matrix_Specification>`, a `Process <Process_Learning>`,
+or a `System <System_Execution_Learning>`, all of the Components required for learning are created automatically.
+The types of Components that are generated depend on the `LearningFunction <LearningFunction>` specified,
+and the configuration of the `Composition`.  All of the learning Components of a System can be displayed using the
+System's `show_graph` method with its **show_learning** argument assigned `True`.
 
 .. _LearningMechanism_Single_Layer_Learning:
 
 Single layer learning
 ^^^^^^^^^^^^^^^^^^^^^
 
-This is the case when only a single MappingProjection is specified for learning, or the LearningMechanism's function
-only considers the output of its `error_source <LearningMechanism_Additional_Attributes>`  when computing the changes
-that will be made to the `learned_projection's  <LearningMechanism_Additional_Attributes>`
-`matrix <MappingProjection.matrix>` (e.g., `Reinforcement`).  In this case, a single `ObjectiveMechanism` and
-LearningMechanism are created for the `learned_projection <LearningMechanism_Additional_Attributes>`, if they do not
-already exist, along with the following MappingProjections:
+This is the configuration when only a single `MappingProjection` is `specified for learning
+<Projection_In_Context_Specification>`, or the LearningMechanism's `function <LearningMechanism.function>` only
+considers the error on its `output_source` (and not any additional sources of error) when calculating the
+`learning_signal <LearningMechanism.learning_signal>`  (e.g., for `Reinforcement` learning).  In this case, a single
+`ComparatorMechanism` and LearningMechanism are created, if they do not already exist, along with the following
+MappingProjections:
 
-* from an OutputState of the LearningMechanism's `error_source <LearningMechanism_Additional_Attributes>` to the
-  ObjectiveMechanism's `SAMPLE` :ref:`InputState <LINK>`.  By default, the
-  `primary OutputState <OutputState_Primary>` of the error_souce is used;
+* from an `OutputState` of the LearningMechanism's `output_source` to the ComparatorMechanism's *SAMPLE* `InputState
+  <input_states>`.  By default, the `primary OutputState <OutputState_Primary>` of the `output_souce` is used;
   however, this can be modified by specifying its `MONITOR_FOR_LEARNING` parameter
   (see `above <LearningMechanism_Activation_Output>`).
 
-* from the Process or System to the ObjectiveMechanism's `TARGET` :ref:`InputState <LINK>`;
+* from the Process or System to the ComparatorMechanism's *TARGET* `InputState <input_states>`;
 
-* from the ObjectiveMechanism's `primary OutputState <OutputState_Primary>` to the LearningMechanism's
+* from the ComparatorMechanism's *ERROR_SIGNAL* `OutputState <>` to the LearningMechanism's
   `ERROR_SIGNAL <LearningMechanism_Activation_Input>` InputState .
 
 In addition, a `LearningProjection` is created from the LearningMechanism's
-`LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` OutputState to the `matrix` `ParameterState`
-for the `learned_projection <LearningMechanism_Additional_Attributes>`.  Because this case involves only a single
+`LEARNING_SIGNAL <LearningMechanism_Learning_Signal>` OutputState to the `ParameterState` for the `matrix
+<MappingProjection.matrix>` of the `primary_learned_projection`.  Because this case involves only a single
 layer of learning, *no* Projection is created or assigned to the LearningMechanism's
 `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` OutputState.
 
@@ -322,8 +318,8 @@ layer of learning, *no* Projection is created or assigned to the LearningMechani
        :alt: Schematic of Mechanisms and Projections involved in learning for a single MappingProjection
        :scale: 50%
 
-       ObjectiveMechanism, LearningMechanism and associated Projections created for a single learned_projection
-       and error_source.  Each Mechanism is labeled by its type (upper line, in bold) and its designated
+       ComparatorMechanism, LearningMechanism and associated Projections created for the `primary_learned_projection`
+       and `output_source`.  Each Mechanism is labeled by its type (upper line, in bold) and its designated
        status in the Process and/or System to which it belongs (lower line, caps).  Italicized labels beside a
        component indicates the attribute of the LearningMechanism with which it is associated.
 
