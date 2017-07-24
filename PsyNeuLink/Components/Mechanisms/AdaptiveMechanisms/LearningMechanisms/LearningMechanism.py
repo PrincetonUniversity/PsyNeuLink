@@ -329,9 +329,9 @@ of the `primary_learned_projection`.  Because this configuration involves only a
 Multilayer learning
 ^^^^^^^^^^^^^^^^^^^
 
-This configuration occurs when a set of MappingProjections are being learned that are in a sequence (such as the
-`pathway` of a Process); that is, in which each projects to a ProcessingMechanism that is the `sender
-<MappingProjection.sender>` for the next MappingProjection in the sequence (see the `figure
+This configuration occurs when a set of `MappingProjections <MappingProjection>` being learned are in a sequence (such
+as the `pathway <Process_Base.pathway>` of a `Process`); that is, in which each projects to a `ProcessingMechanism`
+that is the `sender <MappingProjection.sender>` for the next MappingProjection in the sequence (see the `figure
 <LearningMechanism_Multilayer_Learning_Figure>` below).
 This requires the use of a learning function that can calculate the influence that each MappingProjection and its input
 have on the error that the LearningMechanism receives from the next one in the sequence (e.g., `BackPropagation`).
