@@ -304,11 +304,10 @@ MappingProjections are created:
 * from the ComparatorMechanism's *ERROR_SIGNAL* `output_state <ComparatorMechanism_Structure>` to the
   LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Activation_Input>`.
 
-In addition, a `LearningProjection` is created from the LearningMechanism's `LearningSignal
-<LearningMechanism_LearningSignal>` OutputState to the `ParameterState` for the `matrix <MappingProjection.matrix>`
-of the `primary_learned_projection`.  Because this configuration involves only a single layer of learning,
-*no* Projection is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState
-<LearningMechanism_Output_Error_Signal>`.
+In addition, a `LearningProjection` is created from the `LearningSignal<LearningMechanism_LearningSignal>` for the
+`primary_learned_projection` to the `ParameterState` for the `matrix <MappingProjection.matrix>` of the
+`primary_learned_projection`.  Because this configuration involves only a single layer of learning, *no* Projection
+is created or assigned to the LearningMechanism's *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>`.
 
 .. _LearningMechanism_Single_Layer_Learning_Learning_Figure:
 
@@ -332,35 +331,35 @@ Multilayer learning
 This configuration occurs when a set of `MappingProjections <MappingProjection>` being learned are in a sequence (such
 as the `pathway <Process_Base.pathway>` of a `Process`); that is, in which each projects to a `ProcessingMechanism`
 that is the `sender <MappingProjection.sender>` for the next MappingProjection in the sequence (see the `figure
-<LearningMechanism_Multilayer_Learning_Figure>` below).
-This requires the use of a learning function that can calculate the influence that each MappingProjection and its input
-have on the error that the LearningMechanism receives from the next one in the sequence (e.g., `BackPropagation`).
-In multilayer learning, the components created depend on the position of the
-`learned_projection <LearningMechanism_Additional_Attributes>` and
-`error_source <LearningMechanism_Additional_Attributes>` in the sequence.  If these are the last ones in the
-sequence, they are treated in the same way as `single layer learning <LearningMechanism_Single_Layer>`.  This is the
-case if the `error_source` is a standalone Mechanism (one not in a Process or System), the `TERMINAL` Mechanism of a
-standalone Process (i.e., one not in a System), or the `TERMINAL` of all of the Processes to which it belongs in a
-System (and therefore a `TERMINAL` for the System).  In these cases, as for single layer learning,
-an `ObjectiveMechanism` is created that receives the output of the `error_source` as well as the target for learning
-(see `LearningMechanisms_Targets` below), and projects to a LearningMechanism that is created for the
-`learned_projection`.  For all others, the following MappingProjections are created (shown in the `figure
+<LearningMechanism_Multilayer_Learning_Figure>` below). This requires the use of a learning function that can
+calculate the influence that each MappingProjection and its output have on the error that the LearningMechanism
+receives from the next one in the sequence (e.g., `BackPropagation`). In multilayer learning, the Components created
+depend on the position of the `primary_learned_projection` and `output_source <LearningMechanism.output_source>` in
+the sequence.  If these are the last ones in the sequence, they are treated in the same way as `single layer
+learning <LearningMechanism_Single_Layer>`.  This is the case if the `output_source` is a standalone Mechanism (one
+not in a `Process` or `System`), the `TERMINAL` Mechanism of a standalone Process (i.e., one not in a System),
+or the `TERMINAL` of all of the Processes to which it belongs in a System (and therefore a `TERMINAL` for the
+System).  In these cases, as for single layer learning, a `ComparatorMechanism` is created that receives the output
+of the `output_source` as well as the target for learning (see `LearningMechanisms_Targets` below), and projects to a
+LearningMechanism that is created for the `primary_learned_projection`.  For all other MappingProjections being
+learned in the sequence, the following additional MappingProjections are created for learning (shown in the `figure
 <LearningMechanism_Multilayer_Learning_Figure>` below):
 
-* from the `sender <MappingProjection.sender>` of the `learned_projection` to the LearningMechanism's
-  `ACTIVATION_INPUT` `InputState <LearningMechanism_Activation_Input>`.
+* from the `input_source <LearningMechanism.input_source>` to the LearningMechanism's *ACTIVATION_INPUT* `InputState
+  <LearningMechanism_Activation_Input>`.
 ..
-* from the `error_source` to the LearningMechanism's
-  `ACTIVATION_OUTPUT` `InputState <LearningMechanism_Activation_Output>`.
+* from the `output_source <LearningMechanism.output_source>` to the LearningMechanism's *ACTIVATION_OUTPUT* `InputState
+  <LearningMechanism_Activation_Output>`.
 ..
-* from the `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` OutputState of the LearningMechanism for the
-  next MappingProjection in the sequence (i.e., the layer "above" it) to the LearningMechanism's
-  `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` InputState.
+* from the *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>` of the LearningMechanism for the
+  next MappingProjection in the sequence (i.e., the one to which the `output_source <LearningMechanism.output_source>`
+  projects) to the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 
-In addition, a `LearningProjection` is created from each LearningMechanism's `LEARNING_SIGNAL
-<LearningMechanism_LearningSignal>` OutputState to the `matrix` `ParameterState` of its `learned_projection`.  If the
-`learned_projection` is the first in the sequence, then *no* Projection is created or assigned to its
-LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` OutputState.
+In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
+`primary_learned_projection of each LearningMechanism in the sequence, to the `ParameterState` for the `matrix
+<MappingProjection.matrix>` of the `primary_learned_projection`.  If the `primary_learned_projection` is the first in
+the sequence, then *no* Projection is created or assigned to its LearningMechanism's *ERROR_SIGNAL* `OutputState
+<LearningMechanism_Output_Error_Signal>`.
 
 .. _LearningMechanism_Multilayer_Learning_Figure:
 
@@ -370,10 +369,10 @@ LearningMechanism's `ERROR_SIGNAL <LearningMechanism_Output_Error_Signal>` Outpu
        :alt: Schematic of Mechanisms and Projections involved in learning for a sequence of MappingProjections
        :scale: 50%
 
-       ObjectiveMechanism and LearningMechanisms and associated Projections created for a sequence of two
+       ComparaotrMechanism and LearningMechanisms and associated Projections created for a sequence of two
        MappingProjections specified for learning.  Each Mechanism is labeled by its type (uppler line, in bold) and
-       its designated status in the Process and/or System to which it belongs (lower line, caps).  Italicized labels
-       beside a component indicates the attribute of the LearningMechanism with which it is associated.
+       its designated status in the Process and/or System to which it belongs (lower line, capitalized).  Italicized
+       label beside a component indicates the attribute of the LearningMechanism with which it is associated.
 
 .. _LearningMechanism_Targets:
 
@@ -574,7 +573,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         to the `learned_projection`, the output of the `error_source`, and the error_signal received by the
         LearningMechanism (see `variable <LearningMechanism.variable>` for details).
 
-    error_source : ProcessingMechanism
+    error_source : ComparatorMechanism or LearningMechanism
         specifies the Mechanism the output of which is used to generate the error_signal received by the
         LearningMechanism (in its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` InputState).
 
