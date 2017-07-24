@@ -91,16 +91,16 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - receives the value of an `error_signal <LearningMechanism.error_signal>` from either a
-  `ComparatorMechanism` or another LearningMechanism. If the `primary_learned_projection` projects to the `TERMINAL`
-  Mechanism of the Process or System being learned, or is not part of a `multilayer learning sequence
+* *ERROR_SIGNAL* - receives the value of an error signal from either a `ComparatorMechanism` or another
+  `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the `primary_learned_projection` projects to the
+  `TERMINAL` Mechanism of the Process or System being learned, or is not part of a `multilayer learning sequence
   <LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from a ComparatorMechanism. If the
   `primary_learned_projection` is part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
   then the `error_signal` comes from the next LearningMechanism in the sequence (i.e., the one associated with the
   `output_source`).  It is used by the LearningMechanism's `function <LearningMechanism.function>` to calculate the
   `learning_signal <LearningMechanism.learning_signal>`;  note that the value of the *ERROR_SIGNAL* InputState may
   not be the same as that of the `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL*
-  `OutputState <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Error_Signal>` below).
+  `OutputState <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Output_Error_Signal>` below).
   The `value <InputState.value>` of the *ERROR_SIGNAL* InputState is assigned as the third item of the
   LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
@@ -119,7 +119,7 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
   `MappingProjections <MappingProjection>` being learned, calculated to reduce the value of the LearningMechanism's
   *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 
-.. _LearningMechanism_Error_Signal:
+.. _LearningMechanism_Output_Error_Signal:
 
 * `error_signal <LearningMechanism.error_signal>` - the contribution made by the `primary_learned_projection` to the
   error signal received by the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
@@ -137,7 +137,7 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
      The former is the error signal received from a `ComparatorMechanism` or another `LearningMechanism`,
      while the latter is the contribution made to that error by the `primary_learned_projection` and the
      `output_source, as calculated by the LearningMechanism's `function <LearningMechanism.function>`
-     (see `error_signal <LearningMechanism_Error_Signal>` above).
+     (see `error_signal <LearningMechanism_Output_Error_Signal>` above).
 
 The default `function <LearningMechanism.function>` of a LearningMechanism is `BackPropagation` (also known as the
 *Generalized Delta Rule*;
@@ -169,7 +169,7 @@ They are each described below:
   to the LearningMechanism for the preceding MappingProjection in the sequence being learned - see `figure
   <LearningMechanism_Multilayer_Learning_Figure>` below).  Note that the value of the *ERROR_SIGNAL* OutputState
   value may not be the same as that of the *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`
-  (see `error_signal <LearningMechanism_Error_Signal>`).
+  (see `error_signal <LearningMechanism_Output_Error_Signal>`).
 
 .. _LearningMechanism_LearningSignal:
 
@@ -238,7 +238,7 @@ refer to the Components being learned and/or its operation:
   LearningMechanism's *ACTIVATION_OUTPUT* `InputState <LearningMechanism_Activation_Output>`.
 ..
 * `error_source` - the `ComparatorMechanism` or `LearningMechanism` that calculates the error signal provided to the
-  LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Error_Signal>`.
+  LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 ..
 * `modulation` - the default value used for the `modulation <LearningSignal.modulation>` attribute of
   LearningMechanism's `LearningSignals <LearningSignal>` (i.e. those for which it is not explicitly specified).
@@ -376,18 +376,25 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 .. _LearningMechanism_Targets:
 
-**TARGET Mechanisms**: receive the targets specified for learning.  When learning is specified for a `Process
-<Process_Learning>` or `System <System_Execution_Learning>`, the `ObjectiveMechanism`  that will receive its
-`targets <Run_Targets>` (specified in the call to its :keyword:`execute` or :keyword:`run` method) are identified and
-designated as `TARGET` Mechanisms. These are listed in the Process' or System's `target_mechanisms` attribute.
-It is important to note that the status of a `ProcessingMechanism` in a System takes precedence over its status in any
-of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process,
-if that Process is combined with others in a System, the Mechanism appears in any of those other Processes,
-and it is not the `TERMINAL` of all of them, then it will *not* be the `TERMINAL` for the System.  As consequence,
-although it will project to a `TARGET` Mechanism in the Process for which it is the `TERMINAL`, it will not do so in
-the System (see :ref:`figure below <LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a
-Mechanisms is the `TERMINAL` for more than one Process used to create a System (that is, the pathways for those
-Processes converge on that Mechanism), only one ObjectiveMechanism will be created for it in the System.
+**TARGET Mechanisms**: When learning function is specified for a LearningMechanism that requires a target (e.g.,
+`Backpropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified that receives the target (in its
+*TARGET* `InputState <ComparatorMechanism_Structure>`), and uses it to generate an `error signal
+<_LearningMechanism_Input_Error_Signal>` provided to the LearningMechanism.  For `multilayer learning
+<LearningMechanism_Multilayer_Learning>`, this is the `error_source <LearningMechanism.error_source>` for the last
+MappingProjection in the sequence.  When learning is specified for a `Composition` (i.e., a `Process <Process_Learning>`
+or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s) <ComparatorMechanism>` that receive the
+`targets <Run_Targets>` specified in the call to the Composition's :keyword:`execute` or :keyword:`run` method are
+identified and designated as `TARGET` Mechanisms. These are listed in the Composition's `target_mechanisms` attribute.
+If a `TERMINAL` Mechanism of a Composition receives a MappingProjection that is specified for learning, then it always
+projects to a `TARGET` Mechanism in that Composition. It is important to note, here, that the status of a Mechanism in
+a System takes precedence over its status in any of the Processes to which it belongs. This means that even if a
+Mechanism is the `TERMINAL` of a particular Process, if that Process is combined with others in a System, and the
+Mechanism appears in any of those other Processes, and it is not the `TERMINAL` of all of them, then it will *not* be
+the `TERMINAL` for the System.  As consequence, although it will project to a `TARGET` Mechanism in the Process for
+which it is the `TERMINAL`, it will not do so in the System (see `figure below
+<LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a Mechanisms is the `TERMINAL` for more
+than one Process used to create a System (that is, the pathways for those Processes converge on that Mechanism),
+only one ComparatorMechanism will be created for it in the System.
 
 .. _LearningProjection_Target_vs_Terminal_Figure:
 
@@ -661,7 +668,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     error_source : ComparatorMechanism or LearningMechanism
         the Mechanism that calculates the error signal provided to the
-        LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Error_Signal>`.
+        LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 
     primary_learned_projection : MappingProjection
         the Projection with the `matrix <MappingProjection.matrix>` parameter used to generate the
