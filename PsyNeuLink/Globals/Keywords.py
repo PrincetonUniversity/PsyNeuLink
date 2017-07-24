@@ -363,6 +363,9 @@ ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
+TDLEARNING_FUNCTION = 'TDLearning Function'
+SARSA_FUNCTION = 'SARSA Function'
+QLEARNING_FUNCTION = 'QLearning Function'
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
 
 # Distribution functions

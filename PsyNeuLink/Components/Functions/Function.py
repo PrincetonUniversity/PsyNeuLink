@@ -49,6 +49,8 @@ Objective Functions:
 Learning Functions:
   * `Reinforcement`
   * `BackPropagation`
+  * `Sarsa`
+  * `QLearning`
 
 .. _Function_Overview:
 
@@ -192,6 +194,7 @@ import warnings
 from collections import namedtuple
 from enum import Enum, IntEnum
 from random import randint
+from typing import Dict, Union, List
 
 import numpy as np
 import typecheck as tc
@@ -6448,7 +6451,7 @@ class Reinforcement(
 
     activation_function : Function or function : SoftMax
         the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`; must
-        return and array with a single non-zero value.
+        return an array with a single non-zero value.
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
@@ -6695,16 +6698,16 @@ class BackPropagation(LearningFunction):
        `error_signal <BackPropagation.error_signal>`.
 
     activation_input : 1d np.array
-        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>.
+        the input to the matrix being modified; same as 1st item of `variable <BackPropagation.variable>`.
 
     activation_output : 1d np.array
         the output of the function for which the matrix being modified provides the input;
-        same as 2nd item of `variable <BackPropagation.variable>.
+        same as 2nd item of `variable <BackPropagation.variable>`.
 
     error_signal : 1d np.array
         the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
-        same as 3rd item of `variable <BackPropagation.variable>.
+        same as 3rd item of `variable <BackPropagation.variable>`.
 
     error_matrix : 2d np.array or ParameterState
         matrix, the output of which is used to calculate the `error_signal <BackPropagation.error_signal>`;
@@ -6964,6 +6967,445 @@ class BackPropagation(LearningFunction):
 
         return [weight_change_matrix, dE_dW]
 
+
+class Sarsa(LearningFunction):
+    """
+    Sarsa(                              \
+        variable=variable_class_default,    \
+        learning_rate=0.05                  \
+        discount_factor=0.99                \
+        reward=0.5,                         \
+        params=None,                        \
+        owner=None,                         \
+        prefs=None,                         \
+        context=None)
+
+    Implements a function that calculates the Q-value of the current
+    state using
+    the `SARSA <http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.17.2539&rep=rep1&type=pdf>`
+    algorithm
+
+    Parameters
+    ----------
+
+    variable: List or 2d np.array [length 3] : default variable_class_default
+        specifies a template for three items provided as the variable in the
+        call to `function <Sarsa.function>` (in order):
+
+            - `activation_input <Sarsa.activation_input>` (1d np.array),
+
+            - `activation_output <Sarsa.activation_output>` (1d np.array),
+
+            - `error_signal <Sarsa.error_signal>` (1d np.array).
+
+    learning_rate: float : default 0.05
+        the learning rate or alpha value in SARSA algorithm.
+        Supersedes any specification for the `process <Process>` and/or `system
+        <System>` to which the function's `owner <Function.owner>` belongs (see
+        `learning_rate <Sarsa.learning_rate>` for details).
+
+    discount_factor: float : default 0.99
+        the discount factor or gamma value in SARSA algorithm.
+
+    reward: float : default 0.5
+        the reward for the current state
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that
+        specifies the parameters for the function. Values specified for
+        parameters in the dictionary override any assigned to those parameters
+        in arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs  : Optional[PreferenceSet or specification dict :
+    Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified,
+        a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
+        details).
+
+    context
+
+    Attributes
+    ----------
+
+    variable : 2d np.array
+        contains the three values used as input to the `function <Sarsa.function>`:
+        `activation_input <Sarsa.activation_input>`, `activation_output <Sarsa.activation_output>`, and
+        `error_signal <Sarsa.error_signal>`.
+
+    activation_input : 1d np.array
+        the input to the matrix being modified; same as 1st item of
+        `variable <Sarsa.variable>`.
+
+    activation_output : 1d np.array
+        the output of the function for which the matrix being modified
+        provides the input;
+        same as 2nd item of `variable <Sarsa.variable>`.
+
+    error_signal : 1d np.array
+        the error signal for the next matrix (layer above) in the
+        learning sequence, or the error computed from the
+        target (training signal) and the output of the last Mechanism in
+        the sequence;
+        same as 3rd item of `variable <Sarsa.variable>`.
+
+    learning_rate : float
+        the learning rate used by the function.  If specified,
+        it supersedes any learning_rate specified for the
+        `process <Process.learning_Rate>` and/or `system
+        <System.learning_rate>` to which the function's  `owner
+        <Sarsa.owner>` belongs.  If it is `None`, then the
+        learning_rate specified for the process to
+        which the `owner <Sarsa.owner>` belongs is used;  and,
+        if that is `None`, then the learning_rate for
+        the system to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <Sarsa.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <Sarsa.learning_rate>`
+        if it
+        is not otherwise specified. Currently set to 0.05
+
+    function : Function
+         the function that computes the new Q-value of the current state,
+         and
+         returns that along with the `error_signal <Sarsa.error_signal>`
+         received
+
+    owner : Mechanism
+        `Mechanism <Mechanism>` to which the function belongs.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs**
+        argument
+        of the constructor for the function; if it is not specified,
+        a default
+        is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+        """
+    component_name = SARSA_FUNCTION
+    variable_class_default = [[0], [0], [0]]
+    default_learning_rate = 0.05
+    default_discount_factor = 0.99
+    default_reward = 0.5
+    param_class_defaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 variable: np.array = variable_class_default,
+                 learning_rate: float = default_learning_rate,
+                 discount_factor: float = default_discount_factor,
+                 reward: float = default_reward,
+                 params: Dict = None,
+                 owner: Component = None,
+                 prefs: Union[PreferenceSet, Dict] = None,
+                 context: str = 'Component Init'):
+
+        # Assign args to params and functionParams dicts
+
+        params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                  discount_factor=discount_factor,
+                                                  reward=reward,
+                                                  params=params)
+        super().__init__(default_variable=variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
+
+        if len(self.variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items "
+                                 "(input, output, and error arrays".format(
+                                    self.name, self.variable))
+
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+
+        # May have to change this
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its "
+                                 "variable arg) must be an array with a single "
+                                 "element for {}".format(self.name,
+                                                         self.variable))
+
+    def function(self,
+                 variable: Union[List, np.array] = variable_class_default,
+                 params: Union[Dict, None] = None,
+                 time_scale: TimeScale = TimeScale.TRIAL,
+                 context=None):
+        """Calculate the Q-value of the current state using the SARSA algorithm
+
+        Parameters
+        ----------
+        variable : List or 2d np.array [length 3] : default variableClassDefault
+            must have three items that are the values for the following (in order):
+
+                - `activation_input <Sarsa.activation_input>`
+                    represents Q-value of current state (1d np.array or List with a
+                    single value
+
+                - `activation_output <Sarsa.activation_output>`
+                    represents Q-value of next state (1d np.array or List with a
+                    single value
+
+                - `error_signal <Sarsa.error_signal>` 1d np.array or List
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that
+            specifies the parameters for the function. Values specified for
+            parameters in the dictionary override any assigned to those
+            parameters in the keyword arguments of the constructor.
+        time_scale : TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on time_step or trial
+            time scale.
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+        input = self.activation_input
+        output = self.activation_output
+        error = self.error_signal
+
+        # TODO: is this really necessary? this isn't a static method, so
+        # learning_rate is guaranteed to have a value by now
+        if params['learning_rate'] is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = params['learning_rate']
+
+        if params['reward'] is None:
+            reward = self.default_reward
+        else:
+            reward = params['reward']
+
+        if params['discount_factor'] is None:
+            discount_factor = self.default_discount_factor
+        else:
+            discount_factor = params['discount_factor']
+
+        # FIXME: this probably needs to be tweaked
+
+        error_array = (np.where(output, learning_rate * error, 0))
+
+        q_value = input + learning_rate * (reward + discount_factor * output -
+                                           input)
+
+        return [q_value, error_array]
+
+
+class QLearning(LearningFunction):
+    """
+    QLearning(                              \
+        variable=variable_class_default,    \
+        learning_rate=0.05,                  \
+        discount_factor=0.99                \
+        reward=0.5,                         \
+        params=None,                        \
+        owner=None,                         \
+        prefs=None,                         \
+        context=None)
+
+    Implements a function that calculates the Q-value of the current state using
+    the `Q-Learning <http://www.cs.rhul.ac.uk/~chrisw/new_thesis.pdf>`
+    algorithm
+
+    Parameters
+    ----------
+
+    variable: List or 2d np.array [length 3] : default variable_class_default
+        specifies a template for three items provided as the variable in the
+        call to `function <QLearning.function>` (in order):
+
+            - `activation_input <QLearning.activation_input>` (1d np.array),
+            - `activation_output <QLearning.activation_output>` (1d np.array),
+            - `error_signal <QLearning.error_signal>` (1d np.array).
+
+    learning_rate: float : default 0.05
+        the learning rate or alpha value in Q-learning algorithm. Supersedes any
+        specification for the `process <Process>` and/or `system <System>` to
+        which the function's `owner <Function.owner>` belongs (see
+        `learning_rate <QLearning.learning_rate>` for details).
+
+    discount_factor: float : default 0.99
+        the discount factor or gamma value in Q-learning algorithm.
+
+    reward: float : default 0.5
+        the reward for the current state
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies
+        the parameters for the function. Values specified for parameters in the
+        dictionary override any assigned to those parameters in arguments of
+        the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs  : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+    context
+
+    Attributes
+    ----------
+
+    variable: 2d np.array
+        contains the three values used as input to the `function <QLearning.function>`:
+       `activation_input <QLearning.activation_input>`,
+       `activation_output <QLearning.activation_output>`, and
+       `error_signal <QLearning.error_signal>`.
+
+    activation_input : 1d np.array
+        the input to the matrix being modified; same as 1st item of `variable <QLearning.variable>`.
+
+    activation_output : 1d np.array
+        the output of the function for which the matrix being modified provides the input;
+        same as 2nd item of `variable <QLearning.variable>`.
+
+    error_signal : 1d np.array
+        the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+        target (training signal) and the output of the last Mechanism in the sequence;
+        same as 3rd item of `variable <QLearning.variable>`.
+
+    learning_rate : float
+        the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
+        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
+        <QLearning.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        which the `owner <QLearning.owner>` belongs is used;  and, if that is `None`, then the learning_rate for
+        the system to which it belongs is used. If all are `None`, then the
+        `default_learning_rate <QLearning.default_learning_rate>` is used.
+
+    default_learning_rate : float
+        the value used for the `learning_rate <QLearning.learning_rate>` if it
+        is not otherwise specified. Currently set to 0.05
+
+    function : Function
+         the function that computes the new Q-value of the current state, and
+         returns that along with the `error_signal <QLearning.error_signal>`
+         received
+
+    owner : Mechanism
+        `Mechanism <Mechanism>` to which the function belongs.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument
+        of the constructor for the function; if it is not specified, a default
+        is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+    """
+
+    component_name = QLEARNING_FUNCTION
+    variable_class_default = [[0], [0], [0]]
+    default_learning_rate = 0.05
+    default_discount_factor = 0.99
+    default_reward = 0.5
+    param_class_defaults = Function_Base.paramClassDefaults.copy()
+
+    def __init__(self,
+                 variable: np.array = variable_class_default,
+                 learning_rate: float = default_learning_rate,
+                 discount_factor: float = default_discount_factor,
+                 reward: float = default_reward,
+                 params: Dict = None,
+                 owner: Component = None,
+                 prefs: Union[PreferenceSet, Dict] = None,
+                 context: str = 'Component Init'):
+        # Assign args to params and functionParams dicts
+
+        params = self._assign_args_to_param_dicts(learning_rate=learning_rate,
+                                                  discount_factor=discount_factor,
+                                                  reward=reward,
+                                                  params=params)
+        super().__init__(default_variable=variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+        self.functionOutputType = None
+
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
+
+        if len(self.variable) != 3:
+            raise ComponentError("Variable for {} ({}) must have three items "
+                                 "(input, output, error arrays".format(
+                                    self.name, self.variable))
+
+        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+
+        if len(self.error_signal) != 1:
+            raise ComponentError("Error term for {} (the third item of its "
+                                 "variable arg) must be an array with a single "
+                                 "element for {}".format(self.name,
+                                                         self.variable))
+
+    def function(self,
+                 variable: Union[List, np.array] = variable_class_default,
+                 params: Union[Dict, None] = None,
+                 time_scale: TimeScale = TimeScale.TRIAL,
+                 context=None):
+        """Calculate the Q-value of the current state using the Q-learning
+        algorithm
+
+        Parameters
+        ----------
+        variable: List or 2d np.array [length 3] : default variable_class_default
+            must have three items that are the values for the following (in order):
+
+            - `activation_input <QLearning.activation_input>` represents the Q-value
+            of the current state (1d np.array or List with a single value)
+
+            - `activation_output <QLearning.activation_output>` represents Q-values
+            of the next states for each possible action (1d np.array or List)
+
+            - `error_signal <QLearning.error_signal>` 1d np.array or List
+        params: Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that
+            specifies the parameters for the function. Values specified for
+            parameters in the dictionary override any assigned to those
+            parameters in the keyword arguments of the constructor
+        time_scale: TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on time_step or trial
+            time scale.
+        context
+        """
+        self._check_args(variable, params=params, context=context)
+
+        input = self.activation_input
+        output = self.activation_output
+        error = self.error_signal
+
+        if params['learning_rate'] is None:
+            learning_rate = self.default_learning_rate
+        else:
+            learning_rate = params['learning_rate']
+
+        if params['reward'] is None:
+            reward = self.default_reward
+        else:
+            reward = params['reward']
+
+        if params['discount_factor'] is None:
+            discount_factor = self.default_discount_factor
+        else:
+            discount_factor = params['discount_factor']
+
+        optimal_future_q_value = np.max(output)
+
+        q_value = input + learning_rate * (reward + discount_factor *
+                                           optimal_future_q_value - input)
+
+        return [q_value, error]
 # region *****************************************   OBJECTIVE FUNCTIONS ***********************************************
 # endregion
 # TBI
