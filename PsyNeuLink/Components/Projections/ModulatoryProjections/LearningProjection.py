@@ -99,6 +99,7 @@ Class Reference
 
 import inspect
 
+import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import parameter_keywords
@@ -109,7 +110,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.O
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
-from PsyNeuLink.Components.States.OutputState import OutputState, np
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, OPERATION, PARAMETER_STATES, PROJECTION_SENDER, PROJECTION_TYPE, SLOPE, SUM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set

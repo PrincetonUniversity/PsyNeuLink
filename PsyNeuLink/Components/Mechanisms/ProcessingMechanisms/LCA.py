@@ -74,11 +74,16 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_next, max_vs_avg
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
 import warnings
+
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_avg, max_vs_next
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from PsyNeuLink.Globals.Keywords import CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
 class LCAError(Exception):

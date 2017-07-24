@@ -70,22 +70,16 @@ OTHER
 
 """
 
-import warnings
-# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
-warnings.filterwarnings("error")
-
 import inspect
 import numbers
 import numpy as np
-import typecheck as tc
+import warnings
 
-from enum import EnumMeta
-from enum import IntEnum
+from PsyNeuLink.Globals.Keywords import NAME, VALUE, MATRIX_KEYWORD_VALUES, DISTANCE_METRICS
+from enum import Enum, EnumMeta, IntEnum
 
-from PsyNeuLink.Globals.Defaults import *
-from PsyNeuLink.Globals.Keywords import *
-
-from PsyNeuLink.Scheduling.TimeScale import *
+# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
+warnings.filterwarnings("error")
 
 
 class UtilitiesError(Exception):
@@ -644,7 +638,7 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import OrderedDict, UserDict
+from collections import UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__

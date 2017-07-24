@@ -271,13 +271,14 @@ import logging
 import numbers
 import random
 
+import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import method_type
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.States.OutputState import SEQUENTIAL, np
+from PsyNeuLink.Components.States.OutputState import SEQUENTIAL
 from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel

@@ -7,13 +7,24 @@
 
 # **************************************** KWTA *************************************************
 
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Mechanisms import Mechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import *
+import builtins
+import numbers
+import warnings
+
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import ComponentError
+from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.InputState import InputState
-import builtins
+from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX, INITIALIZING, INPUT_STATE, KWTA, RESULT
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
+from PsyNeuLink.Globals.Utilities import append_type_to_name, is_matrix, is_numeric_or_none, iscompatible
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+
 
 class KWTAError(Exception):
     def __init__(self, error_value):
