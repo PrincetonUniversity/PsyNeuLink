@@ -3512,14 +3512,15 @@ class SimpleIntegrator(
         else:
             offset = self.offset
 
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+        # execute noise if it is a function
+        noise = self.noise
+        if isinstance(noise, (np.ndarray, list)):
+            for i in range(len(noise)):
+                if callable(noise[i]):
+                    noise[i] = noise[i]()
+        elif callable(noise):
+            noise = self.noise()
+
 
         # TBI: execute initializer function if self.initializer_function == True
 
