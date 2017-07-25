@@ -599,8 +599,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
-        specifies the parameter(s) to be trained by the LearningMechanism
-        (see `learning_signals <LearningMechanism.learning_signals>` for details).
+        specifies the parameter(s) to be learned (see `learning_signals <LearningMechanism.learning_signals>` for
+        details).
 
     modulation : ModulationParam : ModulationParam.ADDITIVE
         specifies the default form of modulation used by the LearningMechanism's LearningSignals,
@@ -640,7 +640,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
     COMMENT
 
     variable : 2d np.array
-        specifies three items: 1) the input to the `learned_projection`; 2) the output of the `error_source`; and
+        contains three items that serve as the template for the three inputs required by the LearningMechanism's
+        `function <LearningMechanism.function>`: XXXX
+         the input to the `learned_projection`; 2) the output of the
+        `error_source`; and
         the error signal received from either an ObjectiveMechanism or the next LearningMechanism in a
         `learning sequence <LearningMechanism_Learning_Configurations>`.
 
