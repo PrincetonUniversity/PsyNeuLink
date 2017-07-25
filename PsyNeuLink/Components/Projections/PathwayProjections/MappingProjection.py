@@ -54,9 +54,9 @@ appropriate to the circumstance:
     InputState of the ObjectiveMechanism (`AUTO_ASSIGN_MATRIX` is used as the matrix specification, which determines
     the appropriate matrix by context).
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the ObjectiveMechanism that provides it with the outcome of the
+  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that provides it with the outcome of the
     OutputStates that it monitors, and from those OutputStates (listed in its
-    `monitored_output_states <ControlMechanism.ControlMechanism_Base.monitored_output_states>` attribute) to
+    `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute) to
     the ObjectiveMechanism (an `IDENTITY_MATRIX` is used for all of these);
   ..
   * by a `LearningMechanism`, between it and the other components required to implement learning
@@ -75,6 +75,7 @@ It can be specified in any of the following formats:
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>`.
 
   .. _Matrix_Keywords:
+
   * **Matrix keyword**.  This is used to specify a type of matrix without having to specify its individual values.
     Any of the `matrix keywords <Keywords.MatrixKeywords>` can be used.
 
@@ -85,6 +86,7 @@ It can be specified in any of the following formats:
     specified offset.
 
   .. _MappingProjection_Tuple_Specification:
+
   * **Tuple**.  This is used to specify a Projection to the `ParameterState <ParameterState>` for the matrix
     along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
     the first can be any of the specifications described above;  the second must be a
@@ -147,10 +149,20 @@ Class Reference
 ---------------
 
 """
+import inspect
+import typecheck as tc
 
-from PsyNeuLink.Components.Projections.Projection import *
+import numpy as np
+
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, LinearMatrix, get_matrix
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
+from PsyNeuLink.Components.ShellClasses import Projection
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 parameter_keywords.update({MAPPING_PROJECTION})
 projection_keywords.update({MAPPING_PROJECTION})
@@ -220,7 +232,7 @@ class MappingProjection(PathwayProjection_Base):
 
     receiver: Optional[InputState or Mechanism]
         specifies the destination of the Projection's output.  If a mechanism is specified, its
-        `primary InputState <Mechanism_InputStates>` will be used. If it is not specified, it will be assigned in
+        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
@@ -228,7 +240,7 @@ class MappingProjection(PathwayProjection_Base):
         value of the `sender <MappingProjection.sender>`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
@@ -265,6 +277,9 @@ class MappingProjection(PathwayProjection_Base):
     has_learning_projection : bool : False
         identifies whether the MappingProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned a
         `LearningProjection`.
+
+    value : ndarray
+        Output of MappingProjection, transmitted to `variable <InputState.variable>` of `receiver`.
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.
@@ -371,10 +386,10 @@ class MappingProjection(PathwayProjection_Base):
 
     def _instantiate_receiver(self, context=None):
         """Determine matrix needed to map from sender to receiver
-        
+
         Assign specification to self.matrix_spec attribute
         Assign matrix to self.matrix attribute
-        
+
         """
         self.reshapedWeightMatrix = False
 

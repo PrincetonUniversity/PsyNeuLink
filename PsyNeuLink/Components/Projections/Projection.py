@@ -36,19 +36,19 @@ needed to transmit that information to the `InputState` of another Mechanism (it
     `pathway` of a `Process`.
 ..
 * `ControlProjection`
-    This takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
+    takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
     of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
     that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
     in the context of a `System`.
 ..
 * `LearningProjection`
-    This takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
+    takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
     `ParameterState` of a `MappingProjection` which uses this to modify its
     `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
     learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
 ..
 * `GatingProjection`
-    This takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
+    takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
     a GatingMechanism and conveys it to the `InputState` or `OutputState` of a
     `ProcessingMechanism` for use by the state's `function` in modulating its
     `value`.
@@ -144,10 +144,9 @@ In addition to its `function <Projection.function>`, a Projection has two primar
 Sender
 ~~~~~~
 
-This must be an `OutputState`.  The Projection is assigned to the OutputState's
-`efferents <State.State_Base.efferents>` list, and OutputState's `value
-<OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's `function <Projection.function>`.
-A sender can be specified as:
+This must be an `OutputState`.  The Projection is assigned to the OutputState's `efferents <State_Base.efferents>`
+list, and OutputState's `value <OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's
+`function <Projection.function>`.  A sender can be specified as:
 
   * an **OutputState**, in any of the ways used to `specify an OutputState <OutputState_Specification>`.
   ..
@@ -189,7 +188,7 @@ Receiver
 ~~~~~~~~
 
 This must be an :doc:`InputState` or a :doc:`ParameterState`.  The Projection is assigned to the receiver's
-`path_afferents <State.State_Base.path_afferents>` list, and the output of the Projection's
+`path_afferents <State_Base.path_afferents>` list, and the output of the Projection's
 `function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
 can be specified as:
 
@@ -234,12 +233,17 @@ from its `sender <Projection.sender>` to a form suitable as input for its `recei
 .. _Projection_Class_Reference:
 
 """
+import inspect
+import typecheck as tc
+import warnings
 
-
-from collections import OrderedDict
-
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Component import Component
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
+from PsyNeuLink.Components.ShellClasses import Process, Projection, State
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, GATING, GATING_PROJECTION, INPUT_STATE, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX_KEYWORD_SET, MECHANISM, OUTPUT_STATE, PARAMETER_STATE_PARAMS, PROJECTION, PROJECTION_SENDER, PROJECTION_TYPE, kwAddInputState, kwAddOutputState, kwProjectionComponentCategory
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, iscompatible, type_match
 
 ProjectionRegistry = {}
 
@@ -293,12 +297,12 @@ class Projection_Base(Projection):
     name=None,        \
     prefs=None)
 
-    Abstract class definition for
+    Base class for all Projections.
 
     .. note::
-       Projections should NEVER be instantiated by a direct call to the base class.
-       They should be created by calling the constructor for the desired subclass or by using any of the other
-       methods for :ref:`specifying a Projection <Projection_In_Context_Specification>`.
+       Projection is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be created by calling the constructor for a subclass` or by using any of the other methods for
+       `specifying a Projection <Projection_In_Context_Specification>`.
 
 
     COMMENT:
@@ -321,7 +325,6 @@ class Projection_Base(Projection):
             + variableClassDefault (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
-            + paramNames (dict)
             + FUNCTION (Function class or object, or method)
 
         Class methods
@@ -507,19 +510,17 @@ class Projection_Base(Projection):
         # MODIFIED 4/21/17 END
 
 
-# FIX: SHOULDN'T variable_default HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
+# FIX: SHOULDN'T default_variable HERE BE sender.value ??  AT LEAST FOR MappingProjection?, WHAT ABOUT ControlProjection??
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
         # Validate variable, function and params, and assign params to paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
-        super(Projection_Base, self).__init__(variable_default=variable,
+        super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,
                                               name=self.name,
                                               prefs=prefs,
                                               context=context.__class__.__name__)
-
-        # self.paramNames = self.paramInstanceDefaults.keys()
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender
@@ -775,7 +776,7 @@ class Projection_Base(Projection):
 def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
 
-    Return :keyword:`true` if spec is any of the following:
+    Return `True` if spec is any of the following:
     + Projection class (or keyword string constant for one):
     + Projection object:
     + 2-item tuple of which the second is a projection_spec (checked recursively with thi method):
@@ -857,7 +858,7 @@ def _validate_receiver(sender_mech:Mechanism,
                        spec_type=None,
                        context=None):
     """Check that projection is to expected_receiver_type and in the same system as the sender_mech (if specified)
-    
+
     expected_owner_type must be a Mechanism or a Projection
     spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL
 

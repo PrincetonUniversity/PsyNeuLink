@@ -448,9 +448,9 @@
 
 # FIX: WHEN ControlMechanism IS ASSIGNED TO SYSTEM,
 #      VALIDATE THAT ALL ITEMS LISTED IN monitor_for_control ATTTRIB ARE IN THE SAME SYSTEM AS THE ControlMechanism.
-#               (SEE ControlMechanism._validate_params LINE 316)
+#               (SEE ControlMechanism_Base._validate_params LINE 316)
 #               AND THAT ITEMS LISTED IN control_signals ATTRIB ARE THE SAME SYSTEM AS THE ControlMechanism
-#               (SEE ControlMechanism._validate_params LINE 419)
+#               (SEE ControlMechanism_Base._validate_params LINE 419)
 #      (SINCE COULDN'T DO IT IN _validate_params AS EVC WAS NOT YET IN SYSTEM)
 
 # FIX: UPDATE WITH MODULATION_MODS

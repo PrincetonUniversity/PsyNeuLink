@@ -18,7 +18,7 @@ A LearningProjection is a subclass of `ModulatoryProjection` that projects from 
 MATRIX `parameterState <ParameterState>` of a `MappingProjection` and modifies the value of the
 `matrix <MappingProjection.matrix>` parameter of that MappingProjection.  All of the LearningProjections in a System,
 along with its other `learning components <LearningMechanism>`, can be displayed using the System's `show_graph` method
-with its **show_learning** argument assigned as :keyword:`True`.
+with its **show_learning** argument assigned as `True`.
 
 .. _LearningProjection_Creation:
 
@@ -97,17 +97,26 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import Linear, BackPropagation
+import inspect
+
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
-    import LearningMechanism, ERROR_SIGNAL
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
-    ObjectiveMechanism
+    import LearningMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
-from PsyNeuLink.Components.Projections.Projection import *
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
+from PsyNeuLink.Components.States.OutputState import OutputState, np
+from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, OPERATION, PARAMETER_STATES, PROJECTION_SENDER, PROJECTION_TYPE, SLOPE, SUM
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import iscompatible, parameter_spec
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 # Params:
 
@@ -154,7 +163,8 @@ class LearningProjection(ModulatoryProjection_Base):
                  name=None,           \
                  prefs=None)
 
-    Implements a Projection that modifies the matrix parameter of a MappingProjection.
+    Subclass of `ModulatoryProjection` that modulates the value of a `ParameterState` for the
+    `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     COMMENT:
         Description:
@@ -180,7 +190,6 @@ class LearningProjection(ModulatoryProjection_Base):
                     + PARAMETER_MODULATION_OPERATION: Modulation.ADD,
                     + PROJECTION_TYPE: LEARNING_PROJECTION
 
-            + paramNames (dict)
             + classPreference (PreferenceSet): LearningProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
 
@@ -208,7 +217,7 @@ class LearningProjection(ModulatoryProjection_Base):
         from which it projects (see `learning_rate <LearningProjection.learning_rate>` for additional details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that specifies the parameters for the
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
         Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
         the Projection's default `function <LearningProjection.function>` and parameter assignments.  Values specified
         for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
@@ -270,7 +279,7 @@ class LearningProjection(ModulatoryProjection_Base):
         `learning_rate <LearningProjection.learning_rate>` for LearningProjection supercedes any specification(s) of
         the :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or
         `System <System.System_Base.learning_rate>` to which the LearningMechanism from which it projects belongs.
-        (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
+        See `learning_rate <LearningMechanism_Learning_Rate>` for additional details.
 
     weight_change_matrix : 2d np.array
         matrix of changes to be made to the `mappingWeightMatrix`, after learning_rate has been applied to the
@@ -349,8 +358,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
 
-        Insure `sender <LearningProjection>` is an ObjectiveMechanism or the outputState of one.
-        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix parameterState of one.
+        Insure `sender <LearningProjection>` is a LearningMechanism or the OutputState of one.
+        Insure `receiver <LearningProjection>` is a MappingProjection or the matrix ParameterState of one.
         """
 
         # IMPLEMENTATION NOTE: IS TYPE CHECKING HERE REDUNDANT WITH typecheck IN __init__??
@@ -366,22 +375,22 @@ class LearningProjection(ModulatoryProjection_Base):
                                                   "which is not currently supported".format(sender.name))
                 sender = self.sender = sender.learning_signals[0]
 
-            if any(s in {OutputState, LearningMechanism} for s in {sender, type(sender)}):
+            if any(s in {OutputState, LearningSignal, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputState of a LearningMechanism, check that it is a list or 1D np.array
                 if isinstance(sender, OutputState):
                     if not isinstance(sender.value, (list, np.ndarray)):
                         raise LearningProjectionError("Sender for \'{}\' (OutputState of LearningMechanism \'{}\') "
                                                       "must be a list or 1D np.array".format(self.name, sender.name))
-                    if not np.array(sender.value).ndim == 1:
-                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\')"
-                                                      " must be an 1D np.array".format(sender.owner.name, self.name))
+                    if not np.array(sender.value).ndim >= 1:
+                        raise LearningProjectionError("OutputState of \'{}\' (LearningMechanism for \'{}\') must be "
+                                                      "an ndarray with dim >= 1".format(sender.owner.name, self.name))
                 # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
                 elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
                     pass
 
             else:
-                raise LearningProjectionError("The sender arg for {} ({}) must be an LearningMechanism, "
-                                              "the OutputState of one, or a reference to the class"
+                raise LearningProjectionError("The sender arg for {} ({}) must be a LearningMechanism, "
+                                              "the OutputState or LearningSignal of one, or a reference to the class"
                                               .format(self.name, sender.name))
 
 

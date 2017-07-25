@@ -11,6 +11,7 @@ Functions
              UserDefinedFunction,
              Reduce,
              LinearCombination,
+             TransferFunction,
              Linear,
              Exponential,
              Logistic,

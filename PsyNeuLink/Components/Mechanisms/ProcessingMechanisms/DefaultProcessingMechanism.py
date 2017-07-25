@@ -12,16 +12,22 @@
 **[DOCUMENTATION STILL UNDER CONSTRUCTION]**
 
 """
+import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Globals.Defaults import SystemDefaultInputValue
+from PsyNeuLink.Globals.Keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+
 
 # **************************************** DefaultProcessingMechanism ******************************************************
 
 
 # class DefaultProcessingMechanism_Base(ProcessingMechanism_Base):
 class DefaultProcessingMechanism_Base(Mechanism_Base):
-    """Use to implement SystemDefaultInputMechanism, DefaultControlMechanism, and SystemDefaultOutputMechanism
+    """Subclass of `ProcessingMechanism` used to implement SystemDefaultInputMechanism, DefaultControlMechanism,
+    and SystemDefaultOutputMechanism.
 
     Description:
         Implements "dummy" mechanism used to implement default input, control signals, and outputs to other mechanisms
@@ -57,14 +63,14 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
         """Add Linear as default function, assign default name, and call super.__init__
 
-        :param default_input_value: (value)
+        :param default_variable: (value)
         :param size: (int or list/array of ints)
         :param params: (dict)
         :param name: (str)
@@ -73,7 +79,7 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
         params = self._assign_args_to_param_dicts(params=params)
 
-        super(DefaultProcessingMechanism_Base, self).__init__(variable=default_input_value,
+        super(DefaultProcessingMechanism_Base, self).__init__(variable=default_variable,
                                                               size=size,
                                                               params=params,
                                                               name=name,

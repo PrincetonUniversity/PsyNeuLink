@@ -14,15 +14,15 @@ from PsyNeuLink.Components.System import system
 
 input_layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 hidden_layer = TransferMechanism(name='Hidden Layer', 
                                  function = Linear, 
-                                 default_input_value =[0])
+                                 default_variable =[0])
 
 output_layer = TransferMechanism(name='Output Layer',
                         function=Linear,
-                        default_input_value =[0])
+                        default_variable =[0])
 
 
 
@@ -37,7 +37,7 @@ input_output_weights = MappingProjection(name = 'Input-Output Weights',
 
 
 
-input_hidden_process = process(default_input_value=[0, 0],
+input_hidden_process = process(default_variable=[0, 0],
                                pathway=[input_layer, input_hidden_weights, hidden_layer],
                                learning=LEARNING,
                                learning_rate=1.0,
@@ -46,7 +46,7 @@ input_hidden_process = process(default_input_value=[0, 0],
                                prefs={VERBOSE_PREF: False,
                                       REPORT_OUTPUT_PREF: False})
 
-hidden_output_process = process(default_input_value=[0],
+hidden_output_process = process(default_variable=[0],
                                pathway=[hidden_layer, hidden_output_weights, output_layer],
                                learning=LEARNING,
                                learning_rate=1.0,
@@ -55,7 +55,7 @@ hidden_output_process = process(default_input_value=[0],
                                prefs={VERBOSE_PREF: False,
                                       REPORT_OUTPUT_PREF: False})
 
-input_output_process = process(default_input_value=[0, 0],
+input_output_process = process(default_variable=[0, 0],
                                pathway=[input_layer, input_output_weights, output_layer],
                                learning=LEARNING,
                                learning_rate=1.0,

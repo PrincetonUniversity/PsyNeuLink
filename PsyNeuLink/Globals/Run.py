@@ -295,7 +295,7 @@ Class Reference
 
 from collections import Iterable
 
-from PsyNeuLink.Components.Component import function_type
+from PsyNeuLink.Components.Component import ExecutionStatus, function_type
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Process import Process, ProcessInputState
 from PsyNeuLink.Components.System import System
@@ -397,7 +397,7 @@ def run(object,
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_input_value for a single `TRIAL`
+    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL`
         the input for each `TRIAL` in a sequence (see `Run_Inputs` for detailed description of formatting
         requirements and options).
 
@@ -588,6 +588,7 @@ def run(object,
 
             if RUN in context and not EVC_SIMULATION in context:
                 context = RUN + ": EXECUTING " + object_type.upper() + " " + object.name
+                object.execution_status = ExecutionStatus.EXECUTING
             result = object.execute(input=input,
                                     execution_id=execution_id,
                                     clock=clock,
@@ -866,8 +867,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.variable):
-                raise RunError("Incompatible stimuli ({}) for {} ({})".
-                                  format(stim, append_type_to_name(mech), mech.variable))
+                raise RunError("Input stimululs ({}) for {} is incompatible with its variable ({})".
+                                  format(stim, mech.name, mech.variable))
 
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])

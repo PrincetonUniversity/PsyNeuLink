@@ -1,3 +1,5 @@
+from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -13,19 +15,19 @@ from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
-                                default_input_value = np.zeros((2,)))
+                                default_variable = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = np.zeros((5,)))
+                          default_variable = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0])
+                          default_variable = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value = [0,0,0])
+                        default_variable = [0,0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -78,7 +80,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_input_value=[0, 0],
+z = process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above

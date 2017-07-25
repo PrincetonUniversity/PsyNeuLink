@@ -179,7 +179,7 @@ def test_integrator_input_list_len_5():
 
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        default_input_value=[0, 0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0, 0],
         function=SimpleIntegrator(
         )
     )
@@ -201,7 +201,7 @@ def test_integrator_input_array_len_5():
 
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        default_input_value=[0, 0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0, 0],
         function=SimpleIntegrator(
         )
     )
@@ -229,7 +229,7 @@ def test_integrator_input_array_greater_than_default():
     with pytest.raises(MechanismError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            default_input_value=[0, 0, 0]
+            default_variable=[0, 0, 0]
         )
         # P = process(pathway=[I])
         I.execute([10.0, 5.0, 2.0, 1.0, 0.0])
@@ -245,7 +245,7 @@ def test_integrator_input_array_less_than_default():
     with pytest.raises(MechanismError) as error_text:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            default_input_value=[0, 0, 0, 0, 0]
+            default_variable=[0, 0, 0, 0, 0]
         )
         # P = process(pathway=[I])
         I.execute([10.0, 5.0, 2.0])
@@ -311,7 +311,7 @@ def test_integrator_type_diffusion_rate_float():
 def test_integrator_type_simple_rate_list():
     I = IntegratorMechanism(
         name='IntegratorMechanism',
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         function=SimpleIntegrator(
             rate=[5.0, 5.0, 5.0]
         )
@@ -326,7 +326,7 @@ def test_integrator_type_simple_rate_list():
 
 def test_integrator_type_constant_rate_list():
     I = IntegratorMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='IntegratorMechanism',
         function= ConstantIntegrator(
             rate=[5.0, 5.0, 5.0]
@@ -343,7 +343,7 @@ def test_integrator_type_constant_rate_list():
 
 def test_integrator_type_diffusion_rate_list():
     I = IntegratorMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='IntegratorMechanism',
         function = DriftDiffusionIntegrator(
             rate=[5.0, 5.0, 5.0]
@@ -360,7 +360,7 @@ def test_integrator_type_diffusion_rate_list():
 
 def test_integrator_type_adaptive_rate_list():
     I = IntegratorMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='IntegratorMechanism',
         function=AdaptiveIntegrator(
             rate=[0.5, 0.5, 0.5]
@@ -377,7 +377,7 @@ def test_integrator_type_adaptive_rate_list():
 
 def test_integrator_type_adaptive_rate_float_input_list():
     I = IntegratorMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='IntegratorMechanism',
         function=AdaptiveIntegrator(
             rate=0.5
@@ -659,7 +659,7 @@ def test_mechanisms_without_system_or_process():
 def test_mechanisms_without_system_or_process_no_input():
     I = IntegratorMechanism(
             name='IntegratorMechanism',
-            default_input_value= 10,
+            default_variable= 10,
             function=SimpleIntegrator(
             ),
             time_scale=TimeScale.TIME_STEP

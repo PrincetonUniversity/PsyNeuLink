@@ -5,7 +5,7 @@ from PsyNeuLink.Globals.Keywords import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -48,9 +48,9 @@ import numpy as np
 # # input_layer = TransferMechanism(size=5)
 # # hidden_layer = TransferMechanism(size=2, function=Logistic)
 # # output_layer = TransferMechanism(size=5, function=Logistic)
-# input_layer = TransferMechanism(default_input_value=[0,0,0,0,0])
-# hidden_layer = TransferMechanism(default_input_value=[0,0], function=Logistic)
-# output_layer = TransferMechanism(default_input_value=[0,0,0,0,0], function=Logistic)
+# input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
+# hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
+# output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
 # # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
 # my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 #
@@ -70,13 +70,13 @@ import numpy as np
 
 # print("SIMPLE NN EXAMPLE")
 # VERSION 1
-# colors_input_layer = TransferMechanism(default_input_value=[0,0],
+# colors_input_layer = TransferMechanism(default_variable=[0,0],
 #                                        function=Logistic,
 #                                        name='COLORS INPUT')
-# words_input_layer = TransferMechanism(default_input_value=[0,0],
+# words_input_layer = TransferMechanism(default_variable=[0,0],
 #                                        function=Logistic,
 #                                        name='WORDS INPUT')
-# output_layer = TransferMechanism(default_input_value=[0,0],
+# output_layer = TransferMechanism(default_variable=[0,0],
 #                                        function=Logistic,
 #                                        name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
@@ -88,9 +88,9 @@ import numpy as np
 
 # VERSION 2:
 # differencing_weights = np.array([[1], [-1]])
-# colors_input_layer = TransferMechanism(default_input_value=[0,0], function=Logistic, name='COLORS INPUT')
-# words_input_layer = TransferMechanism(default_input_value=[0,0], function=Logistic, name='WORDS INPUT')
-# output_layer = TransferMechanism(default_input_value=[0], name='OUTPUT')
+# colors_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(default_variable=[0], name='OUTPUT')
 # decision_mech = DDM(name='DECISION')
 # colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer],
 #                          target=[0],
@@ -361,7 +361,6 @@ import numpy as np
 # print = Linear(variable=[[1,1],[2,2]])
 #endregion
 
-
 #region TEST 2 Mechanisms and a Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -375,7 +374,6 @@ import numpy as np
 # my_mech_B.execute(context=EXECUTING)
 #
 #endregion
-
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -423,6 +421,49 @@ import numpy as np
 #                                                   MECHANISM: My_Mech_B,
 #                                                   MODULATION:ModulationParam.ADDITIVE}],
 #                    name='My Test System')
+
+#endregion
+
+#region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+    import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+    import LearningMechanism
+from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+
+my_Mech_A = TransferMechanism(size=10)
+my_Mech_B = TransferMechanism(size=10)
+my_Mech_C = TransferMechanism(size=10)
+my_mapping_AB = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+my_mapping_AC = MappingProjection(sender=my_Mech_A, receiver=my_Mech_C)
+
+my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
+                                    # FIX: DOESN'T WORK WITHOUT EXPLICITY SPECIFIYING input_states, BUT SHOULD
+                                    input_states=[{NAME:SAMPLE,
+                                                   VARIABLE:my_Mech_B.output_state.value,
+                                                   WEIGHT:-1
+                                                   },
+                                                  {NAME:TARGET,
+                                                   VARIABLE:my_Mech_B.output_state.value,
+                                                   # WEIGHT:1
+                                                   }]
+                                    )
+my_learning = LearningMechanism(variable=[my_Mech_A.output_state.value,
+                                          my_Mech_B.output_state.value,
+                                          my_comparator.output_state.value],
+                                error_source=my_comparator,
+                                function=BackPropagation(default_variable=[my_Mech_A.output_state.value,
+                                                                           my_Mech_B.output_state.value,
+                                                                           my_Mech_B.output_state.value],
+                                                         activation_derivative_fct=my_Mech_A.function_object.derivative,
+                                                         error_derivative_fct=my_Mech_A.function_object.derivative,
+                                                         error_matrix=my_mapping_AB.matrix),
+                                learning_signals=[my_mapping_AB, my_mapping_AC])
+
+TEST = True
 
 #endregion
 
@@ -559,9 +600,9 @@ import numpy as np
 # #
 # # TEST = True
 #
-# # my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+# # my_adaptive_integrator = IntegratorMechanism(default_variable=[0],
 # #                                                      function=Integrator(
-# #                                                                          # variable_default=[0,0],
+# #                                                                          # default_variable=[0,0],
 # #                                                                          weighting=SIMPLE,
 # #                                                                          rate=[1]
 # #                                                                          )
@@ -623,7 +664,7 @@ import numpy as np
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 #
-# y = TransferMechanism(default_input_value=[0],
+# y = TransferMechanism(default_variable=[0],
 #              params={INPUT_STATES:i},
 #              name='y')
 #
@@ -647,7 +688,7 @@ import numpy as np
 # # inputs=[[[2,2],[0]],[[2,2],[0]]]
 # # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
 #
-# a = TransferMechanism(name='a',default_input_value=[0,0])
+# a = TransferMechanism(name='a',default_variable=[0,0])
 # b = TransferMechanism(name='b')
 # c = TransferMechanism(name='c')
 #
@@ -778,7 +819,7 @@ import numpy as np
 # )
 #
 # # my_auto = RecurrentTransferMechanism(
-# #         default_input_value=[0,0,0],
+# #         default_variable=[0,0,0],
 # #         size=3,
 # #         function=Logistic,
 # #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
@@ -786,7 +827,7 @@ import numpy as np
 # #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
 # # )
 #
-# # my_auto = TransferMechanism(default_input_value=[0,0,0],
+# # my_auto = TransferMechanism(default_variable=[0,0,0],
 # #                             # function=Logistic
 # #                             )
 # #
@@ -921,12 +962,12 @@ import numpy as np
 # activity = [100,0]
 #
 #
-# eng = Stability(variable_default=activity,
+# eng = Stability(default_variable=activity,
 #              matrix=matrix,
 #              normalize=normalize
 #              )
 #
-# dist = Distance(variable_default=[activity,activity],
+# dist = Distance(default_variable=[activity,activity],
 #                 metric=CROSS_ENTROPY,
 #                 # normalize=normalize
 #                 )
@@ -943,16 +984,16 @@ import numpy as np
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 # from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
-# color_naming = TransferMechanism(default_input_value=[0,0],
+# color_naming = TransferMechanism(default_variable=[0,0],
 #                         function=Linear,
 #                         name="Color Naming"
 #                         )
 #
-# word_reading = TransferMechanism(default_input_value=[0,0],
+# word_reading = TransferMechanism(default_variable=[0,0],
 #                         function=Logistic,
 #                         name="Word Reading")
 #
-# verbal_response = TransferMechanism(default_input_value=[0,0],
+# verbal_response = TransferMechanism(default_variable=[0,0],
 #                            function=Logistic)
 #
 # color_pathway = MappingProjection(sender=color_naming,
@@ -965,7 +1006,7 @@ import numpy as np
 #                         matrix=IDENTITY_MATRIX
 #                        )
 #
-# Stroop_process = process(default_input_value=[[1,2.5]],
+# Stroop_process = process(default_variable=[[1,2.5]],
 #                          pathway=[color_naming, word_reading, verbal_response])
 #
 #

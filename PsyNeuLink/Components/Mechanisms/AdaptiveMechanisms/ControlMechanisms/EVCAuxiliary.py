@@ -6,12 +6,18 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
+
 # *************************************************  EVCAuxiliary ******************************************************
 
+import numpy as np
+import typecheck as tc
 
-from PsyNeuLink.Components.ShellClasses import *
 from PsyNeuLink.Components.Functions.Function import Function_Base
-
+from PsyNeuLink.Globals.Defaults import MPI_IMPLEMENTATION, defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CLOCK, COMBINE_OUTCOME_AND_COST_FUNCTION, CONTEXT, COST_FUNCTION, EVC_SIMULATION, EXECUTING, FUNCTION_OUTPUT_TYPE_CONVERSION, INITIALIZING, PARAMETER_STATE_PARAMS, PARAMS, SAVE_ALL_VALUES_AND_POLICIES, TIME_SCALE, VALUE_FUNCTION, VARIABLE, kwPreferenceSetName, kwProgressBarChar
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 PY_MULTIPROCESSING = False
 
@@ -71,7 +77,7 @@ class EVCAuxiliaryFunction(Function_Base):
         params = self._assign_args_to_param_dicts(params=params)
         self.aux_function = function
 
-        super().__init__(variable_default=variable,
+        super().__init__(default_variable=variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
@@ -126,7 +132,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     componentName = CONTROL_SIGNAL_GRID_SEARCH_FUNCTION
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
                  params=None,
                  function=None,
                  owner=None,

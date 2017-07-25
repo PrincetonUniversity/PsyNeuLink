@@ -48,6 +48,13 @@ from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Globals.Keywords import PATHWAY_PROJECTION
 
 class PathwayProjection_Base(Projection_Base):
+    """Subclass of `Projection` that projects from an `OutputState` to an `InputState`
+
+    .. note::
+       PathwayProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <PathwayProjection_Subtypes>`.
+
+    """
 
     componentCategory = PATHWAY_PROJECTION
 

@@ -2,6 +2,7 @@ import numpy as np
 import random
 import subprocess
 import sys
+import PsyNeuLink.Globals.Preferences.ComponentPreferenceSet
 
 
 # Insures that runs are deterministic for use in Jenkins testing

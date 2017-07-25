@@ -25,8 +25,8 @@ examine how they interact.  In PsyNeuLink, components are used to implement the 
 psychological processes, the interaction of which can then be simulated at the system level.
 
 PsyNeuLink is open source, and meant to be extended. Its goal is to provide an environment for implementing models
-of mind/brain function that are modular, customizable, extensible, disseminable, and clearly documented.  It does this
-in a manner that:
+of mind/brain function that are modular, customizable, extensible, disseminable, easily reproducible and clearly
+documented.  It does this in a manner that:
 
  - is *computationally general* -- that is, that can implement any desired mechanism or process;
  ..
@@ -61,9 +61,11 @@ constraints as possible on what it is possible to implement or ask the model to 
 What PsyNeuLink is **NOT**
 --------------------------
 
-While PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
-disparate existing models into a single, integrated system in which interactions among them can be examined, it is
-*not* currently as well suited to other kinds of efforts, such as:
+PsyNeuLink is well suited to the creation of simple to moderately complex models, and to the integration of
+disparate existing models into a single, integrated system in which interactions among them can be examined.
+While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
+kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
+currenty does not support, such as:
 
  - extensive model fitting
  - large scale simulations

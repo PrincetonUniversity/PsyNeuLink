@@ -29,20 +29,20 @@ class TestStroop:
         )
 
         words = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             size=2,
             function=Linear,
             name="Words",
         )
 
         response = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Logistic,
             name="Response",
         )
 
         color_naming_process = process(
-            default_input_value=[1, 2.5],
+            default_variable=[1, 2.5],
             pathway=[colors, FULL_CONNECTIVITY_MATRIX, response],
             learning=LEARNING_PROJECTION,
             target=[0, 1],
@@ -51,7 +51,7 @@ class TestStroop:
         )
 
         word_reading_process = process(
-            default_input_value=[.5, 3],
+            default_variable=[.5, 3],
             pathway=[words, FULL_CONNECTIVITY_MATRIX, response],
             name='Word Reading',
             learning=LEARNING_PROJECTION,
@@ -132,27 +132,27 @@ class TestStroop:
         }
 
         colors = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Linear,
             name="Colors",
         )
         words = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Linear,
             name="Words",
         )
         hidden = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Logistic,
             name="Hidden",
         )
         response = TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Logistic(),
             name="Response",
         )
         TransferMechanism(
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Logistic,
             name="Output",
         )
@@ -175,7 +175,7 @@ class TestStroop:
         )
 
         color_naming_process = process(
-            default_input_value=[1, 2.5],
+            default_variable=[1, 2.5],
             pathway=[colors, CH_Weights, hidden, HO_Weights, response],
             learning=LEARNING,
             target=[2, 2],
@@ -184,7 +184,7 @@ class TestStroop:
         )
 
         word_reading_process = process(
-            default_input_value=[.5, 3],
+            default_variable=[.5, 3],
             pathway=[words, WH_Weights, hidden],
             name='Word Reading',
             learning=LEARNING,

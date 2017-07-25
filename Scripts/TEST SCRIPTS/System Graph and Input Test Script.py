@@ -49,7 +49,7 @@ print ('************************************************************************
 
 # A) BRANCH -----------------------------------------------------------------------------
 
-a = TransferMechanism(name='test a',default_input_value=[0,0])
+a = TransferMechanism(name='test a',default_variable=[0,0])
 b = TransferMechanism(name='b')
 c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
@@ -79,8 +79,8 @@ print ('************************************************************************
 
 # B) BYPASS -----------------------------------------------------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0])
-b = TransferMechanism(name='b',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_variable=[0,0])
+b = TransferMechanism(name='b',default_variable=[0,0])
 c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
 
@@ -108,7 +108,7 @@ print ('************************************************************************
 
 # C) CHAIN -----------------------------------------------------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0,0])
+a = TransferMechanism(name='a',default_variable=[0,0,0])
 b = TransferMechanism(name='b')
 c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
@@ -140,10 +140,10 @@ print ('************************************************************************
 
 # D) CONVERGENT -----------------------------------------------------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_variable=[0,0])
 b = TransferMechanism(name='b')
 c = TransferMechanism(name='c')
-c = TransferMechanism(name='c',default_input_value=[0])
+c = TransferMechanism(name='c',default_variable=[0])
 d = TransferMechanism(name='d')
 e = TransferMechanism(name='e')
 
@@ -178,8 +178,8 @@ print ('************************************************************************
 
 # E) CYCLIC INCLUDING ORIGIN IN CYCLE (ONE PROCESS) ------------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0])
-b = TransferMechanism(name='b',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_variable=[0,0])
+b = TransferMechanism(name='b',default_variable=[0,0])
 
 p1 = process(pathway=[a, b, a], name='p1')
 
@@ -203,9 +203,9 @@ print ('************************************************************************
 
 # F) CYCLIC INCLUDING ORIGIN IN CYCLE (TWO PROCESSES) -----------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0])
-b = TransferMechanism(name='b',default_input_value=[0,0])
-c = TransferMechanism(name='c',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_variable=[0,0])
+b = TransferMechanism(name='b',default_variable=[0,0])
+c = TransferMechanism(name='c',default_variable=[0,0])
 
 p1 = process(pathway=[a, b, a], name='p1')
 p2 = process(pathway=[a, c, a], name='p2')
@@ -229,11 +229,11 @@ print ('C: ',c.systems[s])
 
 # G) CYCLIC WITH TWO PROCESSES AND AN EXTENDED LOOP ------------------------------------
 
-a = TransferMechanism(name='a',default_input_value=[0,0])
+a = TransferMechanism(name='a',default_variable=[0,0])
 b = TransferMechanism(name='b')
 c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
-e = TransferMechanism(name='e',default_input_value=[0])
+e = TransferMechanism(name='e',default_variable=[0])
 f = TransferMechanism(name='f')
 
 p1 = process(pathway=[a, b, c, d], name='p1')
@@ -274,11 +274,11 @@ print ('F: ',f.systems[s])
 
 # # H) CYCLIC WITH MECHANISM THAT IS BOTH INTIALIZE AND TERMINAL ------------------------------------
 #
-# a = TransferMechanism(name='a',default_input_value=[0,0])
+# a = TransferMechanism(name='a',default_variable=[0,0])
 # b = TransferMechanism(name='b')
 # c = TransferMechanism(name='c')
 # d = TransferMechanism(name='d')
-# e = TransferMechanism(name='e',default_input_value=[0])
+# e = TransferMechanism(name='e',default_variable=[0])
 #
 # p1 = process(pathway=[a, b, c, b], name='p1')
 # p2 = process(pathway=[d, c], name='p2')

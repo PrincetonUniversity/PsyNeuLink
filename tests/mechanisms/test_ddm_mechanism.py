@@ -1,13 +1,11 @@
 import pytest
 import typecheck
-import numpy as np
 
 from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError, DIFFUSION
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, NormalDist
-from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError, DIFFUSION
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
+
 
 # ======================================= FUNCTION TESTS ============================================
 
@@ -249,7 +247,7 @@ def test_DDM_input_list_len_2():
         stim = [10, 10]
         T = DDM(
             name='DDM',
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,
@@ -364,7 +362,7 @@ def test_DDM_input_rate_negative():
     stim = [10]
     T = DDM(
         name='DDM',
-        default_input_value=[0],
+        default_variable=[0],
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -394,7 +392,7 @@ def test_DDM_rate_fn():
         stim = [10]
         T = DDM(
             name='DDM',
-            default_input_value=[0],
+            default_variable=[0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,

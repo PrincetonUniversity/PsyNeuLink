@@ -30,14 +30,14 @@ Output = TransferMechanism(name='Output',
 
 # Processes:
 ColorNamingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output],
         target=[0],
         learning=LEARNING,
         name = 'Color Naming Process')
 
 WordReadingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output],
         learning=LEARNING,
         target=[0],

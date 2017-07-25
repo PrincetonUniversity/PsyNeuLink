@@ -23,7 +23,7 @@ def test_transfer_mech_inputs_list_of_ints():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([10, 10, 10, 10]).tolist()
@@ -40,7 +40,7 @@ def test_transfer_mech_inputs_list_of_floats():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
@@ -60,7 +60,7 @@ def test_transfer_mech_inputs_list_of_fns():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         time_scale=TimeScale.TIME_STEP
     )
     val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
@@ -74,7 +74,7 @@ def test_transfer_mech_variable_3D_array():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[[[0, 0, 0, 0]],[[1,1,1,1]]],
+        default_variable=[[[0, 0, 0, 0]],[[1,1,1,1]]],
         time_scale=TimeScale.TIME_STEP
     )
     assert len(T.variable) == 1 and len(T.variable[0]) == 4 and (T.variable[0] == 0).all()
@@ -103,7 +103,7 @@ def test_transfer_mech_inputs_list_of_strings():
     with pytest.raises(UtilitiesError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             time_scale=TimeScale.TIME_STEP
         )
         T.execute(["one", "two", "three", "four"]).tolist()
@@ -118,7 +118,7 @@ def test_transfer_mech_inputs_mismatched_with_default_longer():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             time_scale=TimeScale.TIME_STEP
         )
         T.execute([1, 2, 3, 4, 5]).tolist()
@@ -134,7 +134,7 @@ def test_transfer_mech_inputs_mismatched_with_default_shorter():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0, 0, 0],
             time_scale=TimeScale.TIME_STEP
         )
         T.execute([1, 2, 3, 4, 5]).tolist()
@@ -154,7 +154,7 @@ def test_transfer_mech_array_var_float_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=5.0,
         time_constant=1.0,
@@ -173,7 +173,7 @@ def test_transfer_mech_array_var_normal_len_1_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=NormalDist().function,
         time_constant=1.0,
@@ -192,7 +192,7 @@ def test_transfer_mech_array_var_normal_array_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function],
         time_constant=1.0,
@@ -211,7 +211,7 @@ def test_transfer_mech_array_var_normal_array_noise2():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=[5.0, 5.0, 5.0, 5.0],
         time_constant=1.0,
@@ -229,7 +229,7 @@ def test_transfer_mech_normal_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=NormalDist().function,
         time_constant=1.0,
@@ -247,7 +247,7 @@ def test_transfer_mech_exponential_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=ExponentialDist().function,
         time_constant=1.0,
@@ -265,7 +265,7 @@ def test_transfer_mech_Uniform_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=UniformDist().function,
         time_constant=1.0,
@@ -283,7 +283,7 @@ def test_transfer_mech_Gamma_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=GammaDist().function,
         time_constant=1.0,
@@ -301,7 +301,7 @@ def test_transfer_mech_Wald_noise():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         noise=WaldDist().function,
         time_constant=1.0,
@@ -324,7 +324,7 @@ def test_transfer_mech_integer_noise():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Linear(),
             noise=5,
             time_constant=0.1,
@@ -343,7 +343,7 @@ def test_transfer_mech_mismatched_shape_noise():
     with pytest.raises(MechanismError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=Linear(),
             noise=[5.0, 5.0, 5.0],
             time_constant=0.1,
@@ -363,7 +363,7 @@ def test_transfer_mech_mismatched_shape_noise_2():
 
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0],
+            default_variable=[0, 0, 0],
             function=Linear(),
             noise=[5.0, 5.0],
             time_constant=0.1,
@@ -387,7 +387,7 @@ def test_transfer_mech_logistic_fun():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Logistic(),
         time_constant=1.0,
         time_scale=TimeScale.TIME_STEP
@@ -404,7 +404,7 @@ def test_transfer_mech_exponential_fun():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Exponential(),
         time_constant=1.0,
         time_scale=TimeScale.TIME_STEP
@@ -421,7 +421,7 @@ def test_transfer_mech_softmax_fun():
 
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=SoftMax(),
         time_constant=1.0,
         time_scale=TimeScale.TIME_STEP
@@ -438,7 +438,7 @@ def test_transfer_mech_softmax_fun():
 
 #     T = TransferMechanism(
 #         name='T',
-#         default_input_value=[0, 0, 0, 0],
+#         default_variable=[0, 0, 0, 0],
 #         function=LinearMatrix(),
 #         time_constant=1.0,
 #         time_scale=TimeScale.TIME_STEP
@@ -459,7 +459,7 @@ def test_transfer_mech_normal_fun():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=NormalDist(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -476,7 +476,7 @@ def test_transfer_mech_reinforcement_fun():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Reinforcement(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -493,7 +493,7 @@ def test_transfer_mech_integrator_fun():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=ConstantIntegrator(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -510,7 +510,7 @@ def test_transfer_mech_reduce_fun():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Reduce(),
             time_constant=1.0,
             time_scale=TimeScale.TIME_STEP
@@ -530,7 +530,7 @@ def test_transfer_mech_reduce_fun():
 def test_transfer_mech_time_constant_0_8():
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         time_constant=0.8,
         time_scale=TimeScale.TIME_STEP
@@ -546,7 +546,7 @@ def test_transfer_mech_time_constant_0_8():
 def test_transfer_mech_time_constant_1_0():
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         time_constant=1.0,
         time_scale=TimeScale.TIME_STEP
@@ -562,7 +562,7 @@ def test_transfer_mech_time_constant_1_0():
 def test_transfer_mech_time_constant_0_0():
     T = TransferMechanism(
         name='T',
-        default_input_value=[0, 0, 0, 0],
+        default_variable=[0, 0, 0, 0],
         function=Linear(),
         time_constant=0.0,
         time_scale=TimeScale.TIME_STEP
@@ -587,7 +587,7 @@ def test_transfer_mech_time_constant_0_8_list():
     with pytest.raises(ComponentError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=[0.8, 0.8, 0.8, 0.8],
             time_scale=TimeScale.TIME_STEP
@@ -607,7 +607,7 @@ def test_transfer_mech_time_constant_2():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=2,
             time_scale=TimeScale.TIME_STEP
@@ -627,7 +627,7 @@ def test_transfer_mech_time_constant_1():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=1,
             time_scale=TimeScale.TIME_STEP
@@ -647,7 +647,7 @@ def test_transfer_mech_time_constant_0():
     with pytest.raises(TransferError) as error_text:
         T = TransferMechanism(
             name='T',
-            default_input_value=[0, 0, 0, 0],
+            default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0,
             time_scale=TimeScale.TIME_STEP
@@ -806,7 +806,7 @@ def test_transfer_mech_size_var_both_lists():
     T = TransferMechanism(
         name='T',
         size=[2., 3.],
-        default_input_value=[[1, 2], [3, 4, 5]]
+        default_variable=[[1, 2], [3, 4, 5]]
     )
     assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all()
 
@@ -819,7 +819,7 @@ def test_transfer_mech_size_scalar_var_2d():
     T = TransferMechanism(
         name='T',
         size=2,
-        default_input_value=[[1, 2], [3, 4]]
+        default_variable=[[1, 2], [3, 4]]
     )
     assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
     assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
@@ -832,7 +832,7 @@ def test_transfer_mech_size_scalar_var_2d():
 def test_transfer_mech_var_2d_array():
     T = TransferMechanism(
         name='T',
-        default_input_value=[[1, 2], [3, 4]]
+        default_variable=[[1, 2], [3, 4]]
     )
     assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
 
@@ -844,7 +844,7 @@ def test_transfer_mech_var_2d_array():
 def test_transfer_mech_var_1D_size_wrong():
     T = TransferMechanism(
         name='T',
-        default_input_value=[1, 2, 3, 4],
+        default_variable=[1, 2, 3, 4],
         size=2
     )
     assert len(T.variable) == 1 and (T.variable[0] == [1, 2, 3, 4]).all()
@@ -859,7 +859,7 @@ def test_transfer_mech_var_1D_size_wrong():
 def test_transfer_mech_var_1D_size_wrong_2():
     T = TransferMechanism(
         name='T',
-        default_input_value=[1, 2, 3, 4],
+        default_variable=[1, 2, 3, 4],
         size=[2, 3, 4]
     )
     assert len(T.variable) == 1 and (T.variable[0] == [1, 2, 3, 4]).all()
@@ -875,7 +875,7 @@ def test_transfer_mech_size_var_incompatible1():
     T = TransferMechanism(
         name='T',
         size=2,
-        default_input_value=[[1, 2], [3, 4, 5]]
+        default_variable=[[1, 2], [3, 4, 5]]
     )
     assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
 
@@ -888,7 +888,7 @@ def test_transfer_mech_size_var_incompatible1():
     T = TransferMechanism(
         name='T',
         size=[2, 2],
-        default_input_value=[[1, 2], [3, 4, 5]]
+        default_variable=[[1, 2], [3, 4, 5]]
     )
     assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
 

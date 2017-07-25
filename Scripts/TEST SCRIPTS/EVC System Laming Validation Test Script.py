@@ -7,6 +7,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 import random
@@ -78,13 +79,13 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
 
 # Processes:
 TaskExecutionProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Input, IDENTITY_MATRIX, Decision],
     prefs = process_prefs,
     name = 'TaskExecutionProcess')
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')

@@ -12,12 +12,12 @@
 Overview
 --------
 
-A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and a
-`GatingProjection`, to modify the `value <State.value> of the InputState(s) and/or OutputState(s) of one or more
-`Mechanisms <Mechanism>`. A GatingSignal receives a value specified by the the `function <GatingMechanism.function>`
-of the GatingMechanism to which it belongs, and assigns that to one or more `GatingProjections <GatingProjection>`,
-each of which projects to one or more InputState(s) and/or OutputState(s) to be gated, and is used to modulate the
-`value <State.value>` of those states.
+A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and one or more
+`GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>` \(s) of the InputState(s) and/or
+OutputState(s) to which they project. A GatingSignal receives the value from the
+`gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs, and assigns that as
+the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s) <GatingProjection>`, each
+of which projects to an InputState or OutputState and is used to modulate the `value <State_Base.value>` of that State.
 
 
 .. _GatingSignal_Creation:
@@ -25,38 +25,53 @@ each of which projects to one or more InputState(s) and/or OutputState(s) to be 
 Creating a GatingSignal
 -----------------------
 
-A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` are
-`specified for gating <GatingMechanism_Gating_Signals>`.  GatingSignals can also be specified in the 
-**gating_signals** argument of the constructor for a `GatingMechanism`, using any of the formats described 
-`below <GatingSignal_Specification>`.  Although a GatingSignal can be created directly using its constructor 
-(or any of the other ways for `creating an OutputState <OutputStates_Creation>`),  this is neither necessary
-nor advisable, as a GatingSignal has dedicated components and requirements for configuration that must be met 
-for it to function properly.
+A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` is specified for
+gating.  This can be done either in the **gating_signals** argument of the constructor for a
+`GatingMechanism <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to
+the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
+other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable,
+as a GatingSignal has dedicated components and requirements for configuration that must be met for it to function
+properly.
 
 .. _GatingSignal_Specification:
 
 Specifying GatingSignals
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a GatingSignal is specified in context (e.g., the **gating_signals** argument of the constructor for a
-`GatingMechanism`, the specification can take any of the following forms:
+When a GatingSignal is specified in the **gating_signals** argument of the constructor for a `GatingMechanism`, the
+InputState(s) and/or OutputState(s) it gates must be specified. This can take any of the following forms:
 
-  * an *InputState* or *OutputState* of a Mechanism;
-  * a *Mechanism*, in which case its `primary inputState <Mechanism_InputStates>` will be used;
-  * a *tuple*, with the *name* of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
+  * an **InputState** or **OutputState** of a Mechanism;
+  ..
+  * a **Mechanism**, in which case its `primary `InputState <InputState_Primary>` or `OutputState <OutputState_Primary>`
+    is used;
+  ..
+  * a **tuple**, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
     but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
-  * a *specification dictionary*, that can take either of the following two forms:
+  ..
+  * a **specification dictionary**, that can take either of the following two forms:
+
     * for a single state, the dictionary must have the following two entries:
-        * *NAME*: str - a string that is the name of the state to be gated;
-        * *MECHANISM*: Mechanism - the Mechanism to which the state belongs;
-    In this case, the GatingSignal will named by appending "_GatingSignal" to the name of the state.
+
+        * *NAME*: str
+            the string must be the name of the State to be gated; the GatingSignal will named by appending
+            "_GatingSignal" to the name of the State.
+
+        * *MECHANISM*: Mechanism
+            the Mechanism must be the one to the which the State to be gated belongs.
+
     * for multiple states, the dictionary must have the following entry:
-        * <str>:list - where the string used for the key specifies the name to be used for the GatingSignal,
-          and the value is a list, each item of which is a `specification of a state <LINK>` to be gated by 
-          the GatingSignal (and that will receive a `GatingProjection` from it).
-    In either case, the dictionary can also contain a *MODULATION* entry, the value of which must be a `Modulation` 
-    value that determines how that particular GatingSignal will modulate the value of all of the states that it gates.
+
+        * <str>:list
+            the string used as the key specifies the name to be used for the GatingSignal,
+            and each item of the list must be a `specification of a State <State_Creation>` to be
+            gated by the GatingSignal (and that will receive a `GatingProjection` from it).
+
+    The dictionary can also contain entries for any other GatingSignal attributes to be specified
+    (e.g., a *MODULATION* entry, the value of which determines how the GatingSignal modulates the
+    `value <State_Base.value>` of the State(s) that it gates); see `below <GatingSignal_Structure>`
+    for a description of GatingSignal attributes.
 
 .. _GatingSignal_Structure:
 
@@ -66,114 +81,160 @@ Structure
 A GatingSignal is owned by a `GatingMechanism`, and associated with one or more `GatingProjections <GatingProjection>`, 
 each of which projects to the InputState or OutputState that it gates.  
 
+.. _GatingSignal_Projections:
+
+Projections
+~~~~~~~~~~~
+
+When a GatingSignal is created, it can be assigned one or more `GatingProjections <GatingProjection>`, using either
+the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
+with the key *PROJECTIONS*.  These will be assigned to its `efferents  <GatingSignal.efferents>` attribute.  See
+`State Projections <State_Projections>` for additional details concerning the specification of Projections when
+creating a State.
+
+.. note::
+   Although a GatingSignal can be assigned more than one `GatingProjection`, all of those Projections will convey
+   the same `gating_signal <LearningMechanism>` (received from the GatingMechanism to which the GatingSignal
+   belongs), and use the same form of `modulation <GatingSignal_Modulation>`.  This can be useful for implementing
+   broadly projecting modulatory effects.
+
 .. _GatingSignal_Modulation:
 
 Modulation
 ~~~~~~~~~~
 
-Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingProjection 
-is used by the state to which it projects to modify its value (see `ModulatorySignal_Modulation`
-for an explanation of how this attribute is specified and used to modulate the value of a state).  The default value 
-is set to the value of the `modulation <GatingMechanism.modulation>` attribute of the GatingMechanism to which the 
-GatingSignal belongs;  this is the same for all of the GatingSignals belonging to that GatingMechanism.  However, the
-`modulation <GatingSignal.modulation>` can be specified individually for a GatingSignal using a specification 
-dictionary where the GatingSignal is specified, as described `above <GatingSignal_Specification>`. The 
-`modulation <GatingSignal.modulation>` value of a GatingSignal is used by all of the 
+Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingSignal's
+`value <GatingSignal.value>` (i.e., its `gating_signal <GatingSignal.gating_signal>`) is used by the States to which it
+projects to modify their `value <State_Base.value>` \s (see `ModulatorySignal_Modulation` for an explanation of how the
+`modulation <GatingSignal.modulation>` attribute is specified and used to modulate the `value <State_Base.value>` of a
+State). The `modulation <GatingSignal.modulation>` attribute can be specified in the **modulation** argument of the
+constructor for a GatingSignal, or in a specification dictionary as described `above <GatingSignal_Specification>`.
+The value must be a value of `ModulationParam`;  if it is not specified, its default is the value of the `modulation
+<GatingMechanism.modulation>` attribute of the GatingMechanism to which the GatingSignal belongs (which is the same
+for all of the GatingSignals belonging to that GatingMechanism).  The value of the
+`modulation <GatingSignal.modulation>` attribute of a GatingSignal is used by all of the
 `GatingProjections <GatingProjection>` that project from that GatingSignal.
 
-.. _ControlSignal_Execution:
+
+.. _GatingSignal_Execution:
 
 Execution
 ---------
 
 A GatingSignal cannot be executed directly.  It is executed whenever the `GatingMechanism` to which it belongs is
-executed.  When this occurs, the GatingMechanism provides the GatingSignal with a value that is used by its 
-`GatingProjection(s) <GatingProjection>` to modulate the :keyword:`value` of the states to which they project. Those 
-states use the value of the GatingProjection they receive to modify a parameter of their function.  How the modulation
-is executed is determined by the GatingSignal's `modulation` attribute
-(see `Modulation Operation <ModulatoryProjections_Modulation_Operation>`).
+executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
+`gating_policy <GatingMechanism.gating_signal>`, that is used by its `function <GatingSignal.function>` to generate its
+the value of its `gating_signal <GatingSignal.gating_signal>`.  That, in turn, is used by its `GatingProjection(s)
+<GatingProjection>` to modulate the `value <State_Base.value>` of the States to which they project. How the modulation
+is executed is determined by the GatingSignal's `modulation <GatingSignal.modulation>` attribute
+(see `above <GatingSigna_Modulation>`, and `ModulatorySignal_Modulation` for a more detailed explanation of how
+modulation operates).
 
 .. note::
-   The change in the value of InputStates and OutputStates in response to the execution of a GatingMechanism are not 
-   applied until the mechanism(s) to which those states belong are next executed; see :ref:`Lazy Evaluation <LINK>` 
-   for an explanation of "lazy" updating).
+   The change in the `value <State_Base.value>` of InputStates and OutputStates in response to the execution of a
+   GatingSignal are not applied until the Mechanism(s) to which those states belong are next executed;
+   see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
 .. _GatingSignal_Examples:
 
 Examples
 ~~~~~~~~
 
-*Gate an InputState and OutputState*.  The following example configures a `GatingMechanism` to gate the
-`primary InputState <Mechanism_InputState>` of one mechanism, and the `primary OutputState <OutputState_Primary>`
+**Gate an InputState and OutputState**.  In the following example, `GatingMechanism` is configured to gate the
+`primary InputState <InputState_Primary>` of one Mechanism, and the `primary OutputState <OutputState_Primary>`
 of another::
 
     my_mechanism_A = TransferMechanism()
     my_mechanism_B = TransferMechanism()
     my_gating_mechanism = GatingMechanism(gating_signals=[my_mechanism_A, my_mechanism_B.output_state)
 
-Note that, in the **gating_signals** arg, the first item is reference to the ``my_mechanism_A`` rather than one of its
-states.  This is all that is necessary, the default for a `GatingSignal` is to modulate the
-`primary InputState <Mechanism_InputStates>` of a Mechanism.  The second item explicitly specifies the State to be
-gated (since it is not a default).  This will generate two GatingSignals, each of which will multiplicatively modulate
-the value of the InputState to which it projects.  This is because, by default, the
-`modulation <GatingSignal.modulation>` attribute of a GatingSignal is the *MULTIPLICATIVE_PARAM* for the
-`function <State.function>` to which it projects.  For an InputState, this is (also by default) the
-`slope <Linear.slope>` parameter of a `Linear` function.  Thus, the value of the GatingSignal is assigned to the
-slope, which multiplies the input to the State to determine its `value <State.value>`.
+Note that, in the **gating_signals** argument, the first item references a Mechanism (``my_mechanism_A``) rather than
+one of its states -- this is all that is necessary, since the default for a `GatingSignal` is to modulate the
+`primary InputState <InputState_Primary>` of a Mechanism.  The second item explicitly specifies the State to be gated,
+since it is an OutputState.  This will generate two GatingSignals, each of which will multiplicatively modulate the
+value of the State to which it projects.  This is because, by default, the `modulation <GatingSignal.modulation>`
+attribute of a GatingSignal is the *MULTIPLICATIVE_PARAM* for the `function <State_Base.function>` of the State to which
+it projects.  For an InputState, the default `function <InputState.function>` is `Linear` and its *MULTIPLICATIVE_PARAM*
+is its `slope <Linear.slope>` parameter.  Thus, the value of the GatingSignal is assigned to the slope, which multiplies
+the State`s `variable <State_Base.variable>` (i.e., its input(s)) to determine its `value <State_Base.value>`.
 
-*Modulate the InputStates of several Mechanisms*.  The following example creates a `GatingMechanism` that modulates the
-`InputState` of all the layers in a 3-layered feedforward neural network.  Ordinarily, gating modulates the
+**Modulate the InputStates of several Mechanisms**.  In next example, a `GatingMechanism` is created that modulates
+the `InputState` of all the layers in a 3-layered feedforward neural network.  Ordinarily, gating modulates the
 *MULTIPLICATIVE_PARAM* of an InputState's `function <InputState.function>`.  In the example, this is changed so that
 it adds the `value <GatingSignal.value>` of the `GatingSignal` to the `value <InputState.value>` of each InputState::
 
-    My_Input_Layer = TransferMechanism(size=3)
+    my_input_layer = TransferMechanism(size=3)
+    my_hidden_layer = TransferMechanism(size=5)
+    my_output_layer = TransferMechanism(size=2)
+    my_gating_mechanism = GatingMechanism(gating_signals=[
+                                            {'GATE_ALL': [my_input_layer,
+                                                          my_hidden_layer,
+                                                          my_output_layer]},
+                                             modulation=ModulationParam.ADDITIVE)
 
-    My_Hidden_Layer = TransferMechanism(size=5)
+Note that, again, the **gating_signals** are listed as Mechanisms, since in this case it is their primary InputStates
+that are to be gated. Since they are all listed in a single entry of a
+`specification dictionary <_GatingSignal_Specification>`, they will all be gated by a single GatingSignal named
+``GATE_ALL``, that will send a `GatingProjection` to the InputState of each of the Mechanisms listed (the next example
+shows how different InputStates can be differentially gated by a `GatingMechanism`). Finally, note that the
+`ModulationParam` specified for the `GatingMechanism` (and therefore the default for its GatingSignals, pertains to
+the `function <InputState.function>` of each `InputState`. By default that is a `Linear` function, the *ADDITIVE_PARAM*
+of which is its `intercept <Linear.intercept>` parameter. Therefore, in the example above, each time the InputStates
+are updated, the value of the GatingSignal will be assigned as the `intercept` of each InputState's
+`function <InputState.function>`, thus adding that amount to the input to the State before determining its
+`value <InputStat.value>`.
 
-    My_Output_Layer = TransferMechanism(size=2)
+**Gate InputStates differentially**.  In the example above, the InputStates for all of the Mechanisms were gated
+using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each
+Mechanism::
 
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[
-                                            {'GATE_ALL': [My_Input_Layer, My_Hidden_Layer, My_Output_Layer]},
-                                          modulation=ModulationParam.ADDITIVE)
+    my_gating_mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
+                                                           MODULATION: ModulationParam.ADDITIVE,
+                                                           PROJECTIONS: my_input_layer},
+                                                          {NAME: 'GATING_SIGNAL_B',
+                                                           PROJECTIONS: [my_hidden_layer,
+                                                                         my_output_layer]}])
 
-Note that, again, the ``gating_signals`` are listed as mechanisms, since their primary InputStates are to be gated.
-Since they are all listed in a single entry of a `state specification dictionary <LINK>`, they will all be gated by a
-single GatingSignal named *GATE_ALL*, that will send a `GatingProjections <GatingProjection>` to the InputState of
-each of the Mechanisms listed (the next example below shows how InputStates can be differentially gated by a
-`GatingMechanism`). Finally, note that the `ModulationParam` specified for the `GatingMechanism` (and therefore the
-default for its `GatingSignals <GatingSignal>) pertains to the `function <InputState.function>` of each `InputState`.
-By default that is a `Linear` function, the *ADDITIVE_PARAM* of which is its `intercept <Linear.intercept>` parameter.
-Therefore, in the example above, each time the InputStates are updated, the value of the GatingSignal will be assigned
-as the `intercept` of each InputState's `function <InputState.function>`, thus adding that amount to the input of the
-State in determining its `value <InputStat.value>`.
+Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
+contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
+GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the 
+default is to gate the `primary InputState <InputState_Primary>` of a Mechanism, so those are what are referenced. The 
+first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>` 
+attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is 
+`ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``my_input_layer`` will be additively modulated by
+``GATING_SIGNAL_A``, while the InputStates of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicatively 
+modulated by ``GATING_SIGNAL_B``.
 
-*Gate InputStates differentially*.  In the example above, all of the InputStates were gated using a single
-GatingSignal.::
+**Creating and assigning stand-alone GatingSignals**.  GatingSignals can also be created on their own, and then later
+assigned to a GatingMechanism.  In the example below, the same GatingSignals specified in the previous example are
+created directly and then assigned to ``my_gating_mechanism``::
 
-    My_Gating_Mechanism = GatingMechanism(gating_signals=[{NAME: 'GATING_SIGNAL_A',
-                                                           GATE: My_Input_Layer,
-                                                           MODULATION: ModulationParam.ADDITIVE},
-                                                           {NAME: 'GATING_SIGNAL_B',
-                                                           GATE: [My_Hidden_Layer, My_Output_Layer]}])
+    my_gating_signal_A = GatingSignal(name='GATING_SIGNAL_A',
+                                      modulation=ModulationParams.ADDITIVE,
+                                      projections=my_input_layer)
+    my_gating_signal_B = GatingSignal(name='GATING_SIGNAL_B',
+                                      projections=my_hidden_layer,
+                                                  my_output_layer)
+    my_gating_mechanism = GatingMechanism(gating_signals=[my_gating_signal_A,
+                                                          my_gating_signal_B])
 
-Here, two GatingSignals are specified as `state specification dictionaries <LINK>`, each of which contains
-an entry for the name of the GatingSignal, and a *GATE* entry that specifies the States to be gated
-(in this case, again exploiting the fact that the default is to modulate the primary InputState of a Mechanism).
-The first dict also contains a *MODULATION* entry that specifies the value of the
-`modulation <GatingSignal.modulation>` attribute for the GatingSignal.  The second one does not, so the default will
-be used (which, for a GatingSignal, is `ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``My_Input_Layer``
-will be additively modulated, while the InputState of ``My_Hidden_Layer`` will be multiplicatively modulated by their
-GatingSignals, respectively.
 
 Class Reference
 ---------------
 
 """
 
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal, modulatory_signal_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+from PsyNeuLink.Components.States.State import State_Base
+from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 
 class GatingSignalError(Exception):
@@ -183,7 +244,7 @@ class GatingSignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
-gating_signal_keywords = {GATED_STATE}
+gating_signal_keywords = {GATE}
 gating_signal_keywords.update(modulatory_signal_keywords)
 
 
@@ -192,12 +253,14 @@ class GatingSignal(ModulatorySignal):
     GatingSignal(                                   \
         owner,                                      \
         function=LinearCombination(operation=SUM),  \
-        modulation=ModulationParam.MULTIPLICATIVE   \
+        modulation=ModulationParam.MULTIPLICATIVE,  \
+        projections=None,                           \
         params=None,                                \
         name=None,                                  \
         prefs=None)
 
-    A subclass of OutputState that represents the value of a GatingSignal provided to a `GatingProjection`.
+    A subclass of `ModulatorySignal` used by a `GatingMechanism` to modulate the value(s)
+    of one more `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>`.
 
     COMMENT:
 
@@ -213,7 +276,6 @@ class GatingSignal(ModulatorySignal):
             + paramClassDefaults (dict)
                 + FUNCTION (LinearCombination)
                 + FUNCTION_PARAMS (Modulation.MULTIPLY)
-            + paramNames (dict)
 
         Class methods:
             function (executes function specified in params[FUNCTION];  default: Linear
@@ -232,15 +294,21 @@ class GatingSignal(ModulatorySignal):
         specifies the `GatingMechanism` to which to assign the GatingSignal.
 
     function : Function or method : default Linear
-        specifies the function used to determine the value of the GatingSignal from the value of its 
+        specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
-        specifies the way in which the `value <GatingSignal.value>` the GatingSignal is used to modify the `value
-        <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
+        specifies the way in which the `value <GatingSignal.value>` the GatingSignal is used to modify the
+        `value <State_Base.value>` of the State(s) to which the GatingSignal's
+        `GatingProjection(s) <GatingProjection>` project.
+
+    projections : list of Projection specifications
+        specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
+        listed in its `efferents <GatingSignal.efferents>` attribute (see `GatingSignal_Projections` for additional
+        details).
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
@@ -266,14 +334,20 @@ class GatingSignal(ModulatorySignal):
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         provides the GatingSignal's `value <GatingMechanism.value>`; the default is an identity function that
-        passes the input to the GatingMechanism as value for the GatingSignal. 
+        passes the input to the GatingMechanism as value for the GatingSignal.
 
     value : number, list or np.ndarray
-        result of `function <GatingSignal.function>`.
+        result of the GatingSignal's `function <GatingSignal.function>`
+        (same as its `gating_signal <GatingSignal.gating_signal>`).
     
+    gating_signal : number, list or np.ndarray
+        result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
+
+
     modulation : ModulationParam
-        determines the way in the which `value <GatingSignal.value>` the GatingSignal is used to modify the `value
-        <State.value>` of the State(s) to which the GatingSignal's `GatingProjection(s) <GatingProjection>` project.
+        determines the way in the which `value <GatingSignal.value>` of the GatingSignal is used to modify the
+        `value <State_Base.value>` of the State(s) to which the GatingSignal's
+        `GatingProjection(s) <GatingProjection>` project.
 
     efferents : [List[GatingProjection]]
         a list of the `GatingProjections <GatingProjection>` assigned to (i.e., that project from) the GatingSignal.
@@ -301,6 +375,7 @@ class GatingSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = OUTPUT_STATES
+    componentName = 'GatingSignal'
     paramsType = OUTPUT_STATE_PARAMS
 
     classPreferenceLevel = PreferenceLevel.TYPE
@@ -313,7 +388,7 @@ class GatingSignal(ModulatorySignal):
     paramClassDefaults = State_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         PROJECTION_TYPE: GATING_PROJECTION,
-        GATED_STATE:None,
+        GATE:None,
     })
     #endregion
 
@@ -362,6 +437,10 @@ class GatingSignal(ModulatorySignal):
     def _execute(self, function_params, context):
         return float(super()._execute(function_params=function_params, context=context))
 
+    @property
+    def gating_signal(self):
+        return self.value
+
 def _parse_gating_signal_spec(owner, state_spec):
     """Take specifications for one or more states to be gated, and return GatingSignal specification dictionary
 
@@ -378,26 +457,26 @@ def _parse_gating_signal_spec(owner, state_spec):
                 NAME:str - used as name of GatingSignal
                 STATES:List[tuple, dict] - each item must be state specification tuple or dict
                 <PARAM_KEYWORD>:<GatingSignal param value>
-    
+
     Each state specification must be a:
         - (str, Mechanism) tuple
         - {NAME:str, MECHANISM:Mechanism} dict
         where:
             str is the name of an InputState or OutputState of the Mechanism,
-            Mechanism is a reference to an existing that belongs to self.system 
-    
+            Mechanism is a reference to an existing that belongs to self.system
+
     Checks for duplicate state specifications within state_spec or with any existing GatingSignal of the owner
         (i.e., states that will receive more than one GatingProjection from the owner)
-        
-    If state_spec is already a GatingSignal, it is returned (in the GATING_SIGNAL entry) along with its parsed elements 
-    
+
+    If state_spec is already a GatingSignal, it is returned (in the GATING_SIGNAL entry) along with its parsed elements
+
     Returns dictionary with the following entries:
         NAME:str - name of either the gated state (if there is only one) or the GatingSignal
         STATES:list - list of states to be gated
         GATING_SIGNAL:GatingSignal or None
         PARAMS:dict - params dict if any were included in the state_spec
     """
-    
+
     from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
     from PsyNeuLink.Components.Projections.Projection import _validate_receiver
     from PsyNeuLink.Components.Projections.ModulatoryProjections.GatingProjection import GatingProjection
@@ -571,9 +650,15 @@ def _parse_gating_signal_spec(owner, state_spec):
 
                 # GatingSignal projects to a single state (named in NAME entry)
                 if not MECHANISM in state_spec:
-                    raise GatingSignalError("Specification dict for state to be gated by {} of {} ({}) must have a "
-                                               "MECHANISM entry specifying the mechanism to which the state belongs".
-                                               format(GATING_SIGNAL, owner.name, state_name))
+                    # raise GatingSignalError("Specification dict for State to be gated by {} of {} ({}) must have a "
+                    #                            "MECHANISM entry specifying the mechanism to which the state belongs".
+                    #                            format(GATING_SIGNAL, owner.name, state_name))
+                    raise GatingSignalError("Use of \'NAME\' entry ({0}) in specification dict for "
+                                            "{1} of {2} is ambiguous: "
+                                            "it must be accompanied by either a \'MECHANISM\' entry "
+                                            "(to be interpreted as the name of a State, "
+                                            "or a \'PROJECTIONS\' entry (to interpreted as the name of the {1})".
+                                            format(state_name, GatingSignal.componentName, owner.name))
                 mech = state_spec[MECHANISM]
 
         # Check that all of the other entries in the dict are for valid GatingSignal params
@@ -609,9 +694,9 @@ def _parse_gating_signal_spec(owner, state_spec):
             state_type = OUTPUT_STATE
             state = mech.output_states[state_name]
         else:
-            raise GatingSignalError("{} (in specification of {}  {}) is not an "
+            raise GatingSignalError("{} (in specification of {} for {}) is not the name of an "
                                        "InputState or OutputState of {}".
-                                        format(state_name, GATING_SIGNAL, owner.name, mech))
+                                        format(state_name, GatingSignal.componentName, owner.name, mech))
         # Check that the Mechanism is in GatingMechanism's system
         # if not owner.system and not mech in owner.system.mechanisms:
         # # IMPLEMENTATION NOTE: REINSTATE WHEN ASSIGNMENT OF GatingMechanism TO SYSTEM IS RESOLVED (IN COMPOSITION??)

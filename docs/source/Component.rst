@@ -10,4 +10,5 @@ Component
    Function
 
 .. automodule:: Component
-   :members: ResetMode
+   :members:
+   :exclude-members: ParamsDict, ComponentLog, COMPONENT_BASE_CLASS

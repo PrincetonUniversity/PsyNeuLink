@@ -48,9 +48,9 @@ system to which it belongs.
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 # ControlMechanismRegistry = {}
 
@@ -65,7 +65,11 @@ class ProcessingMechanism_Base(Mechanism_Base):
     #                primary purpose is to implement TYPE level preferences for all processing mechanisms
     #                inherits all attributes and methods of Mechanism -- see Mechanism for documentation
     # IMPLEMENT: consider moving any properties of processing mechanisms not used by control mechanisms to here
-    """Abstract class for processing mechanism subclasses
+    """Subclass of `Mechanism` that implements processing in a :ref:`Pathway`.
+
+    .. note::
+       ProcessingMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <ProcessingMechanism_Subtypes>`.
    """
 
     componentType = "ProcessingMechanism"

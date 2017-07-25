@@ -18,21 +18,21 @@
 Overview
 --------
 
-A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent 
+A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
 referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
-  
+
 .. _Recurrent_Transfer_Creation:
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the 
-`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its 
+A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
+`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its
 **mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the Mechanism's
-constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is 
-`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a 
+constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is
+`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a
 standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Structure:
@@ -40,9 +40,9 @@ standard `TransferMechanism`.
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>` 
+The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`
 parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to it `primary InputState <Mechanism_InputStates>`.
+`primary OutputState <OutputState_Primary>` back to it `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
@@ -51,20 +51,20 @@ executed.  It also has two additional OutputStates:  an ENERGY OutputState and, 
 `function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
 OutputState, that each report the respective values of the vector in it its
 `primary (RESULTS) OutputState <OutputState_Primary>`.
- 
+
 .. _Recurrent_Transfer_Execution:
 
 Execution
 ---------
 
-When a RecurrentTransferMechanism executes, it includes in its input the value of its 
+When a RecurrentTransferMechanism executes, it includes in its input the value of its
 `primary OutputState <OutputState_Primary>` from its last execution.
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
 `function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
-if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it 
+if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it
 decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
-specified factor.  It then transforms its input (including from the recurrent projection) using the specified 
+specified factor.  It then transforms its input (including from the recurrent projection) using the specified
 function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
 
 .. _Recurrent_Transfer_Class_Reference:
@@ -75,10 +75,18 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Functions.Function import get_matrix, Stability
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import StandardOutputStates, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np
+from PsyNeuLink.Globals.Keywords import ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Utilities import is_matrix, is_numeric_or_none
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
 class RecurrentTransferError(Exception):
@@ -92,7 +100,7 @@ DECAY = 'decay'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class RECURRENT_OUTPUT():
-    
+
     """
         .. _RecurrentTransferMechanism_Standard_OutputStates:
 
@@ -143,10 +151,12 @@ class RECURRENT_OUTPUT():
 class RecurrentTransferMechanism(TransferMechanism):
     """
     RecurrentTransferMechanism(        \
-    default_input_value=None,          \
+    default_variable=None,          \
     size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
+    auto=None,                         \
+    cross=None,                        \
     initial_value=None,                \
     decay=None,                        \
     noise=0.0,                         \
@@ -157,12 +167,12 @@ class RecurrentTransferMechanism(TransferMechanism):
     name=None,                         \
     prefs=None)
 
-    Implements RecurrentTransferMechanism subclass of `TransferMechanism`.
+    Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
 
     COMMENT:
         Description
         -----------
-            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type 
+            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
             of the Mechanism Category of the Component class.
             It implements a TransferMechanism with a recurrent projection (default matrix: FULL_CONNECTIVITY_MATRIX).
             In all other respects, it is identical to a TransferMechanism.
@@ -171,7 +181,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the mechanism to use if none is provided in a call to its
         `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
@@ -188,7 +198,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
-        or a MappingProjection to use. 
+        or a MappingProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
+        will be ignored in favor of those arguments.
+
+    auto : number or None : default None
+        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
+        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **cross**, if either is specified.
+
+    cross : number of None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **cross**, if **cross** is not None;
+        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **cross**, if either is specified.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -218,7 +243,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         `range <TransferMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
@@ -290,7 +315,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`; same value as first item of
-        `output_values <TransferMechanism.output_values>`.    
+        `output_values <TransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -305,11 +330,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `ENERGY`, the :keyword:`value` of which is the energy of the result, 
+        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
           calculated using the `Stability` Function with the ENERGY metric;
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric; 
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1 
+          calculated using the `Stability` Function with the ENTROPY metric;
+          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function).
 
     output_values : List[array(float64), float, float]
@@ -350,39 +375,51 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
+                 default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict))=None,
+                 input_states: tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
+                 auto: is_numeric_or_none=None,
+                 cross: is_numeric_or_none=None,
                  function=Linear,
                  initial_value=None,
-                 decay:is_numeric_or_none=None,
-                 noise:is_numeric_or_none=0.0,
-                 time_constant:is_numeric_or_none=1.0,
+                 decay: is_numeric_or_none=None,
+                 noise: is_numeric_or_none=0.0,
+                 time_constant: is_numeric_or_none=1.0,
                  range=None,
-                 output_states:tc.optional(tc.any(list, dict))=[RESULT],
+                 output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: is_pref_set=None,
                  context=componentType+INITIALIZING):
         """Instantiate RecurrentTransferMechanism
         """
+        if output_states is None:
+            output_states = [RESULT]
+
+        # if auto is not None and cross is not None:
+        #     matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
+        # elif auto is not None:
+        # elif cross is not None:
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  initial_value=initial_value,
                                                   matrix=matrix,
                                                   decay=decay,
                                                   output_states=output_states,
                                                   params=params,
-                                                  noise=noise)
+                                                  noise=noise,
+                                                  auto=auto,
+                                                  cross=cross)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super().__init__(default_input_value=default_input_value,
+        super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=function,
@@ -438,9 +475,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             if rows != size:
                 if (matrix_param, MappingProjection):
                     # if __name__ == '__main__':
-                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of the variable for {} "
-                               "(whose size is {}, variable is {})".
-                               format(MATRIX, self.name, rows, self.name, self.size, self.variable))
+                    err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
+                               "{} {} (whose size is {} and whose variable is {})".
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
@@ -454,11 +491,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("{} argument for {} ({}) must be from 0.0 to 1.0".
                                              format(DECAY, self.name, decay))
 
+    def _instantiate_attributes_before_function(self, context=None):
+        """
+        """
+        super()._instantiate_attributes_before_function(context=context)
+
     def _instantiate_attributes_after_function(self, context=None):
         """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY outputStates
         """
 
         super()._instantiate_attributes_after_function(context=context)
+        print('self.matrix before overriding: ', self.matrix)
+        if self.auto is not None and self.cross is not None:
+            a = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
+            c = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
+            self.matrix = a + c
+        if self.auto is not None:
+            self.matrix = get_matrix(IDENTITY_MATRIX, self.size[0], self.size[0]) * self.auto
+        if self.cross is not None:
+            self.matrix = get_matrix(HOLLOW_MATRIX, self.size[0], self.size[0]) * self.cross
 
         if isinstance(self.matrix, MappingProjection):
             self.recurrent_projection = self.matrix
@@ -495,10 +546,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         if INITIALIZING in context:
-            self.previous_input = self.variable
-
-        if self.decay is not None and self.decay != 1.0:
-            self.previous_input *= self.decay
+            if self.decay is not None and self.decay != 1.0:
+                self.previous_input *= self.decay
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

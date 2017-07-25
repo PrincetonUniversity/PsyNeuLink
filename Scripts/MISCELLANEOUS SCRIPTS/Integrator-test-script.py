@@ -100,7 +100,7 @@ if run_transfer_tests:
 
     try:
         my_Transfer_Test = TransferMechanism(name='my_Transfer_Test',
-                               default_input_value = [0,0],
+                               default_variable = [0,0],
                                function=Logistic(gain=0.1, bias=0.2),
                                noise=5,
                                time_constant = 0.1,
@@ -117,7 +117,7 @@ if run_transfer_tests:
     print("Transfer Test #2: Execute Transfer with noise = 5.0, input = list len 2")
 
     my_Transfer_Test2 = TransferMechanism(name='my_Transfer_Test2',
-                            default_input_value = [0,0],
+                            default_variable = [0,0],
                             function=Logistic(gain=0.1, bias=0.2),
                             noise=2.0,
                             time_constant = 0.1,
@@ -133,7 +133,7 @@ if run_transfer_tests:
     print("Transfer Test #3: Execute Transfer with noise not specified, input = list len 5")
 
     my_Transfer_Test3 = TransferMechanism(name='my_Transfer_Test3',
-                            default_input_value = [0,0,0,0,0],
+                            default_variable = [0,0,0,0,0],
                             function=Logistic(gain=1.0, bias=0.0),
                             time_constant = 0.2,
                             time_scale=TimeScale.TIME_STEP
@@ -149,7 +149,7 @@ if run_transfer_tests:
     print("Transfer Test #4: Execute Transfer with noise=list of floats len 5, input = list len 5 ")
 
     my_Transfer_Test4 = TransferMechanism(name='my_Transfer_Test4',
-                            default_input_value = [0,0,0,0,0],
+                            default_variable = [0,0,0,0,0],
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = [1.0,2.0,3.0,4.0,5.0],
@@ -165,7 +165,7 @@ if run_transfer_tests:
     print("Transfer Test #5: Execute Transfer with noise=list of functions len 5, input = list len 5 ")
 
     my_Transfer_Test5 = TransferMechanism(name='my_Transfer_Test5',
-                            default_input_value = [0,0,0,0,0],
+                            default_variable = [0,0,0,0,0],
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = [NormalDist().function, UniformDist().function, ExponentialDist().function, WaldDist().function, GammaDist().function ],
@@ -181,7 +181,7 @@ if run_transfer_tests:
     print("Transfer Test #6: Execute Transfer with noise=function, input = list len 5 ")
 
     my_Transfer_Test6 = TransferMechanism(name='my_Transfer_Test6',
-                            default_input_value = [0,0,0,0,0],
+                            default_variable = [0,0,0,0,0],
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = NormalDist().function,
@@ -198,7 +198,7 @@ if run_transfer_tests:
     print("Transfer Test #8: Execute Transfer with noise=float, input = list len 5 ")
 
     my_Transfer_Test8 = TransferMechanism(name='my_Transfer_Test8',
-                            default_input_value = [0,0,0,0,0],
+                            default_variable = [0,0,0,0,0],
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = 5.0,
@@ -214,7 +214,7 @@ if run_transfer_tests:
     print("Transfer Test #9: Execute Transfer with noise=float, input = float ")
 
     my_Transfer_Test9 = TransferMechanism(name='my_Transfer_Test9',
-                            default_input_value = 0.0,
+                            default_variable = 0.0,
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = 5.0,
@@ -231,7 +231,7 @@ if run_transfer_tests:
     print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
     try:
         my_Transfer_Test10 = TransferMechanism(name='my_Transfer_Test10',
-                                default_input_value = 0.0,
+                                default_variable = 0.0,
                                 function=Logistic(gain=0.1, bias=0.2),
                                 time_constant = 0.2,
                                 noise = [5.0, 5.0],
@@ -250,7 +250,7 @@ if run_transfer_tests:
     print("NOT Valid -- If noise is an array, it must match the shape of the default input value ")
     try:
         my_Transfer_Test11 = TransferMechanism(name='my_Transfer_Test11',
-                                default_input_value = 0.0,
+                                default_variable = 0.0,
                                 function=Logistic(gain=0.1, bias=0.2),
                                 time_constant = 0.2,
                                 noise = [NormalDist().function, UniformDist().function],
@@ -269,7 +269,7 @@ if run_transfer_tests:
     print("NOT Valid -- Elements of noise array cannot be ints  ")
     try:
         my_Transfer_Test12 = TransferMechanism(name='my_Transfer_Test12',
-                                default_input_value = [0, 0, 0],
+                                default_variable = [0, 0, 0],
                                 function=Logistic(gain=0.1, bias=0.2),
                                 time_constant = 0.2,
                                 noise = [1,2,3],
@@ -286,7 +286,7 @@ if run_transfer_tests:
 
     print("Transfer Test #13: Execute Transfer with noise= list of len 1 float, input = float ")
     my_Transfer_Test13 = TransferMechanism(name='my_Transfer_Test13',
-                            default_input_value = 0.0,
+                            default_variable = 0.0,
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = [1.0],
@@ -301,7 +301,7 @@ if run_transfer_tests:
 
     print("Transfer Test #14: Execute Transfer with noise= list of len 1 function, input = float ")
     my_Transfer_Test14 = TransferMechanism(name='my_Transfer_Test14',
-                            default_input_value = 0.0,
+                            default_variable = 0.0,
                             function=Logistic(gain=0.1, bias=0.2),
                             time_constant = 0.2,
                             noise = [NormalDist().function],
@@ -319,7 +319,7 @@ if run_distribution_test:
 
 
     my_Transfer = TransferMechanism(name='my_Transfer',
-                           default_input_value = [0,0],
+                           default_variable = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=WaldDist(scale = 2.0, mean = 2.0).function,
                            time_constant = 0.1,
@@ -336,7 +336,7 @@ if run_distribution_test:
 
 
     my_Transfer2 = TransferMechanism(name='my_Transfer2',
-                           default_input_value = [0,0],
+                           default_variable = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=GammaDist(scale = 1.0, dist_shape = 1.0).function,
                            time_constant = 0.1,
@@ -352,7 +352,7 @@ if run_distribution_test:
     print("Distribution Test #3: Execute Transfer with noise = UniformDist(low = 2.0, high = 3.0).function")
 
     my_Transfer3 = TransferMechanism(name='my_Transfer3',
-                           default_input_value = [0,0],
+                           default_variable = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=UniformDist(low = 2.0, high = 3.0).function,
                            time_constant = 0.1,
@@ -368,7 +368,7 @@ if run_distribution_test:
     print("Distribution Test #4: Execute Transfer with noise = ExponentialDist(beta=1.0).function")
 
     my_Transfer4 = TransferMechanism(name='my_Transfer4',
-                           default_input_value = [0,0],
+                           default_variable = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=ExponentialDist(beta=1.0).function,
                            time_constant = 0.1,
@@ -384,7 +384,7 @@ if run_distribution_test:
     print("Distribution Test #5: Execute Transfer with noise = NormalDist(mean=1.0, standard_dev = 2.0).function")
 
     my_Transfer5 = TransferMechanism(name='my_Transfer5',
-                           default_input_value = [0,0],
+                           default_variable = [0,0],
                            function=Logistic(gain=0.1, bias=0.2),
                            noise=NormalDist(mean=1.0, standard_dev = 2.0).function,
                            time_constant = 0.1,
