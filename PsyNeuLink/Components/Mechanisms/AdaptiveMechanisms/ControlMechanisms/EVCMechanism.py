@@ -44,18 +44,18 @@ to corresponding parameters of the EVCMechanism, as described under `EVC_Calcula
 Creating an EVCMechanism
 ------------------------
 
-An EVCMechanism is generated automatically when a system is created and an EVCMechanism is specified as its
-`controller` attribute (see `Controller <System_Execution_Control>`).  However, it can also be created using the
-standard Python method of calling its constructor. An EVCMechanism that has been constructed automatically can be
-customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation` below).
-
-When an EVCMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in the EVCMechanism's
-**monitoring_mechanism** argument), that is assigned the set of `Mechanisms <Mechanism>` and/or `OutputStates
-<OutputState>` to monitor (specified in the **monitor_for_control** argument of the EVCMechanism's
-constructor, and
-that evaluates these using a function specified in **outcome_function** argument of the EVCMechanism's constructor.
-A `MappingProjection` is also created that projects from the ObjectiveMechanism's `primary OutputState
-<OutputState_Primary>` to the EVCMechanism's XXXX
+An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
+More commonly, however, EVCMechanisms are created automatically when a `System` is created and an EVCMechanism is
+specified as its `controller` (see `Controller <System_Execution_Control>`).  When an EVCMechanism is constructed
+automatically by a System, it creates an `ObjectiveMechanism` and assigns to its `monitored_values
+<ObjectiveMechanism.monitored_values>` attribute the list of `OutputStates <OutputState>` specified in the
+'monitor_for_control` argument of the System's constructor.  A `MappingProjection` is also created that projects from
+the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState <ObjectiveMechanism.output_state>` to the EVCMechanism's
+`primary InputState <InputState_Primary>`. The EVCMechanism also creates a `ControlSignal` for each parameter of the
+System that has been `specified for control <ControlMechanism_Control_Signals>`, and assigns these to its
+`control_signals <EVCMechanism.control_signals>` attribute.  An EVCMechanism that has been constructed automatically
+can be customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation`
+below).
 
 COMMENT:
 This information is used to set the `allocation` values for the
@@ -428,6 +428,12 @@ class EVCMechanism(ControlMechanism_Base):
     Arguments
     ---------
 
+    system : System : default None
+        specifies the System for which the EVCMechanism should serve as a `controller`;  the EVCMechanism
+        will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the System's constructor, and any `ControlSignals <ControlSignal>` specified in its
+        **control_signals** argument.
+
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
         the mechanism class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named using the name of the `ORIGIN` mechanism + PREDICTION_MECHANISM
@@ -497,8 +503,8 @@ class EVCMechanism(ControlMechanism_Base):
         the `system <System>` for which EVCMechanism is the `controller`.
 
     control_signals : ContentAddressableList[ControlSignal]
-        list of `outputStates <OutputState>` for the EVCMechanism, each of which corresponds to one of its
-        ControlSignals.
+        list of the EVCMechanism's `ControlSignals <ControlSignal>`, including any that it inherited from its
+        `system <EVCMechanism.system>`.
 
     predictionMechanisms : MechanismList
         a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any
@@ -552,8 +558,9 @@ class EVCMechanism(ControlMechanism_Base):
         Its result is provided by a projection from the `monitoring_mechanism` to the EVCMechanism.
 
     monitored_output_states : List[OutputState]
-        each item is an outputState of a mechanism in the system that has been assigned a projection to a corresponding
-        inputState of the EVCMechanism.
+        XXXXeach item is an outputState of a mechanism in the system that has been assigned a projection to a
+        corresponding
+        InputState of the EVCMechanism.
 
     COMMENT:
     [TBI]

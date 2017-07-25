@@ -391,8 +391,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     output_state : OutputState
         contains the `primary OutputState <OutputState_Primary>` of the ObjectiveMechanism; the default is
-        its *ERROR_SIGNAL* OutputState, the value of which is equal to the `value <ObjectiveMechanism.value>`
-        attribute of the ObjectiveMechanism.
+        its *ERROR_SIGNAL* OutputState (see ObjectiveMechanism_Structure), the value of which is equal to the
+        `value <ObjectiveMechanism.value>` attribute of the ObjectiveMechanism.
 
     output_states : ContentAddressableList[OutputState]
         contains, by default, only the *ERROR_SIGNAL* (primary) OutputState of the ObjectiveMechanism.

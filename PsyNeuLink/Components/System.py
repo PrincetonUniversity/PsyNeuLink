@@ -375,23 +375,6 @@ def system(default_variable=None,
     name=None,                                \
     prefs=None)
 
-    COMMENT:
-       VERSION WITH learning
-        system(                                   \
-        default_variable=None,                 \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=None,                 \
-        control_signals=None,                     \
-        learning=None,                            \
-        targets=None                              \
-        params=None,                              \
-        name=None,                                \
-        prefs=None)
-    COMMENT
-
     Factory method for System: returns instance of System.
 
     If called with no arguments, returns an instance of System with a single default Process and Mechanism;
