@@ -1411,7 +1411,7 @@ class Mechanism_Base(Mechanism):
 
     def _instantiate_attributes_after_function(self, context=None):
 
-d        self._instantiate_output_states(context=context)
+        self._instantiate_output_states(context=context)
         super()._instantiate_attributes_after_function(context=context)
 
     def _instantiate_input_states(self, context=None):

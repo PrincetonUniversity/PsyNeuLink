@@ -106,7 +106,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   `output_source`).  It is used by the LearningMechanism's `function <LearningMechanism.function>` to calculate the
   `learning_signal <LearningMechanism.learning_signal>`;  note that the value of the *ERROR_SIGNAL* InputState may
   not be the same as that of the `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL*
-  `OutputState <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Output_Error_Signal>` below).
+  `OutputState <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Error_Signal>` below).
   The `value <InputState.value>` of the *ERROR_SIGNAL* InputState is assigned as the third item of the
   LearningMechanism's `variable <LearningMechanism.variable>` attribute.
 
@@ -125,14 +125,14 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
   `MappingProjections <MappingProjection>` being learned, calculated to reduce the value of the LearningMechanism's
   *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 
-.. _LearningMechanism_Output_Error_Signal:
+.. _LearningMechanism_Error_Signal:
 
 * `error_signal <LearningMechanism.error_signal>` - the contribution made by the `primary_learned_projection` to the
   error signal received by the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
   It is used by the LearningMechanism's `function <LearningMechanism.function>`, possibly weighted by the
   `primary_learned_projection` and the output of the `ProcessingMechanism` to which it projects (the LearningMechanism's
   `output_source` attribute), to calculate the `learning_signal <LearningMechanism.learning_signal>`. Its value is
-  assigned as the value of the LearningMechanism's *ERROR_SIGNAL* `OutputState<LearningMechanism_Output_Error_Signal>`.
+  assigned as the value of the LearningMechanism's *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>`.
 
   .. _LearningMechanism_Error_Signal_Note:
 
@@ -142,8 +142,8 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
      *ERROR_SIGNAL* `OutputState <LearningMechanism_Output_Error_Signal>` may not have the same value.
      The former is the error signal received from a `ComparatorMechanism` or another `LearningMechanism`,
      while the latter is the contribution made to that error by the `primary_learned_projection` and the
-     `output_source, as calculated by the LearningMechanism's `function <LearningMechanism.function>`
-     (see `error_signal <LearningMechanism_Output_Error_Signal>` above).
+     `output_source`, as calculated by the LearningMechanism's `function <LearningMechanism.function>`
+     (see `error_signal <LearningMechanism_Error_Signal>` above).
 
 The default `function <LearningMechanism.function>` of a LearningMechanism is `BackPropagation` (also known as the
 *Generalized Delta Rule*;
@@ -175,7 +175,7 @@ They are each described below:
   to the LearningMechanism for the preceding MappingProjection in the sequence being learned - see `figure
   <LearningMechanism_Multilayer_Learning_Figure>` below).  Note that the value of the *ERROR_SIGNAL* OutputState
   value may not be the same as that of the *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`
-  (see `error_signal <LearningMechanism_Output_Error_Signal>`).
+  (see `error_signal <LearningMechanism_Error_Signal>`).
 
 .. _LearningMechanism_LearningSignal:
 
@@ -209,9 +209,10 @@ They are each described below:
   them in a list assigned to the **learning_signals** argument of the LearningMechanism's constructor.
 
   The `learning_rate <LearningSignal.learning_rate>` for each LearningSignal, and the `learning_rate
-  <LearningProjection.learning_rate>` for each of its LearningProjections, can all be assigned different values
-  (with the latter taking precedence over the former).  If none of these are specified, the `learning_rate
-  <LearningMechanism.learning_rate>` of the LearningMechanism is used (see `below <LearningMechanism_Learning_Rate>`).
+  <LearningProjection.learning_rate>` for each of its `LearningProjections <LearningProjection>`, can all be assigned
+  different values (with the latter taking precedence over the former).  If none of these are specified, the
+  `learning_rate <LearningMechanism.learning_rate>` of the LearningMechanism is used (see `below
+  <LearningMechanism_Learning_Rate>`).
 
   All of the LearningSignals of a LearningMechanism are listed in its `learning_signals` attribute.  Because these
   are `OutputStates <OutputState>`, they are also listed in the `output_states <LearningMechanism.output_states>`
@@ -342,14 +343,14 @@ calculate the influence that each MappingProjection and its output have on the e
 receives from the next one in the sequence (e.g., `BackPropagation`). In multilayer learning, the Components created
 depend on the position of the `primary_learned_projection` and `output_source <LearningMechanism.output_source>` in
 the sequence.  If these are the last ones in the sequence, they are treated in the same way as `single layer
-learning <LearningMechanism_Single_Layer>`.  This is the case if the `output_source` is a standalone Mechanism (one
-not in a `Process` or `System`), the `TERMINAL` Mechanism of a standalone Process (i.e., one not in a System),
+learning <LearningMechanism_Single_Layer_Learning>`.  This is the case if the `output_source` is a standalone Mechanism
+(one not in a `Process` or `System`), the `TERMINAL` Mechanism of a standalone Process (i.e., one not in a System),
 or the `TERMINAL` of all of the Processes to which it belongs in a System (and therefore a `TERMINAL` for the
 System).  In these cases, as for single layer learning, a `ComparatorMechanism` is created that receives the output
-of the `output_source` as well as the target for learning (see `LearningMechanisms_Targets` below), and projects to a
-LearningMechanism that is created for the `primary_learned_projection`.  For all other MappingProjections being
-learned in the sequence, the following additional MappingProjections are created for learning (shown in the `figure
-<LearningMechanism_Multilayer_Learning_Figure>` below):
+of the `output_source` as well as the target for learning (see `TARGET Mechanisms <LearningMechanism_Targets>` below),
+and projects to a LearningMechanism that is created for the `primary_learned_projection`.  For all other
+MappingProjections being learned in the sequence, the following additional MappingProjections are created for
+learning (shown in the `figure <LearningMechanism_Multilayer_Learning_Figure>` below):
 
 * from the `input_source <LearningMechanism.input_source>` to the LearningMechanism's *ACTIVATION_INPUT* `InputState
   <LearningMechanism_Activation_Input>`.
@@ -362,7 +363,7 @@ learned in the sequence, the following additional MappingProjections are created
   projects) to the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal <LearningMechanism_LearningSignal>` for the
-`primary_learned_projection of each LearningMechanism in the sequence, to the `ParameterState` for the `matrix
+`primary_learned_projection` of each LearningMechanism in the sequence, to the `ParameterState` for the `matrix
 <MappingProjection.matrix>` of the `primary_learned_projection`.  If the `primary_learned_projection` is the first in
 the sequence, then *no* Projection is created or assigned to its LearningMechanism's *ERROR_SIGNAL* `OutputState
 <LearningMechanism_Output_Error_Signal>`.
@@ -432,21 +433,23 @@ in the LearningMechanism's `learned_projections` attribute).
 Each ParameterState uses the value it receives from the `LearningProjection` that projects to it to modify the
 parameter of its `function <ParameterState.function>`, in a manner specified by the `modulation
 <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the LearningProjection (see
-`Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the `modulation <LearningSignal.modulation>` attribute of a LearningSignal is `Modulation.ADD`,
+`Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the
+`modulation <LearningSignal.modulation>` attribute of a LearningSignal is `ModulationParam.ADDITIVE`,
 the `function <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is
 `AccumulatorIntegrator`, and the parameter it uses for additive modulation is its `increment
 <AccumulatorIntegrator.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
 to the previous value of the *MATRIX* ParameterState, thus incrementing the weights by an amount specified by the
-LearningMechanism's `learning_signal <LearningMechanism.learning_signal>.
-
-Note, that the changes to the `matrix <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect
+LearningMechanism's `learning_signal <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
+<MappingProjection.MappingProjection.matrix>` parameter itself do not take effect
 until the next time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of
-"lazy" updating). In addition to computing and conveying its`learning_signal <LearningMechanism.learning_signal>`,
-a LearningMechanism's `function <LearningMechanism.function>` also computes an error signal that is assigned to its
-`error_signal <LearningMechanism.error_signal>` attribute and as the `value <OutputState.value>` of its *ERROR_SIGNAL*
+"lazy" updating).
+
+A LearningMechanism's `function <LearningMechanism.function>` also computes an `error_signal
+<LearningMechanism.error_signal>` that is assigned as the `value <OutputState.value>` of its *ERROR_SIGNAL*
 `OutputState <LearningMechanism_Output_Error_Signal>`;  in a `multilayer learning configuration
 <LearningMechanism_Multilayer_Learning>`, that value is provided to the *ERROR_SIGNAL* `InputState
-<LearningMechanism_Output_Error_Signal>` of the LearningMechanism for the preceding MappingProjection in the sequence.
+<LearningMechanism_Input_Error_Signal>` of the LearningMechanism for the preceding MappingProjection
+being learned in the sequence.
 
 .. _LearningMechanism_Class_Reference:
 
@@ -595,7 +598,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
     error_source : ComparatorMechanism or LearningMechanism
         specifies the source of the error signal used by the LearningMechanism's `function
         <LearningMechanism.function>`.  It must be a `ComparatorMechanism` for `single layer learning
-        <LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for
+        <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
@@ -607,10 +610,10 @@ class LearningMechanism(AdaptiveMechanism_Base):
         unless they are `individually specified <LearningSignal_Specification>`.
 
     function : LearningFunction or function
-        specifies the function used to compute the `learning_signal` used by a LearningProjection, and the
-        and `error_signal` passed to the next LearningMechanism in a `learning sequence.  It must take the following
-        arguments: `input` (list or 1d array), `output` (list or 1d array), `derivative` (function) and `error`
-        (list or 1d array) (see `LearningMechanism_Function` for additional details).
+        specifies the function used to calculate the LearningMechanism's `learning_signal
+        <LearningMechanism.learning_signal>` and `error_signal <LearningMechanism.error_signal>` attributes.  It
+        must take the following arguments, each of which must be a list or 1d array: **input**, **output**, and
+        **error** (see `LearningMechanism_Function` for additional details).
 
     learning_rate : float
         specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
@@ -644,7 +647,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         has three items that serve as the template for the three inputs required by the LearningMechanism's `function
         <LearningMechanism.function>` (corresponding to its three `InputStates <LearningMechanism_InputStates>`:
         the input to the `primary_learned_projection` (from `input_source`), the output of the Mechanism to which
-        that projects (i.e., of `output_source`); and the error signal received from `error_source`.
+        that projects (i.e., of `output_source`); and the error signal (from `error_source`).
 
     input_states : ContentAddressableList[OutputState]
         list containing the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`:
@@ -673,12 +676,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `primary_learned_projection`.
 
     function : LearningFunction or function : default BackPropagation
-        specifies the function used to calculate the `learning_signal <LearningMechanism>` (assigned to the
-        LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
+        specifies the function used to calculate the `learning_signal <LearningMechanism.learning_signal>` (assigned
+        to the LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
         <LearningMechanism.error_signal>` (passed to the next LearningMechanism in a learning sequence for
-        `multilayer learning <LearningMechanism_Multilayer_Learning>`).  It takes the following three arguments:
-        `input` (list or 1d array), `output` (list or 1d array), and `error` (list or 1d array)
-        (see `LearningMechanism_Function` for additional details).
+        `multilayer learning <LearningMechanism_Multilayer_Learning>`).  It takes the following three arguments,
+        each of which must be a list or 1d array: **input**,  **output**, and **error** (see
+        `LearningMechanism_Function` for additional details).
 
     learning_rate : float : None
         determines the learning rate for the LearningMechanism.  It is used to specify the :keyword:`learning_rate`
@@ -687,8 +690,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     error_signal : 1d np.array
         one of two values returned by the LearningMechanism's `function <LearningMechanism.function>`.  For
-        `single layer learning <LearningMechanism_Single_Layer>`, this is the same as the value received in the
-        LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`;  for `multilayer
+        `single layer learning <LearningMechanism_Single_Layer_Learning>`, this is the same as the value received in
+        the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`;  for `multilayer
         learning <LearningMechanism_Multilayer_Learning>`, it is a modified version of the value received, that takes
         account of the contribution made by the learned_projection and its input to the error signal received. This
         is assigned as the `value <OutputState.value>` of the LearningMechanisms *ERROR_SIGNAL* `OutputState
@@ -700,7 +703,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         `learned_projections <LearningMechanism.learned_projections>`;  it is calculated to reduce the error signal
         associated with the `primary_learned_projection` and received from the LearningMechanism's `error_source`.
         It is assigned as the value of the LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`
-        and, in turn, its `LearningProjection(s) <LearningProjection>`.
+        and, in turn, its LearningProjection(s).
 
     learning_signals : List[LearningSignal]
         list of all of the `LearningSignals <LearningSignal>` for the LearningMechanism, each of which sends one or
@@ -719,8 +722,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     output_states : ContentAddressableList[OutputState]
         list of the LearningMechanism's `OutputStates <OutputState>`, including its *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>, followed by its `LearningSignal(s) <LearningMechanism_LearningSignal>`,
-        and then any additional (e.g., user-specified) OutputStates.
+        <LearningMechanism_Output_Error_Signal>`, followed by its `LearningSignal(s)
+        <LearningMechanism_LearningSignal>`, and then any additional (e.g., user-specified)
+        `OutputStates <OutputState>`.
 
     COMMENT:
        #  FIX: THIS MAY NEED TO BE A 3d array (TO ACCOMDOATE 2d array (MATRICES) AS ENTRIES)\
