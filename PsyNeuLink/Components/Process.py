@@ -174,14 +174,14 @@ Learning modifies Projections between Mechanisms in a Process's `pathway`, so th
 specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire Process.
 It is specified for a particular Projection by including a `learning specification <LearningSignal_Specification>`
 in the specification for the Projection.  It is specified for the entire Process by assigning either a
-`LearningProjection` or `LearningSignal` specification, or the keyword *ENABLED* to the **learning** argument of the
-Process' constructor.  Specifying learning for a Process will implement it for all eligible Projections in the
-Process (i.e., all `MappingProjections <MappingProjection>`, excluding Projections from the Process' InputState to
-its `ORIGIN` Mechanism, and projections from the `TERMINAL` Mechanism to the Process' OutputState). When learning is
-specified for the Process, all Projections in the Process will be trained so that input to the Process (i.e., its
-`ORIGIN` Mechanism) will generate the specified target value as its output (i.e., the output of the `TERMINAL`
-Mechanism). In either case, all Mechanisms that receive Projections for which learning has been specified must be
-`compatible with learning <LearningProjection>`).
+`LearningProjection <LearningProjection_Creation>` or `LearningSignal <LearningSignal_Specification>` specification,
+or the keyword *ENABLED* to the **learning** argument of the Process' constructor.  Specifying learning for a Process
+implements it for all eligible Projections in the Process (i.e., all `MappingProjections <MappingProjection>`,
+excluding Projections from the Process' InputState to its `ORIGIN` Mechanism, and projections from the `TERMINAL`
+Mechanism to the Process' OutputState). When learning is specified for the Process, all Projections in the Process
+are trained so that input to the Process (i.e., its `ORIGIN` Mechanism) will generate the specified target value
+as its output (i.e., the output of the `TERMINAL` Mechanism). In either case, all Mechanisms that receive Projections
+for which learning has been specified must be `compatible with learning <LearningProjection>`).
 
 When learning is specified, the following Components are automatically created for each Projection involved (
 see figure below):
@@ -2263,7 +2263,7 @@ class Process_Base(Process):
         learning : bool :  default None
             enables or disables learning during execution.
             If it is not specified, current state is left intact.
-            If :keyword:`True`, learning is forced on; if :keyword:`False`, learning is forced off.
+            If `True`, learning is forced on; if :keyword:`False`, learning is forced off.
 
         call_before_trial : Function : default None
             called before each trial in the sequence is executed.

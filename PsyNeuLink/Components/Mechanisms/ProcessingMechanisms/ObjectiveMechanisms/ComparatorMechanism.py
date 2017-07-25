@@ -53,7 +53,7 @@ InputState in the **input_states** argument.
 Structure
 ---------
 
-A ComparatorMechanism has two `InputStates <ComparatorMechanism.input_states>`, each of which receives a
+A ComparatorMechanism has two `input_states <ComparatorMechanism.input_states>`, each of which receives a
 `MappingProjection` from a corresponding OutputState specified in the **sample** and **target**
 arguments of its constructor.  The InputStates are listed in the Mechanism's
 `input_states <ComparatorMechanism.input_States>` attribute.  The OutputStates from which they receive their
@@ -221,7 +221,8 @@ class ComparatorMechanism(ObjectiveMechanism):
     input_states:  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target InputStates;
         by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputStates
-        specified in the **sample** and **target** arguments, respectively.
+        specified in the **sample** and **target** arguments, respectively (see `ComparatorMechanism_Structure`
+        for additional details).
 
     function:  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
@@ -268,7 +269,8 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     input_states : ContentAddressableList[InputState, InputState]
         contains the two InputStates named, by default, *SAMPLE* and *TARGET*, each of which receives a
-        `MappingProjection` from the OutputStates referenced by the `sample` and `target` attributes.
+        `MappingProjection` from the OutputStates referenced by the `sample` and `target` attributes
+        (see `ComparatorMechanism_Structure` for additional details).
 
     function : CombinationFunction, function or method
         used to compare the `sample` with the `target`.  It can be any PsyNeuLink `CombinationFunction`,

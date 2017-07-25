@@ -457,7 +457,7 @@ class EVCMechanism(ControlMechanism_Base):
         to determine its value (see `combine_outcome_and_cost_function` attribute for additional details).
 
     save_all_values_and_policies : bool : default False
-        when it is :keyword:`True`, saves all of the control allocation policies tested in `EVC_policies` and their
+        when it is `True`, saves all of the control allocation policies tested in `EVC_policies` and their
         values in `EVC_values`.
 
     params : Optional[Dict[param keyword, param value]]

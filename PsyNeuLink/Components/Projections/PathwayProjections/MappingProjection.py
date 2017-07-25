@@ -75,6 +75,7 @@ It can be specified in any of the following formats:
     given `sender <MappingProjection.sender>` makes to the `receiver <MappingProjection.receiver>`.
 
   .. _Matrix_Keywords:
+
   * **Matrix keyword**.  This is used to specify a type of matrix without having to specify its individual values.
     Any of the `matrix keywords <Keywords.MatrixKeywords>` can be used.
 
@@ -85,6 +86,7 @@ It can be specified in any of the following formats:
     specified offset.
 
   .. _MappingProjection_Tuple_Specification:
+
   * **Tuple**.  This is used to specify a Projection to the `ParameterState <ParameterState>` for the matrix
     along with the `matrix <MappingProjection.matrix>`  itself. The tuple must have two items:
     the first can be any of the specifications described above;  the second must be a
@@ -275,6 +277,9 @@ class MappingProjection(PathwayProjection_Base):
     has_learning_projection : bool : False
         identifies whether the MappingProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned a
         `LearningProjection`.
+
+    value : ndarray
+        Output of MappingProjection, transmitted to `variable <InputState.variable>` of `receiver`.
 
     name : str : default MappingProjection-<index>
         the name of the MappingProjection.

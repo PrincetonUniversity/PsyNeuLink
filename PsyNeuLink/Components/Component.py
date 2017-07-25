@@ -1851,7 +1851,7 @@ class Component(object):
         Perform top-level type validation of variable against the variableClassDefault;
             if the type is OK, the value is assigned to self.variable (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-        It is called only if the parameter_validation attribute is :keyword:`True` (which it is by default)
+        It is called only if the parameter_validation attribute is `True` (which it is by default)
 
         IMPLEMENTATION NOTES:
            * future versions should add hierarchical/recursive content (e.g., range) checking
@@ -1921,7 +1921,7 @@ class Component(object):
             - otherwise, an exception is raised
 
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-        It is called only if the parameter_validation attribute is :keyword:`True` (which it is by default)
+        It is called only if the parameter_validation attribute is `True` (which it is by default)
 
         IMPLEMENTATION NOTES:
            * future versions should add recursive and content (e.g., range) checking

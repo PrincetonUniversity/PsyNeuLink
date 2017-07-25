@@ -607,8 +607,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 # monitored_value_dict[PARAMS] = monitored_value.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
-                                              "should have returned dict or State, but returned {} instead".
-                                              format(OUTPUT_STATE, self.name, type(monitored_value)))
+                                              "should have returned dict or State, but returned {} instead ({})".
+                                              format(OUTPUT_STATE,
+                                                     self.name,
+                                                     type(monitored_value).__name__,
+                                                     monitored_value))
             monitored_value_dict[OUTPUT_STATE]=value
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
             monitored_values.append(monitored_value_dict)
