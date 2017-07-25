@@ -52,6 +52,12 @@ In these instances, a `ComparatorMechanism`, `LearningProjection <LearningProjec
 required to implement learning that do not already exist are also instantiated.  This is described below, under
 `Learning Configurations <LearningMechanism_Learning_Configurations>`.
 
+If a LearningMechanism is created directly (using its constructor), then it **variable** and **error_source** arguments
+must be specified.  The **variable** must have three items that are compatible (in number and type) with the `value
+<InputState.value>` of the the LearningMechanism's three `InputStates <LearningMechanism_InputStates>`.  The
+**error_source** must be a `ComparatorMechanism` for `single layer learning <LearningMechanism_Single_Layer_Learning>`
+or for the last `MappingProjection` in a learning sequence for `multilayer learning
+<LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
 .. _LearningMechanism_Structure:
 
@@ -69,7 +75,7 @@ InputStates
 ~~~~~~~~~~~
 
 These receive the information required by the LearningMechanism's `function <LearningMechanism.function>`.  They are
-listed in the LearningMechanism's `input_states <LearningMechanism.input_states>` attribute, and have the following
+listed in the LearningMechanism's `input_states <LearningMechanism.input_states>` attribute.  They have the following
 names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_Figure>` below):
 
 .. _LearningMechanism_Activation_Input:
@@ -581,13 +587,16 @@ class LearningMechanism(AdaptiveMechanism_Base):
     ---------
 
     variable : List or 2d np.array
-        specifies a template for the three items required by the `function <LearningMechanism.function>`: the input
-        to the `learned_projection`, the output of the `error_source`, and the error_signal received by the
-        LearningMechanism (see `variable <LearningMechanism.variable>` for details).
+        it must have three items that correspond to the three values required by the LearningMechanism's `function
+        <LearningMechanism.function>`;  they must each be compatible (in number and type) with the `value
+        <InputState.value>` of the corresponding `InputState <LearningMechanism_InputStates>` (see `variable
+        <LearningMechanism.variable>` for additional details).
 
     error_source : ComparatorMechanism or LearningMechanism
-        specifies the Mechanism the output of which is used to generate the error_signal received by the
-        LearningMechanism (in its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>` InputState).
+        specifies the source of the error signal used by the LearningMechanism's `function
+        <LearningMechanism.function>`.  It must be a `ComparatorMechanism` for `single layer learning
+        <LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for
+        `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
     learning_signals : List[parameter of Projection, ParameterState, Projection, tuple[str, Projection] or dict]
         specifies the parameter(s) to be trained by the LearningMechanism
@@ -599,13 +608,12 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     function : LearningFunction or function
         specifies the function used to compute the `learning_signal` used by a LearningProjection, and the
-        and `error_signal` passed to the next LearningMechanism in a
-        `learning sequence <LearningMechanism_Learning_Configurations>`
-        (see `function <LearningMechanism.function>` for details).
+        and `error_signal` passed to the next LearningMechanism in a `learning sequence
+        <LearningMechanism_Learning_Configurations>` (see `function <LearningMechanism.function>` for details).
 
     learning_rate : float
-        specifies the learning rate for this LearningMechanism
-        (see `learning_rate <LearningMechanism.learning_rate>` for details).
+        specifies the learning rate for the LearningMechanism (see `learning_rate <LearningMechanism.learning_rate>`
+        for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
