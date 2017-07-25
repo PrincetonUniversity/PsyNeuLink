@@ -49,9 +49,10 @@ An EVCMechanism is generated automatically when a system is created and an EVCMe
 standard Python method of calling its constructor. An EVCMechanism that has been constructed automatically can be
 customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation` below).
 
-When an EVCMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
-**monitoring_mechanism** argument), that is assigned a set of `Mechanisms <Mechanism>` and/or `OutputStates
-<OutputState>` to monitor specified in the **monitor_for_control** argument of the EVCMechanism's constructor, and
+When an EVCMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in the EVCMechanism's
+**monitoring_mechanism** argument), that is assigned the set of `Mechanisms <Mechanism>` and/or `OutputStates
+<OutputState>` to monitor (specified in the **monitor_for_control** argument of the EVCMechanism's
+constructor, and
 that evaluates these using a function specified in **outcome_function** argument of the EVCMechanism's constructor.
 A `MappingProjection` is also created that projects from the ObjectiveMechanism's `primary OutputState
 <OutputState_Primary>` to the EVCMechanism's XXXX
