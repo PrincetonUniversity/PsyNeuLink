@@ -376,22 +376,21 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 .. _LearningMechanism_Targets:
 
-**TARGET Mechanisms**: When learning function is specified for a LearningMechanism that requires a target (e.g.,
-`Backpropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified that receives the target (in its
-*TARGET* `InputState <ComparatorMechanism_Structure>`), and uses it to generate an `error signal
-<_LearningMechanism_Input_Error_Signal>` provided to the LearningMechanism.  For `multilayer learning
-<LearningMechanism_Multilayer_Learning>`, this is the `error_source <LearningMechanism.error_source>` for the last
-MappingProjection in the sequence.  When learning is specified for a `Composition` (i.e., a `Process <Process_Learning>`
+**TARGET Mechanisms**. When a learning function is specified for a LearningMechanism that requires a target (e.g.,
+`BackPropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified to receive the target.  For
+`multilayer learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source
+<LearningMechanism.error_source>` for the last MappingProjection in each learning sequence.  When
+learning is specified for a `Composition` (i.e., a `Process <Process_Learning>`
 or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s) <ComparatorMechanism>` that receive the
-`targets <Run_Targets>` specified in the call to the Composition's :keyword:`execute` or :keyword:`run` method are
-identified and designated as `TARGET` Mechanisms. These are listed in the Composition's `target_mechanisms` attribute.
+`targets <Run_Targets>`  are
+identified and designated as `TARGET` Mechanisms, and are listed in the Composition's `target_mechanisms` attribute.
 If a `TERMINAL` Mechanism of a Composition receives a MappingProjection that is specified for learning, then it always
-projects to a `TARGET` Mechanism in that Composition. It is important to note, here, that the status of a Mechanism in
-a System takes precedence over its status in any of the Processes to which it belongs. This means that even if a
-Mechanism is the `TERMINAL` of a particular Process, if that Process is combined with others in a System, and the
-Mechanism appears in any of those other Processes, and it is not the `TERMINAL` of all of them, then it will *not* be
-the `TERMINAL` for the System.  As consequence, although it will project to a `TARGET` Mechanism in the Process for
-which it is the `TERMINAL`, it will not do so in the System (see `figure below
+projects to a `TARGET` Mechanism in that Composition. It is important to note, in this context, the status of a
+Mechanism in a System takes precedence over its status in any of the Processes to which it belongs. This means that
+even if a Mechanism is the `TERMINAL` of a particular Process, if that Process is combined with others in a System,
+and the Mechanism appears in any of those other Processes, and it is not the `TERMINAL` of *all* of them, then it will
+*not* be the `TERMINAL` for the System.  As a consequence, although it will project to a `TARGET` Mechanism in the
+Process for which it is the `TERMINAL`, it will not do so in the System (see `figure below
 <LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a Mechanisms is the `TERMINAL` for more
 than one Process used to create a System (that is, the pathways for those Processes converge on that Mechanism),
 only one ComparatorMechanism will be created for it in the System.
@@ -406,36 +405,42 @@ only one ComparatorMechanism will be created for it in the System.
 
        Mechanism 3 is the `TERMINAL` Mechanism for Process A, However, it is also an `INTERNAL` Mechanism of Process B.
        Therefore, Mechanism 3 is designated as an `INTERNAL` Mechanism for the System, and Mechanism 4 is its `TERMINAL`
-       Mechanism. As a consequence, if `BackPropagation` is used for learning, then Mechanism 4 is an
-       `ObjectiveMechanism` and designated as a `TARGET`, while Mechanism 3 is a LearningMechanism
-       and designated as a `LEARNING` Mechanism.
+       Mechanism. As a consequence, if `BackPropagation` is used for learning, then Mechanism 4 will project to a
+       `TARGET` Mechanism of the System, while Mechanism 3 will not.
 
 .. _LearningMechanism_Execution:
 
 Execution
 ---------
 
-LearningMechanisms are executed after all of the ProcessingMechanisms in the Process or System to which it belongs have
-been executed, including the ObjectiveMechanism(s) that provide an error signal to the LearningMechanism(s).  When a
-LearningMechanism is executed, it uses the value of its `ERROR_SIGNAL <LearningMechanism_Input_Error_Signal>`
-InputState to calculate changes to the `matrix <MappingProjection.MappingProjection.matrix>` of the MappingProjections
-being learned.  That value is assigned to its `learning_signal` attribute, as the value of each of the LearningSignals
-in its `learning_signal` attribute, and as the value of each of their LearningProjections.  That value is used,
-in turn, to modify the value of the `MATRIX` ParameterState of each of the MappingProjections being learned
-(listed in the LearningMechanism's `learned_projections` attribute).  Each ParameterState uses the value it receives
-from the `LearningProjection` to modify the parameter of its function in a manner specified by the
-`modulation <LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the
-LearningProjection (see `modulation <ModulatorySignals_Modulation>` for a description of State value modulation).
-By default, the `modulation <LearningSignal.modulation>` attribute of a LearningSignal is Modulation.ADD,
-the `function <ParameterState.function>` of a `MATRIX` ParameterState for a MappingProjection is
-`Accumulator`, and the parameter it uses for `additive modulation` is its `increment <Accumulator.increment>`.  These
-assignments cause the value of a LearningProjection to be added to the previous value of the `MATRIX` ParameterState,
-thus incrementing the weights by the `learning_signal` specified by the LearningMechanism.  Note, however, that these
-changes are not applied to the `matrix <MappingProjection.MappingProjection.matrix>` itself until the next
-time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
-In addition to computing and conveying its `learning_signal`, the LearningMechanism's
-`function <LearningMechanism.function>` also computes an error signal that is assigned to its
-`error_signal <LearningMechanism.error_signal>` attribute and as the value of its *ERROR_SIGNAL* OutputState.
+LearningMechanisms are executed after all of the `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
+`System` to which they belong have been executed.  When a LearningMechanism is executed, it uses the `value
+<InputState.value>` of its *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>` to calculate changes to
+the weights of the `matrix <MappingProjection.MappingProjection.matrix>` parameter of the `learned_projections`. Those
+weight changes are assigned as the LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` attribute,
+the `value <LearningSignal.value>` of each of its `LearningSignals <LearningMechanism_LearningSignal>`, and as the
+`value <LearningProjection.value>` of each of their LearningProjections.  That value is used, in turn, to modify the
+`value <ParameterState.value>` of the *MATRIX* `ParameterState` of each of the MappingProjections being learned (listed
+in the LearningMechanism's `learned_projections` attribute).
+
+Each ParameterState uses the value it receives from the `LearningProjection` that projects to it to modify the
+parameter of its `function <ParameterState.function>`, in a manner specified by the `modulation
+<LearningSignal.modulation>` attribute of the `LearningSignal` from which it receives the LearningProjection (see
+`Modulation <ModulatorySignal_Modulation>` for a description of how modulation operates). By default, the `modulation <LearningSignal.modulation>` attribute of a LearningSignal is `Modulation.ADD`,
+the `function <ParameterState.function>` of a *MATRIX* ParameterState for a MappingProjection is
+`AccumulatorIntegrator`, and the parameter it uses for additive modulation is its `increment
+<AccumulatorIntegrator.increment>` parameter.  These assignments cause the value of the LearningProjection to be added
+to the previous value of the *MATRIX* ParameterState, thus incrementing the weights by an amount specified by the
+LearningMechanism's `learning_signal <LearningMechanism.learning_signal>.
+
+Note, that the changes to the `matrix <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect
+until the next time the `learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of
+"lazy" updating). In addition to computing and conveying its`learning_signal <LearningMechanism.learning_signal>`,
+a LearningMechanism's `function <LearningMechanism.function>` also computes an error signal that is assigned to its
+`error_signal <LearningMechanism.error_signal>` attribute and as the `value <OutputState.value>` of its *ERROR_SIGNAL*
+`OutputState <LearningMechanism_Output_Error_Signal>`;  in a `multilayer learning configuration
+<LearningMechanism_Multilayer_Learning>`, that value is provided to the *ERROR_SIGNAL* `InputState
+<LearningMechanism_Output_Error_Signal>` of the LearningMechanism for the preceding MappingProjection in the sequence.
 
 .. _LearningMechanism_Class_Reference:
 
@@ -514,11 +519,11 @@ class LearningMechanism(AdaptiveMechanism_Base):
     """
     LearningMechanism(                             \
         variable,                                  \
-        error_source                               \
-        function=BackPropagation                   \
-        learning_rate=None                         \
+        error_source,                              \
+        function=BackPropagation,                  \
+        learning_rate=None,                        \
         learning_signals=LEARNING_SIGNAL,          \
-        modulation=ModulationParam.MULTIPLICATIVE  \
+        modulation=ModulationParam.MULTIPLICATIVE, \
         params=None,                               \
         name=None,                                 \
         prefs=None)

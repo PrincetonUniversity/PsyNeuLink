@@ -4522,7 +4522,7 @@ class OrnsteinUhlenbeckIntegrator(
 class AccumulatorIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    ConstantIntegrator(                 \
+    AccumulatorIntegrator(              \
         default_variable=None,          \
         rate=1.0,                       \
         noise=0.0,                      \
@@ -4534,12 +4534,11 @@ class AccumulatorIntegrator(
         prefs=None,                     \
         )
 
-    .. _ConstantIntegrator:
+    .. _AccumulatorIntegrator:
 
-    Integrates prior value by adding `rate <Integrator.rate>` and `noise <Integrator.noise>`. Ignores
-    `variable <Integrator.variable>`).
-
-    `previous_value <Integrator.previous_value>` + `rate <Integrator.rate>` + `noise <Integrator.noise>`
+    Integrates prior value by multiplying `previous_value <AccumulatorIntegrator.previous_value>` by `rate
+    <Integrator.rate>` and adding `increment <AccumulatorIntegrator.increment>` and  `noise
+    <AccumulatorIntegrator.noise>`. Ignores `variable <Integrator.variable>`).
 
     Arguments
     ---------
@@ -4549,16 +4548,25 @@ class AccumulatorIntegrator(
         integrated.
 
     rate : float, list or 1d np.array : default 1.0
-        specifies the rate of integration.  If it is a list or array, it must be the same length as
-        `variable <ConstantIntegrator.default_variable>` (see `rate <ConstantIntegrator.rate>` for details).
+        specifies the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
+        the rate of exponential decay).  If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>`.
+
+    increment : float, list or 1d np.array : default 0.0
+        specifies an amount to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
+        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>`
+        (see `increment <AccumulatorIntegrator.increment>` for details).
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <ConstantIntegrator.function>`. (see
-        `noise <ConstantIntegrator.noise>` for details).
+        specifies random value to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`. If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>` (see `noise <AccumulatorIntegrator.noise>` for details).
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <ConstantIntegrator.default_variable>` (see `initializer <ConstantIntegrator.initializer>` for details).
+        `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
+        <AccumulatorIntegrator.initializer>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4577,50 +4585,56 @@ class AccumulatorIntegrator(
     ----------
 
     variable : number or np.array
-        **Ignored** by the ConstantIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for integrator
-         functions that depend on both a prior value and a new value (variable).
+        **Ignored** by the AccumulatorIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for
+        integrator functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d np.array
-        determines the rate of integration.
+        determines the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e., the
+        rate of exponential decay) in each call to `function <AccumulatorIntegrator.function>`.  If it is a list or
+        array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and each element is
+        used to multiply the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
+        it is used for Hadamard multiplication).  If it is a scalar or has a single element, its value is used to
+        multiply all the elements of `previous_value <AccumulatorIntegrator.previous_value>`.
 
-        If it has a single element, that element is added to each element of
-        `previous_value <ConstantIntegrator.previous_value>`.
-
-        If it has more than one element, each element is added to the corresponding element of
-        `previous_value <ConstantIntegrator.previous_value>`.
+    increment : float, function, list, or 1d np.array
+        determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>` and each element is added to the corresponding element of
+        `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
+        scalar or has a single element, its value is added to all the elements of `previous_value
+        <AccumulatorIntegrator.previous_value>`.
 
     noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <ConstantIntegrator.function>`.
+        determines a random value to be added in each call to `function <AccumulatorIntegrator.function>`.
+        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and
+        each element is added to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`
+        (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
+        the elements of `previous_value <AccumulatorIntegrator.previous_value>`.  If it is a function, it will be
+        executed separately and added to each element.
 
-        If noise is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+        .. note::
 
-        If noise is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
-
-        **Note:**
-        In order to generate random noise, we recommend selecting a probability distribution function
-        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-        its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-        the noise will simply be an offset that remains the same across all executions.
+            In order to generate random noise, a probability distribution function should be selected (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
 
     initializer : float, 1d np.array or list
-        determines the starting value for integration (i.e., the value to which
-        `previous_value <ConstantIntegrator.previous_value>` is set.
-
-        If initializer is a list or array, it must be the same length as `variable <ConstantIntegrator.default_variable>`.
+        determines the starting value for integration (i.e., the value to which `previous_value
+        <AccumulatorIntegrator.previous_value>` is set. If initializer is a list or array, it must be the same length
+        as `variable <AccumulatorIntegrator.default_variable>`.
 
         TBI:
 
         Initializer may be a function or list/array of functions.
 
-        If initializer is specified as a single float or function, while `variable <ConstantIntegrator.variable>` is
+        If initializer is specified as a single float or function, while `variable <AccumulatorIntegrator.variable>` is
         a list or array, initializer will be applied to each variable element. In the case of an initializer function,
         this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default variableClassDefault
-        stores previous value to which `rate <ConstantIntegrator.rate>` and `noise <ConstantIntegrator.noise>` will be
-        added.
+        stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
+        will be added.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
