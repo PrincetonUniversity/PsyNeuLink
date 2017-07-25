@@ -50,43 +50,47 @@ standard Python method of calling its constructor. An EVCMechanism that has been
 customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation` below).
 
 When an EVCMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
-**montioring_mechanism** argument) that is used to monitor and evaluate the System's performance.  The
-ObjectiveMechanism monitors each `Mechanism` and/or `OutputState` listed in the EVCMechanism's
-'monitor_for_control <EVCMechanism.monitor_for_control>` attribute, and evaluates them using the function specified in
-the EVCMechanism's `outcome_function` attribute. This information is used to set the `allocation` values for the
+**monitoring_mechanism** argument), that is assigned a set of `Mechanisms <Mechanism>` and/or `OutputStates
+<OutputState>` to monitor specified in the **monitor_for_control** argument of the EVCMechanism's constructor, and
+that evaluates these using a function specified in **outcome_function** argument of the EVCMechanism's constructor.
+A `MappingProjection` is also created that projects from the ObjectiveMechanism's `primary OutputState
+<OutputState_Primary>` to the EVCMechanism's XXXX
+
+COMMENT:
+This information is used to set the `allocation` values for the
 EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal (a specialized form of `OutputState` used by
-`ControlMechanisms <ControlMechanism>`) is assigned a  `ControlProjections <ControlProjection>` that projects
-to the `ParameterState` for each parameter controlled by a ControlSignal.  In addition, a set of `prediction
-mechanisms <XXX>`
+`ControlMechanisms <ControlMechanism>`) is assigned a  `ControlProjections <ControlProjection>` that projects to the
+`ParameterState` for each parameter controlled by a ControlSignal.  In addition, a set of `prediction mechanisms
+`EVCMechanism.prediction_mechanisms` are created that are used to keep a running average of inputs to the System over
+the course of multiple `TRIAL` \s; these averages are used to generate input to the System when the EVCMechanism
+simulates its execution. Each of these specialized Components is described in the sections that follow.
+COMMENT
 
-
- are created that are used to keep a running average of
-inputs to the system over the course of multiple executions.   These averages are used to generate input to the
-system when the EVCMechanism simulates its execution. Each of these specialized components is described in the
-sections that follow.
 
 .. _EVCMechanism_Structure:
 
 Structure
 ---------
 
-.. _EVCMechanism_InputStates:
-
-
-.. _EVCMechanism_MonitoredOutputStates:
-
 ObjectiveMechanism
 ~~~~~~~~~~~~~~~~~~
 
-An EVCMechanism uses an `ObjectiveMechanism` to evaluate the performance of the system. The ObjectiveMechanism is
-assigned a projection from each of the mechanisms and/or outputStates specified in EVCMechanism's
-`monitor_for_control <EVCMechanism.monitor_for_control>` attribute, which it evaluates using the function specified in
+.. _EVCMechanism_MonitoredOutputStates:
+
+An EVCMechanism uses an `ObjectiveMechanism` to evaluate the performance of the `System` to which it belongs.
+The ObjectiveMechanism is assigned a `MappingProjection` from each of the `Mechanisms <Mechanism>` and/or `OutputStates
+<OutputState>` specified in the **monitor_for_control** argument of the EVCMechanism's constructor (and listed in its
+`monitor_for_control <EVCMechanism.monitor_for_control>` attribute),
+which it evaluates using the function specified in
 the EVCMechanism's `outcome_function` attribute.  By default, the ObjectiveMechanism is assigned a projection from
 the `primary outputState <OutputState_Primary>` of every `TERMINAL` mechanism in the system, and its function
 calculates the product of their values.  However, the contribution of each item listed in
 `monitor_for_control <EVCMechanism.monitor_for_control>` can be specified using the EVCMechanism's
 `monitor_for_control_weights_and_exponents` attribute` (see `below <EVCMechanism_Examples>` for examples).
 The outputStates of the system being monitored by an EVCMechanism are listed in its `monitored_output_states` attribute.
+
+.. _EVCMechanism_InputStates:
+
 
 .. _EVC_Function
 
@@ -101,6 +105,25 @@ value of each ControlSignal). The default function is `ControlSignalGridSearch`,
 system under a range of specified allocationPolicies, and returns the `allocation_policy` that generates the best
 performance (the greatest EVC). This evaluation and selection procedure, including the four evaluation functions that it
 uses (all of which are customizable), is described below.
+
+.. _EVCMechanism_Prediction_Mechanisms:
+
+Prediction Mechanisms
+~~~~~~~~~~~~~~~~~~~~~
+
+Each time the EVCMechanism is executed, it `simulates the execution <EVCMechanism_Execution>` of the system
+in order to evaluate the system's performance.  To do so, it must provide an input to the system.  It uses its
+prediction mechanisms to do this.  Each prediction mechanism provides an estimate of the input to an `ORIGIN`
+mechanism in the system, based on a running average of inputs to that mechanism in previous rounds of execution.
+The EVCMechanism uses these estimates to provide input to the system each time it simulates it to evaluate its
+performance.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, a prediction mechanism is
+created for each `ORIGIN` mechanism in the system. For each projection received by the `ORIGIN` mechanism,
+a `MappingProjection` from the same source is created that projects to the prediction mechanism.  The type of
+mechanism used for the prediction mechanisms can be specified using the EVCMechanism's
+`prediction_mechanism_type` attribute, and their parameters can be specified using the EVCMechanism's
+`prediction_mechanism_params` attribute.  The default type is an 'IntegratorMechanism`, that calculates an
+exponentially weighted time-average of its input.  The prediction mechanisms for an EVCMechanism are listed in its
+`predictionMechanisms` attribute.
 
 .. _EVC_Calculation:
 
@@ -172,7 +195,6 @@ COMMENT
    in the same manner as the default function assignment. Therefore, once assigned, it too must be referenced as
    ``<EVCMechanism>.<function_attribute>.function``.
 
-
 .. _EVCMechanism_ControlSignal:
 
 ControlSignals
@@ -196,24 +218,6 @@ The `cost <ControlSignal.cost>` is included in the evaluation that the EVCMechan
 future.  When the EVCMechanism chooses an `allocation_policy` to evaluate, it selects an allocation value from the
 ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribute.
 
-.. _EVCMechanism_Prediction_Mechanisms:
-
-Prediction Mechanisms
-~~~~~~~~~~~~~~~~~~~~~
-
-Each time the EVCMechanism is executed, it `simulates the execution <EVCMechanism_Execution>` of the system
-in order to evaluate the system's performance.  To do so, it must provide an input to the system.  It uses its
-prediction mechanisms to do this.  Each prediction mechanism provides an estimate of the input to an `ORIGIN`
-mechanism in the system, based on a running average of inputs to that mechanism in previous rounds of execution.
-The EVCMechanism uses these estimates to provide input to the system each time it simulates it to evaluate its
-performance.  When an EVCMechanism is `created automatically <EVCMechanism_Creation>`, a prediction mechanism is
-created for each `ORIGIN` mechanism in the system. For each projection received by the `ORIGIN` mechanism,
-a `MappingProjection` from the same source is created that projects to the prediction mechanism.  The type of
-mechanism used for the prediction mechanisms can be specified using the EVCMechanism's
-`prediction_mechanism_type` attribute, and their parameters can be specified using the EVCMechanism's
-`prediction_mechanism_params` attribute.  The default type is an 'IntegratorMechanism`, that calculates an
-exponentially weighted time-average of its input.  The prediction mechanisms for an EVCMechanism are listed in its
-`predictionMechanisms` attribute.
 
 .. _EVCMechanism_Execution:
 
@@ -514,6 +518,9 @@ class EVCMechanism(ControlMechanism_Base):
         the `ProcessingMechanism` class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named based on `ORIGIN` mechanism + PREDICTION_MECHANISM,
         and assigned an `outputState <OutputState>` with a name based on the same
+
+    prediction_mechanisms : List[ProcessingMechanism]
+        list of predictions mechanisms generated for XXXX based on XXXX
 
     prediction_mechanism_params : Dict[param key, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
