@@ -21,22 +21,23 @@ designed to implement a form of the Expected Value of Control (EVC) Theory descr
 the purpose and structure of the EVCMechanism.
 
 An EVCMechanism has one `ControlSignal` for each parameter of the mechanism or function that it controls.  Each
-ControlSignal is associated with a `ControlProjection`.  The ControlProjection regulates the value of the parameter
-it controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`. A
-particular combination of ControlSignal intensities is called an `allocation_policy`. When a system is executed,
-it concludes by executing the EVCMechanism, which determines the `allocation_policy` (i.e., the ControlSignal
-intensities, and thereby the values of the parameters being controlled) in the next `TRIAL`.
+ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it controls, with the
+magnitude of that regulation determined by the ControlSignal's `intensity`. A particular combination of ControlSignal
+intensities is called an `allocation_policy`. When a `System` is executed that uses and EVCMechanism as its `controller
+<System_Base.controller>`,it concludes by executing the EVCMechanism that determines its `allocation_policy` for the
+next `TRIAL`.  That, in turn, determines the ControlSignal intensities, and therefore the values of the parameters
+being controlled for the next `TRIAL`.
 
 .. _EVCMechanism_EVC:
 
-The procedure by which the EVCMechanism selects an `allocation_policy` when it is executed is determined by its
-`function <EVCMechanism.function>` attribute. By default, this evaluates the performance of the system under every
-possible `allocation_policy`, and chooses the best one. It does this by simulating the system under each
-`allocation_policy`, and evaluating the expected value of control (EVC): a cost-benefit analysis that weighs
-the cost of the ControlSignals against the outcome of performance for the given policy.  The EVCMechanism then
-selects the `allocation_policy` that generates the maximum EVC, and that allocation_policy is implemented for the
-next `TRIAL`. Each step of this procedure can be modified, or it can be replaced entirely, by assigning
-custom functions to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
+The EVCMechanism uses it `function <EVCMechanism.function>` to select an `allocation_policy` for its `System` in the
+next `TRIAL` of execution.  The default `function <EVCMechanism.function>` simulates the `System` under every
+`allocation_policy` (within a `specified set <_EVC_Calculation>`), uses an `ObjectiveMechanism` to evaluate performance
+of the System under each, and chooses the one that generates greatest expected value of control (EVC): a cost-benefit
+analysis that weighs the cost of the ControlSignals against the outcome of performance for the given policy.  The
+EVCMechanism selects the `allocation_policy` that generates the maximum EVC, and  implements that for the next
+`TRIAL`. Each step of this procedure can be modified, or it can be replaced entirely, by assigning custom functions
+to corresponding parameters of the EVCMechanism, as described under `EVC_Calculation` below.
 
 .. _EVCMechanism_Creation:
 
@@ -49,14 +50,17 @@ standard Python method of calling its constructor. An EVCMechanism that has been
 customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation` below).
 
 When an EVCMechanism is constructed automatically, it creates an `ObjectiveMechanism` (specified in its
-`montioring_mechanism` attribute) that is used to monitor and evaluate the system's performance.  The
-ObjectiveMechanism monitors each mechanism and/or outputState listed in the EVCMechanism's
+**montioring_mechanism** argument) that is used to monitor and evaluate the System's performance.  The
+ObjectiveMechanism monitors each `Mechanism` and/or `OutputState` listed in the EVCMechanism's
 'monitor_for_control <EVCMechanism.monitor_for_control>` attribute, and evaluates them using the function specified in
 the EVCMechanism's `outcome_function` attribute. This information is used to set the `allocation` values for the
-EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal is implemented as an `outputState
-<OutputState>` of the EVCMechanism, that is assigned a  `ControlProjections <ControlProjection>` which projects to the
-`parameterStates <ParameterState>` for the parameters of the mechanisms and/or functions controlled by that
-ControlSignal.  In addition, a set of prediction mechanisms  are created that are used to keep a running average of
+EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal (a specialized form of `OutputState` used by
+`ControlMechanisms <ControlMechanism>`) is assigned a  `ControlProjections <ControlProjection>` that projects
+to the `ParameterState` for each parameter controlled by a ControlSignal.  In addition, a set of `prediction
+mechanisms <XXX>`
+
+
+ are created that are used to keep a running average of
 inputs to the system over the course of multiple executions.   These averages are used to generate input to the
 system when the EVCMechanism simulates its execution. Each of these specialized components is described in the
 sections that follow.
@@ -67,6 +71,8 @@ Structure
 ---------
 
 .. _EVCMechanism_InputStates:
+
+
 .. _EVCMechanism_MonitoredOutputStates:
 
 ObjectiveMechanism
@@ -102,8 +108,8 @@ EVC Calculation
 ^^^^^^^^^^^^^^^
 
 The default EVC `function <EVCMechanism.function>` calculates the expected value of control (EVC) by a conducting a
-grid search over every possible `allocation_policy`.  The set of allocationPolicies sampled is determined by the
-`allocation_samples` attribute of each `ControlSignal`. Each policy is constructed by drawing one value from the
+grid search over every `allocation_policy` within a specified set.  The set of allocationPolicies sampled is determined
+by the `allocation_samples` attribute of each `ControlSignal`. Each policy is constructed by drawing one value from the
 `allocation_samples` attribute of each of the EVCMechanism's ControlSignals.  An `allocation_policy` is constructed
 for every possible combination of values, and stored in the EVCMechanism's `control_signal_search_space` attribute.  The
 EVCMechanism's `run_simulation` method is then used to simulate the system under each `allocation_policy` in
@@ -807,7 +813,7 @@ class EVCMechanism(ControlMechanism_Base):
         # self.predictionProcesses = []
 
         # List of prediction mechanism tuples (used by system to execute them)
-        self.prediction_mechs = []
+        self.prediction_mechanisms = []
 
         # Get any params specified for predictionMechanism(s) by EVCMechanism
         try:
@@ -857,13 +863,13 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Add to list of EVCMechanism's prediction_object_items
             # prediction_object_item = prediction_mechanism
-            self.prediction_mechs.append(prediction_mechanism)
+            self.prediction_mechanisms.append(prediction_mechanism)
 
             # Add to system executionGraph and executionList
             self.system.executionGraph[prediction_mechanism] = set()
             self.system.executionList.append(prediction_mechanism)
 
-        self.predictionMechanisms = MechanismList(self, self.prediction_mechs)
+        self.predictionMechanisms = MechanismList(self, self.prediction_mechanisms)
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
