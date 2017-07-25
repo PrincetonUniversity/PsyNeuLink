@@ -213,7 +213,7 @@ or matrix rows) corresponds to the elements of the <a class="reference internal"
 (inner list items, array axis 1, or matrix columns) corresponds to the weighting of the contribution that a
 given <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> makes to the <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</li>
 </ul>
-<ul class="simple">
+<ul class="simple" id="matrix-keywords">
 <li><strong>Matrix keyword</strong>.  This is used to specify a type of matrix without having to specify its individual values.
 Any of the <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords" title="Keywords.MatrixKeywords"><code class="xref any py py-class docutils literal"><span class="pre">matrix</span> <span class="pre">keywords</span></code></a> can be used.</li>
 </ul>
@@ -223,7 +223,7 @@ that provides more flexibility than <a class="reference internal" href="Keywords
 sender and receiver, with random numbers drawn from a uniform distribution within a specified range and with a
 specified offset.</li>
 </ul>
-<ul class="simple">
+<ul class="simple" id="mappingprojection-tuple-specification">
 <li><strong>Tuple</strong>.  This is used to specify a Projection to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the matrix
 along with the <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>  itself. The tuple must have two items:
 the first can be any of the specifications described above;  the second must be a
@@ -323,6 +323,12 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <code class="descname">has_learning_projection</code><a class="headerlink" href="#PathwayProjections.MappingProjection.MappingProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool : False</em> &#8211; identifies whether the MappingProjection&#8217;s <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> has been assigned a
 <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="PathwayProjections.MappingProjection.MappingProjection.value">
+<code class="descname">value</code><a class="headerlink" href="#PathwayProjections.MappingProjection.MappingProjection.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ndarray</em> &#8211; Output of MappingProjection, transmitted to <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
