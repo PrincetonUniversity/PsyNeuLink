@@ -23,7 +23,7 @@ as summarized in the table below:
 | *State Type*     | *Owner*           |      *Description*     |    *Modulated by*    |      *Specification*          |
 +==================+===================+========================+======================+===============================+
 | `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`       |`InputState` constructor;      |
-|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
+|                  |                   |`MappingProjection` \\   |                      |`Mechanism` constructor or     |
 |                  |                   |(s)                     |                      |its `add_states` method        |
 +------------------+-------------------+------------------------+----------------------+-------------------------------+
 |`ParameterState`  |  `Mechanism` or   |represents parameter    |`LearningSignal`      |Implicitly whenever a          |
@@ -32,11 +32,11 @@ as summarized in the table below:
 |                  |                   |                        |                      |<ParameterState_Specification>`|
 +------------------+-------------------+------------------------+----------------------+-------------------------------+
 | `OutputState`    |  `Mechanism`      |provides output to      | `GatingSignal`       |`OutputState` constructor;     |
-|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
+|                  |                   |`MappingProjection` \\   |                      |`Mechanism` constructor or     |
 |                  |                   |(s)                     |                      |its `add_states` method        |
 +------------------+-------------------+------------------------+----------------------+-------------------------------+
 |`ModulatorySignal`|`AdaptiveMechanism`|provides value for      |                      |`AdaptiveMechanism`            |
-|                  |                   |`ModulatoryProjection` \|                      |constructor; tuple in State    |
+|                  |                   |`ModulatoryProjection` \\|                      |constructor; tuple in State    |
 |                  |                   |(s)                     |                      |or parameter specification     |
 +------------------+-------------------+------------------------+----------------------+-------------------------------+
 

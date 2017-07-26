@@ -770,7 +770,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
-           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>` \s
+           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>` \\s
            of its `OutputStates <Mechanism_Base.outputStates>`.
 
     default_value : ndarray : default None

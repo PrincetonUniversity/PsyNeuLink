@@ -732,7 +732,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     output_values : 2d np.array
         the first item is the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
-        <LearningMechanism_Output_Error_Signal>`, followed by the `value <LearningSignal.value>` \(s) of its
+        <LearningMechanism_Output_Error_Signal>`, followed by the `value <LearningSignal.value>` \\(s) of its
         `LearningSignal(s) <LearningMechanism_LearningSignal>`, and then those of any additional (e.g., user-specified)
         `OutputStates <OutputState>`.
 
