@@ -46,59 +46,75 @@ Creating an EVCMechanism
 
 An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`;  it is also
 created automatically when a `System` is created and an EVCMechanism is specified as its `controller` (see
-`Controller <System_Execution_Control>`).  If it is created directly (using its constructor), it creates  an
-`ObjectiveMechanism`, assigns the list of `OutputState` specifications in its **monitor_for_control** argument
-to the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute, and creates a
-`MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
-<ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.  It also creates
-a `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
-<EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`, and assigns these
-to its `prediction_mechanisms` attribute.
+`Controller <System_Execution_Control>`).  If it is created directly (using its constructor), it creates:
+
+* an `ObjectiveMechanism`, using the list of `OutputState` specifications in the EVCMechanism's **monitor_for_control**
+  argument as the ObjectiveMechanism's **monitored_values** argument (the specified OutputStates are then listed in
+  ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>`  and the EVCMechanism's
+  `monitored_output_states  <EVCMechanism.monitored_output_states>` attributes);
+..
+* a `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
+  <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
+..
+* a `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
+  <EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`,
+  and assigns these to its `prediction_mechanisms` attribute.
 
 When an EVCMechanism is created automatically as part of a `System <System_Creation>`, the same set of Components are
-created as described above, with the following modifications:  the `OutputStates <OutputState>` specified in
-the System's `monitor_for_control <System_Base.monitor_for_control>` attribute are used to create the
-ObjectiveMechanism; and a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals
-<EVCMechanism.control_signals>` attribute for every parameter of any `Component` in the System that has been
-`specified for control <ControlMechanism_Control_Signals>`. An EVCMechanism that has been constructed automatically
-can be customized by assigning values to its attributes (e.g., those described above, or its `function
-<EVCMechanism.function>` as described under `EVC_Calculation `below).
+created as described above, with the following modifications:
+
+* the `OutputStates <OutputState>` specified in the System's `monitor_for_control <System_Base.monitor_for_control>`
+  attribute are used to create the ObjectiveMechanism
+..
+* a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals <EVCMechanism.control_signals>`
+  attribute for every parameter of any `Component` in the System that has been `specified for control
+  <ControlMechanism_Control_Signals>`.
+
+An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (
+e.g., those described above, or its `function <EVCMechanism.function>` as described under `EVC_Calculation `below).
 
 .. _EVCMechanism_Structure:
 
 Structure
 ---------
 
-An EVCMechanism receives its input from the *ERROR_SIGNAL* `OutputState <ObjectiveMechanism.output_state>` of an
-ObjectiveMechanism
-
-
-
-A LearningMechanism has three `InputStates <InputState>`, a learning `function <LearningMechanism.function>`,
-and two types of `OutputStates <OutputState>` that are used, respectively, to receive, compute, and transmit the
-information needed to modify the MappingProjection(s) for which it is responsible.  In addition, it has several
-attributes that govern its operation.  These are all described below.
-
-
-
-An EVCMechanism is generally paired an ObjectiveMechanism, that is used to ...
-In addition, it has ControlSignals, allocation_policy, and a set of specialized functions that sample the
-allocation policy, evaluate ControlSignal Costs, and copute the EVC
-
-
+An EVCMechanism belongs to a `System` (identified in its `system <EVCMechanism.system>` attribute).  It receives its
+input from the *ERROR_SIGNAL* `OutputState <ObjectiveMechanism_Structure>` of an `ObjectiveMechanism` (identified
+in its `monitoring_mechanism <EVCMechansm.monitoring_mechanism>` attribute), and has a specialized `function
+EVCMechanism.function>` that simulates the performance of its `system <EVCMechanism.system>` using inputs provided
+by a set of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` and different combinations of values assigned
+to its `ControlSignals <ControlSignal>` (listed in its `control_signals <EVCMechanism.control_signals>` attribute),
+each of which controls a parameter of a Component in its `system <EVCMechanism.system>`.  Each of these specialized
+Components is described below.
 
 
 COMMENT:
+
+ that is creates and configures to monitor and evaluate the
+set of OutputStates specified the **monitor_for_control** argument of the EVCMechanism's constructor (or that of the
+`System` to which it belongs), and listed in its `monitored_output_states <EVCMechanism.monitored_output_states>`
+attribute.  It also has a set of `ControlSignals <ControlSignal>` used to control the parameters specified in the
+**control_signals** argument of its constructor (and listed in its `control_signals <EVCMechanism.control_signals>`
+attribute), as well as a specialized `function <EVCMechanism_Function>` that simulates the performance of its
+`system <EVCMechanism.system>` under various allocation policies, and a set of
+
+that
+assigned `ControlSignals
+<ControlSignal>` that are used
+
+In addition, it has ControlSignals, allocation_policy, and a set of specialized functions that sample the
+allocation policy, evaluate ControlSignal Costs, and copute the EVC
+
 This information is used to set the `allocation` values for the
 EVCMechanism's  `ControlSignals <ControlSignal>`.  Each ControlSignal (a specialized form of `OutputState` used by
 `ControlMechanisms <ControlMechanism>`) is assigned a  `ControlProjections <ControlProjection>` that projects to the
 `ParameterState` for each parameter controlled by a ControlSignal.  In addition, a set of `prediction mechanisms
 `EVCMechanism.prediction_mechanisms` are created that are used to keep a running average of inputs to the System over
 the course of multiple `TRIAL` \s; these averages are used to generate input to the System when the EVCMechanism
-simulates its execution. Each of these specialized Components is described in the sections that follow.
+simulates its execution.
+
+Each of these specialized Components is described in the sections that follow.
 COMMENT
-
-
 
 
 ObjectiveMechanism
@@ -121,7 +137,7 @@ The outputStates of the system being monitored by an EVCMechanism are listed in 
 .. _EVCMechanism_InputStates:
 
 
-.. _EVC_Function
+.. _EVCMechanism_Function
 
 Function
 ~~~~~~~~
