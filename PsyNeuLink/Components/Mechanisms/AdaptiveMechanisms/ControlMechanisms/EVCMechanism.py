@@ -50,26 +50,17 @@ created automatically when a `System` is created and an EVCMechanism is specifie
 `ObjectiveMechanism`, assigns the list of `OutputState` specifications in its **monitor_for_control** argument
 to the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute, and creates a
 `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
-<ObjectiveMechanism.output_state>` to the EVCMechanism's `primary InputState <InputState_Primary>`.  It also creates
-a `prediction mechanism <EVCMechanism_PredictionMechanisms>` for each `ORIGIN` Mechanism in its `system
-<EVCMechanism.system>`, assigns a MappingProjection to each from the `system`, and assigns these to its
-`prediction_mechanisms` attribute.
+<ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.  It also creates
+a `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
+<EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`, and assigns these
+to its `prediction_mechanisms` attribute.
 
-CREATED AUTOMATICALLY:  DOES ALL THESE THINGS, using all parameters in system specified for control as
-ControlSignals, and the Systems monitor_for_control list as its own.
-
-
-More commonly, however, EVCMechanisms are created automatically when a `System` is created and an EVCMechanism is
-specified as its `controller` (see `Controller <System_Execution_Control>`).  When an EVCMechanism is constructed
-automatically by a System, it creates an `ObjectiveMechanism` and assigns to its `monitored_values
-<ObjectiveMechanism.monitored_values>` attribute the list of `OutputStates <OutputState>` specified in the
-'monitor_for_control` argument of the System's constructor, and a `MappingProjection` is created that projects from
-the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState <ObjectiveMechanism.output_state>` to the EVCMechanism's
-`primary InputState <InputState_Primary>`. The EVCMechanism also creates a `ControlSignal` for each parameter
-of the System that has been `specified for control <ControlMechanism_Control_Signals>`, and assigns these to its
-`control_signals <EVCMechanism.control_signals>` attribute.  Finally, a set of `prediction mechanisms
-`EVCMechanism.prediction_mechanisms` are created, that receive MappingProjections from the EVCMechanism's `system
-EVCMechanism.system` to its `ORIGIN` Mechanisms.  An EVCMechanism that has been constructed automatically
+When an EVCMechanism is created automatically as part of a `System <System_Creation>`, the same set of Components are
+created as described above, with the following modifications:  the `OutputStates <OutputState>` specified in
+the System's `monitor_for_control <System_Base.monitor_for_control>` attribute are used to create the
+ObjectiveMechanism; and a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals
+<EVCMechanism.control_signals>` attribute for every parameter of any `Component` in the System that has been
+`specified for control <ControlMechanism_Control_Signals>`. An EVCMechanism that has been constructed automatically
 can be customized by assigning values to its attributes (e.g., those described above, or its `function
 <EVCMechanism.function>` as described under `EVC_Calculation `below).
 
@@ -840,7 +831,7 @@ class EVCMechanism(ControlMechanism_Base):
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
 
-        Instantiate PredictionMechanisms for ORIGIN mechanisms in self.system; these will now be TERMINAL mechanisms
+        Instantiate prediction_mechanisms for ORIGIN mechanisms in self.system; these will now be TERMINAL mechanisms
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
             - therefore if an associated input mechanism must be monitored by the EVCMechanism, it must be specified
                 explicitly in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
