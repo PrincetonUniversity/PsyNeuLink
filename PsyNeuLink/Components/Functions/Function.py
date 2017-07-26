@@ -3253,6 +3253,45 @@ class Integrator(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
 
+    # def _validate_initializer(self, initializer, var):
+    #     # Initializer is a list or array
+    #     if isinstance(initializer, (np.ndarray, list)):
+    #         # Variable is a list/array
+    #         if isinstance(var, (np.ndarray, list)):
+    #             if len(initializer) != np.array(var).size:
+    #                 # Formatting initializer for proper display in error message
+    #                 try:
+    #                     formatted_initializer = list(map(lambda x: x.__qualname__, initializer))
+    #                 except AttributeError:
+    #                     formatted_initializer = initializer
+    #                 raise FunctionError(
+    #                     "The length ({}) of the array specified for the initializer parameter ({}) of {} "
+    #                     "must match the length ({}) of the default input ({}). If initializer is specified as"
+    #                     " an array or list, it must be of the same size as the input."
+    #                     .format(len(initializer), formatted_initializer, self.name, np.array(var).size,
+    #                             var))
+    #             else:
+    #                 for initializer_item in initializer:
+    #                     if not isinstance(initializer_item, (float, int)) and not callable(initializer_item):
+    #                         raise FunctionError(
+    #                             "The elements of a initializer list or array must be floats or functions.")
+    #
+    #
+    #         # Variable is not a list/array
+    #         else:
+    #             raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
+    #                                 "default input value is also a list or array.".format(initializer, self.name))
+    #
+    #         # # Elements of list/array have different types
+    #         # if not all(isinstance(x, type(initializer[0])) for x in initializer):
+    #         #     raise FunctionError("All elements of initializer list/array ({}) for {} must be of the same type. "
+    #         #                         .format(initializer, self.name))
+    #
+    #     elif not isinstance(initializer, (float, int)) and not callable(initializer):
+    #         raise FunctionError(
+    #             "Initializer parameter ({}) for {} must be a float, function, or array/list of these."
+    #                 .format(initializer, self.name))
+
     def _try_execute_param(self, param, var):
 
         # param is a list; if any element is callable, execute it
@@ -3278,54 +3317,6 @@ class Integrator(
             else:
                 param = param()
         return param
-
-    def _validate_initializer(self, initializer):
-        self.initializer_function = False
-        # Initializer is a list or array
-
-        if isinstance(initializer, (np.ndarray, list)):
-            if len(initializer) == 1 and isinstance(initializer[0], (list, np.ndarray)):
-                initializer = initializer[0]
-            # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(initializer) != np.array(self.variable).size:
-                    # Formatting initializer for proper display in error message
-                    try:
-                        formatted_initializer = list(map(lambda x: x.__qualname__, initializer))
-                    except AttributeError:
-                        formatted_initializer = initializer
-                    raise FunctionError(
-                        "The length ({}) of the array specified for the initializer parameter ({}) of {} "
-                        "must match the length ({}) of the default input ({}). If initializer is specified as"
-                        " an array or list, it must be of the same size as the input."
-                            .format(len(initializer), formatted_initializer, self.name, np.array(self.variable).size,
-                                    self.variable))
-                else:
-                    # Initializer is a list or array of functions
-                    if callable(initializer[0]):
-                        self.initializer_function = True
-                    # Initializer is a list or array of invalid elements
-                    elif not isinstance(initializer[0], (float, int)):
-                        raise FunctionError(
-                            "The elements of the initializer list/array ({}) for [] must be floats or functions."
-                                .format(initializer, self.name))
-
-            # Variable is not a list/array
-            else:
-                raise FunctionError("The initializer parameter ({}) for {} may only be a list or array if the "
-                                    "default input value is also a list or array.".format(initializer, self.name))
-            # elements of initializer list/array are of different types
-            if not all(isinstance(x, type(initializer[0])) for x in initializer):
-                raise FunctionError("All elements of initializer list/array ({}) for {} must be of the same type. "
-                                    .format(initializer, self.name))
-
-        elif callable(initializer):
-            self.initializer_function = True
-
-        elif not isinstance(initializer, (float, int)):
-            raise FunctionError(
-                "Initializer parameter ({}) for {} must be a float, function, array or list of floats, or "
-                "array or list of functions.".format(initializer, self.name))
 
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
@@ -3531,9 +3522,6 @@ class SimpleIntegrator(
 
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
-
-
-        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = self._initializer
@@ -3760,8 +3748,6 @@ class ConstantIntegrator(
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
-
-        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
@@ -4035,8 +4021,6 @@ class AdaptiveIntegrator(
         noise = self._try_execute_param(self.noise, variable)
 
 
-        # TBI: execute initializer function if self.initializer_function == True
-
         # try:
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
@@ -4255,8 +4239,6 @@ class DriftDiffusionIntegrator(
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
         noise = self.noise
-
-        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
@@ -4481,8 +4463,6 @@ class OrnsteinUhlenbeckIntegrator(
         decay = self.paramsCurrent[DECAY]
 
         noise = self.noise
-
-        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
@@ -4807,8 +4787,6 @@ class AccumulatorIntegrator(
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
-
-        # TBI: execute initializer function if self.initializer_function == True
 
         # try:
         #     previous_value = params[INITIALIZER]
