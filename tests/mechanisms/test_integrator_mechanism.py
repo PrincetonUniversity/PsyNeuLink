@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator, NormalDist, UniformDist
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Process import process
@@ -41,6 +41,65 @@ def test_integrator_simple():
     val2 = float(I.execute(0))
 
     assert [val, val2] == [10.0, 5.0]
+
+def test_integrator_simple_noise_fn():
+    I = IntegratorMechanism(
+        name='IntegratorMechanism',
+        function=SimpleIntegrator(
+            noise = NormalDist().function
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+#     # P = process(pathway=[I])
+
+    #  returns previous_value + rate*variable + noise
+    # so in this case, returns 10.0
+    val = float(I.execute(10))
+
+    # testing initializer
+    I.function_object.reset_initializer = 5.0
+
+    val2 = float(I.execute(0))
+
+    np.testing.assert_allclose(val, 11.86755799)
+    np.testing.assert_allclose(val2, 4.022722120123589)
+
+def test_integrator_simple_noise_fn_var_list():
+    I = IntegratorMechanism(
+        name='IntegratorMechanism',
+        default_variable= [0, 0, 0, 0],
+        function=SimpleIntegrator(
+            noise = NormalDist().function,
+            default_variable= [0,0,0,0]
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+#     # P = process(pathway=[I])
+
+    #  returns previous_value + rate*variable + noise
+    # so in this case, returns 10.0
+    val = I.execute([10,10,10,10])[0]
+
+    np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
+
+def test_integrator_simple_noise_mixed_list_var_list():
+    I = IntegratorMechanism(
+        name='IntegratorMechanism',
+        default_variable= [0, 0, 0, 0],
+        function=SimpleIntegrator(
+            # noise = [NormalDist().function, UniformDist().function, NormalDist().function , NormalDist().function],
+            noise=[1.0,1.0,1.0,1.0],
+            default_variable= [0,0,0,0]
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+#     # P = process(pathway=[I])
+
+    #  returns previous_value + rate*variable + noise
+    # so in this case, returns 10.0
+    val = I.execute([10,10,10,10])[0]
+
+    np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

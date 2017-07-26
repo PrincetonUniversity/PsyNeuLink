@@ -3233,14 +3233,10 @@ class Integrator(
                         .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
                                 self.variable))
                 else:
-                    # Noise is a list or array of functions
-                    if callable(noise[0]):
-                        self.noise_function = True
-                        # Noise is a list or array of invalid elements
-                    elif not isinstance(noise[0], (float, int)):
-                        self.noise_function = False
-                        raise FunctionError(
-                            "The elements of a noise list or array must be floats or functions.")
+                    for noise_item in noise:
+                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                            raise FunctionError(
+                                "The elements of a noise list or array must be floats or functions.")
 
 
             # Variable is not a list/array
@@ -3248,19 +3244,44 @@ class Integrator(
                 raise FunctionError("The noise parameter ({}) for {} may only be a list or array if the "
                                     "default input value is also a list or array.".format(noise, self.name))
 
-            # Elements of list/array have different types
-            if not all(isinstance(x, type(noise[0])) for x in noise):
-                raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
-                                    .format(noise, self.name))
+            # # Elements of list/array have different types
+            # if not all(isinstance(x, type(noise[0])) for x in noise):
+            #     raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
+            #                         .format(noise, self.name))
 
-
-        elif callable(noise):
-            self.noise_function = True
-
-        elif not isinstance(noise, (float, int)):
+        elif not isinstance(noise, (float, int)) and not callable(noise):
             raise FunctionError(
-                "Noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                "array or list of functions.".format(noise, self.name))
+                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
+                    .format(noise, self.name))
+
+    def _try_execute_param(self, param, var):
+        print("VAR = ", var)
+        print("PARAM = ", param)
+        # param is a list; if any element is callable, execute it
+        if isinstance(param, (np.ndarray, list)):
+            for i in range(len(param)):
+                if callable(param[i]):
+                    param[i] = param[i]()
+        # param is one function
+        elif callable(param):
+            # if the variable is a list/array, execute the param function separately for each element
+            if isinstance(var, (np.ndarray, list)):
+                if isinstance(var[0], (np.ndarray, list)):
+                    new_param = []
+                    for i in var[0]:
+                        new_param.append(param())
+                    print("NEW_PARAM = ", new_param)
+                    param = new_param
+                else:
+                    new_param = []
+                    for i in var:
+                        new_param.append(param())
+                    print("NEW_PARAM = ", new_param)
+                    param = new_param
+            # if the variable is not a list/array, execute the param function
+            else:
+                param = param()
+        return param
 
     def _validate_initializer(self, initializer):
         self.initializer_function = False
@@ -3513,13 +3534,7 @@ class SimpleIntegrator(
             offset = self.offset
 
         # execute noise if it is a function
-        noise = self.noise
-        if isinstance(noise, (np.ndarray, list)):
-            for i in range(len(noise)):
-                if callable(noise[i]):
-                    noise[i] = noise[i]()
-        elif callable(noise):
-            noise = self.noise()
+        noise = self._try_execute_param(self.noise, variable)
 
 
         # TBI: execute initializer function if self.initializer_function == True
