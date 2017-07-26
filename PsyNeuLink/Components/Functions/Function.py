@@ -4672,7 +4672,7 @@ class AccumulatorIntegrator(
                          prefs=prefs,
                          context=context)
 
-        self.variable = self.initializer
+        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4813,7 +4813,7 @@ class AccumulatorIntegrator(
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
 
-        previous_value = np.atleast_2d(self.variable)
+        previous_value = np.atleast_2d(self.previous_value)
 
         value = previous_value*rate + noise + increment
 
@@ -4821,8 +4821,19 @@ class AccumulatorIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.variable = value
+            self.previous_value = value
         return value
+
+    # In an AccumulatorIntegrator, `previous_value` mirrors `variable` because the EVC control mechanism
+    # manipulates `variable`: for the AccumulatorIntegrator, the appropriate attribute for
+    # EVC to manipulate is instead `previous_value`.
+    @property
+    def previous_value(self):
+        return self.variable
+
+    @previous_value.setter
+    def previous_value(self, setting):
+        self.variable = setting
 
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()

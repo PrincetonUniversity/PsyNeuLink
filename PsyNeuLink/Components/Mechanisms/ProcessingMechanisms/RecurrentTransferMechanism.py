@@ -545,15 +545,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         if auto is not None and cross is not None:
             a = get_auto_matrix(auto, size=self.size[0])
             if a is None:
-                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `auto` parameter should be a number, 1D array, "
-                                           "2d array, 2d list, or numpy matrix".
+                raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
+                                             " type {}. Instead, the `auto` parameter should be a number, 1D array, "
+                                             "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
             c = get_cross_matrix(cross, size=self.size[0])
             if c is None:
-                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
-                                           "length one, 2d array, 2d list, or numpy matrix".
+                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was "
+                                             "of type {}. Instead, the `cross` parameter should be a number, 1D array "
+                                             "of length one, 2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, cross, type(cross)))
             self.matrix = a + c
         elif auto is not None:
@@ -607,7 +607,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
-
         if INITIALIZING in context:
             if self.decay is not None and self.decay != 1.0:
                 self.previous_input *= self.decay

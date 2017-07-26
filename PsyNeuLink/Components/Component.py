@@ -1883,7 +1883,8 @@ class Component(object):
         #       not called before being passed
         if isinstance(variable, list) and callable(variable[0]):
             variable = variable[0]()
-
+        # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
+        # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
         # Note: this insures that self.variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
@@ -2700,11 +2701,18 @@ def make_property(name, default_value):
 
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
         if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-            param_state_owner._parameter_states[name].variable = val
-            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED in the current tests. You can test this by
-            # putting a nonsense value instead of `val` in the line above (the tests should all still pass). Consider
+            param_state = param_state_owner._parameter_states[name]
+            param_state.variable = val
+
+            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+            # 'reset_initializer'
+            if hasattr(param_state.function_object, 'initializer'):
+                param_state.function_object.reset_initializer = val
+
+            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED in the current tests. Consider
             # writing tests for this functionality, then. In particular, this functionality would probably be used if a
-            # user created a mechanism, then manually changed a function parameter
+            # user created a mechanism, then manually changed a parameter
 
     # Create the property
     prop = property(getter).setter(setter)

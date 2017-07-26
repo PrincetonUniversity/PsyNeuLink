@@ -1,4 +1,4 @@
-rom PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 #from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic, Linear

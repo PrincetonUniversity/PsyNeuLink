@@ -1795,8 +1795,6 @@ class Mechanism_Base(Mechanism):
 
         for state in self._parameter_states:
 
-            # state_name = state.name
-
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
     def _update_output_states(self, runtime_params=None, time_scale=None, context=None):

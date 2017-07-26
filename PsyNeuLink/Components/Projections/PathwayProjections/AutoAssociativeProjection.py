@@ -106,22 +106,26 @@ class AutoAssociativeProjection(MappingProjection):
 
         self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
-        #
         # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
+        # so the ParameterStates for 'auto' and 'cross' live on the RecurrentTransferMechanism rather than on
+        # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
         if isinstance(self.sender, OutputState):
             owner_mech = self.sender.owner
         elif isinstance(self.sender, Mechanism):
             owner_mech = self.sender
         else:
-            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or State: currently")
+            raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+                                       " the sender is {}".
+                                       format(self.__class__.__name__, self.name, self.sender))
 
         param_keys = owner_mech._parameter_states.key_values
         if AUTO not in param_keys or CROSS not in param_keys:
-            raise AutoAssociativeError("Auto or Cross ParameterState not found in {} \"{}\"; here are names of the "
-                                       "current ParameterStates for {}: {}".format(owner_mech.__class__.__name__, owner_mech.name,
+            raise AutoAssociativeError("Auto or Cross ParameterState not found in {0} \"{1}\"; here are names of the "
+                                       "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
                                                                                    owner_mech.name, param_keys))
 
         # read auto and cross from their ParameterStates, and put them into `auto_matrix` and `cross_matrix`
+        # (where auto_matrix is a diagonal matrix and cross_matrix is a hollow matrix)
         raw_auto = owner_mech._parameter_states[AUTO].value
         auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
         if auto_matrix is None:
@@ -170,6 +174,38 @@ class AutoAssociativeProjection(MappingProjection):
 
         return self.function(self.sender.value, params=params, context=context)
 
+
+    # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
+        # recurrent mechanism, the parameter state wouldn't update until after the mechanism executed: since the system
+        # first runs the projection, then runs the mechanism, the projection initially uses the 'old' value. However,
+        # this is commented out because this may in fact be the desired behavior.
+        # Two possible solutions: allow control to be done on projections, or build a more general way to allow
+        # projections to read parameters from mechanisms.
+    # def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+    #     """Update this projection's owner mechanism's `auto` and `cross` parameter states as well! The owner mechanism
+    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `cross` parameter states during
+    #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
+    #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
+    #     your mechanism must similarly exclude `auto` and `cross` from updating.
+    #     """
+    #     super()._update_parameter_states(runtime_params, time_scale, context)
+    #
+    #     if isinstance(self.sender, OutputState):
+    #         owner_mech = self.sender.owner
+    #     elif isinstance(self.sender, Mechanism):
+    #         owner_mech = self.sender
+    #     else:
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the"
+    #                                    " sender is {}".
+    #                                    format(self.__class__.__name__, self.name, self.sender))
+    #
+    #     if AUTO in owner_mech._parameter_states and CROSS in owner_mech._parameter_states:
+    #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[CROSS].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
+    #     else:
+    #         raise AutoAssociativeError("Auto or Cross ParameterState not found in {0} \"{1}\"; here are names of the "
+    #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
+    #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
 # a helper function that takes a specification of `cross` and returns a hollow matrix with the right values
 # (possibly also used by RecurrentTransferMechanism.py)
