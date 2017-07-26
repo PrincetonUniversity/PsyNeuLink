@@ -44,18 +44,58 @@ to corresponding parameters of the EVCMechanism, as described under `EVC_Calcula
 Creating an EVCMechanism
 ------------------------
 
-An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
+An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`;  it is also
+created automatically when a `System` is created and an EVCMechanism is specified as its `controller` (see
+`Controller <System_Execution_Control>`).  If it is created directly (using its constructor), it creates  an
+`ObjectiveMechanism`, assigns the list of `OutputState` specifications in its **monitor_for_control** argument
+to the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute, and creates a
+`MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
+<ObjectiveMechanism.output_state>` to the EVCMechanism's `primary InputState <InputState_Primary>`.  It also creates
+a `prediction mechanism <EVCMechanism_PredictionMechanisms>` for each `ORIGIN` Mechanism in its `system
+<EVCMechanism.system>`, assigns a MappingProjection to each from the `system`, and assigns these to its
+`prediction_mechanisms` attribute.
+
+CREATED AUTOMATICALLY:  DOES ALL THESE THINGS, using all parameters in system specified for control as
+ControlSignals, and the Systems monitor_for_control list as its own.
+
+
 More commonly, however, EVCMechanisms are created automatically when a `System` is created and an EVCMechanism is
 specified as its `controller` (see `Controller <System_Execution_Control>`).  When an EVCMechanism is constructed
 automatically by a System, it creates an `ObjectiveMechanism` and assigns to its `monitored_values
 <ObjectiveMechanism.monitored_values>` attribute the list of `OutputStates <OutputState>` specified in the
-'monitor_for_control` argument of the System's constructor.  A `MappingProjection` is also created that projects from
+'monitor_for_control` argument of the System's constructor, and a `MappingProjection` is created that projects from
 the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState <ObjectiveMechanism.output_state>` to the EVCMechanism's
-`primary InputState <InputState_Primary>`. The EVCMechanism also creates a `ControlSignal` for each parameter of the
-System that has been `specified for control <ControlMechanism_Control_Signals>`, and assigns these to its
-`control_signals <EVCMechanism.control_signals>` attribute.  An EVCMechanism that has been constructed automatically
-can be customized by assigning values to its attributes (e.g., its functions, as described under `EVC_Calculation`
-below).
+`primary InputState <InputState_Primary>`. The EVCMechanism also creates a `ControlSignal` for each parameter
+of the System that has been `specified for control <ControlMechanism_Control_Signals>`, and assigns these to its
+`control_signals <EVCMechanism.control_signals>` attribute.  Finally, a set of `prediction mechanisms
+`EVCMechanism.prediction_mechanisms` are created, that receive MappingProjections from the EVCMechanism's `system
+EVCMechanism.system` to its `ORIGIN` Mechanisms.  An EVCMechanism that has been constructed automatically
+can be customized by assigning values to its attributes (e.g., those described above, or its `function
+<EVCMechanism.function>` as described under `EVC_Calculation `below).
+
+.. _EVCMechanism_Structure:
+
+Structure
+---------
+
+An EVCMechanism receives its input from the *ERROR_SIGNAL* `OutputState <ObjectiveMechanism.output_state>` of an
+ObjectiveMechanism
+
+
+
+A LearningMechanism has three `InputStates <InputState>`, a learning `function <LearningMechanism.function>`,
+and two types of `OutputStates <OutputState>` that are used, respectively, to receive, compute, and transmit the
+information needed to modify the MappingProjection(s) for which it is responsible.  In addition, it has several
+attributes that govern its operation.  These are all described below.
+
+
+
+An EVCMechanism is generally paired an ObjectiveMechanism, that is used to ...
+In addition, it has ControlSignals, allocation_policy, and a set of specialized functions that sample the
+allocation policy, evaluate ControlSignal Costs, and copute the EVC
+
+
+
 
 COMMENT:
 This information is used to set the `allocation` values for the
@@ -68,10 +108,7 @@ simulates its execution. Each of these specialized Components is described in th
 COMMENT
 
 
-.. _EVCMechanism_Structure:
 
-Structure
----------
 
 ObjectiveMechanism
 ~~~~~~~~~~~~~~~~~~
@@ -124,7 +161,7 @@ mechanism used for the prediction mechanisms can be specified using the EVCMecha
 `prediction_mechanism_type` attribute, and their parameters can be specified using the EVCMechanism's
 `prediction_mechanism_params` attribute.  The default type is an 'IntegratorMechanism`, that calculates an
 exponentially weighted time-average of its input.  The prediction mechanisms for an EVCMechanism are listed in its
-`predictionMechanisms` attribute.
+`prediction_mechanisms` attribute.
 
 .. _EVC_Calculation:
 
@@ -225,7 +262,7 @@ ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribut
 Execution
 ---------
 
-When an EVCMechanism is executed, it updates the value of its `predictionMechanisms` and `monitoring_mechanism`,
+When an EVCMechanism is executed, it updates the value of its `prediction_mechanisms` and `monitoring_mechanism`,
 and then calls its `function <EVCMechanism.function>`, which determines and implements the `allocation_policy` for
 the next round of the system's execution.  By default, the EVCMechanism identifies and implements the
 `allocation_policy` that maximizes the EVC evaluated for the outputStates it is monitoring, as described below.
@@ -506,9 +543,9 @@ class EVCMechanism(ControlMechanism_Base):
         list of the EVCMechanism's `ControlSignals <ControlSignal>`, including any that it inherited from its
         `system <EVCMechanism.system>`.
 
-    predictionMechanisms : MechanismList
+    prediction_mechanisms : MechanismList
         a list of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the system, along with any
-        `runtime_params <Mechanism.runtime_params>` and the `phase <Mechanism.phase>` in which they execute.
+        `runtime_params <Mechanism.runtime_params>`.
 
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the `system <System>` for
@@ -828,7 +865,7 @@ class EVCMechanism(ControlMechanism_Base):
         # self.predictionProcesses = []
 
         # List of prediction mechanism tuples (used by system to execute them)
-        self.prediction_mechanisms = []
+        self.prediction_mechs = []
 
         # Get any params specified for predictionMechanism(s) by EVCMechanism
         try:
@@ -878,13 +915,13 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Add to list of EVCMechanism's prediction_object_items
             # prediction_object_item = prediction_mechanism
-            self.prediction_mechanisms.append(prediction_mechanism)
+            self.prediction_mechs.append(prediction_mechanism)
 
             # Add to system executionGraph and executionList
             self.system.executionGraph[prediction_mechanism] = set()
             self.system.executionList.append(prediction_mechanism)
 
-        self.predictionMechanisms = MechanismList(self, self.prediction_mechanisms)
+        self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
@@ -1417,7 +1454,7 @@ class EVCMechanism(ControlMechanism_Base):
         inputs : List[input] or ndarray(input) : default default_variable
             the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
             should be the `value <Mechanism.Mechanism_Base.value> for each
-            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `predictionMechanisms`
+            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `prediction_mechanisms`
             attribute.  The inputs are available from the `predictedInput` attribute.
 
         allocation_vector : (1D np.array)
