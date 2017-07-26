@@ -3215,7 +3215,6 @@ class Integrator(
     # need to be executed
 
     def _validate_noise(self, noise):
-        self.noise_function = False
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
@@ -3255,8 +3254,7 @@ class Integrator(
                     .format(noise, self.name))
 
     def _try_execute_param(self, param, var):
-        print("VAR = ", var)
-        print("PARAM = ", param)
+
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
             for i in range(len(param)):
@@ -3270,13 +3268,11 @@ class Integrator(
                     new_param = []
                     for i in var[0]:
                         new_param.append(param())
-                    print("NEW_PARAM = ", new_param)
                     param = new_param
                 else:
                     new_param = []
                     for i in var:
                         new_param.append(param())
-                    print("NEW_PARAM = ", new_param)
                     param = new_param
             # if the variable is not a list/array, execute the param function
             else:
@@ -3761,14 +3757,9 @@ class ConstantIntegrator(
         offset = self.offset
         scale = self.scale
 
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
+
 
         # TBI: execute initializer function if self.initializer_function == True
 
@@ -4040,14 +4031,9 @@ class AdaptiveIntegrator(
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
+
 
         # TBI: execute initializer function if self.initializer_function == True
 
@@ -4227,7 +4213,6 @@ class DriftDiffusionIntegrator(
         self.auto_dependent = True
 
     def _validate_noise(self, noise):
-        self.noise_function = False
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
@@ -4269,14 +4254,7 @@ class DriftDiffusionIntegrator(
 
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
 
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+        noise = self.noise
 
         # TBI: execute initializer function if self.initializer_function == True
 
@@ -4460,7 +4438,6 @@ class OrnsteinUhlenbeckIntegrator(
         self.auto_dependent = True
 
     def _validate_noise(self, noise):
-        self.noise_function = False
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
@@ -4503,14 +4480,7 @@ class OrnsteinUhlenbeckIntegrator(
         time_step_size = self.paramsCurrent[TIME_STEP_SIZE]
         decay = self.paramsCurrent[DECAY]
 
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+        noise = self.noise
 
         # TBI: execute initializer function if self.initializer_function == True
 
@@ -4823,22 +4793,20 @@ class AccumulatorIntegrator(
 
         # rate = np.array(self.rate).astype(float)
         # increment = self.increment
+
         if self.rate is None:
             rate = 1.0
         else:
             rate = self.rate
+
         if self.increment is None:
             increment = 0.0
         else:
             increment = self.increment
-        # if noise is a function, execute it
-        if self.noise_function:
-            if isinstance(self.noise, (np.ndarray, list)):
-                noise = list(map(lambda x: x(), self.noise))
-            else:
-                noise = self.noise()
-        else:
-            noise = self.noise
+
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
+
 
         # TBI: execute initializer function if self.initializer_function == True
 
