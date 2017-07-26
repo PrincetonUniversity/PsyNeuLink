@@ -179,7 +179,7 @@ COMMENT
 * `value_function` - this is an "orchestrating" function that calls the three helper functions described below, which
   do the actual work of evaluating the performance of the EVCMechanism's `system <EVCMechanism.system>`, the `cost`
   of its `ControlSignals <EVCMechanism_ControlSignals>` under the current `allocation_policy`, and combining these to
-  calculate the EVC.  This `value_function <EVCMechanism.value_function>` can be replaced with a user-defined function
+  calculate the EVC.  The `value_function <EVCMechanism.value_function>` can be replaced with a user-defined function
   to fully customize the calculation of the EVC (see `note <EVCMechanism_Calling_and_Assigning_Functions>` below).
 
 .. _EVCMechanism_Outcome_Function:
@@ -253,21 +253,32 @@ ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribut
 Execution
 ---------
 
+ORGANIZE AMONG
+  Here
+  Structure/Function/EVC_Calculation
+  Attributes / function
+
+function:
+  ControlSignalGridSearch:
+     value_function
+         outcome_function
+         cost_function
+         combine_function
+
+An EVCMechanims, like any `ControlMechanism`, is always the last `Mechanism` to be executed in a `TRIAL` for its
+`system <EVCMechanism.system>` (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).
 When an EVCMechanism is executed, it updates the value of its `prediction_mechanisms` and `monitoring_mechanism`,
 and then calls its `function <EVCMechanism.function>`, which determines and implements the `allocation_policy` for
-the next `TRIAL` of its `system <EVCMechanism.system>` \s execution.  By default, the EVCMechanism selects the
-`allocation_policy` that maximizes the EVC evaluated for the OutputStates specified in its `monitored_output_states
-<EVCMechanism.monitored_output_states>` attribute, as described below. However, this procedure can be modified by
-specifying a custom function for any or all of the EVCMechanism's `functions <EVC_Auxiliary_Functions>`.
+the next `TRIAL` of its `system <EVCMechanism.system>` \s execution.  The default `function <EVCMechanism.function>`
+for an EVCMechanism selects the `allocation_policy` that maximizes the EVC evaluated for the OutputStates specified
+in its `monitored_output_states <EVCMechanism.monitored_output_states>` attribute, as summarized below. However,
+this procedure can be modified by specifying a custom function for any or all of the EVCMechanism's `functions
+<EVC_Auxiliary_Functions>`.
 
 .. _EVCMechanism_Default_Function:
 
-The default `function <EVCMechanism.function>` for an EVCMechanism selects an `allocation_policy` by assessing
-the performance of the system under each of the policies in its `control_signal_search_space`, and selecting the
-one that yields the maximum EVC. The `control_signal_search_space` is constructed by creating a set of
-allocationPolicies that represent all permutations of the `allocation` values to be sampled for each ControlSignal.
-Each `allocation_policy` in the set is constructed by drawing one value from the `allocation_samples` of each
-ControlSignal, and the set contains all combinations of these values.  For each `allocation_policy`, the default
+
+For each `allocation_policy`, the default
 `function <EVCMechanism.function>` calls the EVCMechanism's `value_function` which, in turn, carries out the
 following steps:
 
