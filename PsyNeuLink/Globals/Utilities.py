@@ -273,7 +273,7 @@ def iscompatible(candidate, reference=None, **kargs):
                 + kwCompatibilityType = enum, then candidate must be an enum if reference is one
             - if reference is absent:
                 if kwCompatibilityType is also absent:
-                    if kwCompatibilityNumeric is :keyword:`True`, all elements of candidate must be numbers
+                    if kwCompatibilityNumeric is `True`, all elements of candidate must be numbers
                     if kwCompatibilityNumeric is :keyword:`False`, candidate can contain any type
                 if kwCompatibilityType is specified, candidate's type must match or be subclass of specified type
             - for iterables, if kwNumeric is :keyword:`False`, candidate can have multiple types but
@@ -288,8 +288,8 @@ def iscompatible(candidate, reference=None, **kargs):
                 if reference is provided, candidate must be same length as reference
                 if reference is omitted, length of candidate must equal value of kwLength
             Note: kwCompatibility < 0 is illegal;  it will generate a warning and be set to 0
-        kwCompatibilityNumeric ("number": <bool> (default: :keyword:`True`)  (spec local_variable: number_only)
-            If kwCompatibilityNumeric is :keyword:`True`, candidate must be either numeric or a list or tuple of
+        kwCompatibilityNumeric ("number": <bool> (default: `True`)  (spec local_variable: number_only)
+            If kwCompatibilityNumeric is `True`, candidate must be either numeric or a list or tuple of
                 numeric types
             If kwCompatibilityNumberic is :keyword:`False`, candidate can be strings, lists or tuples of strings,
                 or dicts

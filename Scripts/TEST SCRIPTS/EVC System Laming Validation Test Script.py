@@ -7,6 +7,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection i
 from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 import random

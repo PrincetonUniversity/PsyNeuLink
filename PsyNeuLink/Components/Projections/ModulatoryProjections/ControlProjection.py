@@ -18,7 +18,7 @@ A ControlProjection is a subclass of `ModulatoryProjection` that projects to the
 a `ProcessingMechanism`. It takes the value of a `ControlSignal` of a `ControlMechanism` and uses it to  modify the
 value of the parameter associated with the ParameterState to which it projects.  All of the ControlProjections in a
 System, along with its other `control components <ControlMechanism>`, can be displayed using the System's `show_graph`
-method with its **show_control** argument assigned as :keyword:`True`.
+method with its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
 
