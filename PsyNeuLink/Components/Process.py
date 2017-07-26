@@ -1441,7 +1441,7 @@ class Process_Base(Process):
                             try:
                                 sender_arg = item.init_args[SENDER]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
                                                    format(item, InitStatus.DEFERRED_INITIALIZATION))
                             except KeyError:
                                 raise ProcessError("PROGRAM ERROR: Value of {} is {} "
@@ -1462,10 +1462,10 @@ class Process_Base(Process):
                             try:
                                 receiver_arg = item.init_args[kwReceiverArg]
                             except AttributeError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} but it does not have init_args".
+                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} but it does not have init_args".
                                                    format(item, InitStatus.DEFERRED_INITIALIZATION))
                             except KeyError:
-                                raise ProcessError("PROGRAM ERROR: Value of {} is {} "
+                                raise ProcessError("PROGRAM ERROR: init_status of {} is {} "
                                                    "but init_args does not have entry for {}".
                                                    format(item.init_args[NAME], InitStatus.DEFERRED_INITIALIZATION, kwReceiverArg))
                             else:
