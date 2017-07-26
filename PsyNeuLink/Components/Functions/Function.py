@@ -3209,17 +3209,17 @@ class Integrator(
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            self._validate_noise(target_set[NOISE], self.variable)
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
 
-    def _validate_noise(self, noise):
+    def _validate_noise(self, noise, var):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(noise) != np.array(self.variable).size:
+            if isinstance(var, (np.ndarray, list)):
+                if len(noise) != np.array(var).size:
                     # Formatting noise for proper display in error message
                     try:
                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
@@ -3229,8 +3229,8 @@ class Integrator(
                         "The length ({}) of the array specified for the noise parameter ({}) of {} "
                         "must match the length ({}) of the default input ({}). If noise is specified as"
                         " an array or list, it must be of the same size as the input."
-                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                self.variable))
+                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
+                                var))
                 else:
                     for noise_item in noise:
                         if not isinstance(noise_item, (float, int)) and not callable(noise_item):
@@ -3993,7 +3993,7 @@ class AdaptiveIntegrator(
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            self._validate_noise(target_set[NOISE], self.variable)
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
@@ -4212,7 +4212,7 @@ class DriftDiffusionIntegrator(
 
         self.auto_dependent = True
 
-    def _validate_noise(self, noise):
+    def _validate_noise(self, noise, var):
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. DriftDiffusionIntegrator requires noise parameter to be a float. Noise"
@@ -4437,7 +4437,7 @@ class OrnsteinUhlenbeckIntegrator(
 
         self.auto_dependent = True
 
-    def _validate_noise(self, noise):
+    def _validate_noise(self, noise, var):
         if not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
