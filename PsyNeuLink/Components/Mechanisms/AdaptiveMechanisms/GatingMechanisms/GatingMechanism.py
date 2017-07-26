@@ -31,7 +31,7 @@ Creating A GatingMechanism
 ---------------------------
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
-A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an 
+A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an
 `InputState`, `OutputState` or `Mechanism`, in which case a `GatingProjection` is automatically created that
 projects from the GatingMechanism to the specified target
 
@@ -106,19 +106,19 @@ Class Reference
 # IMPLEMENTATION NOTE: COPIED FROM DefaultProcessingMechanism;
 #                      ADD IN GENERIC CONTROL STUFF FROM DefaultGatingMechanism
 
-import typecheck as tc
 import numpy as np
+import typecheck as tc
 
+from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal, _parse_gating_signal_spec
-
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state
 from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
-from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
+from PsyNeuLink.Globals.Keywords import GATING_POLICY, GATING_PROJECTION, GATING_PROJECTIONS, GATING_SIGNAL, GATING_SIGNALS, GATING_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_GATING_MECHANISM, NAME, OWNER, PARAMS, REFERENCE_VALUE, STATES
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -186,7 +186,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_policy**
         argument; if a `Mechanism` is specified, its `primary InputState <InputState_Primary>` is used
         (see `GatingMechanism_GatingSignals for details).
-        
+
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the GatingMechanism's `GatingSignals <GatingSignal>`,
         unless they are `individually specified <GatingSignal_Specification>`.
@@ -304,7 +304,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       context=context)
 
         if GATING_SIGNALS in target_set and target_set[GATING_SIGNALS]:
-            
+
             if not isinstance(target_set[GATING_SIGNALS], list):
                 raise GatingMechanismError("{} arg of {} must be list".
                                            format(GATING_SIGNAL, self.name))
@@ -392,7 +392,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         if isinstance(gating_signal_spec[GATING_SIGNAL], GatingSignal):
             gating_signal = gating_signal_spec[GATING_SIGNAL]
             # Deferred Initialization, so assign owner, name, and initialize
-            if gating_signal.value is DEFERRED_INITIALIZATION:
+            if gating_signal.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR GatingSignal
                 # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
                 # OR ASSIGN NAME IF IT IS DEFAULT, USING GATING_SIGNAL_DICT??
@@ -426,7 +426,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             existing_names = []
             for gs in self.gating_signals:
                 if isinstance(gs, GatingSignal):
-                    if gs.value is DEFERRED_INITIALIZATION and gs.init_args[NAME]:
+                    if gs.init_status is InitStatus.DEFERRED_INITIALIZATION and gs.init_args[NAME]:
                         existing_names.append(gs.init_args[NAME])
                     else:
                         existing_names.append(gs.name)
@@ -466,7 +466,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
                                                       format(gating_projection, self.name))
                 _validate_receiver(self, gating_projection, Mechanism, GATING_SIGNAL, context=context)
                 state = gating_projection.receiver
-                if gating_projection.value is DEFERRED_INITIALIZATION:
+                if gating_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                     gating_projection.init_args['sender']=gating_signal
                     if gating_projection.init_args['name'] is None:
                         gating_projection.init_args['name'] = GATING_PROJECTION + \
@@ -540,7 +540,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             for state in mech._input_states + mech._output_states:
                 for projection in state.mod_afferents:
                     # If projection was deferred for init, initialize it now and instantiate for self
-                    if projection.value is DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
+                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION and projection.init_args['sender'] is None:
                         # FIX 5/23/17: MODIFY THIS WHEN (param, GatingProjection) tuple
                         # FIX:         IS REPLACED WITH (param, GatingSignal) tuple
                         # Add projection itself to any params specified in the GatingProjection for the GatingSignal

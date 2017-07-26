@@ -279,7 +279,7 @@ import warnings
 
 from enum import IntEnum
 
-from PsyNeuLink.Components.Component import function_type, method_type
+from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -1112,8 +1112,8 @@ class ControlSignal(ModulatorySignal):
     @property
     def value(self):
         # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if isinstance(self._value, str):
-            return self._value
+        if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
+            return None
         else:
             # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity

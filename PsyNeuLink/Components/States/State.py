@@ -109,7 +109,7 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *NAME*:<str>
           the string is used as the name of the State;
-      
+
       ..
       * *STATE_TYPE*:<State type>
           specifies type of State to create (necessary if it cannot be determined from the
@@ -306,13 +306,12 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component, ComponentError, component_keywords, function_type
+from PsyNeuLink.Components.Component import Component, ComponentError, InitStatus, component_keywords, function_type
 from PsyNeuLink.Components.Functions.Function import LinearCombination, ModulationParam, _get_modulated_param, get_param_value_for_function, get_param_value_for_keyword
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, \
-    STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from PsyNeuLink.Globals.Keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -948,7 +947,7 @@ class State_Base(State):
             #     else, returns new (default) PROJECTION_TYPE object with self as receiver
             #     note: in that case, projection will be in self.path_afferents list
             if isinstance(projection_spec, Projection_Base):
-                if projection_spec.value is DEFERRED_INITIALIZATION:
+                if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                     if isinstance(projection_spec, ModulatoryProjection_Base):
                         # Assign projection to mod_afferents
                         self.mod_afferents.append(projection_spec)
@@ -1117,7 +1116,7 @@ class State_Base(State):
             #    requiring reassignment or modification of sender OutputStates, etc.
 
             # Initialization of projection is deferred
-            if projection_spec.value is DEFERRED_INITIALIZATION:
+            if projection_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 # Assign instantiated "stub" so it is found on deferred initialization pass (see Process)
                 if isinstance(projection_spec, ModulatoryProjection_Base):
                     self.mod_afferents.append(projection_spec)
@@ -1636,7 +1635,7 @@ class State_Base(State):
                                                       context=context)
 
             # If this is initialization run and projection initialization has been deferred, pass
-            if INITIALIZING in context and projection_value is DEFERRED_INITIALIZATION:
+            if INITIALIZING in context and projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 continue
 
             if isinstance(projection, PathwayProjection_Base):
@@ -1722,9 +1721,6 @@ class State_Base(State):
         # MODIFIED 7/8/17 END
 
         self._value = assignment
-
-        if self._value is DEFERRED_INITIALIZATION or self._value is INITIALIZING:
-            return
 
         # Store value in log if specified
         # Get logPref
@@ -2065,7 +2061,7 @@ def _instantiate_state(owner,                  # Object to which state will belo
     if isinstance(state_spec, state_type):
         # State initialization was deferred (owner or referenc_value was missing), so
         #    assign owner, variable, and/or reference_value if they were not specified
-        if state_spec.value is DEFERRED_INITIALIZATION:
+        if state_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state_spec.init_args[OWNER]:
                 state_spec.init_args[OWNER] = owner
                 state_spec.init_args[VARIABLE] = owner.variable[0]
