@@ -477,16 +477,16 @@ Note: adding an entry does not mean data will be recorded;</p>
 <dd><p>Delete entry for attribute from self.entries</p>
 <p>If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
 Note: deleting the entry will delete all the data recorded within it
-Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
 Notes:
-* only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+* only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
 * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entries</strong> &#8211; (str, list, or ALL_LOG_ENTRIES)</li>
+<li><strong>entries</strong> &#8211; (str, list, or Log.ALL_LOG_ENTRIES)</li>
 <li><strong>confirm</strong> &#8211; (bool)</li>
 </ul>
 </td>
@@ -503,16 +503,16 @@ Notes:
 <code class="descname">reset_entries</code><span class="sig-paren">(</span><em>entries</em>, <em>confirm=True</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.Log.reset_entries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset one or more entries by removing all data, but leaving entries in log dict</p>
 <p>If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
-Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
 Notes:
-* only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+* only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
 * resetting an entry deletes ALL the data recorded within it</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entries</strong> &#8211; (list, str or ALL_LOG_ENTRIES)</li>
+<li><strong>entries</strong> &#8211; (list, str or Log.ALL_LOG_ENTRIES)</li>
 <li><strong>confirm</strong> &#8211; (bool)</li>
 </ul>
 </td>
