@@ -47,7 +47,7 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
     is used;
   ..
   * a **tuple**, with the name of the state as the 1st item, and the Mechanism to which it belongs as the 2nd;
-    note that this is a convenience format, which is simpler to use than a specification dictionary (see below), 
+    note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <GatingSignal_Structure>` for the GatingSignal.
   ..
   * a **specification dictionary**, that can take either of the following two forms:
@@ -78,8 +78,8 @@ InputState(s) and/or OutputState(s) it gates must be specified. This can take an
 Structure
 ---------
 
-A GatingSignal is owned by a `GatingMechanism`, and associated with one or more `GatingProjections <GatingProjection>`, 
-each of which projects to the InputState or OutputState that it gates.  
+A GatingSignal is owned by a `GatingMechanism`, and associated with one or more `GatingProjections <GatingProjection>`,
+each of which projects to the InputState or OutputState that it gates.
 
 .. _GatingSignal_Projections:
 
@@ -197,12 +197,12 @@ Mechanism::
 
 Here, two GatingSignals are specified as `specification dictionaries <GatingSignal_Specification>`, each of which
 contains an entry for the name of the GatingSignal, and a *PROJECTIONS* entry that specifies the States to which the
-GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the 
-default is to gate the `primary InputState <InputState_Primary>` of a Mechanism, so those are what are referenced. The 
-first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>` 
-attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is 
+GatingSignal should project (i.e., the ones to be gated).  Once again, the specifications exploit the fact that the
+default is to gate the `primary InputState <InputState_Primary>` of a Mechanism, so those are what are referenced. The
+first dict also contains a  *MODULATION* entry that specifies the value of the `modulation <GatingSignal.modulation>`
+attribute for the GatingSignal.  The second one does not, so the default will be used (which, for a GatingSignal, is
 `ModulationParam.MULTIPLICATIVE`).  Thus, the InputState of ``my_input_layer`` will be additively modulated by
-``GATING_SIGNAL_A``, while the InputStates of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicatively 
+``GATING_SIGNAL_A``, while the InputStates of ``my_hidden_layer`` and ``my_output_layer`` will be multiplicatively
 modulated by ``GATING_SIGNAL_B``.
 
 **Creating and assigning stand-alone GatingSignals**.  GatingSignals can also be created on their own, and then later
@@ -226,13 +226,14 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.Component import InitStatus
+from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, _is_modulation_param
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal, modulatory_signal_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
-from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM, GATE
+from PsyNeuLink.Globals.Keywords import GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, INPUT_STATE, MECHANISM, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMS, PROJECTION_TYPE, STATES, SUM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
@@ -339,7 +340,7 @@ class GatingSignal(ModulatorySignal):
     value : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>`
         (same as its `gating_signal <GatingSignal.gating_signal>`).
-    
+
     gating_signal : number, list or np.ndarray
         result of the GatingSignal's `function <GatingSignal.function>` (same as its `value <GatingSignal.value>`).
 
@@ -511,7 +512,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     if isinstance(state_spec, GatingSignal):
         gating_signal = state_spec
         # GatingSignal initialization has been deferred, so just get name and return
-        if gating_signal.value is DEFERRED_INITIALIZATION:
+        if gating_signal.init_status is InitStatus.DEFERRED_INITIALIZATION:
             gating_signal_name = gating_signal.init_args[NAME]
             return {NAME: gating_signal_name,
                     STATES: [],
@@ -717,7 +718,7 @@ def _parse_gating_signal_spec(owner, state_spec):
     if owner.gating_signals:
         #                                   _gating_signal_arg
         for owner_gs in [gs for gs in owner.gating_signals #   is already an instantiated GatingSignal
-                              if (isinstance(gs, GatingSignal) and not gs.value is DEFERRED_INITIALIZATION)]:
+                              if (isinstance(gs, GatingSignal) and not gs.init_status is InitStatus.DEFERRED_INITIALIZATION)]:
             all_gated_states.extend([proj.receiver for proj in owner_gs.efferents])
     # Add states for current GatingSignal
     all_gated_states.extend(states)

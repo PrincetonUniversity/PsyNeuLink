@@ -88,14 +88,14 @@ Class Reference
 
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, RECEIVER, SENDER
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, RECEIVER, SENDER
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -261,8 +261,8 @@ class ControlProjection(ModulatoryProjection_Base):
                                                   params=params)
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
-        if (sender is None or sender.value is DEFERRED_INITIALIZATION or
-                    receiver is None or receiver.value is DEFERRED_INITIALIZATION):
+        if (sender is None or sender.init_status is InitStatus.DEFERRED_INITIALIZATION or
+                    receiver is None or receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
             # Store args for deferred initialization
             self.init_args = locals().copy()
             self.init_args['context'] = self
@@ -274,7 +274,7 @@ class ControlProjection(ModulatoryProjection_Base):
             if receiver:
                 self.init_args[RECEIVER] = receiver
             # Flag for deferred initialization
-            self.value = DEFERRED_INITIALIZATION
+            self.init_status = InitStatus.DEFERRED_INITIALIZATION
             return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
