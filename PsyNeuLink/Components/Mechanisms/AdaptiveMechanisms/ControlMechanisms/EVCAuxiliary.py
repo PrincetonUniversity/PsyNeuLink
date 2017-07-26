@@ -149,8 +149,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         -----------
             * Called by ControlSignalGridSearch.
             * Call system.execute for each `allocation_policy` in `control_signal_search_space`.
-            * Store an array of values for outputStates in `monitored_output_states` (i.e., the input_states in `input_states`)
-                for each `allocation_policy`.
+            * Store an array of values for outputStates in `monitored_output_states`
+                (i.e., the input_states in `input_states`) for each `allocation_policy`.
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
                 and assign to `EVC_max`.
             * Set `EVC_max_policy` to the `allocation_policy` (outputState.values) corresponding to EVC_max.
