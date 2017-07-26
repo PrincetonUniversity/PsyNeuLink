@@ -471,6 +471,23 @@ class Projection_Base(Projection):
                           registry=self._stateRegistry,
                           context=context)
 
+        try:
+            if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                self.init_args = locals().copy()
+                self.init_args['context'] = self
+                self.init_args['name'] = name
+
+                # remove local imports
+                del self.init_args['ParameterState']
+                del self.init_args['State_Base']
+
+                return
+        except AttributeError:
+            # if this Projection does not have an init_status attribute, we can guarantee that it's not in
+            # deferred init state. It's tricky to ensure this attribute always exists due to the nature
+            # of deferred init
+            pass
+
 # FIX: 6/23/16 NEEDS ATTENTION *******************************************************A
 #      NOTE: SENDER IS NOT YET KNOWN FOR DEFAULT control_signal
 #      WHY IS self.sender IMPLEMENTED WHEN sender IS NOT??

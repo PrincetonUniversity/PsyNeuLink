@@ -95,7 +95,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjectio
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE, RECEIVER, SENDER
+from PsyNeuLink.Globals.Keywords import CONTROL, CONTROL_PROJECTION, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -263,19 +263,7 @@ class ControlProjection(ModulatoryProjection_Base):
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if (sender is None or sender.init_status is InitStatus.DEFERRED_INITIALIZATION or
                     receiver is None or receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
-            # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = self
-            self.init_args['name'] = name
-            # Delete this as it has been moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[CONTROL_SIGNAL_PARAMS]
-            if sender:
-                self.init_args[SENDER] = sender
-            if receiver:
-                self.init_args[RECEIVER] = receiver
-            # Flag for deferred initialization
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
-            return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)

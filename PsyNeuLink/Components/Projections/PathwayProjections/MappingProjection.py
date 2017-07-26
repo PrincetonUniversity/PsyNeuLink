@@ -340,16 +340,7 @@ class MappingProjection(PathwayProjection_Base):
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
-            # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = self
-            self.init_args['name'] = name
-            # Delete these as they have been moved to params dict (and will not be recognized by Projection.__init__)
-            del self.init_args['matrix']
-
-            # Flag for deferred initialization
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
-            return
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
