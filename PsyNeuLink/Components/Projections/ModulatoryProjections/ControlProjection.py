@@ -211,7 +211,6 @@ class ControlProjection(ModulatoryProjection_Base):
         the input to the ControlProjection; same as the :keyword:`value` of the `sender <ControlProjection.sender>`.
 
     value : float
-        during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
         during execution, is assigned the current value of the ControlProjection.
 
     name : str : default ControlProjection-<index>

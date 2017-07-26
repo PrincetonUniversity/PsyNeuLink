@@ -180,7 +180,6 @@ class GatingProjection(ModulatoryProjection_Base):
         the input to the GatingProjection; same as the :keyword:`value` of the `sender <GatingProjection.sender>`.
 
     value : float
-        during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
         during execution, is assigned the current value of the GatingProjection.
 
     name : str : default GatingProjection-<index>
