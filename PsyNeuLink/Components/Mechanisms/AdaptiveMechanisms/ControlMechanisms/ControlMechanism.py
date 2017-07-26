@@ -70,7 +70,7 @@ Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
-evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor. 
+evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor.
 The **monitor_for_control** argument must be a list, each item of which must refer to a `Mechanism` or the `OutputState`
 of one.  These are assigned to the ObjectiveMechanism's `monitored_values <ObjectiveMechanism>` attribute, and the
 ObjectiveMechanism is referenced by the ControlMechanism's
@@ -120,18 +120,25 @@ Class Reference
 ---------------
 
 """
-from PsyNeuLink.Components.Functions.Function import _is_modulation_param
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import *
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import *
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import modulatory_signal_keywords
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MONITOR_FOR_CONTROL, OWNER, PARAMETER_STATE, REFERENCE_VALUE, SYSTEM
+from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MECHANISM, MONITOR_FOR_CONTROL, NAME, OWNER, PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 ControlMechanismRegistry = {}
 
@@ -197,7 +204,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     control_signals : List[parameter of Mechanism or its function, \
                       ParameterState, Mechanism tuple[str, Mechanism] or dict]
-        specifies the parameters to be controlled by the ControlMechanism 
+        specifies the parameters to be controlled by the ControlMechanism
         (see `control_signals <ControlMechanism_Base.control_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
@@ -228,7 +235,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     monitoring_mechanism : ObjectiveMechanism
         Mechanism that monitors and evaluates the values specified in the ControlMechanism's **monitor_for_control**
-        argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL* 
+        argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism.input_state>`.
 
     monitored_output_states : List[OutputState]
@@ -253,7 +260,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism.value>` attribute).
-        
+
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.

@@ -69,14 +69,13 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink import FunctionOutputType
+
 from PsyNeuLink.Components.Component import parameter_keywords
-from PsyNeuLink.Components.Functions.Function import Linear
+from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
 from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
