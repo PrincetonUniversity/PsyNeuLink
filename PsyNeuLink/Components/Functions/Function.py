@@ -2805,7 +2805,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                self.owner.name,
                                                MATRIX_KEYWORD_NAMES))
             else:
-                message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
+                message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
                                                                                                 self.componentName,
                                                                                                 self.owner.name)
                 continue
@@ -2814,7 +2814,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise FunctionError(message)
 
     def _instantiate_attributes_before_function(self, context=None):
-        self._matrix = self.instantiate_matrix(self.matrix)
+        self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification

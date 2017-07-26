@@ -2521,6 +2521,8 @@ def _parse_state_spec(owner,
         # A value was returned, so use value of keyword as variable
         if spec is not None:
             state_dict[VARIABLE] = spec
+            # NOTE: (7/26/17 CW) This warning below may not be appropriate, since this routine is run if the
+            # matrix parameter is specified as a keyword, which may be intentional.
             if owner.prefs.verbosePref:
                 print("{} not specified for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, value))
