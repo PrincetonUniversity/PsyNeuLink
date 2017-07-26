@@ -447,6 +447,8 @@ class Projection_Base(Projection):
         :param context: (str)
         :return: None
         """
+        from PsyNeuLink.Components.States.ParameterState import ParameterState
+        from PsyNeuLink.Components.States.State import State_Base
 
         if not isinstance(context, Projection_Base):
             raise ProjectionError("Direct call to abstract class Projection() is not allowed; "
@@ -462,10 +464,8 @@ class Projection_Base(Projection):
 
         # # MODIFIED 9/11/16 NEW:
         # Create projection's _stateRegistry and ParameterState entry
-        from PsyNeuLink.Components.States.State import State_Base
         self._stateRegistry = {}
-        # ParameterState
-        from PsyNeuLink.Components.States.ParameterState import ParameterState
+
         register_category(entry=ParameterState,
                           base_class=State_Base,
                           registry=self._stateRegistry,
