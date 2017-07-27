@@ -699,28 +699,31 @@ class EVCMechanism(ControlMechanism_Base):
         of the `helper functions <EVCMechanism_Auxiliary_Functions>` that it calls (however, see `note
         <EVCMechanism_Calling_and_Assigning_Functions>` above).
 
-    #MENTION THAT IT IS ASSIGNED TO AND FUNCTIONS FROM MONITORING_MECHANISM (PROPERTIES INSURE IT IS RETREIVED FROM
-     AND ASSIGNED TO THAT MECHANISM.
     outcome_function : function : default LinearCombination(operation=PRODUCT)
-        calculates the outcome for a given `allocation_policy`.  The default combines the values of the outputStates in
-        `monitored_output_states` by taking their product, using the `LinearCombination` function.  The
-        `weights and/or exponents specified for the outputStates <ControlMechanism_OutputState_Tuple>` (see
-        examples <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the
-        `LinearCombination` function, respectively. If the default `outcome_function` is called by a custom
+        calculates a measure of performance of the EVCMechanism's `system <EVCMechanism.system>` for the current
+        `allocation_policy`.  This function is not called by the EVCMechanism directly; it is assigned to its
+        `monitoring_mechanism` when that is created (or when a new assignment is made to its `outcome_function
+        <EVCMechanism.outcome_function>` attribute), and then called when the `monitoring_mechanism
+        <EVCMechanism.monitoring>` executes.  The default is a LinearCombination that combines the values of the
+        OutputStates listed in the EVCMechanism's  `monitored_output_states <EVCMechanism.monitored_output_states>`
+        attribute (and the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` \'s `monitored_values
+        <ObjectiveMechanism.monitored_values>` attribute) by taking their elementwise (Hadamard) product.  The
+        `weights and/or exponents specified for the OutputStates <ControlMechanism_OutputState_Tuple>` (see examples
+        <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the `LinearCombination`
+        function, respectively. If the default `outcome_function <EVCMechanism.outcome_function>` is called by a custom
         `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
-        entry of a `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of
-        the `LinearCombination` function. The length of each array must equal the number of (and values be listed in
-        the same order as) the outputStates in the EVCMechanism's `monitored_output_states` attribute.  These
-        specifications will supercede any made for individual outputStates in the `monitor_for_control` argument or
-        `MONITOR_FOR_CONTROL <monitor_for_control>` entry of a parameter specification dictionary for the
-        EVCMechanism (see `ControlMechanism_Monitored_OutputStates`).  The default function can also be replaced
-        with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If
-        used with the EVCMechanism's default `value_function`, a custom outcome_function must accommodate two
-        arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism itself (and can be used
-        access to its attributes, including the `monitor_for_control_weights_and_exponents` attribute that lists the
-        weights and exponents assigned to each outputState being monitored);  and an :keyword:`outcome` argument,
-        that is a scalar value specifying the result of the ObjectiveMechanism's function (based on the outputStates
-        listed in the `monitored_output_states` attribute of the :keyword:`controller` argument).
+        entry of a `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of the
+        `LinearCombination` function. The length of each array must equal the number of (and values be listed in
+        the same order as) the OutputStates in the EVCMechanism's `monitored_output_states
+        <EVCMechanism.monitored_output_states>` attribute.  These specifications will supersede any made for
+        individual OutputStates in the **monitor_for_control** argument of the constructor for the EVCMechanism.  The
+        default function can be replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that
+        returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom outcome_function
+        must accommodate two arguments (passed by name): a **controller** argument that is the EVCMechanism itself
+        (and can be used access to its attributes, including the `monitor_for_control_weights_and_exponents` attribute
+        that lists the weights and exponents assigned to each outputState being monitored);  and an **outcome**
+        argument, that is a scalar value specifying the result of the ObjectiveMechanism's function (based on the
+        OutputStates listed in the `monitored_output_states` attribute of the **controller** argument).
 
     cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocation_policy`.  The default combines the `cost` of each ControlSignals in
