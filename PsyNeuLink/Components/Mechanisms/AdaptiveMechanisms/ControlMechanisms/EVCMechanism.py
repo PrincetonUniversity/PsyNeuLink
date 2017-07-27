@@ -699,6 +699,8 @@ class EVCMechanism(ControlMechanism_Base):
         of the `helper functions <EVCMechanism_Auxiliary_Functions>` that it calls (however, see `note
         <EVCMechanism_Calling_and_Assigning_Functions>` above).
 
+    #MENTION THAT IT IS ASSIGNED TO AND FUNCTIONS FROM MONITORING_MECHANISM (PROPERTIES INSURE IT IS RETREIVED FROM
+     AND ASSIGNED TO THAT MECHANISM.
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates the outcome for a given `allocation_policy`.  The default combines the values of the outputStates in
         `monitored_output_states` by taking their product, using the `LinearCombination` function.  The
@@ -1559,9 +1561,15 @@ class EVCMechanism(ControlMechanism_Base):
         # MODIFIED 7/27/17 NEW:
         # Get outcome_function from monitoring_mechanism if it has the attribute
         if hasattr(self, MONITORING_MECHANISM) and self.monitoring_mechanism:
+            # # Check that outcome_function is same as function of monitoring_mechanism
+            # if not self._outcome_function == self.monitoring_mechanism.function_object:
+            #     raise EVCError("PROGRAM ERROR: outcome_function for {} ({}) is not same as "
+            #                    "monitoring_mechanism.function_object ({})".
+            #                    format(self.name, self._outcome_function, self.monitoring_mechanism.function_object))
             return self.monitoring_mechanism.function_object
-        else:
-            return self._outcome_function
+        #     return self._outcome_function
+        # else:
+        return self._outcome_function
         # MODIFIED 7/27/17 END
 
     @outcome_function.setter
