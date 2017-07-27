@@ -6,8 +6,12 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-
 # *************************************************  EVCAuxiliary ******************************************************
+
+"""
+Auxiliary functions for `EVCMechanism`.
+
+"""
 
 import numpy as np
 import typecheck as tc
@@ -86,6 +90,9 @@ class EVCAuxiliaryFunction(Function_Base):
         self.functionOutputType = None
 
 class ValueFunction(EVCAuxiliaryFunction):
+    """Calculate the EVC for a given `allocation_policy <EVCMechanism.allocation_policy>`.
+
+    """
 
     componentName = kwValueFunction
 
@@ -128,6 +135,9 @@ class ValueFunction(EVCAuxiliaryFunction):
 
 
 class ControlSignalGridSearch(EVCAuxiliaryFunction):
+    """Conducts and exhaustive search of allocation polices and returns one with maximum EVC
+
+    """
 
     componentName = CONTROL_SIGNAL_GRID_SEARCH_FUNCTION
 
