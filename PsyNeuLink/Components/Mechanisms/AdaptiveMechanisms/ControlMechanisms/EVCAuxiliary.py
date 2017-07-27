@@ -90,64 +90,24 @@ class EVCAuxiliaryFunction(Function_Base):
         self.functionOutputType = None
 
 class ValueFunction(EVCAuxiliaryFunction):
-    """Calculate the `EVC <EVCMechanism_EVC>` for a given `allocation_policy <EVCMechanism.allocation_policy>`.
+    """Calculate the `EVC <EVCMechanism_EVC>` for a given performance outcome and set of costs.
 
-    In the default configuration of an `EVCMechanism`, this is assigned as its `value_function
-    <EVCMechanism.value_function>` attribute, and called by `ControlSignalGridSearch`.  It calculates and returns the
-    `expected value of control (EVC) <EVCMechanism_EVC>` for the current `allocation_policy`, by combining an
-    evaluation of the performance of the EVCMechanism's `system <EVCMechanism.system>` with the associated `cost
-    <ControlSignal.cost>` of its `ControlSignals <EVCMechanism_ControlSignals>` for that policy.  It determines
-    each of these quantitites using three helper functions, as described below
+    ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
+    and list of costs (each reflecting the `cost <ControlSignal.cost>` of a `ControlSignal` of the `controller
+    System_Base.controller` of that System) and returns an `expected value of control (EVC) <EVCMechanism_EVC>` based
+    on these (along with the outcome and aggregation of costs used to calculate the EVC).
 
-    .. _ValueFunction_Outcome:
+    ValueFunction is the default for an EVCMechanism's `value_function <EVCMechanism.value_function>` attribute, and
+    it is called by `ControlSignalGridSearch` (the EVCMechanism's default `function <EVCMechanism.function>`).
 
-    *Outcome* - the `value <InputState.value>` of the EVCMechanism's `primary InputState <InputState_Primary>` is used
-    as the measure of the performance of its EVCMechanism's `system <EVCMechanism.system>` under the current
-    `allocation_policy`.  This is provided the EVCMechanism's `monitoring_mechanism`, which monitors the OutputStates
-    specified in the EVCMechanism `monitor_for_control <EVCMechanism.monitor_for_control>` attribute, and uses as its
-    `function <ObjectiveMechanism.function>` the one specified in the EVCMechanism's `output_function
-    <EVCMechanism.output_function>` attribute.
-
-    .. _ValueFunction_Cost:
-
-    *Cost* - this is calculated by calling the function specified in the EVCMechanism's `cost_function
-    <EVCMechanism.cost_function>` attribute; by default, this sums the `cost <ControlSignal.cost>` of its
-    `ControlSignals <EVCMechanism_ControlSignals>`.
-
-    .. _ValueFunction_EVC:
-
-    *EVC* - this is calculated by calling the function specified in the EVCMechanism's
-    `combine_outcome_and_cost_function <EVCMechanism.combine_outcome_and_cost_function>` attribute; by default,
-    this subtracts the `cost <ValueFunction_Cost>` from the `outcome <ValueFunction_Outcome>` to generate the value
-    of the EVC under the current `allocation_policy`.
-
-
-    -----
-    XXX EDIT:
-    ValueFunction returns the result
-    as the first item of a  three-item tuple, the second
-    and third of which are the outcome and cost used to determine the result.  The default function can be
-    replaced by any function that returns a tuple with three items: the calculated EVC (which must be a scalar
-    value), and the outcome and cost from which it was calculated (these can be scalar values or `None`).
-    If used with the EVCMechanism's default `function <EVCMechanism.function>`, a custom `value_function` must
-    accommodate three arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism for
-    which it is carrying out the calculation; an :keyword:`outcome` argument that is a scalar value that reflects
-    the outcome of the function of the ObjectiveMechanism (based on the value of the outputStates being monitored
-    (and specified in the EVCMechanism's `monitored_output_states` attribute;
-    and a :keyword:`costs` argument that is a 2d array of costs, each item of which is the `cost` of a
-    ControlSignal in the EVCMechanism's `control_signals` attribute.  A custom function assigned to
-    `value_function` can also call any of the other EVCMechanism functions described below (however,
-    see `note <EVCMechanism_Calling_and_Assigning_Functions>` above).
-    ------
-
-    The calculation of EVC provided by ValueFunction can be customized by replacing any of the helper functions on
-    which it depends, specified in the corresponding attributes of the `EVCMechanism`:
-    `outcome_function <EVCMechanism.outcome_function>`, `cost_function <EVCMechanism.cost_function>`, and/or
-    `combine_outcome_and_cost_function <EVCMechanism.combine_outcome_and_cost_function>`, so long as any replacements
-    use the same format (number and type of items) for its arguments and return values (see `note
-    <EVCMechanism_Calling_and_Assigning_Functions>`).
-
-
+    The ValueFunction's default `function <ValueFunction.function>` calculates the EVC using three `helper functions
+    <EVCMechanism_Auxiliary_Functions>`, specified in corresponding attributes of an `EVCMechanism`: `outcome_function
+    <EVCMechanism.outcome_function>`, `cost_function <EVCMechanism.cost_function>`, and
+    `combine_outcome_and_cost_function <EVCMechanism.combine_outcome_and_cost_function>`.
+    The calculation of EVC provided by ValueFunction can be modified by assigning custom functions to these
+    attributes, or by replacing the ValueFunction's `function <ValueFunction.function>` itself (in the EVCMechanism's
+    `value_function <EVCMechanism.value_function>` attribute). Replacement functions must use the same format (number
+    and type of items) for its arguments and return values (see `note <EVCMechanism_Calling_and_Assigning_Functions>`).
 
     """
 
@@ -159,7 +119,44 @@ class ValueFunction(EVCAuxiliaryFunction):
                          context=self.componentName+INITIALIZING)
 
     def function(self, **kwargs):
-        """aggregate costs, combine with outcome, and return value
+        """
+        function (controller, outcome, costs)
+
+        Calculate the EVC as follows:
+
+        * call the `cost_function` for the EVCMechanism specified in the **controller** argument,
+          to combine the list of costs specified in the **costs** argument into a single cost value;
+
+        * call the `combine_outcome_and_cost_function` for the EVCMechanism specified in the **controller** argument,
+          to combine the value specified in the **outcome** argument with the value returned by the `cost_function`;
+
+        * return the results in a three item tuple: (EVC, outcome and cost).
+
+
+        Arguments
+        ---------
+
+        controller : EVCMechanism
+            the EVCMechanism for which the EVC is to be calculated;  this is required so that the controller's
+            `cost_function <EVCMechanism.cost_function>` and `combine_outcome_and_cost_function
+            <EVCMechanism.combine_outcome_and_cost_function>` functions can be called.
+
+        outcome : value : default float
+            should represent the outcome of performance of the `System` for which an `allocation_policy` is being
+            evaluated.
+
+        costs : list or array of values : default 1d np.array of floats
+            each item should be the `cost <ControlSignal.cost>` of one of the controller's `ControlSignals
+            <EVCMechanism_ControlSignals>`.
+
+
+        Returns
+        -------
+
+        (EVC, outcome, cost) : Tuple(float, float, float)
+
+
+
         """
 
         context = kwargs['context']
