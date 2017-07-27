@@ -17,7 +17,7 @@
 
 import inspect
 
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Keywords import DEFAULT_PROCESSING_MECHANISM, PROJECTION_SENDER, PROJECTION_TYPE
 from PsyNeuLink.Globals.Registry import register_category
 
 kwInitPy = '__init__.py'
@@ -32,8 +32,8 @@ class InitError(Exception):
 
 #region ***************************************** MECHANISM SUBCLASSES *************************************************
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
     import DefaultProcessingMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism \
@@ -92,8 +92,8 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 #              while still indexing multiple uses of the same base name within an owner
 #
 # State registry
-from PsyNeuLink.Components.States.State import State_Base
 from PsyNeuLink.Components.States.State import StateRegistry
+from PsyNeuLink.Components.States.State import State_Base
 
 # InputState
 from PsyNeuLink.Components.States.InputState import InputState
@@ -119,8 +119,8 @@ register_category(entry=ParameterState,
 # Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
-from PsyNeuLink.Components.Projections.Projection import Projection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
+from PsyNeuLink.Components.Projections.Projection import Projection_Base
 
 # MappingProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection

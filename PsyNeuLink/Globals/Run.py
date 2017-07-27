@@ -293,13 +293,19 @@ Class Reference
 
 """
 
+import warnings
+
 from collections import Iterable
 
+import numpy as np
+import typecheck as tc
+
 from PsyNeuLink.Components.Component import ExecutionStatus, function_type
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
-from PsyNeuLink.Components.Process import Process, ProcessInputState
-from PsyNeuLink.Components.System import System
-from PsyNeuLink.Globals.Utilities import *
+from PsyNeuLink.Components.Process import ProcessInputState
+from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
+from PsyNeuLink.Globals.Keywords import EVC_SIMULATION, MECHANISM, PROCESS, PROCESSES_DIM, RUN, SAMPLE, SYSTEM, TARGET
+from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 HOMOGENOUS = 1
 HETEROGENOUS = 0

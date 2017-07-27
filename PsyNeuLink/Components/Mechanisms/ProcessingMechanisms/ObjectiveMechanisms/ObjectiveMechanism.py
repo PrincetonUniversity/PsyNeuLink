@@ -226,13 +226,14 @@ import warnings
 
 import typecheck as tc
 
+from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -725,7 +726,7 @@ def _instantiate_monitoring_projections(owner,
         if isinstance(sender, OutputState):
             # Projection has been specified for receiver and initialization begun, so call deferred_init()
             if receiver.path_afferents:
-                if not receiver.path_afferents[0].value is DEFERRED_INITIALIZATION:
+                if not receiver.path_afferents[0].init_status is InitStatus.DEFERRED_INITIALIZATION:
                     raise ObjectiveMechanismError("PROGRAM ERROR: {} of {} already has an afferent projection "
                                                   "implemented and initialized ({})".
                                                   format(receiver.name, owner.name, receiver.aferents[0].name))

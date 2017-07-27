@@ -9,20 +9,6 @@
 # ***********************************************  Init ****************************************************************
 import logging
 
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import System, system
-from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
-
 
 # https://stackoverflow.com/a/17276457/3131666
 class Whitelist(logging.Filter):

@@ -129,24 +129,25 @@ Class Reference
 
 """
 
+import warnings
+
 import numpy as np
 
-from PsyNeuLink.Components.Functions.Function import Function, function_type, method_type
-from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, Reinforcement, BackPropagation
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, \
-    ACTIVATION_OUTPUT, ERROR_SIGNAL
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
-    ObjectiveMechanism
+from PsyNeuLink.Components.Component import function_type, method_type
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
-    import ComparatorMechanism, MSE
+    import ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+
 
 class LearningAuxilliaryError(Exception):
     def __init__(self, error_value):
@@ -1113,9 +1114,9 @@ class LearningComponents(object):
     #         #                                   format(learning_mech))
     #         self.error_objective_mech = error_obj_mech
     #         return error_obj_mech
-    # 
+    #
     #     return self._error_objective_mech or _get_obj_mech()
-    # 
+    #
     # @error_objective_mech.setter
     # def error_objective_mech(self, assignment):
     #     if assignment is None or isinstance(assignment, (ObjectiveMechanism)):
@@ -1123,7 +1124,7 @@ class LearningComponents(object):
     #     else:
     #         raise LearningAuxilliaryError("PROGRAM ERROR: illegal assignment to error_objective_mech; "
     #                                       "it must be an ObjectiveMechanism.")
-    # 
+    #
     # # ---------------------------------------------------------------------------------------------------------------
     # # error_objective_mech_output: outputState of ObjectiveMechanism for error_projection (ObjectiveMechanism)
     # @property
@@ -1144,7 +1145,7 @@ class LearningComponents(object):
     #                                           format(self.error_objective_mech_output.name))
     #         return self.error_objective_mech.outputState
     #     return self._error_objective_mech_output or _get_err_obj_mech_out()
-    # 
+    #
     # @error_objective_mech_output.setter
     # def error_objective_mech_output(self, assignment):
     #     if isinstance(assignment, (OutputState)):

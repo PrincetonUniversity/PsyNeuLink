@@ -75,6 +75,7 @@ Class Reference
 
 """
 
+import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
@@ -82,11 +83,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, FUNCTION_PARAMS, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
+from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -200,7 +198,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         or a custom function.
 
     matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
-        specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`, 
+        specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`,
         or a MappingProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
 

@@ -119,7 +119,7 @@ therefore an uncommon practice.
 
 The following is an example that creates an instance of a TransferMechanism that names the default InputState
 ``MY_INPUT``, and assigns three `standard OutputStates <OutputState_Standard>`::
- 
+
      my_mech = TransferMechanism(input_states=['MY_INPUT'], output_states=[RESULT, MEAN, VARIANCE])
 
 .. _Mechanism_Structure:
@@ -280,7 +280,7 @@ States, ParameterStates can receive Projections. Typically these are from the `C
 of a `ControlMechanism` that is used to modify parameter values in response to the outcome(s) of
 processing.  A parameter value (and the value of its associated ParameterState) can be specified when a Mechanism or
 its function is first created  using the corresponding argument in the object's constructor.  Parameter values can
-also be assigned later, by direct assignment of a value to the corresponding attribute, or by using the Mechanism's 
+also be assigned later, by direct assignment of a value to the corresponding attribute, or by using the Mechanism's
 `assign_param` method (the safest means;  see `ParameterState_Specification`).  All of the Mechanism's
 parameters are list in a dict in its `user_params` attribute; the dict contains a `function_params` entry which
 in turn contains a dict of the parameters for the Mechanism's `function <Mechanism.function>`.
@@ -325,7 +325,7 @@ COMMENT:
 COMMENT
 
 Most Mechanisms implement a standard set of parameters, that can be specified by direct reference to the corresponding
-attribute of the Mechanisms (e.g., myMechanism.attribute), in a 
+attribute of the Mechanisms (e.g., myMechanism.attribute), in a
 `parameter dictionary <ParameterState_Specification>` assigned to `params` argument in the Mechanism's
 constructor, or with the Mechanism's `assign_params` method, using the following keywords:
 
@@ -354,7 +354,7 @@ constructor, or with the Mechanism's `assign_params` method, using the following
       |
       .. note::
          Some Mechanism subclasses include the function parameters as arguments in Mechanism's constructor.
-         Any values specified in the `FUNCTION__PARAMS` entry of a 
+         Any values specified in the `FUNCTION__PARAMS` entry of a
          `parameter specification dictionary <ParameterState_Specification>` for the Mechanism take precedence
          over values assigned to parameter-specific arguments in its (or its function's) constructor.
 
@@ -506,17 +506,22 @@ Class Reference
 
 """
 
+import inspect
 import logging
 
 from collections import OrderedDict
 from inspect import isclass
 
-from PsyNeuLink.Components.Component import ExecutionStatus
-from PsyNeuLink.Components.ShellClasses import *
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, method_type
+from PsyNeuLink.Components.ShellClasses import Function, Mechanism, Projection
 from PsyNeuLink.Globals.Defaults import timeScaleSystemDefault
-from PsyNeuLink.Globals.Keywords import CHANGED, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
+from PsyNeuLink.Globals.Keywords import CHANGED, COMMAND_LINE, DDM_MECHANISM, EVC_SIMULATION, EXECUTING, FUNCTION_PARAMS, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, INPUT_STATE_PARAMS, MECHANISM_TIME_SCALE, MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, NO_CONTEXT, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PARAMETER_STATE, PARAMETER_STATE_PARAMS, PROCESS_INIT, SEPARATOR_BAR, SET_ATTRIBUTE, SYSTEM_INIT, TIME_SCALE, UNCHANGED, VALIDATE, kwMechanismComponentCategory, kwMechanismExecuteFunction, kwMechanismType, kwProcessDefaultMechanism
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import AutoNumber, append_type_to_name, kwCompatibilityNumeric
+from PsyNeuLink.Globals.Utilities import AutoNumber, ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, kwCompatibilityNumeric
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
@@ -1967,7 +1972,7 @@ class Mechanism_Base(Mechanism):
             specifying the class or keyword for InputState or OutputState).
 
         """
-        from PsyNeuLink.Components.States.State import _parse_state_type, _instantiate_state_list
+        from PsyNeuLink.Components.States.State import _parse_state_type
         from PsyNeuLink.Components.States.InputState import InputState, _instantiate_input_states
         from PsyNeuLink.Components.States.OutputState import OutputState, _instantiate_output_states
 
@@ -2105,7 +2110,7 @@ def _is_mechanism_spec(spec):
 #
 # MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
 
-from collections import Iterable, UserList
+from collections import UserList
 class MechanismList(UserList):
     """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
 

@@ -191,9 +191,13 @@ Class Reference
 ---------------
 """
 
+from PsyNeuLink.Components.Component import InitStatus, component_keywords
+from PsyNeuLink.Components.ShellClasses import State
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.State import *
-from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION
+from PsyNeuLink.Components.States.State import StateError, State_Base
+from PsyNeuLink.Globals.Keywords import MECHANISM, MODULATION, MODULATORY_SIGNAL
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+
 
 class ModulatorySignalError(Exception):
     def __init__(self, error_value):
@@ -294,7 +298,7 @@ class ModulatorySignal(OutputState):
     value : number, list or np.ndarray
         result of `function <ModulatorySignal.function>`, and is the value used to determine the
         `value <State_Base.value>` of the State(s) being modulated.
-    
+
     modulation : ModulationParam
         determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
 
@@ -349,7 +353,7 @@ class ModulatorySignal(OutputState):
 
         # Deferred initialization
         try:
-            if self.value in {DEFERRED_INITIALIZATION, INITIALIZING}:
+            if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
                 # If init was deferred, it may have been because owner was not yet known (see OutputState.__init__),
                 #   and so modulation hasn't had a chance to be assigned to the owner's value
                 #   (i.e., if it was not specified in the constructor), so do it now;
