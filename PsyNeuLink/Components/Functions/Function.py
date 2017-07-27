@@ -2944,7 +2944,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Matrix provided (and validated in _validate_params); convert to np.array
     if isinstance(specification, np.matrix):
-        return np.array(specification)
+        specification = np.array(specification)
 
     if isinstance(specification, np.ndarray):
         if specification.ndim == 2:
@@ -2956,7 +2956,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
                                 format(specification))
 
-    if specification is AUTO_ASSIGN_MATRIX:
+    if specification == AUTO_ASSIGN_MATRIX:
         if rows == cols:
             specification = IDENTITY_MATRIX
         else:
@@ -2965,19 +2965,19 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
 
-    if specification is IDENTITY_MATRIX:
+    if specification == IDENTITY_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return np.identity(rows)
 
-    if specification is HOLLOW_MATRIX:
+    if specification == HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
 
-    if specification is RANDOM_CONNECTIVITY_MATRIX:
+    if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
@@ -3214,7 +3214,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     def _validate_noise(self, noise):
         self.noise_function = False
         # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)):
+        if isinstance(noise, (np.ndarray, list)) and len(noise) != 1:
             # Variable is a list/array
             if isinstance(self.variable, (np.ndarray, list)):
                 if len(noise) != np.array(self.variable).size:
@@ -3254,7 +3254,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         elif callable(noise):
             self.noise_function = True
 
-        elif not isinstance(noise, (float, int)):
+        elif not isinstance(noise, (float, int, np.ndarray)):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, array or list of floats, or "
                 "array or list of functions.".format(noise, self.name))

@@ -557,7 +557,7 @@ def test_transfer_mech_time_constant_1_0():
     assert val == [[1.0, 1.0, 1.0, 1.0]]
 
 # ------------------------------------------------------------------------------------------------
-# TEST 1
+# TEST 3
 # time_constant = 0.0
 
 
@@ -571,6 +571,25 @@ def test_transfer_mech_time_constant_0_0():
     )
     val = T.execute([1, 1, 1, 1]).tolist()
     assert val == [[0.0, 0.0, 0.0, 0.0]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# time_constant = 0.8, initial_value=0.5
+
+def test_transfer_mech_time_constant_0_8_initial_0_5():
+    T = TransferMechanism(
+        name='T',
+        default_variable=[0, 0, 0, 0],
+        function=Linear(),
+        time_constant=0.8,
+        initial_value=np.array([[.5, .5, .5, .5]]),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = T.execute([1, 1, 1, 1]).tolist()
+    assert val == [[0.9, 0.9, 0.9, 0.9]]
+    T.noise = 10
+    val = T.execute([1, 2, -3, 0]).tolist()
+    assert val == [[10.98, 11.78, 7.779999999999999, 10.18]] # testing noise changes to an integrator
 
 # ------------------------------------------------------------------------------------------------
 
@@ -896,7 +915,7 @@ def test_transfer_mech_size_var_incompatible1():
 
 # ------------------------------------------------------------------------------------------------
 
-# INVALID INPUTS
+# INVALID SIZE INPUTS
 
 # ------------------------------------------------------------------------------------------------
 # TEST 1

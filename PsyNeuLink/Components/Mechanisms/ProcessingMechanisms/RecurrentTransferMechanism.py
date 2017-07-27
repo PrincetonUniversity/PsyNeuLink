@@ -453,7 +453,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             elif isinstance(matrix_param, str):
                 matrix = get_matrix(matrix_param, size, size)
 
-            elif isinstance(matrix_param, np.matrix):
+            elif isinstance(matrix_param, (np.matrix, list)):
                 matrix = np.array(matrix_param)
 
             else:
@@ -464,12 +464,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # Shape of matrix must be square
             if rows != cols:
-                if (matrix_param, MappingProjection):
+                if isinstance(matrix_param, MappingProjection):
                     # if __name__ == '__main__':
                     err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
                                format(MATRIX, matrix_param.name, self.name))
                 else:
-                    err_msg = "{} param for must be square".format(MATRIX, self.name)
+                    err_msg = "{0} param for {1} must be square; currently, the {0} param is: {2}".\
+                        format(MATRIX, self.name, matrix)
                 raise RecurrentTransferError(err_msg)
 
             # Size of matrix must equal length of variable:

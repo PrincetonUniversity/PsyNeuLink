@@ -1,14 +1,12 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
-from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, FunctionError
+from PsyNeuLink.Components.Functions.Function import ExponentialDist, NormalDist
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
@@ -57,8 +55,10 @@ def test_recurrent_mech_inputs_list_of_ints():
         name='R',
         default_variable=[0, 0, 0, 0]
     )
-    val = R.execute([10, 10, 10, 10]).tolist()
-    assert val == [[10.0, 10.0, 10.0, 10.0]]
+    val = R.execute([10, 12, 0, -1]).tolist()
+    assert val == [[10.0, 12.0, 0, -1]]
+    val = R.execute([1, 2, 3, 0]).tolist()
+    assert val == [[1, 2, 3, 0]] # because recurrent projection is not used when executing: mech is reset each time
 
 # ------------------------------------------------------------------------------------------------
 # TEST 4
@@ -255,6 +255,34 @@ def test_recurrent_mech_matrix_strings():
     assert "has non-numeric entries" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
+# TEST 4
+# matrix = non-square
+
+
+def test_recurrent_mech_matrix_nonsquare():
+    with pytest.raises(RecurrentTransferError) as error_text:
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            matrix=[[1, 3]]
+        )
+    assert "must be square" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 5
+# matrix = 3D array
+
+
+def test_recurrent_mech_matrix_3d():
+    with pytest.raises(FunctionError) as error_text:
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=2,
+            matrix=[[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
+        )
+    assert "more than 2d" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
 
 # ====================================== FUNCTION TESTS ==========================================
 
@@ -394,23 +422,60 @@ def test_recurrent_mech_time_constant_0_8():
     )
     val = R.execute([1, 1, 1, 1]).tolist()
     assert val == [[0.8, 0.8, 0.8, 0.8]]
+    val = R.execute([1, 1, 1, 1]).tolist()
+    assert val == [[.96, .96, .96, .96]]
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # time_constant = 0.8, initial_value=0.5
 
-# def test_recurrent_mech_time_constant_0_8_initial_0_5():
-#     R = RecurrentTransferMechanism(
-#         name='R',
-#         default_variable=[0, 0, 0, 0],
-#         function=Linear(),
-#         time_constant=0.8,
-#         initial_value=np.atleast_2d([0.5, 0.5, 0.5, 0.5]),
-#         time_scale=TimeScale.TIME_STEP
-#     )
-#     val = R.execute([1, 1, 1, 1]).tolist()
-#     assert val == [[0.9, 0.9, 0.9, 0.9]]
+def test_recurrent_mech_time_constant_0_8_initial_0_5():
+    R = RecurrentTransferMechanism(
+        name='R',
+        default_variable=[0, 0, 0, 0],
+        function=Linear(),
+        time_constant=0.8,
+        initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = R.execute([1, 1, 1, 1]).tolist()
+    assert val == [[0.9, 0.9, 0.9, 0.9]]
+    val = R.execute([1, 2, 3, 4]).tolist()
+    assert val == [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]] # due to inevitable floating point errors
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
-# time_constant = 0.8
+# time_constant = 0.8, initial_value = 1.8
+
+def test_recurrent_mech_time_constant_0_8_initial_1_8():
+    R = RecurrentTransferMechanism(
+        name='R',
+        default_variable=[0, 0, 0, 0],
+        function=Linear(),
+        time_constant=0.8,
+        initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = R.execute([1, 1, 1, 1]).tolist()
+    assert val == [[1.16, 1.16, 1.16, 1.16]]
+    val = R.execute([2, 2, 2, 2]).tolist()
+    assert val == [[1.832, 1.832, 1.832, 1.832]]
+    val = R.execute([-4, -3, 0, 1]).tolist()
+    assert val == [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]]
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# time_constant = 0.8, initial_value = [-1, 1, -2, 2]
+
+def test_recurrent_mech_time_constant_0_8_initial_1_2():
+    R = RecurrentTransferMechanism(
+        name='R',
+        default_variable=[0, 0, 0, 0],
+        function=Linear(),
+        time_constant=0.8,
+        initial_value=np.array([[-1, 1, -2, 2]]),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = R.execute([3, 2, 1, 0]).tolist()
+    assert val == [[2.2, 1.8, .40000000000000013, .3999999999999999]]
+
