@@ -240,30 +240,21 @@ COMMENT
   .. _EVCMechanism_Value_Function:
 
   * `value_function` - calculates and returns the `EVC <EVCMechanism_EVC>` for the current `allocation_policy`. The
-    default, `ValueFunction`, uses the three helper functions described below to evaluate the performance of
+    default, `ValueFunction`, uses the three helper functions (described below) to evaluate the performance of
     the EVCMechanism's `system <EVCMechanism.system>` (`EVCMechanism.outcome_function`) and the `cost` of its
     `ControlSignals <EVCMechanism_ControlSignals>` (EVCMechanism.cost_function) under the current `allocation_policy`,
     and combine these (EVCMechanism.combine_outcome_and_cost_function) to calculate the EVC. The `value_function
-    <EVCMechanism.value_function>` can be replaced with any function that returns the value expected by the function
-    assigned to the EVCMechanism's `function <EVCMechanism.function>` attribute (see `note
+    <EVCMechanism.value_function>` can be replaced with any function that returns a value of the type expected by the
+    function assigned to the EVCMechanism's `function <EVCMechanism.function>` attribute (see `note
     <EVCMechanism_Calling_and_Assigning_Functions>` below).
 
-XXX MOVE BACK TO ATTRIBUTE:
-        calculates the value for a given `allocation_policy`.  The default uses `outcome_function` to determine the
-        outcome of the policy, `cost_function` to determine its cost, combines these using
-        `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
-        and third of which are the outcome and cost used to determine the result. The default function can be
-        replaced by any function that returns a tuple with three items: the calculated EVC (which must be a scalar
-        value), and the outcome and cost from which it was calculated (these can be scalar values or `None`).
-        If used with the EVCMechanism's default `function <EVCMechanism.function>`, a custom `value_function` must
-        accommodate three arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism for
-        which it is carrying out the calculation; an :keyword:`outcome` argument that is a scalar value that reflects
-        the outcome of the function of the ObjectiveMechanism (based on the value of the outputStates being monitored
-        (and specified in the EVCMechanism's `monitored_output_states` attribute;
-        and a :keyword:`costs` argument that is a 2d array of costs, each item of which is the `cost` of a
-        ControlSignal in the EVCMechanism's `control_signals` attribute.  A custom function assigned to
-        `value_function` can also call any of the other EVCMechanism functions described below (however,
-        see `note <EVCMechanism_Calling_and_Assigning_Functions>` above).
+    value_function : function : default value_function()
+        calculates the value for a given `allocation_policy`.  The default, `ValueFunction`, uses the `value
+        <InputState.value>` of the EVCMechanism's `primary InputState <InputState_Primary>` (provided by the
+        `monitoring_mechanism` that uses `outcome_function`) as the outcome of the `system <EVCMechaism.system>` \s
+        performance under the `allocation_policy`; it calls the `cost_function` to determine its cost; and it
+        combines these by calling `combine_outcome_and_cost_function` with each of those values.
+
 
 .. _EVCMechanism_Outcome_Function:
 
@@ -764,9 +755,15 @@ class EVCMechanism(ControlMechanism_Base):
 
     XXX EDIT:
     value_function : function : default value_function()
-        calculates the value for a given `allocation_policy`.  The default uses `outcome_function` to determine the
-        outcome of the policy, `cost_function` to determine its cost, combines these using
-        `combine_outcome_and_cost_function`, and returns the result as the first item of a three-item tuple, the second
+        calculates the value for a given `allocation_policy`.  The default, `ValueFunction`, uses the `value
+        <InputState.value>` of the EVCMechanism's `primary InputState <InputState_Primary>` (provided by the
+        `monitoring_mechanism` that uses `outcome_function`) as the outcome of the `system <EVCMechaism.system>` \s
+        performance under the `allocation_policy`; it calls the `cost_function` to determine its cost; and it
+        combines these by calling `combine_outcome_and_cost_function` with each of those values.
+
+
+        It returns the result
+        as the first item of a  three-item tuple, the second
         and third of which are the outcome and cost used to determine the result.  The default function can be
         replaced by any function that returns a tuple with three items: the calculated EVC (which must be a scalar
         value), and the outcome and cost from which it was calculated (these can be scalar values or `None`).
