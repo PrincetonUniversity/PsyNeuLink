@@ -166,72 +166,16 @@ safest way), or by assigning them directly to the corresponding attribute (see `
 **Default EVC Function**
 
   The default `function <EVCMechanism.function>` of an EVCMechanism is `ControlSignalGridSearch`. It identifies
-  the `allocation_policy` with the maximum `EVC <EVCMechanism_EVC>` by a conducting a grid search over every possible
-  `allocation_policy` given the `allocation_samples` specified for each of its ControlSignals (i.e., the `Cartesian
-  product <https://en.wikipedia.org/wiki/Cartesian_product>`_ of the `allocation <ControlSignal.allocation>` values
-  specified by the `allocation_samples` attribute of each ControlSignal).  The full set of allocation policies is
-  stored in the EVCMechanism's `control_signal_search_space` attribute.  The EVCMechanism's `run_simulation` method
-  is then used to simulate its `system <EVCMechanism.system>` under each `allocation_policy` in
-  `control_signal_search_space`, calculate the EVC for each of those policies, and return the policy with
-  the greatest EVC. By default, only the maximum EVC is saved and returned.  However, by setting the
-  `save_all_values_and_policies` attribute to `True`, each policy and its EVC can be saved for each simulation run (in
-  the EVCMechanism's `EVC_policies` and `EVC_values` attributes, respectively). The EVC is calculated for each policy by
-  iterating over the following steps, involving calls to four auxiliary functions (described `below
-  <EVCMechanism_Auxiliary_Functions>`):
-
-    * Select an allocation_policy:
-        draw a successive item from `control_signal_search_space` in each iteration, and use it to assign
-        the `allocation` values to the ControlSignals for that simulation of the `system <EVCMechanism.system>`.
-
-    * Simulate performance:
-        execute the system under the selected `allocation_policy` using the EVCMechanism's `run_simulation` method,
-        and the `value <Mechanism.value>` of its `prediction_mechanisms` (that use the history of previous trials to
-        generate to generate an average expected input value) as the input to the `system <EVCMechanism.system>`.
-
-    * Calculate the EVC:
-        call the EVCMechanism's `value_function <EVCMechanism_Value_Function>` that uses the values returned by three
-        other auxiliary functions to calculate the EVC for the current `allocation_policy`:  a) an `outcome
-        <EVCMechanism_Outcome_Function>` function, that evaluates the performance of the `system <EVCMechanism.system>`
-        under the current `allocation_policy` ; b) a `cost <EVCMechanism_Cost_Function>` function, that calculates the
-        cost for the `allocation_policy` based on the current `cost <ControlSignal.cost>` associated with each
-        ControlSignal; and c) a `combine <EVCMechanism_Combine_Function>` function that calculates the EVC by
-        subtracting the cost from the outcome (these functions are described in detail `below
-        <EVCMechanism_Auxiliary_Functions>`).
-
-    * Save the values:
-        if the `save_all_values_and_policies` attribute is `True`, save allocation policy in the EVCMechanism's
-        `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute; otherwise, retain only maximum
-        EVC value.
-
-COMMENT:
-    ..
-    * *Select an allocation_policy.* A successive item is drawn from `control_signal_search_space` in each iteration,
-      and used to assign the corresponding `allocation` values to the ControlSignals for that simulation of the `system
-      <EVCMechanism.system>`.
-    ..
-    * *Simulate performance.*  Execute the system under the selected `allocation_policy` using the EVCMechanism's
-      `run_simulation` method, and the `value <Mechanism.value>` of its `prediction_mechanisms` (that use the history
-      of previous trials to generate to generate an average expected input value) as the input to the `system
-      <EVCMechanism.system>`;
-    ..
-    * *Calculate the EVC.*  Call the EVCMechanism's `value_function <EVCMechanism_Value_Function>` that, in turn uses
-      the values returned by three other auxiliary functions:  the `outcome_function` (assigned to and executed by the
-      EVCMechanism's `monitoring_mechanism`), that evaluates the performance of the `system <EVCMechanism.system>`
-      under the current `allocation_policy`; a `cost_function` that calculates the cost for the `allocation_policy`
-      based on the current `cost <ControlSignal.cost>` associated with each ControlSignal; and the
-      `combine_outcome_and_cost_function` that calculates the EVC by subtracting the cost from the outcome (these
-      functions are all described in detail `below <EVCMechanism_Auxiliary_Functions>`).
-    ..
-    * *Save the values.* If the `save_all_values_and_policies` attribute is `True`, the allocation policy is saved
-      in the EVCMechanism's `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute;  otherwise,
-      only the maximum EVC value is retained.
-COMMENT
-
-  `ControlSignalGridSearch` returns the `allocation_policy` that yielded the maximum EVC. Its operation can be modified
-  by assigning custom functions to any or all of the `auxiliary functions <EVCMechanism_Auxiliary_Functions>`, or it be
-  replace altogether.  However, any replacement function must return an `allocation_policy` (as a 2d array), with the
-  same number of items in axis 0 as the number of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`,
-  using the order in which they are listed in its `control_signals <EVCMechanism.control_signals>` attribute.
+  the `allocation_policy` with the maximum `EVC <EVCMechanism_EVC>` by a conducting an exhausitve search over every
+  possible `allocation_policy`, given the `allocation_samples` specified for each of its ControlSignals.  For each
+  `allocation_policy`, it executes the `system <EVCMechanism.system>`, evaluates the `EVC <EVCMechanism_EVC>` for that
+  policy, and returns the `allocation_policy` with the greatest EVC value.  It uses the results of three auxiliary
+  functions (described `below <EVCMechanism_Auxiliary_Functions>`).  Any of these can be replaced, or
+  `ControlSignalGridSearch` itself can be replaced as the EVCMechanism's `function <EVCMechanism.function>`,
+  to customize how the `allocation_policy` is determined.  However, any replacement function must return an
+  `allocation_policy` (as a 2d array), with the same number of items in axis 0 as the number of the EVCMechanism's
+  `ControlSignals <EVCMechanism_ControlSignals>`, ordered to correspond to the order in which the ControlSignals are
+  listed in the EVCMechanism's `control_signals <EVCMechanism.control_signals>` attribute.
 
 .. _EVCMechanism_Auxiliary_Functions:
 
