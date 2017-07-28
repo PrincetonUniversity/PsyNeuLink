@@ -9,13 +9,12 @@
 # **********************************************  PreferenceSet **********************************************************
 #
 import inspect
+
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Keywords import kwPreferenceSetName
 from PsyNeuLink.Globals.Utilities import iscompatible, kwCompatibilityType
-
-# from Globals.Defaults import *
 
 PreferenceSetRegistry = {}
 
@@ -274,7 +273,7 @@ class PreferenceSet(object):
 
         # Owner is a class
         if inspect.isclass(owner):
-            
+
             # Class PreferenceSet already exists
             if isinstance(class_prefs, PreferenceSet):
                 self = class_prefs
@@ -293,7 +292,7 @@ class PreferenceSet(object):
                         self.prefsList = [i for i in list(class_prefs.__dict__.keys()) if '_pref' in i]
 
                     for pref_key in self.prefsList:
-                        class_pref_entry = getattr(class_prefs, pref_key) 
+                        class_pref_entry = getattr(class_prefs, pref_key)
                         try:
                             # Get pref from prefs arg; use class_prefs as validation/default
                             self.set_preference(candidate_info=prefs[pref_key],
@@ -337,7 +336,7 @@ class PreferenceSet(object):
                         if isinstance(error, KeyError):
                             # Pref not in prefs arg, so get pref from <subclass>.defaultPreferences
                             condition = 4
-                            
+
                         if isinstance(error, TypeError):
                             # No prefs, so get pref from  <subclass>.defaultPreferences        # Condition 3
                             condition = 3
@@ -678,7 +677,7 @@ class PreferenceSet(object):
         Arguments:
         - pref_ivar_name (str): name of ivar for preference attribute for which to return the setting;
         - requested_level (PreferenceLevel): preference level for which the setting should be returned
-        
+
         Returns:
         - PreferenceEntry.setting, str:
         """

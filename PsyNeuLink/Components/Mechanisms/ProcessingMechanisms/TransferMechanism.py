@@ -95,13 +95,14 @@ Class Reference
 """
 import inspect
 import numbers
+import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import Component, function_type, method_type
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, np, standard_output_states
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
 from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, MEAN, MEDIAN, NOISE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
@@ -465,7 +466,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            self._validate_noise(target_set[NOISE], self.variable)
 
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
@@ -492,49 +493,70 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                                       rate = self.time_constant,
         #                                       integration_type= ADAPTIVE)
 
-    def _validate_noise(self, noise):
+    def _validate_noise(self, noise, var):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(noise) != np.array(self.variable).size:
+            if isinstance(var, (np.ndarray, list)):
+                if len(noise) != np.array(var).size:
+                    # Formatting noise for proper display in error message
                     try:
                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
                         formatted_noise = noise
-                    raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                         "must match the length ({}) of the default input ({}). If noise is specified as"
-                                         " an array or list, it must be of the same size as the input."
-                                         .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                 self.variable))
+                    raise MechanismError(
+                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
+                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                        " an array or list, it must be of the same size as the input."
+                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
+                                var))
                 else:
-                    # Noise is a list or array of functions
-                    if callable(noise[0]):
-                        self.noise_function = True
-                    # Noise is a list or array of floats
-                    elif isinstance(noise[0], float):
-                        self.noise_function = False
-                    # Noise is a list or array of invalid elements
-                    else:
-                        raise MechanismError("The elements of a noise list or array must be floats or functions.")
+                    for noise_item in noise:
+                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                            raise MechanismError(
+                                "The elements of a noise list or array must be floats or functions.")
+
+
             # Variable is not a list/array
             else:
                 raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
-                                     "default input value is also a list or array.".format(noise, self.name))
+                                    "default input value is also a list or array.".format(noise, self.name))
 
-        elif callable(noise):
-            self.noise_function = True
-            if isinstance(self.variable, (np.ndarray, list)):
-                new_noise = []
-                for i in self.variable:
-                    new_noise.append(self.noise)
-                noise = new_noise
+            # # Elements of list/array have different types
+            # if not all(isinstance(x, type(noise[0])) for x in noise):
+            #     raise MechanismError("All elements of noise list/array ({}) for {} must be of the same type. "
+            #                         .format(noise, self.name))
 
-        elif isinstance(noise, float):
-            self.noise_function = False
-        else:
-            raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                 "array or list of functions.".format(noise, self.name))
+        elif not isinstance(noise, (float, int)) and not callable(noise):
+            raise MechanismError(
+                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
+                    .format(noise, self.name))
+
+    def _try_execute_param(self, param, var):
+
+        # param is a list; if any element is callable, execute it
+        if isinstance(param, (np.ndarray, list)):
+            for i in range(len(param)):
+                if callable(param[i]):
+                    param[i] = param[i]()
+        # param is one function
+        elif callable(param):
+            # if the variable is a list/array, execute the param function separately for each element
+            if isinstance(var, (np.ndarray, list)):
+                if isinstance(var[0], (np.ndarray, list)):
+                    new_param = []
+                    for i in var[0]:
+                        new_param.append(param())
+                    param = new_param
+                else:
+                    new_param = []
+                    for i in var:
+                        new_param.append(param())
+                    param = new_param
+            # if the variable is not a list/array, execute the param function
+            else:
+                param = param()
+        return param
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -641,19 +663,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
-            if self.noise_function:
-                if isinstance(noise, (list, np.ndarray)):
-                    new_noise = []
-                    for n in noise:
-                        new_noise.append(n())
-                    noise = new_noise
-                elif isinstance(variable, (list, np.ndarray)):
-                    new_noise = []
-                    for v in variable[0]:
-                        new_noise.append(noise())
-                    noise = new_noise
-                else:
-                    noise = noise()
+            noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.

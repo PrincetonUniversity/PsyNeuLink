@@ -324,9 +324,9 @@ import warnings
 from collections import Iterable, OrderedDict
 from enum import Enum, IntEnum
 
-from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, DEFERRED_INITIALIZATION, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
+from PsyNeuLink.Globals.Keywords import COMMAND_LINE, COMPONENT_INIT, CONTEXT, CONTROL, CONTROL_PROJECTION, DEFERRED_DEFAULT_NAME, FUNCTION, FUNCTION_CHECK_ARGS, FUNCTION_PARAMS, INITIALIZING, INIT_FULL_EXECUTE_METHOD, INPUT_STATES, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, NAME, OUTPUT_STATES, PARAMS, PARAMS_CURRENT, PARAM_CLASS_DEFAULTS, PARAM_INSTANCE_DEFAULTS, PREFS_ARG, SEPARATOR_BAR, SET_ATTRIBUTE, SIZE, USER_PARAMS, VALUE, VARIABLE, kwComponentCategory
 from PsyNeuLink.Globals.Log import Log
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref, ComponentPreferenceSet
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_to_np_array, is_same_function_spec, iscompatible, kwCompatibilityLength
 
@@ -370,6 +370,13 @@ class ExecutionStatus(Enum):
     INITIALIZING = 1
     EXECUTING = 2
     VALIDATING = 3
+
+
+class InitStatus(Enum):
+    UNSET = 1
+    INITIALIZING = 2
+    DEFERRED_INITIALIZATION = 3
+    INITIALIZED = 4
 
 # Transitional type:
 #    for implementing params as attributes that are accessible via current paramsDicts
@@ -686,7 +693,7 @@ class Component(object):
         # # MODIFIED 8/14/16 NEW:
         # # PROBLEM: variable has different name for different classes;  need to standardize name across classes
         # try:
-        #     if self.value is DEFERRED_INITIALIZATION:
+        #     if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
         #         defer_init = True
         # except AttributeError:
         #     pass
@@ -698,6 +705,7 @@ class Component(object):
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
         self.execution_status = ExecutionStatus.INITIALIZING
+        self.init_status = InitStatus.UNSET
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.variableInstanceDefault = None
@@ -977,12 +985,12 @@ class Component(object):
     def _deferred_init(self, context=None):
         """Use in subclasses that require deferred initialization
         """
-        if self.value is DEFERRED_INITIALIZATION:
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
 
             # Flag that object is now being initialized
             # Note: self.value will be resolved to the object's value as part of initialization
             #       (usually in _instantiate_function)
-            self.value = INITIALIZING
+            self.init_status = InitStatus.INITIALIZING
 
             del self.init_args['self']
 
@@ -1013,6 +1021,8 @@ class Component(object):
 
             # Complete initialization
             super(self.__class__,self).__init__(**self.init_args)
+
+            self.init_status = InitStatus.INITIALIZED
 
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params

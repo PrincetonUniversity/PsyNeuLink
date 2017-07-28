@@ -9,9 +9,13 @@
 # ******************************************** MechanismPreferenceSet **************************************************
 #
 #
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+
+import inspect
+
+from PsyNeuLink.Globals.Keywords import NAME
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpReportOutputPref, kpRuntimeParamStickyAssignmentPref, kpVerbosePref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import Modulation
-from PsyNeuLink.Globals.Preferences import *
 
 # MODIFIED 11/29/16 OLD:
 # # Keypaths for preferences:
@@ -31,38 +35,38 @@ runtimeParamStickyAssignmentPrefCategoryDefault = PreferenceEntry(False, Prefere
 
 class MechanismPreferenceSet(ComponentPreferenceSet):
     """Extends ComponentPreferenceSet to include Mechanism-specific preferences
-     
+
     Description:
         Implements the following preference:
             - runtimeParamModulation (bool): uses specification of run-time params to update execute method params
 
     Class methods:
         - runtimeParamModulationPref():
-            returns setting for runtimeParamModulation preference at level specified in runtimeParamModulation 
+            returns setting for runtimeParamModulation preference at level specified in runtimeParamModulation
             PreferenceEntry of owner's Preference object
         - runtimeParamModulationPref(setting=<value>):
-            assigns the value of the setting item in the runtimeParamModulationPref PreferenceEntry of the 
+            assigns the value of the setting item in the runtimeParamModulationPref PreferenceEntry of the
             owner's Preference object
         - runtimeParamModulationPrefLevel()
             returns level in the runtimeParamModulationPref PreferenceEntry of the owner's Preference object
         - runtimeParamModulationPrefLevel(level=<PreferenceLevel>):
-            assigns the value of the level item in the runtimeParamModulationPref PreferenceEntry of the 
+            assigns the value of the level item in the runtimeParamModulationPref PreferenceEntry of the
             owner's Preference object
         - runtimeParamModulationPrefEntry():
             assigns PreferenceEntry to runtimeParamModulationPref attribute of the owner's Preference object
         - runtimeParamModulationPrefEntry(entry=<PreferenceEntry>):
             returns PreferenceEntry for the runtimeParamModulationPref attribute of the owner's Preference object
         - RuntimeParamStickyAssignmentPref():
-            returns setting for runtimeParamStickyAssignment preference at level specified in 
-            runtimeParamStickyAssignment 
+            returns setting for runtimeParamStickyAssignment preference at level specified in
+            runtimeParamStickyAssignment
             PreferenceEntry of owner's Preference object
         - RuntimeParamStickyAssignmentPref(setting=<value>):
-            assigns the value of the setting item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the 
+            assigns the value of the setting item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
             owner's Preference object
         - RuntimeParamStickyAssignmentPrefLevel()
             returns level in the RuntimeParamStickyAssignmentPref PreferenceEntry of the owner's Preference object
         - RuntimeParamStickyAssignmentPrefLevel(level=<PreferenceLevel>):
-            assigns the value of the level item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the 
+            assigns the value of the level item in the RuntimeParamStickyAssignmentPref PreferenceEntry of the
             owner's Preference object
         - RuntimeParamStickyAssignmentPrefEntry():
             assigns PreferenceEntry to RuntimeParamStickyAssignmentPref attribute of the owner's Preference object
@@ -201,7 +205,7 @@ class MechanismPreferenceSet(ComponentPreferenceSet):
                   format(entry, self._runtime_param_modulation_pref))
             return
         self._runtime_param_modulation_pref = entry
-        
+
 
 
     # runtimeParamStickyAssignment entry -------------------------------------------------------------------------------

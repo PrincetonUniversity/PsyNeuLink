@@ -69,16 +69,15 @@ Class Reference
 """
 import typecheck as tc
 
-from PsyNeuLink import FunctionOutputType
-from PsyNeuLink.Components.Component import parameter_keywords
-from PsyNeuLink.Components.Functions.Function import Linear
+
+from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
+from PsyNeuLink.Components.Functions.Function import FunctionOutputType, Linear
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
-from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Globals.Defaults import defaultGatingPolicy
-from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import FUNCTION_OUTPUT_TYPE, GATING, GATING_MECHANISM, GATING_PROJECTION, INITIALIZING, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -181,7 +180,6 @@ class GatingProjection(ModulatoryProjection_Base):
         the input to the GatingProjection; same as the :keyword:`value` of the `sender <GatingProjection.sender>`.
 
     value : float
-        during initialization, assigned a keyword string (either `INITIALIZING` or `DEFERRED_INITIALIZATION`);
         during execution, is assigned the current value of the GatingProjection.
 
     name : str : default GatingProjection-<index>
@@ -233,16 +231,8 @@ class GatingProjection(ModulatoryProjection_Base):
 
         # If receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
-            # Store args for deferred initialization
-            self.init_args = locals().copy()
-            self.init_args['context'] = self
-            self.init_args['name'] = name
-            # Delete this as it has breen moved to params dict (so it will not be passed to Projection.__init__)
-            del self.init_args[GATING_SIGNAL_PARAMS]
-
             # Flag for deferred initialization
-            self.value = DEFERRED_INITIALIZATION
-            return
+            self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)

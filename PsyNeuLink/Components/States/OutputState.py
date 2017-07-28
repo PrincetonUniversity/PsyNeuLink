@@ -36,14 +36,14 @@ automatically creates a default OutputState if none is explicitly specified, tha
 `function <Mechanism_Base.function>`.  For example, if the Mechanism is created within the `pathway` of a
 `Process <Process>`, an OutputState will be created and assigned as the
 `sender <MappingProjection.MappingProjection.sender>` of a `MappingProjection` to the next Mechanism in the pathway,
-or to the Process' `output <Process_Input_And_Output>` if the Mechanism is a `TERMINAL` Mechanism for that Process.  
+or to the Process' `output <Process_Input_And_Output>` if the Mechanism is a `TERMINAL` Mechanism for that Process.
 Other configurations can also easily be specified using a Mechanism's **output_states** argument (see
 `OutputState_Specification` below).
 
-An OutputState must be owned by a `Mechanism`.  When OutputState is specified in the constructor for a `Mechanism` 
-(see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the 
-OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner** argument of its 
-constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned to 
+An OutputState must be owned by a `Mechanism`.  When OutputState is specified in the constructor for a `Mechanism`
+(see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
+OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner** argument of its
+constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned to
 an owner using the owner's `add_states` method.
 
 .. _OutputState_Primary:
@@ -139,7 +139,7 @@ Standard OutputStates
 
 Most types of Mechanisms have a `standard_output_states` class attribute, that contains a list of predefined
 OutputStates relevant to that type of Mechanism (for example, the `TransferMechanism` class has OutputStates for
-calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as 
+calculating the mean, median, variance, and standard deviation of its result).  The names of these are listed as
 attributes of a class with the name *<ABBREVIATED_CLASS_NAME>_OUTPUT*.  For example, the TransferMechanism class
 defines `TRANSFER_OUTPUT`, with attributes *MEAN*, *MEDIAN*, *VARIANCE* and *STANDARD_DEVIATION* that are the names of
 predefined OutputStates in its `standard_output_states <TransferMechanism.standard_output_states>` attribute.
@@ -322,16 +322,15 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import Component
+from PsyNeuLink.Components.Component import Component, InitStatus
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination, is_function_type
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.State import State_Base, _instantiate_state_list, state_type_keywords
-from PsyNeuLink.Globals.Keywords import CALCULATE, DEFERRED_INITIALIZATION, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
+from PsyNeuLink.Globals.Keywords import CALCULATE, INDEX, MAPPING_PROJECTION, MEAN, MEDIAN, NAME, OUTPUT_STATE, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_STATES, SUM, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import iscompatible, type_match
 from PsyNeuLink.Globals.Utilities import UtilitiesError
+from PsyNeuLink.Globals.Utilities import iscompatible, type_match
 
 state_type_keywords = state_type_keywords.update({OUTPUT_STATE})
 
@@ -595,7 +594,7 @@ class OutputState(State_Base):
             self.init_args['projections'] = projections
 
             # Flag for deferred initialization
-            self.value = DEFERRED_INITIALIZATION
+            self.init_status = InitStatus.DEFERRED_INITIALIZATION
             return
 
         self.reference_value = reference_value
