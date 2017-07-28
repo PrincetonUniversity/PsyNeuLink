@@ -1736,7 +1736,8 @@ class Mechanism_Base(Mechanism):
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.variableInstanceDefault
-            self._assign_input(input)
+            variable = self._get_variable_from_input(input)
+            self.variable = variable
 
         #endregion
 
@@ -1865,7 +1866,7 @@ class Mechanism_Base(Mechanism):
                    call_after_trial=call_after_execution,
                    time_scale=time_scale)
 
-    def _assign_input(self, input):
+    def _get_variable_from_input(self, input):
 
         input = np.atleast_2d(input)
         num_inputs = np.size(input,0)
@@ -1886,17 +1887,18 @@ class Mechanism_Base(Mechanism):
             # input_item = np.ndarray(input[i])
             input_item = input[i]
 
-            if len(input_state.variable) == len(input_item):
+            if len(input_state.variableInstanceDefault) == len(input_item):
                 input_state.value = input_item
             else:
                 raise MechanismError("Length ({}) of input ({}) does not match "
                                      "required length ({}) for input to {} of {}".
                                      format(len(input_item),
                                             input[i],
-                                            len(input_state.variable),
+                                            len(input_state.variableInstanceDefault),
                                             input_state.name,
                                             append_type_to_name(self)))
-        self.variable = np.array(self.input_values)
+
+        return np.array(self.input_values)
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each InputState in self.input_states:
