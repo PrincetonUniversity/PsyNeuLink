@@ -166,7 +166,7 @@ safest way), or by assigning them directly to the corresponding attribute (see `
 <EVCMechanism_Calling_and_Assigning_Functions>` below).
 
 
-**Default EVC Function**
+**Default EVC Function and Auxiliary Functions**
 
   The default `function <EVCMechanism.function>` of an EVCMechanism is `ControlSignalGridSearch`. It identifies
   the `allocation_policy` with the maximum `EVC <EVCMechanism_EVC>` by a conducting an exhausitve search over every
@@ -192,7 +192,7 @@ safest way), or by assigning them directly to the corresponding attribute (see `
   determined, so long as the customized function accepts arguments and returns values that are compatible with
   any that it must interact (see `note <EVCMechanism_Calling_and_Assigning_Functions>`).
 
-XXX BELONGS TO ObjectiveMechanism XXXX
+COMMENT:
 * `outcome_function` - this combines the `value <OutputState.value>` \s of the OutputStates in the EVCMechanism's
   `monitored_output_states <EVCMechanism.monitored_output_states>` attribute, to generate an aggregated outcome value
   for the current `allocation_policy`. The default is the `LinearCombination` function, that computes an elementwise
@@ -268,18 +268,20 @@ XXX BELONGS TO ObjectiveMechanism XXXX
         arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism itself; an
         :keyword:`outcome` argument that is a 1d array with the outcome of the current `allocation_policy`; and a
         :keyword:`cost` argument that is 1d array with the cost of the current `allocation_policy`.
+COMMENT
 
 .. _EVCMechanism_Calling_and_Assigning_Functions:
 
-.. note::
-   The `EVCMechanism auxilliary functions <EVC_Auxiliary_Functions>` described above are all implemented as PsyNeuLink
-   `Functions <Function>`.  Therefore, to call a function itself, it must be referenced as
-   ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxiliary functions
-   can be either a PsyNeuLink `Function <Function>`, or a generic python function or method (including a lambda
-   function).  If it is one of the latter, it is automatically "wrapped" as a PsyNeuLink `Function <Function>`
-   (specifically, it is assigned as the `function <UserDefinedFunction.function>` attribute of a
-   `UserDefinedFunction` object), so that it can be referenced and called in the same manner as the default function
-   assignment. Therefore, once assigned, it too must be referenced as ``<EVCMechanism>.<function_attribute>.function``.
+    .. note::
+       The `EVCMechanism auxilliary functions <EVC_Auxiliary_Functions>` described above are all implemented as
+       PsyNeuLink `Functions <Function>`.  Therefore, to call a function itself, it must be referenced as
+       ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxiliary functions
+       can be either a PsyNeuLink `Function <Function>`, or a generic python function or method (including a lambda
+       function).  If it is one of the latter, it is automatically "wrapped" as a PsyNeuLink `Function <Function>`
+       (specifically, it is assigned as the `function <UserDefinedFunction.function>` attribute of a
+       `UserDefinedFunction` object), so that it can be referenced and called in the same manner as
+       the default function assignment. Therefore, once assigned, it too must be referenced as
+       ``<EVCMechanism>.<function_attribute>.function``.
 
 .. _EVCMechanism_ControlSignals:
 
