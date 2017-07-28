@@ -584,52 +584,38 @@ class EVCMechanism(ControlMechanism_Base):
         which the EVCMechanism is the `controller`, one for each of its `ORIGIN` mechanisms.  The key for each
         entry is an `ORIGIN` mechanism of the system, and the value is the corresponding prediction mechanism.
 
-    COMMENT:
-        predictionProcesses : List[Process]
-            a list of prediction processes added to the system, each comprised of one of its `ORIGIN` mechanisms
-            and the associated `prediction mechanism <EVCMechanism_Prediction_Mechanisms>`.
-    COMMENT
-
     prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
         the `ProcessingMechanism` class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named based on `ORIGIN` mechanism + PREDICTION_MECHANISM,
-        and assigned an `outputState <OutputState>` with a name based on the same
+        and assigned an `OutputState` with a name based on the same.
 
     prediction_mechanisms : List[ProcessingMechanism]
-        list of predictions mechanisms generated for XXXX based on XXXX
+        list of `predictions mechanisms <EVCMechanism_Prediction_Mechanisms>` generated for the EVCMechanism's
+        `system <EVCMechanism.system>`, one for each `ORIGIN` Mechanism in the System.
 
     prediction_mechanism_params : Dict[param key, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
         the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
 
-    COMMENT:
-        OLD
-        predictedInput : 3d np.array
-            array with the `value <Mechanism.Mechanism_Base.value>` of each
-            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms`.  Each item of
-            axis 0 corresponds to the `value <Mechanism.Mechanism_Base.value>` of a prediction mechanism,
-            axis 1 an `inputState <InputState>` of that prediction mechanism, and
-            axis 2 the elements of the input for that inputState.
-    COMMENT
-
-    predictedInput : dict
+    predicted_input : dict
         dictionary with the `value <Mechanism.Mechanism_Base.value>` of each
         `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding
         to each ORIGIN mechanism of the system. The key for each entry is the name of an ORIGIN mechanism, and its
         value the `value <Mechanism.Mechanism_Base.value>` of the corresponding prediction mechanism.
 
     monitoring_mechanism : ObjectiveMechanism
-        the 'ObjectiveMechanism' that monitors the mechanisms and/or outputStates used by the EVCMechanism to evaluate
-        the system's performance.  Each mechanism and/or outputState listed in the EVCMechanism's
-        `monitored_output_states` attribute projects to an inputState of the `monitoring_mechanism`.  The EVCMechanism's
-        `outcome_function` is assiged as the `function <ObjectiveMechanism.function>` for `monitoring_mechanism`.
-        Its result is provided by a projection from the `monitoring_mechanism` to the EVCMechanism.
+        the 'ObjectiveMechanism' used by the EVCMechanism to evaluate the performance of its `system
+        <EVCMechanism.system>`.  The OutputStates specified in the **monitor_for_control** argument of the
+        EVCMechanism's constructor are assigned as the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` \s
+        `monitored_values <ObjectiveMechanism.monitored_values>` attribute, the EVCMechanism's `outcome_function
+        <EVCMechanism.outcome_function>` is assigned as its `function <ObjectiveMechanism.function>`,
+        and a MappingProjection is assigned from it to the EVCMechanism's `primary InputState <InputState_Primary>`.
 
     monitored_output_states : List[OutputState]
-        XXXXeach item is an outputState of a mechanism in the system that has been assigned a projection to a
-        corresponding
-        InputState of the EVCMechanism.
+        list of the OutputStates specified in the **monitor_for_control** argument of the EVCMechanism's constructor,
+        and assigned to the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` for use in evaluating the
+        performance of the EVCMechanism's `system <EVCMechanism.system>`.
 
     COMMENT:
     [TBI]
@@ -724,20 +710,21 @@ class EVCMechanism(ControlMechanism_Base):
         accepts an array of values as its input and returns a scalar value.
 
     cost_function : function : default LinearCombination(operation=SUM)
-        calculates the cost for a given `allocation_policy`.  The default combines the `cost` of each ControlSignals in
-        `control_signals` by summing them using the `LinearCombination` function. If the default `cost_function` is
-        called by a custom `value_function`, the weights and/or exponents parameters of the function can be used,
-        respectively, to scale and/or exponentiate the contribution of each ControlSignal's cost to the aggregated
-        value.  These must be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS` entry of a
-        `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of the
-        `LinearCombination` function; the length of each array must equal the number of (and the values listed in the
-        same order as) the ControlSignals in the EVCMechanism's `control_signals` attribute, and be in the same order.
-        The default function can also be replaced with any
-        `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
-        the EVCMechanism's default `value_function`, a custom cost_function must accommodate two arguments (passed by
-        name): a :keyword:`controller` argument that is the EVCMechanism itself;  and a
-        :keyword:`costs` argument, that is 1d array of scalar values specifying the `cost` for each ControlSignal listed
-        in the `control_signals` attribute of the :keyword:`controller` argument.
+        calculates the cost of the `ControlSignals <ControlSignal>` for the current `allocation_policy`.  The default
+        function sums the `cost <ControlSignal.cost>` of each of the EVCMechanism's `ControlSignals
+        <EVCMechanism_ControlSignals>`.  The `weights <LinearCombination.weights>` and/or `exponents
+        <LinearCombination.exponents>` parameters of the function can be used, respectively, to scale and/or
+        exponentiate the contribution of each ControlSignal cost to the combined cost.  These must be specified as
+        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
+        assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
+        each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
+        EVCMechanism's `control_signals <EVCMechanism.control_signals>` attribute. The default function can also be
+        replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that takes an array as
+        input and returns a scalar value.  If used with the EVCMechanism's default `value_function
+        <EVCMechanism.value_function>`, a custom `cost_function <EVCMechanism.cost_function>` must accommodate two
+        arguments (passed by name): a **controller** argument that is the EVCMechanism itself;  and a **costs**
+        argument that is a 1d array of scalar values specifying the `cost <ControlSignal.cost>` for each ControlSignal
+        listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
         combines the outcome and cost for given `allocation_policy` to determine its value.  The default uses the
@@ -882,7 +869,7 @@ class EVCMechanism(ControlMechanism_Base):
             - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
             - add the process to self.system.processes
 
-        Instantiate self.predictedInput dict:
+        Instantiate self.predicted_input dict:
             - key for each entry is an ORIGIN mechanism of the system
             - value of each entry is the value of the corresponding predictionMechanism:
             -     each value is a 2d array, each item of which is the value of an inputState of the predictionMechanism
@@ -957,10 +944,10 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Assign list of destinations for predicted_inputs:
         #    the variable of the ORIGIN mechanism for each process in the system
-        self.predictedInput = {}
+        self.predicted_input = {}
         for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
-            # self.predictedInput[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
-            self.predictedInput[origin_mech] = self.system.processes[i].origin_mechanisms[0].variable
+            # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
+            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].variable
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     # FIX: MOVE THIS TO ControlMechanism??
@@ -1433,14 +1420,14 @@ class EVCMechanism(ControlMechanism_Base):
         return allocation_policy
 
     def _update_predicted_input(self):
-        """Assign values of prediction mechanisms to predictedInput
+        """Assign values of prediction mechanisms to predicted_input
 
         Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
         Note: must be assigned in order of self.system.processes
 
         """
 
-        # Assign predictedInput for each process in system.processes
+        # Assign predicted_input for each process in system.processes
 
         # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
         num_origin_mechs = len(self.system.origin_mechanisms)
@@ -1451,9 +1438,9 @@ class EVCMechanism(ControlMechanism_Base):
                            format(num_origin_mechs, num_prediction_mechs, self.system.name))
         for origin_mech in self.system.origin_mechanisms:
             # Get origin mechanism for each process
-            # Assign value of predictionMechanism to the entry of predictedInput for the corresponding ORIGIN mechanism
-            self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            # self.predictedInput[origin_mech] = self.origin_prediction_mechanisms[origin_mech].outputState.value
+            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN mechanism
+            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
+            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].outputState.value
 
     def add_monitored_values(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
@@ -1487,7 +1474,7 @@ class EVCMechanism(ControlMechanism_Base):
             the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
             should be the `value <Mechanism.Mechanism_Base.value> for each
             `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `prediction_mechanisms`
-            attribute.  The inputs are available from the `predictedInput` attribute.
+            attribute.  The inputs are available from the `predicted_input` attribute.
 
         allocation_vector : (1D np.array)
             the allocation policy to use in running the simulation, with one allocation value for each of the

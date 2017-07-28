@@ -516,10 +516,10 @@ def _compute_EVC(args):
 
     # # TEST PRINT:
     # print("Allocation vector: {}\nPredicted input: {}".
-    #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predictedInput]),
+    #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
     #       flush=True)
 
-    ctlr.run_simulation(inputs=ctlr.predictedInput,
+    ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
                         time_scale=time_scale,
