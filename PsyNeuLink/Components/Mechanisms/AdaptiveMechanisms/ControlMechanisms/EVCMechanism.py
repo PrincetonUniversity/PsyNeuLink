@@ -727,46 +727,43 @@ class EVCMechanism(ControlMechanism_Base):
         listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
 
     combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
-        combines the outcome and cost for given `allocation_policy` to determine its value.  The default uses the
-        `LinearCombination` function to subtract the cost from the outcome, and returns the difference.  If the
-        default `combine_outcome_and_cost_function` is called by a custom `value_function`, the weights and/or
-        exponents parameters of the `LinearCombination` function can be used, respectively, to scale and/or exponentiate
-        the contribution of the outcome and/or cost to the result.  These must be specified as 1d arrays in a `WEIGHTS`
-        and/or EXPONENTS entry of a  `parameter specifiction dictionary <ParameterState_Specification>`
-        assigned to the function's `params` argument; each array must have two elements, the first for the outcome
-        and second for the cost. The default function can also be replaced with any
-        `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with
-        the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must accomoudate three
-        arguments (passed by name): a :keyword:`controller` argument that is the EVCMechanism itself; an
-        :keyword:`outcome` argument that is a 1d array with the outcome of the current `allocation_policy`; and a
-        :keyword:`cost` argument that is 1d array with the cost of the current `allocation_policy`.
+        combines the outcome and cost for given `allocation_policy` to determine its `EVC <EVCMechanisms_EVC>`. The
+        default function subtracts the cost from the outcome, and returns the difference.  This can be modified using
+        the `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>` parameters of the
+        function, as described for the `cost_function <EVCMechanisms.cost_function>`.  The default function can also be
+        replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
+        If used with the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must
+        accomoudate three arguments (passed by name): a **controller** argument that is the EVCMechanism itself; an
+        **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`; and a **cost**
+        argument that is 1d array with the cost of the current `allocation_policy`.
 
     control_signal_search_space : 2d np.array
-        an array that contains arrays of allocation policies.  Each allocation policy contains one value for each of
-        the mechanism's ControlSignals.  By default, it is assigned a set of all possible allocation policies
-        (using np.meshgrid to construct all permutations of ControlSignal values).
+        an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
+        allocation policies, using np.meshgrid to construct all permutations of `ControlSignal` values from the set
+        specified for each by its `allocation_samples <EVCMechanism.allocation_samples>` attribute.
 
     EVC_max : 1d np.array with single value
-        the maximum EVC value over all allocation policies in `control_signal_search_space`.
+        the maximum `EVC <EVCMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
 
     EVC_max_state_values : 2d np.array
-        an array of the values for the outputStates in `monitored_output_states` using the allocation policy that
+        an array of the values for the OutputStates in `monitored_output_states` using the `allocation_policy` that
         generated `EVC_max`.
 
     EVC_max_policy : 1d np.array
-        an array of the ControlSignal intensity values for the allocation policy that generated `EVC_max`.
+        an array of the ControlSignal `intensity <ControlSignal.intensity> values for the allocation policy that
+        generated `EVC_max`.
 
     save_all_values_and_policies : bool : default False
-        specifies whether or not to save all allocation policies and associated EVC values (in addition to the max).
-        If it is specified, each policy tested in the `control_signal_search_space` is saved in `EVC_policies` and their
-        values are saved in `EVC_values`.
+        specifies whether or not to save every `allocation_policy and associated EVC value (in addition to the max).
+        If it is specified, each `allocation_policy` tested in the `control_signal_search_space` is saved in
+        `EVC_policies`, and their values are saved in `EVC_values`.
 
     EVC_policies : 2d np.array
-        array of allocation policies tested in `control_signal_search_space`.  The values of each are stored in
-        `EVC_values`.
+        array with every `allocation_policy` tested in `control_signal_search_space`.  The `EVC <EVCMechanism_EVC>`
+        value of each is stored in `EVC_values`.
 
     EVC_values :  1d np.array
-        array of EVC values corresponding to the policies in `EVC_policies`.
+        array of `EVC <EVCMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in `EVC_policies`;
 
     """
 
