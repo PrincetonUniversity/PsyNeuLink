@@ -80,6 +80,8 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.States.State import _instantiate_state
+from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
