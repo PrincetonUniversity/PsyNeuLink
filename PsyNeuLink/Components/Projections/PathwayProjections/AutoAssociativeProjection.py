@@ -92,15 +92,7 @@ class AutoAssociativeProjection(MappingProjection):
 
     def execute(self, input=None, clock=CentralClock, time_scale=None, params=None, context=None):
         """
-        If there is a functionParameterStates[LEARNING_PROJECTION], update the matrix ParameterState:
-
-        - it should set params[PARAMETER_STATE_PARAMS] = {kwLinearCombinationOperation:SUM (OR ADD??)}
-          and then call its super().execute
-        - use its value to update MATRIX using CombinationOperation (see State update ??execute method??)
-
-        Assumes that if ``self.learning_mechanism`` is assigned *and* ParameterState[MATRIX] has been instantiated
-        then learningSignal exists;  this averts duck typing which otherwise would be required for the most
-        frequent cases (i.e., *no* learningSignal).
+        Based heavily on the execute() method for MappingProjection.
 
         """
 
@@ -161,16 +153,12 @@ class AutoAssociativeProjection(MappingProjection):
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix base_value
             matrix_parameter_state.update(weight_change_params, context=context)
 
-            # Update MATRIX
+            # Update MATRIX, and AUTO and CROSS accordingly
             self.matrix = matrix_parameter_state.value
-            # FIX: UPDATE FOR LEARNING END
 
-            # # TEST PRINT
-            # print("\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".format(self.name, CentralClock.trial, self.matrix))
-            # # print("\n@@@ WEIGHTS CHANGED FOR {} TRIAL {}".format(self.name, CentralClock.trial))
-            # TEST DEBUG MULTILAYER
-            # print("\n{}\n### WEIGHTS CHANGED FOR {} TRIAL {}:\n{}".
-            #       format(self.__class__.__name__.upper(), self.name, CentralClock.trial, self.matrix))
+            self.auto = np.diag(self.matrix).copy()
+            self.cross = self.matrix.copy()
+            np.fill_diagonal(self.cross, 0)
 
         return self.function(self.sender.value, params=params, context=context)
 
@@ -208,7 +196,7 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
 # a helper function that takes a specification of `cross` and returns a hollow matrix with the right values
-# (possibly also used by RecurrentTransferMechanism.py)
+# (also used by RecurrentTransferMechanism.py)
 def get_cross_matrix(raw_cross, size):
     if isinstance(raw_cross, numbers.Number):
         return get_matrix(HOLLOW_MATRIX, size, size) * raw_cross
@@ -220,7 +208,7 @@ def get_cross_matrix(raw_cross, size):
     elif (isinstance(raw_cross, np.matrix) or
               (isinstance(raw_cross, np.ndarray) and raw_cross.ndim == 2) or
               (isinstance(raw_cross, list) and np.array(raw_cross).ndim == 2)):
-        # we COULD add a validation here to ensure raw_cross is hollow, but it would slow stuff down.
+        np.fill_diagonal(raw_cross, 0)
         return np.array(raw_cross)
     else:
         return None
