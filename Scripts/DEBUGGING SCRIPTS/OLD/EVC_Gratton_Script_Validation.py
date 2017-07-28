@@ -146,7 +146,7 @@ mySystem.controller.controlSignals[1].intensity_cost_function = Exponential(rate
 #         mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 1.0
 #
 
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
+for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if 'Reward' in mech.name:
         mech.parameterStates['rate'].baseValue = 1.0
     if 'Flanker' in mech.name or 'Target' in mech.name:

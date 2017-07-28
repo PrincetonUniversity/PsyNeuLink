@@ -98,7 +98,7 @@ COMMENT
 Execution
 ---------
 
-A ControlMechanism that is a System's `controller` is always the last Mechanism to be executed in a `TRIAL` for that
+A ControlMechanism that is a System's `controller` is always the last `Mechanism` to be executed in a `TRIAL` for that
 System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The ControlMechanism's
 `function <ControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of its *ERROR_SIGNAL*
 `input_state <Mechanism.input_state>`, and uses that to determine its

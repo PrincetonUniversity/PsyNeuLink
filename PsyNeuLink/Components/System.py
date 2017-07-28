@@ -37,7 +37,7 @@ Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes
 as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
 support ESP).  A System can include two types of Mechanisms:
 
-* `ProcessingMechanism`
+* `ProcessingMechanism`d
     These receive input from one or more `Projections <Projection>`, transform their input in some way,
     and assign the result as their output.
 
@@ -62,9 +62,7 @@ a `DefaultControlMechanism` is created.
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
-   must be
-   included
-   in the **processes** argument of the constructor for the System.
+   must be included in the **processes** argument of the constructor for the System.
 
 
 .. _System_Structure:
@@ -374,23 +372,6 @@ def system(default_variable=None,
     params=None,                              \
     name=None,                                \
     prefs=None)
-
-    COMMENT:
-       VERSION WITH learning
-        system(                                   \
-        default_variable=None,                 \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=None,                 \
-        control_signals=None,                     \
-        learning=None,                            \
-        targets=None                              \
-        params=None,                              \
-        name=None,                                \
-        prefs=None)
-    COMMENT
 
     Factory method for System: returns instance of System.
 
