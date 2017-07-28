@@ -11,12 +11,12 @@
 """
 
 The DefaultControlMechanism is created for a `System` if no other controller type is specified. The
-DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses
-`defaultControlAllocation` as the value for the control signal.  By default,  :py:data:`defaultControlAllocation` =  1,
-so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be
-used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
-`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
-created, executed and their attributes.
+DefaultControlMechanism creates an `ControlSignal` for each `ControlProjection` it is assigned, and uses
+`defaultControlAllocation` as the `value <ControlSignal.value>` for the ControlSignal.  By default,
+`defaultControlAllocation` =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
+parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
+by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism` for additional details of
+how ControlMechanisms are created, executed and their attributes.
 
 COMMENT:
    ADD LINK FOR defaultControlAllocation

@@ -125,7 +125,7 @@ mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rat
 
 # Loop over the KEYS in this dict
 # for mech in mySystem.controller.prediction_mechanisms.keys():
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
+for mech in mySystem.controller.prediction_mechanisms.mechanisms:
 
     # mySystem.controller.prediction_mechanisms is dictionary organized into key-value pairs where the key is a
     # (transfer) mechanism, and the value is the corresponding prediction (integrator) mechanism
@@ -157,7 +157,7 @@ for mech in mySystem.controller.predictionMechanisms.mechanisms:
 
 print('new rate of integration mechanisms before system execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
+for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     print(mech.name)
     print(mech.function_object.rate)
     print('----')

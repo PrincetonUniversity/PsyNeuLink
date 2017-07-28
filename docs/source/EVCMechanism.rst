@@ -4,8 +4,7 @@ EVCMechanism
 .. toctree::
    :maxdepth: 1
 
-   ControlSignal
-   ControlProjection
+   EVCAuxiliary
 
 .. automodule:: AdaptiveMechanisms.ControlMechanisms.EVCMechanism
    :members:
