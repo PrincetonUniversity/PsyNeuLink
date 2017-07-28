@@ -109,19 +109,18 @@ COMMENT
   described in the specifications below.
 ..
 
-COMMENT: TBI
-    .. _ObjectiveMechanism_OutputState_Tuple:
+.. _ObjectiveMechanism_OutputState_Tuple:
 
-    * **MonitoredOutputState Tuple**  tuple can be used wherever an OutputState can be specified, to determine how
-      its value is combined with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`. Each
-      tuple must have the three following items in the order listed:
+* **MonitoredOutputState Tuple**: a tuple can be used wherever an OutputState can be specified, to determine how
+  its value is combined with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
+  `example <ObjectiveMechanism_OutputState_Tuple_Example>`). Each tuple must have the three following items in the
+  order listed:
 
-          * an OutputState or Mechanism, the name of one, or a specification dictionary for one;
-          ..
-          * a weight (int) - multiplies the value of the OutputState.
-          ..
-          * an exponent (int) - exponentiates the value of the OutputState;
-COMMENT
+      * an OutputState or Mechanism, the name of one, or a specification dictionary for one;
+      ..
+      * a weight (int) - multiplies the value of the OutputState.
+      ..
+      * an exponent (int) - exponentiates the value of the OutputState;
 
 * **string**, **value** or **dict**: These can be used as placemarkers for a monitored_state that will be instantiated
   later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as the
@@ -212,9 +211,28 @@ of the action selected from the value of the reward::
 This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
 with two values [-1] and [1] corresponding to the two items in `monitored_values` (and `default_variable`).  This
 will multiply the value from `my_action_select_mech` by -1 before adding it to (and thus
-subtracting it from) the value of `my_reward_mech`.  Similarly, the `operation <LinearCombination.operation>`
-and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used together to multiply and
-divide quantities.
+subtracting it from) the value of `my_reward_mech`.  Notice that the weight for ``my_reward_mech`` had to be specified,
+even though it is using the default value (1);  whenever a weight and/or exponent parameter is specified, there must
+be an entry for every item of the function's variable.  The `operation <LinearCombination.operation>`
+and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used similarly, and together,
+to multiply and divide quantities.
+
+.. ObjectiveMechanism_OutputState_Tuple_Example:
+
+As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
+the **monitored_value** argument, by placing them in a tuple with the OutputState (see `MonitoredOutputState Tuple
+<ObjectiveMechanism_OutputState_Tuple>`).  The following example specifies the example same ObjectiveMechanism as the
+previous example::
+
+    my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
+                                          monitored_values = [(my_action_select_mech, -1, 1), my_reward_mech])
+
+This specifies that ``my_action_select_mech`` should be assigned a weight of -1 and an exponent of 1 when it is
+submitted to the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Notice that the exponent had to be
+included, even though it is the default value;  when a tuple is used, the weight and exponent values must both be
+specified.  Notice also that ``my_reward_mech`` does not use a tuple, so it will be assigned defaults for both the
+weight and exponent parameters.
+
 
 .. _ObjectiveMechanism_Class_Reference:
 

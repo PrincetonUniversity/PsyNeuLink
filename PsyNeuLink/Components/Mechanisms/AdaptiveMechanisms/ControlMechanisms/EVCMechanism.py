@@ -98,17 +98,20 @@ ObjectiveMechanism
 
 .. _EVCMechanism_ObjectiveMechanism:
 
-When an EVCMechanism is created, it creates an `ObjectiveMechanism` that is listed in its `monitoring_mechanism
-<EVCMechanism.monitoring_mechanism` attribute, and can be used to evaluate the performance of its `system
-<EVCMechanism.system>`.  The `monitoring_mechanism` receives a `MappingProjection` from each of the `OutputStates
-<OutputState>` specified in the EVCMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>`
-attribute (also listed in the `monitored_values <ObjectiveMechanism.monitored_values>` attribute of the
-`monitoring_mechanism`), and its `function <ObjectiveMechanism.function>` is assigned the function specified in
-the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>` attribute.  By default, the `outcome_function
-<EVCMechanism.outcome_function>` calculates the product of the `value <OutputState.value>` of the OutputStates
-specified in `monitored_output_states <EVCMechanism.monitored_output_states>`.  However, the contribution of each
-can be specified using the EVCMechanism's `monitor_for_control_weights_and_exponents` attribute` (see `below
-<EVCMechanism_Examples>` for examples).  The result is conveyed as the input to the EVCMechanism and assigned as the
+When an EVCMechanism is created, it creates an `ObjectiveMechanism` that is assigned as its `monitoring_mechanism
+<EVCMechanism.monitoring_mechanism>` attribute, and can be used to evaluate the performance of its `system
+<EVCMechanism.system>`.  The `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` receives a `MappingProjection`
+from each of the `OutputStates <OutputState>` specified in the EVCMechanism's `monitored_output_states
+<EVCMechanism.monitored_output_states>` attribute (also listed in the `monitored_values
+<ObjectiveMechanism.monitored_values>` attribute of the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`),
+and the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>` is assinged as the `monitoring_mechanism
+<EVCMechanism.monitoring_mechanism>` \'s `function <ObjectiveMechanism.function>`.  By default, this is a
+`LinearCombination` function that calculates the product of the `value <OutputState.value>` of the OutputStates
+specified in `monitored_output_states <EVCMechanism.monitored_output_states>`.  However, the contribution of individual
+OutputStates can be specified in the **monitor_for_control** argument of the EVCMechanism's constructor, by using a
+tuple that includes a weight and exponent along with the OutputState for its entry in the list (see
+`MonitoredOutputState Tuple <ObjectiveMechanism_OutputState_Tuple>`).  The outcome calcuated by the
+`monitoring_mechanism <EVCMechanism.monitoring_mechanism>` is conveyed to the EVCMechanism and assigned as the
 `value <InputState.value>` of its `primary InputState <InputState_Primary>`.
 
 
@@ -271,7 +274,7 @@ XXX BELONGS TO ObjectiveMechanism XXXX
 .. note::
    The `EVCMechanism auxilliary functions <EVC_Auxiliary_Functions>` described above are all implemented as PsyNeuLink
    `Functions <Function>`.  Therefore, to call a function itself, it must be referenced as
-   ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxilliary functions
+   ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxiliary functions
    can be either a PsyNeuLink `Function <Function>`, or a generic python function or method (including a lambda
    function).  If it is one of the latter, it is automatically "wrapped" as a PsyNeuLink `Function <Function>`
    (specifically, it is assigned as the `function <UserDefinedFunction.function>` attribute of a
@@ -701,29 +704,24 @@ class EVCMechanism(ControlMechanism_Base):
 
     outcome_function : function : default LinearCombination(operation=PRODUCT)
         calculates a measure of performance of the EVCMechanism's `system <EVCMechanism.system>` for the current
-        `allocation_policy`.  This function is not called by the EVCMechanism directly; it is assigned to its
-        `monitoring_mechanism` when that is created (or when a new assignment is made to its `outcome_function
-        <EVCMechanism.outcome_function>` attribute), and then called when the `monitoring_mechanism
-        <EVCMechanism.monitoring>` executes.  The default is a LinearCombination that combines the values of the
-        OutputStates listed in the EVCMechanism's  `monitored_output_states <EVCMechanism.monitored_output_states>`
-        attribute (and the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` \'s `monitored_values
-        <ObjectiveMechanism.monitored_values>` attribute) by taking their elementwise (Hadamard) product.  The
-        `weights and/or exponents specified for the OutputStates <ControlMechanism_OutputState_Tuple>` (see examples
-        <EVCMechanism_Examples>`) are used as the `weights` and `exponents` parameters of the `LinearCombination`
-        function, respectively. If the default `outcome_function <EVCMechanism.outcome_function>` is called by a custom
-        `value_function`, the weights and/or exponents can be specified as 1d arrays in a `WEIGHTS` and/or `EXPONENTS`
-        entry of a `parameter dictionary <ParameterState_Specification>` specified for the `params` argument of the
-        `LinearCombination` function. The length of each array must equal the number of (and values be listed in
-        the same order as) the OutputStates in the EVCMechanism's `monitored_output_states
-        <EVCMechanism.monitored_output_states>` attribute.  These specifications will supersede any made for
-        individual OutputStates in the **monitor_for_control** argument of the constructor for the EVCMechanism.  The
+        `allocation_policy`.
+
+        .. note::
+
+            This function is not called by the EVCMechanism directly; it is assigned to its
+            `monitoring_mechanism` when that is created (or when a new assignment is made to its `outcome_function
+            <EVCMechanism.outcome_function>` attribute), and then called when the `monitoring_mechanism
+            <EVCMechanism.monitoring>` executes.
+
+        The default function combines the values of the OutputStates listed in the EVCMechanism's
+        `monitored_output_states <EVCMechanism.monitored_output_states>` attribute (and the `monitoring_mechanism
+        <EVCMechanism.monitoring_mechanism>` \'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
+        by taking their elementwise (Hadamard) product.  Any weighs and exponents `specified in a tuple
+        <ObjectiveMechanism_OutputState_Tuple>` for an OutputState in the **monitor_for_control** argument of
+        the EVCMechanism's constructor are used as the `weights <LinearCombination.weights>` and
+        `exponents <LinearCombination.exponents>` parameters of the `LinearCombination` (default) function. The
         default function can be replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that
-        returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom outcome_function
-        must accommodate two arguments (passed by name): a **controller** argument that is the EVCMechanism itself
-        (and can be used access to its attributes, including the `monitor_for_control_weights_and_exponents` attribute
-        that lists the weights and exponents assigned to each outputState being monitored);  and an **outcome**
-        argument, that is a scalar value specifying the result of the ObjectiveMechanism's function (based on the
-        OutputStates listed in the `monitored_output_states` attribute of the **controller** argument).
+        accepts an array of values as its input and returns a scalar value.
 
     cost_function : function : default LinearCombination(operation=SUM)
         calculates the cost for a given `allocation_policy`.  The default combines the `cost` of each ControlSignals in
@@ -1273,7 +1271,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
 
-        # Note: these values will be superceded by any assigned as arguments to the outcome_function
+        # Note: these values will be superseded by any assigned as arguments to the outcome_function
         #       if it is specified in the constructor for the mechanism
 
         num_monitored_output_states = len(self.monitored_output_states)
