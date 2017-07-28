@@ -1244,10 +1244,10 @@ class System_Base(System):
                             all(
                                 # are to ControlMechanism(s)...
                                 isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
-                                 # ObjectiveMechanism(s) used for Learning or Control
+                                 # are to ObjectiveMechanism(s) used for Learning or Control...
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
                                              projection.receiver.owner._role in (LEARNING, CONTROL)) or
-                                # itself!
+                                # or are to itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.efferents)
                         for output_state in sender_mech.output_states)):
@@ -1268,7 +1268,8 @@ class System_Base(System):
 
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    if not receiver or is_monitoring_mech(receiver):
+                    # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections (i.e. receiver is sender_mech)
+                    if not receiver or is_monitoring_mech(receiver) or (receiver is sender_mech):
                         continue
 
                     try:
@@ -2079,13 +2080,11 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, clock=CentralClock, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+    def _execute_processing(self, clock=CentralClock, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
-
-
-            # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
+        # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
+        # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
         if self.scheduler_processing is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
