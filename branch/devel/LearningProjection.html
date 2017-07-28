@@ -35,7 +35,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
         <link rel="up" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
-        <link rel="next" title="GatingProjection" href="GatingProjection.html"/>
+        <link rel="next" title="ControlProjection" href="ControlProjection.html"/>
         <link rel="prev" title="ModulatoryProjection" href="ModulatoryProjection.html"/> 
 
   
@@ -200,7 +200,7 @@ needed to implement learning for the MappingProjection (see <a class="reference 
 <span id="learningprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
 <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#ModulatoryProjections.LearningProjection.LearningProjection.receiver" title="ModulatoryProjections.LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This
-allows a LearningProjection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
+allows a LearningProjection to be created before its <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.sender" title="Function.Stability.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.receiver" title="Function.Stability.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them
 in a script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>
 method.  This is not necessary if learning has been specified for a <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>,
@@ -388,7 +388,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="GatingProjection.html" class="btn btn-neutral float-right" title="GatingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ControlProjection.html" class="btn btn-neutral float-right" title="ControlProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ModulatoryProjection.html" class="btn btn-neutral" title="ModulatoryProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

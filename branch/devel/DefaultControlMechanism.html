@@ -175,12 +175,12 @@
   <div class="section" id="module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism">
 <span id="defaultcontrolmechanism"></span><h1>DefaultControlMechanism<a class="headerlink" href="#module-AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism" title="Permalink to this headline">¶</a></h1>
 <p>The DefaultControlMechanism is created for a <a class="reference internal" href="System.html"><span class="doc">System</span></a> if no other controller type is specified. The
-DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses
-<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the value for the control signal.  By default,  <code class="xref py py-data docutils literal"><span class="pre">defaultControlAllocation</span></code> =  1,
-so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be
-used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
-<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> for additional details of how ControlMechanisms are
-created, executed and their attributes.</p>
+DefaultControlMechanism creates an <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> it is assigned, and uses
+<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for the ControlSignal.  By default,
+<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
+parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
+by manually changing the value of <code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> for additional details of
+how ControlMechanisms are created, executed and their attributes.</p>
 </div>
 
 
