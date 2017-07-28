@@ -458,9 +458,12 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             else:
                 matrix = matrix_param
-
-            rows = np.array(matrix).shape[0]
-            cols = np.array(matrix).shape[1]
+            if matrix is None:
+                rows = cols = size # this is just to skip the tests ahead: if the matrix really is None, that is checked
+                # up ahead, in _instantiate_attributes_before_function()
+            else:
+                rows = np.array(matrix).shape[0]
+                cols = np.array(matrix).shape[1]
 
             # Shape of matrix must be square
             if rows != cols:
@@ -501,7 +504,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         super()._instantiate_attributes_before_function(context=context)
 
         param_keys = self._parameter_states.key_values
-        specified_matrix = get_matrix(self.params['matrix'], self.size[0], self.size[0])
+        specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
+
+        if specified_matrix is None and (AUTO not in param_keys or CROSS not in param_keys):
+            raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
+                                         "if the matrix parameter does not produce a suitable matrix, the "
+                                         "'auto' and 'cross' parameters must be specified; currently, either"
+                                         "auto or cross parameter is missing.".format(self.params[MATRIX], self))
 
         if AUTO not in param_keys:
             d = np.diagonal(specified_matrix).copy()

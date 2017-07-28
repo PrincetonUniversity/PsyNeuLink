@@ -328,7 +328,7 @@ class MappingProjection(PathwayProjection_Base):
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
-        if isinstance(matrix, np.matrix):
+        if isinstance(matrix, (np.matrix, list)):
             matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(
@@ -468,6 +468,10 @@ class MappingProjection(PathwayProjection_Base):
         frequent cases (i.e., *no* learningSignal).
 
         """
+
+        # IMPLEMENTATION NOTE (7/28/17 CW): The execute() method in AutoAssociativeProjection is heavily based on
+        # this one, so if you make a change here, please make it there as well.
+
         # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
         # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
         if "System" not in str(self.sender.owner):

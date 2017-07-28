@@ -6,14 +6,23 @@ from PsyNeuLink.Components.Functions.Function import ExponentialDist, NormalDist
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 class TestRecurrentTransferMechanismInputs:
 
-    def test_recurrent_mech_check_attrs(self):
+    def test_recurrent_mech_empty_spec(self):
+        R = RecurrentTransferMechanism()
+        assert R.value is None
+        assert R.variable.tolist() == [[0]]
+        assert R.matrix.tolist() == [[1]]
 
+    def test_recurrent_mech_check_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=3
@@ -23,7 +32,6 @@ class TestRecurrentTransferMechanismInputs:
         assert R.matrix.tolist() == [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]
 
     def test_recurrent_mech_check_proj_attrs(self):
-
         R = RecurrentTransferMechanism(
             name='R',
             size=3
@@ -33,7 +41,6 @@ class TestRecurrentTransferMechanismInputs:
         assert R.recurrent_projection.receiver is R.input_state
 
     def test_recurrent_mech_inputs_list_of_ints(self):
-
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
@@ -44,7 +51,6 @@ class TestRecurrentTransferMechanismInputs:
         assert val == [[1, 2, 3, 0]] # because recurrent projection is not used when executing: mech is reset each time
 
     def test_recurrent_mech_inputs_list_of_floats(self):
-
         R = RecurrentTransferMechanism(
             name='R',
             size=4
@@ -53,7 +59,6 @@ class TestRecurrentTransferMechanismInputs:
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
     def test_recurrent_mech_inputs_list_of_fns(self):
-
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
@@ -63,7 +68,6 @@ class TestRecurrentTransferMechanismInputs:
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
     def test_recurrent_mech_no_inputs(self):
-
         R = RecurrentTransferMechanism(
             name='R'
         )
@@ -109,8 +113,6 @@ class TestRecurrentTransferMechanismInputs:
         assert "does not match required length" in str(error_text.value)
 
 class TestRecurrentTransferMechanismMatrix:
-    # consider adding a different kind of validation to these matrix tests:
-    # the current assertion/validation doesn't execute/use the recurrent projection
 
     def test_recurrent_mech_matrix_keyword_spec(self):
 
@@ -144,9 +146,8 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             auto=2
         )
-        val = R.execute([10, 10, 10]).tolist()
-        assert val == [[10., 10., 10.]]
         assert R.matrix.tolist() == [[2, 1, 1], [1, 2, 1], [1, 1, 2]] and isinstance(R.matrix, np.ndarray)
+        assert run_twice_in_system(R, [1, 2, 3], [10, 11, 12]) == [17, 19, 21]
 
     def test_recurrent_mech_matrix_cross_spec(self):
         R = RecurrentTransferMechanism(
@@ -154,9 +155,12 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             cross=-1
         )
-        val = R.execute([10, 10, 10]).tolist()
-        assert val == [[10., 10., 10.]]
+        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputState of the mechanism: if
+        # the behavior of execute() changes, feel free to change these numbers
+        val = R.execute([-1, -2, -3]).tolist()
+        assert val == [[-1, -2, -3]]
         assert R.matrix.tolist() == [[1, -1, -1], [-1, 1, -1], [-1, -1, 1]] and isinstance(R.matrix, np.ndarray)
+        assert run_twice_in_system(R, [1, 2, 3], [10, 11, 12]) == [8, 7, 6]
 
     def test_recurrent_mech_matrix_auto_cross_spec_size_1(self):
         R = RecurrentTransferMechanism(
@@ -207,6 +211,17 @@ class TestRecurrentTransferMechanismMatrix:
         assert val == [[10., 11., 12., 13.]]
         assert R.matrix.tolist() == [[2.2, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 2.2, 4], [1, 2, 3, 2.2]]
 
+    def test_recurrent_mech_auto_array_matrix_spec(self):
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            auto=[1.1, 2.2, 3.3, 4.4],
+            matrix=[[1, 2, 3, 4]] * 4
+        )
+        val = R.execute([10, 11, 12, 13]).tolist()
+        assert val == [[10., 11., 12., 13.]]
+        assert R.matrix.tolist() == [[1.1, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 3.3, 4], [1, 2, 3, 4.4]]
+
     def test_recurrent_mech_cross_float_matrix_spec(self):
         # cross should override off-diagonal only
         R = RecurrentTransferMechanism(
@@ -231,6 +246,46 @@ class TestRecurrentTransferMechanismMatrix:
         assert val == [[1., 2., 3., 4.]]
         assert R.matrix.tolist() == [[1, -3, -2, -1], [-4, 2, -2, -1], [-4, -3, 3, -1],
                                      [-4, -3, -2, 4]]
+
+    def test_recurrent_mech_auto_cross_matrix_spec_v1(self):
+        # auto and cross should override matrix
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            auto = [1, 3, 5, 7],
+            cross=np.array([[-4, -3, -2, -1]] * 4),
+            matrix=[[1, 2, 3, 4]] * 4
+        )
+        val = R.execute([1, 2, 3, 4]).tolist()
+        assert val == [[1., 2., 3., 4.]]
+        assert R.matrix.tolist() == [[1, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 5, -1],
+                                     [-4, -3, -2, 7]]
+
+    def test_recurrent_mech_auto_cross_matrix_spec_v2(self):
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            auto = [3],
+            cross=np.array([[-4, -3, -2, -1]] * 4),
+            matrix=[[1, 2, 3, 4]] * 4
+        )
+        val = R.execute([1, 2, 3, 4]).tolist()
+        assert val == [[1., 2., 3., 4.]]
+        assert R.matrix.tolist() == [[3, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 3, -1],
+                                     [-4, -3, -2, 3]]
+
+    def test_recurrent_mech_auto_cross_matrix_spec_v3(self):
+        R = RecurrentTransferMechanism(
+            name='R',
+            size=4,
+            auto = [3],
+            cross=2,
+            matrix=[[1, 2, 3, 4]] * 4
+        )
+        val = R.execute([1, 2, 3, 4]).tolist()
+        assert val == [[1., 2., 3., 4.]]
+        assert R.matrix.tolist() == [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2],
+                                     [2, 2, 2, 3]]
 
     def test_recurrent_mech_matrix_too_large(self):
         with pytest.raises(RecurrentTransferError) as error_text:
@@ -277,6 +332,17 @@ class TestRecurrentTransferMechanismMatrix:
                 matrix=[[[1, 3], [2, 4]], [[5, 7], [6, 8]]]
             )
         assert "more than 2d" in str(error_text.value)
+
+    def test_recurrent_mech_matrix_none_auto_none(self):
+        for a in [None, 1, [1, 2, 5]]:
+                with pytest.raises(RecurrentTransferError) as error_text:
+                    R = RecurrentTransferMechanism(
+                        name = 'R',
+                        size = 3,
+                        matrix = None,
+                        auto = a
+                    )
+                assert "failed to produce a suitable matrix" in str(error_text.value)
 
 class TestRecurrentTransferMechanismFunction:
 
@@ -411,3 +477,59 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([3, 2, 1, 0]).tolist()
         assert val == [[2.2, 1.8, .40000000000000013, .3999999999999999]]
 
+# the below are used because it's good to test System and Process anyways, and because the recurrent projection won't
+# get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
+
+def run_twice_in_system(mech, input1, input2=None):
+    if input2 is None:
+        input2 = input1
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+    simple_process = process(size = mech.size[0], pathway = [mech], name = 'simple_process')
+    simple_system = system(processes = [simple_process], name='simple_system', prefs = simple_prefs)
+
+    first_output = simple_system.run(inputs = {mech: input1})
+    second_output = simple_system.run(inputs = {mech: input2})
+    return second_output[1][0].tolist()
+
+class TestRecurrentTransferMechanismInSystem:
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+
+    def test_recurrent_mech_transfer_mech_system_two_runs(self):
+        R = RecurrentTransferMechanism(
+            size=4,
+            auto=0,
+            cross=-1)
+        T = TransferMechanism(
+            size = 3,
+            function = Linear)
+        p = process(size = 4, pathway = [R, T], prefs = TestRecurrentTransferMechanismInSystem.simple_prefs)
+        s = system(processes = [p], prefs = TestRecurrentTransferMechanismInSystem.simple_prefs)
+        s.run(inputs = {R: [1, 2, 3, 4]})
+        assert(R.value.tolist() == [[1., 2., 3., 4.]])
+        assert(T.value.tolist() == [[10., 10., 10.]])
+        s.run(inputs = {R: [5, 6, 7, 8]})
+        assert(R.value.tolist() == [[-4, -2, 0, 2]])
+        assert(T.value.tolist() == [[-4, -4, -4]])
+
+    # def test_recurrent_mech_system_auto_change(self):
+    #     R = RecurrentTransferMechanism(
+    #         size=4,
+    #         auto=[1, 2, 3, 4],
+    #         cross=-1)
+    #     T = TransferMechanism(
+    #         size=3,
+    #         function=Linear)
+    #     p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+    #     s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+    #     R.auto = 0
+    #     print('matrix 1', R.matrix)
+    #     s.run(inputs={R: [1, 2, 3, 4]})
+    #     print('matrix 2', R.matrix)
+    #     assert (R.value.tolist() == [[1., 2., 3., 4.]])
+    #     assert (T.value.tolist() == [[10., 10., 10.]])
+    #     R.auto = 1
+    #     print('matrix 3', R.matrix)
+    #     s.run(inputs={R: [5, 6, 7, 8]})
+    #     print('matrix 4', R.matrix)
+    #     assert (R.value.tolist() == [[-4, -2, 0, 2]])
+    #     assert (T.value.tolist() == [[-4, -4, -4]])
