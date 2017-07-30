@@ -511,25 +511,25 @@ class TestRecurrentTransferMechanismInSystem:
         assert(R.value.tolist() == [[-4, -2, 0, 2]])
         assert(T.value.tolist() == [[-4, -4, -4]])
 
-    # def test_recurrent_mech_system_auto_change(self):
-    #     R = RecurrentTransferMechanism(
-    #         size=4,
-    #         auto=[1, 2, 3, 4],
-    #         cross=-1)
-    #     T = TransferMechanism(
-    #         size=3,
-    #         function=Linear)
-    #     p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-    #     s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-    #     R.auto = 0
-    #     print('matrix 1', R.matrix)
-    #     s.run(inputs={R: [1, 2, 3, 4]})
-    #     print('matrix 2', R.matrix)
-    #     assert (R.value.tolist() == [[1., 2., 3., 4.]])
-    #     assert (T.value.tolist() == [[10., 10., 10.]])
-    #     R.auto = 1
-    #     print('matrix 3', R.matrix)
-    #     s.run(inputs={R: [5, 6, 7, 8]})
-    #     print('matrix 4', R.matrix)
-    #     assert (R.value.tolist() == [[-4, -2, 0, 2]])
-    #     assert (T.value.tolist() == [[-4, -4, -4]])
+    def test_recurrent_mech_system_auto_change(self):
+        R = RecurrentTransferMechanism(
+            size=4,
+            auto=[1, 2, 3, 4],
+            cross=-1)
+        T = TransferMechanism(
+            size=3,
+            function=Linear)
+        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        R.auto = 0
+        print('matrix 1', R.matrix)
+        s.run(inputs={R: [1, 2, 3, 4]})
+        print('matrix 2', R.matrix)
+        assert (R.value.tolist() == [[1., 2., 3., 4.]])
+        assert (T.value.tolist() == [[10., 10., 10.]])
+        R.auto = 1
+        print('matrix 3', R.matrix)
+        s.run(inputs={R: [5, 6, 7, 8]})
+        print('matrix 4', R.matrix)
+        assert (R.value.tolist() == [[-4, -2, 0, 2]])
+        assert (T.value.tolist() == [[-4, -4, -4]])
