@@ -1515,10 +1515,10 @@ class System_Base(System):
                 if len(self.variable[i][j]) != len(origin_mech.input_states[j].variable):
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN mechanism ()".
-                                       format(i,
-                                              len(self.variable[i][j]),
-                                              len(origin_mech.input_states[j].variable),
-                                              origin_mech.name))
+                                      format(i,
+                                             len(self.variable[i][j]),
+                                             len(origin_mech.input_states[j].variable),
+                                             origin_mech.name))
             # MODIFIED 6/27/17 END
 
             stimulus_input_state = SystemInputState(owner=self,
@@ -2000,7 +2000,7 @@ class System_Base(System):
                     if system_input_state:
                         system_input_state.value = input[i][j]
                     else:
-                        print("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
+                        logger.warning("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
                               format(origin_mech.name, j+1, origin_mech.input_states[j]))
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 

@@ -24,7 +24,9 @@ from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX,
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
 from PsyNeuLink.Globals.Utilities import append_type_to_name, is_matrix, is_numeric_or_none, iscompatible
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+import logging
 
+logger = logging.getLogger(__name__)
 
 class KWTAError(Exception):
     def __init__(self, error_value):
@@ -379,23 +381,23 @@ class KWTA(RecurrentTransferMechanism):
         inhibVector = np.array(inhibVector)  # may be redundant
         if (inhibVector == 0).all():
             if type(context) == str and INITIALIZING not in context:
-                print("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
+                logger.info("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
                       format(inhibVector, current_input))
             inhibVector = np.ones(int(self.size[0]))
         if (inhibVector > 0).all():
             inhibVector = -1 * inhibVector
         if (inhibVector == 0).any():
-            raise KWTAError("inhibVector ({}) contained some, but not all, zeros: not "
-                            "currently supported".format(inhibVector))
+            raise KWTAError("inhibition vector ({}) for {} contained some, but not all, zeros: not "
+                            "currently supported".format(inhibVector, self))
         if (inhibVector > 0).any():
-            raise KWTAError("inhibVector ({}) was not all positive or all negative: not "
-                            "currently supported".format(inhibVector))
+            raise KWTAError("inhibition vector ({}) for {} was not all positive or all negative: not "
+                            "currently supported".format(inhibVector, self))
         if len(inhibVector) != len(current_input):
-            raise KWTAError("The inhibition vector ({}) is of a different length than the"
-                            " current primary input vector ({}).".format(inhibVector, current_input))
+            raise KWTAError("The inhibition vector ({}) for {} is of a different length than the"
+                            " current primary input vector ({}).".format(inhibVector, self, current_input))
 
         if not isinstance(current_input, np.ndarray):
-            warnings.warn("input was not a numpy array: this may cause unexpected KWTA behavior")
+            logger.warning("input was not a numpy array: this may cause unexpected KWTA behavior")
 
         sortedInput = sorted(current_input, reverse=True)  # sortedInput is the values of current_input, sorted
 
