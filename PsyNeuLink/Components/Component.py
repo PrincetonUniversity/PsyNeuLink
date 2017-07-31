@@ -1725,6 +1725,11 @@ class Component(object):
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         # MODIFIED 5/6/17 NEW:
         # Prevent recursive calls from setters
+        # (7/31/17 CW): This causes bugs when you try to set some parameter twice in a script: The second time,
+        # sometimes prev_context is equal to context and that causes the setting to fail to set.
+        # I see two options: one is to set self.prev_context to a nonsense value BEFORE attempting to call
+        # _assign_params(): this could be done in the default property setter; the other option is to get rid of this
+        # check entirely (all tests currently pass regardless)
         if self.prev_context == context:
             return
         self.prev_context = context
@@ -2671,7 +2676,7 @@ def make_property(name, default_value):
             from PsyNeuLink.Components.Functions.Function import Function
             if not isinstance(self, Function):
                 raise TypeError
-            return self.owner._parameter_states[backing_field[1:]].value
+            return self.owner._parameter_states[name].value
         except (AttributeError, TypeError):
             try:
                 # Get value of param from Component's own ParameterState.value
@@ -2679,7 +2684,7 @@ def make_property(name, default_value):
                 #    example: matrix parameter of a MappingProjection)
                 #    rationale: next most common case
                 #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-                return self._parameter_states[backing_field[1:]].value
+                return self._parameter_states[name].value
             except (AttributeError, TypeError):
                 # Get value of param from Component's attribute
                 #    case: request is for the value of an attribute for which the Component has no ParameterState
@@ -2691,9 +2696,10 @@ def make_property(name, default_value):
     def setter(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_str = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
-            self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + backing_field[1:] + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={name:val}, context=curr_context)
         else:
             setattr(self, backing_field, val)
 

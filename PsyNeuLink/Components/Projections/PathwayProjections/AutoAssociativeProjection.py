@@ -96,8 +96,6 @@ class AutoAssociativeProjection(MappingProjection):
 
         """
 
-        self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
-
         # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
         # so the ParameterStates for 'auto' and 'cross' live on the RecurrentTransferMechanism rather than on
         # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
@@ -134,6 +132,12 @@ class AutoAssociativeProjection(MappingProjection):
                                        "length one, 2d array, 2d list, or numpy matrix".
                                        format(owner_mech.__class__.__name__, owner_mech.name, raw_cross, type(raw_cross)))
         self.matrix = auto_matrix + cross_matrix
+
+        # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and cross_matrix,
+        # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
+        # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
+        # from the previous_value into the value of the parameterState
+        self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
         # Check whether error_signal has changed
         if self.learning_mechanism and self.learning_mechanism.status == CHANGED:

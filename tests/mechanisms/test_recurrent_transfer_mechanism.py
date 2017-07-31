@@ -477,8 +477,8 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([3, 2, 1, 0]).tolist()
         assert val == [[2.2, 1.8, .40000000000000013, .3999999999999999]]
 
-# the below are used because it's good to test System and Process anyways, and because the recurrent projection won't
-# get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
+# (7/28/17 CW): the below are used because it's good to test System and Process anyways, and because the recurrent
+# projection won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
 
 def run_twice_in_system(mech, input1, input2=None):
     if input2 is None:
@@ -494,7 +494,9 @@ def run_twice_in_system(mech, input1, input2=None):
 class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
-    def test_recurrent_mech_transfer_mech_system_two_runs(self):
+    def test_recurrent_mech_transfer_mech_system_three_runs(self):
+        # this test ASSUMES that the parameter state for auto and cross is updated one run-cycle AFTER they are set by
+        # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
             auto=0,
@@ -533,3 +535,6 @@ class TestRecurrentTransferMechanismInSystem:
         print('matrix 4', R.matrix)
         assert (R.value.tolist() == [[-4, -2, 0, 2]])
         assert (T.value.tolist() == [[-4, -4, -4]])
+        s.run(inputs={R: [12, 11, 10, 9]})
+        assert (R.value.tolist() == [[8, 11, 14, 17]])
+        assert (T.value.tolist() == [[50, 50, 50]])
