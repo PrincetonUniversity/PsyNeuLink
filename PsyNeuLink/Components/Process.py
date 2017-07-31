@@ -1014,7 +1014,7 @@ class Process_Base(Process):
         self._origin_mechs = [pathway[0]]
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
 
-        # Assign last mechanism in pathwway to lastMechanism attribute
+        # Assign last mechanism in pathway to lastMechanism attribute
         i = -1
         while not isinstance(pathway[i],Mechanism_Base):
             i -=1
@@ -1185,9 +1185,9 @@ class Process_Base(Process):
             # self.mechanismNames.append(mech.name)
 
             # FIX: ADD RECURRENT PROJECTION AND MECHANISM
-            # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW RECURRENT MECHANISMS IN THE CURRENT SYSTEM
+            # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW SELF-RECURRENT MECHANISMS IN THE CURRENT SYSTEM
             #                       SHOULD BE HANDLED MORE APPROPRIATELY IN COMPOSITION
-            # If this is the last mechanism in the pathway, and it has a recurrent Projection,
+            # If this is the last mechanism in the pathway, and it has a self-recurrent Projection,
             #    add that to the pathway so that it can be identified and assigned for learning if so specified
             if i+1 == len(pathway):
                 if any(any(proj.receiver.owner is mech
@@ -1197,7 +1197,7 @@ class Process_Base(Process):
                         for proj in state.efferents:
                             if proj.receiver.owner is mech:
                                 pathway.append(proj)
-                                pathway.append(pathway[i-2])
+                                pathway.append(pathway[i])
 
 
         # Validate initial values

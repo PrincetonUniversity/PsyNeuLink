@@ -2697,7 +2697,7 @@ def make_property(name, default_value):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
             val_type = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + backing_field[1:] + ' of ' + self.name
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
             # self.prev_context = "nonsense" + str(curr_context)
             self._assign_params(request_set={name:val}, context=curr_context)
         else:
