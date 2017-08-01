@@ -33,41 +33,41 @@ differ in the type of information they transmit, how they do this, and the type 
 (i.e., of their `receiver <Projection.receiver>`):
 
 * `PathwayProjection`
-  GET FROM QUICK REFERENCE
+    Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
+    `pathway <Process_Base.pathway`>.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
-      takes the output of a `ProcessingMechanism <ProcessingMechanism>`, converts it by convolving it with the
-      Projection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmits the result to the
-      `InputState` of another ProcessingMechanism.  Typically, MappingProjections are used to connect Mechanisms in
-      the `pathway` of a `Process`, though they can be use for other purposes as well (for example, to convey the
-      output of an `ObjectiveMechanism` to an `AdaptiveMechanism`).
-
+      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism` converts it by convolving it
+      with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmits the
+      result to the `InputState` of another ProcessingMechanism.  Typically, MappingProjections are used to connect
+      Mechanisms in the `pathway` of a `Process`, though they can be use for other purposes as well (for example, to
+      convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism`).
 
 * `ModulatoryProjection`
-  GET FROM QUICK REFERENCE
+    takes the `value <OutputState.value>` of a `ModulatorySignal` of an `AdaptiveMechanism <ProcessingMechanism>`,
+    uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or `OutputState` of
+    another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to specify how to
+    modify the `value <State.value>` of the `State` to which a ModulatoryProjection projects.  There are three types
+    of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and corresponding
+    ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`), that project to different types of `States
+    <State>`:
 
   * `LearningProjection`
-      takes the value of a `LearningSignal` from a `LearningMechanism`, and transmit this to the
-      `ParameterState` of a `MappingProjection` which uses this to modify its
-      `matrix <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when
-      learning has been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
+      takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
+      this to the `ParameterState` of a `MappingProjection` that uses this to modify its `matrix
+      <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
+      been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
-      takes an `allocation <ControlProjection.ControlProjection.allocation>` specification, usually the ouptput
-      of a `ControlMechanism <ControlMechanism>`, and transmit this to the `ParameterState` of a `ProcessingMechanism`
-      that uses this to modulate a parameter of the Mechanism or its function. ControlProjections are typically used
-      in the context of a `System`.
+      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
+      to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
+      `function <Mechanism.function>`) for which it is responsible.  ControlProjections are used when control
+      has been used specified for a `System`.
   ..
   * `GatingProjection`
-      takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to
-      a GatingMechanism and conveys it to the `InputState` or `OutputState` of a
-      `ProcessingMechanism` for use by the state's `function` in modulating its
-     `value`.
-  ..
-
-COMMENT:
-* Gating: takes an input signal and uses it to modulate the InputState and/or OutputState of the receiver
-COMMENT
+      takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
+      the `InputState` or `OutputState` of a `ProcessingMechanism` that uses this to modify the State's `value
+      <State.value>`
 
 .. _Projection_Creation:
 
