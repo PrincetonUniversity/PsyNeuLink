@@ -106,12 +106,12 @@ def llvm_build():
         print("ISA assembly:")
         print(__target_machine.emit_assembly(__mod))
 
-def convert_llvm_ir_to_ctype(t):
+def _convert_llvm_ir_to_ctype(t):
     if type(t) is ir.VoidType:
         return None
     elif type(t) is ir.PointerType:
         # FIXME: Can this handle void*? Do we care?
-        pointee = convert_llvm_ir_to_ctype(t.pointee)
+        pointee = _convert_llvm_ir_to_ctype(t.pointee)
         return ctypes.POINTER(pointee)
     elif type(t) is ir.IntType:
         # FIXME: We should consider bitwidth here
@@ -141,10 +141,10 @@ class LLVMBinaryFunction:
         f = _module.get_global(self.__name)
         assert(isinstance(f, ir.Function))
 
-        return_type = convert_llvm_ir_to_ctype(f.return_value.type)
+        return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         params = []
         for a in f.args:
-            params.append(convert_llvm_ir_to_ctype(a.type))
+            params.append(_convert_llvm_ir_to_ctype(a.type))
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
         self.__c_func = self.__c_func_type(self.__ptr)
 
@@ -165,7 +165,7 @@ class LLVMBinaryFunction:
             _binaries[name] = LLVMBinaryFunction(name);
         return _binaries[name];
 
-def updateNativeBinaries(module, buffer):
+def _updateNativeBinaries(module, buffer):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
         print(module)
     # update all pointers that might have been modified
@@ -173,7 +173,7 @@ def updateNativeBinaries(module, buffer):
        new_ptr = _engine.get_function_address(k)
        v.ptr = new_ptr
 
-_engine.set_object_cache(updateNativeBinaries)
+_engine.set_object_cache(_updateNativeBinaries)
 
 # Initialize builtins
 with llvm_get_current_ctx() as ctx:
