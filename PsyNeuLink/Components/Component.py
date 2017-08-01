@@ -1405,7 +1405,7 @@ class Component(object):
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
                 context = FUNCTION_CHECK_ARGS
-            self._validate_variable(variable, context=context)
+            variable = self._validate_variable(variable, context=context)
         else:
             self.variable = variable
 
@@ -1474,6 +1474,9 @@ class Component(object):
         if self.prefs.paramValidationPref and params and not params is target_set:
             self._validate_params(request_set=params, target_set=target_set, context=context)
 
+        # assigning here so that self.variable maintains any size/format transformations needed for validation
+        self.variable = variable
+        return variable
 
     def _instantiate_defaults(self,
                         variable=None,
@@ -1903,7 +1906,7 @@ class Component(object):
         if variable is None:
             self.variable = self.variableClassDefault
             self._variable_not_specified = True
-            return
+            return self.variableClassDefault
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -1931,7 +1934,9 @@ class Component(object):
                     format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
                 raise ComponentError(message)
 
+        # assigning here so that self.variable maintains any size/format transformations needed for validation
         self.variable = variable
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign validated values to targets,
@@ -2483,7 +2488,10 @@ class Component(object):
         #    execute method, not its function
         if not context:
             context = "DIRECT CALL"
-        self.value = self.execute(context=context)
+        try:
+            self.value = self.execute(variable=self.variable, context=context)
+        except TypeError:
+            self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         try:

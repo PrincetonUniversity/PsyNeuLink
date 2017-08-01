@@ -759,6 +759,7 @@ class ArgumentTherapy(Function_Base):
         if type(variable) == type(self.variableClassDefault) or \
                 (isinstance(variable, numbers.Number) and isinstance(self.variableClassDefault, numbers.Number)):
             self.variable = variable
+            return variable
         else:
             raise FunctionError("Variable must be {0}".format(type(self.variableClassDefault)))
 
@@ -833,12 +834,12 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        self._check_args(variable, params, context)
+        variable = self._check_args(variable, params, context)
 
         # Compute the function
 
         # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
-        statement = self.variable
+        statement = variable
         propensity = self.paramsCurrent[PROPENSITY]
         pertinacity = self.paramsCurrent[PERTINACITY]
         whim = randint(-10, 10)
@@ -1150,10 +1151,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             variable:
             context:
         """
-        super()._validate_variable(variable=variable, context=context)
+        variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
+        return variable
 
     def function(self,
                  variable=None,
@@ -1188,7 +1190,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
 
         # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         operation = self.paramsCurrent[OPERATION]
         scale = self.paramsCurrent[SCALE]
@@ -1196,9 +1198,9 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # Calculate using relevant aggregation operation and return
         if (operation is SUM):
-            result = np.sum(self.variable) * scale + offset
+            result = np.sum(variable) * scale + offset
         elif operation is PRODUCT:
-            result = np.product(self.variable) * scale + offset
+            result = np.product(variable) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
@@ -1440,7 +1442,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             variable:
             context:
         """
-        super()._validate_variable(variable=variable, context=context)
+        variable = super()._validate_variable(variable=variable, context=context)
         # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
@@ -1462,6 +1464,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                 if old_length != new_length:
                     raise FunctionError("Length of all arrays in variable {0} for {1} must be the same".
                                         format(variable, self.__class__.__name__))
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate weghts, exponents, scale and offset parameters
@@ -1576,7 +1579,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         """
 
         # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         exponents = self.exponents
         weights = self.weights
@@ -1597,22 +1600,22 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
-        if np_array_less_than_2d(self.variable):
-            return (self.variable * scale) + offset
+        if np_array_less_than_2d(variable):
+            return (variable * scale) + offset
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
         if exponents is not None:
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
-            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(self.variable, exponents)):
-                self.variable = np.ones_like(self.variable)
+            if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
+                variable = np.ones_like(variable)
             else:
-                self.variable = self.variable ** exponents
+                variable = variable ** exponents
 
         # Apply weights if they were specified
         if weights is not None:
-            self.variable = self.variable * weights
+            variable = variable * weights
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
@@ -1620,21 +1623,21 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
-                    result = np.sum(self.variable, axis=0) * scale + offset
+                    result = np.sum(variable, axis=0) * scale + offset
                 # Scalar scale and Hadamard offset
                 else:
-                    result = np.sum(np.append([self.variable * scale], [offset], axis=0), axis=0)
+                    result = np.sum(np.append([variable * scale], [offset], axis=0), axis=0)
             else:
                 # Hadamard scale, scalar offset
                 if isinstance(offset, numbers.Number):
-                    result = np.product([np.sum([self.variable], axis=0), scale], axis=0)
+                    result = np.product([np.sum([variable], axis=0), scale], axis=0)
                 # Hadamard scale and offset
                 else:
-                    hadamard_product = np.product([np.sum([self.variable], axis=0), scale], axis=0)
+                    hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
         elif (operation is PRODUCT):
-            product = np.product(self.variable, axis=0)
+            product = np.product(variable, axis=0)
             if isinstance(scale, numbers.Number):
                 # Scalar scale and offset
                 if isinstance(offset, numbers.Number):
@@ -1651,12 +1654,10 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                     hadamard_product = np.product(np.append([product], [scale], axis=0), axis=0)
                     result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
 
-        # elif operation is PRODUCT:
-        #     result = reduce(mul, self.variable, 1)
-
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
+        self.variable = variable
         return result
 
     @property
@@ -1886,13 +1887,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
 
         # By default, result should be returned as np.ndarray with same dimensionality as input
-        result = self.variable * slope + intercept
+        result = variable * slope + intercept
 
         # region Type conversion (specified by outputType):
         # Convert to 2D array, irrespective of variable type:
@@ -1903,16 +1904,16 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
         elif outputType is FunctionOutputType.NP_1D_ARRAY:
             # If variable is 2D
-            if self.variable.ndim == 2:
+            if variable.ndim == 2:
                 # If there is only one item:
-                if len(self.variable) == 1:
+                if len(variable) == 1:
                     result = result[0]
                 else:
                     raise FunctionError("Can't convert result ({0}: 2D np.ndarray object with more than one array)"
                                         " to 1D array".format(result))
-            elif len(self.variable) == 1:
+            elif len(variable) == 1:
                 result = result
-            elif len(self.variable) == 0:
+            elif len(variable) == 0:
                 result = np.atleast_1d(result)
             else:
                 raise FunctionError("Can't convert result ({0} to 1D array".format(result))
@@ -1921,15 +1922,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # Note: if 2D or 1D array has more than two items, generate exception
         elif outputType is FunctionOutputType.RAW_NUMBER:
             # If variable is 2D
-            if self.variable.ndim == 2:
+            if variable.ndim == 2:
                 # If there is only one item:
-                if len(self.variable) == 1 and len(self.variable[0]) == 1:
+                if len(variable) == 1 and len(variable[0]) == 1:
                     result = result[0][0]
                 else:
                     raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
                                         format(result))
-            elif len(self.variable) == 1:
-                if len(self.variable) == 1:
+            elif len(variable) == 1:
+                if len(variable) == 1:
                     result = result[0]
                 else:
                     raise FunctionError("Can't convert result ({0}) with more than a single number to a raw number".
@@ -2082,13 +2083,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
         scale = self.paramsCurrent[SCALE]
 
-        return scale * np.exp(rate * self.variable)
+        return scale * np.exp(rate * variable)
 
     def derivative(self, input, output=None):
         """
@@ -2234,12 +2235,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
         try:
-            return_val = 1 / (1 + np.exp(-(gain * self.variable) + bias))
+            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
         except (Warning):
             # handle RuntimeWarning: overflow in exp
             return_val = 0
@@ -2400,14 +2401,14 @@ class SoftMax(TransferFunction):
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         # Assign the params and return the result
         output_type = self.params[OUTPUT_TYPE]
         gain = self.params[GAIN]
 
         # Modulate variable by gain
-        v = gain * self.variable
+        v = gain * variable
         # Shift by max to avoid extreme values:
         v = v - np.max(v)
         # Exponentiate
@@ -2433,7 +2434,7 @@ class SoftMax(TransferFunction):
             random_value = np.random.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            sm = self.variable * chosen_in_cum_sum
+            sm = variable * chosen_in_cum_sum
 
         return sm
 
@@ -2641,15 +2642,17 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :param context:
         :return:
         """
-        super()._validate_variable(variable, context)
+        variable = super()._validate_variable(variable, context)
 
-        # Check that self.variable <= 2D
+        # Check that variable <= 2D
         try:
-            if not self.variable.ndim <= 2:
+            if not variable.ndim <= 2:
                 raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(self.variable, self.__class__.__name__))
         except AttributeError:
             raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
                                     format(self.variable, self.__class__.__name__))
+
+        return variable
 
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2890,15 +2893,16 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
-        return np.dot(self.variable, self.matrix)
+        return np.dot(variable, self.matrix)
 
     def keyword(self, keyword):
 
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         rows = None
         cols = None
+        # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
             cols = len(self.receiver.variable)
@@ -3510,7 +3514,7 @@ class SimpleIntegrator(
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
 
@@ -3528,7 +3532,7 @@ class SimpleIntegrator(
         previous_value = self.previous_value
 
         # previous_value = np.atleast_2d(previous_value)
-        new_value = self.variable
+        new_value = variable
 
 
         # if params and VARIABLE in params:
@@ -3738,12 +3742,13 @@ class ConstantIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.rate).astype(float)
         offset = self.offset
         scale = self.scale
 
+        # CAVEAT: why was self.variable never used in this function previously?
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
@@ -4012,7 +4017,7 @@ class AdaptiveIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -4026,7 +4031,7 @@ class AdaptiveIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = self.variable
+        new_value = variable
 
         value = (1 - rate) * previous_value + rate * new_value + noise
 
@@ -4230,7 +4235,7 @@ class DriftDiffusionIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -4245,7 +4250,7 @@ class DriftDiffusionIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = self.variable
+        new_value = variable
 
         value = previous_value + rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
@@ -4453,7 +4458,7 @@ class OrnsteinUhlenbeckIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -4469,7 +4474,7 @@ class OrnsteinUhlenbeckIntegrator(
         previous_value = self.previous_value
 
         previous_value = np.atleast_2d(previous_value)
-        new_value = self.variable
+        new_value = variable
 
         value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
@@ -4993,9 +4998,9 @@ class BogaczEtAl(
 
         """
 
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
-        drift_rate = float(self.drift_rate) * float(self.variable)
+        drift_rate = float(self.drift_rate) * float(variable)
         threshold = float(self.threshold)
         starting_point = float(self.starting_point)
         noise = float(self.noise)
@@ -6074,7 +6079,7 @@ class Stability(ObjectiveFunction):
 
         """
         # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix, ParameterState):
@@ -6082,11 +6087,11 @@ class Stability(ObjectiveFunction):
         else:
             matrix = self.matrix
 
-        current = self.variable
+        current = variable
         if self.transfer_fct is not None:
-            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, self.variable))
+            transformed = self.transfer_fct(np.dot(matrix * self._hollow_matrix, variable))
         else:
-            transformed = np.dot(matrix * self._hollow_matrix, self.variable)
+            transformed = np.dot(matrix * self._hollow_matrix, variable)
 
         if self.metric is ENERGY:
             result = -np.sum(current * transformed)
@@ -6094,7 +6099,7 @@ class Stability(ObjectiveFunction):
             result = self._metric_fct.function(variable=[current,transformed], context=context)
 
         if self.normalize:
-            result /= len(self.variable)
+            result /= len(variable)
 
         return result
 
@@ -6220,10 +6225,10 @@ class Distance(ObjectiveFunction):
 
         """
         # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._check_args(variable=variable, params=params, context=context)
 
-        v1 = self.variable[0]
-        v2 = self.variable[1]
+        v1 = variable[0]
+        v2 = variable[1]
 
         # Simple Hadamard difference of v1 and v2
         if self.metric is DIFFERENCE:
@@ -6258,7 +6263,7 @@ class Distance(ObjectiveFunction):
         if self.normalize:
             # if np.sum(denom):
             # result /= np.sum(x,y)
-            result /= len(self.variable)
+            result /= len(variable)
 
         return result
 
@@ -6449,12 +6454,13 @@ class Reinforcement(
         self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
-        super()._validate_variable(variable, context)
+        variable = super()._validate_variable(variable, context)
 
-        if len(self.variable) != 3:
+        if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
-                                 format(self.name, self.variable))
+                                 format(self.name, variable))
 
+        # TODO: stateful - should these be stateful?
         self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
         self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
         self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
@@ -6470,7 +6476,9 @@ class Reinforcement(
                 raise ComponentError("First item ({}) of variable for {} must be an array with a single non-zero value "
                                      "(if output Mechanism being trained uses softmax,"
                                      " its \'output\' arg may need to be set to to PROB)".
-                                     format(self.variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+                                     format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
+
+        return variable
 
     def function(self,
                  variable=None,
@@ -6714,16 +6722,19 @@ class BackPropagation(LearningFunction):
         self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
-        super()._validate_variable(variable, context)
+        variable = super()._validate_variable(variable, context)
 
-        if len(self.variable) != 3:
+        if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items: "
                                  "activation_input, activation_output, and error_signal)".
-                                 format(self.name, self.variable))
+                                 format(self.name, variable))
 
-        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
-        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
-        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+        # TODO: stateful - should these be stateful?
+        self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = variable[LEARNING_ERROR_OUTPUT]
+
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_matrix param
