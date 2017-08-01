@@ -25,6 +25,12 @@ class LLVMBuilderContext:
         self.int32_ty = ir.IntType(32)
         self.float_ty = ir.DoubleType()
 
+    def get_llvm_function(self, name):
+        f = self.module.get_global(name)
+        if not isinstance(f, ir.Function):
+            raise ValueError("No such function: {}".format(name))
+        return f
+
     def __enter__(self):
         return self
 
