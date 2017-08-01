@@ -159,6 +159,7 @@ if __dumpenv is not None and __dumpenv.find("llvm") != -1:
 
 # Compiler binding
 binding.initialize()
+
 # native == currently running CPU
 binding.initialize_native_target()
 
@@ -181,12 +182,6 @@ __backing_mod = binding.parse_assembly("")
 # MCJIT makes it easier to run the compiled function right away.
 __engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 
-# IR module is not the same as binding module.
-# "assembly" in this case is LLVM IR assembly
-# TODO is there a better way to convert this?
-__mod = binding.parse_assembly(str(__module))
-__mod.verify()
-
 __pass_manager_builder = binding.PassManagerBuilder()
 __pass_manager_builder.inlining_threshold = 99999 # Inline all function calls
 __pass_manager_builder.loop_vectorize = True
@@ -198,21 +193,37 @@ __pass_manager = binding.ModulePassManager()
 __target_machine.add_analysis_passes(__pass_manager);
 __pass_manager_builder.populate(__pass_manager);
 
-__pass_manager.run(__mod)
-if __dumpenv is not None and __dumpenv.find("opt") != -1:
-    print(__mod)
-
-# Now add the module and make sure it is ready for execution
-__engine.add_module(__mod)
-__engine.finalize_object()
-
-#This prints generated x86 assembly
-if __dumpenv is not None and __dumpenv.find("isa") != -1:
-    print("ISA assembly:")
-    print(__target_machine.emit_assembly(__mod))
+__mod = None
 
 def get_mxv():
     func_ptr = __engine.get_function_address('mxv');
     cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(func_ptr)
 
     return cfunc
+
+def llvm_build():
+    # Remove the old module
+    global __mod
+    if __mod is not None:
+        __engine.remove_module(__mod);
+
+    # IR module is not the same as binding module.
+    # "assembly" in this case is LLVM IR assembly.
+    # This is intentional design decision to ease
+    # compatibility between LLVM versions.
+    __mod = binding.parse_assembly(str(__module))
+    __mod.verify()
+    __pass_manager.run(__mod)
+    if __dumpenv is not None and __dumpenv.find("opt") != -1:
+        print(__mod)
+
+    # Now add the module and make sure it is ready for execution
+    __engine.add_module(__mod)
+    __engine.finalize_object()
+
+    #This prints generated x86 assembly
+    if __dumpenv is not None and __dumpenv.find("isa") != -1:
+        print("ISA assembly:")
+        print(__target_machine.emit_assembly(__mod))
+
+llvm_build()
