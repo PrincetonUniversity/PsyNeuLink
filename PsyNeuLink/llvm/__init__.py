@@ -37,9 +37,6 @@ __context = LLVMBuilderContext()
 def llvm_get_current_ctx():
     return __context
 
-def __env_dump_llvm_ir(module):
-    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(module)
 
 # Compiler binding
 binding.initialize()
@@ -169,7 +166,8 @@ class LLVMBinaryFunction:
         return _binaries[name];
 
 def updateNativeBinaries(module, buffer):
-    __env_dump_llvm_ir(module)
+    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
+        print(module)
     # update all pointers that might have been modified
     for k, v in _binaries.items():
        new_ptr = _engine.get_function_address(k)
