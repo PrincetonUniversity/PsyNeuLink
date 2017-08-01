@@ -85,9 +85,9 @@ In Context Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a `pathway` for a `Process`, where the value of a parameter is specified
-(e.g., to assign a ControlProjection) or where a MappingProjection is specified  (to assign it a LearningProjection).
-Any of the following can be used to specify a Projection in context:
+specification of a `pathway <Process_Base.pathway>` for a `Process`, where the value of a parameter is specified
+(e.g., to assign a `ControlProjection`) or where a `MappingProjection` is specified  (to assign it a
+`LearningProjection`).  Any of the following can be used to specify a Projection in context:
 
   * *Constructor*.  Used the same way in context as it is ordinarily.
   ..
