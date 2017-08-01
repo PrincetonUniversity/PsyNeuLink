@@ -22,7 +22,9 @@ ptr = pnlvm.LLVMBinaryFunction.get('mxv')
 orig_res = copy.deepcopy(llvm_res)
 ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
-cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(ptr.ptr)
+cfunc_type = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))
+
+cfunc = cfunc_type(ptr.ptr)
 
 cfunc(ct_vec, ct_mat, x, y, ct_res)
 
@@ -32,7 +34,7 @@ pnlvm.llvm_build()
 rebuild_res = copy.deepcopy(llvm_res)
 ct_res = rebuild_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
-cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(ptr.ptr)
+cfunc = cfunc_type(ptr.ptr)
 
 cfunc(ct_vec, ct_mat, x, y, ct_res)
 
@@ -41,7 +43,7 @@ ptr2 = pnlvm.LLVMBinaryFunction.get('mxv')
 new_res = copy.deepcopy(llvm_res)
 ct_res = new_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
-cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(ptr2.ptr)
+cfunc = cfunc_type(ptr2.ptr)
 
 cfunc(ct_vec, ct_mat, x, y, ct_res)
 

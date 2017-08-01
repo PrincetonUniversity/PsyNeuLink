@@ -15,7 +15,7 @@ import uuid
 import os
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
-__module = ir.Module(name="PsyNeuLinkModule")
+_module = ir.Module(name="PsyNeuLinkModule")
 __int32_ty = ir.IntType(32)
 __double_ty = ir.DoubleType()
 
@@ -67,7 +67,7 @@ def setup_mxv():
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, __int32_ty, __int32_ty, double_ptr_ty))
 
     # Create function
-    function = ir.Function(__module, func_ty, name="mxv")
+    function = ir.Function(_module, func_ty, name="mxv")
     function.attributes.add('argmemonly')
 
     block = function.append_basic_block(name="entry")
@@ -208,7 +208,7 @@ def llvm_build():
     # "assembly" in this case is LLVM IR assembly.
     # This is intentional design decision to ease
     # compatibility between LLVM versions.
-    __mod = binding.parse_assembly(str(__module))
+    __mod = binding.parse_assembly(str(_module))
     __mod.verify()
     __pass_manager.run(__mod)
     if __dumpenv is not None and __dumpenv.find("opt") != -1:
@@ -223,16 +223,39 @@ def llvm_build():
         print("ISA assembly:")
         print(__target_machine.emit_assembly(__mod))
 
+def convert_llvm_ir_to_ctype(t):
+    if type(t) is ir.VoidType:
+        return None
+    elif type(t) is ir.PointerType:
+        pointee = convert_llvm_ir_to_ctype(t.pointee)
+        return ctypes.POINTER(pointee)
+    elif type(t) is ir.IntType:
+        return ctypes.c_int
+    elif type(t) is ir.DoubleType:
+        return ctypes.c_double
+    elif type(t) is ir.FloatType:
+        return ctypes.c_float
+    assert(False)
+
 _binaries = {}
 
 class LLVMBinaryFunction:
-    def __init__(self, p):
-        self.ptr = p
+    def __init__(self, name):
+        # Binary pointer
+        self.ptr = _engine.get_function_address(name)
+        self.name = name
+
+        f = _module.get_global(name)
+        assert(isinstance(f, ir.Function))
+        params = []
+        for a in f.args:
+            params.append(convert_llvm_ir_to_ctype(a.type))
+        self.c_func_type = ctypes.CFUNCTYPE(convert_llvm_ir_to_ctype(f.return_value.type), *params)
 
     @staticmethod
     def get(name):
         if not name in _binaries.keys():
-            _binaries[name] = LLVMBinaryFunction(_engine.get_function_address(name));
+            _binaries[name] = LLVMBinaryFunction(name);
         return _binaries[name];
 
 def updateNativeBinaries(module, buffer):
