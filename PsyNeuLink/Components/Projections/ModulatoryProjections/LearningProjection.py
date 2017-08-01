@@ -99,9 +99,10 @@ Class Reference
 
 import inspect
 
+import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
     import LearningMechanism
@@ -109,10 +110,10 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.O
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import Projection_Base, _is_projection_spec, projection_keywords
-from PsyNeuLink.Components.States.OutputState import OutputState, np
 from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import DEFERRED_INITIALIZATION, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, OPERATION, PARAMETER_STATES, PROJECTION_SENDER, PROJECTION_TYPE, SLOPE, SUM
+from PsyNeuLink.Globals.Keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INTERCEPT, LEARNING, LEARNING_PROJECTION, MATRIX, OPERATION, PARAMETER_STATES, PROJECTION_SENDER, PROJECTION_TYPE, SLOPE, SUM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import iscompatible, parameter_spec
@@ -353,7 +354,7 @@ class LearningProjection(ModulatoryProjection_Base):
         del self.init_args['learning_rate']
 
         # Flag for deferred initialization
-        self.value = DEFERRED_INITIALIZATION
+        self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate sender and receiver
@@ -508,8 +509,8 @@ class LearningProjection(ModulatoryProjection_Base):
         params = params or {}
 
         # Pass during initialization (since has not yet been fully initialized
-        if self.value is DEFERRED_INITIALIZATION:
-            return self.value
+        if self.init_status is InitStatus.DEFERRED_INITIALIZATION:
+            return self.init_status
 
         # if self.learning_rate:
         #     params.update({SLOPE:self.learning_rate})

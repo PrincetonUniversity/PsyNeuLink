@@ -9,9 +9,13 @@
 # ******************************************** ComponentPreferenceSet ***************************************************
 #
 #
-from PsyNeuLink.Globals.Log import *
+
+import inspect
+
+from PsyNeuLink.Globals.Keywords import NAME, kwDefaultPreferenceSetOwner, kwPrefLevel, kwPreferenceSetName, kwPrefs, kwPrefsOwner
+from PsyNeuLink.Globals.Log import LogLevel
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel, PreferenceSet
 from PsyNeuLink.Globals.Utilities import Modulation
-from PsyNeuLink.Globals.Preferences.PreferenceSet import *
 
 # Keypaths for preferences:
 REPORT_OUTPUT_PREF = kpReportOutputPref = '_report_output_pref'
@@ -135,7 +139,7 @@ class ComponentPreferenceSet(PreferenceSet):
                     InputState.classPreferences
                     ParameterState.classPreferences
                     OutputState.classPreferences
-                Projection types:             
+                Projection types:
                     ControlProjection.classPreferences
                     MappingProjection.classPreferences
             - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):

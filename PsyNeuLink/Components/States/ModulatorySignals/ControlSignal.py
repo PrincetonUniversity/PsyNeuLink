@@ -111,7 +111,7 @@ Allocation, Function and Intensity
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
 which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
-which to use (such as the `EVCMechanism <EVC_Calculation>`);  in those cases, they use each ControlSignal's
+which to use (such as the `EVCMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
@@ -273,21 +273,21 @@ Class Reference
 """
 
 import inspect
+import numpy as np
+import typecheck as tc
 import warnings
 
 from enum import IntEnum
 
-import typecheck as tc
-
-from PsyNeuLink.Components.Component import function_type, method_type
+from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, ModulationParam, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, np
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
@@ -1112,8 +1112,8 @@ class ControlSignal(ModulatorySignal):
     @property
     def value(self):
         # In case the ControlSignal has not yet been assigned (and its value is INITIALIZING or DEFERRED_INITIALIZATION
-        if isinstance(self._value, str):
-            return self._value
+        if self.init_status in {InitStatus.DEFERRED_INITIALIZATION, InitStatus.INITIALIZING}:
+            return None
         else:
             # FIX: NEED TO DEAL WITH LOGGING HERE (AS PER @PROPERTY State.value)
             return self._intensity

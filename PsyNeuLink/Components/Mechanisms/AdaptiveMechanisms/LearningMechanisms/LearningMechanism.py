@@ -461,7 +461,7 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function \
     import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
@@ -471,14 +471,10 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.Projections.Projection \
     import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Projection
-from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, DEFERRED_INITIALIZATION, FUNCTION_PARAMS, \
-    IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, \
-    LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, \
-    LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
+from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTIONS, FUNCTION_PARAMS, IDENTITY_MATRIX, INDEX, INITIALIZING, INPUT_STATES, LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION, MATRIX, NAME, OUTPUT_STATES, PARAMETER_STATE, PARAMS, PROJECTION, PROJECTIONS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, is_numeric, parameter_spec
+from PsyNeuLink.Globals.Utilities import is_numeric, parameter_spec
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # Params:
@@ -800,7 +796,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # delete self.init_args[ERROR_SOURCE]
 
         # # Flag for deferred initialization
-        # self.value = DEFERRED_INITIALIZATION
+        # self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
         self._learning_rate = learning_rate
 
@@ -1145,7 +1141,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                             # MODIFIED 7/21/17 END
                         elif isinstance(spec[0], LearningProjection):
                             learning_projection = spec[0]
-                            if learning_projection.value is DEFERRED_INITIALIZATION:
+                            if learning_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                                 parameter_state = learning_projection.init_args['receiver']
                             else:
                                 parameter_state = learning_projection.receiver
@@ -1172,7 +1168,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         # Specification is a LearningSignal (either passed in directly, or parsed from tuple above)
         if isinstance(learning_signal_spec, LearningSignal):
             # Deferred Initialization, so assign owner, name, and initialize
-            if learning_signal_spec.value is DEFERRED_INITIALIZATION:
+            if learning_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR LearningSignal
                 # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM learning_signal_dict?? (OR WAS IT SPECIFIED)
                 # OR ASSIGN NAME IF IT IS DEFAULT, USING learning_signal_DICT??
@@ -1232,7 +1228,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 raise LearningMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                   "that is not a LearningProjection, to LearningSignal of {}".
                                                   format(learning_projection, self.name))
-            if learning_projection.value is DEFERRED_INITIALIZATION:
+            if learning_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 learning_projection.init_args['sender']=learning_signal
                 if learning_projection.init_args['name'] is None:
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:

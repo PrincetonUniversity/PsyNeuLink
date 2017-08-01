@@ -9,19 +9,19 @@
 # ***********************************************  Init ****************************************************************
 import logging
 
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Exponential, FunctionOutputType, Integrator, Linear, LinearCombination, LinearMatrix, Logistic, SoftMax, UserDefinedFunction
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System, system
-from PsyNeuLink.Globals.Defaults import DefaultControlAllocationMode
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet
+from PsyNeuLink.Globals.Keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MAKE_DEFAULT_CONTROLLER, MATRIX, MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, WEIGHTS
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 
 # https://stackoverflow.com/a/17276457/3131666
@@ -57,7 +57,6 @@ __all__ = ['System',
            'DDM',
            'EVCMechanism',
            'ComparatorMechanism',
-           'WeightedErrorMechanism',
            'MappingProjection',
            'ControlProjection',
            'LearningProjection',

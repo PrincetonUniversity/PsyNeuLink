@@ -93,10 +93,11 @@ Class Reference
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+
 
 class AdpativeMechanismError(Exception):
     def __init__(self, error_value):

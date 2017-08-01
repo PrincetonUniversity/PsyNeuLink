@@ -1663,7 +1663,7 @@
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
-# 1) Function implements _deferred_init(), which checks whether self.value is DEFERRED_INITIALIZATION;
+# 1) Function implements _deferred_init(), which checks whether self.init_status is InitStatus.DEFERRED_INITIALIZATION;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
 #     <subclass> is the class implementing deferred initialization
 #     <**self.init_args> is the set of args passed to the __init__() method of the subclass
@@ -1673,7 +1673,7 @@
 #         self.init_args['context'] = self
 #         self.init_args['name'] = name
 #         del self.init_args['self']
-#     - set self.value = DEFERRED_INITIALIZATION
+#     - set self.init_status = InitStatus.DEFERRED_INITIALIZATION
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to efferents,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its pathway,

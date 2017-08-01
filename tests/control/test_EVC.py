@@ -330,7 +330,7 @@ def test_EVC_gratton():
     mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function
     mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate=0.8046).function
 
-    for mech in mySystem.controller.predictionMechanisms.mechanisms:
+    for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
             # when you find a key mechanism (transfer mechanism) with the correct name, print its name
             print(mech.name)
@@ -343,7 +343,7 @@ def test_EVC_gratton():
 
     print('new rate of integration mechanisms before system execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
-    for mech in mySystem.controller.predictionMechanisms.mechanisms:
+    for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         print(mech.name)
         print(mech.function_object.rate)
         print('----')
