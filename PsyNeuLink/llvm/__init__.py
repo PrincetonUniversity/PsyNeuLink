@@ -15,16 +15,17 @@ import os
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _module = ir.Module(name="PsyNeuLinkModule")
-__int32_ty = ir.IntType(32)
-__double_ty = ir.DoubleType()
 
 class LLVMBuilderContext:
     def __init__(self, recompile = True):
         self.module = _module
         self.__recompile = recompile
+        # TODO: Should this be selectable?
+        self.int32_ty = ir.IntType(32)
+        self.float_ty = ir.DoubleType()
 
     def __enter__(self):
-        return self.module
+        return self
 
     def __exit__(self, e_type, e_value, e_traceback):
         if self.__recompile:
@@ -46,7 +47,8 @@ def __set_array_body(builder, index, array, value):
 
 def __for_loop(builder, start, stop, inc, body_func, id):
     # Initialize index variable
-    index_var = builder.alloca(__int32_ty)
+    assert(start.type is stop.type)
+    index_var = builder.alloca(stop.type)
     builder.store(start, index_var)
 
     # basic blocks
@@ -72,10 +74,11 @@ def __for_loop(builder, start, stop, inc, body_func, id):
 
     return ir.IRBuilder(out_block)
 
-def setup_vxm_builtin(module):
+def setup_vxm_builtin(ctx):
+    module = ctx.module
     # Setup types
-    double_ptr_ty = __double_ty.as_pointer()
-    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, __int32_ty, __int32_ty, double_ptr_ty))
+    double_ptr_ty = ctx.float_ty.as_pointer()
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
 
     # Create function
     function = ir.Function(module, func_ty, name="__pnl_builtin_vxm")
@@ -90,17 +93,17 @@ def setup_vxm_builtin(module):
         a.attributes.add('nonnull')
         a.attributes.add('noalias')
 
-    kwargs = {"array": o, "value": __double_ty(.0)}
+    kwargs = {"array": o, "value": ctx.float_ty(.0)}
 
     # zero the output array
     zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = __for_loop(builder, __int32_ty(0), y, __int32_ty(1), zero_array, "zero")
+    builder = __for_loop(builder, ctx.int32_ty(0), y, ctx.int32_ty(1), zero_array, "zero")
 
     # Multiplication
 
     # Initialize outer loop variable
-    index_i_var = builder.alloca(__int32_ty)
-    builder.store(__int32_ty(0), index_i_var)
+    index_i_var = builder.alloca(ctx.int32_ty)
+    builder.store(ctx.int32_ty(0), index_i_var)
 
     # Outer loop cond BB
     outer_cond_block = builder.append_basic_block("outer-cond")
@@ -119,8 +122,8 @@ def setup_vxm_builtin(module):
         index_i = builder.load(index_i_var)
 
         # Initialize outer loop variable
-        index_j_var = builder.alloca(__int32_ty)
-        builder.store(__int32_ty(0), index_j_var)
+        index_j_var = builder.alloca(ctx.int32_ty)
+        builder.store(ctx.int32_ty(0), index_j_var)
 
         # Outer loop cond BB
         inner_cond_block = builder.append_basic_block("inner-cond")
@@ -154,13 +157,13 @@ def setup_vxm_builtin(module):
 
             builder.store(new_el, out_ptr)
 
-            next_index_j = builder.add(index_j, __int32_ty(1))
+            next_index_j = builder.add(index_j, ctx.int32_ty(1))
             builder.store(next_index_j, index_j_var)
             builder.branch(inner_cond_block)
     
 
         with builder.goto_block(inner_out_block):
-            next_index_i = builder.add(index_i, __int32_ty(1))
+            next_index_i = builder.add(index_i, ctx.int32_ty(1))
             builder.store(next_index_i, index_i_var)
             builder.branch(outer_cond_block)
 
@@ -306,5 +309,5 @@ def updateNativeBinaries(module, buffer):
 _engine.set_object_cache(updateNativeBinaries)
 
 # Initialize builtins
-with llvm_get_current_ctx() as m:
-    setup_vxm_builtin(m)
+with llvm_get_current_ctx() as ctx:
+    setup_vxm_builtin(ctx)
