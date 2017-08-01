@@ -98,6 +98,23 @@ It can be specified in any of the following formats:
       XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
   COMMENT
 
+COMMENT:
+XXX ADD THIS:
+.. _MappingProjection_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+`sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+a ControlProjection to be created before its `sender` (and/or `receiver`) have been created (e.g., before them in a
+script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
+ControlProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
+not necessary if the parameter(s) to be controlled are specified in the **control_signals** argument of a `System`, or
+in a tuple specifying the parameter of a `Mechanism` (or its `function <Mechanism.function`) that is part of a System
+-- in those cases, deferred initialization is completed automatically.
+COMMENT
+
 .. _Mapping_Structure:
 
 Structure

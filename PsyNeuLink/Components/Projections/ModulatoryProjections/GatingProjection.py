@@ -29,8 +29,13 @@ constructor on its own, the **receiver** argument must be specified.  It can be 
 or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, the Mechanism's
 `primary InputState <InputState_Primary>` will be used. If the GatingProjection is included in an InputState or
 OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
+
+COMMENT:
+### REPLACE WITH DEFERRED INIT HERE
 If a GatingProjection's `sender <GatingProjection.sender>` is not specified, the `sender <GatingProjection.sender>`
 is assigned to the OutputState of a `DefaultGatingMechanism`.
+COMMENT
+
 
 .. _GatingProjection_Structure:
 
@@ -136,7 +141,7 @@ class GatingProjection(ModulatoryProjection_Base):
     ---------
 
     sender : Optional[Mechanism or GatingSignal]
-        specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
+        specifies the source of the input for the GatingProjection;  usually an `OutputState` of a
         `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism`
         for the system to which the receiver belongs will be assigned.
 

@@ -89,28 +89,45 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
 (e.g., to assign a `ControlProjection`) or where a `MappingProjection` is specified  (to assign it a
 `LearningProjection`).  Any of the following can be used to specify a Projection in context:
 
-  * *Constructor*.  Used the same way in context as it is ordinarily.
+  * **Constructor**.  Used the same way in context as it is ordinarily.
   ..
-  * *Projection reference*.  This must be a reference to a Projection that has already been created.
+  * **Projection reference**.  This must be a reference to a Projection that has already been created.
   ..
-  * *Projection keyword*.  This creates a default instance of the specified type, and can be any of the following:
+  * **Keyword**.  This creates a default instance of the specified type, and can be any of the following:
 
-      * MAPPING_PROJECTION -- a `MappingProjection` with the `DefaultMechanism` as its :keyword:`sender`.
+      * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
+      <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
+      `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been determined
+      (e.g., it is used in the specification of a `pathway <Process_Base.pathway>` for a `Process`).
       |
-      * CONTROL_PROJECTION -- a `ControlProjection` with the `DefaultControlMechanism` as its :keyword:`sender`.
+      * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
+        (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
+        MappingProjection projects to a `LearningMechanism` or a `ComparatorMechanism` that projects to one, then a
+        `LearningSignal` is added to that LearningMechanism and assigned as the LearningProjection's `sender
+        <LearningProjection.sender>`;  otherwise, a LearningMechanism is `automatically created
+        <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
+        <LearningProjection.sender>`. See `<LearningMechanism_Learning_Configurations>` for additional details.
       |
-      * GATING_PROJECTION -- a `GatingProjection` with the `DefaultGatingMechanism` as its :keyword:`sender`.
+      * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
+        <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
+        parameter.  If the `Component` to which the parameter belongs is part of a `System`, then a `ControlSignal` is
+        added to the System's `controller <System_Base.controller>` and assigned as the ControlProjection's `sender
+        <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization is deferred
+        <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System, at which time the
+        ControlSignal is added to the System's `controller <System_Base.controller>` and assigned as its the
+        ControlProjection's `sender <ControlProjection.sender>`.  See `<ControlMechanism_Control_Signals>` for
+        additional details.
       |
-      * LEARNING_PROJECTION -- a `LearningProjection`.  At present, this can only be used together with the
-        specification of a MappingProjection (see `tuple <Mapping_Matrix_Specification>` format).  If the
-        :keyword:`receiver` of the MappingProjection projects to a `LearningMechanism <LearningMechanism>`,
-        the latter will be used as the :keyword:`sender` for the LearningProjection.  Otherwise,
-        a LearningMechanism will be created for it
-        (see `Automatic Instantiation <LearningProjection_Automatic_Creation>` of a LearningProjection for details).
+      * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
+        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State`.  If the
+        GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
+        specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
+        it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
+
   ..
-  * *Projection type*.  This creates a default instance of the specified Projection subclass.
+  * **Projection type**.  This creates a default instance of the specified Projection subclass.
   ..
-  * *Specification dictionary*.  This can contain an entry specifying the type of Projection, and/or entries
+  * **Specification dictionary**.  This can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
       * PROJECTION_TYPE: *<name of a Projection type>* --
