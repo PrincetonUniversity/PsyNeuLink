@@ -189,6 +189,9 @@ __pass_manager_builder.populate(__pass_manager);
 
 # And an execution engine with an empty backing module
 # TODO: why is empty backing mod necessary?
+# TODO: It looks like backing_mod is just another compiled module.
+#       Can we use it to avoid recompiling builtins?
+#       Would cross module calls work? and for GPUs?
 __backing_mod = binding.parse_assembly("")
 
 # There are other engines beside MCJIT
@@ -218,7 +221,7 @@ def llvm_build():
     _engine.add_module(__mod)
     _engine.finalize_object()
 
-    #This prints generated x86 assembly
+    # This prints generated x86 assembly
     if __dumpenv is not None and __dumpenv.find("isa") != -1:
         print("ISA assembly:")
         print(__target_machine.emit_assembly(__mod))
@@ -227,9 +230,11 @@ def convert_llvm_ir_to_ctype(t):
     if type(t) is ir.VoidType:
         return None
     elif type(t) is ir.PointerType:
+        # FIXME: Can this handle void*? Do we care?
         pointee = convert_llvm_ir_to_ctype(t.pointee)
         return ctypes.POINTER(pointee)
     elif type(t) is ir.IntType:
+        # FIXME: We should consider bitwidth here
         return ctypes.c_int
     elif type(t) is ir.DoubleType:
         return ctypes.c_double
