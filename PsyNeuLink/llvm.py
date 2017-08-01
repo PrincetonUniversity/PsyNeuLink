@@ -61,13 +61,13 @@ def __for_loop(builder, start, stop, inc, body_func, id = __get_id()):
 
     return ir.IRBuilder(out_block)
 
-def setup_mxv():
+def setup_vxm_builtin():
     # Setup types
     double_ptr_ty = __double_ty.as_pointer()
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, __int32_ty, __int32_ty, double_ptr_ty))
 
     # Create function
-    function = ir.Function(_module, func_ty, name="mxv")
+    function = ir.Function(_module, func_ty, name="__pnl_builtin_vxm")
     function.attributes.add('argmemonly')
 
     block = function.append_basic_block(name="entry")
@@ -294,7 +294,7 @@ def updateNativeBinaries(module, buffer):
 
 _engine.set_object_cache(updateNativeBinaries)
 
-setup_mxv()
+setup_vxm_builtin()
 
 #run this to compile builtins
 llvm_build()
