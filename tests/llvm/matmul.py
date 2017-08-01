@@ -29,7 +29,7 @@ x, y = matrix.shape
 stop = timeit.default_timer()
 print("Convert time elapsed {:f}".format(stop-start))
 
-llvm_fun = pnlvm.get_mxv()
+llvm_fun = pnlvm.LLVMBinaryFunction.get('mxv')
 
 start = timeit.default_timer()
 for _ in range(ITERATIONS):

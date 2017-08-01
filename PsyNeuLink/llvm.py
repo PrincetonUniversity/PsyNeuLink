@@ -289,13 +289,7 @@ def updateNativeBinaries(module, buffer):
 
 _engine.set_object_cache(updateNativeBinaries)
 
-
-def get_mxv():
-    func_ptr = _engine.get_function_address('mxv');
-    cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(func_ptr)
-
-    return cfunc
-
 setup_mxv()
 
+#run this to compile builtins
 llvm_build()
