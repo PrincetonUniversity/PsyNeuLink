@@ -18,6 +18,22 @@ _module = ir.Module(name="PsyNeuLinkModule")
 __int32_ty = ir.IntType(32)
 __double_ty = ir.DoubleType()
 
+class LLVMBuilderContext:
+    def __init__(self, recompile = True):
+        self.module = _module
+        self.__recompile = recompile
+
+    def __enter__(self):
+        return self.module
+
+    def __exit__(self, e_type, e_value, e_traceback):
+        if self.__recompile:
+            llvm_build()
+
+__context = LLVMBuilderContext()
+
+def llvm_get_current_ctx():
+    return __context
 
 def __env_dump_llvm_ir(module):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
@@ -56,13 +72,13 @@ def __for_loop(builder, start, stop, inc, body_func, id):
 
     return ir.IRBuilder(out_block)
 
-def setup_vxm_builtin():
+def setup_vxm_builtin(module):
     # Setup types
     double_ptr_ty = __double_ty.as_pointer()
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, __int32_ty, __int32_ty, double_ptr_ty))
 
     # Create function
-    function = ir.Function(_module, func_ty, name="__pnl_builtin_vxm")
+    function = ir.Function(module, func_ty, name="__pnl_builtin_vxm")
     function.attributes.add('argmemonly')
 
     block = function.append_basic_block(name="entry")
@@ -289,7 +305,6 @@ def updateNativeBinaries(module, buffer):
 
 _engine.set_object_cache(updateNativeBinaries)
 
-setup_vxm_builtin()
-
-#run this to compile builtins
-llvm_build()
+# Initialize builtins
+with llvm_get_current_ctx() as m:
+    setup_vxm_builtin(m)
