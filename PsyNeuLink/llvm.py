@@ -14,9 +14,16 @@ import functools
 import uuid
 import os
 
+__dumpenv = os.environ.get("PNL_LLVM_DUMP")
 __module = ir.Module(name="PsyNeuLinkModule")
 __int32_ty = ir.IntType(32)
 __double_ty = ir.DoubleType()
+
+
+def __env_dump_llvm_ir(module):
+    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
+        print(module)
+
 
 def __get_id(suffix=""):
     return uuid.uuid4().hex + suffix
@@ -151,12 +158,6 @@ def setup_mxv():
         builder.ret_void()
 
 
-setup_mxv()
-
-__dumpenv = os.environ.get("PNL_LLVM_DUMP")
-if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-    print(__module)
-
 # Compiler binding
 binding.initialize()
 
@@ -174,13 +175,6 @@ __cpu_name = binding.get_host_cpu_name()
 __target = binding.Target.from_default_triple()
 __target_machine = __target.create_target_machine(cpu = __cpu_name, features = __features, opt = 3)
 
-# And an execution engine with an empty backing module
-# TODO: why is empty backing mod necessary?
-__backing_mod = binding.parse_assembly("")
-
-# There are other engines beside MCJIT
-# MCJIT makes it easier to run the compiled function right away.
-__engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 
 __pass_manager_builder = binding.PassManagerBuilder()
 __pass_manager_builder.inlining_threshold = 99999 # Inline all function calls
@@ -193,19 +187,22 @@ __pass_manager = binding.ModulePassManager()
 __target_machine.add_analysis_passes(__pass_manager);
 __pass_manager_builder.populate(__pass_manager);
 
+# And an execution engine with an empty backing module
+# TODO: why is empty backing mod necessary?
+__backing_mod = binding.parse_assembly("")
+
+# There are other engines beside MCJIT
+# MCJIT makes it easier to run the compiled function right away.
+_engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
+
+
 __mod = None
-
-def get_mxv():
-    func_ptr = __engine.get_function_address('mxv');
-    cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(func_ptr)
-
-    return cfunc
 
 def llvm_build():
     # Remove the old module
     global __mod
     if __mod is not None:
-        __engine.remove_module(__mod);
+        _engine.remove_module(__mod);
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
@@ -218,12 +215,42 @@ def llvm_build():
         print(__mod)
 
     # Now add the module and make sure it is ready for execution
-    __engine.add_module(__mod)
-    __engine.finalize_object()
+    _engine.add_module(__mod)
+    _engine.finalize_object()
 
     #This prints generated x86 assembly
     if __dumpenv is not None and __dumpenv.find("isa") != -1:
         print("ISA assembly:")
         print(__target_machine.emit_assembly(__mod))
+
+_binaries = {}
+
+class LLVMBinaryFunction:
+    def __init__(self, p):
+        self.ptr = p
+
+    @staticmethod
+    def get(name):
+        if not name in _binaries.keys():
+            _binaries[name] = LLVMBinaryFunction(_engine.get_function_address(name));
+        return _binaries[name];
+
+def updateNativeBinaries(module, buffer):
+    __env_dump_llvm_ir(module)
+    # update all pointers that might have been modified
+    for k, v in _binaries.items():
+       new_ptr = _engine.get_function_address(k)
+       v.ptr = new_ptr
+
+_engine.set_object_cache(updateNativeBinaries)
+
+
+def get_mxv():
+    func_ptr = _engine.get_function_address('mxv');
+    cfunc = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_double))(func_ptr)
+
+    return cfunc
+
+setup_mxv()
 
 llvm_build()
