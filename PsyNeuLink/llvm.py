@@ -241,16 +241,38 @@ _binaries = {}
 
 class LLVMBinaryFunction:
     def __init__(self, name):
+        self.__name = name
         # Binary pointer
         self.ptr = _engine.get_function_address(name)
-        self.name = name
 
-        f = _module.get_global(name)
+    def __call__(self, *args, **kwargs):
+        self.c_func(*args, **kwargs)
+
+
+    def set_ptr(self, ptr):
+        self.__ptr = ptr
+
+        # Recompiled, update the signature
+        f = _module.get_global(self.__name)
         assert(isinstance(f, ir.Function))
+
+        return_type = convert_llvm_ir_to_ctype(f.return_value.type)
         params = []
         for a in f.args:
             params.append(convert_llvm_ir_to_ctype(a.type))
-        self.c_func_type = ctypes.CFUNCTYPE(convert_llvm_ir_to_ctype(f.return_value.type), *params)
+        self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
+        self.__c_func = self.__c_func_type(self.__ptr)
+
+    # This will be useful for non-native targets
+    def get_ptr(self):
+        return self.__ptr
+
+    ptr = property(get_ptr, set_ptr)
+
+    def get_c_func(self):
+        return self.__c_func
+
+    c_func = property(get_c_func)
 
     @staticmethod
     def get(name):
