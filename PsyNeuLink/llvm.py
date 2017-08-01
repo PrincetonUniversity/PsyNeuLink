@@ -11,7 +11,6 @@
 from llvmlite import binding,ir
 import ctypes
 import functools
-import uuid
 import os
 
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
@@ -24,22 +23,18 @@ def __env_dump_llvm_ir(module):
     if __dumpenv is not None and __dumpenv.find("llvm") != -1:
         print(module)
 
-
-def __get_id(suffix=""):
-    return uuid.uuid4().hex + suffix
-
 def __set_array_body(builder, index, array, value):
     ptr = builder.gep(array, [index])
     builder.store(value, ptr)
     
 
-def __for_loop(builder, start, stop, inc, body_func, id = __get_id()):
+def __for_loop(builder, start, stop, inc, body_func, id):
     # Initialize index variable
     index_var = builder.alloca(__int32_ty)
     builder.store(start, index_var)
 
     # basic blocks
-    cond_block = builder.append_basic_block(id + "cond")
+    cond_block = builder.append_basic_block(id + "-cond")
     out_block = None
 
     # Loop condition
@@ -83,7 +78,7 @@ def setup_vxm_builtin():
 
     # zero the output array
     zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = __for_loop(builder, __int32_ty(0), y, __int32_ty(1), zero_array, "zero-")
+    builder = __for_loop(builder, __int32_ty(0), y, __int32_ty(1), zero_array, "zero")
 
     # Multiplication
 
