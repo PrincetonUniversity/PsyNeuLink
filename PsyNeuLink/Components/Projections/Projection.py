@@ -123,22 +123,27 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
         GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
         specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
-
   ..
-  * **Projection type**.  This creates a default instance of the specified Projection subclass.
+  * **Projection type**.  This creates a default instance of the specified Projection subclass.  The assignment or
+    creation of the Projection's `sender <Projection.sender>` is handled in the same manner as described above for the
+    keyword specifications.
   ..
   * **Specification dictionary**.  This can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
-      * PROJECTION_TYPE: *<name of a Projection type>* --
+      * *PROJECTION_TYPE*: *<name of a Projection type>* --
         if this entry is absent, a default Projection will be created that is appropriate for the context
-        (for example, a `MappingProjection` for an `InputState`, and a `ControlProjection` for a `ParameterState`).
+        (for example, a `MappingProjection` for an `InputState`, a `LearningProjection` for the `matrix
+        <MappingProjection.matrix>` parameter of a `MappingProjection`, and a `ControlProjection` for any other
+        type of parameter.
       |
-      * PROJECTION_PARAMS: *Dict[Projection argument, argument value]* --
+      * *PROJECTION_PARAMS*: *Dict[Projection argument, argument value]* --
         the key for each entry of the dictionary must be the name of a Projection parameter, and its value the value
         of the parameter.  It can contain any of the standard parameters for instantiating a Projection (in particular
-        its `sender <Projection_Sender>` and `receiver <Projection_Receiver>` or ones specific to a particular type of
-        Projection (see documentation for subclass).
+        its `sender <Projection_Sender>` and `receiver <Projection_Receiver>`, or ones specific to a particular type
+        of Projection (see documentation for subclass).  If the `sender <Projection_Sender>` and/or
+        `receiver <Projection_Receiver>` are not specified, their assignment and/or creation are handled in the same
+        manner as described above for keyword specifications.
 
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
         Note that parameter
@@ -153,13 +158,10 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
 Automatic creation
 ~~~~~~~~~~~~~~~~~~
 
-Under some circumstances PsyNeuLink will automatically create a Projection. For example, a `Process`
-automatically generates a `MappingProjection` between adjacent Mechanisms in its `pathway` if none is specified;
-and `LearningProjections <LearningProjection>` are automatically generated when `learning` is specified for a
-`Process <Process_Learning>` or `System <System_Execution_Learning>`.  Creating a `state <State>` will also
-automatically generate a Projection and a Mechanism as the Projection's `sender <Projection.sender>` if none is
-specified in the constructor for the state (the type of Projection and Mechanism depend on the type of state -- see
-`state subclasses <States>` for details).
+Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
+`MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
+<Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
+when :keyword:`learning` is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`).
 
 .. _Projection_Structure:
 
@@ -174,13 +176,19 @@ Sender
 ~~~~~~
 
 This must be an `OutputState`.  The Projection is assigned to the OutputState's `efferents <State_Base.efferents>`
-list, and OutputState's `value <OutputState.OutputState.value>` is used as the :keyword:`variable` for Projection's
+list, and the OutputState's `value <OutputState.value>` is used as the `variable <Function.variable>` for Projection's
 `function <Projection.function>`.  A sender can be specified as:
 
   * an **OutputState**, in any of the ways used to `specify an OutputState <OutputState_Specification>`.
   ..
-  * a **Mechanism**, in which case the Mechanism's :ref:`primary OutputState  <OutputState_Primary>` is assigned as the
+  * a **Mechanism**, in which case the Mechanism's `primary OutputState  <OutputState_Primary>` is assigned as the
     `sender <Projection.sender>`.
+
+CORRECT TO DESCRIBE DEFERRED INITIALIZATION
+??
+CONSOLIDATE FROM LEARNING_PROJECTION, CONTROL_PROJECTION, AND GATING_PROJECTION
+DELETE THOSE SECTIONS AND REFERENCE THIS ONE?
+CORRECT REFERENCES ABOVE, POINT THEM TO HERE
 
 If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then a default Mechanism of a
