@@ -1472,7 +1472,10 @@ class Component(object):
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is target_set:
-            self._validate_params(request_set=params, target_set=target_set, context=context)
+            try:
+                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=params, target_set=target_set, context=context)
 
         # assigning here so that self.variable maintains any size/format transformations needed for validation
         self.variable = variable
@@ -1719,7 +1722,10 @@ class Component(object):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
             # MODIFIED 4/18/17 END NEW
-            self._validate_params(request_set, target_set, context=context)
+            try:
+                self._validate_params(variable=variable, request_set=request_set, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary

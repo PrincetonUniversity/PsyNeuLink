@@ -2655,7 +2655,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return variable
 
 
-    def _validate_params(self, request_set, target_set=None, context=None):
+    def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -2669,7 +2669,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         super()._validate_params(request_set, target_set, context)
         param_set = target_set
-        sender = self.variable
+        sender = variable
         # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
@@ -4663,7 +4663,7 @@ class AccumulatorIntegrator(
 
         self.auto_dependent = True
 
-    def _accumulator_check_args(self, params=None, target_set=None, context=None):
+    def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate params and assign any runtime params.
 
         Called by AccumulatorIntegrator to validate params
@@ -4743,9 +4743,10 @@ class AccumulatorIntegrator(
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is target_set:
-            self._validate_params(request_set=params, target_set=target_set, context=context)
-
-
+            try:
+                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=params, target_set=target_set, context=context)
 
     def function(self,
                  variable=None,
@@ -4773,7 +4774,7 @@ class AccumulatorIntegrator(
         updated value of integral : 2d np.array
 
         """
-        self._accumulator_check_args(params=params, context=context)
+        self._accumulator_check_args(variable, params=params, context=context)
 
         # rate = np.array(self.rate).astype(float)
         # increment = self.increment
@@ -6198,18 +6199,18 @@ class Distance(ObjectiveFunction):
 
         self.functionOutputType = None
 
-    def _validate_params(self, request_set, target_set=None, context=None):
+    def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
 
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if len(self.variable) != 2:
+        if len(variable) != 2:
             raise FunctionError("variable for {} ({}) must have two items".format(self.name, self.variable))
 
-        if len(self.variable[0]) != len(self.variable[1]):
+        if len(variable[0]) != len(variable[1]):
             raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
-                format(self.name, len(self.variable[0]), len(self.variable[1])))
+                format(self.name, len(variable[0]), len(variable[1])))
 
     def function(self,
                  variable=None,
