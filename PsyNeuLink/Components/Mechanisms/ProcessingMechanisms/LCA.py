@@ -79,11 +79,12 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_avg, max_vs_next
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import LCA, HOLLOW_MATRIX, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE, ENERGY, ENTROPY
+from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE, ENERGY, ENTROPY
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
@@ -401,8 +402,8 @@ class LCA(RecurrentTransferMechanism):
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
-                 auto:is_numeric_or_none=None,  # not used: only here to avoid bugs
-                 cross:is_numeric_or_none=None,
+                 auto=None,  # not used: only here to avoid bugs
+                 cross=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
@@ -419,92 +420,9 @@ class LCA(RecurrentTransferMechanism):
         """Instantiate LCA
         """
 
-        # this may be problematic
-        # IMPLEMENTATION NOTE: parts of this region may be redundant with code in ProcessingMechanism.__init__()
-        # region Fill in and infer default_variable and size if they aren't specified in args
-        if default_variable is None and size is None:
-            default_variable = self.variableClassDefault
-            size = [1]
-
-        # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
-        # default_variable are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
-        # region Convert default_variable (if given) to a 2D array, and size (if given) to a 1D integer array
-
-        try:
-            if default_variable is not None:
-                default_variable = np.atleast_2d(default_variable)
-                if len(np.shape(default_variable)) > 2:  # number of dimensions of default_variable > 2
-                    warnings.warn("default_variable had more than two dimensions (had {} dimensions) "
-                                  "so only the first element of its second-highest-numbered axis will be"
-                                  " used".format(len(np.shape(default_variable))))
-                    while len(np.shape(default_variable)) > 2:  # reduce the dimensions of default_variable
-                        default_variable = default_variable[0]
-        except:
-            raise LCAError("Failed to convert default_variable (of type {})"
-                                " to a 2D array".format(type(default_variable)))
-
-        try:
-            if size is not None:
-                size = np.atleast_1d(size)
-                if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                    warnings.warn("size had more than one dimension (size had {} dimensions), so only the first "
-                                  "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                    while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                        size = size[0]
-        except:
-            raise LCAError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-        try:
-            if size is not None:
-                map(lambda x: int(x), size)  # convert all elements of size to int
-        except:
-            raise LCAError("Failed to convert an element in size to an integer.")
-        # endregion
-
-        # region If default_variable is None, make it a 2D array of zeros each with length=size[i]
-        # IMPLEMENTATION NOTE: perhaps add setting to enable user to change
-        # default_variable's default value, which is an array of zeros at the moment
-        if default_variable is None and size is not None:
-            try:
-                default_variable = []
-                for s in size:
-                    default_variable.append(np.zeros(s))
-                default_variable = np.array(default_variable)
-            except:
-                raise LCAError("default_variable was not specified, but PsyNeuLink was unable to "
-                                    "infer default_variable from the size argument, {}. size should be"
-                                    " an integer or an array or list of integers. Either size or "
-                                    "default_variable must be specified.".format(size))
-        # endregion
-
-        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_variable[i])
-        if size is None:
-            size = []
-            try:
-                for input_vector in default_variable:
-                    size.append(len(input_vector))
-                size = np.array(size)
-            except:
-                raise LCAError("size was not specified, but PsyNeuLink was unable to infer size from "
-                                    "the default_variable argument, {}. default_variable can be an array,"
-                                    " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                                    " default_variable must be specified.".format(default_variable))
-        # endregion
-
-        # region If length(size) = 1 and default_variable is not None, then expand size to length(default_variable)
-        if len(size) == 1 and len(default_variable) > 1:
-            new_size = np.empty(len(default_variable))
-            new_size.fill(size[0])
-            size = new_size
-        # endregion
-
-        # IMPLEMENTATION NOTE: if default_variable and size are both specified as arguments, they will be checked
-        # against each other in Component.py, during _instantiate_defaults().
-        # endregion
-
         if matrix is not None:
             warnings.warn("Matrix arg for LCA is not used; matrix was assigned using inhibition arg")
-        matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
+        # matrix = np.full((size[0], size[0]), -inhibition) * get_matrix(HOLLOW_MATRIX,size[0],size[0])
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -521,7 +439,8 @@ class LCA(RecurrentTransferMechanism):
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
-                         matrix=matrix,
+                         auto = 0,
+                         cross = inhibition,
                          function=function,
                          initial_value=initial_value,
                          decay=decay,
@@ -534,3 +453,11 @@ class LCA(RecurrentTransferMechanism):
                          name=name,
                          prefs=prefs,
                          context=context)
+
+    @property
+    def inhibition(self):
+        return self.cross
+
+    @inhibition.setter
+    def inhibition(self, setting):
+        self.cross = setting
