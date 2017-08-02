@@ -83,7 +83,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
 from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -558,7 +558,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              " type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                              "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_cross_matrix(hetero, size=self.size[0])
+            c = get_hetero_matrix(hetero, size=self.size[0])
             if c is None:
                 raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
                                              "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
@@ -574,7 +574,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
 
         elif hetero is not None:
-            self.matrix = get_cross_matrix(hetero, size=self.size[0])
+            self.matrix = get_hetero_matrix(hetero, size=self.size[0])
             if self.matrix is None:
                 raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
                                            "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
@@ -635,7 +635,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not hasattr(self, 'size'):
                 raise Exception('Error in retrieving matrix parameter for {}: `size` is not instantiated.'.format(self))
             a = get_auto_matrix(self.auto, self.size[0])
-            c = get_cross_matrix(self.hetero, self.size[0])
+            c = get_hetero_matrix(self.hetero, self.size[0])
             return a + c
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval

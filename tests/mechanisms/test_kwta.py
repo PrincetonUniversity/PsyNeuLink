@@ -103,7 +103,7 @@ class TestKWTAMatrix:
                 val = K.execute([10, 10, 10, 10]).tolist()
                 assert(val == [[.5, .5, .5, .5]])
 
-    def test_kwta_matrix_auto_cross_spec(self):
+    def test_kwta_matrix_auto_hetero_spec(self):
         K = KWTA(
             name='K',
             size=4,
@@ -112,7 +112,7 @@ class TestKWTAMatrix:
         )
         assert(K.recurrent_projection.matrix.tolist() == [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
 
-    def test_kwta_matrix_cross_spec(self):
+    def test_kwta_matrix_hetero_spec(self):
         K = KWTA(
             name='K',
             size=3,
@@ -129,6 +129,15 @@ class TestKWTAMatrix:
         assert(K.recurrent_projection.matrix.tolist() == [[-.5, -1, -1], [-1, -.5, -1], [-1, -1, -.5]])
 
     def test_kwta_matrix_mixed_sign(self):
+        with pytest.raises(KWTAError) as error_text:
+            K = KWTA(
+                name='K',
+                size=4,
+                matrix=[[-1, 2, -2, 4]] * 4
+            )
+        assert "Mixing positive and negative values can create non-supported inhibition vector" in str(error_text.value)
+
+    def test_kwta_auto_hetero_mixed_sign(self):
         with pytest.raises(KWTAError) as error_text:
             K = KWTA(
                 name='K',

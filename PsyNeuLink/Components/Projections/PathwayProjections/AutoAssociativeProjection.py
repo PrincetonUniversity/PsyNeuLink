@@ -110,12 +110,12 @@ class AutoAssociativeProjection(MappingProjection):
 
         param_keys = owner_mech._parameter_states.key_values
         if AUTO not in param_keys or HETERO not in param_keys:
-            raise AutoAssociativeError("Auto or Cross ParameterState not found in {0} \"{1}\"; here are names of the "
+            raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
                                        "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
                                                                                    owner_mech.name, param_keys))
 
-        # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `cross_matrix`
-        # (where auto_matrix is a diagonal matrix and cross_matrix is a hollow matrix)
+        # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `hetero_matrix`
+        # (where auto_matrix is a diagonal matrix and hetero_matrix is a hollow matrix)
         raw_auto = owner_mech._parameter_states[AUTO].value
         auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
         if auto_matrix is None:
@@ -124,16 +124,16 @@ class AutoAssociativeProjection(MappingProjection):
                                        "2d array, 2d list, or numpy matrix".
                                        format(owner_mech.__class__.__name__, owner_mech.name, raw_auto, type(raw_auto)))
 
-        raw_cross = owner_mech._parameter_states[HETERO].value
-        cross_matrix = get_cross_matrix(raw_cross=raw_cross, size=owner_mech.size[0])
-        if cross_matrix is None:
+        raw_hetero = owner_mech._parameter_states[HETERO].value
+        hetero_matrix = get_hetero_matrix(raw_hetero=raw_hetero, size=owner_mech.size[0])
+        if hetero_matrix is None:
             raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
                                        "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
                                        "length one, 2d array, 2d list, or numpy matrix".
-                                       format(owner_mech.__class__.__name__, owner_mech.name, raw_cross, type(raw_cross)))
-        self.matrix = auto_matrix + cross_matrix
+                                       format(owner_mech.__class__.__name__, owner_mech.name, raw_hetero, type(raw_hetero)))
+        self.matrix = auto_matrix + hetero_matrix
 
-        # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and cross_matrix,
+        # note that updating parameter states MUST happen AFTER self.matrix is set by auto_matrix and hetero_matrix,
         # because setting self.matrix only changes the previous_value/variable of the 'matrix' parameter state (which
         # holds the matrix parameter) and the matrix parameter state must be UPDATED AFTERWARDS to put the new value
         # from the previous_value into the value of the parameterState
@@ -193,32 +193,32 @@ class AutoAssociativeProjection(MappingProjection):
     #
     #     if AUTO in owner_mech._parameter_states and hetero in owner_mech._parameter_states:
     #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
-    #         owner_mech._parameter_states[CROSS].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
+    #         owner_mech._parameter_states[HETERO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
     #     else:
-    #         raise AutoAssociativeError("Auto or Cross ParameterState not found in {0} \"{1}\"; here are names of the "
+    #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
     #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
 # a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 # (also used by RecurrentTransferMechanism.py)
-def get_cross_matrix(raw_cross, size):
-    if isinstance(raw_cross, numbers.Number):
-        return get_matrix(HOLLOW_MATRIX, size, size) * raw_cross
-    elif ((isinstance(raw_cross, np.ndarray) and raw_cross.ndim == 1) or
-              (isinstance(raw_cross, list) and np.array(raw_cross).ndim == 1)):
-        if len(raw_cross) != 1:
+def get_hetero_matrix(raw_hetero, size):
+    if isinstance(raw_hetero, numbers.Number):
+        return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero
+    elif ((isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 1) or
+              (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 1)):
+        if len(raw_hetero) != 1:
             return None
-        return get_matrix(HOLLOW_MATRIX, size, size) * raw_cross[0]
-    elif (isinstance(raw_cross, np.matrix) or
-              (isinstance(raw_cross, np.ndarray) and raw_cross.ndim == 2) or
-              (isinstance(raw_cross, list) and np.array(raw_cross).ndim == 2)):
-        np.fill_diagonal(raw_cross, 0)
-        return np.array(raw_cross)
+        return get_matrix(HOLLOW_MATRIX, size, size) * raw_hetero[0]
+    elif (isinstance(raw_hetero, np.matrix) or
+              (isinstance(raw_hetero, np.ndarray) and raw_hetero.ndim == 2) or
+              (isinstance(raw_hetero, list) and np.array(raw_hetero).ndim == 2)):
+        np.fill_diagonal(raw_hetero, 0)
+        return np.array(raw_hetero)
     else:
         return None
 
 
-# similar to get_cross_matrix() above
+# similar to get_hetero_matrix() above
 def get_auto_matrix(raw_auto, size):
     if isinstance(raw_auto, numbers.Number):
         return np.diag(np.full(size, raw_auto))

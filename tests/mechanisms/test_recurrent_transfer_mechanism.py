@@ -151,7 +151,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[2, 1, 1], [1, 2, 1], [1, 1, 2]] and isinstance(R.matrix, np.ndarray)
         assert run_twice_in_system(R, [1, 2, 3], [10, 11, 12]) == [17, 19, 21]
 
-    def test_recurrent_mech_matrix_cross_spec(self):
+    def test_recurrent_mech_matrix_hetero_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=3,
@@ -164,7 +164,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[1, -1, -1], [-1, 1, -1], [-1, -1, 1]] and isinstance(R.matrix, np.ndarray)
         assert run_twice_in_system(R, [1, 2, 3], [10, 11, 12]) == [8, 7, 6]
 
-    def test_recurrent_mech_matrix_auto_cross_spec_size_1(self):
+    def test_recurrent_mech_matrix_auto_hetero_spec_size_1(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=1,
@@ -175,7 +175,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert val == [[10.]]
         assert R.matrix.tolist() == [[-2]] and isinstance(R.matrix, np.ndarray)
 
-    def test_recurrent_mech_matrix_auto_cross_spec_size_4(self):
+    def test_recurrent_mech_matrix_auto_hetero_spec_size_4(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
@@ -187,7 +187,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[2.2, -3, -3, -3], [-3, 2.2, -3, -3], [-3, -3, 2.2, -3], [-3, -3, -3, 2.2]]
         assert isinstance(R.matrix, np.ndarray)
 
-    def test_recurrent_mech_matrix_auto_cross_matrix_spec(self):
+    def test_recurrent_mech_matrix_auto_hetero_matrix_spec(self):
         # when auto, hetero, and matrix are all specified, auto and hetero should take precedence
         R = RecurrentTransferMechanism(
             name='R',
@@ -224,7 +224,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert val == [[10., 11., 12., 13.]]
         assert R.matrix.tolist() == [[1.1, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 3.3, 4], [1, 2, 3, 4.4]]
 
-    def test_recurrent_mech_cross_float_matrix_spec(self):
+    def test_recurrent_mech_hetero_float_matrix_spec(self):
         # hetero should override off-diagonal only
         R = RecurrentTransferMechanism(
             name='R',
@@ -237,7 +237,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[1, -2.2, -2.2, -2.2], [-2.2, 2, -2.2, -2.2], [-2.2, -2.2, 3, -2.2],
                                      [-2.2, -2.2, -2.2, 4]]
 
-    def test_recurrent_mech_cross_matrix_matrix_spec(self):
+    def test_recurrent_mech_hetero_matrix_matrix_spec(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
@@ -249,7 +249,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[1, -3, -2, -1], [-4, 2, -2, -1], [-4, -3, 3, -1],
                                      [-4, -3, -2, 4]]
 
-    def test_recurrent_mech_auto_cross_matrix_spec_v1(self):
+    def test_recurrent_mech_auto_hetero_matrix_spec_v1(self):
         # auto and hetero should override matrix
         R = RecurrentTransferMechanism(
             name='R',
@@ -263,7 +263,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[1, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 5, -1],
                                      [-4, -3, -2, 7]]
 
-    def test_recurrent_mech_auto_cross_matrix_spec_v2(self):
+    def test_recurrent_mech_auto_hetero_matrix_spec_v2(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
@@ -276,7 +276,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[3, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 3, -1],
                                      [-4, -3, -2, 3]]
 
-    def test_recurrent_mech_auto_cross_matrix_spec_v3(self):
+    def test_recurrent_mech_auto_hetero_matrix_spec_v3(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
@@ -584,7 +584,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert (R.value.tolist() == [[8, 11, 14, 23]])
         assert (T.value.tolist() == [[56, 56, 56]])
 
-    def test_recurrent_mech_system_cross_change(self):
+    def test_recurrent_mech_system_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
@@ -606,7 +606,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert (R.value.tolist() == [[-2.5, 38, 50.5, 29.25]])
         assert (T.value.tolist() == [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
-    def test_recurrent_mech_system_auto_and_cross_change(self):
+    def test_recurrent_mech_system_auto_and_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
