@@ -768,6 +768,7 @@ class EVCMechanism(ControlMechanism_Base):
                                            prefs=prefs,
                                            context=self)
 
+    # TODO: delete this? seems pointless override
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
