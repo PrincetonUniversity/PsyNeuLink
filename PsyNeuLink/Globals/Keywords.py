@@ -570,7 +570,7 @@ kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 AUTO = 'auto'
-CROSS = 'cross'
+HETERO = 'hetero'
 
 
 #endregion

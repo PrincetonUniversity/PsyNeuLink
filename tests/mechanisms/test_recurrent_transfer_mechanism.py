@@ -155,7 +155,7 @@ class TestRecurrentTransferMechanismMatrix:
         R = RecurrentTransferMechanism(
             name='R',
             size=3,
-            cross=-1
+            hetero=-1
         )
         # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputState of the mechanism: if
         # the behavior of execute() changes, feel free to change these numbers
@@ -169,7 +169,7 @@ class TestRecurrentTransferMechanismMatrix:
             name='R',
             size=1,
             auto=-2,
-            cross=4.4
+            hetero=4.4
         )
         val = R.execute([10]).tolist()
         assert val == [[10.]]
@@ -180,7 +180,7 @@ class TestRecurrentTransferMechanismMatrix:
             name='R',
             size=4,
             auto=2.2,
-            cross=-3
+            hetero=-3
         )
         val = R.execute([10, 10, 10, 10]).tolist()
         assert val == [[10., 10., 10., 10.]]
@@ -188,12 +188,12 @@ class TestRecurrentTransferMechanismMatrix:
         assert isinstance(R.matrix, np.ndarray)
 
     def test_recurrent_mech_matrix_auto_cross_matrix_spec(self):
-        # when auto, cross, and matrix are all specified, auto and cross should take precedence
+        # when auto, hetero, and matrix are all specified, auto and hetero should take precedence
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
             auto=2.2,
-            cross=-3,
+            hetero=-3,
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([10, 10, 10, 10]).tolist()
@@ -225,11 +225,11 @@ class TestRecurrentTransferMechanismMatrix:
         assert R.matrix.tolist() == [[1.1, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 3.3, 4], [1, 2, 3, 4.4]]
 
     def test_recurrent_mech_cross_float_matrix_spec(self):
-        # cross should override off-diagonal only
+        # hetero should override off-diagonal only
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            cross=-2.2,
+            hetero=-2.2,
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([1, 2, 3, 4]).tolist()
@@ -241,7 +241,7 @@ class TestRecurrentTransferMechanismMatrix:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            cross=np.array([[-4, -3, -2, -1]] * 4),
+            hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([1, 2, 3, 4]).tolist()
@@ -250,12 +250,12 @@ class TestRecurrentTransferMechanismMatrix:
                                      [-4, -3, -2, 4]]
 
     def test_recurrent_mech_auto_cross_matrix_spec_v1(self):
-        # auto and cross should override matrix
+        # auto and hetero should override matrix
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
             auto = [1, 3, 5, 7],
-            cross=np.array([[-4, -3, -2, -1]] * 4),
+            hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([1, 2, 3, 4]).tolist()
@@ -268,7 +268,7 @@ class TestRecurrentTransferMechanismMatrix:
             name='R',
             size=4,
             auto = [3],
-            cross=np.array([[-4, -3, -2, -1]] * 4),
+            hetero=np.array([[-4, -3, -2, -1]] * 4),
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([1, 2, 3, 4]).tolist()
@@ -281,7 +281,7 @@ class TestRecurrentTransferMechanismMatrix:
             name='R',
             size=4,
             auto = [3],
-            cross=2,
+            hetero=2,
             matrix=[[1, 2, 3, 4]] * 4
         )
         val = R.execute([1, 2, 3, 4]).tolist()
@@ -497,12 +497,12 @@ class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_process_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and cross is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
             auto=0,
-            cross=-1)
+            hetero=-1)
         T = TransferMechanism(
             size=3,
             function=Linear)
@@ -521,7 +521,7 @@ class TestRecurrentTransferMechanismInProcess:
         R = RecurrentTransferMechanism(
             size=4,
             auto=1,
-            cross=-1)
+            hetero=-1)
         T = TransferMechanism(
             size=4,
             function=Linear)
@@ -541,12 +541,12 @@ class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_system_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and cross is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
             auto=0,
-            cross=-1)
+            hetero=-1)
         T = TransferMechanism(
             size = 3,
             function = Linear)
@@ -566,7 +566,7 @@ class TestRecurrentTransferMechanismInSystem:
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
-            cross=-1)
+            hetero=-1)
         T = TransferMechanism(
             size=3,
             function=Linear)
@@ -588,17 +588,17 @@ class TestRecurrentTransferMechanismInSystem:
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
-            cross=[[-1, -2, -3, -4]] * 4)
+            hetero=[[-1, -2, -3, -4]] * 4)
         T = TransferMechanism(
             size=5,
             function=Linear)
         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        R.cross = 0
+        R.hetero = 0
         s.run(inputs={R: [1, 2, 3, -0.5]})
         assert (R.value.tolist() == [[1., 2., 3., -0.5]])
         assert (T.value.tolist() == [[5.5, 5.5, 5.5, 5.5, 5.5]])
-        R.cross = [[-1, 2, 3, 1.5]] * 4
+        R.hetero = [[-1, 2, 3, 1.5]] * 4
         s.run(inputs={R: [-1.5, 0, 1, 2]})
         assert (R.value.tolist() == [[-.5, 4, 10, 0]])
         assert (T.value.tolist() == [[13.5, 13.5, 13.5, 13.5, 13.5]])
@@ -610,13 +610,13 @@ class TestRecurrentTransferMechanismInSystem:
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
-            cross=[[-1, -2, -3, -4]] * 4)
+            hetero=[[-1, -2, -3, -4]] * 4)
         T = TransferMechanism(
             size=5,
             function=Linear)
         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
-        R.cross = 0
+        R.hetero = 0
         s.run(inputs={R: [1, 2, 3, -0.5]})
         assert (R.value.tolist() == [[1., 2., 3., -0.5]])
         assert (T.value.tolist() == [[5.5, 5.5, 5.5, 5.5, 5.5]])
@@ -632,7 +632,7 @@ class TestRecurrentTransferMechanismInSystem:
         R = RecurrentTransferMechanism(
             size=4,
             auto=1,
-            cross=-1)
+            hetero=-1)
         T = TransferMechanism(
             size=4,
             function=Linear)
@@ -656,13 +656,13 @@ class TestRecurrentTransferMechanismInSystem:
 #         R = RecurrentTransferMechanism(
 #             size=4,
 #             auto=1,
-#             cross=-1)
+#             hetero=-1)
 #         T = TransferMechanism(
 #             size=3,
 #             function=Linear)
 #         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = system(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCMechanism,
-#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('cross', R)])
+#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [1, 3, 2, 5]})
 #         print('T.value: ', T.value)
 #         assert(T.value.tolist() == [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])

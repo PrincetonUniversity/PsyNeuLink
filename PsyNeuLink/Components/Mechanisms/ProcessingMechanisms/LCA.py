@@ -403,7 +403,7 @@ class LCA(RecurrentTransferMechanism):
                  input_states:tc.optional(tc.any(list, dict))=None,
                  matrix=None,
                  auto=None,  # not used: only here to avoid bugs
-                 cross=None,
+                 hetero=None,
                  function=Logistic,
                  initial_value=None,
                  decay:tc.optional(tc.any(int, float))=1.0,
@@ -440,7 +440,7 @@ class LCA(RecurrentTransferMechanism):
                          size=size,
                          input_states=input_states,
                          auto = 0,
-                         cross = inhibition,
+                         hetero = inhibition,
                          function=function,
                          initial_value=initial_value,
                          decay=decay,
@@ -456,8 +456,8 @@ class LCA(RecurrentTransferMechanism):
 
     @property
     def inhibition(self):
-        return self.cross
+        return self.hetero
 
     @inhibition.setter
     def inhibition(self, setting):
-        self.cross = setting
+        self.hetero = setting

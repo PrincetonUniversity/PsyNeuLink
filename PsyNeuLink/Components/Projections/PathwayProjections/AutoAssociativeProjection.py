@@ -19,7 +19,7 @@ that my matrix (with which I multiply my input to produce my output) is a square
 primary input state and output state of my owner. But you can specify the input and output state as well.
 """
 
-from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, CROSS, CHANGED
+from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, HETERO, CHANGED
 from PsyNeuLink.Components.Projections.Projection import *
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Functions.Function import *
@@ -54,7 +54,7 @@ class AutoAssociativeProjection(MappingProjection):
                  receiver=None,
                  matrix=DEFAULT_MATRIX,
                  auto=None,
-                 cross=None,
+                 hetero=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
@@ -68,7 +68,7 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        params = self._assign_args_to_param_dicts(auto=auto, cross=cross, function_params={MATRIX: matrix}, params=params)
+        params = self._assign_args_to_param_dicts(auto=auto, hetero=hetero, function_params={MATRIX: matrix}, params=params)
 
         super().__init__(sender=sender,
                          receiver=receiver,
@@ -85,7 +85,7 @@ class AutoAssociativeProjection(MappingProjection):
         super()._instantiate_attributes_before_function(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Create self.matrix based on auto and cross, if specified
+        """Create self.matrix based on auto and hetero, if specified
         """
 
         super()._instantiate_attributes_after_function(context=context)
@@ -97,7 +97,7 @@ class AutoAssociativeProjection(MappingProjection):
         """
 
         # As of 7/21/17, modulation of parameters through ControlSignals is only possible on Mechanisms
-        # so the ParameterStates for 'auto' and 'cross' live on the RecurrentTransferMechanism rather than on
+        # so the ParameterStates for 'auto' and 'hetero' live on the RecurrentTransferMechanism rather than on
         # the AutoAssociativeProjection itself. So this projection must reference its owner's ParameterStates
         if isinstance(self.sender, OutputState):
             owner_mech = self.sender.owner
@@ -109,12 +109,12 @@ class AutoAssociativeProjection(MappingProjection):
                                        format(self.__class__.__name__, self.name, self.sender))
 
         param_keys = owner_mech._parameter_states.key_values
-        if AUTO not in param_keys or CROSS not in param_keys:
+        if AUTO not in param_keys or HETERO not in param_keys:
             raise AutoAssociativeError("Auto or Cross ParameterState not found in {0} \"{1}\"; here are names of the "
                                        "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
                                                                                    owner_mech.name, param_keys))
 
-        # read auto and cross from their ParameterStates, and put them into `auto_matrix` and `cross_matrix`
+        # read auto and hetero from their ParameterStates, and put them into `auto_matrix` and `cross_matrix`
         # (where auto_matrix is a diagonal matrix and cross_matrix is a hollow matrix)
         raw_auto = owner_mech._parameter_states[AUTO].value
         auto_matrix = get_auto_matrix(raw_auto=raw_auto, size=owner_mech.size[0])
@@ -124,11 +124,11 @@ class AutoAssociativeProjection(MappingProjection):
                                        "2d array, 2d list, or numpy matrix".
                                        format(owner_mech.__class__.__name__, owner_mech.name, raw_auto, type(raw_auto)))
 
-        raw_cross = owner_mech._parameter_states[CROSS].value
+        raw_cross = owner_mech._parameter_states[HETERO].value
         cross_matrix = get_cross_matrix(raw_cross=raw_cross, size=owner_mech.size[0])
         if cross_matrix is None:
-            raise AutoAssociativeError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                       "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+            raise AutoAssociativeError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                       "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
                                        "length one, 2d array, 2d list, or numpy matrix".
                                        format(owner_mech.__class__.__name__, owner_mech.name, raw_cross, type(raw_cross)))
         self.matrix = auto_matrix + cross_matrix
@@ -157,12 +157,12 @@ class AutoAssociativeProjection(MappingProjection):
             # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix base_value
             matrix_parameter_state.update(weight_change_params, context=context)
 
-            # Update MATRIX, and AUTO and CROSS accordingly
+            # Update MATRIX, and AUTO and HETERO accordingly
             self.matrix = matrix_parameter_state.value
 
             self.auto = np.diag(self.matrix).copy()
-            self.cross = self.matrix.copy()
-            np.fill_diagonal(self.cross, 0)
+            self.hetero = self.matrix.copy()
+            np.fill_diagonal(self.hetero, 0)
 
         return self.function(self.sender.value, params=params, context=context)
 
@@ -174,11 +174,11 @@ class AutoAssociativeProjection(MappingProjection):
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
     # def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
-    #     """Update this projection's owner mechanism's `auto` and `cross` parameter states as well! The owner mechanism
-    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `cross` parameter states during
+    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
+    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
     #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
-    #     your mechanism must similarly exclude `auto` and `cross` from updating.
+    #     your mechanism must similarly exclude `auto` and `hetero` from updating.
     #     """
     #     super()._update_parameter_states(runtime_params, time_scale, context)
     #
@@ -191,7 +191,7 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    " sender is {}".
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
-    #     if AUTO in owner_mech._parameter_states and CROSS in owner_mech._parameter_states:
+    #     if AUTO in owner_mech._parameter_states and hetero in owner_mech._parameter_states:
     #         owner_mech._parameter_states[AUTO].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
     #         owner_mech._parameter_states[CROSS].update(params=runtime_params, time_scale=time_scale, context=context + INITIALIZING)
     #     else:
@@ -199,7 +199,7 @@ class AutoAssociativeProjection(MappingProjection):
     #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
     #                                    owner_mech.name, owner_mech._parameter_states.key_values))
 
-# a helper function that takes a specification of `cross` and returns a hollow matrix with the right values
+# a helper function that takes a specification of `hetero` and returns a hollow matrix with the right values
 # (also used by RecurrentTransferMechanism.py)
 def get_cross_matrix(raw_cross, size):
     if isinstance(raw_cross, numbers.Number):

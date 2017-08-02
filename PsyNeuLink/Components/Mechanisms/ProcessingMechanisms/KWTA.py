@@ -19,7 +19,7 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
-from PsyNeuLink.Globals.Keywords import AUTO, CROSS, FULL_CONNECTIVITY_MATRIX, INITIALIZING, KWTA, MATRIX, RESULT
+from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, KWTA, MATRIX, RESULT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -55,7 +55,7 @@ class KWTA(RecurrentTransferMechanism):
                  initial_value=None,
                  matrix=None,  # None defaults to a hollow uniform inhibition matrix
                  auto: is_numeric_or_none=None,
-                 cross: is_numeric_or_none=None,
+                 hetero: is_numeric_or_none=None,
                  decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,
@@ -110,8 +110,8 @@ class KWTA(RecurrentTransferMechanism):
         if matrix is None:
             if auto is None:
                 auto = 0
-            if cross is None:
-                cross = -1
+            if hetero is None:
+                hetero = -1
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -119,7 +119,7 @@ class KWTA(RecurrentTransferMechanism):
                          function=kwta_log_function,
                          matrix=matrix,
                          auto=auto,
-                         cross=cross,
+                         hetero=hetero,
                          initial_value=initial_value,
                          decay=decay,
                          noise=noise,
@@ -228,7 +228,7 @@ class KWTA(RecurrentTransferMechanism):
             self.recurrent_projection = self.matrix
 
         else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, cross=self.cross,
+            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, hetero=self.hetero,
                                                                           matrix=self.matrix, context=context)
 
         self._matrix = self.recurrent_projection.matrix
@@ -529,7 +529,7 @@ class KWTA(RecurrentTransferMechanism):
 @tc.typecheck
 def _instantiate_recurrent_projection(mech: Mechanism_Base,
                                       auto=None,
-                                      cross=None,
+                                      hetero=None,
                                       matrix=FULL_CONNECTIVITY_MATRIX,
                                       context=None):
     """Instantiate a MappingProjection from mech to itself
@@ -543,6 +543,6 @@ def _instantiate_recurrent_projection(mech: Mechanism_Base,
     return AutoAssociativeProjection(sender=mech,
                                      receiver=mech.input_states[mech.indexOfInhibitionInputState],
                                      auto=auto,
-                                     cross=cross,
+                                     hetero=hetero,
                                      matrix=matrix,
                                      name=mech.name + ' recurrent projection')

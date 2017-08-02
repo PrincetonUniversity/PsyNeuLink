@@ -108,7 +108,7 @@ class TestKWTAMatrix:
             name='K',
             size=4,
             auto=3,
-            cross=2
+            hetero=2
         )
         assert(K.recurrent_projection.matrix.tolist() == [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]])
 
@@ -116,7 +116,7 @@ class TestKWTAMatrix:
         K = KWTA(
             name='K',
             size=3,
-            cross=-.5,
+            hetero=-.5,
         )
         assert(K.recurrent_projection.matrix.tolist() == [[0, -.5, -.5], [-.5, 0, -.5], [-.5, -.5, 0]])
 

@@ -85,7 +85,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
+from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -158,7 +158,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
     auto=None,                         \
-    cross=None,                        \
+    hetero=None,                        \
     initial_value=None,                \
     decay=None,                        \
     noise=0.0,                         \
@@ -200,22 +200,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
         specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or a AutoAssociativeProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
+        or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
 
     auto : number or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
-        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **cross**, if either is specified.
+        **auto** and/or **hetero**, if either is specified.
 
-    cross : number of None : default None
-        specifies matrix as a hollow matrix with all non-diagonal entries equal to **cross**, if **cross** is not None;
-        If **auto** and **cross** are both specified, then matrix is the sum of the two matrices from **auto** and
-        **cross**. For example, setting **auto** to 1 and **cross** to -1 would set matrix to have a diagonal of
+    hetero : number of None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **cross**, if either is specified.
+        **auto** and/or **hetero**, if either is specified.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -382,7 +382,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  input_states: tc.optional(tc.any(list, dict))=None,
                  matrix=FULL_CONNECTIVITY_MATRIX,
                  auto=None,
-                 cross=None,
+                 hetero=None,
                  function=Linear,
                  initial_value=None,
                  decay: is_numeric_or_none=None,
@@ -400,8 +400,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if output_states is None:
             output_states = [RESULT]
 
-        if isinstance(cross, (list, np.matrix)):
-            cross = np.array(cross)
+        if isinstance(hetero, (list, np.matrix)):
+            hetero = np.array(hetero)
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(input_states=input_states,
@@ -412,7 +412,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   params=params,
                                                   noise=noise,
                                                   auto=auto,
-                                                  cross=cross)
+                                                  hetero=hetero)
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
@@ -497,19 +497,19 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _instantiate_attributes_before_function(self, context=None):
         """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
-        ParameterStates for auto and cross if they haven't already been instantiated. This is useful if auto and
-        cross were None in the initialization call.
+        ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
+        hetero were None in the initialization call.
         """
         super()._instantiate_attributes_before_function(context=context)
 
         param_keys = self._parameter_states.key_values
         specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])
 
-        if specified_matrix is None and (AUTO not in param_keys or CROSS not in param_keys):
+        if specified_matrix is None and (AUTO not in param_keys or HETERO not in param_keys):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
-                                         "'auto' and 'cross' parameters must be specified; currently, either"
-                                         "auto or cross parameter is missing.".format(self.params[MATRIX], self))
+                                         "'auto' and 'hetero' parameters must be specified; currently, either"
+                                         "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
 
         if AUTO not in param_keys:
             d = np.diagonal(specified_matrix).copy()
@@ -526,21 +526,21 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
-        if CROSS not in param_keys:
+        if HETERO not in param_keys:
             m = specified_matrix.copy()
             np.fill_diagonal(m, 0.0)
             state = _instantiate_state(owner=self,
                                        state_type=ParameterState,
-                                       state_name=CROSS,
+                                       state_name=HETERO,
                                        state_spec=m,
                                        state_params=None,
                                        constraint_value=m,
-                                       constraint_value_name=CROSS,
+                                       constraint_value_name=HETERO,
                                        context=context)
             if state is not None:
-                self._parameter_states[CROSS] = state
+                self._parameter_states[HETERO] = state
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `cross` attribute for {} \"{}\"".
+                raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -550,20 +550,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         super()._instantiate_attributes_after_function(context=context)
 
         auto = self.params[AUTO]
-        cross = self.params[CROSS]
-        if auto is not None and cross is not None:
+        hetero = self.params[HETERO]
+        if auto is not None and hetero is not None:
             a = get_auto_matrix(auto, size=self.size[0])
             if a is None:
                 raise RecurrentTransferError("The `auto` parameter of {} {} was invalid: it was equal to {}, and was of"
                                              " type {}. Instead, the `auto` parameter should be a number, 1D array, "
                                              "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
-            c = get_cross_matrix(cross, size=self.size[0])
+            c = get_cross_matrix(hetero, size=self.size[0])
             if c is None:
-                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was "
-                                             "of type {}. Instead, the `cross` parameter should be a number, 1D array "
+                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was "
+                                             "of type {}. Instead, the `hetero` parameter should be a number, 1D array "
                                              "of length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, cross, type(cross)))
+                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
             self.matrix = a + c
         elif auto is not None:
             self.matrix = get_auto_matrix(auto, size=self.size[0])
@@ -573,20 +573,20 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            "2d array, 2d list, or numpy matrix".
                                            format(self.__class__.__name__, self.name, auto, type(auto)))
 
-        elif cross is not None:
-            self.matrix = get_cross_matrix(cross, size=self.size[0])
+        elif hetero is not None:
+            self.matrix = get_cross_matrix(hetero, size=self.size[0])
             if self.matrix is None:
-                raise RecurrentTransferError("The `cross` parameter of {} {} was invalid: it was equal to {}, and was of "
-                                           "type {}. Instead, the `cross` parameter should be a number, 1D array of "
+                raise RecurrentTransferError("The `hetero` parameter of {} {} was invalid: it was equal to {}, and was of "
+                                           "type {}. Instead, the `hetero` parameter should be a number, 1D array of "
                                            "length one, 2d array, 2d list, or numpy matrix".
-                                           format(self.__class__.__name__, self.name, cross, type(cross)))
+                                           format(self.__class__.__name__, self.name, hetero, type(hetero)))
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
         if isinstance(self.matrix, AutoAssociativeProjection):
             self.recurrent_projection = self.matrix
 
         else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, cross=self.cross,
+            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, hetero=self.hetero,
                                                                           matrix=self.matrix, context=context)
 
         # self._matrix = self.recurrent_projection.matrix
@@ -627,18 +627,18 @@ class RecurrentTransferMechanism(TransferMechanism):
                                 context=context)
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
-    # single flag to check whether to get matrix from auto and cross?
+    # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
         if hasattr(self, '_parameter_states') \
-                and 'auto' in self._parameter_states and 'cross' in self._parameter_states:
+                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if not hasattr(self, 'size'):
                 raise Exception('Error in retrieving matrix parameter for {}: `size` is not instantiated.'.format(self))
             a = get_auto_matrix(self.auto, self.size[0])
-            c = get_cross_matrix(self.cross, self.size[0])
+            c = get_cross_matrix(self.hetero, self.size[0])
             return a + c
         else:
-            # if auto and cross are not yet instantiated, then just use the standard method of attribute retrieval
+            # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
             # (basically copied from Component's basic make_property getter)
             name = 'matrix'
             backing_field = '_matrix'
@@ -650,13 +650,13 @@ class RecurrentTransferMechanism(TransferMechanism):
     @matrix.setter
     def matrix(self, val):
         if hasattr(self, '_parameter_states')\
-                and 'auto' in self._parameter_states and 'cross' in self._parameter_states:
+                and 'auto' in self._parameter_states and 'hetero' in self._parameter_states:
             if hasattr(self, 'size'):
                 val = get_matrix(val, self.size[0], self.size[0])
             temp_matrix = val.copy()
             self.auto = np.diag(temp_matrix).copy()
             np.fill_diagonal(temp_matrix, 0)
-            self.cross = temp_matrix
+            self.hetero = temp_matrix
         else:
             name = 'matrix'
             backing_field = '_matrix'
@@ -687,7 +687,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 @tc.typecheck
 def _instantiate_recurrent_projection(mech:Mechanism_Base,
                                       auto=None,
-                                      cross=None,
+                                      hetero=None,
                                       # this typecheck was failing, I didn't want to fix (7/19/17 CW)
                                       # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
                                       matrix=FULL_CONNECTIVITY_MATRIX,
@@ -702,6 +702,6 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
 
     return AutoAssociativeProjection(owner=mech,
                                      auto=auto,
-                                     cross=cross,
+                                     hetero=hetero,
                                      matrix=matrix,
                                      name=mech.name + ' recurrent projection')
