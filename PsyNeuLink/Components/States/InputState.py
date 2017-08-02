@@ -260,7 +260,7 @@ from PsyNeuLink.Globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_S
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-
+from PsyNeuLink.Components.Component import InitStatus
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
