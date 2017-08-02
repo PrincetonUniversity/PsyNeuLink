@@ -1,15 +1,14 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, FunctionError
-from PsyNeuLink.Components.Functions.Function import ExponentialDist, NormalDist
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, get_matrix, Linear, Logistic, Reduce, Reinforcement, FunctionError, ExponentialDist, NormalDist
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
@@ -37,7 +36,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R',
             size=3
         )
-        assert R.recurrent_projection.matrix is R.matrix
+        assert R.recurrent_projection.matrix.tolist() == R.matrix.tolist()
         assert R.recurrent_projection.sender is R.output_state
         assert R.recurrent_projection.receiver is R.input_state
 
@@ -125,10 +124,11 @@ class TestRecurrentTransferMechanismMatrix:
             )
             val = R.execute([10, 10, 10, 10]).tolist()
             assert val == [[10., 10., 10., 10.]]
+            assert R.recurrent_projection.matrix.tolist() == get_matrix(m, R.size[0], R.size[0]).tolist()
 
     def test_recurrent_mech_matrix_other_spec(self):
 
-        specs = [np.matrix('1 2; 3 4'), np.atleast_2d([[1, 2], [3, 4]]), [[1, 2], [3, 4]]]
+        specs = [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4']
         for m in specs:
             R = RecurrentTransferMechanism(
                 name='R',
@@ -492,6 +492,50 @@ def run_twice_in_system(mech, input1, input2=None):
     second_output = simple_system.run(inputs = {mech: input2})
     return second_output[1][0].tolist()
 
+class TestRecurrentTransferMechanismInProcess:
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+
+    def test_recurrent_mech_transfer_mech_process_three_runs(self):
+        # this test ASSUMES that the parameter state for auto and cross is updated one run-cycle AFTER they are set by
+        # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
+        R = RecurrentTransferMechanism(
+            size=4,
+            auto=0,
+            cross=-1)
+        T = TransferMechanism(
+            size=3,
+            function=Linear)
+        p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        p.run(inputs=[[[1, 2, 3, 4]]])
+        assert (R.value.tolist() == [[1., 2., 3., 4.]])
+        assert (T.value.tolist() == [[10., 10., 10.]])
+        p.run(inputs=[[[5, 6, 7, 8]]])
+        assert (R.value.tolist() == [[-4, -2, 0, 2]])
+        assert (T.value.tolist() == [[-4, -4, -4]])
+        p.run(inputs=[[[-1, 2, -2, 5.5]]])
+        assert (R.value.tolist() == [[-1.0, 4.0, 2.0, 11.5]])
+        assert (T.value.tolist() == [[16.5, 16.5, 16.5]])
+
+    def test_recurrent_mech_process_matrix_change(self):
+        R = RecurrentTransferMechanism(
+            size=4,
+            auto=1,
+            cross=-1)
+        T = TransferMechanism(
+            size=4,
+            function=Linear)
+        p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        R.matrix = [[2, 0, 1, 3]] * 4
+        p.run(inputs = [[[1, 2, 3, 4]]])
+        assert(T.value.tolist() == [[1, 2, 3, 4]])
+        assert(R.value.tolist() == [[1, 2, 3, 4]])
+        p.run(inputs = {T: [1, 3, 2, 5]})
+        assert(R.recurrent_projection.matrix.tolist() == [[2, 0, 1, 3]] * 4)
+        assert(T.value.tolist() == [[1, 3, 2, 5]])
+        assert(R.value.tolist() == [[21, 3, 12, 35]])
+
+
+
 class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
@@ -584,8 +628,6 @@ class TestRecurrentTransferMechanismInSystem:
         assert (T.value.tolist() == [[42, 42, 42, 42, 42]])
 
     def test_recurrent_mech_system_matrix_change(self):
-        # 7/31/17 CW: This test is currently incomplete: it will be complete only when the matrix property of the
-        # recurrent projection is hooked up with the matrix property of the recurrent mechanism. This is TBI.
         R = RecurrentTransferMechanism(
             size=4,
             auto=1,
@@ -600,8 +642,27 @@ class TestRecurrentTransferMechanismInSystem:
         assert(T.value.tolist() == [[1, 2, 3, 4]])
         assert(R.value.tolist() == [[1, 2, 3, 4]])
         s.run(inputs = {T: [1, 3, 2, 5]})
-        # print('T.value final: ', T.value)
-        # print('R.value final: ', R.value)
-        # print('R.matrix final: ', R.matrix)
-        # print('R.recurrent_projection.matrix final: ', R.recurrent_projection.matrix)
-        # assert(R.recurrent_projection.matrix.tolist() == [[2, 0, 1, 3]] * 4)
+        assert(R.recurrent_projection.matrix.tolist() == [[2, 0, 1, 3]] * 4)
+        assert(T.value.tolist() == [[1, 3, 2, 5]])
+        assert(R.value.tolist() == [[21, 3, 12, 35]])
+
+
+# this doesn't work consistently due to EVC's issue with the scheduler
+
+# class TestRecurrentTransferMechanismControl:
+#     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+#     def test_recurrent_mech_EVC(self):
+#         R = RecurrentTransferMechanism(
+#             size=4,
+#             auto=1,
+#             cross=-1)
+#         T = TransferMechanism(
+#             size=3,
+#             function=Linear)
+#         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
+#         s = system(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCMechanism,
+#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('cross', R)])
+#         s.run(inputs = {R: [1, 3, 2, 5]})
+#         print('T.value: ', T.value)
+#         assert(T.value.tolist() == [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
+#         s.run(inputs = {})
