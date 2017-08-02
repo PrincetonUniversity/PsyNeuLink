@@ -1185,12 +1185,14 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        super(Mechanism_Base, self)._validate_variable(variable, context)
+        variable = super(Mechanism_Base, self)._validate_variable(variable, context)
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
         self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        variable = convert_to_np_array(variable, 2)
+
+        return variable
 
     def _filter_params(self, params):
         """Add rather than override INPUT_STATES and/or OUTPUT_STATES

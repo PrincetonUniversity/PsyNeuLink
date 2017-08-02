@@ -509,7 +509,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                           format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
         # MODIFIED 6/29/17 END
 
-        super()._validate_variable(variable=variable, context=context)
+        return super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate `role`, `monitored_values`, amd `input_states <ObjectiveMechanism.input_states>` arguments

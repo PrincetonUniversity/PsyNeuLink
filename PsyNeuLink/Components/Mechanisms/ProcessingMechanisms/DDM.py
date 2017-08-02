@@ -739,7 +739,7 @@ class DDM(ProcessingMechanism_Base):
         # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
         if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
-        super()._validate_variable(variable=variable, context=context)
+        return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
 

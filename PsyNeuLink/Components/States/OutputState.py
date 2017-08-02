@@ -630,17 +630,18 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-        super(OutputState,self)._validate_variable(variable, context)
+        variable = super(OutputState, self)._validate_variable(variable, context)
 
         self.variableClassDefault = self.reference_value
 
         # Insure that self.variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(self.variable, self.reference_value):
+        if not iscompatible(variable, self.reference_value):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".
-                                           format(self.variable,
+                                           format(variable,
                                                   self.owner.name,
                                                   self.reference_value))
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate index and calculate parameters

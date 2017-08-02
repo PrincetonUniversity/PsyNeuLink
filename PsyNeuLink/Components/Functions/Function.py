@@ -1448,7 +1448,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # FIX; PUT THIS IN DOCUMENTATION
         if isinstance(variable, (list, np.ndarray)):
             if isinstance(variable, np.ndarray) and not variable.ndim:
-                return
+                return variable
             length = 0
             for i in range(len(variable)):
                 if i == 0:
@@ -2650,7 +2650,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                 raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(self.variable, self.__class__.__name__))
         except AttributeError:
             raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
-                                    format(self.variable, self.__class__.__name__))
+                                    format(variable, self.__class__.__name__))
 
         return variable
 

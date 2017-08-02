@@ -743,16 +743,14 @@ class State_Base(State):
         Note:  this method (or the class version) is called only if the parameter_validation attribute is True
         """
 
-        super(State,self)._validate_variable(variable, context)
+        variable = super(State, self)._validate_variable(variable, context)
 
         if not context:
             context = kwAssign + ' Base Value'
         else:
             context = context + kwAssign + ' Base Value'
 
-        # # MODIFIED 6/1/17 OLD:
-        # self.base_value = self.variable
-        # MODIFIED 6/1/17 END
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate projection specification(s)
