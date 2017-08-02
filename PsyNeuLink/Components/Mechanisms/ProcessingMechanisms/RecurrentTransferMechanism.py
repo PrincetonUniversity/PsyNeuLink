@@ -19,7 +19,7 @@ Overview
 --------
 
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
-network, in which each element is connected to every other element (instantiated in a recurrent MappingProjection
+network, in which each element is connected to every other element (instantiated in a recurrent AutoAssociativeProjection
 referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
 
@@ -31,7 +31,7 @@ Creating a RecurrentTransferMechanism
 A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
 `mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its
 **mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the Mechanism's
-constructor, which must specify either a square matrix or a `MappingProjection` that uses one (the default is
+constructor, which must specify either a square matrix or a `AutoAssociativeProjection` that uses one (the default is
 `FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a
 standard `TransferMechanism`.
 
@@ -41,7 +41,7 @@ Structure
 ---------
 
 The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`
-parameter, which specifies a self-projecting MappingProjection;  that is, one that projects from the Mechanism's
+parameter, which specifies a self-projecting AutoAssociativeProjection;  that is, one that projects from the Mechanism's
 `primary OutputState <OutputState_Primary>` back to it `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
@@ -84,9 +84,8 @@ from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_cross_matrix
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Keywords import AUTO, CROSS, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -199,9 +198,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
         or a custom function.
 
-    matrix : list, np.ndarray, np.matrix, function keyword, or MappingProjection : default FULL_CONNECTIVITY_MATRIX
-        specifies the matrix to use for creating a `recurrent MappingProjection <Recurrent_Transfer_Structure>`,
-        or a MappingProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
+        or a AutoAssociativeProjection to use. If **auto** or **cross** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
 
     auto : number or None : default None
@@ -278,11 +277,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         the Function used to transform the input.
 
     matrix : 2d np.array
-        the `matrix <MappingProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
+        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
 
-    recurrent_projection : MappingProjection
-        a `MappingProjection` that projects from the Mechanism's `primary outputState <OutputState_Primary>`
-        back to it `primary inputState <Mechanism_InputStates>`.
+    recurrent_projection : AutoAssociativeProjection
+        an `AutoAssociativeProjection` that projects from the Mechanism's `primary outputState <OutputState_Primary>`
+        back to its `primary inputState <Mechanism_InputStates>`.
 
     decay : float : default 1.0
         determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
@@ -447,7 +446,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix_param = target_set[MATRIX]
             size = len(self.variable[0])
 
-            if isinstance(matrix_param, MappingProjection):
+            if isinstance(matrix_param, AutoAssociativeProjection):
                 matrix = matrix_param.matrix
 
             elif isinstance(matrix_param, str):
@@ -459,15 +458,15 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 matrix = matrix_param
             if matrix is None:
-                rows = cols = size # this is just to skip the tests ahead: if the matrix really is None, that is checked
-                # up ahead, in _instantiate_attributes_before_function()
+                rows = cols = size # this is a hack just to skip the tests ahead: if the matrix really is None, that is
+                # checked up ahead, in _instantiate_attributes_before_function()
             else:
                 rows = np.array(matrix).shape[0]
                 cols = np.array(matrix).shape[1]
 
             # Shape of matrix must be square
             if rows != cols:
-                if isinstance(matrix_param, MappingProjection):
+                if isinstance(matrix_param, AutoAssociativeProjection):
                     # if __name__ == '__main__':
                     err_msg = ("{} param of {} must be square to be used as recurrent projection for {}".
                                format(MATRIX, matrix_param.name, self.name))
@@ -478,7 +477,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # Size of matrix must equal length of variable:
             if rows != size:
-                if (matrix_param, MappingProjection):
+                if (matrix_param, AutoAssociativeProjection):
                     # if __name__ == '__main__':
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
@@ -583,14 +582,14 @@ class RecurrentTransferMechanism(TransferMechanism):
                                            format(self.__class__.__name__, self.name, cross, type(cross)))
 
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
-        if isinstance(self.matrix, MappingProjection):
+        if isinstance(self.matrix, AutoAssociativeProjection):
             self.recurrent_projection = self.matrix
 
         else:
             self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, cross=self.cross,
                                                                           matrix=self.matrix, context=context)
 
-        self._matrix = self.recurrent_projection.matrix
+        # self._matrix = self.recurrent_projection.matrix
 
         if ENERGY in self.output_states.names:
             energy = Stability(self.variable[0],
@@ -617,7 +616,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
-        if INITIALIZING in context:
+        if context is None or (INITIALIZING not in context):
             if self.decay is not None and self.decay != 1.0:
                 self.previous_input *= self.decay
 
@@ -626,6 +625,62 @@ class RecurrentTransferMechanism(TransferMechanism):
                                 clock=CentralClock,
                                 time_scale=time_scale,
                                 context=context)
+
+    # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
+    # single flag to check whether to get matrix from auto and cross?
+    @property
+    def matrix(self):
+        if hasattr(self, '_parameter_states') \
+                and 'auto' in self._parameter_states and 'cross' in self._parameter_states:
+            if not hasattr(self, 'size'):
+                raise Exception('Error in retrieving matrix parameter for {}: `size` is not instantiated.'.format(self))
+            a = get_auto_matrix(self.auto, self.size[0])
+            c = get_cross_matrix(self.cross, self.size[0])
+            return a + c
+        else:
+            # if auto and cross are not yet instantiated, then just use the standard method of attribute retrieval
+            # (basically copied from Component's basic make_property getter)
+            name = 'matrix'
+            backing_field = '_matrix'
+            try:
+                return self._parameter_states[name].value
+            except (AttributeError, TypeError):
+                return getattr(self, backing_field)
+
+    @matrix.setter
+    def matrix(self, val):
+        if hasattr(self, '_parameter_states')\
+                and 'auto' in self._parameter_states and 'cross' in self._parameter_states:
+            if hasattr(self, 'size'):
+                val = get_matrix(val, self.size[0], self.size[0])
+            temp_matrix = val.copy()
+            self.auto = np.diag(temp_matrix).copy()
+            np.fill_diagonal(temp_matrix, 0)
+            self.cross = temp_matrix
+        else:
+            name = 'matrix'
+            backing_field = '_matrix'
+            if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
+                val_type = val.__class__.__name__
+                curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
+                # self.prev_context = "nonsense" + str(curr_context)
+                self._assign_params(request_set={name: val}, context=curr_context)
+            else:
+                setattr(self, backing_field, val)
+
+            # Update user_params dict with new value
+            self.user_params.__additem__(name, val)
+
+            # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
+            if hasattr(self, '_parameter_states') and name in self._parameter_states:
+                param_state = self._parameter_states[name]
+                param_state.variable = val
+
+                # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+                # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+                # 'reset_initializer'
+                if hasattr(param_state.function_object, 'initializer'):
+                    param_state.function_object.reset_initializer = val
 
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -637,7 +692,7 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
                                       # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
                                       matrix=FULL_CONNECTIVITY_MATRIX,
                                       context=None):
-    """Instantiate a MappingProjection from mech to itself
+    """Instantiate a AutoAssociativeProjection from mech to itself
 
     """
 
@@ -650,9 +705,3 @@ def _instantiate_recurrent_projection(mech:Mechanism_Base,
                                      cross=cross,
                                      matrix=matrix,
                                      name=mech.name + ' recurrent projection')
-
-    # return MappingProjection(sender=mech,
-    #                          receiver=mech,
-    #                          matrix=matrix,
-    #                          name = mech.name + ' recurrent projection')
-
