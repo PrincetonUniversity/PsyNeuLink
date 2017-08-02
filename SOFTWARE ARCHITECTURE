@@ -807,7 +807,7 @@ Keep components simple; put any necessary complexity (to make it easier for the 
 
 ### Notes on Size:
 
-The size attribute is purely used for instantiating PsyNeuLink Components (and subclasses, such as Mechanism and State). Size is simply a substitute for variable (or default_input_value) and causes variable to become a correctly-sized array of zeros. For example, initializing a Mechanism with size=4 will result in _handle_size() setting variable to be equal to [[0, 0, 0, 0]]; initializing with size=[1, 2, 3] will result in variable being equal to [[0], [0, 0], [0, 0, 0]] where the three vectors of zeros represent the default inputs to 3 different input-states for that Mechanism.
+The size attribute is purely used for instantiating PsyNeuLink Components (and subclasses, such as Mechanism and State). Size is simply a substitute for variable (or default_variable) and causes variable to become a correctly-sized array of zeros. For example, initializing a Mechanism with size=4 will result in _handle_size() setting variable to be equal to [[0, 0, 0, 0]]; initializing with size=[1, 2, 3] will result in variable being equal to [[0], [0, 0], [0, 0, 0]] where the three vectors of zeros represent the default inputs to 3 different input-states for that Mechanism.
 
 _handle_size() is the function within Component.__init__() which does the following:
 	-If size is None and variable is None: Do nothing
@@ -822,4 +822,4 @@ In terms of software architecture, this is done by having the Mechanism (2D vari
 Note that size is a property, NOT an internally stored attribute or parameter. After initialization of an object is complete, users aren’t allowed to change its size. Size is not stored, so when a user ‘gets’ the size of a Component, the size is dynamically calculated based on the Component’s variable.
 
 Known bug: size may fail if you try to use inputs that are matrices, or other unorthodox values. Needs to be fixed, and fixing this might also make it easier to override the _handle_size function.
-Debugging tip: If your program faces bugs related to dimensionality, _handle_size may be a likely culprit because _handle_size() messes with the dimensionality of ‘variable’.
+Debugging tip: If your program faces bugs related to dimensionality, _handle_size may be a likely culprit because _handle_size() interferes with the dimensionality of ‘variable’ (generally tries to make `variable` at least 2D).

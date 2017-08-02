@@ -8,11 +8,10 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMech
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES
+from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -117,6 +116,8 @@ class TestRecurrentTransferMechanismMatrix:
     def test_recurrent_mech_matrix_keyword_spec(self):
 
         for m in MATRIX_KEYWORD_VALUES:
+            if m == RANDOM_CONNECTIVITY_MATRIX:
+                continue
             R = RecurrentTransferMechanism(
                 name='R',
                 size=4,

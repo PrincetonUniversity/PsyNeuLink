@@ -2938,12 +2938,8 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
-
-    if isinstance(specification, list):
-        specification = np.array(specification)
-
     # Matrix provided (and validated in _validate_params); convert to np.array
-    if isinstance(specification, np.matrix):
+    if isinstance(specification, (list, np.matrix)):
         specification = np.array(specification)
 
     if isinstance(specification, np.ndarray):
