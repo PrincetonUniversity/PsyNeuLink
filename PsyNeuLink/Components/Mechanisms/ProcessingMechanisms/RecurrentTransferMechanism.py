@@ -19,7 +19,7 @@ Overview
 --------
 
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
-network, in which each element is connected to every other element (instantiated in a recurrent AutoAssociativeProjection
+network, in which each element is connected to every other element (instantiated in a recurrent `AutoAssociativeProjection`
 referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).  It also allows its
 previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.
 
@@ -30,19 +30,21 @@ Creating a RecurrentTransferMechanism
 
 A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
 `mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its
-**mech_spec** argument.  The recurrent projection is created using the **matrix** argument of the Mechanism's
-constructor, which must specify either a square matrix or a `AutoAssociativeProjection` that uses one (the default is
-`FULL_CONNECTIVITY_MATRIX`).  In all other respects, a RecurrentTransferMechanism is specified in the same way as a
-standard `TransferMechanism`.
+**mech_spec** argument.  The recurrent projection is automatically created using the **matrix**
+(or **auto** and **hetero**) argument of the Mechanism's constructor. If used, the **matrix** argument must specify
+either a square matrix or a `AutoAssociativeProjection` that uses one (the default is `FULL_CONNECTIVITY_MATRIX`).
+Alternatively, **auto** and **hetero** can be specified: these set the diagonal and off-diagonal terms, respectively.
+In all other respects, a RecurrentTransferMechanism is specified in the same way as a standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Structure:
 
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`
-parameter, which specifies a self-projecting AutoAssociativeProjection;  that is, one that projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to it `primary InputState <InputState_Primary>`.
+The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`,
+`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` parameters, which
+specify a self-projecting AutoAssociativeProjection;  that is, one that projects from the Mechanism's
+`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
@@ -75,6 +77,7 @@ Class Reference
 
 """
 
+import numbers
 import numpy as np
 import typecheck as tc
 
@@ -153,12 +156,12 @@ class RECURRENT_OUTPUT():
 class RecurrentTransferMechanism(TransferMechanism):
     """
     RecurrentTransferMechanism(        \
-    default_variable=None,          \
+    default_variable=None,             \
     size=None,                         \
     function=Linear,                   \
     matrix=FULL_CONNECTIVITY_MATRIX,   \
     auto=None,                         \
-    hetero=None,                        \
+    hetero=None,                       \
     initial_value=None,                \
     decay=None,                        \
     noise=0.0,                         \
@@ -203,19 +206,21 @@ class RecurrentTransferMechanism(TransferMechanism):
         or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
         will be ignored in favor of those arguments.
 
-    auto : number or None : default None
+    auto : number, 1D array, or None : default None
         specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
         **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified.
+        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
+        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
 
-    hetero : number of None : default None
+    hetero : number, 2D array, or None : default None
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
         If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
         **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
-        **auto** and/or **hetero**, if either is specified.
+        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
+        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
 
     decay : number : default 1.0
         specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
@@ -435,16 +440,38 @@ class RecurrentTransferMechanism(TransferMechanism):
                          context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate shape and size of matrix and decay.
+        """Validate shape and size of auto, hetero, matrix and decay.
         """
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if AUTO in target_set:
+            auto_param = target_set[AUTO]
+            if (auto_param is not None) and not isinstance(auto_param, (np.ndarray, list, numbers.Number)):
+                raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
+                                             "number, None, or a 1D numeric array".format(auto_param, self))
+            if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
+                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the variable "
+                                             "({2}) of its owner, {1}.".format(auto_param, self, self.variable))
+
+        if HETERO in target_set:
+            hetero_param = target_set[HETERO]
+            if hetero_param is not None and not isinstance(hetero_param, (np.matrix, np.ndarray, list, numbers.Number)):
+                raise RecurrentTransferError("hetero parameter ({}) of {} is of incompatible type: it should be a "
+                                             "number, None, or a 2D numeric matrix or array".format(hetero_param, self))
+            hetero_shape = np.array(hetero_param).shape
+            if hetero_shape != (1,) and hetero_shape != (1, 1):
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
+                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the variable "
+                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.variable))
+                if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
+                    raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
         # Validate MATRIX
         if MATRIX in target_set:
 
             matrix_param = target_set[MATRIX]
-            size = len(self.variable[0])
+            size = self.size[0]
 
             if isinstance(matrix_param, AutoAssociativeProjection):
                 matrix = matrix_param.matrix
@@ -483,7 +510,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                "{} {} (whose size is {} and whose variable is {})".
                                format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.variable))
                 else:
-                    err_msg = ("Size of {} param for {} ({}) must same as its variable ({})".
+                    err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
                 raise RecurrentTransferError(err_msg)
 
@@ -586,8 +613,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self.matrix
 
         else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, hetero=self.hetero,
-                                                                          matrix=self.matrix, context=context)
+            self.recurrent_projection = self._instantiate_recurrent_projection(self, matrix=self.matrix, context=context)
 
         # self._matrix = self.recurrent_projection.matrix
 
@@ -626,6 +652,14 @@ class RecurrentTransferMechanism(TransferMechanism):
                                 time_scale=time_scale,
                                 context=context)
 
+    def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
+        for state in self._parameter_states:
+            # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
+            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
+            # projection's _update_parameter_states, and accordingly are not updated here
+            if state.name != AUTO or state.name != HETERO:
+                state.update(params=runtime_params, time_scale=time_scale, context=context)
+
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
     @property
@@ -639,7 +673,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             return a + c
         else:
             # if auto and hetero are not yet instantiated, then just use the standard method of attribute retrieval
-            # (basically copied from Component's basic make_property getter)
+            # (simplified version of Component's basic make_property getter)
             name = 'matrix'
             backing_field = '_matrix'
             try:
@@ -682,26 +716,22 @@ class RecurrentTransferMechanism(TransferMechanism):
                 if hasattr(param_state.function_object, 'initializer'):
                     param_state.function_object.reset_initializer = val
 
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+    @tc.typecheck
+    def _instantiate_recurrent_projection(self,
+                                          mech: Mechanism_Base,
+                                          # this typecheck was failing, I didn't want to fix (7/19/17 CW)
+                                          # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
+                                          matrix=FULL_CONNECTIVITY_MATRIX,
+                                          context=None):
+        """Instantiate a AutoAssociativeProjection from mech to itself
 
-# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-@tc.typecheck
-def _instantiate_recurrent_projection(mech:Mechanism_Base,
-                                      auto=None,
-                                      hetero=None,
-                                      # this typecheck was failing, I didn't want to fix (7/19/17 CW)
-                                      # matrix:is_matrix=FULL_CONNECTIVITY_MATRIX,
-                                      matrix=FULL_CONNECTIVITY_MATRIX,
-                                      context=None):
-    """Instantiate a AutoAssociativeProjection from mech to itself
+        """
 
-    """
+        if isinstance(matrix, str):
+            size = len(mech.variable[0])
+            matrix = get_matrix(matrix, size, size)
 
-    if isinstance(matrix, str):
-        size = len(mech.variable[0])
-        matrix = get_matrix(matrix, size, size)
-
-    return AutoAssociativeProjection(owner=mech,
-                                     auto=auto,
-                                     hetero=hetero,
-                                     matrix=matrix,
-                                     name=mech.name + ' recurrent projection')
+        return AutoAssociativeProjection(owner=mech,
+                                         matrix=matrix,
+                                         name=mech.name + ' recurrent projection')
