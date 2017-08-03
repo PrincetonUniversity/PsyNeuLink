@@ -26,13 +26,12 @@ which in turn modify the matrix parameter(s) of the MappingProjection(s) being l
 Creating a LearningSignal
 ------------------------
 
-A LearningSignal is created automatically whenever a `MappingProjection` is
-`specified for learning <LearningMechanism_Creation>` and the Projection belongs to the same `Composition` as the
-`LearningMechanism`.  LearningSignals can also be specified in the **learning_signals** argument of the constructor
-for a `LearningMechanism`.  Although a LearningSignal can be created directly using its
-constructor (or any of the other ways for `creating an OutputState <OutputStates_Creation>`), this is neither
-necessary nor advisable, as a LearningSignal has dedicated Components and requirements for configuration that must be
-met for it to function properly.
+A LearningSignal is created automatically whenever a `MappingProjection` is `specified for learning
+<LearningMechanism_Creation>` and the Projection belongs to the same `Composition` as the `LearningMechanism`.
+LearningSignals can also be specified in the **learning_signals** argument of the constructor for a `LearningMechanism`.
+Although a LearningSignal can be created directly using its constructor (or any of the other ways for `creating an
+OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a LearningSignal has dedicated
+Components and requirements for configuration that must be met for it to function properly.
 
 .. _LearningSignal_Specification:
 

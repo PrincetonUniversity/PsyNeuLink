@@ -35,6 +35,8 @@ being created within the `pathway <Process_Base.pathway` of a `Process`, its Inp
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
 `pathway <Process_Base.pathway>`.
 
+.. _InputState_Deferred_Initialization:
+
 An InputState must be owned by a `Mechanism`.  When InputState is specified in the constructor for a `Mechanism`
 (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
 InputState is created directly, its `owner <InputState.owner>` can specified in the **owner** argument of its

@@ -44,7 +44,7 @@ A ModulatoryProjection is a base class, and cannot be instantiated directly.  Ho
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
 More commonly, however, ModulatoryProjections are either specified `in context <Projection_In_Context_Specification>`,
 or are `created automatically <Projection_Automatic_Creation>`, the details of which are described in the documentation
-for each type.
+for each type of ModulatoryProjection.
 
 .. _ModulatoryProjection_Structure:
 

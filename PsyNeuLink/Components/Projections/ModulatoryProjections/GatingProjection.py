@@ -29,8 +29,17 @@ constructor on its own, the **receiver** argument must be specified.  It can be 
 or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, the Mechanism's
 `primary InputState <InputState_Primary>` will be used. If the GatingProjection is included in an InputState or
 OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
-If a GatingProjection's `sender <GatingProjection.sender>` is not specified, the `sender <GatingProjection.sender>`
-is assigned to the OutputState of a `DefaultGatingMechanism`.
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a GatingProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
+`sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+a GatingProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a
+script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
+GatingProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
+not necessary if the State(s) to be gated are specified in the **gating_signals** argument of a `GatingMechanism`,
+in which case deferred initialization is completed automatically by the GatingMechanism when it is created.
 
 .. _GatingProjection_Structure:
 
@@ -136,7 +145,7 @@ class GatingProjection(ModulatoryProjection_Base):
     ---------
 
     sender : Optional[Mechanism or GatingSignal]
-        specifies the source of the input for the GatingProjection;  usually an `outputState <OutputState>` of a
+        specifies the source of the input for the GatingProjection;  usually an `OutputState` of a
         `GatingMechanism <GatingMechanism>`.  If it is not specified, an outputState of the `DefaultGatingMechanism`
         for the system to which the receiver belongs will be assigned.
 
