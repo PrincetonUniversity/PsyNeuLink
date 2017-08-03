@@ -298,7 +298,6 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
 
-    import warnings
     with warnings.catch_warnings():
         warnings.filterwarnings("error")
         try:

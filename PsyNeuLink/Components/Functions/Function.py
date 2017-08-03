@@ -1205,8 +1205,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         return result
 
 
-class LinearCombination(
-    CombinationFunction):  # ------------------------------------------------------------------------
+class LinearCombination(CombinationFunction):  # ------------------------------------------------------------------------
     # FIX: CONFIRM THAT 1D KWEIGHTS USES EACH ELEMENT TO SCALE CORRESPONDING VECTOR IN VARIABLE
     # FIX  CONFIRM THAT LINEAR TRANSFORMATION (OFFSET, SCALE) APPLY TO THE RESULTING ARRAY
     # FIX: CONFIRM RETURNS LIST IF GIVEN LIST, AND SIMLARLY FOR NP.ARRAY
@@ -1898,7 +1897,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # region Type conversion (specified by outputType):
         # Convert to 2D array, irrespective of variable type:
         if outputType is FunctionOutputType.NP_2D_ARRAY:
-            result = np.atleast2d(result)
+            result = np.atleast_2d(result)
 
         # Convert to 1D array, irrespective of variable type:
         # Note: if 2D array (or higher) has more than two items in the outer dimension, generate exception
@@ -2107,8 +2106,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return self.rate * input
 
 
-class Logistic(
-    TransferFunction):  # ------------------------------------------------------------------------------------
+class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
     """
     Logistic(              \
          default_variable, \
@@ -2807,7 +2805,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                self.owner.name,
                                                MATRIX_KEYWORD_NAMES))
             else:
-                message += "Unrecognized param ({}) specified for the {} function of {}".format(param_name,
+                message += "Unrecognized param ({}) specified for the {} function of {}\n".format(param_name,
                                                                                                 self.componentName,
                                                                                                 self.owner.name)
                 continue
@@ -2816,7 +2814,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             raise FunctionError(message)
 
     def _instantiate_attributes_before_function(self, context=None):
-        self._matrix = self.instantiate_matrix(self.matrix)
+        self.matrix = self.instantiate_matrix(self.matrix)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
@@ -2940,13 +2938,9 @@ def get_matrix(specification, rows=1, cols=1, context=None):
      Returns 2D np.array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
     """
 
-
-    if isinstance(specification, list):
-        specification = np.array(specification)
-
     # Matrix provided (and validated in _validate_params); convert to np.array
-    if isinstance(specification, np.matrix):
-        return np.array(specification)
+    if isinstance(specification, (list, np.matrix)):
+        specification = np.array(specification)
 
     if isinstance(specification, np.ndarray):
         if specification.ndim == 2:
@@ -2958,7 +2952,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
             raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
                                 format(specification))
 
-    if specification is AUTO_ASSIGN_MATRIX:
+    if specification == AUTO_ASSIGN_MATRIX:
         if rows == cols:
             specification = IDENTITY_MATRIX
         else:
@@ -2967,19 +2961,19 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if specification == FULL_CONNECTIVITY_MATRIX:
         return np.full((rows, cols), 1.0)
 
-    if specification is IDENTITY_MATRIX:
+    if specification == IDENTITY_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return np.identity(rows)
 
-    if specification is HOLLOW_MATRIX:
+    if specification == HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
         return 1-np.identity(rows)
 
-    if specification is RANDOM_CONNECTIVITY_MATRIX:
+    if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
@@ -3012,8 +3006,7 @@ class IntegratorFunction(Function_Base):
 # • are rate and noise converted to 1d np.array?  If not, correct docstring
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
-class Integrator(
-    IntegratorFunction):  # --------------------------------------------------------------------------------
+class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
     """
     Integrator(                 \
         default_variable=None,  \
@@ -3216,7 +3209,7 @@ class Integrator(
 
     def _validate_noise(self, noise, var):
         # Noise is a list or array
-        if isinstance(noise, (np.ndarray, list)):
+        if isinstance(noise, (np.ndarray, list)) and len(noise) != 1:
             # Variable is a list/array
             if isinstance(var, (np.ndarray, list)):
                 if len(noise) != np.array(var).size:
@@ -3248,7 +3241,7 @@ class Integrator(
             #     raise FunctionError("All elements of noise list/array ({}) for {} must be of the same type. "
             #                         .format(noise, self.name))
 
-        elif not isinstance(noise, (float, int)) and not callable(noise):
+        elif not isinstance(noise, (float, int, np.ndarray)) and not callable(noise):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
@@ -4655,7 +4648,7 @@ class AccumulatorIntegrator(
                          prefs=prefs,
                          context=context)
 
-        self.variable = self.initializer
+        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4792,7 +4785,7 @@ class AccumulatorIntegrator(
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
 
-        previous_value = np.atleast_2d(self.variable)
+        previous_value = np.atleast_2d(self.previous_value)
 
         value = previous_value*rate + noise + increment
 
@@ -4800,8 +4793,19 @@ class AccumulatorIntegrator(
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
-            self.variable = value
+            self.previous_value = value
         return value
+
+    # In an AccumulatorIntegrator, `previous_value` mirrors `variable` because the EVC control mechanism
+    # manipulates `variable`: for the AccumulatorIntegrator, the appropriate attribute for
+    # EVC to manipulate is instead `previous_value`.
+    @property
+    def previous_value(self):
+        return self.variable
+
+    @previous_value.setter
+    def previous_value(self, setting):
+        self.variable = setting
 
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()

@@ -1226,10 +1226,10 @@ class System_Base(System):
                             all(
                                 # are to ControlMechanism(s)...
                                 isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
-                                 # ObjectiveMechanism(s) used for Learning or Control
+                                 # are to ObjectiveMechanism(s) used for Learning or Control...
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
                                              projection.receiver.owner._role in (LEARNING, CONTROL)) or
-                                # itself!
+                                # or are to itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.efferents)
                         for output_state in sender_mech.output_states)):
@@ -1250,7 +1250,8 @@ class System_Base(System):
 
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
-                    if not receiver or is_monitoring_mech(receiver):
+                    # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections (i.e. receiver is sender_mech)
+                    if not receiver or is_monitoring_mech(receiver) or (receiver is sender_mech):
                         continue
 
                     try:
@@ -1515,10 +1516,10 @@ class System_Base(System):
                 if len(self.variable[i][j]) != len(origin_mech.input_states[j].variable):
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN mechanism ()".
-                                       format(i,
-                                              len(self.variable[i][j]),
-                                              len(origin_mech.input_states[j].variable),
-                                              origin_mech.name))
+                                      format(i,
+                                             len(self.variable[i][j]),
+                                             len(origin_mech.input_states[j].variable),
+                                             origin_mech.name))
             # MODIFIED 6/27/17 END
 
             stimulus_input_state = SystemInputState(owner=self,
@@ -2000,7 +2001,7 @@ class System_Base(System):
                     if system_input_state:
                         system_input_state.value = input[i][j]
                     else:
-                        print("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
+                        logger.warning("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
                               format(origin_mech.name, j+1, origin_mech.input_states[j]))
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
@@ -2061,13 +2062,11 @@ class System_Base(System):
 
         return self.terminalMechanisms.outputStateValues
 
-    def _execute_processing(self, clock=CentralClock, context=None):
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
+    def _execute_processing(self, clock=CentralClock, context=None):
         # Execute each Mechanism in self.executionList, in the order listed during its phase
-
-
-            # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-# FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
+        # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
+        # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
         if self.scheduler_processing is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
@@ -2846,7 +2845,9 @@ class System_Base(System):
             # outgoing edges
             for output_state in controller.control_signals:
                 for projection in output_state.efferents:
-                    edge_name
+                    # MODIFIED 7/21/17 CW: this edge_name statement below didn't do anything and caused errors, so
+                    # I commented it out.
+                    # edge_name
                     rcvr_name = projection.receiver.owner.name
                     G.edge(controller.name, rcvr_name, label=projection.name, color=control_color)
 
@@ -2858,7 +2859,11 @@ class System_Base(System):
 
             # prediction mechanisms
             for object_item in self.executionList:
-                mech = object_item[0]
+                # MODIFIED 7/20/17 (CW) OLD:
+                # mech = object_item[0]
+                # MODIFIED 7/20/17 (CW) NEW:
+                mech = object_item
+                # the above line was causing a bug; I simply got rid of the [0] and then it worked fine.
                 if mech._role is CONTROL:
                     G.node(mech.name, color=control_color)
                     recvr = mech.origin_mech

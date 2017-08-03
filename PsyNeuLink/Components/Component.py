@@ -1035,13 +1035,6 @@ class Component(object):
 
         # Get args in call to __init__ and create access to default values
         sig = inspect.signature(self.__init__)
-        # print(sig.parameters)
-        # def default(val):
-        #     print("type(self) is: ", type(self))
-        #     print("sig is: ", sig)
-        #     print("sig.parameters is: ", sig.parameters)
-        #     print("val is: ", val)
-        #     return list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
         default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
 
@@ -1195,7 +1188,7 @@ class Component(object):
                         # Assign as is (i.e., don't convert to class), since class is generic
                         # (_instantiate_function also tests for this and leaves it as is)
                         params[FUNCTION] = function
-                        if self.verbosePref:
+                        if hasattr(self, '_prefs') and self.verbosePref:
                             warnings.warn("{} is not a PsyNeuLink Function, "
                                           "therefore runtime_params cannot be used".format(default(arg).__name__))
                     else:
@@ -1533,7 +1526,7 @@ class Component(object):
 
         # ASSIGN SHAPE TO VARIABLE if specified
 
-        elif hasattr(self, 'shape') and self.shape is not None:
+        if hasattr(self, 'shape') and self.shape is not None:
             # IMPLEMENTATION NOTE 6/23/17 (CW): this test is currently unused by all components. To confirm this, we
             # may add an exception here (raise ComponentError("Oops this is actually used")), then run all tests.
             # thus, we should consider deleting this validation
@@ -1732,6 +1725,11 @@ class Component(object):
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         # MODIFIED 5/6/17 NEW:
         # Prevent recursive calls from setters
+        # (7/31/17 CW): This causes bugs when you try to set some parameter twice in a script: The second time,
+        # sometimes prev_context is equal to context and that causes the setting to fail to set.
+        # I see two options: one is to set self.prev_context to a nonsense value BEFORE attempting to call
+        # _assign_params(): this could be done in the default property setter; the other option is to get rid of this
+        # check entirely (all tests currently pass regardless)
         if self.prev_context == context:
             return
         self.prev_context = context
@@ -1900,7 +1898,8 @@ class Component(object):
         #       not called before being passed
         if isinstance(variable, list) and callable(variable[0]):
             variable = variable[0]()
-
+        # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
+        # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
         # Note: this insures that self.variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
@@ -2677,7 +2676,7 @@ def make_property(name, default_value):
             from PsyNeuLink.Components.Functions.Function import Function
             if not isinstance(self, Function):
                 raise TypeError
-            return self.owner._parameter_states[backing_field[1:]].value
+            return self.owner._parameter_states[name].value
         except (AttributeError, TypeError):
             try:
                 # Get value of param from Component's own ParameterState.value
@@ -2685,7 +2684,7 @@ def make_property(name, default_value):
                 #    example: matrix parameter of a MappingProjection)
                 #    rationale: next most common case
                 #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)
-                return self._parameter_states[backing_field[1:]].value
+                return self._parameter_states[name].value
             except (AttributeError, TypeError):
                 # Get value of param from Component's attribute
                 #    case: request is for the value of an attribute for which the Component has no ParameterState
@@ -2697,9 +2696,10 @@ def make_property(name, default_value):
     def setter(self, val):
 
         if self.paramValidationPref and hasattr(self, PARAMS_CURRENT):
-            val_str = val.__class__.__name__
-            curr_context = SET_ATTRIBUTE + ': ' + val_str + ' for ' + backing_field[1:] + ' of ' + self.name
-            self._assign_params(request_set={backing_field[1:]:val}, context=curr_context)
+            val_type = val.__class__.__name__
+            curr_context = SET_ATTRIBUTE + ': ' + val_type + str(val) + ' for ' + name + ' of ' + self.name
+            # self.prev_context = "nonsense" + str(curr_context)
+            self._assign_params(request_set={name:val}, context=curr_context)
         else:
             setattr(self, backing_field, val)
 
@@ -2717,7 +2717,18 @@ def make_property(name, default_value):
 
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
         if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
-            param_state_owner._parameter_states[name].variable = val
+            param_state = param_state_owner._parameter_states[name]
+            param_state.variable = val
+
+            # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
+            # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
+            # 'reset_initializer'
+            if hasattr(param_state.function_object, 'initializer'):
+                param_state.function_object.reset_initializer = val
+
+            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED in the current tests. Consider
+            # writing tests for this functionality, then. In particular, this functionality would probably be used if a
+            # user created a mechanism, then manually changed a parameter
 
     # Create the property
     prop = property(getter).setter(setter)
