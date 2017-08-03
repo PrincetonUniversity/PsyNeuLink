@@ -35,6 +35,5 @@ Functions
              Distance,
              LearningFunction,
              Reinforcement,
-             BackPropagation,
-..
-    :exclude-members: function
+             BackPropagation
+   :exclude-members: ParameterState, MappingProjection

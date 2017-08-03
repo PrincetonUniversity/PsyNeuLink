@@ -195,7 +195,7 @@ When an InputState is created, it can be assigned one or more `Projections <Proj
 **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument with
 the key *PROJECTIONS*.  An InputState can be assigned either `MappingProjection(s) <MappingProjection>` or
 `GatingProjection(s) <GatingProjection>`.  MappingProjections are assigned to its
-`pathway_afferents <InputState.pathway_afferents>` attribute and GatingProjections to its
+`path_afferents <InputState.path_afferents>` attribute and GatingProjections to its
 `mod_afferents <InputState.mod_afferents>` attribute.  See `State Projections <State_Projections>` for additional
 details concerning the specification of Projections when creating a State.
 
@@ -379,7 +379,7 @@ class InputState(State_Base):
     owner : Mechanism
         the Mechanism to which the InputState belongs.
 
-    pathway_afferents : List[MappingProjection]
+    path_afferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` received by the InputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
@@ -556,7 +556,7 @@ class InputState(State_Base):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor
 
         Call _instantiate_projections_to_state to assign:
-            PathwayProjections to .pathway_afferents
+            PathwayProjections to .path_afferents
             ModulatoryProjections to .mod_afferents
         """
         self._instantiate_projections_to_state(projections=projections, context=context)

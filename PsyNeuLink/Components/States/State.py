@@ -160,7 +160,7 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
 
     * `InputState`
         • `PathwayProjection(s) <PathwayProjection>`
-          - assigned to its `pathway_afferents <Input.pathway_afferents>` attribute.
+          - assigned to its `path_afferents <Input.path_afferents>` attribute.
         • `GatingProjection(s) <GatingProjection>`
           - assigned to its `mod_afferents <InputState.mod_afferents>` attribute.
 
@@ -858,7 +858,7 @@ class State_Base(State):
         Must be implemented by subclasss, to handle interpretation of projection specification(s)
         in a class-appropriate manner:
             PathwayProjections:
-              InputState: _instantiate_projections_to_state (.pathway_afferents)
+              InputState: _instantiate_projections_to_state (.path_afferents)
               ParameterState: disallowed
               OutputState: _instantiate_projections_from_state (.efferents)
               ModulatorySignal: disallowed

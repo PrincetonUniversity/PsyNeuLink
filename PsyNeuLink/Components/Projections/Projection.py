@@ -45,7 +45,7 @@ differ in the type of information they transmit, how they do this, and the type 
 
 * `ModulatoryProjection`
     takes the `value <OutputState.value>` of a `ModulatorySignal` of an `AdaptiveMechanism <ProcessingMechanism>`,
-    uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or `OutputState` of
+    uses it to modify the `value <State.value>` of an `InputState`, `ParameterState` or `OutputState` of
     another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to specify how to
     modify the `value <State.value>` of the `State` to which a ModulatoryProjection projects.  There are three types
     of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and corresponding
@@ -54,19 +54,18 @@ differ in the type of information they transmit, how they do this, and the type 
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
-      this to the `ParameterState` of a `MappingProjection` that uses this to modify its `matrix
+      this to the `ParameterState` of a `MappingProjection` that uses it to modify its `matrix
       <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
       been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
-      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
-      to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
-      `function <Mechanism.function>`) for which it is responsible.  ControlProjections are used when control
-      has been used specified for a `System`.
+      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmits this
+      to the `ParameterState` of a `ProcessingMechanism` that uses it to modify the parameter for which it is
+      responsible.  ControlProjections are used when control has been used specified for a `System`.
   ..
   * `GatingProjection`
       takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
-      the `InputState` or `OutputState` of a `ProcessingMechanism` that uses this to modify the State's `value
+      the `InputState` or `OutputState` of a `ProcessingMechanism` that uses it to modify the State's `value
       <State.value>`
 
 .. _Projection_Creation:
