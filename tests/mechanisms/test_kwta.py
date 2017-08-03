@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import typecheck
 
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, FunctionError, ExponentialDist, NormalDist
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
@@ -10,6 +11,7 @@ from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from PsyNeuLink.Globals.Run import RunError
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -142,6 +144,83 @@ class TestKWTAMatrix:
             K = KWTA(
                 name='K',
                 size=4,
-                matrix=[[-1, 2, -2, 4]] * 4
+                auto=3,
+                hetero=-2.2
             )
         assert "Mixing positive and negative values can create non-supported inhibition vector" in str(error_text.value)
+
+    def test_kwta_matrix_hetero_mixed_sign(self):
+        with pytest.raises(KWTAError) as error_text:
+            K = KWTA(
+                name='K',
+                size=2,
+                matrix = [[1, 3], [1, 3]],
+                hetero=-2.2
+            )
+        assert "Mixing positive and negative values can create non-supported inhibition vector" in str(error_text.value)
+
+class TestKWTAFunction:
+
+    def test_kwta_gain(self):
+        K = KWTA(
+            name='K',
+            size=3,
+            gain=2
+        )
+        val = K.execute(input = [1, 2, 3]).tolist()
+        assert val == [[0.2689414213699951, 0.7310585786300049, 0.9525741268224334]]
+
+    def test_kwta_bias(self):
+        K = KWTA(
+            name='K',
+            size=3,
+            bias = -.2
+        )
+        val = K.execute(input=[1, 2, 3]).tolist()
+        assert val == [[0.425557483188341, 0.6681877721681662, 0.84553473491646523]]
+
+    def test_kwta_gain_bias(self):
+        K = KWTA(
+            name='K',
+            size=2,
+            gain=-.2,
+            bias=4
+        )
+        val = K.execute(input = [.1, -4]).tolist()
+        assert val == [[0.012009204309927387, 0.026857118784809654]]
+
+    def test_kwta_gain_string(self):
+        with pytest.raises(typecheck.framework.InputParameterError) as error_text:
+            K = KWTA(
+                name='K',
+                size=3,
+                gain='some string'
+            )
+        assert "has got an incompatible value for gain: some string" in str(error_text.value)
+
+class TestKWTARatio:
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+
+    def test_kwta_naive_input(self):
+        with pytest.raises(RunError) as error_text:
+            K = KWTA(
+                name='K',
+                size=4
+            )
+            p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
+            s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+            s.run(inputs={K: [[np.array([2, 4, 1, 6])]]})
+        assert "For KWTA mechanisms, remember to append an array of zeros" in str(error_text.value)
+
+    def test_kwta_ratio_empty(self):
+        K = KWTA(
+            name='K',
+            size=4
+        )
+        p = process(pathway = [K], prefs = TestKWTARatio.simple_prefs)
+        s = system(processes=[p], prefs = TestKWTARatio.simple_prefs)
+        s.run(inputs = {K: [[[2, 4, 1, 6], [0, 0, 0, 0]]]})
+        assert K.value.tolist() == [[0.2689414213699951, 0.7310585786300049, 0.11920292202211755, 0.9525741268224334]]
+        s.run(inputs = {K: [[[1, 2, 3, 4], [0, 0, 0, 0]]]})
+        assert K.value.tolist() == [[.1506327210799811, .49250998958935144, .5109072669826713, .9093258490277805]]
+
