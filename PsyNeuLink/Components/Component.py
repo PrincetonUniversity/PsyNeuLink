@@ -1566,11 +1566,12 @@ class Component(object):
 
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-            self._validate_variable(variable, context=context)
-            if variable is None:
-                self.variableInstanceDefault = self.variableClassDefault
-            else:
-                self.variableInstanceDefault = self.variable
+            variable = self._validate_variable(variable, context=context)
+            if self.variableInstanceDefault is None:
+                if variable is None:
+                    self.variableInstanceDefault = self.variableClassDefault
+                else:
+                    self.variableInstanceDefault = variable
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:
