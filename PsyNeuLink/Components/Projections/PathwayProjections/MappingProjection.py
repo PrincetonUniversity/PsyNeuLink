@@ -14,21 +14,11 @@
 Overview
 --------
 
-COMMENT:
-    VERSION WITH MORE LINKS:
-    A MappingProjection transmits the `value <OutputState.OutputState.value>` of an `OutputState <OutputState>` of one
-    `ProcessingMechanism` (its `sender <MappingProjection.sender>`) to the `InputState <InputState>` of another
-    (its `receiver <MappingProjection.receiver>`).  The default `function <MappingProjection.function>` for a
-    MappingProjection is  `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>`
-    attribute to transform the value received from its `sender <MappingProjection.sender>` and provide the result to its
-    `receiver <MappingProjection.receiver>`.
-COMMENT
-
-A MappingProjection transmits the `value <OutputState.OutputState.value>` of an `OutputState <OutputState>` of one
-`ProcessingMechanism` (its sender) to the `InputState <InputState>` of another (its receiver).  The default function
-for a MappingProjection is  `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>`
-attribute to transform the value received from its sender and provide the result to its receiver.
-
+A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism` (its
+`sender <MappingProjection.sender>`) to the `InputState` of another (its `receiver <MappingProjection.receiver>`).
+The default `function <MappingProjection.function>` for a MappingProjection is  `LinearMatrix`, which uses the
+MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the value received from its `sender
+<MappingProjection.sender>` and provide the result to its `receiver <MappingProjection.receiver>`.
 
 .. _Mapping_Creation:
 
