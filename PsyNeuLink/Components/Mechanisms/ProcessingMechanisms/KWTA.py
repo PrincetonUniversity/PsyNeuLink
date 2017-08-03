@@ -18,8 +18,8 @@ from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, KWTA, MATRIX, RESULT
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
+from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, K_VALUE, KWTA, MATRIX, RATIO, RESULT, THRESHOLD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -220,18 +220,14 @@ class KWTA(RecurrentTransferMechanism):
 
         self.int_k = k
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        super(RecurrentTransferMechanism, self)._instantiate_attributes_after_function(context=context)
-
-        if isinstance(self.matrix, AutoAssociativeProjection):
-            self.recurrent_projection = self.matrix
-
-        else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, auto=self.auto, hetero=self.hetero,
-                                                                          matrix=self.matrix, context=context)
-
-        self._matrix = self.recurrent_projection.matrix
+        a = get_auto_matrix(self.auto, self.size[0])
+        h = get_hetero_matrix(self.hetero, self.size[0])
+        mat = a + h
+        flat_mat = mat.flatten()
+        if not (flat_mat <= 0).all() and not (flat_mat >= 0).all():
+            raise KWTAError("matrix {} for {} should be non-positive, or "
+                            "non-negative. Mixing positive and negative values can create non-supported "
+                            "inhibition vectors".format(mat, self))
 
     # this function returns the KWTA-scaled current_input, which is scaled based on
     # self.k_value, self.threshold, self.ratio, and of course the inhibition vector
@@ -272,7 +268,7 @@ class KWTA(RecurrentTransferMechanism):
         # for most situations where the inhibition vector is negative, a lower ratio means more inhibition
         sk = sorted(scales, reverse=True)[k]
         skMinusOne = sorted(scales, reverse=True)[k - 1]
-        final_scale = sorted(scales, reverse=True)[k] * self.ratio + sorted(scales, reverse=True)[k - 1] * (1 - self.ratio)
+        final_scale = sk * self.ratio + skMinusOne * (1 - self.ratio)
 
         out = current_input + final_scale * inhibVector
 
@@ -338,8 +334,25 @@ class KWTA(RecurrentTransferMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if AUTO in target_set:
-            pass
+        if RATIO in target_set:
+            ratio_param = target_set[RATIO]
+            if not isinstance(ratio_param, numbers.Real):
+                if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+                    raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
+
+        if K_VALUE in target_set:
+            k_param = target_set[K_VALUE]
+            if not isinstance(k_param, numbers.Real):
+                if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
+                    raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
+
+        if THRESHOLD in target_set:
+            threshold_param = target_set[THRESHOLD]
+            if not isinstance(threshold_param, numbers.Real):
+                if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
+                    raise KWTAError(
+                        "k-value parameter ({}) for {} must be a single number".format(threshold_param, self))
+
         # Validate MATRIX
         if MATRIX in target_set:
 
@@ -369,10 +382,11 @@ class KWTA(RecurrentTransferMechanism):
         if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
             raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
                             format(input, self, self.__class__.__name__))
-        input = list(np.atleast_2d(input))
-        if len(input) == len(self.variable) - 1:
-            input.append(np.zeros(self.size[0]))
-        input = np.array(input)
+        if input is not None:
+            input = list(np.atleast_2d(input))
+            if (input is not None) and len(input) == len(self.variable) - 1:
+                input.append(np.zeros(self.size[0]))
+            input = np.array(input)
 
         return super().execute(input=input, runtime_params=runtime_params, clock=clock, time_scale=time_scale,
                                ignore_execution_id=ignore_execution_id, context=context)
@@ -526,23 +540,20 @@ class KWTA(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-@tc.typecheck
-def _instantiate_recurrent_projection(mech: Mechanism_Base,
-                                      auto=None,
-                                      hetero=None,
-                                      matrix=FULL_CONNECTIVITY_MATRIX,
-                                      context=None):
-    """Instantiate a MappingProjection from mech to itself
+    @tc.typecheck
+    def _instantiate_recurrent_projection(self,
+                                          mech: Mechanism_Base,
+                                          matrix=FULL_CONNECTIVITY_MATRIX,
+                                          context=None):
+        """Instantiate a MappingProjection from mech to itself
 
-    """
+        """
 
-    if isinstance(matrix, str):
-        size = len(mech.variable[0])
-        matrix = get_matrix(matrix, size, size)
+        if isinstance(matrix, str):
+            size = len(mech.variable[0])
+            matrix = get_matrix(matrix, size, size)
 
-    return AutoAssociativeProjection(sender=mech,
-                                     receiver=mech.input_states[mech.indexOfInhibitionInputState],
-                                     auto=auto,
-                                     hetero=hetero,
-                                     matrix=matrix,
-                                     name=mech.name + ' recurrent projection')
+        return AutoAssociativeProjection(sender=mech,
+                                         receiver=mech.input_states[mech.indexOfInhibitionInputState],
+                                         matrix=matrix,
+                                         name=mech.name + ' recurrent projection')
