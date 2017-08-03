@@ -36,5 +36,4 @@ Functions
              LearningFunction,
              Reinforcement,
              BackPropagation,
-..
-    :exclude-members: function
+   :exclude-members: MappingProjection, ParameterState

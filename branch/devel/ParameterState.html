@@ -417,7 +417,12 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ParameterState.ParameterState.mod_afferents">
 <code class="descname">mod_afferents</code><a class="headerlink" href="#ParameterState.ParameterState.mod_afferents" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[GatingProjection]</em> &#8211; a list of the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the ParameterState.</p>
+<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
+for which it is a <code class="xref any docutils literal"><span class="pre">receiver</span></code>); these can be
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>,
+but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each
+must match the format (number and types of elements) of the ParameterState&#8217;s
+<a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -425,17 +430,6 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <code class="descname">variable</code><a class="headerlink" href="#ParameterState.ParameterState.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number, list or np.ndarray</em> &#8211; the parameter&#8217;s attribute value —&nbsp;that is, the value of the attribute of the
 ParameterState&#8217;s owner or its <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> assigned to the parameter.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">mod_afferents</code></dt>
-<dd><p><em>Optional[List[Projection]]</em> &#8211; a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterState (i.e.,
-for which it is a <code class="xref any docutils literal"><span class="pre">receiver</span></code>); these can be
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>,
-but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each
-must match the format (number and types of elements) of the ParameterState&#8217;s
-<a class="reference internal" href="#ParameterState.ParameterState.variable" title="ParameterState.ParameterState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
