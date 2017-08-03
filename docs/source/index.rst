@@ -119,7 +119,7 @@ of information.  PsyNeuLink provides a library of Components of each type.  For 
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.
 
-Since Mechanisms can implement any function, Projections insure that they can "communicate" with
+Since Mechanisms can implement any function, Projections ensure that they can "communicate" with
 each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
 Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
 and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
