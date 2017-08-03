@@ -5,7 +5,24 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# **************************************** KWTA *************************************************
+# ****************************************************** KWTA **********************************************************
+
+"""
+
+Overview
+--------
+
+A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
+k-winners-take-all (kWTA) behavior.
+
+.. _KWTA_Creation:
+
+Creating a KWTA
+---------------
+
+
+
+"""
 
 import builtins
 import numbers
