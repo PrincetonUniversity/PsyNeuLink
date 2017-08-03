@@ -128,21 +128,21 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
   different formats, as described `above <Mapping_Matrix_Specification>`.
 
-.. _Projection_Execution:
+.. _Mapping_Execution:
 
 Execution
 ---------
 
 A MappingProjection uses its `function <MappingProjection.function>` and `matrix <MappingProjection.matrix>
 parameter to transform the value of its `sender <MappingProjection.sender>`, and assign this as the variable for its
-`receiver <MappingProjection.receiver>`.  When executed, updating its ParameterStates will cause in turn update
-the its `matrix <MappingProjection.matrix>` parameter based on any Projections it receives (e.g., a `LearningProjection`).
+`receiver <MappingProjection.receiver>`.  When executed, updating its ParameterStates will cause it in turn to update
+its `matrix <MappingProjection.matrix>` parameter based on any Projections it receives (e.g., a `LearningProjection`).
 This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
 Because of :ref:`Lazy Evaluation <LINK>`, those changes will only take effect after the current execution (as a
 consequence, inspecting `matrix <MappingProjection.matrix>` will not show the effects of Projections to its
 ParameterState until the MappingProjection has been executed).
 
-.. _Projection_Class_Reference:
+.. _Mapping_Class_Reference:
 
 
 Class Reference

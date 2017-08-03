@@ -873,8 +873,15 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.variable):
-                raise RunError("Input stimululs ({}) for {} is incompatible with its variable ({})".
-                                  format(stim, mech.name, mech.variable))
+                err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
+                    format(stim, mech.name, mech.variable)
+                # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                # for "functionality" but rather a hack for user clarity
+                if "KWTA" in str(type(mech)):
+                    err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
+                                        " to represent the outside stimulus for the inhibition input state, and " \
+                                        "for systems, put your inputs"
+                raise RunError(err_msg)
 
     stim_lists = list(stimuli.values())
     num_input_sets = len(stim_lists[EXECUTION_SET_DIM])

@@ -448,6 +448,9 @@ MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
 SIZE = 'size'
+K_VALUE = 'k_value'
+THRESHOLD = 'threshold'
+RATIO = 'ratio'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
