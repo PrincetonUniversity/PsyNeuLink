@@ -262,7 +262,7 @@ Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, 
 that specifies how it should modulate the State's `value <State_Base.value>` when the State is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
 State's `function <State_Base.function>` to modulate its `value <State_Base.value>`.  The function of every State
-assigns one of its parameters as its *MULTIPLICATIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
+assigns one of its parameters as its *ADDITIVE_PARAM* and another as its *MULTIPLICATIVE_PARAM*. The
 `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines which of these to modify when the
 State uses it `function <State_Base.function>` to calculate its `value  <State_Base.value>`.  However, the
 ModulatorySignal can also be configured to override the State's `value <State_Base.value>` (i.e., assign it directly),
@@ -2517,6 +2517,8 @@ def _parse_state_spec(owner,
         # A value was returned, so use value of keyword as variable
         if spec is not None:
             state_dict[VARIABLE] = spec
+            # NOTE: (7/26/17 CW) This warning below may not be appropriate, since this routine is run if the
+            # matrix parameter is specified as a keyword, which may be intentional.
             if owner.prefs.verbosePref:
                 print("{} not specified for {} of {};  default ({}) will be used".
                       format(VARIABLE, state_type, owner.name, value))

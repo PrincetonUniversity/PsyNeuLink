@@ -802,8 +802,8 @@ class Projection_Base(Projection):
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
-        for state_name, state in self._parameter_states.items():
-
+        for state in self._parameter_states:
+            state_name = state.name
             state.update(params=runtime_params, time_scale=time_scale, context=context)
 
             # Assign ParameterState's value to parameter value in runtime_params
@@ -827,6 +827,10 @@ class Projection_Base(Projection):
 
             # Assign version of ParameterState.value matched to type of template
             #    to runtime param or paramsCurrent (per above)
+            # FYI (7/18/17 CW) : in addition to the params and attribute being set, the state's variable is ALSO being
+            # set by the statement below. For example, if state_name is 'matrix', the statement below sets
+            # params['matrix'] to state.value, calls setattr(state.owner, 'matrix', state.value), which sets the
+            # 'matrix' parameter state's variable to ALSO be equal to state.value! If this is unintended, please change.
             param[state_name] = type_match(state.value, param_type)
 
     def add_to(self, receiver, state, context=None):

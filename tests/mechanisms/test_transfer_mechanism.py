@@ -337,6 +337,8 @@ class TestTransferMechanismTimeConstant:
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.8, 0.8, 0.8, 0.8]]
+        val = T.execute([1, 1, 1, 1]).tolist()
+        assert val == [[0.96, 0.96, 0.96, 0.96]]
 
     def test_transfer_mech_time_constant_1_0(self):
         T = TransferMechanism(
@@ -359,6 +361,22 @@ class TestTransferMechanismTimeConstant:
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.0, 0.0, 0.0, 0.0]]
+
+    def test_transfer_mech_time_constant_0_8_initial_0_5(self):
+        T = TransferMechanism(
+            name='T',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            time_constant=0.8,
+            initial_value=np.array([[.5, .5, .5, .5]]),
+            time_scale=TimeScale.TIME_STEP
+        )
+        val = T.execute([1, 1, 1, 1]).tolist()
+        assert val == [[0.9, 0.9, 0.9, 0.9]]
+        T.noise = 10
+        val = T.execute([1, 2, -3, 0]).tolist()
+        assert val == [[10.98, 11.78, 7.779999999999999, 10.18]]  # testing noise changes to an integrator
+
 
     def test_transfer_mech_time_constant_0_8_list(self):
         with pytest.raises(ComponentError) as error_text:
@@ -428,11 +446,7 @@ class TestTransferMechanismSize:
         )
         assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 2
-    # size = int, variable = list of ints
-
+        assert len(T.size) == 1 and T.size[0] == 4 and type(T.size[0]) == np.int64
 
     def test_transfer_mech_size_int_inputs_ints(self):
         T = TransferMechanism(
@@ -442,11 +456,6 @@ class TestTransferMechanismSize:
         val = T.execute([10, 10, 10, 10]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 3
-    # size = int, variable = list of floats
-
-
     def test_transfer_mech_size_int_inputs_floats(self):
         T = TransferMechanism(
             name='T',
@@ -454,11 +463,6 @@ class TestTransferMechanismSize:
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 4
-    # size = int, variable = list of functions
-
 
     def test_transfer_mech_size_int_inputs_fns(self):
         T = TransferMechanism(
@@ -469,11 +473,6 @@ class TestTransferMechanismSize:
         val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 5
-    # size = float, check if variable is an array of zeros
-
-
     def test_transfer_mech_size_float_inputs_check_var(self):
         T = TransferMechanism(
             name='T',
@@ -481,11 +480,6 @@ class TestTransferMechanismSize:
         )
         assert len(T.variable) == 1 and (T.variable[0] == [0., 0., 0., 0.]).all()
         assert len(T.size == 1) and T.size[0] == 4.0 and type(T.size[0]) == np.int64
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 6
-    # size = float, variable = list of ints
-
 
     def test_transfer_mech_size_float_inputs_ints(self):
         T = TransferMechanism(
@@ -495,11 +489,6 @@ class TestTransferMechanismSize:
         val = T.execute([10, 10, 10, 10]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 7
-    # size = float, variable = list of floats
-
-
     def test_transfer_mech_size_float_inputs_floats(self):
         T = TransferMechanism(
             name='T',
@@ -507,11 +496,6 @@ class TestTransferMechanismSize:
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 8
-    # size = float, variable = list of functions
-
 
     def test_transfer_mech_size_float_inputs_fns(self):
         T = TransferMechanism(
@@ -522,22 +506,12 @@ class TestTransferMechanismSize:
         val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 9
-    # size = list of ints, check that variable is correct
-
-
     def test_transfer_mech_size_list_of_ints(self):
         T = TransferMechanism(
             name='T',
             size=[2, 3, 4]
         )
         assert len(T.variable) == 3 and len(T.variable[0]) == 2 and len(T.variable[1]) == 3 and len(T.variable[2]) == 4
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 10
-    # size = list of floats, check that variable is correct
-
 
     def test_transfer_mech_size_list_of_floats(self):
         T = TransferMechanism(
@@ -546,13 +520,8 @@ class TestTransferMechanismSize:
         )
         assert len(T.variable) == 3 and len(T.variable[0]) == 2 and len(T.variable[1]) == 3 and len(T.variable[2]) == 4
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 11
-    # size = list of floats, variable = a compatible 2D array: check that variable is correct
     # note that this output under the Linear function is useless/odd, but the purpose of allowing this configuration
-    # is for possible user-defined functions.
-
-
+    # is for possible user-defined functions that do use unusual shapes.
     def test_transfer_mech_size_var_both_lists(self):
         T = TransferMechanism(
             name='T',
@@ -560,11 +529,6 @@ class TestTransferMechanismSize:
             default_variable=[[1, 2], [3, 4, 5]]
         )
         assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all()
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 12
-    # size = int, variable = a compatible 2D array: check that variable is correct
-
 
     def test_transfer_mech_size_scalar_var_2d(self):
         T = TransferMechanism(
@@ -575,22 +539,12 @@ class TestTransferMechanismSize:
         assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
         assert len(T.size) == 2 and T.size[0] == 2 and T.size[1] == 2
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 13
-    # variable = a 2D array: check that variable is correct
-
-
     def test_transfer_mech_var_2d_array(self):
         T = TransferMechanism(
             name='T',
             default_variable=[[1, 2], [3, 4]]
         )
         assert len(T.variable) == 2 and (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4]).all()
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 14
-    # variable = a 1D array, size does not match: check that variable and output are correct
-
 
     def test_transfer_mech_var_1D_size_wrong(self):
         T = TransferMechanism(
@@ -602,11 +556,6 @@ class TestTransferMechanismSize:
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 15
-    # variable = a 1D array, size does not match again: check that variable and output are correct
-
-
     def test_transfer_mech_var_1D_size_wrong_2(self):
         T = TransferMechanism(
             name='T',
@@ -617,11 +566,6 @@ class TestTransferMechanismSize:
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 16
-    # size = int, variable = incompatible array, check variable
-
-
     def test_transfer_mech_size_var_incompatible1(self):
         T = TransferMechanism(
             name='T',
@@ -629,11 +573,6 @@ class TestTransferMechanismSize:
             default_variable=[[1, 2], [3, 4, 5]]
         )
         assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 17
-    # size = array, variable = incompatible array, check variable
-
 
     def test_transfer_mech_size_var_incompatible1(self):
         T = TransferMechanism(
@@ -643,15 +582,6 @@ class TestTransferMechanismSize:
         )
         assert (T.variable[0] == [1, 2]).all() and (T.variable[1] == [3, 4, 5]).all() and len(T.variable) == 2
 
-    # ------------------------------------------------------------------------------------------------
-
-    # INVALID INPUTS
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 1
-    # size = 0, check less-than-one error
-
-
     def test_transfer_mech_size_zero(self):
         with pytest.raises(ComponentError) as error_text:
             T = TransferMechanism(
@@ -659,11 +589,6 @@ class TestTransferMechanismSize:
                 size=0,
             )
         assert "is not a positive number" in str(error_text.value)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 2
-    # size = -1.0, check less-than-one error
-
 
     def test_transfer_mech_size_negative_one(self):
         with pytest.raises(ComponentError) as error_text:
@@ -673,12 +598,8 @@ class TestTransferMechanismSize:
             )
         assert "is not a positive number" in str(error_text.value)
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 3
-    # size = non-integer float, check integer-cast value-change warning
-    # this test and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
+    # this test below and the (currently commented) test immediately after it _may_ be deprecated if we ever fix
     # warnings to be no longer fatal. At the time of writing (6/30/17, CW), warnings are always fatal.
-
 
     # the test commented out here is similar to what we'd want if we got warnings to be non-fatal
     # and error_text was correctly representing the warning. For now, the warning is hidden under
@@ -691,11 +612,6 @@ class TestTransferMechanismSize:
     #         )
     #     assert "cast to integer, its value changed" in str(error_text.value)
 
-    # ------------------------------------------------------------------------------------------------
-    # TEST 4
-    # size = 2D array, check too-many-dimensions warning
-
-
     # def test_transfer_mech_size_2d(self):
     #     with pytest.raises(UserWarning) as error_text:
     #         T = TransferMechanism(
@@ -703,11 +619,6 @@ class TestTransferMechanismSize:
     #             size=[[2]],
     #         )
     #     assert "had more than one dimension" in str(error_text.value)
-
-    # ------------------------------------------------------------------------------------------------
-    # TEST 5
-    # size = 2D array, check variable is correctly instantiated
-
 
     # for now, since the test above doesn't work, we use this test. 6/30/17 (CW)
     def test_transfer_mech_size_2d(self):

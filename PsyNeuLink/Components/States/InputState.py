@@ -155,7 +155,7 @@ A Mechanism must have one InputState for each item of its `variable <Mechanism_B
 Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
 the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
 if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism's using `add_states` method;  this
+`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism using its `add_states` method;  this
 extends its `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates
 added, and each new item is assigned a value compatible with the `value <InputState.value>` of the corresponding
 InputState added.

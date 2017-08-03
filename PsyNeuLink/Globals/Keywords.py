@@ -160,7 +160,7 @@ MATRIX_KEYWORD_NAMES = MATRIX_KEYWORDS._names()
 ON = True
 OFF = False
 DEFAULT = False
-AUTO = True
+# AUTO = True  # MODIFIED 7/14/17 CW
 
 
 # Used by initDirective
@@ -303,6 +303,7 @@ MODULATORY_SIGNAL = 'ModulatorySignal'
 
 # Projections:
 MAPPING_PROJECTION = "MappingProjection"
+AUTO_ASSOCIATIVE_PROJECTION = "AutoAssociativeProjection"
 LEARNING_PROJECTION = "LearningProjection"
 CONTROL_PROJECTION = "ControlProjection"
 GATING_PROJECTION = "GatingProjection"
@@ -353,7 +354,8 @@ SOFTMAX_FUNCTION = 'SoftMax Function'
 INTEGRATOR_FUNCTION = "Integrator Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
-ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumualtorIntegrator Function"
+ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
+ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
@@ -446,6 +448,9 @@ MEAN = 'MEAN'
 MEDIAN = 'MEDIAN'
 VARIANCE = 'VARIANCE'
 SIZE = 'size'
+K_VALUE = 'k_value'
+THRESHOLD = 'threshold'
+RATIO = 'ratio'
 
 STATE_VALUE = "State value"   # Used in State specification dict
                                                  #  to specify State value
@@ -567,6 +572,8 @@ kwProjectionReceiver = 'projection_receiver'
 kwReceiverArg = 'receiver'
 # kpLog = "ProjectionLog"
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
+AUTO = 'auto'
+HETERO = 'hetero'
 
 
 #endregion
