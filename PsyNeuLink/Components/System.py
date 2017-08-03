@@ -235,7 +235,8 @@ execution of the Mechanism.
 
 Control
 ~~~~~~~
-Every System is associated with a single `controller`.  The controller uses an `ObjectiveMechanism` to monitor the
+Every System is associated with a single `controller`, that is specified in the **controller** argument of its
+constructor (see `System_Creation`).  The controller uses an `ObjectiveMechanism` to monitor the
 OutputState(s) of one or more Mechanisms in the System (listed in its `monitored_output_states` attribute), and uses
 that information to set the value of parameters for those or other Mechanisms in the System, or their functions (see
 `ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored, and

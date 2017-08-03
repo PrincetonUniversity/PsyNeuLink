@@ -40,14 +40,16 @@ Mechanism that is part of a System, then the ControlProjection's `sender <Contro
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ControlProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+When a ControlProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
-a ControlProjection to be created before its `sender` (and/or `receiver`) have been created (e.g., before them in a
+a ControlProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a
 script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
-ControlProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
-not necessary if the parameter(s) to be controlled are specified in the **control_signals** argument of a `System`, or
-in a tuple specifying the parameter of a `Mechanism` (or its `function <Mechanism.function`) that is part of a System
--- in those cases, deferred initialization is completed automatically.
+ControlProjection to be operational, initialization must be completed by calling its `deferred_init` method. This is
+not necessary if the ControlProjection is included in a `tuple specification <ParameterState_Tuple_Specification>`
+for the parameter of a Mechanism or its `function <Mechanism.function`, in which case the deferred initialization is
+completed automatically when the `ControlMechanism` is created for the `System` to which the parameter's owner belongs
+(see `ControlMechanism_Creation`).
+
 
 .. _ControlProjection_Structure:
 

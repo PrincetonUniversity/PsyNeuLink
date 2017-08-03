@@ -163,109 +163,115 @@ Under some circumstances Projections are created automatically. For example, a `
 <Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
 when :keyword:`learning` is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`).
 
+.. _Projection_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a Projection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
+<ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+a Projection to be created before its `sender` and/or `receiver` have been created (e.g., before them in a script),
+by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the Projection
+to be operational, initialization must be completed by calling its `_deferred_init` method.  Under most conditions
+this occurs automatically (e.g., when the projection is assigned to a type of Component that expects to be the
+`sender <Projection.sender>` or `receiver <Projection.receiver>` for that type of Projection); these conditions are
+described in the section on *Deferred Initialization* for each type of Projection.  Otherwise, the Projection's
+`_deferred_init` method must be called explicitly, once the missing attribute assignments have been made.
+
+
 .. _Projection_Structure:
 
 Structure
 ---------
 
-In addition to its `function <Projection.function>`, a Projection has two primary attributes:
+In addition to its `function <Projection.function>`, a Projection has two primary attributes: a `sender
+<Projection.sender>` and `receiver <Projection.receiver>`.  The types of `State(s) <State>` that can be
+assigned to these, and the attributes of those States to which Projections of each type are assigned, are
+summarized in the following table, and described in greater detail in the subsections below.
+
+.. _Projection_Table:
+
++-----------------------------------------------------------------------------------------------------------------+
+|            Sender, receiver and attribute assignments for different types of Projections                        |
++----------------------+---------------------------------------+--------------------------------------------------+
+|     Projection       |   sender                              |  receiver                                        |
+|                      |   (attribute)                         |  (attribute)                                     |
++======================+=======================================+==================================================+
+| `MappingProjection`  | `OutputState`                         | `InputState`                                     |
+|                      | (`efferents <OutputState.efferents>`) | (`path_afferents <InputState.path_afferents>`)   |
++----------------------+---------------------------------------+--------------------------------------------------+
+| `LearningProjection` | `LearningSignal`                      | `ParameterState`                                 |
+|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
++----------------------+---------------------------------------+--------------------------------------------------+
+| `ControlProjection`  | `ControlSignal`                       | `ParameterState`                                 |
+|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <ParameterState.mod_afferents>`) |
++----------------------+---------------------------------------+--------------------------------------------------+
+| `GatingProjection`   | `GatingSignal`                        | `InputState` or `OutputState`                    |
+|                      | (`efferents <OutputState.efferents>`) | (`mod_afferents <State_Base.mod_afferents>`)     |
++----------------------+---------------------------------------+--------------------------------------------------+
 
 .. _Projection_Sender:
 
 Sender
 ~~~~~~
 
-This must be an `OutputState`.  The Projection is assigned to the OutputState's `efferents <State_Base.efferents>`
-list, and the OutputState's `value <OutputState.value>` is used as the `variable <Function.variable>` for Projection's
-`function <Projection.function>`.  A sender can be specified as:
+This must be an `OutputState` or a `ModulatorySignal` (a subclass of OutputState specialized for `ModulatoryProjections
+<ModulatoryProjection>`.  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
+<State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to the
+`AdaptiveMechanism` from which it projects.  The OutputState or ModulatorySignal's `value <OutputState.value>` is
+used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
 
-  * an **OutputState**, in any of the ways used to `specify an OutputState <OutputState_Specification>`.
+A sender can be specified as:
+
+  * an **OutputState** or **ModulatorySignal*, as appropriate for the Projection's type, using any of the ways for
+    `specifying an OutputState <OutputState_Specification>`.
   ..
-  * a **Mechanism**, in which case the Mechanism's `primary OutputState  <OutputState_Primary>` is assigned as the
-    `sender <Projection.sender>`.
-
-CORRECT TO DESCRIBE DEFERRED INITIALIZATION
-??
-CONSOLIDATE FROM LEARNING_PROJECTION, CONTROL_PROJECTION, AND GATING_PROJECTION
-DELETE THOSE SECTIONS AND REFERENCE THIS ONE?
-CORRECT REFERENCES ABOVE, POINT THEM TO HERE
+  * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
+    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection`, a `ModulatorySignal` of the appropriate
+    type is created and assigned to the Mechanism.
 
 If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
-specification is not associated with a Mechanism that can be determined from context, then a default Mechanism of a
-type appropriate for the Projection is used, and its `primary OutputState <OutputState_Primary>` is assigned as the
-`sender <Projection.sender>`. The type of default Mechanism
-COMMENT:
-    used by a Projection is specified in its :keyword:`paramClassDefaults[PROJECTION_SENDER]` class attribute, and
-COMMENT
-is assigned as follows:
-
-  * `MappingProjection`: the
-    :py:const:`DefaultProcessingMechanism <Components.__init__.DefaultProcessingMechanism LINK>`
-    is used, and its `primary OutputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
-  ..
-  * `ControlProjection`: if the Projection's `receiver <Projection.receiver>` belongs to a system, then the system's
-    `controller` is used as the Mechanism for the `sender <Projection.sender>`, an OutputState is added to the
-    ControlMechanism, and assigned as the Projection's `sender <Projection.sender>`.  If the receiver does not
-    belong to a system, the ControlProjection will be ignored.
-  ..
-  COMMENT:
-  * `GatingProjection`:  DOCUMENT
-  COMMENT
-  ..
-  * `LearningProjection`: if it is to a MappingProjection that projects to the `TERMINAL` Mechanism of a Process,
-    then a `ComparatorMechanism` is created, and its `primary OutputState <OutputState_Primary>` is assigned as the
-    `sender <Projection.sender>`.  Otherwise, a `WeightedErrorMechanism` is created and its
-    `primary OutputState <OutputState_Primary>` is assigned as the `sender <Projection.sender>`.
-
-
+specification is not associated with a Mechanism that can be determined from context, then the initialization of the
+Projection is `deferred <Projection_Deferred_Initialization>`.
 
 .. _Projection_Receiver:
 
 Receiver
 ~~~~~~~~
 
-This must be an :doc:`InputState` or a :doc:`ParameterState`.  The Projection is assigned to the receiver's
-`path_afferents <State_Base.path_afferents>` list, and the output of the Projection's
-`function <Projection.function>` is transmitted to its receiver.  A `receiver <Projection.receiver>`
-can be specified as:
+The `receiver <Projection.receiver>` required by a Projection depends on its type, as listed below:
 
-  * an existing **InputState**;
+    * MappingProjection: `InputState`
+    * LearningProjection: `ParameterState` (for the `matrix <MappingProjection>` of a `MappingProjection`)
+    * ControlProjection: `ParameterState`
+    * GatingProjection: `InputState` or OutputState`
+
+A `MappingProjection` (as a `PathwayProjection`) is assigned to the `path_afferents <State.path_afferents>` attribute
+of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to the `mod_afferents
+<State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
+
+A `receiver <Projection.receiver>` can be specified as:
+
+  * an existing **State**;
   ..
   * an existing **Mechanism** or **Projection**; which of these is permissible, and how a state is assigned to it, is
     determined by the type of Projection — see subclasses for details).
   ..
   * a **specification dictionary** (see subclasses for details).
-  ..
-  .. note::
-     a receiver **must** be specified for a Projection;  PsyNeuLink cannot create a default.  This reflects the
-     principle of :ref:`Lazy Evaluation <LINK>` which, here, means that objects can create other objects from which
-     they *expect* input, but cannot *impose* the creation of "downstream" objects.
 
-COMMENT:
-    If the ``receiver`` of a Projection is specified as a Projection or Mechanism, the type of state created and added
-    to the Mechanism depends on the type of Projection:
-        MappingProjection:
-            receiver = <Mechanism>.input_state
-        ControlProjection:
-            sender = <Mechanism>.outputState
-            receiver = <Mechanism>.parameterState if there is a corresponding parameter; otherwise, an error occurs
-        LearningProjection:
-            sender = <Mechanism>.outputState
-            receiver = <MappingProjection>.parameterState IF AND ONLY IF there is a single one
-                        that is a ParameterState;  otherwise, an exception is raised
-COMMENT
 
 .. _Projection_Execution:
 
 Execution
 ---------
 
-A Projection cannot be executed directly.  It is executed when the `state <States>` to which it projects — its
-`receiver <Projection.receiver>` — is updated;  that occurs when the state's owner Mechanism is executed.  When a
-Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the :keyword:`variable`
-of its `function <Projection.function>`, calls the function, and provides the result as to its
-`receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection converts the value received
-from its `sender <Projection.sender>` to a form suitable as input for its `receiver <Projection.receiver>`.
+A Projection cannot be executed directly.  It is executed when the `State` to which it projects (i.e., its `receiver
+<Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism` is executed.  When a
+Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
+<Projection.variable>` of its `function <Projection.function>`, calls the `function <Projection.function>`, and
+provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
+converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver
+<Projection.receiver>`.
 
 .. _Projection_Class_Reference:
 

@@ -51,8 +51,10 @@ Creating an EVCMechanism
 ------------------------
 
 An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`;  it is also
-created automatically when a `System` is created and an EVCMechanism is specified as its `controller` (see
-`Controller <System_Execution_Control>`).  If it is created directly (using its constructor), it creates:
+created automatically when a `System` is created and the EVCMechanism class is specified in the **controller**
+argument of the System's constructor (see `System_Creation`).
+
+When an EVCMechanism is created explicitly (using its constructor), it creates:
 
 * an `ObjectiveMechanism`, using the list of `OutputState` specifications in the **monitor_for_control** argument of
   the EVCMechanism's constructor to specify the ObjectiveMechanism's `monitored_values
@@ -73,8 +75,10 @@ created as described above, with the following modifications:
   attribute are used to create the ObjectiveMechanism
 ..
 * a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals <EVCMechanism.control_signals>`
-  attribute for every parameter of any `Component` in the System that has been `specified for control
-  <ControlMechanism_Control_Signals>`.
+  attribute for every parameter of any `Component` in the System that has been specified for control (that is,
+  by including a `ControlProjection` or `ControlSignal` in a `tuple specification <>` for the parameter, or by
+  specifying the parameter (or its associated `ParameterState`) in the **control_signals** argument of a
+  `ControlMechanism <ControlMechanism_Control_Signals>`.
 
 An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
 those described above, or its `function <EVCMechanism.function>` as described under `EVC_Default_Configuration `below).
