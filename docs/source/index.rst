@@ -65,7 +65,7 @@ PsyNeuLink is well suited to the creation of simple to moderately complex models
 disparate existing models into a single, integrated system in which interactions among them can be examined.
 While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
 kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
-currenty does not support, such as:
+currently does not support, such as:
 
  - extensive model fitting
  - large scale simulations
@@ -95,7 +95,7 @@ Overview and Sampler
 --------------------
 
 PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
+The sections below provide some examples of what PsyNeuLink models look like and some of its capabilities.
 `Structure_Basic_Constructs` provides an overview of PsyNeuLink Components, Compositions, and their execution.
 The `UsersGuide` provides a more thorough description of how PsyNeuLink is organized and its basic principles of
 operation.  The `Tutorial` provides an interactive guide to the construction of models using PsyNeuLink.
@@ -196,7 +196,7 @@ and then specifying the target for each trial when it is run (here five trials o
     my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
                    target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
 
-`Backpropation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
+`Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
 `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal
 Differences, and supervised learning for recurrent networks).
 
@@ -255,7 +255,7 @@ as follows::
     input_layer = TransferMechanism(size = 10)
     hidden_layer = TransferMechanism(size = 100)
     output_layer = TransferMechanism(size = 10)
-    recurent_layer = RecurrentTransferMechanism(size = 10)
+    recurrent_layer = RecurrentTransferMechanism(size = 10)
 
     feed_forward_network = process(pathway=[input_layer, hidden_layer, output_layer])
     recurrent_network = process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
@@ -325,7 +325,7 @@ Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
 Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.
+repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get access.
 
 PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.
