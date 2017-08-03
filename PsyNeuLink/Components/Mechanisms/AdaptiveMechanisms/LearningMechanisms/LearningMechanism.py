@@ -43,7 +43,7 @@ More commonly, however, LearningMechanisms are created automatically when:
 * the learning attribute is specified for a `System <System_Execution_Learning>` or `Process <Process_Learning>`;
 ..
 * a `LearningProjection` (or the keyword *LEARNING*) is specified as the second item of a
-  `tuple used to specify the matrix parameter <Mapping_Matrix_Specification>` of a `MappingProjection` in
+  `tuple specification` for the matrix parameter <Mapping_Matrix_Specification>` of a `MappingProjection` in
   the `pathway <Process_Base.pathway>` of a `Process`.
 ..
 * a `LearningProjection` is created without specifying its `sender <LearningProjection.sender>` attribute.
