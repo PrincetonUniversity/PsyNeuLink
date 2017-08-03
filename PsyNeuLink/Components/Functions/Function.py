@@ -2850,7 +2850,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if matrix is None:
             raise FunctionError("MATRIX param ({}) for the {} function of {} must be a matrix, a function that returns "
                                 "one, a matrix specification keyword ({}), or a number (filler)".
-                                format(specification, self.name, self.owner.name, matrix_keywords))
+                                format(specification, self.name, self.owner.name, MATRIX_KEYWORD_NAMES))
         else:
             return matrix
 
