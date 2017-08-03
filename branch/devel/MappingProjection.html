@@ -243,17 +243,17 @@ different formats, as described <a class="reference internal" href="#mapping-mat
 </ul>
 </div>
 <div class="section" id="execution">
-<span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="mapping-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A MappingProjection uses its <code class="xref any docutils literal"><span class="pre">function</span></code> and <code class="xref any docutils literal"><span class="pre">matrix</span></code>, and assign this as the variable for its
-<a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  When executed, updating its ParameterStates will cause in turn update
-the its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter based on any Projections it receives (e.g., a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>).
+<a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  When executed, updating its ParameterStates will cause it in turn to update
+its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter based on any Projections it receives (e.g., a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>).
 This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
 Because of <span class="xref std std-ref">Lazy Evaluation</span>, those changes will only take effect after the current execution (as a
 consequence, inspecting <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> will not show the effects of Projections to its
 ParameterState until the MappingProjection has been executed).</p>
 </div>
 <div class="section" id="class-reference">
-<span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<span id="mapping-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="PathwayProjections.MappingProjection.MappingProjection">
 <em class="property">class </em><code class="descclassname">PathwayProjections.MappingProjection.</code><code class="descname">MappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PathwayProjections.MappingProjection.MappingProjection" title="Permalink to this definition">¶</a></dt>
