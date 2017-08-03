@@ -187,13 +187,11 @@ which in turn modify the matrix parameter(s) of the MappingProjection(s) being l
 </div>
 <div class="section" id="creating-a-learningsignal">
 <span id="learningsignal-creation"></span><h2>Creating a LearningSignal<a class="headerlink" href="#creating-a-learningsignal" title="Permalink to this headline">¶</a></h2>
-<p>A LearningSignal is created automatically whenever a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is
-<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">specified for learning</span></a> and the Projection belongs to the same <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> as the
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.  LearningSignals can also be specified in the <strong>learning_signals</strong> argument of the constructor
-for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.  Although a LearningSignal can be created directly using its
-constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an OutputState</span></a>), this is neither
-necessary nor advisable, as a LearningSignal has dedicated Components and requirements for configuration that must be
-met for it to function properly.</p>
+<p>A LearningSignal is created automatically whenever a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">specified for learning</span></a> and the Projection belongs to the same <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> as the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.
+LearningSignals can also be specified in the <strong>learning_signals</strong> argument of the constructor for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>.
+Although a LearningSignal can be created directly using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an
+OutputState</span></a>), this is neither necessary nor advisable, as a LearningSignal has dedicated
+Components and requirements for configuration that must be met for it to function properly.</p>
 <div class="section" id="specifying-learningsignals">
 <span id="learningsignal-specification"></span><h3>Specifying LearningSignals<a class="headerlink" href="#specifying-learningsignals" title="Permalink to this headline">¶</a></h3>
 <p>When a LearningSignal is specified in the <strong>learning_signals</strong> argument of the constructor for a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>,

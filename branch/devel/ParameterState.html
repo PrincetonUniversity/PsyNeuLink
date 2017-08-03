@@ -85,9 +85,38 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ParameterState</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
@@ -207,13 +236,14 @@ assigned to the argument for the parameter in the Component&#8217;s constructor.
 <p>The specification of the initial value of a parameter can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple" id="parameterstate-value-assignment">
-<li>A <strong>value</strong> - this must be a valid value for the parameter. It creates a default ParameterState,
+<li><strong>Value</strong> &#8211; this must be a valid value for the parameter. It creates a default ParameterState,
 assigns the parameter&#8217;s default value as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
 and assigns the parameter&#8217;s name as the name of the ParameterState.</li>
 </ul>
 <ul>
-<li><p class="first">A reference to an existing <strong>ParameterState</strong> object - its name must be the name of a parameter of the
-owner or of its <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and its value must be a valid one for the parameter.</p>
+<li><p class="first"><strong>ParameterState referece</strong> &#8211; this must refer to an existing <strong>ParameterState</strong> object; its name must be the
+name of a parameter of the owner or of the owner&#8217;s <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and its value must be a valid
+one for the parameter.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">This capability is provided for generality and potential
@@ -222,19 +252,19 @@ future use, but its current use is not advised.</p>
 </li>
 </ul>
 <ul class="simple" id="parameterstate-modulatory-specification">
-<li>A Modulatory specification -  this can be an existing <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>, a
-<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, a constructor or the class name for any of these, or the
-keywords <em>CONTROL</em> or <em>LEARNING</em>.  Any of these create a default ParameterState, assign the parameter&#8217;s default
-value as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and assign the parameter&#8217;s name as the name of the
-ParameterState.  They also create and/or assign the corresponding ModulatorySignal and ModulatoryProjection,
-and assign the ParameterState as the ModulatoryProjection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>.
-If the ModulatorySignal and/or ModulatoryProjection already exist, their value(s) must be valid one(s) for the
-parameter.  Note that only Control and Learning Modulatory components can be assigned to a ParameterState
-(Gating components cannot be used &#8211; they can only be assigned to <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a>
-and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>).</li>
+<li><strong>Modulatory specification</strong> &#8211; this can be an existing <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>,
+a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, a constructor or the class name for any of these, or the
+keywords <em>CONTROL</em>, <em>CONTROL_PROJECTION</em>, <em>LEARNING</em>, or <a href="#id1"><span class="problematic" id="id2">*</span></a>LEARNING_PROJECTION.  Any of these create a default
+ParameterState, assign the parameter&#8217;s default value as the ParameterState&#8217;s <a class="reference internal" href="#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
+and assign the parameter&#8217;s name as the name of the ParameterState.  They also create and/or assign the
+corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterState as the
+ModulatoryProjection&#8217;s <code class="xref any docutils literal"><span class="pre">receiver</span></code>. If the ModulatorySignal and/or
+ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
+Control and Learning Modulatory components can be assigned to a ParameterState (Gating components cannot be
+used &#8211; they can only be assigned to <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>).</li>
 </ul>
-<ul>
-<li><p class="first">A 2-item (value, Modulatory specification) <strong>tuple</strong>.  This creates a default ParameterState, uses the value
+<ul id="parameterstate-tuple-specification">
+<li><p class="first"><strong>Tuple</strong> (value, Modulatory specification) &#8211; this creates a default ParameterState, uses the value
 (1st) item of the tuple as parameter&#8217;s <a class="reference internal" href="#parameterstate-value-assignment"><span class="std std-ref">value assignment</span></a>, and assigns the
 parameter&#8217;s name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
 ParameterState&#8217;s <a class="reference internal" href="#parameterstate-modulatory-specification"><span class="std std-ref">modulatory assignment</span></a>, and the ParameterState

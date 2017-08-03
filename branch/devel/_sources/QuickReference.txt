@@ -96,7 +96,7 @@ There are four types of Components in PsyNeuLink:  Mechanisms, Projections, Stat
        There is currently one on type of PathwayProjection:
 
        + `MappingProjection`
-         Takses the value of the `OutputState` of one Mechanism, and converts it as necessary to provide it as
+         Takes the value of the `OutputState` of one Mechanism, and converts it as necessary to provide it as
          the variable for the `InputState` of another Mechanism.
 
    + `ModulatoryProjection`

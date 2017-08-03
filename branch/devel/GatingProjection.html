@@ -184,9 +184,17 @@ by including it in the specification of an <a class="reference internal" href="I
 constructor on its own, the <strong>receiver</strong> argument must be specified.  It can be specified as a particular InputState
 or OutputState of a Mechanism, or simply as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  In the latter case, the Mechanism&#8217;s
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If the GatingProjection is included in an InputState or
-OutputState specification, that state will be assigned as the GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.
-If a GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is not specified, the <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
-is assigned to the OutputState of a <code class="xref any docutils literal"><span class="pre">DefaultGatingMechanism</span></code>.</p>
+OutputState specification, that state will be assigned as the GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<div class="section" id="deferred-initialization">
+<h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
+<p>When a GatingProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
+<a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
+a GatingProjection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
+script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
+GatingProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
+not necessary if the State(s) to be gated are specified in the <strong>gating_signals</strong> argument of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>,
+in which case deferred initialization is completed automatically by the GatingMechanism when it is created.</p>
+</div>
 </div>
 <div class="section" id="structure">
 <span id="gatingprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -222,7 +230,7 @@ see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[Mechanism or GatingSignal]</em>) &#8211; specifies the source of the input for the GatingProjection;  usually an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of a
+<li><strong>sender</strong> (<em>Optional[Mechanism or GatingSignal]</em>) &#8211; specifies the source of the input for the GatingProjection;  usually an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a
 <a class="reference internal" href="GatingMechanism.html"><span class="doc">GatingMechanism</span></a>.  If it is not specified, an outputState of the <code class="xref any docutils literal"><span class="pre">DefaultGatingMechanism</span></code>
 for the system to which the receiver belongs will be assigned.</li>
 <li><strong>receiver</strong> (<em>Optional[Mechanism or ParameterState]</em>) &#8211; specifies the inputState or outputState to which the GatingProjection projects.  This must be specified,
