@@ -139,8 +139,13 @@ class LLVMBinaryFunction:
     def __call__(self, *args, **kwargs):
         self.c_func(*args, **kwargs)
 
+    # This will be useful for non-native targets
+    @property
+    def ptr(self):
+        return self.__ptr
 
-    def set_ptr(self, ptr):
+    @ptr.setter
+    def ptr(self, ptr):
         self.__ptr = ptr
 
         # Recompiled, update the signature
@@ -154,16 +159,9 @@ class LLVMBinaryFunction:
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
         self.__c_func = self.__c_func_type(self.__ptr)
 
-    # This will be useful for non-native targets
-    def get_ptr(self):
-        return self.__ptr
-
-    ptr = property(get_ptr, set_ptr)
-
-    def get_c_func(self):
+    @property
+    def c_func(self):
         return self.__c_func
-
-    c_func = property(get_c_func)
 
     @staticmethod
     def get(name):
