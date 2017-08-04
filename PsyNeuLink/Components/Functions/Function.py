@@ -2238,7 +2238,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
-        return 1 / (1 + np.exp(-(gain * self.variable) + bias))
+        try:
+            return_val = 1 / (1 + np.exp(-(gain * self.variable) + bias))
+        except (Warning):
+            # handle RuntimeWarning: overflow in exp
+            return_val = 0
+
+        return return_val
 
     def derivative(self, output, input=None):
         """
