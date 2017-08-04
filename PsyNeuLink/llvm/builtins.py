@@ -8,41 +8,13 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
+from PsyNeuLink.llvm import helpers
 from llvmlite import ir
 import functools
 
 def __set_array_body(builder, index, array, value):
     ptr = builder.gep(array, [index])
     builder.store(value, ptr)
-
-def __for_loop(builder, start, stop, inc, body_func, id):
-    # Initialize index variable
-    assert(start.type is stop.type)
-    index_var = builder.alloca(stop.type)
-    builder.store(start, index_var)
-
-    # basic blocks
-    cond_block = builder.append_basic_block(id + "-cond")
-    out_block = None
-
-    # Loop condition
-    builder.branch(cond_block)
-    with builder.goto_block(cond_block):
-        tmp = builder.load(index_var);
-        cond = builder.icmp_signed("<", tmp, stop)
-
-        # Loop body
-        with builder.if_then(cond, likely=True):
-            index = builder.load(index_var)
-            if (body_func is not None):
-                body_func(builder, index)
-            index = builder.add(index, inc)
-            builder.store(index, index_var)
-            builder.branch(cond_block)
-
-        out_block = builder.block
-
-    return ir.IRBuilder(out_block)
 
 def setup_vxm(ctx):
     module = ctx.module
@@ -68,7 +40,7 @@ def setup_vxm(ctx):
 
     # zero the output array
     zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = __for_loop(builder, ctx.int32_ty(0), y, ctx.int32_ty(1), zero_array, "zero")
+    builder = helpers.for_loop(builder, ctx.int32_ty(0), y, ctx.int32_ty(1), zero_array, "zero")
 
     # Multiplication
 
