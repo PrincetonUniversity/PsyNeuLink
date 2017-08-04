@@ -178,7 +178,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     selected `allocation_policy` specifies for each ControlSignal, and then simulate these system using the
     corresponding parameter values.
 
-  * **Calculate outcome** - combine the `value <OutputState.value>` \s of the OutputStates listed in the
+  * **Calculate outcome** - combine the `value <OutputState.value>` \\s of the OutputStates listed in the
     EVCMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute using the function
     specified by its `outcome_function <EVCMechanism.outcome_function>` attribute (this is done by the EVCMechanism's
     `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`, and passed to the EVCMechanism's `primary InputState
@@ -187,7 +187,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     <EVCMechanism.outcome_function>`).
   ..
   * **Calculate EVC** - by calling the EVCMechanism's `value_function <EVCMechanism.value_function>` with the
-    outcome (received from the `monitoring_mechanism`) and a list of the `costs <ControlSignal.cost>` \s of its
+    outcome (received from the `monitoring_mechanism`) and a list of the `costs <ControlSignal.cost>` \\s of its
     `ControlSignals <EVCMechanism_ControlSignals>`; default `value_function <EVCMechanism.value_function>` calls
     to additional auxiliary functions:  first it calls the `cost_function <EVCMechanism.cost_function>` which sums
     the costs, though this can be configured to weight and/or exponentiate individual costs (see `cost_function
