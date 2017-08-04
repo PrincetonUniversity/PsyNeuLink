@@ -26,14 +26,15 @@ binf.c_func(ct_vec, ct_mat, x, y, ct_res)
 
 with pnlvm.llvm_get_current_ctx() as ctx:
     double_ptr_ty = ctx.float_ty.as_pointer()
-    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+    func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
     # get builtin IR
     builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
 
     # Create square vector matrix multiply
     function = ir.Function(ctx.module, func_ty, name="vxsqm")
-    _v, _m, _x, _o = function.args
+    _x = ctx.int32_ty(x)
+    _v, _m, _o = function.args
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
     builder.call(builtin, [_v, _m, _x, _x, _o])
@@ -46,7 +47,7 @@ binf2 = pnlvm.LLVMBinaryFunction.get('vxsqm')
 new_res = copy.deepcopy(llvm_res)
 ct_res = new_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
-binf2(ct_vec, ct_mat, x, ct_res)
+binf2(ct_vec, ct_mat, ct_res)
 
 if np.array_equal(orig_res, new_res):
     print("TEST PASSED")
