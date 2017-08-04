@@ -229,18 +229,21 @@ class MappingProjection(PathwayProjection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        specifies the source of the Projection's input. If a mechanism is specified, its
+        specifies the source of the Projection's input. If a `Mechanism` is specified, its
         `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
+        the context in which the Projection is used, or its initialization will be `deferred
+        <MappingProjection_Deferred_Initialization>`.
 
     receiver: Optional[InputState or Mechanism]
-        specifies the destination of the Projection's output.  If a mechanism is specified, its
+        specifies the destination of the Projection's output.  If a `Mechanism` is specified, its
         `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
+        the context in which the Projection is used, or its initialization will be `deferred
+        <MappingProjection_Deferred_Initialization>`.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
         the matrix used by `function <MappingProjection.function>` (default: `LinearCombination`) to transform the
-        value of the `sender <MappingProjection.sender>`.
+        value of the `sender <MappingProjection.sender>` into a form suitable for the `variable <InputState.variable>`
+        of its `receiver <MappingProjection.receiver>`.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -264,25 +267,25 @@ class MappingProjection(PathwayProjection_Base):
     componentType : MAPPING_PROJECTION
 
     sender : OutputState
-        identifies the source of the Projection's input.
+        the `OutputState` of the `Mechanism` that is the source of the Projection's input
 
     receiver: InputState
-        identifies the destination of the Projection.
-
-    learning_mechanism : LearningMechanism
-        source of error signal for that determine changes to the `matrix <MappingProjection.matrix>` when
-        `learning <LearningProjection>` is used.
+        the `InputState` of the `Mechanism` that is the destination of the Projection's output.
 
     matrix : 2d np.array
-        matrix used by `function <MappingProjection.function>` to transform input from the
-        `sender <MappingProjection.sender>` to the value provided to the `receiver <MappingProjection.receiver>`.
+        the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
+        `sender <MappingProjection.sender>` into the value provided to its `receiver <MappingProjection.receiver>`.
 
     has_learning_projection : bool : False
         identifies whether the MappingProjection's `MATRIX` `ParameterState <ParameterState>` has been assigned a
         `LearningProjection`.
 
+    learning_mechanism : LearningMechanism
+        source of the `learning signal <LearningSignal>` that determines the changes to the `matrix
+        <MappingProjection.matrix>` when `learning <LearningMechanism>` is used.
+
     value : ndarray
-        Output of MappingProjection, transmitted to `variable <InputState.variable>` of `receiver
+        output of MappingProjection, transmitted to `variable <InputState.variable>` of its `receiver
         <MappingProjection.receiver>`.
 
     name : str : default MappingProjection-<index>

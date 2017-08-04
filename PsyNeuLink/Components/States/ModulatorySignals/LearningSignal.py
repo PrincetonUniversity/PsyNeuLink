@@ -14,7 +14,7 @@ Overview
 
 A LearningSignal is a type of `ModulatorySignal` that is specialized for use with a `LearningMechanism` and one or more
 `LearningProjections <LearningProjection>`, to modify the `matrix <MappingProjection.matrix>` parameter of the
-`MappingProjections <MappiongProjection>` to which they project.  A LearningSignal receives the value of a
+`MappingProjections <MappingProjection>` to which they project.  A LearningSignal receives the value of a
 `learning_signal <LearningMechanism>` calculated by the `LearningMechanism` to which it belongs, which in general is a
 matrix of weight changes to be made to the `matrix <MappingProjection>` parameter of the MappingProjection(s) being
 learned.  The LearningSignal assigns its `learning_signal <LearningSignal.learning_signal>` as the value of its
