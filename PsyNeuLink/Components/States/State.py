@@ -120,13 +120,10 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *PROJECTIONS*:<List>
           the list must contain specifications for one or more
-          `projections <Projection_In_Context_Specification> to or from the State, and/or
+          `Projections <Projection_In_Context_Specification>` to or from the State, and/or
           `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
           the type of Projections it can send and/or receive depends the type of State and
-          the context in which it is specified;
-          COMMENT:
-              REFER TO TABLE OF STATES AND TYPES OF PREOJCTIONS THEY CAN RECEIVE
-          COMMENT
+          the context in which it is specified (see `State_Projections` below);
       ..
       * *str*:<List>
           the key is used as the name of the State, and the list must contain specifications for

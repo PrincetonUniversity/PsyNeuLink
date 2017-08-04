@@ -30,6 +30,8 @@ or OutputState of a Mechanism, or simply as a `Mechanism`.  In the latter case, 
 `primary InputState <InputState_Primary>` will be used. If the GatingProjection is included in an InputState or
 OutputState specification, that state will be assigned as the GatingProjection's `receiver <GatingProjection.receiver>`.
 
+.. _GatingProjection_Deferred_Initialization:
+
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
