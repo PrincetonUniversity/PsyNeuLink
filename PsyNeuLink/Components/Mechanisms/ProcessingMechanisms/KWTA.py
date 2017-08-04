@@ -287,11 +287,16 @@ class KWTA(RecurrentTransferMechanism):
         skMinusOne = sorted(scales, reverse=True)[k - 1]
         final_scale = sk * self.ratio + skMinusOne * (1 - self.ratio)
 
+        # 8/4/17 CW: this is to prevent inhibition from _increasing_ total activity levels; this allows the KWTA to
+        # naturally decay its activity levels (if decay is used) to zero if the inputs become zero
+        if final_scale < 0:
+            return current_input
+
         out = current_input + final_scale * inhibVector
 
         if (sum(out > self.threshold) > k) or (sum(out < self.threshold) > len(out) - k):
-            warnings.warn("KWTA scaling was not fully successful. The input was {}, the inhibition vector was {}, "
-                          "and the KWTA-scaled input was {}".format(current_input, inhibVector, out))
+            warnings.warn("KWTA scaling did not reach fully successful. The input was {}, the inhibition vector was {},"
+                          " and the KWTA-scaled input was {}.".format(current_input, inhibVector, out))
 
         return out
 
@@ -299,10 +304,12 @@ class KWTA(RecurrentTransferMechanism):
         inhib = np.array(inhib)
         if (inhib == 0).all():
             if type(context) == str and INITIALIZING not in context:
-                logger.info("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
-                      format(inhib, inp))
-            inhib = np.ones(int(self.size[0]))
+                logger.info("inhib vector ({}) was all zeros, so inhibition will be uniform".format(inhib))
+            inhib = -1 * np.ones(int(self.size[0]))
         if (inhib > 0).all():
+            # 8/4/17 CW: this could be replaced by simply subtracting the maximum value from the inhibition
+            logger.warning("inhibition vector({}) for {} was positive, rather than negative: thus, the inhibition "
+                           "was flipped".format(inhib, self))
             inhib = -1 * inhib
         if (inhib == 0).any():
             raise KWTAError("inhibition vector ({}) for {} contained some, but not all, zeros: not "
@@ -312,7 +319,7 @@ class KWTA(RecurrentTransferMechanism):
                             "currently supported".format(inhib, self))
         if len(inhib) != len(inp):
             raise KWTAError("The inhibition vector ({}) for {} is of a different length than the"
-                            " current primary input vector ({}).".format(inhib, self, input))
+                            " current primary input vector ({}).".format(inhib, self, inp))
 
         return inhib
 
@@ -357,18 +364,35 @@ class KWTA(RecurrentTransferMechanism):
                 if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
                     raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
 
+            if ratio_param > 1 or ratio_param < 0:
+                raise KWTAError("ratio parameter ({}) for {} must be between 0 and 1".format(ratio_param, self))
+
         if K_VALUE in target_set:
             k_param = target_set[K_VALUE]
             if not isinstance(k_param, numbers.Real):
                 if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
+            if (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+                k_num = k_param[0]
+            else:
+                k_num = k_param
+            if not isinstance(k_num, int):
+                try:
+                    if not k_num.is_integer() and (k_num > 1 or k_num < 0):
+                        raise KWTAError("k-value parameter ({}) for {} must be an integer, or between 0 and 1.".
+                                        format(k_param, self))
+                except AttributeError:
+                    raise KWTAError("k-value parameter ({}) for {} was an unexpected type.".format(k_param, self))
+            if abs(k_num) > self.size[0]:
+                raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
+                                format(k_param, self))
 
         if THRESHOLD in target_set:
             threshold_param = target_set[THRESHOLD]
             if not isinstance(threshold_param, numbers.Real):
                 if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
-                    raise KWTAError(
-                        "k-value parameter ({}) for {} must be a single number".format(threshold_param, self))
+                    raise KWTAError("k-value parameter ({}) for {} must be a single number".
+                                    format(threshold_param, self))
 
         # Validate MATRIX
         if MATRIX in target_set:
