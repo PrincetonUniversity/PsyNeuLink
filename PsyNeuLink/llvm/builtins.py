@@ -53,6 +53,7 @@ def setup_vxm(ctx):
     # Create function
     function = ir.Function(module, func_ty, name="__pnl_builtin_vxm")
     function.attributes.add('argmemonly')
+    function.attributes.add('alwaysinline')
 
     block = function.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
