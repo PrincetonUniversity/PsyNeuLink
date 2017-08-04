@@ -27,7 +27,8 @@ cfunc_type = ctypes.CFUNCTYPE(None, ctypes.POINTER(ctypes.c_double), ctypes.POIN
 binf.c_func(ct_vec, ct_mat, x, y, ct_res)
 
 # Rebuild and try again
-pnlvm.llvm_build()
+# This is not a public API
+pnlvm._llvm_build()
 
 rebuild_res = copy.deepcopy(llvm_res)
 ct_res = rebuild_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))

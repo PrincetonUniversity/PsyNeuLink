@@ -62,10 +62,11 @@ with pnlvm.LLVMBuilderContext() as ctx:
     builder.call(builtin, [_v, _m, _x, _y, _o])
     builder.ret_void()
 
+# This triggers recompile if needed so it should be included in the measurement
+binf2 = pnlvm.LLVMBinaryFunction.get('vxsqm')
 stop = timeit.default_timer()
 print("Build time elapsed {:f}".format(stop-start))
 
-binf2 = pnlvm.LLVMBinaryFunction.get('vxsqm')
 start = timeit.default_timer()
 for _ in range(ITERATIONS):
     binf2(ct_vec, ct_mat, ct_res)

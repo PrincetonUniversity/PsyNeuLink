@@ -20,11 +20,12 @@ _module = ir.Module(name="PsyNeuLinkModule")
 # TODO: Should this be selectable?
 _int32_ty = ir.IntType(32)
 _float_ty = ir.DoubleType()
+_llvm_generation = 0
+_binary_generation = 0
 
 class LLVMBuilderContext:
-    def __init__(self, recompile=True):
+    def __init__(self):
         self.module = _module
-        self.__recompile = recompile
         self.int32_ty = _int32_ty
         self.float_ty = _float_ty
 
@@ -38,8 +39,8 @@ class LLVMBuilderContext:
         return self
 
     def __exit__(self, e_type, e_value, e_traceback):
-        if self.__recompile:
-            llvm_build()
+        global _llvm_generation
+        _llvm_generation += 1
 
 # Compiler binding
 binding.initialize()
@@ -84,7 +85,7 @@ _engine = binding.create_mcjit_compiler(__backing_mod, __target_machine)
 
 __mod = None
 
-def llvm_build():
+def _llvm_build():
     # Remove the old module
     global __mod
     if __mod is not None:
@@ -103,6 +104,13 @@ def llvm_build():
     # Now add the module and make sure it is ready for execution
     _engine.add_module(__mod)
     _engine.finalize_object()
+
+    if __dumpenv is not None and __dumpenv.find("compile") != -1:
+        global _binary_generation
+        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, _llvm_generation))
+
+    # update binary generation
+    _binary_generation = _llvm_generation;
 
     # This prints generated x86 assembly
     if __dumpenv is not None and __dumpenv.find("isa") != -1:
@@ -162,6 +170,8 @@ class LLVMBinaryFunction:
 
     @staticmethod
     def get(name):
+        if _llvm_generation > _binary_generation:
+            _llvm_build()
         if not name in _binaries.keys():
             _binaries[name] = LLVMBinaryFunction(name);
         return _binaries[name];
@@ -176,6 +186,6 @@ def _updateNativeBinaries(module, buffer):
 
 _engine.set_object_cache(_updateNativeBinaries)
 
-# Initialize builtins, recompile
+# Initialize builtins
 with LLVMBuilderContext() as ctx:
     builtins.setup_vxm(ctx)
