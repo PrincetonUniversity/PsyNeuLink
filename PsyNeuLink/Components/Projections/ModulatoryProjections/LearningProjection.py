@@ -357,7 +357,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = None
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,

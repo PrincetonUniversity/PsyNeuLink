@@ -54,7 +54,9 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    variableClassDefault = None
+    class ClassDefaults(Function_Base.ClassDefaults):
+        variable = None
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
                                FUNCTION_OUTPUT_TYPE_CONVERSION: False,

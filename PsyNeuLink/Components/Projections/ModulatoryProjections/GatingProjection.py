@@ -236,7 +236,8 @@ class GatingProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = 0.0
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = 0.0
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({

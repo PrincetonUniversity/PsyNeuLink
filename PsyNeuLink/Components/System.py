@@ -308,10 +308,12 @@ import math
 import numbers
 import re
 import warnings
+
 from collections import OrderedDict
 
 import numpy as np
 import typecheck as tc
+
 from toposort import toposort, toposort_flatten
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
@@ -932,18 +934,18 @@ class System_Base(System):
 
         # # MODIFIED 6/26/16 OLD:
         # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
-        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        # self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         # self.variable = convert_to_np_array(self.variable, 2)
         # FIX:  THIS CURRENTLY FAILS:
         # # MODIFIED 6/26/16 NEW:
         # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
-        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 3)
+        # self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 3)
         # self.variable = convert_to_np_array(self.variable, 3)
         # MODIFIED 10/2/16 NEWER:
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         if variable is None:
             return
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         self.variable = convert_to_np_array(self.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):

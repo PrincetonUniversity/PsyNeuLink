@@ -432,11 +432,12 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
+    class ClassDefaults(Projection.ClassDefaults):
+        variable = [0]
+
     registry = ProjectionRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
@@ -557,7 +558,7 @@ class Projection_Base(Projection):
             try:
                 if self.receiver.prefs.verbosePref:
                     warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                                  format(sender, self.name, self.variableClassDefault))
+                                  format(sender, self.name, self.ClassDefaults.variable))
                 variable = None
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))

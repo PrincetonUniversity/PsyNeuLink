@@ -899,8 +899,8 @@ class Process_Base(Process):
         super(Process_Base, self)._validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
-        if self.variableClassDefault:
-            self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        if self.ClassDefaults.variable:
+            self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         if variable is not None:
             self.variable = convert_to_np_array(self.variable, 2)
 

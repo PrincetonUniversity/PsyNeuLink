@@ -542,11 +542,12 @@ class State_Base(State):
     suffix = " " + className
     paramsType = None
 
+    class ClassDefaults(State.ClassDefaults):
+        variable = [0]
+
     registry = StateRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
@@ -2399,7 +2400,7 @@ def _parse_state_spec(owner,
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
         if state_spec is state_type:
-            state_dict[VARIABLE] = state_spec.variableClassDefault
+            state_dict[VARIABLE] = state_spec.ClassDefaults.variable
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type_name))

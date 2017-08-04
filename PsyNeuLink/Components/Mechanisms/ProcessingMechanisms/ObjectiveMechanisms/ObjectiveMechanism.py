@@ -443,7 +443,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
-    variableClassDefault = None
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        variable = None
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -660,7 +661,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_input_states(context=context)
 
-        # self.variableClassDefault = self.variable.copy()
+        # self.ClassDefaults.variable = self.variable.copy()
 
         # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []

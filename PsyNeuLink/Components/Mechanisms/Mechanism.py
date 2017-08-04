@@ -985,6 +985,9 @@ class Mechanism_Base(Mechanism):
     className = componentCategory
     suffix = " " + className
 
+    class ClassDefaults(Mechanism.ClassDefaults):
+        variable = [0.0]
+
     registry = MechanismRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -1004,8 +1007,6 @@ class Mechanism_Base(Mechanism):
     # IMPLEMENTATION NOTE: move this to a preference
     default_mechanism = DDM_MECHANISM
 
-
-    variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple States:  one 1D np.ndarray per state
     variableEncodingDim = 2
@@ -1189,7 +1190,7 @@ class Mechanism_Base(Mechanism):
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
+        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         variable = convert_to_np_array(variable, 2)
 
         return variable

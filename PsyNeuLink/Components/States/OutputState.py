@@ -555,6 +555,9 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
+    class ClassDefaults(State_Base.ClassDefaults):
+        variable = None
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -632,7 +635,7 @@ class OutputState(State_Base):
         """
         variable = super(OutputState, self)._validate_variable(variable, context)
 
-        self.variableClassDefault = self.reference_value
+        self.ClassDefaults.variable = self.reference_value
 
         # Insure that self.variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(variable, self.reference_value):

@@ -375,7 +375,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     standard_output_states = standard_output_states.copy()
 
-    variableClassDefault = [[0]]
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        variable = [[0]]
 
     @tc.typecheck
     def __init__(self,
@@ -403,7 +404,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             default_variable = [[0]]
 
-        self.variableClassDefault = default_variable
+        self.ClassDefaults.variable = default_variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,

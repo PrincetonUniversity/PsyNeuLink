@@ -315,7 +315,8 @@ class ComparatorMechanism(ObjectiveMechanism):
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # variableClassDefault = [[0],[0]]  # By default, ComparatorMechanism compares two 1D np.array input_states
-    variableClassDefault = None
+    class ClassDefaults(ObjectiveMechanism.ClassDefaults):
+        variable = None
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

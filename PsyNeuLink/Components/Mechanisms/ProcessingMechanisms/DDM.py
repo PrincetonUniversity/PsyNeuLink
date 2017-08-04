@@ -562,8 +562,9 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # Assigned in __init__ to match default staring_point
-    variableClassDefault = None
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Assigned in __init__ to match default staring_point
+        variable = None
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -596,7 +597,9 @@ class DDM(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   params=params)
 
-        self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
+        # TODO: stateful - is this correct? seems like if it's per instance this WILL mess up if you use two DDMs
+        # should be instance default probably
+        self.ClassDefaults.variable = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.

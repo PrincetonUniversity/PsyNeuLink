@@ -386,7 +386,8 @@ class LCA(RecurrentTransferMechanism):
 
     paramClassDefaults = RecurrentTransferMechanism.paramClassDefaults.copy()
 
-    variableClassDefault = [[0]]
+    class ClassDefaults(RecurrentTransferMechanism.ClassDefaults):
+        variable = [[0]]
 
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_NEXT})
     # paramClassDefaults[OUTPUT_STATES].append({NAME:MAX_VS_AVG})

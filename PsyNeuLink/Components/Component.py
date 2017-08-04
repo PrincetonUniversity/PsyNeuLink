@@ -656,6 +656,20 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class Defaults(object):
+        @classmethod
+        def values(cls):
+            vardict = {k: getattr(cls, k) for k in dir(cls) if k[:2]+k[-2:] != '____' and not callable(getattr(cls, k))}
+            return vardict
+
+    class ClassDefaults(Defaults):
+        variable = NotImplemented
+
+    class InstanceDefaults(Defaults):
+        def __init__(self, **kwargs):
+            for param in kwargs:
+                setattr(self, param, kwargs[param])
+
     initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
@@ -762,14 +776,14 @@ class Component(object):
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
-        # All subclasses must implement variableClassDefault
+        # All subclasses must implement self.ClassDefaults.variable
         # Do this here, as _validate_variable might be overridden by subclass
         try:
-            if self.variableClassDefault is NotImplemented:
-                raise ComponentError("variableClassDefault for {} must be assigned a value or \'None\'".
+            if self.ClassDefaults.variable is NotImplemented:
+                raise ComponentError("self.ClassDefaults.variable for {} must be assigned a value or \'None\'".
                                      format(self.componentName))
         except AttributeError:
-            raise ComponentError("variableClassDefault must be defined for {} or its base class".
+            raise ComponentError("self.ClassDefaults.variable must be defined for {} or its base class".
                                 format(self.componentName))
 
         # CHECK FOR REQUIRED PARAMS
@@ -870,7 +884,7 @@ class Component(object):
 
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
-            #     variable = self.variableClassDefault
+            #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
             # expected behavior when variable is None and size is None.
 
@@ -1569,7 +1583,7 @@ class Component(object):
             variable = self._validate_variable(variable, context=context)
             if self.variableInstanceDefault is None:
                 if variable is None:
-                    self.variableInstanceDefault = self.variableClassDefault
+                    self.variableInstanceDefault = self.ClassDefaults.variable
                 else:
                     self.variableInstanceDefault = variable
 
@@ -1873,14 +1887,14 @@ class Component(object):
     def _validate_variable(self, variable, context=None):
         """Validate variable and assign validated values to self.variable
 
-        Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:
+        Convert self.ClassDefaults.variable specification and variable (if specified) to list of 1D np.ndarrays:
 
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
         Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
-        Perform top-level type validation of variable against the variableClassDefault;
+        Perform top-level type validation of variable against the self.ClassDefaults.variable;
             if the type is OK, the value is assigned to self.variable (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
         It is called only if the parameter_validation attribute is `True` (which it is by default)
@@ -1898,22 +1912,22 @@ class Component(object):
             raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
                                  format(variable.__name__, self.name))
 
-        pre_converted_variable_class_default = self.variableClassDefault
+        pre_converted_variable_class_default = self.ClassDefaults.variable
 
         # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY
         # FIX: NOTE:  VARIABLE (BELOW) IS CONVERTED TO ONLY 1D ARRAY
-        # Convert variableClassDefault to list of np.ndarrays
-        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
+        # Convert self.ClassDefaults.variable to list of np.ndarrays
+        # self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 1)
 
         # If variable is not specified, then:
-        #    - assign to (??now np-converted version of) variableClassDefault
+        #    - assign to (??now np-converted version of) self.ClassDefaults.variable
         #    - mark as not having been specified
         #    - return
         self._variable_not_specified = False
         if variable is None:
-            self.variable = self.variableClassDefault
+            self.variable = self.ClassDefaults.variable
             self._variable_not_specified = True
-            return self.variableClassDefault
+            return self.ClassDefaults.variable
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -1929,14 +1943,14 @@ class Component(object):
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
         variable = convert_to_np_array(variable, 1)
 
-        # If variableClassDefault is locked, then check that variable matches it
+        # If self.ClassDefaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
-            # If variable type matches variableClassDefault
+            # If variable type matches self.ClassDefaults.variable
             #    then assign variable to self.variable
-            # if (type(variable) == type(self.variableClassDefault) or
+            # if (type(variable) == type(self.ClassDefaults.variable) or
             #         (isinstance(variable, numbers.Number) and
-            #              isinstance(self.variableClassDefault, numbers.Number))):
-            if not variable.dtype is self.variableClassDefault.dtype:
+            #              isinstance(self.ClassDefaults.variable, numbers.Number))):
+            if not variable.dtype is self.ClassDefaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
                     format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
                 raise ComponentError(message)
