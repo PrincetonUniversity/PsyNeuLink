@@ -17,13 +17,16 @@ from PsyNeuLink.llvm import builtins
 __dumpenv = os.environ.get("PNL_LLVM_DUMP")
 _module = ir.Module(name="PsyNeuLinkModule")
 
+# TODO: Should this be selectable?
+_int32_ty = ir.IntType(32)
+_float_ty = ir.DoubleType()
+
 class LLVMBuilderContext:
-    def __init__(self, recompile = True):
+    def __init__(self, recompile=True):
         self.module = _module
         self.__recompile = recompile
-        # TODO: Should this be selectable?
-        self.int32_ty = ir.IntType(32)
-        self.float_ty = ir.DoubleType()
+        self.int32_ty = _int32_ty
+        self.float_ty = _float_ty
 
     def get_llvm_function(self, name):
         f = self.module.get_global(name)
@@ -37,12 +40,6 @@ class LLVMBuilderContext:
     def __exit__(self, e_type, e_value, e_traceback):
         if self.__recompile:
             llvm_build()
-
-__context = LLVMBuilderContext()
-
-def llvm_get_current_ctx():
-    return __context
-
 
 # Compiler binding
 binding.initialize()
@@ -179,6 +176,6 @@ def _updateNativeBinaries(module, buffer):
 
 _engine.set_object_cache(_updateNativeBinaries)
 
-# Initialize builtins
-with llvm_get_current_ctx() as ctx:
+# Initialize builtins, recompile
+with LLVMBuilderContext() as ctx:
     builtins.setup_vxm(ctx)

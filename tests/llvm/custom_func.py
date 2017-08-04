@@ -24,7 +24,7 @@ ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
 binf.c_func(ct_vec, ct_mat, x, y, ct_res)
 
-with pnlvm.llvm_get_current_ctx() as ctx:
+with pnlvm.LLVMBuilderContext() as ctx:
     double_ptr_ty = ctx.float_ty.as_pointer()
     func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
@@ -39,9 +39,6 @@ with pnlvm.llvm_get_current_ctx() as ctx:
     builder = ir.IRBuilder(block)
     builder.call(builtin, [_v, _m, _x, _x, _o])
     builder.ret_void()
-
-# Rebuild and try again
-#pnlvm.llvm_build()
 
 binf2 = pnlvm.LLVMBinaryFunction.get('vxsqm')
 new_res = copy.deepcopy(llvm_res)
