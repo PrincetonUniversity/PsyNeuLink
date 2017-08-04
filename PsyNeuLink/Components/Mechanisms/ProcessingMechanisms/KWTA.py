@@ -5,7 +5,24 @@
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and limitations under the License.
 
-# **************************************** KWTA *************************************************
+# ****************************************************** KWTA **********************************************************
+
+"""
+
+Overview
+--------
+
+A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
+k-winners-take-all (kWTA) behavior.
+
+.. _KWTA_Creation:
+
+Creating a KWTA
+---------------
+
+
+
+"""
 
 import builtins
 import numbers
@@ -14,17 +31,18 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.InputState import InputState
-from PsyNeuLink.Globals.Keywords import FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX, INITIALIZING, INPUT_STATE, KWTA, RESULT
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
+from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, K_VALUE, KWTA, MATRIX, RATIO, RESULT, THRESHOLD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
-from PsyNeuLink.Globals.Utilities import append_type_to_name, is_matrix, is_numeric_or_none, iscompatible
+from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+import logging
 
+logger = logging.getLogger(__name__)
 
 class KWTAError(Exception):
     def __init__(self, error_value):
@@ -34,7 +52,7 @@ class KWTAError(Exception):
         return repr(self.error_value)
 
 class KWTA(RecurrentTransferMechanism):
-    """Subclass of `RecurrentTransferMechanism` that dynamically regulates the values the "activity" of its elements.
+    """Subclass of `RecurrentTransferMechanism` that dynamically regulates the "activity" of its elements.
     """
 
     componentType = KWTA
@@ -53,12 +71,12 @@ class KWTA(RecurrentTransferMechanism):
                  bias=0,
                  initial_value=None,
                  matrix=None,  # None defaults to a hollow uniform inhibition matrix
-                 auto: is_numeric_or_none=None,  # not used: only here to avoid bugs
-                 cross: is_numeric_or_none=None,
+                 auto: is_numeric_or_none=None,
+                 hetero: is_numeric_or_none=None,
                  decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,
-                 k_value: is_numeric_or_none = 0,
+                 k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
                  range=None,
@@ -70,171 +88,22 @@ class KWTA(RecurrentTransferMechanism):
                  context=componentType + INITIALIZING,
                  ):
 
-        kwta_log_function = Logistic(gain=gain, bias=bias)
+        kwta_log_function = Logistic(gain=gain, bias=bias) # the user doesn't get to choose the function of the KWTA
 
-        # IMPLEMENTATION NOTE: parts of this region may be redundant with code in Component._handle_size()
-        # region Fill in and infer default_variable and size if they aren't specified in args
         if default_variable is None and size is None:
-            if matrix is None:
-                default_variable = [[0]]
-                size=[1]
-            else:
-                try: # TODO: make this match the matrix handling in _validate_params() of RecurrentTransferMechanism
-                    if isinstance(matrix, list):
-                        size = len(matrix[0])
-                    else:
-                        size = matrix.shape[0]
-                except:
-                    raise KWTAError("Unable to parse matrix argument, {}. Please input a 2D array,"
-                                    " list, or numpy matrix".format(matrix))
+            default_variable = self.variableClassDefault
 
-        def checkAndCastInt(x):
-            if not isinstance(x, numbers.Number):
-                raise ComponentError("An element ({}) in size is not a number.".format(x))
-            if x < 1:
-                raise ComponentError("An element ({}) in size is not a positive number.".format(x))
-            try:
-                int_x = int(x)
-            except:
-                raise ComponentError(
-                    "Failed to convert an element ({}) in size argument for {} {} to an integer. size "
-                    "should be a number, or iterable of numbers, which are integers or "
-                    "can be converted to integers.".format(x, type(self), self.name))
-            if int_x != x:
-                if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                    warnings.warn("When an element ({}) in the size argument was cast to "
-                                  "integer, its value changed to {}.".format(x, int_x))
-            return int_x
+        # IMPLEMENTATION NOTE: somewhat redundant with the call to _handle_size() in Component: but this allows us
+        # to append zeros to default_variable immediately below, rather than wait to do it in
+        # _instantiate_attributes_before_function or elsewhere: the longer we wait, the more bugs are likely to exist
+        default_variable = self._handle_size(size, default_variable)
 
-        # 6/23/17: This conversion is safe but likely redundant. If, at some point in development, size and
-        # default_variable are no longer 2D or 1D arrays, this conversion should still be safe, but wasteful.
-        # region Convert default_variable (if given) to a 2D array, and size (if given) to a 1D integer array
-        try:
-            if default_variable is not None:
-                default_variable = np.atleast_2d(default_variable)
-                # 6/30/17 (CW): Previously, using default_variable or default_variable to create
-                # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
-                # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
-                if isinstance(default_variable[0], list) or isinstance(default_variable[0], np.ndarray):
-                    allLists = True
-                    for i in builtins.range(len(default_variable[0])):
-                        if isinstance(default_variable[0][i], (list, np.ndarray)):
-                            default_variable[0][i] = np.array(default_variable[0][i])
-                        else:
-                            allLists = False
-                            break
-                    if allLists:
-                        default_variable = default_variable[0]
-        except:
-            raise ComponentError("Failed to convert default_variable (of type {}) to a 2D array.".
-                                 format(type(default_variable)))
-
-        try:
-            if size is not None:
-                size = np.atleast_1d(size)
-                if len(np.shape(size)) > 1:  # number of dimensions of size > 1
-                    if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                        warnings.warn(
-                            "size had more than one dimension (size had {} dimensions), so only the first "
-                            "element of its highest-numbered axis will be used".format(len(np.shape(size))))
-                    while len(np.shape(size)) > 1:  # reduce the dimensions of size
-                        size = size[0]
-        except:
-            raise ComponentError("Failed to convert size (of type {}) to a 1D array.".format(type(size)))
-
-        if size is not None:
-            size = np.array(list(map(checkAndCastInt, size)))  # convert all elements of size to int
-        # endregion
-
-        # region If default_variable is None, make it a 2D array of zeros each with length=size[i]
-        # implementation note: for good coding practices, perhaps add setting to enable
-        # easy change of default_variable's default value, which is an array of zeros at the moment
-        # added 6/22/17
-        if default_variable is None and size is not None:
-            try:
-                default_variable = []
-                for s in size:
-                    default_variable.append(np.zeros(s))
-                default_variable = np.array(default_variable)
-            except:
-                raise ComponentError("default_variable was not specified, but PsyNeuLink was unable to "
-                                     "infer default_variable from the size argument, {}. size should be"
-                                     " an integer or an array or list of integers. Either size or "
-                                     "default_variable must be specified.".format(size))
-        # endregion
-
-        # region If size is None, then make it a 1D array of scalars with size[i] = length(default_variable[i])
-        # added 6/22/17
-        if size is None and default_variable is not None:
-            size = []
-            try:
-                for input_vector in default_variable:
-                    size.append(len(input_vector))
-                size = np.array(size)
-            except:
-                raise ComponentError(
-                    "size was not specified, but PsyNeuLink was unable to infer size from "
-                    "the default_variable argument, {}. default_variable can be an array,"
-                    " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                    " default_variable must be specified.".format(default_variable))
-        # endregion
-
-        # region If length(size) = 1 and default_variable is not None,
-        # then expand size to length(default_variable)
-        if len(size) == 1 and len(default_variable) > 1:
-            new_size = np.empty(len(default_variable))
-            new_size.fill(size[0])
-            size = new_size
-        # endregion
-
-        # check if default_variable and size are compatible, if not, then give
-        # warning and set size based on default_variable
-        if default_variable is not None and size is not None:
-            # If they conflict, give warning
-            if len(size) != len(default_variable):
-                if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                    warnings.warn("The size arg of {} conflicts with the length of its "
-                                  "default_variable arg ({}) at element {}: default_variable takes precedence".
-                                  format(self.name, size[i], default_variable[i], i))
-                size = []
-                try:
-                    for input_vector in default_variable:
-                        size.append(len(input_vector))
-                    size = np.array(size)
-                except:
-                    raise ComponentError(
-                        "size was not specified, but PsyNeuLink was unable to infer size from "
-                        "the default_variable argument, {}. default_variable can be an array,"
-                        " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                        " default_variable must be specified.".format(default_variable))
-            else:
-                for i in builtins.range(len(size)):
-                    if size[i] != len(default_variable[i]):
-                        if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                            warnings.warn("The size arg of {} ({}) conflicts with the length "
-                                          "of its default_variable arg ({}) at element {}: default_variable takes precedence".
-                                          format(self.name, size[i], default_variable[i], i))
-                        size = []
-                        try:
-                            for input_vector in default_variable:
-                                size.append(len(input_vector))
-                            size = np.array(size)
-                        except:
-                            raise ComponentError(
-                                "size was not specified, but PsyNeuLink was unable to infer size from "
-                                "the default_variable argument, {}. default_variable can be an array,"
-                                " list, a 2D array, a list of arrays, array of lists, etc. Either size or"
-                                " default_variable must be specified.".format(default_variable))
-        # endregion
-
-        # if default_variable was passed as a 1D vector, append an array of zeros to it.
-        if len(default_variable) == 1:
-            d = list(default_variable)
-            d.append(np.zeros(len(default_variable[0])))
-            default_variable = np.array(d)
+        # append an array of zeros to default_variable, to represent the zero outside input to the inhibition vector.
+        d = list(default_variable)
+        d.append(np.zeros(len(default_variable[0])))
+        default_variable = np.array(d)
 
         # region set up the additional input_state that will represent inhibition
-        # convert input_states to a list, if it was a dict before: this makes working with it easier
         if isinstance(input_states, dict):
             input_states = [input_states]
 
@@ -242,6 +111,7 @@ class KWTA(RecurrentTransferMechanism):
             input_states = ["Default_input_state"]
 
         if isinstance(input_states, list) and len(input_states) > 1:
+            # probably useless since self never has an attribute `prefs` at this point?
             if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
                 warnings.warn("kWTA adjusts only the FIRST input state. If you have multiple input states, "
                               "only the primary one will be adjusted to have k values above the threshold.")
@@ -253,18 +123,23 @@ class KWTA(RecurrentTransferMechanism):
                                                   k_value=k_value,
                                                   threshold=threshold,
                                                   ratio=ratio)
-
+        # this defaults the matrix to be a hollow uniform inhibition matrix
         if matrix is None:
-            matrix = np.full((size[0], size[0]), -1) * get_matrix(HOLLOW_MATRIX, size[0], size[0])
+            if auto is None:
+                auto = 0
+            if hetero is None:
+                hetero = -1
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
                          function=kwta_log_function,
+                         matrix=matrix,
+                         auto=auto,
+                         hetero=hetero,
                          initial_value=initial_value,
                          decay=decay,
                          noise=noise,
-                         matrix=matrix,
                          time_constant=time_constant,
                          range=range,
                          output_states=output_states,
@@ -274,67 +149,67 @@ class KWTA(RecurrentTransferMechanism):
                          prefs=prefs,
                          context=context)
 
-    def _instantiate_input_states(self, context=None):
-        # this code is copied heavily from InputState.py, devel branch 6/26/17
-        # the reason for this is to override the param-check that causes InputState to throw an exception
-        # because the number of input_states is different from the length of the mechanism's "variable"
-        owner = self
-
-        # extendedSelfVariable = list(self.variable)
-        # extendedSelfVariable.append(np.ones(self.size[0]))
-        # extendedSelfVariable = np.array(extendedSelfVariable)
-
-        from PsyNeuLink.Components.States.State import _instantiate_state_list
-        state_list = _instantiate_state_list(owner=owner,
-                                             state_list=owner.input_states,
-                                             state_type=InputState,
-                                             state_param_identifier=INPUT_STATE,
-                                             constraint_value=self.variable,
-                                             constraint_value_name="kwta-extended function variable",
-                                             context=context)
-
-        # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
-        #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
-        # if context and 'COMMAND_LINE' in context:
-        #     if owner.input_states:
-        #         owner.input_states.extend(state_list)
-        #     else:
-        #         owner.input_states = state_list
-        # else:
-        #     if owner._input_states:
-        #         owner._input_states.extend(state_list)
-        #     else:
-        #         owner._input_states = state_list
-
-        # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
-        # FIX: Hack to prevent recursion in calls to setter and assign_params
-        if context and 'COMMAND_LINE' in context:
-            owner.input_states = state_list
-        else:
-            owner._input_states = state_list
-
-        # Check that number of input_states and their variables are consistent with owner.variable,
-        #    and adjust the latter if not
-        for i in builtins.range(len(owner.input_states)):
-            input_state = owner.input_states[i]
-            try:
-                variable_item_is_OK = iscompatible(self.variable[i], input_state.value)
-                if not variable_item_is_OK:
-                    break
-            except IndexError:
-                variable_item_is_OK = False
-                break
-
-        if not variable_item_is_OK:
-            old_variable = owner.variable
-            new_variable = []
-            for state_name, state in owner.input_states:
-                new_variable.append(state.value)
-            owner.variable = np.array(new_variable)
-            if owner.verbosePref:
-                warnings.warn("Variable for {} ({}) has been adjusted "
-                              "to match number and format of its input_states: ({})".
-                              format(old_variable, append_type_to_name(owner), owner.variable))
+    # def _instantiate_input_states(self, context=None):
+    #     # this code is copied heavily from InputState.py, devel branch 6/26/17
+    #     # the reason for this is to override the param-check that causes InputState to throw an exception
+    #     # because the number of input_states is different from the length of the mechanism's "variable"
+    #     owner = self
+    #
+    #     # extendedSelfVariable = list(self.variable)
+    #     # extendedSelfVariable.append(np.ones(self.size[0]))
+    #     # extendedSelfVariable = np.array(extendedSelfVariable)
+    #
+    #     from PsyNeuLink.Components.States.State import _instantiate_state_list
+    #     state_list = _instantiate_state_list(owner=owner,
+    #                                          state_list=owner.input_states,
+    #                                          state_type=InputState,
+    #                                          state_param_identifier=INPUT_STATE,
+    #                                          constraint_value=self.variable,
+    #                                          constraint_value_name="kwta-extended function variable",
+    #                                          context=context)
+    #
+    #     # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
+    #     #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
+    #     # if context and 'COMMAND_LINE' in context:
+    #     #     if owner.input_states:
+    #     #         owner.input_states.extend(state_list)
+    #     #     else:
+    #     #         owner.input_states = state_list
+    #     # else:
+    #     #     if owner._input_states:
+    #     #         owner._input_states.extend(state_list)
+    #     #     else:
+    #     #         owner._input_states = state_list
+    #
+    #     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
+    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
+    #     if context and 'COMMAND_LINE' in context:
+    #         owner.input_states = state_list
+    #     else:
+    #         owner._input_states = state_list
+    #
+    #     # Check that number of input_states and their variables are consistent with owner.variable,
+    #     #    and adjust the latter if not
+    #     for i in builtins.range(len(owner.input_states)):
+    #         input_state = owner.input_states[i]
+    #         try:
+    #             variable_item_is_OK = iscompatible(self.variable[i], input_state.value)
+    #             if not variable_item_is_OK:
+    #                 break
+    #         except IndexError:
+    #             variable_item_is_OK = False
+    #             break
+    #
+    #     if not variable_item_is_OK:
+    #         old_variable = owner.variable
+    #         new_variable = []
+    #         for state_name, state in owner.input_states:
+    #             new_variable.append(state.value)
+    #         owner.variable = np.array(new_variable)
+    #         if owner.verbosePref:
+    #             warnings.warn("Variable for {} ({}) has been adjusted "
+    #                           "to match number and format of its input_states: ({})".
+    #                           format(old_variable, append_type_to_name(owner), owner.variable))
 
     # adds indexOfInhibitionInputState to the attributes of KWTA
     def _instantiate_attributes_before_function(self, context=None):
@@ -342,14 +217,19 @@ class KWTA(RecurrentTransferMechanism):
         super()._instantiate_attributes_before_function(context=context)
 
         # this index is saved so the KWTA mechanism knows which input state represents inhibition
+        # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,
+        # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
-        int_k_value = int(self.k_value[0])
+        try:
+            int_k_value = int(self.k_value[0])
+        except:
+            int_k_value = int(self.k_value)
         # ^ this is hacky but necessary for now, since something is
         # incorrectly turning self.k_value into an array of floats
         n = self.size[0]
         if (self.k_value[0] > 0) and (self.k_value[0] < 1):
-            k = int(round(int_k_value * n))
+            k = int(round(self.k_value[0] * n))
         elif (int_k_value < 0):
             k = n - int_k_value
         else:
@@ -357,45 +237,27 @@ class KWTA(RecurrentTransferMechanism):
 
         self.int_k = k
 
-    def _instantiate_attributes_after_function(self, context=None):
-
-        super(RecurrentTransferMechanism, self)._instantiate_attributes_after_function(context=context)
-
-        if isinstance(self.matrix, MappingProjection):
-            self.recurrent_projection = self.matrix
-
-        else:
-            self.recurrent_projection = _instantiate_recurrent_projection(self, self.matrix, context=context)
-
-        self._matrix = self.recurrent_projection.matrix
+        a = get_auto_matrix(self.auto, self.size[0])
+        h = get_hetero_matrix(self.hetero, self.size[0])
+        mat = a + h
+        flat_mat = mat.flatten()
+        if not (flat_mat <= 0).all() and not (flat_mat >= 0).all():
+            raise KWTAError("matrix {} for {} should be non-positive, or "
+                            "non-negative. Mixing positive and negative values can create non-supported "
+                            "inhibition vectors".format(mat, self))
 
     # this function returns the KWTA-scaled current_input, which is scaled based on
-    # self.k_value, self.threshold, and self.ratio
+    # self.k_value, self.threshold, self.ratio, and of course the inhibition vector
     def _kwta_scale(self, current_input, context=None):
 
         k = self.int_k
 
         inhibVector = self.input_states[self.indexOfInhibitionInputState].value  # inhibVector is the inhibition input
-        inhibVector = np.array(inhibVector)  # may be redundant
-        if (inhibVector == 0).all():
-            if type(context) == str and INITIALIZING not in context:
-                print("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
-                      format(inhibVector, current_input))
-            inhibVector = np.ones(int(self.size[0]))
-        if (inhibVector > 0).all():
-            inhibVector = -1 * inhibVector
-        if (inhibVector == 0).any():
-            raise KWTAError("inhibVector ({}) contained some, but not all, zeros: not "
-                            "currently supported".format(inhibVector))
-        if (inhibVector > 0).any():
-            raise KWTAError("inhibVector ({}) was not all positive or all negative: not "
-                            "currently supported".format(inhibVector))
-        if len(inhibVector) != len(current_input):
-            raise KWTAError("The inhibition vector ({}) is of a different length than the"
-                            " current primary input vector ({}).".format(inhibVector, current_input))
+        inhibVector = self._validate_inhib(inhib=inhibVector, inp=current_input, context=context)
 
         if not isinstance(current_input, np.ndarray):
-            warnings.warn("input was not a numpy array: this may cause unexpected KWTA behavior")
+            logger.warning("input ({}) of type {} was not a numpy array: this may cause unexpected KWTA behavior".
+                           format(current_input, current_input.__class__.__name__))
 
         sortedInput = sorted(current_input, reverse=True)  # sortedInput is the values of current_input, sorted
 
@@ -423,7 +285,7 @@ class KWTA(RecurrentTransferMechanism):
         # for most situations where the inhibition vector is negative, a lower ratio means more inhibition
         sk = sorted(scales, reverse=True)[k]
         skMinusOne = sorted(scales, reverse=True)[k - 1]
-        final_scale = sorted(scales, reverse=True)[k] * self.ratio + sorted(scales, reverse=True)[k - 1] * (1 - self.ratio)
+        final_scale = sk * self.ratio + skMinusOne * (1 - self.ratio)
 
         out = current_input + final_scale * inhibVector
 
@@ -432,6 +294,27 @@ class KWTA(RecurrentTransferMechanism):
                           "and the KWTA-scaled input was {}".format(current_input, inhibVector, out))
 
         return out
+
+    def _validate_inhib(self, inhib, inp, context=None):
+        inhib = np.array(inhib)
+        if (inhib == 0).all():
+            if type(context) == str and INITIALIZING not in context:
+                logger.info("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
+                      format(inhib, inp))
+            inhib = np.ones(int(self.size[0]))
+        if (inhib > 0).all():
+            inhib = -1 * inhib
+        if (inhib == 0).any():
+            raise KWTAError("inhibition vector ({}) for {} contained some, but not all, zeros: not "
+                            "currently supported".format(inhib, self))
+        if (inhib > 0).any():
+            raise KWTAError("inhibition vector ({}) for {} was not all positive or all negative: not "
+                            "currently supported".format(inhib, self))
+        if len(inhib) != len(inp):
+            raise KWTAError("The inhibition vector ({}) for {} is of a different length than the"
+                            " current primary input vector ({}).".format(inhib, self, input))
+
+        return inhib
 
     # # deprecated: used when variable was length 1.
     # def execute(self,
@@ -461,6 +344,69 @@ class KWTA(RecurrentTransferMechanism):
 
     # this is the exact same as _execute in TransferMechanism, except that this _execute calls _kwta_scale()
     # and implements decay as self.previous_input *= self.decay
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate shape and size of matrix and decay.
+        """
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+
+        if RATIO in target_set:
+            ratio_param = target_set[RATIO]
+            if not isinstance(ratio_param, numbers.Real):
+                if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+                    raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
+
+        if K_VALUE in target_set:
+            k_param = target_set[K_VALUE]
+            if not isinstance(k_param, numbers.Real):
+                if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
+                    raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
+
+        if THRESHOLD in target_set:
+            threshold_param = target_set[THRESHOLD]
+            if not isinstance(threshold_param, numbers.Real):
+                if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
+                    raise KWTAError(
+                        "k-value parameter ({}) for {} must be a single number".format(threshold_param, self))
+
+        # Validate MATRIX
+        if MATRIX in target_set:
+
+            matrix_param = target_set[MATRIX]
+            size = len(self.variable[0])
+            if isinstance(matrix_param, MappingProjection):
+                matrix = matrix_param.matrix
+            else:
+                matrix = get_matrix(matrix_param, size, size)
+            if matrix is not None:
+                flat_mat = matrix.flatten()
+                if not (flat_mat <= 0).all() and not (flat_mat >= 0).all():
+                    raise KWTAError("matrix {} (from matrix specification {}) for {} should be non-positive, or "
+                                    "non-negative. Mixing positive and negative values can create non-supported "
+                                    "inhibition vectors".format(matrix, matrix_param, self))
+
+            # 8/1/17 CW: if matrix is not all non-negative or non-positive, then it may result in inappropriate
+            # inhibition vectors since KWTA currently does not support inhibVectors that are part positive part negative
+
+    def execute(self,
+                input=None,
+                runtime_params=None,
+                clock=CentralClock,
+                time_scale=TimeScale.TRIAL,
+                ignore_execution_id = False,
+                context=None):
+        if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
+            raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
+                            format(input, self, self.__class__.__name__))
+        if input is not None:
+            input = list(np.atleast_2d(input))
+            if (input is not None) and len(input) == len(self.variable) - 1:
+                input.append(np.zeros(self.size[0]))
+            input = np.array(input)
+
+        return super().execute(input=input, runtime_params=runtime_params, clock=clock, time_scale=time_scale,
+                               ignore_execution_id=ignore_execution_id, context=context)
     def _execute(self,
                 variable=None,
                 runtime_params=None,
@@ -468,7 +414,7 @@ class KWTA(RecurrentTransferMechanism):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        self.variable[0] = self._kwta_scale(self.variable[0], context = context)
+        self.variable[0] = self._kwta_scale(self.variable[0], context=context)
 
         return super()._execute(variable=self.variable,
                        runtime_params=runtime_params,
@@ -611,19 +557,20 @@ class KWTA(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-@tc.typecheck
-def _instantiate_recurrent_projection(mech: Mechanism_Base,
-                                      matrix: is_matrix = FULL_CONNECTIVITY_MATRIX,
-                                      context=None):
-    """Instantiate a MappingProjection from mech to itself
+    @tc.typecheck
+    def _instantiate_recurrent_projection(self,
+                                          mech: Mechanism_Base,
+                                          matrix=FULL_CONNECTIVITY_MATRIX,
+                                          context=None):
+        """Instantiate a MappingProjection from mech to itself
 
-    """
+        """
 
-    if isinstance(matrix, str):
-        size = len(mech.variable[0])
-        matrix = get_matrix(matrix, size, size)
+        if isinstance(matrix, str):
+            size = len(mech.variable[0])
+            matrix = get_matrix(matrix, size, size)
 
-    return MappingProjection(sender=mech,
-                             receiver=mech.input_states[mech.indexOfInhibitionInputState],
-                             matrix=matrix,
-                             name=mech.name + ' recurrent projection')
+        return AutoAssociativeProjection(sender=mech,
+                                         receiver=mech.input_states[mech.indexOfInhibitionInputState],
+                                         matrix=matrix,
+                                         name=mech.name + ' recurrent projection')

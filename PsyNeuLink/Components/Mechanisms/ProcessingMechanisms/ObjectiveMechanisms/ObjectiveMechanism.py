@@ -304,7 +304,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Description:
             ObjectiveMechanism is a subtype of the ProcessingMechanism Type of the Mechanism Category of the
                 Component class
-            It's function uses the LinearCombination Function to compare two input variables
+            Its function uses the LinearCombination Function to compare two input variables
             COMPARISON_OPERATION (functionParams) determines whether the comparison is subtractive or divisive
             The function returns an array with the Hadamard (element-wise) differece/quotient of target vs. sample,
                 as well as the mean, sum, sum of squares, and mean sum of squares of the comparison array

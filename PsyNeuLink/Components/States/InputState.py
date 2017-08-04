@@ -35,6 +35,8 @@ being created within the `pathway <Process_Base.pathway` of a `Process`, its Inp
 as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
 `pathway <Process_Base.pathway>`.
 
+.. _InputState_Deferred_Initialization:
+
 An InputState must be owned by a `Mechanism`.  When InputState is specified in the constructor for a `Mechanism`
 (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
 InputState is created directly, its `owner <InputState.owner>` can specified in the **owner** argument of its
@@ -153,7 +155,7 @@ A Mechanism must have one InputState for each item of its `variable <Mechanism_B
 Mechanism's constructor determines the number of items in its `variable <Mechanism_Base>`, which ordinarily matches
 the size (along axis 0) of the input expected by its `function <Mechanism_Base.function>`.  Therefore,
 if any InputStates are specified in the constructor, the number of them must match the number of items in
-`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism's using `add_states` method;  this
+`variable <Mechanism_Base.variable>`.  InputStates can be added to a Mechanism using its `add_states` method;  this
 extends its `variable <Mechanism_Base.variable>` by a number of items equal to the number of InputStates
 added, and each new item is assigned a value compatible with the `value <InputState.value>` of the corresponding
 InputState added.
@@ -260,7 +262,7 @@ from PsyNeuLink.Globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_S
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-
+from PsyNeuLink.Components.Component import InitStatus
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,

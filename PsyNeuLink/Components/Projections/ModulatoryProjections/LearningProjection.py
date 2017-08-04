@@ -47,14 +47,15 @@ needed to implement learning for the MappingProjection (see `LearningMechanism_L
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When a LearningProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+When a LearningProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
 `sender <LearningProjection.sender>` and `receiver <LearningProjection.receiver>` have been fully specified.  This
 allows a LearningProjection to be created before its `sender` and/or `receiver` have been created (e.g., before them
 in a script), by calling its constructor without specifying its **sender** or **receiver** arguments.
 However, for the LearningProjection to be operational, initialization must be completed by calling its `deferred_init`
-method.  This is not necessary if learning has been specified for a `System <System_Execution_Learning>`,
-`Process <Process_Learning>`, or as the `Projection <MappingProjection_Tuple_Specification>` in the `pathway` of a
-Process -- in those cases, deferred initialization is completed automatically.
+method.  This is not necessary if the LearningProjection` is included in a `tuple specification
+<MappingProjection_Tuple_Specification>` for the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`,
+in which case deferred initialization is completed automatically when the `LearningMechanism` associated with that
+MappingProjection is created for the `Process` or `System` to which it belongs (see `LearningMechanism_Creation`).
 
 .. _LearningProjection_Structure:
 
@@ -458,7 +459,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.value, self.receiver.variable):
+        if not iscompatible(self.value, self.receiver.value):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,

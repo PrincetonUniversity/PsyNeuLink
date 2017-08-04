@@ -103,7 +103,7 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
-from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, MEAN, MEDIAN, NOISE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING,  MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
@@ -395,6 +395,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                  context=componentType+INITIALIZING):
         """Assign type-level preferences and call super.__init__
         """
+        # MODIFIED 7/21/17 CW: Removed output_states = [RESULT] from initialization, due to potential bugs with
+        # mutable default arguments (see: bit.ly/2uID3s3)
+        if output_states is None:
+            output_states = [RESULT]
 
         if default_variable is None and size is None:
             default_variable = [[0]]
@@ -649,17 +653,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                                             self.variable,
                                             initializer = self.initial_value,
                                             noise = self.noise,
-                                            rate = self.time_constant
+                                            rate = self.time_constant,
+                                            owner = self
                                             )
 
             current_input = self.integrator_function.execute(self.variable,
                                                         # Should we handle runtime params?
-                                                             # params={INITIALIZER: self.previous_input,
-                                                             #         INTEGRATION_TYPE: ADAPTIVE,
-                                                             #         NOISE: self.noise,
-                                                             #         RATE: self.time_constant}
-                                                             # context=context
-                                                             # name=Integrator.componentName + '_for_' + self.name
+                                                             params={INITIALIZER: self.initial_value,
+                                                                     NOISE: self.noise,
+                                                                     RATE: self.time_constant},
+                                                             context=context
                                                              )
 
         elif time_scale is TimeScale.TRIAL:

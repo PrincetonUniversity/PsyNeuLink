@@ -14,21 +14,11 @@
 Overview
 --------
 
-COMMENT:
-    VERSION WITH MORE LINKS:
-    A MappingProjection transmits the `value <OutputState.OutputState.value>` of an `OutputState <OutputState>` of one
-    `ProcessingMechanism` (its `sender <MappingProjection.sender>`) to the `InputState <InputState>` of another
-    (its `receiver <MappingProjection.receiver>`).  The default `function <MappingProjection.function>` for a
-    MappingProjection is  `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>`
-    attribute to transform the value received from its `sender <MappingProjection.sender>` and provide the result to its
-    `receiver <MappingProjection.receiver>`.
-COMMENT
-
-A MappingProjection transmits the `value <OutputState.OutputState.value>` of an `OutputState <OutputState>` of one
-`ProcessingMechanism` (its sender) to the `InputState <InputState>` of another (its receiver).  The default function
-for a MappingProjection is  `LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>`
-attribute to transform the value received from its sender and provide the result to its receiver.
-
+A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism` (its
+`sender <MappingProjection.sender>`) to the `InputState` of another (its `receiver <MappingProjection.receiver>`).
+The default `function <MappingProjection.function>` for a MappingProjection is  `LinearMatrix`, which uses the
+MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the value received from its `sender
+<MappingProjection.sender>` and provide the result to its `receiver <MappingProjection.receiver>`.
 
 .. _Mapping_Creation:
 
@@ -98,6 +88,23 @@ It can be specified in any of the following formats:
       XXXXX IF NOT, THEN CULL matrix_spec SETTER TO ONLY ALLOW THE ONES THAT ARE SUPPORTED
   COMMENT
 
+COMMENT:
+XXX ADD THIS:
+.. _MappingProjection_Deferred_Initialization:
+
+Deferred Initialization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When a ControlProjection is created, its full initialization is :ref:`deferred <Component_Deferred_Init>` until its
+`sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+a ControlProjection to be created before its `sender` (and/or `receiver`) have been created (e.g., before them in a
+script), by calling its constructor without specifying its **sender** or **receiver** arguments. However, for the
+ControlProjection to be operational, initialization must be completed by calling its `deferred_init` method.  This is
+not necessary if the parameter(s) to be controlled are specified in the **control_signals** argument of a `System`, or
+in a tuple specifying the parameter of a `Mechanism` (or its `function <Mechanism.function`) that is part of a System
+-- in those cases, deferred initialization is completed automatically.
+COMMENT
+
 .. _Mapping_Structure:
 
 Structure
@@ -128,21 +135,21 @@ In addition to its `function <MappingProjection.function>`, MappingProjections u
   input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
   different formats, as described `above <Mapping_Matrix_Specification>`.
 
-.. _Projection_Execution:
+.. _Mapping_Execution:
 
 Execution
 ---------
 
 A MappingProjection uses its `function <MappingProjection.function>` and `matrix <MappingProjection.matrix>
 parameter to transform the value of its `sender <MappingProjection.sender>`, and assign this as the variable for its
-`receiver <MappingProjection.receiver>`.  When executed, updating its ParameterStates will cause in turn update
-the its `matrix <MappingProjection.matrix>` parameter based on any Projections it receives (e.g., a `LearningProjection`).
+`receiver <MappingProjection.receiver>`.  When executed, updating its ParameterStates will cause it in turn to update
+its `matrix <MappingProjection.matrix>` parameter based on any Projections it receives (e.g., a `LearningProjection`).
 This will bring into effect any changes that occurred during the previous execution (e.g., due to learning).
 Because of :ref:`Lazy Evaluation <LINK>`, those changes will only take effect after the current execution (as a
 consequence, inspecting `matrix <MappingProjection.matrix>` will not show the effects of Projections to its
 ParameterState until the MappingProjection has been executed).
 
-.. _Projection_Class_Reference:
+.. _Mapping_Class_Reference:
 
 
 Class Reference
@@ -159,7 +166,7 @@ from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, Line
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Projection
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -328,7 +335,7 @@ class MappingProjection(PathwayProjection_Base):
         # Assign matrix to function_params for use as matrix param of MappingProjection.function
         # (7/12/17 CW) this is a PATCH to allow the user to set matrix as an np.matrix... I still don't know why
         # it wasn't working.
-        if isinstance(matrix, np.matrix):
+        if isinstance(matrix, (np.matrix, list)):
             matrix = np.array(matrix)
 
         params = self._assign_args_to_param_dicts(
@@ -469,7 +476,13 @@ class MappingProjection(PathwayProjection_Base):
 
         """
 
-        # FIX: NEED TO EXECUTE PROJECTIONS TO PARAMS HERE (PER update_parameter_state FOR A MECHANISM)
+        # IMPLEMENTATION NOTE (7/28/17 CW): The execute() method in AutoAssociativeProjection is heavily based on
+        # this one, so if you make a change here, please make it there as well.
+
+        # (7/18/17 CW) note that we don't let MappingProjections related to System inputs execute here (due to a
+        # minor bug with execution ID): maybe we should just fix this bug instead, if it's useful to do so
+        if "System" not in str(self.sender.owner):
+            self._update_parameter_states(runtime_params=params, time_scale=time_scale, context=context)
 
         # Check whether error_signal has changed
         if self.learning_mechanism and self.learning_mechanism.status == CHANGED:
@@ -517,11 +530,23 @@ class MappingProjection(PathwayProjection_Base):
                                "an np.matrix, a 2d np.array, or a correspondingly configured list".
                                format(self.name, matrix))
 
+        matrix = np.array(matrix)
+
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         # self.function.__self__.matrix = matrix
         self.function_object.matrix = matrix
+
+        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
+        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
+        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
+        # fix this bug and make setting myMappingProjection.matrix effective.
+        # REMOVED 7/26/17 CW: feel free to remove all this commented block
+        # if MATRIX in self._parameter_states.key_values:
+        #     if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
+        #         self._parameter_states[MATRIX].function_object.variable = matrix
+        #         self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
 
     @property
     def _matrix_spec(self):
