@@ -63,11 +63,13 @@ Structure
 ---------
 
 The `sender <LearningProjection.sender>` of a LearningProjection is a `LearningSignal` of a `LearningMechanism`.  Its
-`receiver <LearningProjection.receiver>` is the *MATRIX* `ParameterState` of a `MappingProjection`,  The
+`receiver <LearningProjection.receiver>` is the *MATRIX* `ParameterState` of a `MappingProjection`.  The
 `function <LearningProjection.function>` of a LearningProjection is, by default, the identity function;  that is,
 it conveys the `value <LearningSignal.value>` of its `sender <LearningProjection.sender>` to
 its `receiver <LearningProjection.receiver>`, for use in modifying the `matrix <MappingProjection.matrix>` parameter
-of the `MappingProjection` being learned.
+of the `MappingProjection` being learned.  The `value <LearningProjection.value>` is a matrix of weight changes to be
+made to the MappingProjection (it is the same as LearningProjection's `weight_change_matrix
+<LearningProjection.weight_change_matrix>` attribute).
 
 .. _LearningProjection_Execution:
 
@@ -284,8 +286,10 @@ class LearningProjection(ModulatoryProjection_Base):
         See `learning_rate <LearningMechanism_Learning_Rate>` for additional details.
 
     weight_change_matrix : 2d np.array
-        matrix of changes to be made to the `mappingWeightMatrix`, after learning_rate has been applied to the
-        `learning_signal <LearningProjection.learning_signal>`; same as `value <LearningProjection.value>`.
+        matrix of changes to be made to the `matrix <MappingProjection.matrix>` parameter of the `learned_projection
+        <LearningProjection.learned_projection>`, after `learning_rate <LearningProjection.learning_rate>` has been
+        applied to the `learning_signal <LearningProjection.learning_signal>`; same as `value
+        <LearningProjection.value>`.
 
     value : 2d np.array
         same as `weight_change_matrix`.
