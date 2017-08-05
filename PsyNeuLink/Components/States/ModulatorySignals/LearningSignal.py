@@ -39,8 +39,10 @@ Specifying LearningSignals
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a LearningSignal is specified in the **learning_signals** argument of the constructor for a `LearningMechanism`,
-the `ParameterState(s) ParameterState` of the `MappingProjection(s) <MappingProjection>` being learning must be
+the `ParameterState(s) <ParameterState>` of the `MappingProjection(s) <MappingProjection>` being learning must be
 specified.  This can take any of the following forms:
+
+  * an existing LearningSignal, or a reference to the class (in which case a default LearningSignal is created);
 
   * a **ParameterState**, which must be for the `matrix <MappingProjection.matrix>` parameter of the
     `MappingProjection` to be learned;
@@ -102,13 +104,13 @@ Modulation
 A LearningSignal has a `modulation <LearningSignal.modulation>` attribute that determines how the LearningSignal's
 `value <LearningSignal.value>` (i.e., its `learning_signal <LearningSignal.learning_signal>`) is used by the
 ParameterState(s) to which it projects to modify the `matrix <MappingProjection.matrix>` parameter(s) of their
-MappingProjection(s) (see `ModulatorySignal_Modulation` for an explanation of how the modulation is specified and
-used to modulate the value of a parameter).  The default value is set to the value of the `modulation
-<LearningMechanism.modulation>` attribute of the LearningMechanism to which the LearningSignal belongs;  this is the
-same for all of the LearningSignals belonging to that LearningMechanism. The default value of
-`modulation <LearningMechanism.modulation>` for a LearningMechanism is `ADDITIVE`, which causes the
-`learning_signal <LearningSignal.learning_signal>` (i.e., its matrix of weight changes) to be added to the
-`matrix <MappingProjection.matrix>` parameter of the MappingProjection being learned.  The
+MappingProjection(s) (see `ModulatorySignal Modulation <ModulatorySignal_Modulation>` for an explanation of how the
+`modulation <LearningSignal.modulation>` attribute is specified and used to modify the value of a parameter).  The
+default value is set to the value of the `modulation <LearningMechanism.modulation>` attribute of the
+LearningMechanism to which the LearningSignal belongs;  this is the same for all of the LearningSignals belonging to
+that LearningMechanism. The default value of `modulation <LearningMechanism.modulation>` for a LearningMechanism is
+`ADDITIVE`, which causes the `learning_signal <LearningSignal.learning_signal>` (i.e., its matrix of weight changes)
+to be added to the `matrix <MappingProjection.matrix>` parameter of the MappingProjection being learned.  The
 `modulation <LearningSignal.modulation>` can be individually specified for a LearningSignal using a
 specification dictionary where the LearningSignal itself is specified, as described
 `above <LearningSignal_Specification>`. The `modulation <LearningSignal.modulation>` value of a LearningSignal is

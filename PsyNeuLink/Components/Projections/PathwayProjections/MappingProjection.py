@@ -25,7 +25,10 @@ MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform t
 Creating a MappingProjection
 -----------------------------
 
-A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`).
+A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
+(see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <MappingProjection.sender>` and
+`receiver <MappingProjection.receiver>` attributes, respectively).
+
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
@@ -48,8 +51,8 @@ MappingProjections are also generated automatically in the following circumstanc
 
 .. _Mapping_Matrix_Specification:
 
-Matrix Parameter
-~~~~~~~~~~~~~~~~
+Specifying the Matrix Parameter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a MappingProjection is created explicitly, the **matrix** argument of its constructor can be used to specify
 its `matrix <MappingProjection.matrix>` parameter.  This is used by the MappingProjection's `function
@@ -80,8 +83,33 @@ following ways:
 
   * **Tuple** -- used to specify the `matrix <MappingProjection.matrix>` along with a specification for learning;
     The tuple must have two items: the first can be any of the specifications described above; the second must be
-    a specification for `LearningProjection`, using either the keywords *LEARNING_PROJECTION* or *LEARNING*, or a
+    a specification for `LearningProjection`, using either the keywords *LEARNING_PROJECTION*, *LEARNING*, or a
     reference to the class (in which case a default LearningProjection is created), or an existing LearningProjection.
+
+
+.. _MappingProjection_Learning_Specification:
+
+Specifying Learning
+~~~~~~~~~~~~~~~~~~~
+
+The `matrix <MappingProjection.matrix>` parameter of a MappingProjection can be specified for learning by assigning it
+a `LearningProjection` (see LearningMechanism documentation for an overview of `learning components
+<LearningMechanism_Overview>` and a detailed description of `LearningMechanism_Learning_Configurations`;  see
+`MappingProjection_Learning` below for a description of how learning modifies a MappingProjection).  A
+LearningProjection can be assigned to a MappingProjection in any of the following ways:
+
+    * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
+      <MappingProjection_Tuple_Specification>` described above;
+    ..
+    * by specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
+      <LearningProjection.receiver>` of a `LearningProjection`;
+    ..
+    * specifying the the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
+      the constructor for a `LearningMechanism <LearningSignal_Specification>`.
+    ..
+    * by `specifying learning <Process_Learning>` for a `Process`, which assigns `LearningProjections
+      <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process_Base.pathway>`;
+
 
 .. _MappingProjection_Deferred_Initialization:
 
@@ -102,30 +130,25 @@ is specified in the `pathway <Process_Base.pathway>` of `Process`, or anywhere e
 Structure
 ---------
 
-COMMENT:
-    .. _MappingProjection_Sender:
-    .. _MappingProjection_Receiver:
-    XXXX NEED TO ADD DESCRIPTION OF SENDER AND RECEIVER -- SPECIFIED AS MECHANISM OR STATE.
-
-COMMENT
-
-COMMENT:
-    XXXX NEED TO ADD SOMETHING ABOUT HOW A LearningProjection CAN BE SPECIFIED HERE:
-            IN THE pathway FOR A process;  BUT ALSO IN ITS CONSTRUCTOR??
-            SEE BELOW:  If there is a params[FUNCTION_PARAMS][MATRIX][1]
-    SPECIFIED IN TUPLE ASSIGNED TO MATRIX PARAM (MATRIX ENTRY OF PARAMS DICT)
-
-COMMENT
-
-In addition to its `function <MappingProjection.function>`, MappingProjections use the following two parameters:
+In addition to its `sender <MappingProjection.sender>`, `receiver <MappingProjection.receiver>`, and `function
+<MappingProjection.function>`, a MappingProjection has two characteristic attributes:
 
 .. _Mapping_Matrix:
 
-* `matrix <MappingProjection.matrix>`
+* `matrix <MappingProjection.matrix>` parameter - used by the MappingProjection's `function
+  <MappingProjection.function>` to carry out a matrix transformation of its input, that is then provided to its
+  `receiver <MappingProjection.receiver>`. It can be specified in a variety of ways, as described `above
+  <Mapping_Matrix_Specification>`.
 
-  Used by the MappingProjection's `function <MappingProjection.function>` to carry out a matrix transformation of its
-  input, that is then provided to its `receiver <MappingProjection.receiver>`.  It can be specified using a number of
-  different formats, as described `above <Mapping_Matrix_Specification>`.
+.. _Mapping_Matrix_ParameterState:
+
+* *MATRIX* `ParameterState` - this receives any `LearningProjections <LearningProjection>` that are assigned to the
+  MappingProjection (see `MappingProjection_Learning_Specification` above), and updates the current value of the
+  MappingProjection's `matrix <MappingProjection.matrix>` parameter in response to `learning
+  <LearningMechanism>`.  The `function <ParameterState.function>` of a *MATRIX* ParameterState is an
+  `AccumulatorIntegrator`, which accumulates the weight changes received from the LearningProjections
+  that project to it (see `MappingProjection_Learning` below).  This can be replaced by any function that can take
+  as its input an array or matrix, and return one of the same size.
 
 .. _Mapping_Execution:
 
@@ -134,14 +157,45 @@ Execution
 
 A MappingProjection uses its `function <MappingProjection.function>` and `matrix <MappingProjection.matrix>`
 parameter to transform its `sender <MappingProjection.sender>` into a form suitable for the `variable
-<InputState.variable>` of its `receiver <MappingProjection.receiver>`.  When executed, it updates its *MATRIX*
-`ParameterState`, that in turn updates its `matrix <MappingProjection.matrix>` parameter based on any
-`LearningProjection(s)` it receives (listed in the ParameterState's `mod_afferents <ParameterState.mod_afferents>`
-attribute).  This brings into effect any changes that occurred due to `learning <LearningMechanism_Execution>` in the
-previous `TRIAL` of execution of the `System <System_Base_Execution>` or `Process <Process_Base_Execution>` to which
-the  MappingProjection belongs.  Because of :ref:`Lazy Evaluation <LINK>`, those changes take effect only after the
-current `TRIAL` of execution; as a consequence, inspecting `matrix <MappingProjection.matrix>` or its ParameterState do
-not show the effects of learning until the MappingProjection has been executed.
+<InputState.variable>` of its `receiver <MappingProjection.receiver>`.  A MappingProjection cannot be executed
+directly. It is executed when the `InputState` to which it projects (i.e., its `receiver
+<MappingProjection.receiver>`) is updated;  that occurs when the InputState's owner `Mechanism` is executed.
+When executed, the MappingProjection's *MATRIX* `ParameterState` updates its `matrix <MappingProjection.matrix>`
+parameter based on any `LearningProjection(s)` it receives (listed in the ParameterState's `mod_afferents
+<ParameterState.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
+<MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives the MappingProjection
+is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not take effect, and are not
+observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or the
+`value <ParameterState.value>` of its ParameterState) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
+for an explanation of "lazy" updating).
+
+.. _MappingProjection_Learning:
+
+Learning
+~~~~~~~~
+
+Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`. A
+LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
+*MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
+and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
+default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
+modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
+<AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
+attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
+executes its *MATRIX* ParameterState, the `weight changes <LearningProjection_Structure>` conveyed to the
+MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
+ParameterState's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
+attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
+executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
+LearningProjection(s) are stored by the *MATRIX* ParameterState's function, and not the MappingProjection's `matrix
+<MappingProjection.matrix>` parameter itself; the latter stores the original value of the matrix before learning (that
+is, its unmodulated value, conforming to the general protocol for `modulation <ModulatorySignal_Modulation>` in
+PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
+<ParameterState.value>` of its *MATRIX* ParameterState. As noted `above <Mapping_Execution>`, however, this does not
+reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterState's
+`value <ParameterState.value>` when it executes, which does not occur until the `Mechanism` that receives the
+MappingProjection is executed in the next `TRIAL` of execution.
 
 .. _Mapping_Class_Reference:
 
@@ -518,7 +572,6 @@ class MappingProjection(PathwayProjection_Base):
 
     @property
     def matrix(self):
-        # return self.function.__self__.matrix
         return self.function_object.matrix
 
     @matrix.setter
@@ -535,18 +588,7 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: Hack to prevent recursion in calls to setter and assign_params
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
-        # self.function.__self__.matrix = matrix
         self.function_object.matrix = matrix
-
-        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
-        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
-        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
-        # fix this bug and make setting myMappingProjection.matrix effective.
-        # REMOVED 7/26/17 CW: feel free to remove all this commented block
-        # if MATRIX in self._parameter_states.key_values:
-        #     if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
-        #         self._parameter_states[MATRIX].function_object.variable = matrix
-        #         self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
 
     @property
     def _matrix_spec(self):

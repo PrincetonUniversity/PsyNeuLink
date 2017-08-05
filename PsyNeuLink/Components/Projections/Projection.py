@@ -221,14 +221,14 @@ Sender
 ~~~~~~
 
 This must be an `OutputState` or a `ModulatorySignal` (a subclass of OutputState specialized for `ModulatoryProjections
-<ModulatoryProjection>`.  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
+<ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
 <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to the
 `AdaptiveMechanism` from which it projects.  The OutputState or ModulatorySignal's `value <OutputState.value>` is
 used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
 
 A sender can be specified as:
 
-  * an **OutputState** or **ModulatorySignal*, as appropriate for the Projection's type, using any of the ways for
+  * an **OutputState** or **ModulatorySignal**, as appropriate for the Projection's type, using any of the ways for
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is

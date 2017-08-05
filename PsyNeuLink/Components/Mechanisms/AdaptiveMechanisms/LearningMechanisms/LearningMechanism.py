@@ -59,6 +59,13 @@ must be specified.  The **variable** must have three items that are compatible (
 or for the last `MappingProjection` in a learning sequence for `multilayer learning
 <LearningMechanism_Multilayer_Learning>`;  otherwise it must be a `LearningProjection`.
 
+.. _LearningMechanism_Learning_Signals:
+
+When a LearningMechanism is created explicitly, it can also be assigned existing LearningSignals and/or specified to
+create these, as well as `LearningProjections <LearningProjection>` from these to specified MappingProjections.  These
+are specified in the **learning_signals** argument of the LearningMechanism's constructor, using any of forms allowed
+for `specifying a LearningSignal <LearningSignal_Specification>`.
+
 .. _LearningMechanism_Structure:
 
 Structure
