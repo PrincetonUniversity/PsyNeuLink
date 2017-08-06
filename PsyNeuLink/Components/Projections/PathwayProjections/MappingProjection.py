@@ -175,8 +175,9 @@ Learning
 ~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`. A
-LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`.
+This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
+A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
 *MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
 default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
@@ -547,14 +548,6 @@ class MappingProjection(PathwayProjection_Base):
 
             # Assign current MATRIX to parameter state's base_value, so that it is updated in call to execute()
             setattr(self, '_'+MATRIX, self.matrix)
-
-            # FIX: UPDATE FOR LEARNING BEGIN
-            #    ??DELETE ONCE INTEGRATOR FUNCTION IS IMPLEMENTED
-            # Pass params for ParameterState's function specified by instantiation in LearningProjection
-            weight_change_params = matrix_parameter_state.paramsCurrent
-
-            # Update parameter state: combines weightChangeMatrix from LearningProjection with matrix base_value
-            matrix_parameter_state.update(weight_change_params, context=context)
 
             # Update MATRIX
             self.matrix = matrix_parameter_state.value

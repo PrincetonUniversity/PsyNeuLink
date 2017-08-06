@@ -135,7 +135,7 @@ as well the `learning_rate <Process_Base.learning_rate>` for any Process(es) and
 The `function <LearningSignal.function>` of a LearningSignal converts the
 `learning_signal <LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its
 `value <LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By
-default this is an identity function ((`Linear` with **slope**\\ =1 and **intercept**\\ =0)), that simply uses the
+default this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its own.  However, the LearningSignal's
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.

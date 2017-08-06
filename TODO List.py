@@ -2982,9 +2982,6 @@
 #
 # FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
-# FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE _instantiate_defaults:
-                # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:
 # FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
