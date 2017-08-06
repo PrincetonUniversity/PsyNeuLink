@@ -329,16 +329,15 @@ class LearningProjection(ModulatoryProjection_Base):
 
     name : str : default LearningProjection-<index>
         the name of the LearningProjection.
-        Specified in the **name** argument of the constructor for the Projection;
+        Specified in the **name** argument of the constructor for the LearningProjection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
+        the `PreferenceSet` for LearningProjection.
+        Specified in the **prefs** argument of the constructor for the LearningProjection;
         if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
-
 
     """
 
