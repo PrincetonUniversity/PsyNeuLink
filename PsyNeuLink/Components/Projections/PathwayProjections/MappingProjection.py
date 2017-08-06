@@ -175,8 +175,9 @@ Learning
 ~~~~~~~~
 
 Learning modifies the `matrix <MappingProjection.matrix>` parameter of a MappingProjection, under the influence
-of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`. A
-LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
+of one or more `LearningProjections <LearningProjection>` that project to its *MATRIX* `ParameterState`.
+This conforms to the general procedures for modulation used by `ModulatoryProjections <ModulatoryProjection>`
+A LearningProjection `modulates <LearningSignal_Modulation>` the `function <ParameterState.function>` of the
 *MATRIX* ParameterState, which is responsible for keeping a record of the value of the MappingProjection's matrix,
 and providing it to the MappingProjection's `function <MappingProjection.function>` (usually `LinearMatrix`).  By
 default, the function for the *MATRIX* ParameterState is an `AccumulatorIntegrator`.  A LearningProjection
