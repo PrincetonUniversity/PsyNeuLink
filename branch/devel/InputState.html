@@ -346,13 +346,15 @@ assigned.</li>
 </ul>
 </div>
 <div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="inputstate-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When this occurs, the InputState executes any Projections it receives, calls its <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
-aggregate their values, and then assigns the result to the InputState&#8217;s <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.  This,
-in turn, is assigned to the item of the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_values" title="Mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attributes corresponding to that InputState
-(see <a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">Mechanism variable and input_values attributes</span></a> for additional details).</p>
+When this occurs, the InputState executes any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it receives, calls its <a class="reference internal" href="#InputState.InputState.function" title="InputState.InputState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to aggregate the values received from any <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives
+(listed in its its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute) and modulate them in response to any
+<a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> (listed in its <a class="reference internal" href="#InputState.InputState.mod_afferents" title="InputState.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute),
+and then assigns the result to the InputState&#8217;s <a class="reference internal" href="#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.
+This, in turn, is assigned to the item of the Mechanism&#8217;s  <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_values" title="Mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal"><span class="pre">input_values</span></code></a> attributes  corresponding to that InputState (see <a class="reference internal" href="Mechanism.html#mechanism-variable"><span class="std std-ref">Mechanism
+variable and input_values attributes</span></a> for additional details).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="inputstate-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
