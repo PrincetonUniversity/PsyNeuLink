@@ -117,7 +117,7 @@ class TestTransferMechanismNoise:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.9500884175255894, -0.1513572082976979, -0.10321885179355784, 0.41059850193837233]]
+        assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
 
     def test_transfer_mech_array_var_normal_array_noise(self):
 
@@ -185,7 +185,7 @@ class TestDistributionFunctions:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.9500884175255894, -0.1513572082976979, -0.10321885179355784, 0.41059850193837233]]
+        assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
 
     def test_transfer_mech_exponential_noise(self):
 
@@ -198,7 +198,7 @@ class TestDistributionFunctions:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.5755191991686398, 2.223524413032657, 3.314912182053814, 0.4836021009022533]]
+        assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
 
     def test_transfer_mech_Uniform_noise(self):
 
@@ -211,7 +211,7 @@ class TestDistributionFunctions:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777]]
+        assert val == [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]]
 
     def test_transfer_mech_Gamma_noise(self):
 
@@ -224,7 +224,7 @@ class TestDistributionFunctions:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.5755191991686398, 2.223524413032657, 3.314912182053814, 0.4836021009022533]]
+        assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
 
     def test_transfer_mech_Wald_noise(self):
 
@@ -237,7 +237,7 @@ class TestDistributionFunctions:
             time_scale=TimeScale.TIME_STEP
         )
         val = T.execute([0, 0, 0, 0]).tolist()
-        assert val == [[0.4753163256920605, 0.8855024243613571, 1.5531700767920125, 1.3939555850782692]]
+        assert val == [[1.3939555850782692, 0.25118783985272053, 1.2272797824363235, 0.1190661760253029]]
 
 class TestTransferMechanismFunctions:
 

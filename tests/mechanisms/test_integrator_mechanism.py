@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator, NormalDist, UniformDist
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, NormalDist, SimpleIntegrator, UniformDist
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Process import process
@@ -534,7 +534,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
+        np.testing.assert_allclose(val, [ 10.12167502,  10.44386323,  10.33367433,  11.49407907])
 
     def test_integrator_accumulator_noise_fn(self):
             I = IntegratorMechanism(
@@ -590,7 +590,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val,[-0.15135721, -0.10321885,  0.4105985,   0.14404357])
+        np.testing.assert_allclose(val, [ 0.12167502,  0.44386323,  0.33367433,  1.49407907])
 
     def test_integrator_adaptive_noise_fn(self):
             I = IntegratorMechanism(
@@ -618,7 +618,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
+        np.testing.assert_allclose(val, [ 10.12167502,  10.44386323,  10.33367433,  11.49407907])
 
     def test_integrator_drift_diffusion_noise_val(self):
             I = IntegratorMechanism(
