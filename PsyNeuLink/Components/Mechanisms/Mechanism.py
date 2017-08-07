@@ -821,7 +821,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : ndarray : default variableInstanceDefault
+    variable : ndarray : default self.instance_defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
         <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
@@ -842,7 +842,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputState <InputState_Primary>` (i.e., the one in the its `input_state
         <Mechanism_Base.input_state>` attribute).
 
-    input_values : List[List or 1d np.array] : default variableInstanceDefault
+    input_values : List[List or 1d np.array] : default self.instance_defaults.variable
         each item in the list corresponds to the `value <InputState.value>` of one of the Mechanism's `InputStates
         <Mechanism_InputStates>` listed in its `input_states <Mechanism_Base.input_states>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -1607,7 +1607,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        input : List[value] or ndarray : default variableInstanceDefault
+        input : List[value] or ndarray : default self.instance_defaults.variable
             input to use for execution of the Mechanism.
             This must be consistent with the format of the Mechanism's `InputState(s) <Mechanism_InputStates>`:
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
@@ -1737,7 +1737,7 @@ class Mechanism_Base(Mechanism):
                 context = EXECUTING + ' ' + append_type_to_name(self)
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
-                input = self.variableInstanceDefault
+                input = self.instance_defaults.variable
             variable = self._get_variable_from_input(input)
             self.variable = variable
 
@@ -1889,14 +1889,14 @@ class Mechanism_Base(Mechanism):
             # input_item = np.ndarray(input[i])
             input_item = input[i]
 
-            if len(input_state.variableInstanceDefault) == len(input_item):
+            if len(input_state.instance_defaults.variable) == len(input_item):
                 input_state.value = input_item
             else:
                 raise MechanismError("Length ({}) of input ({}) does not match "
                                      "required length ({}) for input to {} of {}".
                                      format(len(input_item),
                                             input[i],
-                                            len(input_state.variableInstanceDefault),
+                                            len(input_state.instance_defaults.variable),
                                             input_state.name,
                                             append_type_to_name(self)))
 

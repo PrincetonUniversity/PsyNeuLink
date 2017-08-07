@@ -597,10 +597,6 @@ class DDM(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   params=params)
 
-        # TODO: stateful - is this correct? seems like if it's per instance this WILL mess up if you use two DDMs
-        # should be instance default probably
-        self.variableInstanceDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
-
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
@@ -853,7 +849,7 @@ class DDM(ProcessingMechanism_Base):
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self.variableInstanceDefault
+            variable = self.instance_defaults.variable
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:

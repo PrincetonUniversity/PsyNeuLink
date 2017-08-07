@@ -735,8 +735,10 @@ class Component(object):
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
 
+        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **param_defaults)
+
         # These ensure that subclass values are preserved, while allowing them to be referred to below
-        self.variableInstanceDefault = None
+        self.instance_defaults.variable = None
         self.paramInstanceDefaults = {}
 
         self._auto_dependent = False
@@ -837,8 +839,8 @@ class Component(object):
 
         # SET CURRENT VALUES OF VARIABLE AND PARAMS
 
-        self.variable = self.variableInstanceDefault
-        # self.variable = self.variableInstanceDefault.copy()
+        self.variable = self.instance_defaults.variable
+        # self.variable = self.instance_defaults.variable.copy()
 
         # self.paramsCurrent = self.paramInstanceDefaults
         self.paramsCurrent = self.paramInstanceDefaults.copy()
@@ -1407,7 +1409,7 @@ class Component(object):
 
         # If function is called without any arguments, get default for variable
         if variable is None:
-            variable = self.variableInstanceDefault # assigned by the Function class init when initializing
+            variable = self.instance_defaults.variable # assigned by the Function class init when initializing
 
         # If the variable is a function, call it
         if callable(variable):
@@ -1579,13 +1581,13 @@ class Component(object):
         # VALIDATE VARIABLE (if not called from assign_params)
 
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-            # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
+            # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
             variable = self._validate_variable(variable, context=context)
-            if self.variableInstanceDefault is None:
+            if self.instance_defaults.variable is None:
                 if variable is None:
-                    self.variableInstanceDefault = self.ClassDefaults.variable
+                    self.instance_defaults.variable = self.ClassDefaults.variable
                 else:
-                    self.variableInstanceDefault = variable
+                    self.instance_defaults.variable = variable
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:

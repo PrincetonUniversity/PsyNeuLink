@@ -541,7 +541,7 @@ class Function_Base(Function):
         - params_default (dict): assigned as paramInstanceDefaults
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Function class default = on)
 
-        :param default_variable: (anything but a dict) - value to assign as variableInstanceDefault
+        :param default_variable: (anything but a dict) - value to assign as self.instance_defaults.variable
         :param params: (dict) - params to be assigned to paramInstanceDefaults
         :param log: (ComponentLog enum) - log entry types set in self.componentLog
         :param name: (string) - optional, overrides assignment of default (componentName of subclass)

@@ -2415,19 +2415,6 @@ class Process_Base(Process):
     def mechanismNames(self):
         return self._allMechanisms.names
 
-    @property
-    def variableInstanceDefault(self):
-        return self._variableInstanceDefault
-
-    @variableInstanceDefault.setter
-    def variableInstanceDefault(self, value):
-        assigned = -1  # what is the purpose of this line? (7/5/17 CW)
-        try:
-            value
-        except ValueError as e:
-            pass
-        self._variableInstanceDefault = value
-
     # @property
     # def input_value(self):
     #     return self.variable

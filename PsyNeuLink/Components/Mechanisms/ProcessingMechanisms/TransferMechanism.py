@@ -577,7 +577,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(context=context)
 
         if self.initial_value is None:
-            self.initial_value = self.variableInstanceDefault
+            self.initial_value = self.instance_defaults.variable
 
     def _execute(self,
                  variable=None,
