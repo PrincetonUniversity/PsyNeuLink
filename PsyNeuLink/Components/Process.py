@@ -169,10 +169,10 @@ Learning
 ~~~~~~~~
 
 Learning modifies Projections between Mechanisms in a Process's `pathway`, so that the input to each Projection's
-`sender <MappingProjection_Sender>` produces the desired ("target") output from its
-`receiver <MappingProjection_Receiver>`.  Learning occurs when a Projection or Process for which learning has been
-specified is executed.  Learning can be specified for a particular Projection in a Process, or for the entire Process.
-It is specified for a particular Projection by including a `learning specification <LearningSignal_Specification>`
+`sender <MappingProjection_Sender>` produces the desired ("target") output from its`receiver
+<MappingProjection_Receiver>`.  Learning occurs when a Projection or Process for which learning has been specified is
+executed.  Learning can be specified for a particular Projection in a Process, or for the entire Process. It is
+specified for a particular Projection by including a `learning specification <MappingProjection_Learning_Specification>`
 in the specification for the Projection.  It is specified for the entire Process by assigning either a
 `LearningProjection <LearningProjection_Creation>` or `LearningSignal <LearningSignal_Specification>` specification,
 or the keyword *ENABLED* to the **learning** argument of the Process' constructor.  Specifying learning for a Process

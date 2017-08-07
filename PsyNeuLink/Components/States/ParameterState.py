@@ -14,7 +14,7 @@ Overview
 --------
 
 ParameterStates belong to either a `Mechanism` or a `MappingProjection` and are used to represent, and possibly modify
-the, values of all of the configurable parameters of a `Component` or its `function <Component.function>`. A
+the, values of all of the configurable parameters of the `Component` or its `function <Component.function>`. A
 ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
 `LearningProjections <LearningProjection>` that modify the value of the parameter. The Projections received by a
 ParameterState are listed in its `mod_afferents <ParameterState.mod_afferents>` attribute. The ParameterState's

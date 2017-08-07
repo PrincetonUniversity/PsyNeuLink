@@ -306,10 +306,11 @@ attribute. The OutputState's `index <OutputState.index>` attribute designates th
 `value <Mechanism.Mechanism_Base.value>` for use by the OutputState.  The OutputState is updated by calling the function
 specified by its `calculate <OutputState_Calculate>` attribute with the designated item of the Mechanism's
 `value <Mechanism.Mechanism_Base.value>` as its input.  This is used by the Mechanism's
-`function <Mechanism_Base.function>`, possibly under the influence of any `GatingProjections <GatingProjection>` it
-receives, to generate the `value <OutputState.value>` of the OutputState.  This is assigned to a corresponding item
-of the Mechanism's `output_values  <Mechanism.Mechanism_Base.output_values>` attribute, and is used as the
-input to any projections for which the OutputState is the `sender <Projection.Projection.sender>`.
+`function <Mechanism_Base.function>`, modified by any `GatingProjections <GatingProjection>` it receives (listed in
+its `mod_afferents <OutputState.mod_afferents>` attribute), to generate the `value <OutputState.value>` of the
+OutputState.  This is assigned to a corresponding item of the Mechanism's `output_values
+<Mechanism.Mechanism_Base.output_values>` attribute, and is used as the input to any projections for which the
+OutputState is the `sender <Projection.Projection.sender>`.
 
 .. _OutputState_Class_Reference:
 
