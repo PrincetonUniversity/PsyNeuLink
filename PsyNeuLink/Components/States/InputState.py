@@ -235,15 +235,20 @@ Like all PsyNeuLink components, an InputState also has the three following core 
   item of the owner Mechanism's `variable <Mechanism.Mechanism_Base.variable>` to which the InputState has been
   assigned.
 
+.. _InputState_Execution:
+
 Execution
 ---------
 
 An InputState cannot be executed directly.  It is executed when the Mechanism to which it belongs is executed.
-When this occurs, the InputState executes any Projections it receives, calls its `function <InputState.function>` to
-aggregate their values, and then assigns the result to the InputState's `value <InputState.value>` attribute.  This,
-in turn, is assigned to the item of the Mechanism's `variable <Mechanism.Mechanism_Base.variable>` and
-`input_values <Mechanism.Mechanism_Base.input_values>` attributes corresponding to that InputState
-(see `Mechanism variable and input_values attributes <Mechanism_Variable>` for additional details).
+When this occurs, the InputState executes any `Projections <Projection>` it receives, calls its `function
+<InputState.function>` to aggregate the values received from any `MappingProjections <MappingProjection>` it receives
+(listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
+`GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
+and then assigns the result to the InputState's `value <InputState.value>` attribute.
+This, in turn, is assigned to the item of the Mechanism's  `variable <Mechanism.Mechanism_Base.variable>` and
+`input_values <Mechanism.Mechanism_Base.input_values>` attributes  corresponding to that InputState (see `Mechanism
+variable and input_values attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
 
