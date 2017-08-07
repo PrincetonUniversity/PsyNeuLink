@@ -94,7 +94,7 @@ Modulation
 ~~~~~~~~~~
 
 A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that determines how its ControlSignal's
-`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \s
+`value <ControlSignal.value>` is used by the States to which it projects to modify their `value <State_Base.value>` \\s
 (see `ModulatorySignal_Modulation` for an explanation of how the `modulation <ControlSignal.modulation>`  attribute is
 specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
@@ -121,8 +121,8 @@ at the end of the previous `TRIAL` (i.e., when the ControlMechanism last execute
 
 *Function*. A ControlSignal's `allocation <ControlSignal.alloction>` serves as its`variable <ControlSignal.variable>`,
 and is used by its `function <ControlSignal.function>` to generate an `intensity`. The default `function
-<ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \=1 and
-`intercept <Linear.intercept>`\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
+<ControlSignal.function>` for a ControlSignal is an identity function (`Linear` with `slope <Linear.slope>` \\=1 and
+`intercept <Linear.intercept>`\\=0), that simply assigns the `allocation <ControlSignal.allocation>` as the
 ControlSignal's `intensity <ControlSignal.intensity>`. However, another `TransferFunction` can be assigned
 (e.g., `Exponential`), or any other function that takes and returns a scalar value or 1d array.
 
@@ -182,7 +182,7 @@ A ControlSignal cannot be executed directly.  It is executed whenever the `Contr
 executed.  When this occurs, the ControlMechanism provides the ControlSignal with an
 `allocation <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its
 `intensity` for that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>`
-to set the `value <ParameterState.value>` \(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal
+to set the `value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal
 projects. Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal
 controls. See `ModulatorySignal_Modulation` for a more detailed descriptio of how modulation operates).  The
 ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its

@@ -13,7 +13,7 @@ Overview
 --------
 
 A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and one or more
-`GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>` \(s) of the InputState(s) and/or
+`GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>` \\(s) of the InputState(s) and/or
 OutputState(s) to which they project. A GatingSignal receives the value from the
 `gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs, and assigns that as
 the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s) <GatingProjection>`, each
@@ -105,7 +105,7 @@ Modulation
 
 Each GatingSignal has a `modulation <GatingSignal.modulation>` attribute that determines how the GatingSignal's
 `value <GatingSignal.value>` (i.e., its `gating_signal <GatingSignal.gating_signal>`) is used by the States to which it
-projects to modify their `value <State_Base.value>` \s (see `ModulatorySignal_Modulation` for an explanation of how the
+projects to modify their `value <State_Base.value>` \\s (see `ModulatorySignal_Modulation` for an explanation of how the
 `modulation <GatingSignal.modulation>` attribute is specified and used to modulate the `value <State_Base.value>` of a
 State). The `modulation <GatingSignal.modulation>` attribute can be specified in the **modulation** argument of the
 constructor for a GatingSignal, or in a specification dictionary as described `above <GatingSignal_Specification>`.
