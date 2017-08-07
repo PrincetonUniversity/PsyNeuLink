@@ -16,13 +16,10 @@ vector = np.random.rand(DIM_X)
 llvm_res = np.random.rand(DIM_Y)
 result = np.dot(vector, matrix)
 
-#start = timeit.default_timer()
 @pytest.mark.llvm
 def test_matmul_numpy(benchmark):
     numpy_res = benchmark(np.dot, vector, matrix)
     assert np.allclose(numpy_res, result)
-#stop = timeit.default_timer()
-#print("Numpy time elapsed {:f}".format(stop-start))
 
 #start = timeit.default_timer()
 ct_vec = vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
@@ -31,25 +28,13 @@ ct_res = llvm_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 x, y = matrix.shape
 #stop = timeit.default_timer()
 #print("Convert time elapsed {:f}".format(stop-start))
-#
-#
-#start = timeit.default_timer()
+
 @pytest.mark.llvm
 def test_matmul_llvm(benchmark):
     llvm_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_vxm')
     benchmark(llvm_fun, ct_vec, ct_mat, x, y, ct_res)
     assert np.allclose(llvm_res, result)
 
-#for _ in range(ITERATIONS):
-#    llvm_fun(ct_vec, ct_mat, x, y, ct_res)
-#stop = timeit.default_timer()
-#print("LLVM time elapsed {:f}".format(stop-start))
-#
-#if not np.allclose(llvm_res, result):
-#    print("TEST FAILED LLVM results differ!")
-#    print(llvm_res)
-#    print(result)
-#
 #start = timeit.default_timer()
 
 custom_name = None
@@ -75,22 +60,9 @@ with pnlvm.LLVMBuilderContext() as ctx:
 # This triggers recompile if needed so it should be included in the measurement
 #stop = timeit.default_timer()
 #print("Build time elapsed {:f}".format(stop-start))
-#
-#start = timeit.default_timer()
+
 @pytest.mark.llvm
-def test_matmul_llvm_cont_dim(benchmark):
+def test_matmul_llvm_constant_dim(benchmark):
     binf2 = pnlvm.LLVMBinaryFunction.get(custom_name)
     benchmark(binf2, ct_vec, ct_mat, ct_res)
     assert np.allclose(llvm_res, result)
-#for _ in range(ITERATIONS):
-#    binf2(ct_vec, ct_mat, ct_res)
-#stop = timeit.default_timer()
-#print("LLVM-custom time elapsed {:f}".format(stop-start))
-#
-## Use all close to ignore rounding errors
-#if not np.allclose(llvm_res, result):
-#    print("TEST FAILED LLVM-custom results differ!")
-#    print(llvm_res)
-#    print(result)
-#else:
-#    print("TEST PASSED")
