@@ -635,7 +635,7 @@ class OutputState(State_Base):
         """
         variable = super(OutputState, self)._validate_variable(variable, context)
 
-        self.ClassDefaults.variable = self.reference_value
+        self.variableInstanceDefault = self.reference_value
 
         # Insure that self.variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(variable, self.reference_value):

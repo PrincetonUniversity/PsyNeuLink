@@ -599,7 +599,7 @@ class DDM(ProcessingMechanism_Base):
 
         # TODO: stateful - is this correct? seems like if it's per instance this WILL mess up if you use two DDMs
         # should be instance default probably
-        self.ClassDefaults.variable = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
+        self.variableInstanceDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
