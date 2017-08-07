@@ -142,7 +142,7 @@ class LLVMBinaryFunction:
         self.ptr = _engine.get_function_address(name)
 
     def __call__(self, *args, **kwargs):
-        self.c_func(*args, **kwargs)
+        return self.c_func(*args, **kwargs)
 
     # This will be useful for non-native targets
     @property
