@@ -184,7 +184,7 @@ executed.  When this occurs, the ControlMechanism provides the ControlSignal wit
 `intensity` for that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>`
 to set the `value <ParameterState.value>` \(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal
 projects. Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal
-controls. See `ModulatorySignal_Modulation` for a more detailed descriptio of how modulation operates).  The
+controls. See `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The
 ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its
 `cost` attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples`
 attribute, to evaluate an `allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's

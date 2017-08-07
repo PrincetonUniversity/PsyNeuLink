@@ -33,7 +33,7 @@ The control components of a System are executed after all `ProcessingMechanisms 
 
 .. _ControlMechanism_Creation:
 
-Creating A ControlMechanism
+Creating a ControlMechanism
 ---------------------------
 
 A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
