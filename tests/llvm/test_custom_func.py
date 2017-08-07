@@ -27,8 +27,10 @@ def test_fixed_dimensions__pnl_builtin_vxm():
     ct_res = orig_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
     binf.c_func(ct_vec, ct_mat, x, y, ct_res)
+    custom_name = None
 
     with pnlvm.LLVMBuilderContext() as ctx:
+        custom_name = ctx.module.get_unique_name("vxsqm")
         double_ptr_ty = ctx.float_ty.as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
@@ -36,7 +38,7 @@ def test_fixed_dimensions__pnl_builtin_vxm():
         builtin = ctx.get_llvm_function('__pnl_builtin_vxm')
 
         # Create square vector matrix multiply
-        function = ir.Function(ctx.module, func_ty, name="vxsqm")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
         _x = ctx.int32_ty(x)
         _v, _m, _o = function.args
         block = function.append_basic_block(name="entry")
@@ -44,7 +46,7 @@ def test_fixed_dimensions__pnl_builtin_vxm():
         builder.call(builtin, [_v, _m, _x, _x, _o])
         builder.ret_void()
 
-    binf2 = pnlvm.LLVMBinaryFunction.get('vxsqm')
+    binf2 = pnlvm.LLVMBinaryFunction.get(custom_name)
     new_res = copy.deepcopy(llvm_res)
     ct_res = new_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
