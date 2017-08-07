@@ -1190,6 +1190,7 @@ class Mechanism_Base(Mechanism):
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
+        # TODO: stateful - should this be here?? seems not
         self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         variable = convert_to_np_array(variable, 2)
 

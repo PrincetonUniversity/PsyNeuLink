@@ -404,8 +404,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             default_variable = [[0]]
 
-        self.ClassDefaults.variable = default_variable
-
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,

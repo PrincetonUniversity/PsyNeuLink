@@ -107,8 +107,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
 
         self.system = None
 
-        self.ClassDefaults.variable = variable  # should this line be here? (7/5/17 CW)
-
         super().__init__(variable=variable,
                          size=size,
                          input_states=input_states,
