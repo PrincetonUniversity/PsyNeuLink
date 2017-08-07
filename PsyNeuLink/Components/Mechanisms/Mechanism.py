@@ -34,7 +34,7 @@ A Mechanism takes an input, transforms it in some way, and makes the result avai
 types of Mechanisms in PsyNeuLink:
 
     * `ProcessingMechanisms <ProcessingMechanism>` aggregrate the input they receive from other Mechanisms, and/or the
-      input to the the `Process` or `System` to which they belong, transform it in some way, and
+      input to the `Process` or `System` to which they belong, transform it in some way, and
       provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
       System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
       input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
@@ -43,20 +43,23 @@ types of Mechanisms in PsyNeuLink:
       to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
 
       * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the
-        output of a Mechanism to generate learning signals that are used to modify
-        `MappingProjection <MappingProjections>` (see `learning <Process_Learning>`).
+        output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
+        <MappingProjection>` (see `learning <Process_Learning>`).
 
       * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
-        generate control signals used to modify the parameters of those or other Mechanisms.
+        generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
 
-      * `GatingMechanisms <GatingMechanism>` - these receive input, and use this to determine whether and how to
-        modify the value of the InputState(s) and/or OutputState(s) of other Mechanisms.
+      * `GatingMechanisms <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
+        `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
+        Mechanisms.
 
-      Each type of AdaptiveMechanism is associated with a corresponding type of Projection (`LearningProjection`,
-      `ControlProjection` and `GatingProjection`, respectively).
+      Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal` and
+      `ModulatoryProjection`.
 
-A Mechanism is made up of four fundamental components: the function it uses to transform its input; and the States it
-uses to represent its input(s), parameter(s), and output(s).
+Every Mechanism is made up of four fundamental components:  the `InputState(s) <InputState>` used to receive and
+represent its input(s); the `Function` used to transform its input(s) into its output(s); the `ParameterState(s)
+<ParameterState>` used to represent the parameters of its Function (and/or any specific to the Mechanism itself);
+and the `OutputState(s) <OutputState>` used to represent its output(s).
 
 .. _Mechanism_Creation:
 
