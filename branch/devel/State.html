@@ -428,7 +428,7 @@ initialization will be <a class="reference internal" href="#state-deferred-initi
 <li><code class="xref any docutils literal"><span class="pre">variable</span></code>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>,
 the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
 its <a class="reference internal" href="#State.State_Base.path_afferents" title="State.State_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute).  For an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, it is the item of the owner
-Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> to which the OutputState is assigned (specified by the OutputState&#8217;s
+Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.value" title="Mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to which the OutputState is assigned (specified by the OutputState&#8217;s
 <a class="reference internal" href="OutputState.html#outputstate-index"><span class="std std-ref">index</span></a> attribute.</li>
 </ul>
 <ul class="simple">
@@ -437,7 +437,7 @@ State receives (the default is <a class="reference internal" href="Function.html
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, it determines the value of the associated parameter, under the
 potential influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
 for an OutputState, it conveys the result  of the Mechanism&#8217;s function to its
-<code class="xref any docutils literal"><span class="pre">output_values</span></code> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_values" title="Mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> associated with
 each type for a description of how they can be used to modulate the <a class="reference internal" href="#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a State.</li>
 </ul>

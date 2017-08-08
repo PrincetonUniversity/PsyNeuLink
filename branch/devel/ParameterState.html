@@ -85,38 +85,9 @@
           
             
             
-                <ul class="current">
+                <ul>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ParameterState</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-parameterstate">Creating a ParameterState</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
@@ -233,7 +204,7 @@ assigned to the argument for the parameter in the Component&#8217;s constructor.
 <li>In the <strong>runtime_params</strong> argument of a call to component&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</li>
 </ul>
 </div></blockquote>
-<p>The specification of the initial value of a parameter can take any of the following forms:</p>
+<p id="parameterstate-value-specification">The specification of the initial value of a parameter can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple" id="parameterstate-value-assignment">
 <li><strong>Value</strong> &#8211; this must be a valid value for the parameter. It creates a default ParameterState,
@@ -241,7 +212,7 @@ assigns the parameter&#8217;s default value as the ParameterState&#8217;s <a cla
 and assigns the parameter&#8217;s name as the name of the ParameterState.</li>
 </ul>
 <ul>
-<li><p class="first"><strong>ParameterState referece</strong> &#8211; this must refer to an existing <strong>ParameterState</strong> object; its name must be the
+<li><p class="first"><strong>ParameterState reference</strong> &#8211; this must refer to an existing <strong>ParameterState</strong> object; its name must be the
 name of a parameter of the owner or of the owner&#8217;s <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and its value must be a valid
 one for the parameter.</p>
 <div class="admonition note">
@@ -273,21 +244,20 @@ is assigned as the <code class="xref any docutils literal"><span class="pre">rec
 <p class="first admonition-title">Note</p>
 <p class="last">Currently, the <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component, although it can be specified as a
 parameter value, cannot be assigned a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or modified in the <strong>runtime_params</strong> argument of
-a call to a Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">execute</span></code> method. This may change in the future.</p>
+a call to a Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method. This may change in the future.</p>
 </div>
 </li>
 </ul>
 </div></blockquote>
 <p>The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
-of the Component&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> to which the parameter belongs.  The attribute has the same name as
-the parameter, and can be referenced using standard Python attribute (&#8220;dot&#8221;) notation;  for example, the value of a
-parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal"><span class="pre">param</span></code> that can be referenced as <code class="docutils literal"><span class="pre">my_component.param</span></code>).
-The parameter&#8217;s value is assigned as the <strong>default value</strong> for the ParameterState.</p>
+of the Component&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to which the parameter belongs.  The attribute has the same
+name as the parameter, and can be referenced using standard Python attribute (&#8220;dot&#8221;) notation;  for example,
+the value of a parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal"><span class="pre">param</span></code> that can be referenced as``my_component.param``). The parameter&#8217;s value is assigned as the <strong>default value</strong> for the ParameterState.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If the value of a parameter is specified as <code class="xref any docutils literal"><span class="pre">None</span></code>, <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code>, or any other non-numeric value that is not one
 of those listed above, then no ParameterState is created and the parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>
-or in the <strong>runtime_params</strong> argument of a call to a Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">execute</span></code> method.</p>
+or in the <strong>runtime_params</strong> argument of a call to a Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</p>
 </div>
 <p class="rubric" id="parameterstate-specification-examples">Examples</p>
 <p>In the following example, a Mechanism is created by specifying two of its parameters, as well as its

@@ -212,7 +212,7 @@ to setting <a href="#id2"><span class="problematic" id="id3">**</span></a>variab
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component can be assigned either a <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> object or any other
-callable object in python.  If the latter is assigned, it will be &#8220;wrapped&#8221; in a <a class="reference internal" href="Function.html#Function.UserDefinedFunction" title="Function.UserDefinedFunction"><code class="xref any py py-class docutils literal"><span class="pre">UserDefinedFunction</span></code></a>.</p>
+callable object in python.  If the latter is assigned, it is &#8220;wrapped&#8221; in a <a class="reference internal" href="Function.html#Function.UserDefinedFunction" title="Function.UserDefinedFunction"><code class="xref any py py-class docutils literal"><span class="pre">UserDefinedFunction</span></code></a>.</p>
 </div>
 <p>All Components have a default <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (with a default set of parameters), that is used if it
 is not otherwise specified.  The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in the
@@ -283,23 +283,32 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <span id="component-informational-attributes"></span><h3>Core Informational Attributes<a class="headerlink" href="#core-informational-attributes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-user-params">
 <li><strong>user_params</strong> - this contains a dictionary of all of the configurable attributes for a given Component.
-The dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-value to the attribute directly (see &lt;&gt;), or using the Component&#8217;s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
+The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserDict</a>). The
+value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.user_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
+however, to access a full list of entries it&#8217;s data attribute must be used (e.g.,
+<code class="docutils literal"><span class="pre">my_component.user_params.data</span></code>).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
+changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
+<code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>), or using the Component&#8217;s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
 </ul>
 <ul class="simple" id="component-function-object">
 <li><strong>function_object</strong> - the <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the Component;
 The Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> is assigned to the <a class="reference internal" href="#"><span class="doc">function</span></a> attribute of the
 Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-those parameters (see <a class="reference internal" href="#Component.Component.function_params" title="Component.Component.function_params"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> above).</li>
+those parameters (see <a class="reference internal" href="#component-function-params"><span class="std std-ref">function_params</span></a> below).</li>
 </ul>
 <ul id="component-function-params">
 <li><p class="first"><strong>function_params</strong> - the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute contains a dictionary of the parameters
-for the Component&#8217;s <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values.  Each entry is the name of a parameter, and
-its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function&#8217;s
-parameters must be made by assigning a value to the corresponding attribute of the Component&#8217;s
-<a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g., myMechanism.function_object.my_parameter),
-or in a FUNCTION_PARAMS dict using its <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The parameters for the function can be specified
-when the Component is created in one of the following ways:</p>
+for the Component&#8217;s <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values.  Each entry is the name of a parameter, and its
+value the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserList</a>). The
+value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.function_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
+however, to access a full list of entries it&#8217;s data attribute must be used (e.g.,
+<code class="docutils literal"><span class="pre">my_component.function_params.data</span></code>).  Also, because it is read-only, it cannot be used to make assignments.
+Rather, changes to the value of the function&#8217;s parameters must be made by assigning a value to the corresponding
+attribute of the Component&#8217;s <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g.,
+<code class="docutils literal"><span class="pre">my_component.function_object.my_parameter</span></code>), or in a FUNCTION_PARAMS dict using its <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The
+parameters for the function can be specified when the Component is created in one of the following ways:</p>
 <ul>
 <li><p class="first">in the <strong>constructor</strong> for a Function &#8211; if that is used to specify the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument,
 as in the following example:</p>
@@ -322,8 +331,9 @@ parameter&#8217;s value, as in the example below:</p>
 </div>
 </li>
 </ul>
-<p>See <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a> for details concerning different ways in which the value of a parameter
-can be specified.</p>
+<p>The parameters of functions for some Components may allow other forms of specification (see
+<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a> for details concerning different ways in which the value of a
+parameter can be specified).</p>
 </li>
 </ul>
 </div>
