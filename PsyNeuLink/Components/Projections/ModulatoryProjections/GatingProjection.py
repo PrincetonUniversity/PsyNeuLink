@@ -84,7 +84,6 @@ OutputStates).
 
 .. _GatingProjection_Class_Reference:
 
-
 Class Reference
 ---------------
 

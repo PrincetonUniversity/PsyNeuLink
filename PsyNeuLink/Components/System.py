@@ -115,10 +115,11 @@ and/or the role they play in a System:
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
-    .. note:: Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively,
-       the `ORIGIN` or `TERMINAL` of any Process(es) to which they belong.  However, it is not
-       necessarily the case that the `ORIGIN` and/or `TERMINAL` Mechanism of a Process is also the
-       `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see the Chain example below).
+    .. note::
+       Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively, the `ORIGIN` or `TERMINAL` of any
+       Process(es) to which they belong.  However, it is not necessarily the case that the `ORIGIN` and/or `TERMINAL`
+       Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
+       `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
     .. note: designations are stored in the Mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
@@ -402,7 +403,7 @@ def system(default_variable=None,
         a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
         `INITIALIZE_CYCLE`). The key for each entry is a Mechanism object, and the value is a number,
         list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
-        `value <Mechanism.value>` (i.e., Mechanism.value[0]).
+        `value <Mechanism_Base.value>` (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
         specifies the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for

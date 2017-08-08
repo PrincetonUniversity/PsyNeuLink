@@ -210,8 +210,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
     * Simulate performance:
         execute the system under the selected `allocation_policy` using the EVCMechanism's `run_simulation` method,
-        and the `value <Mechanism.value>` of its `prediction_mechanisms` (that use the history of previous trials to
-        generate to generate an average expected input value) as the input to the `system <EVCMechanism.system>`.
+        and the `value <Mechanism_Base.value>` of its `prediction_mechanisms` (that use the history of previous trials
+        to generate to generate an average expected input value) as the input to the `system <EVCMechanism.system>`.
 
     * Calculate the EVC:
         call the EVCMechanism's `value_function <EVCMechanism_Value_Function>` that uses the values returned by three

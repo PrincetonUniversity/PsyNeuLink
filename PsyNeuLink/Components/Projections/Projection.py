@@ -61,7 +61,7 @@ differ in the type of information they transmit, how they do this, and the type 
   * `ControlProjection`
       takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
       to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
-      `function <Mechanism.function>`) for which it is responsible.  ControlProjections are used when control
+      `function <Mechanism_Base.function>`) for which it is responsible.  ControlProjections are used when control
       has been used specified for a `System`.
   ..
   * `GatingProjection`
@@ -154,7 +154,7 @@ Projection in context:
         Note that parameter
         values in the specification dictionary will be used to instantiate the Projection.  These can be overridden
         during execution by specifying `runtime parameters <Mechanism_Runtime_parameters>` for the Projection,
-        either when calling the `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>`
+        either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
 

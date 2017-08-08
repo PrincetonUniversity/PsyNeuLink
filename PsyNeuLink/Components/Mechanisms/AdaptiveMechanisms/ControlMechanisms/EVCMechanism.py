@@ -525,10 +525,10 @@ class EVCMechanism(ControlMechanism_Base):
         to all instances of `prediction_mechanism_type` created.
 
     predicted_input : Dict[ProcessingMechanism, value]
-        dictionary with the `value <Mechanism.Mechanism_Base.value>` of each `prediction mechanism
+        dictionary with the `value <Mechanism_Base.value>` of each `prediction mechanism
         <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each ORIGIN
         mechanism of the system. The key for each entry is the name of an ORIGIN mechanism, and its
-        value the `value <Mechanism.Mechanism_Base.value>` of the corresponding prediction mechanism.
+        value the `value <Mechanism_Base.value>` of the corresponding prediction mechanism.
 
     monitoring_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCMechanism to evaluate the performance of its `system
@@ -1396,7 +1396,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         inputs : List[input] or ndarray(input) : default default_variable
             the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
-            should be the `value <Mechanism.Mechanism_Base.value> for each
+            should be the `value <Mechanism_Base.value> for each
             `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `prediction_mechanisms`
             attribute.  The inputs are available from the `predicted_input` attribute.
 

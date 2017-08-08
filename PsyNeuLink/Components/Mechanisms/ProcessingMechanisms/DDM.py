@@ -60,7 +60,7 @@ Structure
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState` the
 `value <DDM.value>` of which is assigned to the `input <DDM.input>` specified by its
-`execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods,
+`execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods,
 and that is used as the stimulus component of the `drift rate <DDM_Drift_Rate>` for the decision process.  The
 decision process can be configured to execute in different modes.
 
@@ -129,7 +129,7 @@ using the keywords in the list below, as in the following example::
 
 .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
    `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a mechanism's constructor
-   override corresponding ones specified as arguments of its `function <Mechanism.Mechanism_Base.function>`
+   override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
    (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
    set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
    as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
@@ -224,7 +224,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism.Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods)
+   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
    differently than standard Components: runtime parameters are added to the mechanism's current value of the
    corresponding parameterState (rather than overriding it);  that is, they are combined additively with the value of
    any `ControlProjection` it receives to determine the parameter's value for that execution.  The parameterState's
@@ -462,7 +462,7 @@ class DDM(ProcessingMechanism_Base):
     ---------
     default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
         the input to the mechanism to use if none is provided in a call to its
-        :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
+        :py:data:`execute <Mechanism_Base.execute>` or :py:data:`run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
         and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
         of greater than 1 is handled).
