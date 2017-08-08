@@ -734,9 +734,9 @@ class State_Base(State):
         return variable
 
     def _validate_variable(self, variable, context=None):
-        """Validate variable and assign validated values to self.variable
+        """Validate variable and return validated variable
 
-        Sets self.base_value = self.value = self.variable = variable
+        Sets self.base_value = self.value = variable
         Insures that it is a number of list or tuple of numbers
 
         This overrides the class method, to perform more detailed type checking
@@ -802,12 +802,14 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.variable)
+        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
 
         This constraint reflects the role of State functions:
             they simply update the value of the State;
             accordingly, their variable and value must be compatible
         """
+
+        # NOTE: stateful - it seems like this is a structural self.variable, so using self.instance_defaults.variable
 
         var_is_matrix = False
         # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
@@ -820,33 +822,45 @@ class State_Base(State):
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
         #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterState)
-        if ((inspect.isclass(self.function) and issubclass(self.function, LinearCombination) or
-                 isinstance(self.function, LinearCombination)) and
-                (isinstance(self.variable, np.matrix) or
-                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2))):
-            self.variable = [self.variable]
+        if (
+            (
+                (inspect.isclass(self.function) and issubclass(self.function, LinearCombination))
+                or isinstance(self.function, LinearCombination)
+            )
+            and (
+                isinstance(self.instance_defaults.variable, np.matrix)
+                or (
+                    isinstance(self.instance_defaults.variable, np.ndarray)
+                    and self.instance_defaults.variable.ndim >= 2
+                )
+            )
+        ):
+            self.instance_defaults.variable = [self.instance_defaults.variable]
             var_is_matrix = True
 
         super()._instantiate_function(context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:
-            self.variable = self.variable[0]
+            self.instance_defaults.variable = self.instance_defaults.variable[0]
 
-        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.variable)
+        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.instance_defaults.variable)
         #     (this enforces constraint that State functions should only combine values from multiple projections,
         #     but not transform them in any other way;  so the format of its value should be the same as its variable).
-        if not iscompatible(self.variable, self.value):
-            raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-                                      " must be the same format as its input ({6}: {7})".
-                                      format(type(self.value).__name__,
-                                             self.value,
-                                             self.function.__self__.componentName,
-                                             self.name,
-                                             self.__class__.__name__,
-                                             self.owner.name,
-                                             self.variable.__class__.__name__,
-                                             self.variable))
+        if not iscompatible(self.instance_defaults.variable, self.value):
+            raise StateError(
+                "Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
+                " must be the same format as its input ({6}: {7})".format(
+                    type(self.value).__name__,
+                    self.value,
+                    self.function.__self__.componentName,
+                    self.name,
+                    self.__class__.__name__,
+                    self.owner.name,
+                    self.instance_defaults.variable.__class__.__name__,
+                    self.instance_defaults.variable
+                )
+            )
 
     def _instantiate_projections(self, projections, context=None):
         """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
@@ -1141,7 +1155,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with the State's variable
             #    - assign projection to path_afferents
             else:
-                if iscompatible(self.variable, projection_spec.value):
+                if iscompatible(self.instance_defaults.variable, projection_spec.value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
                     #    may have already called this method and assigned projection to self.path_afferents list
                     if not projection_spec in self.path_afferents:

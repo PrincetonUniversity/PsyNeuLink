@@ -622,7 +622,7 @@ class OutputState(State_Base):
     def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this State
 
-        Validate self.variable against component of owner's value (output of owner's function)
+        Validate variable against component of owner's value (output of owner's function)
              that corresponds to this OutputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -637,7 +637,7 @@ class OutputState(State_Base):
 
         self.instance_defaults.variable = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
+        # Insure that variable is compatible with (relevant item of) output value of owner's function
         if not iscompatible(variable, self.reference_value):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".

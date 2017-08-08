@@ -449,11 +449,11 @@ class MappingProjection(PathwayProjection_Base):
         # Get sender and receiver lengths
         # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
         try:
-            mapping_input_len = len(self.variable)
+            mapping_input_len = len(self.instance_defaults.variable)
         except TypeError:
             mapping_input_len = 1
         try:
-            receiver_len = len(self.receiver.variable)
+            receiver_len = len(self.receiver.instance_defaults.variable)
         except TypeError:
             receiver_len = 1
 

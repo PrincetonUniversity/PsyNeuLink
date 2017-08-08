@@ -237,7 +237,7 @@ class LearningSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used by the LearningSignal to generate its
         `learning_signal <LearningSignal.learning_signal>`.
-    
+
     learning_rate : float or None : default None
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).
@@ -284,7 +284,7 @@ class LearningSignal(ModulatorySignal):
         LearningSignal's `variable <LearningSignal.variable>` as its `learning_signal <LearningSignal.learning_signal>`.
 
     learning_rate : float : None
-        determines the learning rate for the LearningSignal.  It is used to specify the 
+        determines the learning rate for the LearningSignal.  It is used to specify the
         `learning_rate <LearningProjection.learning_rate>` parameter for its LearningProjection(s) (listed in the
         `efferents <LearningSignal.efferents>` attribute). See `LearningSignal_Learning_Rate` for additional details.
 
@@ -384,10 +384,6 @@ class LearningSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
-
-    @property
-    def error_signal(self):
-        return self.variable
 
     @property
     def learning_signal(self):

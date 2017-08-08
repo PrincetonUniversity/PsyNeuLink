@@ -529,7 +529,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     # if __name__ == '__main__':
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
-                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.variable))
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.instance_defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
@@ -639,7 +639,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # self._matrix = self.recurrent_projection.matrix
 
         if ENERGY in self.output_states.names:
-            energy = Stability(self.variable[0],
+            energy = Stability(self.instance_defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
                                matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -647,7 +647,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if ENTROPY in self.output_states.names:
             if self.function_object.bounds == (0,1) or range == (0,1):
-                entropy = Stability(self.variable[0],
+                entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
                                     matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -750,7 +750,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         if isinstance(matrix, str):
-            size = len(mech.variable[0])
+            size = len(mech.instance_defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         return AutoAssociativeProjection(owner=mech,

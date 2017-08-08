@@ -833,12 +833,13 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                                                            name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                                                            default_variable = origin_mech.input_state.variable,
-                                                            # default_variable=variables,
-                                                            # INPUT_STATES=state_names,
-                                                            params = prediction_mechanism_params,
-                                                            context=context)
+                name=origin_mech.name + " " + PREDICTION_MECHANISM,
+                default_variable = origin_mech.input_state.instance_defaults.variable,
+                # default_variable=variables,
+                # INPUT_STATES=state_names,
+                params = prediction_mechanism_params,
+                context=context,
+            )
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 

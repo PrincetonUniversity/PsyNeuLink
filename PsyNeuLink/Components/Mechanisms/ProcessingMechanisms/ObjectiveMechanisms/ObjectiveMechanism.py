@@ -654,6 +654,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE])
 
+        # TODO: stateful - what is this doing?
         constraint_value = []
         for input_state in self.input_states:
             constraint_value.append(input_state[VARIABLE])

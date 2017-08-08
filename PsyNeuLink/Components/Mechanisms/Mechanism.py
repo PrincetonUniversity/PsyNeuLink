@@ -1174,7 +1174,7 @@ class Mechanism_Base(Mechanism):
 
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each InputState
+        """Convert variableClassDefault and variable to 2D np.array: one 1D value for each InputState
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]
@@ -1192,6 +1192,7 @@ class Mechanism_Base(Mechanism):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
         # TODO: stateful - should this be here?? seems not
         self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
         variable = convert_to_np_array(variable, 2)
 
         return variable
@@ -1368,16 +1369,19 @@ class Mechanism_Base(Mechanism):
                     # set to None, so it is set to default (self.variable) in instantiate_inputState
                     param_value[key] = None
                     if self.prefs.verbosePref:
-                        print("Item {0} of {1} param ({2}) in {3} is not a"
-                              " InputState, specification dict or value, nor a list of dict of them; "
-                              "variable ({4}) of execute method for {5} will be used"
-                              " to create a default OutputState for {3}".
-                              format(i,
-                                     INPUT_STATES,
-                                     param_value,
-                                     self.__class__.__name__,
-                                     self.variable,
-                                     self.execute.__self__.name))
+                        print(
+                            "Item {0} of {1} param ({2}) in {3} is not a"
+                            " InputState, specification dict or value, nor a list of dict of them; "
+                            "variable ({4}) of execute method for {5} will be used"
+                            " to create a default OutputState for {3}".format(
+                                i,
+                                INPUT_STATES,
+                                param_value,
+                                self.__class__.__name__,
+                                self.instance_defaults.variable,
+                                self.execute.__self__.name,
+                            )
+                        )
                 i += 1
             params[INPUT_STATES] = param_value
 
@@ -1649,11 +1653,13 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(variable=self.variable,
-                                                 runtime_params=runtime_params,
-                                                 clock=clock,
-                                                 time_scale=time_scale,
-                                                 context=context)
+                return_value =  self._execute(
+                    variable=self.instance_defaults.variable,
+                    runtime_params=runtime_params,
+                    clock=clock,
+                    time_scale=time_scale,
+                    context=context,
+                )
 
                 # # # MODIFIED 3/3/17 OLD:
                 # # return np.atleast_2d(return_value)
@@ -1684,10 +1690,12 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return_value = self.function(variable=self.variable,
-                                             params=runtime_params,
-                                             time_scale=time_scale,
-                                             context=context)
+                return_value = self.function(
+                    variable=self.instance_defaults.variable,
+                    params=runtime_params,
+                    time_scale=time_scale,
+                    context=context,
+                )
                 return np.atleast_2d(return_value)
 
 
@@ -1719,9 +1727,10 @@ class Mechanism_Base(Mechanism):
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        self._check_args(variable=self.variable,
-                        params=runtime_params,
-                        target_set=runtime_params)
+        self._check_args(
+            params=runtime_params,
+            target_set=runtime_params,
+        )
         #endregion
 
         #region UPDATE INPUT STATE(S)
@@ -1729,7 +1738,7 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
-            self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+            variable = self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -1739,7 +1748,6 @@ class Mechanism_Base(Mechanism):
             if input is None:
                 input = self.instance_defaults.variable
             variable = self._get_variable_from_input(input)
-            self.variable = variable
 
         #endregion
 
@@ -1749,11 +1757,13 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(variable=self.variable,
-                                   runtime_params=runtime_params,
-                                   clock=clock,
-                                   time_scale=time_scale,
-                                   context=context)
+        self.value = self._execute(
+            variable=variable,
+            runtime_params=runtime_params,
+            clock=clock,
+            time_scale=time_scale,
+            context=context,
+        )
 
         # # MODIFIED 3/3/17 OLD:
         # self.value = np.atleast_2d(self.value)
@@ -1892,13 +1902,16 @@ class Mechanism_Base(Mechanism):
             if len(input_state.instance_defaults.variable) == len(input_item):
                 input_state.value = input_item
             else:
-                raise MechanismError("Length ({}) of input ({}) does not match "
-                                     "required length ({}) for input to {} of {}".
-                                     format(len(input_item),
-                                            input[i],
-                                            len(input_state.instance_defaults.variable),
-                                            input_state.name,
-                                            append_type_to_name(self)))
+                raise MechanismError(
+                    "Length ({}) of input ({}) does not match "
+                    "required length ({}) for input to {} of {}".format(
+                        len(input_item),
+                        input[i],
+                        len(input_state.instance_defaults.variable),
+                        input_state.name,
+                        append_type_to_name(self),
+                    )
+                )
 
         return np.array(self.input_values)
 
@@ -1912,7 +1925,7 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-        self.variable = np.array(self.input_values)
+        return np.array(self.input_values)
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
 

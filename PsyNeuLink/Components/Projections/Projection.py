@@ -701,15 +701,15 @@ class Projection_Base(Projection):
 
 
     def _instantiate_sender(self, context=None):
-        """Assign self.sender to OutputState of sender and insure compatibility with self.variable
+        """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.variable, and assign projection to sender's efferents attribute
+        Validate, set self.instance_defaults.variable, and assign projection to sender's efferents attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
-        If self.value / self.variable is None, set to sender.value
+        If self.value / self.instance_defaults.variable is None, set to sender.value
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
@@ -749,23 +749,26 @@ class Projection_Base(Projection):
         if not self in self.sender.efferents:
             self.sender.efferents.append(self)
 
-        # Validate projection's variable (self.variable) against sender.outputState.value
-        if iscompatible(self.variable, self.sender.value):
-            # Is compatible, so assign sender.outputState.value to self.variable
-            self.variable = self.sender.value
+        # Validate projection's variable (self.instance_defaults.variable) against sender.outputState.value
+        if iscompatible(self.instance_defaults.variable, self.sender.value):
+            # Is compatible, so assign sender.outputState.value to self.instance_defaults.variable
+            self.instance_defaults.variable = self.sender.value
 
         else:
             # Not compatible, so:
             # - issue warning
             if self.prefs.verbosePref:
-                warnings.warn("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                              " of function {4} for sender ({5}); it has been reassigned".
-                      format(self.variable,
-                             self.name,
-                             self.receiver.owner.name,
-                             self.sender.value,
-                             self.sender.function.__class__.__name__,
-                             self.sender.owner.name))
+                warnings.warn(
+                    "The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
+                    " of function {4} for sender ({5}); it has been reassigned".format(
+                        self.instance_defaults.variable,
+                        self.name,
+                        self.receiver.owner.name,
+                        self.sender.value,
+                        self.sender.function.__class__.__name__,
+                        self.sender.owner.name
+                    )
+                )
             # - reassign self.variable to sender.value
             self._instantiate_defaults(variable=self.sender.value, context=context)
 

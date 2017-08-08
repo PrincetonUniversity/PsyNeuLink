@@ -459,17 +459,27 @@ class TransferMechanism(ProcessingMechanism_Base):
         if INITIAL_VALUE in target_set:
             initial_value = target_set[INITIAL_VALUE]
             if initial_value is not None:
-                if not iscompatible(initial_value, self.variable):
-                    raise Exception("initial_value is {}, type {}\nself.variable is {}, type {}".
-                                    format(initial_value, type(initial_value), self.variable, type(self.variable)))
-                    raise TransferError("The format of the initial_value parameter for {} ({}) "
-                                        "must match its input ({})".
-                                        format(append_type_to_name(self), initial_value, self.variable[0]))
+                if not iscompatible(initial_value, self.instance_defaults.variable):
+                    raise Exception(
+                        "initial_value is {}, type {}\nself.instance_defaults.variable is {}, type {}".format(
+                            initial_value,
+                            type(initial_value),
+                            self.instance_defaults.variable,
+                            type(self.instance_defaults.variable),
+                        )
+                    )
+                    raise TransferError(
+                        "The format of the initial_value parameter for {} ({}) must match its input ({})".format(
+                            append_type_to_name(self),
+                            initial_value,
+                            self.instance_defaults.variable[0],
+                        )
+                    )
 
         # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.variable)
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
 
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
@@ -491,7 +501,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # self.integrator_function = Integrator(
         #     # default_variable=self.default_variable,
-        #                                       initializer = self.variable,
+        #                                       initializer = self.instance_defaults.variable,
         #                                       noise = self.noise,
         #                                       rate = self.time_constant,
         #                                       integration_type= ADAPTIVE)
@@ -649,19 +659,19 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = AdaptiveIntegrator(
-                                            self.variable,
+                                            variable,
                                             initializer = self.initial_value,
                                             noise = self.noise,
                                             rate = self.time_constant,
-                                            owner = self
-                                            )
+                                            owner = self)
 
-            current_input = self.integrator_function.execute(self.variable,
+            current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
-                                                             params={INITIALIZER: self.initial_value,
-                                                                     NOISE: self.noise,
-                                                                     RATE: self.time_constant},
-                                                             context=context
+                                                              params={INITIALIZER: self.initial_value,
+                                                                      NOISE: self.noise,
+                                                                      RATE: self.time_constant},
+                                                              context=context
+                                                             
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
@@ -670,9 +680,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
             # when the input is given as a string.
             if (np.array(noise) != 0).any():
-                current_input = self.variable[0] + noise
+                current_input = variable[0] + noise
             else:
-                current_input = self.variable[0]
+                current_input = variable[0]
         else:
             raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 

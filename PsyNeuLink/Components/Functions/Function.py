@@ -607,8 +607,7 @@ class Function_Base(Function):
                                 format(self.functionOutputType, self.__class__.__name__))
 
         # Can't convert from arrays of length > 1 to number
-        # if (self.variable.size  > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
-        if (len(self.variable) > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
+        if (len(self.instance_defaults.variable) > 1 and (self.functionOutputType is FunctionOutputType.RAW_NUMBER)):
             raise FunctionError(
                 "{0} can't be set to return a single number since its variable has more than one number".
                 format(self.__class__.__name__))
@@ -746,7 +745,7 @@ class ArgumentTherapy(Function_Base):
         self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
-        """Validates variable and assigns validated values to self.variable
+        """Validates variable and returns validated value
 
         This overrides the class method, to perform more detailed type checking
         See explanation in class method.
@@ -754,12 +753,11 @@ class ArgumentTherapy(Function_Base):
 
         :param variable: (anything but a dict) - variable to be validated:
         :param context: (str)
-        :return none:
+        :return variable: - validated
         """
 
         if type(variable) == type(self.ClassDefaults.variable) or \
                 (isinstance(variable, numbers.Number) and isinstance(self.ClassDefaults.variable, numbers.Number)):
-            self.variable = variable
             return variable
         else:
             raise FunctionError("Variable must be {0}".format(type(self.ClassDefaults.variable)))
@@ -838,8 +836,6 @@ class ArgumentTherapy(Function_Base):
         variable = self._check_args(variable, params, context)
 
         # Compute the function
-
-        # Use self.variable (rather than variable), as it has been validated (and default assigned, if necessary)
         statement = variable
         propensity = self.paramsCurrent[PROPENSITY]
         pertinacity = self.paramsCurrent[PERTINACITY]
@@ -1192,7 +1188,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         """
 
-        # Validate variable and assign to self.variable, and validate params
+        # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable, params=params, context=context)
 
         operation = self.paramsCurrent[OPERATION]
@@ -1425,7 +1421,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                                   exponents=exponents,
                                                   operation=operation,
                                                   scale=scale,
-                                                  offset=offset ,
+                                                  offset=offset,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
@@ -1490,16 +1486,16 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         if WEIGHTS in target_set and target_set[WEIGHTS] is not None:
             target_set[WEIGHTS] = np.atleast_2d(target_set[WEIGHTS]).reshape(-1, 1)
             if EXECUTING in context:
-                if len(target_set[WEIGHTS]) != len(self.variable):
+                if len(target_set[WEIGHTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of weights ({0}) is not equal to number of items in variable ({1})".
-                                        format(len(target_set[WEIGHTS]), len(self.variable.shape)))
+                                        format(len(target_set[WEIGHTS]), len(self.instance_defaults.variable.shape)))
 
         if EXPONENTS in target_set and target_set[EXPONENTS] is not None:
             target_set[EXPONENTS] = np.atleast_2d(target_set[EXPONENTS]).reshape(-1, 1)
             if EXECUTING in context:
-                if len(target_set[EXPONENTS]) != len(self.variable):
+                if len(target_set[EXPONENTS]) != len(self.instance_defaults.variable):
                     raise FunctionError("Number of exponents ({0}) does not equal number of items in variable ({1})".
-                                        format(len(target_set[EXPONENTS]), len(self.variable.shape)))
+                                        format(len(target_set[EXPONENTS]), len(self.instance_defaults.variable.shape)))
 
         if SCALE in target_set and target_set[SCALE] is not None:
             scale = target_set[SCALE]
@@ -1512,12 +1508,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                     format(SCALE, self.name, scale))
             if EXECUTING in context:
                 if (isinstance(scale, np.ndarray) and
-                        (scale.size != self.variable.size or
-                         scale.shape != self.variable.shape)):
+                        (scale.size != self.instance_defaults.variable.size or
+                         scale.shape != self.instance_defaults.variable.shape)):
                     raise FunctionError("Scale is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(scale.shape, scale.size, self.variable.shape, self.variable.size))
+                                        format(scale.shape, scale.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
 
         if OFFSET in target_set and target_set[OFFSET] is not None:
             offset = target_set[OFFSET]
@@ -1530,12 +1526,12 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                     format(OFFSET, self.name, offset))
             if EXECUTING in context:
                 if (isinstance(offset, np.ndarray) and
-                        (offset.size != self.variable.size or
-                         offset.shape != self.variable.shape)):
+                        (offset.size != self.instance_defaults.variable.size or
+                         offset.shape != self.instance_defaults.variable.shape)):
                     raise FunctionError("Offset is using Hadamard modulation "
                                         "but its shape and/or size (shape: {}, size:{}) "
                                         "do not match the variable being modulated (shape: {}, size: {})".
-                                        format(offset.shape, offset.size, self.variable.shape, self.variable.size))
+                                        format(offset.shape, offset.size, self.instance_defaults.variable.shape, self.instance_defaults.variable.size))
 
             # if not operation:
             #     raise FunctionError("Operation param missing")
@@ -1582,7 +1578,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
 
         """
 
-        # Validate variable and assign to self.variable, and validate params
+        # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable, params=params, context=context)
 
         exponents = self.exponents
@@ -1661,7 +1657,6 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
                                 format(self.paramsCurrent[OPERATION].self.Operation.SUM))
-        self.variable = variable
         return result
 
     @property
@@ -2656,7 +2651,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # Check that variable <= 2D
         try:
             if not variable.ndim <= 2:
-                raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(self.variable, self.__class__.__name__))
+                raise FunctionError("variable ({0}) for {1} must be a numpy.ndarray of dimension at most 2".format(variable, self.__class__.__name__))
         except AttributeError:
             raise FunctionError("PROGRAM ERROR: variable ({0}) for {1} should be a numpy.ndarray".
                                     format(variable, self.__class__.__name__))
@@ -2679,7 +2674,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         super()._validate_params(request_set, target_set, context)
         param_set = target_set
         sender = variable
-        # Note: this assumes self.variable is a 1D np.array, as enforced by _validate_variable
+        # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
         # FIX: RELABEL sender -> input AND receiver -> output
@@ -2851,7 +2846,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if isinstance(specification, np.matrix):
             return np.array(specification)
 
-        sender = self.variable
+        sender = self.instance_defaults.variable
         sender_len = sender.shape[0]
         try:
             receiver = self.receiver
@@ -2914,7 +2909,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # use of variable attribute here should be ok because it's using it as a format/type
         if isinstance(self, MappingProjection):
             rows = len(self.sender.value)
-            cols = len(self.receiver.variable)
+            cols = len(self.receiver.instance_defaults.variable)
         matrix = get_matrix(keyword, rows, cols)
 
         if matrix is None:
@@ -3178,8 +3173,8 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         # Handle list or array for rate specification
         if RATE in request_set:
             rate = request_set[RATE]
-            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.variable):
-                if len(rate) != np.array(self.variable).size:
+            if isinstance(rate, (list, np.ndarray)) and not iscompatible(rate, self.instance_defaults.variable):
+                if len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
@@ -3191,22 +3186,28 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                     if self._variable_not_specified:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
-                            warnings.warn("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                          "must match the length ({}) of the default input ({});  "
-                                          "the default input has been updated to match".
-                                          format(len(rate),
-                                                 rate,
-                                                 self.name,
-                                                 np.array(self.variable).size),
-                                          self.variable)
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable,
+                            )
                     else:
-                        raise FunctionError("The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                            "must match the length ({}) of the default input ({})".
-                                            format(len(rate),
-                                                   rate,
-                                                   self.name,
-                                                   np.array(self.variable).size,
-                                                   self.variable))
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
                 # OLD:
                 # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
@@ -3222,7 +3223,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         #     self._validate_initializer(target_set[INITIALIZER])
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.variable)
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
@@ -3942,7 +3943,7 @@ class AdaptiveIntegrator(
         if RATE in request_set:
             rate = request_set[RATE]
             if isinstance(rate, (list, np.ndarray)):
-                if len(rate) != np.array(self.variable).size:
+                if len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
                     # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
@@ -3957,21 +3958,25 @@ class AdaptiveIntegrator(
                             warnings.warn(
                                 "The length ({}) of the array specified for the rate parameter ({}) of {} "
                                 "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".
-                                    format(len(rate),
-                                           rate,
-                                           self.name,
-                                           np.array(self.variable).size),
-                                self.variable)
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable
+                            )
                     else:
                         raise FunctionError(
                             "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                            "must match the length ({}) of the default input ({})".
-                                format(len(rate),
-                                       rate,
-                                       self.name,
-                                       np.array(self.variable).size,
-                                       self.variable))
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
                         # OLD:
                         # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
 
@@ -3996,7 +4001,7 @@ class AdaptiveIntegrator(
                         "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
 
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE], self.variable)
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
@@ -4676,6 +4681,7 @@ class AccumulatorIntegrator(
                          context=context)
 
         self.previous_value = self.initializer
+        self.instance_defaults.variable = self.initializer
 
         self.auto_dependent = True
 
@@ -5437,8 +5443,8 @@ class NormalDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
@@ -5532,8 +5538,8 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         beta = self.paramsCurrent[BETA]
 
@@ -5635,8 +5641,8 @@ class UniformDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         low = self.paramsCurrent[LOW]
         high = self.paramsCurrent[HIGH]
@@ -5740,8 +5746,8 @@ class GammaDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
         dist_shape = self.paramsCurrent[DIST_SHAPE]
@@ -5845,8 +5851,8 @@ class WaldDist(DistributionFunction):
                  params=None,
                  time_scale=TimeScale.TRIAL,
                  context=None):
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._check_args(variable=variable, params=params, context=context)
 
         scale = self.paramsCurrent[SCALE]
         mean = self.paramsCurrent[DIST_MEAN]
@@ -6042,7 +6048,7 @@ class Stability(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(np.squeeze(self.variable))
+            size = len(np.squeeze(self.instance_defaults.variable))
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -6065,7 +6071,7 @@ class Stability(ObjectiveFunction):
 
         """
 
-        size = len(np.squeeze(self.variable))
+        size = len(np.squeeze(self.instance_defaults.variable))
 
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -6103,7 +6109,7 @@ class Stability(ObjectiveFunction):
         stability : scalar
 
         """
-        # Validate variable and assign to self.variable, and validate params
+        # Validate variable and validate params
         variable = self._check_args(variable=variable, params=params, context=context)
 
         from PsyNeuLink.Components.States.ParameterState import ParameterState
@@ -6231,7 +6237,7 @@ class Distance(ObjectiveFunction):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
         if len(variable) != 2:
-            raise FunctionError("variable for {} ({}) must have two items".format(self.name, self.variable))
+            raise FunctionError("variable for {} ({}) must have two items".format(self.name, variable))
 
         if len(variable[0]) != len(variable[1]):
             raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
@@ -6250,7 +6256,7 @@ class Distance(ObjectiveFunction):
         distance : scalar
 
         """
-        # Validate variable and assign to self.variable, and validate params
+        # Validate variable and validate params
         variable = self._check_args(variable=variable, params=params, context=context)
 
         v1 = variable[0]
@@ -6351,7 +6357,7 @@ class Reinforcement(
         Reinforcement learning rule
           [matrix]         [scalar]        [col array]
         delta_weight =  learning rate   *     error
-          return     =  LEARNING_RATE  *  self.variable
+          return     =  LEARNING_RATE  *  variable
 
         Reinforcement.function:
             variable must be a 1D np.array with three items (standard for learning functions)
@@ -6488,9 +6494,9 @@ class Reinforcement(
                                  format(self.name, variable))
 
         # TODO: stateful - should these be stateful?
-        self.activation_input = self.variable[LEARNING_ACTIVATION_INPUT]
-        self.activation_output = self.variable[LEARNING_ACTIVATION_OUTPUT]
-        self.error_signal = self.variable[LEARNING_ERROR_OUTPUT]
+        self.activation_input = variable[LEARNING_ACTIVATION_INPUT]
+        self.activation_output = variable[LEARNING_ACTIVATION_OUTPUT]
+        self.error_signal = variable[LEARNING_ERROR_OUTPUT]
 
         if len(self.error_signal) != 1:
             raise ComponentError("Error term for {} (the third item of its variable arg) must be an array with a "

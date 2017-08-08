@@ -652,17 +652,17 @@ class DDM(ProcessingMechanism_Base):
 
         # set initial values and threshold
         time_step = [0]
-        position = [float(self.variable)]
-        self.variable = stimulus
+        position = [float(self.instance_defaults.variable)]
+        variable = stimulus
 
         # execute the mechanism once to begin the loop
-        result_check = self.plot_function(self.variable, context="plot")[0][0]
+        result_check = self.plot_function(variable, context="plot")[0][0]
 
         # continue executing the ddm until its value exceeds the threshold
         while abs(result_check) < threshold:
             time_step.append(time_step[-1] + 1)
             position.append(result_check)
-            result_check = self.plot_function(self.variable, context="plot")[0][0]
+            result_check = self.plot_function(variable, context="plot")[0][0]
 
         # add the ddm's final position to the list of positions
         time_step.append(time_step[-1] + 1)
@@ -854,7 +854,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
 
-            result = self.function(self.variable, context=context)
+            result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
             if abs(result) >= self.threshold:
@@ -867,7 +867,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            result = self.function(variable=self.variable,
+            result = self.function(variable=variable,
                                    params=runtime_params,
                                    context=context)
 

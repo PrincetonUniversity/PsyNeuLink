@@ -521,7 +521,7 @@ class InputState(State_Base):
 
 
     def _instantiate_function(self, context=None):
-        """Insure that function is LinearCombination and that output is compatible with owner.variable
+        """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
 
         Insures that function:
             - is LinearCombination (to aggregate Projection inputs)
@@ -578,6 +578,7 @@ class InputState(State_Base):
         # If there were any Transmissive Projections:
         if self._path_proj_values:
             # Combine Projection values
+            # TODO: stateful - this seems dangerous with statefulness, maybe safe when self.value is only passed or stateful
             combined_values = self.function(variable=self._path_proj_values,
                                             params=function_params,
                                             context=context)
@@ -606,7 +607,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
 
     If input_states is not specified:
         - use owner.input_states as list of InputState specifications
-        - if owner.input_states is empty, user owner.variable to create a default InputState
+        - if owner.input_states is empty, user owner.instance_defaults.variable to create a default InputState
 
     When completed:
         - self.input_states contains a ContentAddressableList of one or more input_states
@@ -632,7 +633,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                                          state_list=input_states,
                                          state_type=InputState,
                                          state_param_identifier=INPUT_STATE,
-                                         constraint_value=owner.variable,
+                                         constraint_value=owner.instance_defaults.variable,
                                          constraint_value_name=VARIABLE,
                                          context=context)
 
@@ -642,11 +643,11 @@ def _instantiate_input_states(owner, input_states=None, context=None):
     else:
         owner._input_states = state_list
 
-    # Check that number of input_states and their variables are consistent with owner.variable,
+    # Check that number of input_states and their variables are consistent with owner.instance_defaults.variable,
     #    and adjust the latter if not
     for i, input_state in enumerate(owner.input_states):
         try:
-            variable_item_is_OK = iscompatible(owner.variable[i], input_state.value)
+            variable_item_is_OK = iscompatible(owner.instance_defaults.variable[i], input_state.value)
             if not variable_item_is_OK:
                 break
         except IndexError:
@@ -655,12 +656,16 @@ def _instantiate_input_states(owner, input_states=None, context=None):
 
     if not variable_item_is_OK:
         # NOTE: This block of code appears unused, and the 'for' loop appears to cause an error anyways. (7/11/17 CW)
-        old_variable = owner.variable
+        old_variable = owner.instance_defaults.variable
         new_variable = []
         for state in owner.input_states:
             new_variable.append(state.value)
-        owner.variable = np.array(new_variable)
+        owner.instance_defaults.variable = np.array(new_variable)
         if owner.verbosePref:
-            warnings.warn("Variable for {} ({}) has been adjusted "
-                          "to match number and format of its input_states: ({})".
-                          format(old_variable, append_type_to_name(owner),owner.variable))
+            warnings.warn(
+                "Variable for {} ({}) has been adjusted to match number and format of its input_states: ({})".format(
+                    old_variable,
+                    append_type_to_name(owner),
+                    owner.instance_defaults.variable,
+                )
+            )
