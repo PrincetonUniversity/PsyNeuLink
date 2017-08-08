@@ -52,7 +52,22 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
         benchmark(lambda _:0,0)
         pytest.xfail(fail)
         return
-    f = Function.Distance(metric=metric, normalize=normalize)
+    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
+    assert np.allclose(res, expected)
+
+@pytest.mark.function
+@pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
+@pytest.mark.benchmark
+def test_llvm(variable, metric, normalize, fail, expected, benchmark):
+    if fail is not None:
+        # This is a rather ugly hack to stop pytest benchmark complains
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.xfail(fail)
+        return
+    f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
+    benchmark.group = metric + ("-normalized" if normalize else "")
+    res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)

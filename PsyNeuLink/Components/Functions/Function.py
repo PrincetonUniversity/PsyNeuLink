@@ -178,6 +178,12 @@ from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import AutoNumber, is_distance_metric, is_matrix, is_numeric, iscompatible, np_array_less_than_2d, parameter_spec
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
+import functools
+import ctypes
+import PsyNeuLink.llvm as pnlvm
+from PsyNeuLink.llvm import helpers
+from llvmlite import ir
+
 EPSILON = np.finfo(float).eps
 
 FunctionRegistry = {}
@@ -6187,6 +6193,10 @@ class Distance(ObjectiveFunction):
 
         self.functionOutputType = None
 
+        #TODO: Is this legit? Can we guarantee vector sizes?
+        self.__llvm_func_name = self.__get_llvm_function(default_variable)
+        self.__bin_function = None
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate that variable had two items of equal length
 
@@ -6199,6 +6209,110 @@ class Distance(ObjectiveFunction):
         if len(self.variable[0]) != len(self.variable[1]):
             raise FunctionError("The lengths of the items in the variable for {} ({},{}) must be equal".
                 format(self.name, len(self.variable[0]), len(self.variable[1])))
+
+    def __gen_llvm_difference(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        ltz = builder.fcmp_ordered("<", sub, ctx.float_ty(0))
+        abs_val = builder.select(ltz, builder.fsub(ctx.float_ty(0), sub), sub)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, abs_val)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_euclidean(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        sub = builder.fsub(val1, val2)
+        sqr = builder.fmul(sub, sub)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, sqr)
+        builder.store(new_acc, acc)
+
+    def __gen_llvm_cross_entropy(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        log_f = ctx.module.declare_intrinsic("llvm.log", [ctx.float_ty])
+        log = builder.call(log_f, [val2])
+        prod = builder.fmul(val1, log)
+
+        acc_val = builder.load(acc)
+        new_acc = builder.fsub(acc_val, prod)
+        builder.store(new_acc, acc)
+
+    def __get_llvm_function(self, default_variable):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            if (self.metric == EUCLIDEAN):
+                sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
+            func_name = ctx.module.get_unique_name("distance")
+            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
+            func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
+            vector_length = ctx.int32_ty(len(default_variable[0]))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            v1, v2 = llvm_func.args
+            for a in v1,v2:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            acc_ptr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty(0), acc_ptr)
+
+            kwargs = {"ctx":ctx, "v1":v1, "v2":v2, "acc": acc_ptr}
+            if (self.metric == DIFFERENCE):
+                inner = functools.partial(self.__gen_llvm_difference, **kwargs)
+            elif (self.metric == EUCLIDEAN):
+                inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
+            elif (self.metric == CROSS_ENTROPY):
+                inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+            else:
+                raise RuntimeError('Unsupported metric')
+
+
+            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, self.metric)
+            ret = builder.load(acc_ptr)
+            if (self.metric == EUCLIDEAN):
+                ret = builder.call(sqrt, [ret])
+
+            # len(self.argument) is always 2, perhaps the size of vector
+            # should be used instead
+            if self.normalize:
+                ret = builder.fdiv(ret, ctx.float_ty(2), name="sqrt")
+            builder.ret(ret)
+        return func_name
+
+    def bin_function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        # TODO: Port this to llvm
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        v1 = self.variable[0]
+        v2 = self.variable[1]
+
+        if self.__bin_function is None:
+            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        ct_v1 = v1.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        ct_v2 = v2.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        return self.__bin_function(ct_v1, ct_v2)
 
     def function(self,
                  variable=None,
