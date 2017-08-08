@@ -96,19 +96,19 @@ Class Reference
 """
 
 import numbers
+
 import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
     get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, \
-    MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _instantiate_state
+from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale

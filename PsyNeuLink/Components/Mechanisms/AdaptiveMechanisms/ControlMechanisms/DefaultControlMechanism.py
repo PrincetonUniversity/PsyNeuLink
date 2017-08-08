@@ -33,6 +33,7 @@ COMMENT
 
 """
 
+import numpy as np
 import typecheck as tc
 import numpy as np
 

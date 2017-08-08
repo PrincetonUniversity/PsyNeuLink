@@ -1425,7 +1425,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
                                                   exponents=exponents,
                                                   operation=operation,
                                                   scale=scale,
-                                                  offset=offset,
+                                                  offset=offset ,
                                                   params=params)
 
         super().__init__(default_variable=default_variable,
