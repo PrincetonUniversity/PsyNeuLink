@@ -82,16 +82,17 @@ PsyNeuLink assigns a default Projection. Specifying the components of a pathway 
 Mechanisms
 ~~~~~~~~~~
 
-The `Mechanisms` of a Process must be listed in the `pathway` argument of the :py:func:`process` function explicitly,
-in the order to be executed.  The first Mechanism in the Process is designated as the `ORIGIN`, and receives as its
-input any input provided to the Process' `execute <Process_Base.execute>` or `run <Process_Base.run>` methods. The last
-Mechanism listed in the `pathway` is designated as the `TERMINAL` Mechanism, and its output is assigned as the output
-of the Process when it is executed.
+The `Mechanisms <Mechanism>` of a Process must be listed in the `pathway` argument of the :py:func:`process` function
+explicitly, in the order to be executed.  The first Mechanism in the Process is designated as the `ORIGIN`,
+and receives as its input any input provided to the Process' `execute <Process_Base.execute>` or `run
+<Process_Base.run>` methods. The last Mechanism listed in the `pathway` is designated as the `TERMINAL` Mechanism,
+and its output is assigned as the output of the Process when it is executed.
 
 .. note::
-   The `ORIGIN` and `TERMINAL` Mechanisms of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms
-   of the `System(s) <System_Mechanisms>` to which it belongs.  The designations of a Mechanism's status in the
-   Process(es) to which it belongs are listed in its `Processes <Mechanism_Base.processes>` attribute.
+   The `ORIGIN` and `TERMINAL` Mechanisms of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms of
+   the `System(s) <System_Mechanisms>` to which it the Process belongs (see `example
+   <LearningProjection_Target_vs_Terminal_Figure>`).  The designations of a Mechanism's status in the Process(es) to
+   which it belongs are listed in its `Processes <Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 

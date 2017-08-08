@@ -115,10 +115,11 @@ and/or the role they play in a System:
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
-    .. note:: Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively,
-       the `ORIGIN` or `TERMINAL` of any Process(es) to which they belong.  However, it is not
-       necessarily the case that the `ORIGIN` and/or `TERMINAL` Mechanism of a Process is also the
-       `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see the Chain example below).
+    .. note::
+       Any `ORIGIN` and `TERMINAL` Mechanisms of a System must be, respectively, the `ORIGIN` or `TERMINAL` of any
+       Process(es) to which they belong.  However, it is not necessarily the case that the `ORIGIN` and/or `TERMINAL`
+       Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
+       `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
     .. note: designations are stored in the Mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 

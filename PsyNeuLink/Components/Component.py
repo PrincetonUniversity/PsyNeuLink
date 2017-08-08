@@ -80,7 +80,7 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
   .. note::
      The `function <Component.function>` of a Component can be assigned either a `Function` object or any other
-     callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
+     callable object in python.  If the latter is assigned, it is "wrapped" in a `UserDefinedFunction`.
 
   All Components have a default `function <Component.function>` (with a default set of parameters), that is used if it
   is not otherwise specified.  The `function <Component.function>` can be specified in the

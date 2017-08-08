@@ -119,7 +119,7 @@ Specifying States
 ~~~~~~~~~~~~~~~~~
 
 Every Mechanism has one or more `InputStates <InputState>`, `ParameterStates <ParameterState>`, and `OutputStates
-<OutputState>` (summarized `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
+<OutputState>` (described `below <Mechanism_States>`) that allow it to receive and send `Projections <Projection>`,
 and to execute its `function <Mechanism_Base.function>`).  When a Mechanism is created, it automatically creates the
 ParameterStates it needs to represent its parameters, including those of its `function <Mechanism_Base.function>`. It
 also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
@@ -151,11 +151,24 @@ This shows how the same mechanism can be specified using a dictionary assigned t
      my_mech = TransferMechanism(params={INPUT_STATES: ['MY_INPUT'],
                                          OUTPUT_STATES: [RESULT, MEAN, VARIANCE]})
 
+.. _Mechanism_Parameter_Specification:
+
+Specifying Parameters
+~~~~~~~~~~~~~~~~~~~~~
+
+As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
+current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
+<Mechanism_Execution>`. These can also be used by a `ControlMechanism` to control the parameters of the Mechanism and/or
+it `function <Mechanism_Base.function>`.  The value of any of these, and their control, can be specified in the
+corresponding argument of the constructor for the Mechanism and/or its `function <Mechanism_Base.function>`,  or in a
+parameter specification dictionary assigned to the **params** argument of its constructor, as described under
+`ParameterState_Specification`.
+
 
 .. _Mechanism_Structure:
 
 Structure
---------
+---------
 
 .. _Mechanism_Function:
 
@@ -226,6 +239,28 @@ to a particular function must be specified in a constructor for that function.  
 auxiliary functions, those must be specified in arguments for them in the Mechanism's constructor, and their parameters
 must be specified in constructors for those functions unless documented otherwise.
 
+COMMENT:
+    FOR DEVELOPERS:
+    + FUNCTION : function or method :  method used to transform Mechanism input to its output;
+        This must be implemented by the subclass, or an exception will be raised;
+        each item in the variable of this method must be compatible with a corresponding InputState;
+        each item in the output of this method must be compatible  with the corresponding OutputState;
+        for any parameter of the method that has been assigned a ParameterState,
+        the output of the ParameterState's own execute method must be compatible with
+        the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
+    + FUNCTION_PARAMS (dict):
+        NOTE: function parameters can be specified either as arguments in the Mechanism's __init__ method,
+        or by assignment of the function_params attribute for paramClassDefaults.
+        Only one of these methods should be used, and should be chosen using the following principle:
+        - if the Mechanism implements one function, then its parameters should be provided as arguments in the __init__
+        - if the Mechanism implements several possible functions and they do not ALL share the SAME parameters,
+            then the function should be provided as an argument but not they parameters; they should be specified
+            as arguments in the specification of the function
+        each parameter is instantiated as a ParameterState
+        that will be placed in <Mechanism>._parameter_states;  each parameter is also referenced in
+        the <Mechanism>.function_params dict, and assigned its own attribute (<Mechanism>.<param>).
+COMMENT
+
 
 .. _Mechanism_Custom_Function:
 
@@ -245,7 +280,7 @@ COMMENT:
     `function <UserDefinedFunction.function>` attribute.
 COMMENT
 
-Variable and Value Attributes
+variable and value Attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's
@@ -424,95 +459,50 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 
 .. _Mechanism_Attributes:
 
-Mechanism Attributes
-~~~~~~~~~~~~~~~~~~~~
+Additional Attributes
+~~~~~~~~~~~~~~~~~~~~~
 
-Most Mechanisms implement a standard set of attributes (listed below), in addition to those possessed by all
-`Components <Component_Structure>`.  These can be specified in arguments of the Mechanism's constructor, in a
-`parameter specification dictionary <ParameterState_Specification>` assigned to the **params** argument of the
+In addition to the `standard attributes <Component_Structure>` of any `Component`, Mechanisms have a set of
+Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
+in a `parameter specification dictionary <ParameterState_Specification>` assigned to the **params** argument of the
 Mechanism's constructor, by direct reference to the corresponding attribute of the Mechanisms after it has been
-constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method.  The standard parameters
-of a Mechanism are listed below by their keywords, along with a description of how they are specified:
-
-    * *INPUT_STATES* - a list specifying specialized input_states used by a Mechanism type
-      (see :ref:`InputState specification <InputState_Creation>` for details of specification).
-    ..
-    * *OUTPUT_STATES* - specifies specialized OutputStates required by a Mechanism subclass
-      (see :ref:`OutputStates_Creation` for details of specification).
-    ..
-    * *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by the `controller`
-      for the System to which the Mechanism belongs (see :ref:`specifying monitored OutputStates
-      <ControlMechanism_Monitored_OutputStates>` for details of specification).
-    ..
-    * *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for learning
-      (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
-
-XXX ???INCLUDE
-In addition, the Mechanism's
-
-    * *FUNCTION* - specifies the `function <Mechanism_Base.function>` for the Mechanism;  can be one of several
-      functions pre-specified by the Mechanism's type or a user-defined `custom function <Mechanism_Custom_Function>`.
-    ..
-    * *FUNCTION_PARAMS* - a `parameter specification dictionary <ParameterState_Specification>` for the Mechanism's
-      `function <Mechanism_Base.function>`;  the key for each entry must be the name of one of the function's
-      parameters (capitalized);  its value can be any of the following:
-
-      * the value of the parameter itself;
-      |
-      * a `ParameterState <ParameterState_Creation>`, the value of which specifies the parameter's value;
-      |
-      * a `ControlProjection <ControlProjection_Creation>` specification, that assigns the parameter its default value,
-        and a ControlProjection to it's `ParameterState`;
-      |
-      * a tuple with exactly two items: the parameter value and the specification for a `ControlProjection <>` or
-        `ControlSignal`
-        XXX TYPE OR EXISTING ONE ??OR MECHANISM?
-        XXX REFERENCE TUPLE HERE FOR ??CONTROL SIGNAL OR PARMATER STATE??
-      |
-      .. note::
-         Some Mechanism types include the function parameters as arguments in Mechanism's constructor (see `above
-         <XXX>). Any values specified in the `FUNCTION__PARAMS` entry of a
-         `parameter specification dictionary <ParameterState_Specification>` for the Mechanism take precedence
-         over values assigned to parameter-specific arguments in its (or its function's) constructor.
+constructed (e.g., ``my_mechanism.param``), or using the Mechanism's `assign_params` method. The Mechanism-specific
+attributes are listed below by their argument names / keywords, along with a description of how they are specified:
 
 COMMENT:
-    FOR DEVELOPERS:
-    + FUNCTION : function or method :  method used to transform Mechanism input to its output;
-        This must be implemented by the subclass, or an exception will be raised;
-        each item in the variable of this method must be compatible with a corresponding InputState;
-        each item in the output of this method must be compatible  with the corresponding OutputState;
-        for any parameter of the method that has been assigned a ParameterState,
-        the output of the ParameterState's own execute method must be compatible with
-        the value of the parameter with the same name in params[FUNCTION_PARAMS] (EMP)
-    + FUNCTION_PARAMS (dict):
-        NOTE: function parameters can be specified either as arguments in the Mechanism's __init__ method
-        (** EXAMPLE ??), or by assignment of the function_params attribute for paramClassDefaults (** EXMAMPLE ??).
-        Only one of these methods should be used, and should be chosen using the following principle:
-        - if the Mechanism implements one function, then its parameters should be provided as arguments in the __init__
-        - if the Mechanism implements several possible functions and they do not ALL share the SAME parameters,
-            then the function should be provided as an argument but not they parameters; they should be specified
-            as arguments in the specification of the function
-        each parameter is instantiated as a ParameterState
-        that will be placed in <Mechanism>._parameter_states;  each parameter is also referenced in
-        the <Mechanism>.function_params dict, and assigned its own attribute (<Mechanism>.<param>).
+    * **input_states** / *INPUT_STATES* - a list specifying specialized input_states used by a Mechanism type
+      (see :ref:`InputState specification <InputState_Creation>` for details of specification).
+    ..
+    * **output_states** / *OUTPUT_STATES* - specifies specialized OutputStates required by a Mechanism subclass
+      (see :ref:`OutputStates_Creation` for details of specification).
 COMMENT
+    ..
+    * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
+      the `controller` for the System to which the Mechanism belongs (see :ref:`specifying monitored OutputStates
+      <ControlMechanism_Monitored_OutputStates>` for details of specification).
+    ..
+    * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
+      learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
+
 
 .. _Mechanism_Role_In_Processes_And_Systems:
 
 Role in Processes and Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of one or more Processes are assigned designations that indicate the
+Mechanisms that are part of one or more `Processes <Process>` are assigned designations that indicate the
 `role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
-any systems to which they belong. These designations are listed in the Mechanism's `processes` and `systems`
-attributes, respectively.  Any Mechanism designated as `ORIGIN` receives a Projection to its
-`primary InputState <InputState_Primary>` from the Process(es) to which it belongs.  Accordingly, when the Process
-(or System of which the Process is a part) is executed, those Mechanisms receive the input provided to the Process
-(or System).  The `output_values <Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL`
-Mechanism for a Process is assigned as the `output` of that Process, and similarly for systems to which it belongs.
+any `Systems <System>` to which they belong. These designations are listed in the Mechanism's `processes
+<Mechanism_Base.processes>` and `systems <Mechanism_Base.systems>` attributes, respectively.  Any Mechanism
+designated as `ORIGIN` receives a `MappingProjection` to its `primary InputState <InputState_Primary>` from the
+Process(es) to which it belongs.  Accordingly, when the Process (or System of which the Process is a part) is
+executed, those Mechanisms receive the input provided to the Process (or System).  The `output_values
+<Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` Mechanism for a Process is assigned as
+the `output <Process_Base.output>` of that Process, and similarly for any System to which it belongs.
 
-.. note:: A Mechanism can be the `ORIGIN` or `TERMINAL` of a Process but not of a System to which that
-          Process belongs;  see :ref:`Chain Example <LINK>` for further explanation.
+.. note::
+   A Mechanism that is the `ORIGIN` or `TERMINAL` of a Process does not necessarily have the same role in the
+   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
 
 .. _Mechanism_Execution:
@@ -523,10 +513,10 @@ Execution
 A Mechanism can be executed using its `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods.  This
 can be useful in testing a Mechanism and/or debugging.  However, more typically, Mechanisms are executed as part of a
 `Process <Process_Execution>` or `System <System_Execution>`.  For either of these, the Mechanism must be included in
-the `pathway` of a Process.  There, it can be specified on its own, or as the first item of a tuple that also has an
-optional set of `runtime parameters <Mechanism_Runtime_Parameters>`, and/or a `phase specification <System_Phase>` for
-use when  executed in a System (see `Process_Mechanisms` for additional details about specifying a Mechanism in a
-Process `pathway`).
+the `pathway <Process_Base.pathway>` of a Process.  There, it can be specified on its own, or as the first item of a
+tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Parameters>` (see `Process Mechanisms
+<Process_Mechanisms>` for additional details about specifying a Mechanism in a Process `pathway
+<Process_Base.pathway>`).
 
 .. _Mechanism_Runtime_Parameters:
 
@@ -536,28 +526,30 @@ Runtime Parameters
 .. note::
    This is an advanced feature, and is generally not required for most applications.
 
-The parameters of a Mechanism are usually specified when the Mechanism is created.  However, these can be overridden
-when it executed.  This can be done in a `parameter specification dictionary <ParameterState_Specification>`
-assigned to the **runtime_param** argument of the Mechanism's `execute <Mechanism_Base.execute>` method, or in a
-`tuple with the Mechanism <Process_Mechanisms>` in the `pathway` of a `Process`.  Any value assigned to a
-parameter in a **runtime_params** dictionary will override the current value of that parameter for the (and *only* the)
-current execution of the Mechanism; the value will return to its previous value following current execution,
-unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter belongs.
+The parameters of a Mechanism are usually specified when the Mechanism is `created <Mechanism_Creation>`.  However,
+these can be overridden when it `executed <Mechanism_Base.execution>`.  This can be done in a `parameter specification
+dictionary <ParameterState_Specification>` assigned to the **runtime_param** argument of the Mechanism's `execute
+<Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
+of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
+that parameter for the (and *only* the) current execution of the Mechanism; the value will return to its previous value
+following that execution, unless the `runtimeParamStickyAssignmentPref` is set for the component to which the parameter
+belongs.
 
-The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of
-which is for a parameter of the Mechanism or its  function, or for one of the Mechanism's `States <State>`.
-Entries for parameters of the Mechanism or its function use the standard format for
-`parameter specification dictionaries <ParameterState_Specification>`. Entries for the Mechanism's States can
-be used to specify runtime parameters of the corresponding State, its function, or any of the Projections to that State.
-Each State entry uses a key corresponding to the type of State (*INPUT_STATE_PARAMS*, *OUTPUT_STATE_PARAMS* or
-*PARAMETER_STATE_PARAMS*), and the value is a subdictionary containing a dictionary with the runtime  parameter
-specifications for all States of that type). Within that subdictionary, specification of parameters for the State or
-its function use the  standard format for `parameter dictionaries <ParameterState_Specification>`.  Parameters
-for all of the State's Projections can be specified in an entry with the key *PROJECTION_PARAMS*, and a subdictionary
-that contains the parameter specifications;  parameters for Projections of a particular type can be placed in an
-entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
-*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters can for a specific Projection can be
-placed in an entry with a key specifying the name of the project and a dictionary with the specifications.
+The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
+is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's States
+<Mechanism_States>`. Entries for parameters of the Mechanism or its `function <Mechanism_Base.function>` use the
+standard format for `parameter specification dictionaries <ParameterState_Specification>`. Entries for the Mechanism's
+States can be used to specify runtime parameters of the corresponding State, its `function <State_Base.function>`, or
+any of the `Projections to that state <State_Projections>`. Each entry for the parameters of a State uses a key
+corresponding to the type of State (*INPUT_STATE_PARAMS*, *OUTPUT_STATE_PARAMS* or *PARAMETER_STATE_PARAMS*), and a
+value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all States of that
+type). Within that sub-dictionary, specification of parameters for the State or its `function <State_Base.function>` use
+the  standard format for a `parameter specification dictionary <ParameterState_Specification>`.  Parameters for all of
+the `State's Projections <State_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
+sub-dictionary that contains the parameter specifications;  parameters for Projections of a particular type can be
+placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
+*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters for a specific Projection can be placed in
+an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
 
 COMMENT:
     ADD EXAMPLE(S) HERE

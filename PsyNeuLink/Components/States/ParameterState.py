@@ -62,6 +62,8 @@ Parameters can be specified in one of several places:
     ..
     * In the **runtime_params** argument of a call to component's `execute <Mechanism_Base.execute>` method.
 
+.. _ParameterState_Value_Specification:
+
 The specification of the initial value of a parameter can take any of the following forms:
 
     .. _ParameterState_Value_Assignment:
@@ -70,7 +72,7 @@ The specification of the initial value of a parameter can take any of the follow
       assigns the parameter's default value as the ParameterState's `value <ParameterState.value>`,
       and assigns the parameter's name as the name of the ParameterState.
     ..
-    * **ParameterState referece** -- this must refer to an existing **ParameterState** object; its name must be the
+    * **ParameterState reference** -- this must refer to an existing **ParameterState** object; its name must be the
       name of a parameter of the owner or of the owner's `function <Component.function>`, and its value must be a valid
       one for the parameter.
 
