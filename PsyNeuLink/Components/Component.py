@@ -148,8 +148,14 @@ Core Informational Attributes
 .. _Component_User_Params:
 
 * **user_params** - this contains a dictionary of all of the configurable attributes for a given Component.
-  The dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-  value to the attribute directly (see <>), or using the Component's `assign_params <Component.assign_params>` method.
+  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+  class `UserDict <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+  value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
+  however, to access a full list of entries it's data attribute must be used (e.g.,
+  ``my_component.user_params.data``).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
+  changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
+  ``my_component.my_parameter``), or using the Component's `assign_params <Component.assign_params>` method.
+
 ..
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
@@ -163,17 +169,21 @@ COMMENT
 * **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
   The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
   Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-  those parameters (see `function_params <Component.function_params>` above).
+  those parameters (see `function_params <Component_Function_Params>` below).
 
 .. _Component_Function_Params:
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
-  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
-  its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
-  parameters must be made by assigning a value to the corresponding attribute of the Component's
-  `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter),
-  or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified
-  when the Component is created in one of the following ways:
+  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
+  value the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+  class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+  value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
+  however, to access a full list of entries it's data attribute must be used (e.g.,
+  ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
+  Rather, changes to the value of the function's parameters must be made by assigning a value to the corresponding
+  attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
+  ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
+  parameters for the function can be specified when the Component is created in one of the following ways:
 
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
@@ -193,8 +203,12 @@ COMMENT
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  See `ParameterState_Specification` for details concerning different ways in which the value of a parameter
-  can be specified.
+  The parameters of functions for some Components may allow other forms of specification (see
+  `ParameterState_Specification` for details concerning different ways in which the value of a
+  parameter can be specified).
+
+
+
 
 COMMENT:
 * **log**
@@ -2680,7 +2694,7 @@ def make_property(name, default_value):
         except (AttributeError, TypeError):
             try:
                 # Get value of param from Component's own ParameterState.value
-                #    case: request is for the value of a parameter of a Mechanism or Project that has a ParameterState
+                #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
                 #    example: matrix parameter of a MappingProjection)
                 #    rationale: next most common case
                 #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)

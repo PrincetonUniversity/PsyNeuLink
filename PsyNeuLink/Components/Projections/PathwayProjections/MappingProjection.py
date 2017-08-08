@@ -32,8 +32,8 @@ A MappingProjection can be created in any of the ways that can be used to create
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
-  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already have a
-    Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
+  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process_Base.pathway>` do not already
+    have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
   * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_values

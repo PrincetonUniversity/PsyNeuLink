@@ -60,7 +60,7 @@ Parameters can be specified in one of several places:
     ..
     * In the `assign_params <Component.assign_params>` method for the Component.
     ..
-    * In the **runtime_params** argument of a call to component's `execute <Mechanism.Mechanism_Base.execute>` method.
+    * In the **runtime_params** argument of a call to component's `execute <Mechanism_Base.execute>` method.
 
 The specification of the initial value of a parameter can take any of the following forms:
 
@@ -102,18 +102,17 @@ The specification of the initial value of a parameter can take any of the follow
       .. note::
           Currently, the `function <Component.function>` of a Component, although it can be specified as a
           parameter value, cannot be assigned a `ModulatorySignal` or modified in the **runtime_params** argument of
-          a call to a Mechanism's `execute <Mechanism.execute>` method. This may change in the future.
+          a call to a Mechanism's `execute <Mechanism_Base.execute>` method. This may change in the future.
 
 The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
-of the Component's `function <Mechanism.function>` to which the parameter belongs.  The attribute has the same name as
-the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example, the value of a
-parameter named *param* is assigned to an attribute named ``param`` that can be referenced as ``my_component.param``).
-The parameter's value is assigned as the **default value** for the ParameterState.
+of the Component's `function <Mechanism_Base.function>` to which the parameter belongs.  The attribute has the same
+name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example,
+the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as``my_component.param``). The parameter's value is assigned as the **default value** for the ParameterState.
 
 .. note::
    If the value of a parameter is specified as `None`, `NotImplemented`, or any other non-numeric value that is not one
    of those listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal`
-   or in the **runtime_params** argument of a call to a Mechanism's `execute <Mechanism.execute>` method.
+   or in the **runtime_params** argument of a call to a Mechanism's `execute <Mechanism_Base.execute>` method.
 
 
 .. _ParameterState_Specification_Examples:

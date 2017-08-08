@@ -91,7 +91,7 @@ of the Process when it is executed.
 .. note::
    The `ORIGIN` and `TERMINAL` Mechanisms of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms
    of the `System(s) <System_Mechanisms>` to which it belongs.  The designations of a Mechanism's status in the
-   Process(es) to which it belongs are listed in its `Processes <Mechanism.Mechanism_Base.processes>` attribute.
+   Process(es) to which it belongs are listed in its `Processes <Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 
@@ -442,8 +442,8 @@ def process(process_spec=None,
     initial_values : Optional[Dict[Mechanism, param value]] : default None
         a dictionary of values used to initialize the specified Mechanisms. The key for each entry must be a Mechanism
         object, and the value must be a number, list or np.array that must be compatible with the format of
-        the Mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be initialized
-        with their `default_variable <Mechanism.Mechanism_Base.default_variable>`.
+        the Mechanism's `value <Mechanism_Base.value>` attribute. Mechanisms not specified will be initialized
+        with their `default_variable <Mechanism_Base.default_variable>`.
 
     clamp_input : Optional[keyword] : default None
         specifies whether the input to the Process continues to be applied to the `ORIGIN` Mechanism after
@@ -643,10 +643,10 @@ class Process_Base(Process):
         input to the Process for each `TRIAL` of executions;  it is assigned the value of the :keyword:`input` argument
         in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
         assigned as the value of the corresponding ProcessInputStates in `process_input_states`, and must match the
-        format of the `variable <Mechanism.Mechanism_Base.variable>` for the Process' `ORIGIN` Mechanism.
+        format of the `variable <Mechanism_Base.variable>` for the Process' `ORIGIN` Mechanism.
 
         .. note:: The :keyword:`input` attribute of a Process preserves its value throughout the execution of the
-                  Process. It's value is assigned to the `variable <Mechanism.Mechanism_Base.variable>` attribute of
+                  Process. It's value is assigned to the `variable <Mechanism_Base.variable>` attribute of
                   the `ORIGIN` Mechanism at the start of execution.  After that, by default, that Mechanism's
                   :keyword:`variable` attribute is zeroed. This is so that if the `ORIGIN` Mechanism is executed
                   again in the same `PASS` of executions (e.g., if it is part of a recurrent loop) it does not continue
@@ -673,8 +673,8 @@ class Process_Base(Process):
     initial_values : Optional[Dict[Mechanism, param value]]
         a dictionary of values used to initialize the specified Mechanisms. The key for each entry is a Mechanism
         object, and the value is a number, list or np.array that must be compatible with the format of
-        the Mechanism's `value <Mechanism.Mechanism_Base.value>` attribute. Mechanisms not specified will be
-        initialized with their `default_variable <Mechanism.Mechanism_Base.default_variable>`.
+        the Mechanism's `value <Mechanism_Base.value>` attribute. Mechanisms not specified will be
+        initialized with their `default_variable <Mechanism_Base.default_variable>`.
 
     value: 2d. np.array
         the value of the `primary OutputState <OutputState_Primary>` of the `TERMINAL` Mechanism of the Process.
@@ -2449,7 +2449,7 @@ class ProcessInputState(OutputState):
 
     Each instance encodes one of the following:
     - an item of the `input <Process.input>` to the process (a 1d array in the 2d input array) and provides it to a
-        `MappingProjection` that projects to one or more `input_states <Mechanism.Mechanism_Base.input_states>` of the
+        `MappingProjection` that projects to one or more `input_states <Mechanism_Base.input_states>` of the
         `ORIGIN` Mechanism in the process.
     - a `target <Process.target>` to the process (also a 1d array) and provides it to a `MappingProjection` that
          projects to the `TARGET` Mechanism of the process.
