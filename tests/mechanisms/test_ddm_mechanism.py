@@ -30,7 +30,6 @@ def test_DDM_Integrator():
     T.function_object.initializer = 30.0
     val2 = float(T.execute(stim)[0])
     # assert [val, val2]  == [10, 30]
-test_DDM_Integrator()
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
