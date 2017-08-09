@@ -61,7 +61,7 @@ class TestRecurrentTransferMechanismInputs:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
@@ -79,7 +79,7 @@ class TestRecurrentTransferMechanismInputs:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"]).tolist()
         assert "has non-numeric entries" in str(error_text.value)
@@ -89,7 +89,7 @@ class TestRecurrentTransferMechanismInputs:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=['a', 'b', 'c', 'd'],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
         assert "has non-numeric entries" in str(error_text.value)
 
@@ -381,7 +381,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -393,7 +393,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -405,7 +405,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -417,7 +417,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -430,7 +430,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0.8,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.8, 0.8, 0.8, 0.8]]
@@ -444,7 +444,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.9, 0.9, 0.9, 0.9]]
@@ -458,7 +458,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[1.16, 1.16, 1.16, 1.16]]
@@ -474,7 +474,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([3, 2, 1, 0]).tolist()
         assert val == [[2.2, 1.8, .40000000000000013, .3999999999999999]]

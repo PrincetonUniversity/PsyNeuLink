@@ -69,7 +69,7 @@ class TestKWTAInputs:
             K = KWTA(
                 name='K',
                 default_variable=['a', 'b', 'c', 'd'],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
         assert("has non-numeric entries" in str(error_text.value))
 
