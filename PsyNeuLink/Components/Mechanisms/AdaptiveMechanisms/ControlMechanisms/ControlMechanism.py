@@ -33,7 +33,7 @@ The control components of a System are executed after all `ProcessingMechanisms 
 
 .. _ControlMechanism_Creation:
 
-Creating A ControlMechanism
+Creating a ControlMechanism
 ---------------------------
 
 A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
@@ -106,7 +106,7 @@ Execution
 A ControlMechanism that is a System's `controller` is always the last `Mechanism` to be executed in a `TRIAL` for that
 System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The ControlMechanism's
 `function <ControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of its *ERROR_SIGNAL*
-`input_state <Mechanism.input_state>`, and uses that to determine its
+`input_state <Mechanism_Base.input_state>`, and uses that to determine its
 `allocation_policy <ControlMechanism_Base.allocation_policy>` which specifies the value assigned to the
 `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
@@ -241,17 +241,17 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     monitoring_mechanism : ObjectiveMechanism
         Mechanism that monitors and evaluates the values specified in the ControlMechanism's **monitor_for_control**
         argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
-        `input_state <Mechanism.input_state>`.
+        `input_state <Mechanism_Base.input_state>`.
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` of a `Mechanism` specified in the **monitor_for_control** argument of the
         ControlMechanism's constructor, the `value <OutputState.value>` \s of which serve as the items of the
-        ControlMechanism's `variable <Mechanism.variable>`.
+        ControlMechanism's `variable <Mechanism_Base.variable>`.
 
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls (same as ControlMechanism's
-        `output_states <Mechanism.output_states>` attribute).
+        `output_states <Mechanism_Base.output_states>` attribute).
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -264,7 +264,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     allocation_policy : 2d np.array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
-        ControlMechanism's `value <Mechanism.value>` attribute).
+        ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,

@@ -48,7 +48,7 @@ COMMENT:
 
 * `ParameterState`:
     * used by a Mechanism to represent the value of one of its parameters, or a parameter of its
-      `function <Mechanism.function>`, that can be modulated by a `ControlSignal`;
+      `function <Mechanism_Base.function>`, that can be modulated by a `ControlSignal`;
     * used by a `MappingProjection` to represent the value of its `matrix <MappingProjection.MappingProjection.matrix>`
       parameter, that can be modulated by a `LearningSignal`.
 
@@ -120,13 +120,10 @@ Wherever a State is specified, it can be done using any of the following:
       ..
       * *PROJECTIONS*:<List>
           the list must contain specifications for one or more
-          `projections <Projection_In_Context_Specification> to or from the State, and/or
+          `Projections <Projection_In_Context_Specification>` to or from the State, and/or
           `ModulatorySignals <ModulatorySignal>` from which it should receive projections;
           the type of Projections it can send and/or receive depends the type of State and
-          the context in which it is specified;
-          COMMENT:
-              REFER TO TABLE OF STATES AND TYPES OF PREOJCTIONS THEY CAN RECEIVE
-          COMMENT
+          the context in which it is specified (see `State_Projections` below);
       ..
       * *str*:<List>
           the key is used as the name of the State, and the list must contain specifications for
@@ -233,7 +230,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
     * `variable <State_Base.variable>`:  for an `InputState` and `ParameterState`,
       the value of this is determined by the value(s) of the Projection(s) that it receives (and that are listed in
       its `path_afferents <State_Base.path_afferents>` attribute).  For an `OutputState`, it is the item of the owner
-      Mechanism's `value <Mechanism.value>` to which the OutputState is assigned (specified by the OutputState's
+      Mechanism's `value <Mechanism_Base.value>` to which the OutputState is assigned (specified by the OutputState's
       `index <OutputState_Index>` attribute.
     ..
     * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
@@ -241,7 +238,7 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
       potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
       for an OutputState, it conveys the result  of the Mechanism's function to its
-      `output_values <Mechanism.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
+      `output_values <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
     ..

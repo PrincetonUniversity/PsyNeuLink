@@ -24,7 +24,8 @@ Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created direc
 using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. Just as with a
 `RecurrentTransferMechanism`, the **auto**, **hetero**, and/or **matrix** arguments are used to specify the matrix
 used by the recurrent projection. The **k_value**, **threshold**, and **ratio** arguments are KWTA's characteristic
-attributes. The **k_value** argument specifies the `k_value` and `int_k` attributes of the
+attributes. The **k_value** argument specifies the `k_value` and `int_k` attributes of the KWTA (which are currently
+not supposed to be changed), and the number (or proportion) of 
 
 
 

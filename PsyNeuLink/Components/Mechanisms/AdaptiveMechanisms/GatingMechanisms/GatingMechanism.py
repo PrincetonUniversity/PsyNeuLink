@@ -220,7 +220,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_signals : List[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
         `GatingProjection(s) <GatingProjection>` to the `InputState(s) <InputState>` and/or `OutputStates <OutputState>`
-        that it gates; same as GatingMechanisms `output_states <Mechanism.output_states>` attribute.
+        that it gates; same as GatingMechanisms `output_states <Mechanism_Base.output_states>` attribute.
 
     gating_projections : List[GatingProjection]
         list of all of the `GatingProjections <GatingProjection>` assigned to the GatingMechanism's

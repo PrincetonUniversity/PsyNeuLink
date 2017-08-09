@@ -61,7 +61,7 @@ differ in the type of information they transmit, how they do this, and the type 
   * `ControlProjection`
       takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
       to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
-      `function <Mechanism.function>`) for which it is responsible.  ControlProjections are used when control
+      `function <Mechanism_Base.function>`) for which it is responsible.  ControlProjections are used when control
       has been used specified for a `System`.
   ..
   * `GatingProjection`
@@ -87,7 +87,8 @@ In Context Specification
 Projections can be specified in a number of places where they are required or permitted, for example in the
 specification of a `pathway <Process_Base.pathway>` for a `Process`, where the value of a parameter is specified
 (e.g., to assign a `ControlProjection`) or where a `MappingProjection` is specified  (to assign it a
-`LearningProjection`).  Any of the following can be used to specify a Projection in context:
+`LearningProjection <MappingProjection_Tuple_Specification>`).  Any of the following can be used to specify a
+Projection in context:
 
   * **Constructor**.  Used the same way in context as it is ordinarily.
   ..
@@ -96,9 +97,9 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
   * **Keyword**.  This creates a default instance of the specified type, and can be any of the following:
 
       * *MAPPING_PROJECTION* -- if the `sender <MappingProjection.sender>` and/or its `receiver
-      <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
-      `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been determined
-      (e.g., it is used in the specification of a `pathway <Process_Base.pathway>` for a `Process`).
+        <MappingProjection.receiver>` cannot be inferred from the context in which this specification occurs, then its
+        `initialization is deferred <MappingProjection_Deferred_Initialization>` until both of those have been
+        determined (e.g., it is used in the specification of a `pathway <Process_Base.pathway>` for a `Process`).
       |
       * *LEARNING_PROJECTION*  (or *LEARNING*) -- this can only be used in the specification of a `MappingProjection`
         (see `tuple <Mapping_Matrix_Specification>` format).  If the `receiver <MappingProjection.receiver>` of the
@@ -106,7 +107,7 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
         `LearningSignal` is added to that LearningMechanism and assigned as the LearningProjection's `sender
         <LearningProjection.sender>`;  otherwise, a LearningMechanism is `automatically created
         <LearningMechanism_Creation>`, along with a LearningSignal that is assigned as the LearningProjection's `sender
-        <LearningProjection.sender>`. See `<LearningMechanism_Learning_Configurations>` for additional details.
+        <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       |
       * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
@@ -115,7 +116,7 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
         <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization is deferred
         <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System, at which time the
         ControlSignal is added to the System's `controller <System_Base.controller>` and assigned as its the
-        ControlProjection's `sender <ControlProjection.sender>`.  See `<ControlMechanism_Control_Signals>` for
+        ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
       * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
@@ -145,11 +146,15 @@ specification of a `pathway <Process_Base.pathway>` for a `Process`, where the v
         `receiver <Projection_Receiver>` are not specified, their assignment and/or creation are handled in the same
         manner as described above for keyword specifications.
 
+      COMMENT:
+          WHAT ABOUT SPECIFICATION USING OutputState/ModulatorySignal OR Mechanism?
+      COMMENT
+
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
         Note that parameter
         values in the specification dictionary will be used to instantiate the Projection.  These can be overridden
         during execution by specifying `runtime parameters <Mechanism_Runtime_parameters>` for the Projection,
-        either when calling the `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>`
+        either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
 
@@ -163,7 +168,7 @@ Under some circumstances Projections are created automatically. For example, a `
 <Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
 when :keyword:`learning` is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`).
 
-.. _Projection_Deferred_Initialization:
+.. _MappingProjection_Deferred_Initialization:
 
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -216,14 +221,14 @@ Sender
 ~~~~~~
 
 This must be an `OutputState` or a `ModulatorySignal` (a subclass of OutputState specialized for `ModulatoryProjections
-<ModulatoryProjection>`.  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
+<ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
 <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to the
 `AdaptiveMechanism` from which it projects.  The OutputState or ModulatorySignal's `value <OutputState.value>` is
 used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
 
 A sender can be specified as:
 
-  * an **OutputState** or **ModulatorySignal*, as appropriate for the Projection's type, using any of the ways for
+  * an **OutputState** or **ModulatorySignal**, as appropriate for the Projection's type, using any of the ways for
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is

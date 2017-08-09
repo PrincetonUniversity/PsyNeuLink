@@ -73,7 +73,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     default_input_value : number, list or np.ndarray
         the input to the mechanism to use if none is provided in a call to its
-        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods;
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
         `function <CompositionInterfaceMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
         mechanism.

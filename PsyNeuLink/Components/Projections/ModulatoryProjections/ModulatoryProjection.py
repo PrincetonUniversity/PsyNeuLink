@@ -33,7 +33,7 @@ that modulate different types of components and their states:
 * `ControlProjection`
     takes the `value of a <ControlSignal.value> of a `ControlSignal` belonging to a ControlMechanism,
     and conveys it to the `ParameterState` for the parameter of a `Mechanism` or its
-    `function <Mechanism.function>`, for use in modulating the value of the parameter.
+    `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 
 .. _Projection_Creation:
 
