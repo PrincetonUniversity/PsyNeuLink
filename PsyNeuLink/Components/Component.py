@@ -1853,7 +1853,7 @@ class Component(object):
 
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
-        Single state array (vector) variable:                         [0, 1] -> [array([0, 1])
+        Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
         Perform top-level type validation of variable against the variableClassDefault;
