@@ -662,8 +662,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_input_states(context=context)
 
-        # self.ClassDefaults.variable = self.variable.copy()
-
         # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []
         for i, state in enumerate(self._input_states):

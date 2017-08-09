@@ -1789,7 +1789,7 @@ def _instantiate_state_list(owner,
         - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of State(s):
-        - INPUT_STATE: self.variable
+        - INPUT_STATE: self.instance_defaults.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)

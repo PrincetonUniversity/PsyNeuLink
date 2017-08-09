@@ -482,7 +482,7 @@ class Projection_Base(Projection):
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
-            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_sender may alter self.instance_defaults.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
@@ -769,7 +769,7 @@ class Projection_Base(Projection):
                         self.sender.owner.name
                     )
                 )
-            # - reassign self.variable to sender.value
+            # - reassign self.instance_defaults.variable to sender.value
             self._instantiate_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):

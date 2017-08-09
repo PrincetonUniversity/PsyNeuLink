@@ -694,14 +694,14 @@ class DDM(ProcessingMechanism_Base):
         # # # Select a random seed to ensure that the test run will be the same as the real run
         # seed_value = np.random.randint(0, 100)
         # np.random.seed(seed_value)
-        # self.variable = stimulus
+        # variable = stimulus
         #
         # result_check = 0
         # time_check = 0
         #
         # while abs(result_check) < threshold:
         #     time_check += 1
-        #     result_check = self.get_axes_function(self.variable, context='plot')
+        #     result_check = self.get_axes_function(variable, context='plot')
         #
         # # Re-set random seed for the real run
         # np.random.seed(seed_value)
@@ -718,7 +718,7 @@ class DDM(ProcessingMechanism_Base):
         # time = 0
         # while abs(result) < threshold:
         #     time += 1
-        #     result = self.plot_function(self.variable, context='plot')
+        #     result = self.plot_function(variable, context='plot')
         #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
         #     plt.pause(0.01)
         #

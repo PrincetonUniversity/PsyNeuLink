@@ -295,7 +295,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.value = self.variable
+        Insure that sender.value = self.instance_defaults.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:

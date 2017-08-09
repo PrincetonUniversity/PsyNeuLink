@@ -39,7 +39,7 @@ class TestIntegratorFunctions:
             )
         )
         # P = process(pathway=[I])
-        # constant integrator does not use input value (self.variable)
+        # constant integrator does not use input value (variable)
 
         # step 1:
         val = I.execute(20000)

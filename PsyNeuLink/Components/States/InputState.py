@@ -570,7 +570,7 @@ class InputState(State_Base):
         self._instantiate_projections_to_state(projections=projections, context=context)
 
     def _execute(self, function_params, context):
-        """Call self.function with self.variable
+        """Call self.function with self._path_proj_values
 
         If there were no Transmissive Projections, ignore and return None
         """
