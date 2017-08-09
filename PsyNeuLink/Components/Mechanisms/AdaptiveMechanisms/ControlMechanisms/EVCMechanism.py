@@ -109,7 +109,7 @@ from each of the `OutputStates <OutputState>` specified in the EVCMechanism's `m
 <EVCMechanism.monitored_output_states>` attribute (also listed in the `monitored_values
 <ObjectiveMechanism.monitored_values>` attribute of the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`),
 and the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>` is assinged as the `monitoring_mechanism
-<EVCMechanism.monitoring_mechanism>` \'s `function <ObjectiveMechanism.function>`.  By default, this is a
+<EVCMechanism.monitoring_mechanism>`'s `function <ObjectiveMechanism.function>`.  By default, this is a
 `LinearCombination` function that calculates the product of the `value <OutputState.value>` of the OutputStates
 specified in `monitored_output_states <EVCMechanism.monitored_output_states>`.  However, the contribution of individual
 OutputStates can be specified in the **monitor_for_control** argument of the EVCMechanism's constructor, by using a
@@ -156,8 +156,8 @@ combine these (combine_outcome_and_cost_function <EVCMechanism.combine_outcome_a
 
 .. _EVCMechanism_Default_Configuration:
 
-Default Configuration of EVC Function and Auxiliary Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Configuration of EVC Function and its Auxiliary Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In its default configuration, an EVCMechanism simulates and evaluates the performance of its `system
 <EVCMechanism.system>` under a set of allocation_policies determined by the `allocation_samples
@@ -203,7 +203,7 @@ arguments and return values that are compatible with any that call that function
 .. _EVCMechanism_Calling_and_Assigning_Functions:
 
     .. note::
-       The `EVCMechanism auxilliary functions <EVC_Auxiliary_Functions>` described above are all implemented as
+       The `EVCMechanism auxiliary functions <EVC_Auxiliary_Functions>` described above are all implemented as
        PsyNeuLink `Functions <Function>`.  Therefore, to call a function itself, it must be referenced as
        ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxiliary functions
        can be either a PsyNeuLink `Function <Function>`, or a generic python function or method (including a lambda
@@ -431,7 +431,7 @@ class EVCMechanism(ControlMechanism_Base):
     system : System : default None
         specifies the `System` for which the EVCMechanism should serve as a `controller <System_Base.controller>`;
         the EVCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>` \'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
@@ -628,7 +628,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         The default function combines the values of the OutputStates listed in the EVCMechanism's
         `monitored_output_states <EVCMechanism.monitored_output_states>` attribute (and the `monitoring_mechanism
-        <EVCMechanism.monitoring_mechanism>` \'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
+        <EVCMechanism.monitoring_mechanism>`'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
         by taking their elementwise (Hadamard) product.  Any weighs and exponents `specified in a tuple
         <ObjectiveMechanism_OutputState_Tuple>` for an OutputState in the **monitor_for_control** argument of
         the EVCMechanism's constructor are used as the `weights <LinearCombination.weights>` and

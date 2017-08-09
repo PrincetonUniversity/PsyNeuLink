@@ -232,12 +232,21 @@ and can be  accessed using the parameter's name as the key for its entry in the 
 the parameters in the  example above could also be accessed as ``my_mechanism.function_params[GAIN]`` and
 ``my_mechanism.function_params[GAIN]``
 
+Some Mechanisms have auxiliary functions that are inherent (i.e., not made available as arguments in the Mechanism's
+constructor;  e.g., the `integrator_function <TransferMechanism.integrator_function>` of a `TransferMechanism`);
+however, the Mechanism may include parameters for those functions in its constructor (e.g., the **noise** argument in
+the constructor for a `TransferMechanism` is used as the `noise <AdaptiveIntegrator.noise>` parameter of the
+`AdaptiveIntegrator` assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`).
+
+COMMENT:
+NOT CURRENTLY IMPLEMENTED
 For Mechanisms that offer a selection of functions for the primary function (such as the `TransferMechanism`), if all
 of the functions use the same parameters, then those parameters can also be specified as entries in a `parameter
 specification dictionary <ParameterState_Specification>` as described above;  however, any parameters that are unique
 to a particular function must be specified in a constructor for that function.  For Mechanisms that have additional,
 auxiliary functions, those must be specified in arguments for them in the Mechanism's constructor, and their parameters
 must be specified in constructors for those functions unless documented otherwise.
+COMMENT
 
 COMMENT:
     FOR DEVELOPERS:
@@ -267,11 +276,18 @@ COMMENT
 Custom Functions
 ^^^^^^^^^^^^^^^^
 
-Any function used by a Mechanism (primary or auxiliary) can be customized by assigning a user-defined function (e.g.,
+A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
-Mechanism's default for that function. A user-defined function can be assigned using the Mechanism's `assign_params`
-method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism (for its
-primary function, its `function <Mechanism_Base.function>` attribute).
+Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
+Mechanism's constructor (e.g., the `EVCMechanism_Auxiliary_Functions` of an EVC Mechanmism). A user-defined function
+can be assigned using the Mechanism's `assign_params` method (the safest means) or by assigning it directly to the
+corresponding attribute of the Mechanism (for its primary function, its `function <Mechanism_Base.function>` attribute).
+It is *strongly advised* that auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear
+as an argument in the Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>`
+of a `TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
+arguments in the constructor for the Mechanism, and thus changing the function could produce confusing and/or
+unpredictable effects.
+
 
 COMMENT:
     When a custom function is specified,
@@ -652,21 +668,19 @@ def mechanism(mech_spec=None, params=None, context=None):
         specification for the Mechanism to create.
         If it is the name of a Mechanism subclass, a default instance of that subclass is returned.
         If it is string that is the name of a Mechanism subclass registered in the `MechanismRegistry`,
-        an instance of a `default_mechanism <Mechanism_Base.default_mechanism>` for *that class* is returned;
-        otherwise, the string is used to name an instance of the `default_mechanism <Mechanism_Base.default_mechanism>.
-        If it is a dict, it must be a `Mechanism specification dictionary <`Mechanism_Creation>`.
-        If it is `None` or not specified, an instance of the `default mechanism <Mechanism_Base.default_mechanism>` is
-        returned;
-        the nth instance created will be named by using the Mechanism's :keyword:`componentType` attribute as the
-        base for the name and adding an indexed suffix:  componentType-n.
+        an instance of a default mechanism for *that class* is returned; otherwise, the string is used to name an
+        instance of the `default_mechanism <Mechanism_Base.default_mechanism>.  If it is a dict, it must be a
+        `Mechanism specification dictionary <`Mechanism_Creation>`. If it is `None` or not specified, an instance of
+        the `default mechanism <Mechanism_Base.default_mechanism>` is returned;
+        the nth instance created will be named by using the Mechanism's `componentType <Mechanism_Base.componentType>`
+        attribute as the base for the name and adding an indexed suffix:  componentType-n.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism and/or its function, and/or a custom function and its parameters.  It is passed to the relevant
-        subclass to instantiate the Mechanism. Its entries can be used to specify any parameters described in
-        `Mechanism_Attributes` that are relevant to the Mechanism's type, and/or defined specifically by that
-        particular type of `Mechanism`.  Values specified for parameters in the dictionary override any assigned to
-        those parameters in arguments of the constructor.
+        subclass to instantiate the Mechanism. Its entries can be used to specify any attributes relevant to a
+        `Mechanism <Mechanism_Structure>` and/or defined specifically by the subclass being created.  Values specified
+        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
 
     COMMENT:
         context : str
@@ -677,7 +691,7 @@ def mechanism(mech_spec=None, params=None, context=None):
     Returns
     -------
 
-    Instance of specified Mechanism subclass or None : Mechanism
+    Instance of specified type of Mechanism or None : Mechanism
     """
 
     # Called with a keyword
@@ -722,7 +736,7 @@ class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
 
     .. note::
-       Mechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       Mechanism is an abstract class and should **never** be instantiated by a direct call to its constructor.
        It should be instantiated using the :class:`mechanism` factory method (see it for description of parameters),
        by calling the constructor for a subclass, or using other methods for specifying a Mechanism in context
        (see `Mechanism_Creation`).
@@ -808,93 +822,95 @@ class Mechanism_Base(Mechanism):
     ----------
 
     variable : ndarray : default variableInstanceDefault
-        value used as input to the Mechanism's `function <Mechanism_Base.function>`, each item of which corresponds to
-        a `value <InputState.value>` of one of the InputStates.  It is always at least a 2d np.array, with each item of
-        axis 0 corresponding to the values of the Mechanism's `InputStates <OutputState>` (in the order they are listed
-        in its `input_states <Mechanism_Base.input_states>` attribute, and the `primary InputState <InputState_Primary>`
-        referring to the first item (i.e., item 0) along axis 0.  When specified in the **variable** argument of the
-        constructor for the Mechanism,  it is used as a template to define the format (length and type of elements)
-        and of the input the Mechanism's `function <Mechanism_Base.function>`.
-        COMMENT:
-         and its `default_variable <Mechanism_Base.default_value>`.
-        COMMENT
+        used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
+        with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
+        <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
+        the first item (i.e., item 0) corresponding to the `value <InputState.value>` of the `primary InputState
+        <InputState_Primary>`.  When specified in the **variable** argument of the constructor for the Mechanism,
+        it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
+        `function <Mechanism_Base.function>`.
 
         .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
 
     input_state : InputState : default default InputState
         `primary InputState <InputState_Primary>` for the Mechanism;  same as first entry of its `input_states
-        <Mechanism_Base.input_states>` attribute.
+        <Mechanism_Base.input_states>` attribute.  Its `value <InputState.value>` is assigned as the first item of the
+        Mechanism's `variable <Mechanism_Base.variable>`.
 
     input_states : ContentAddressableList[str, InputState]
-        a dictionary of the Mechanism's `input_states <Mechanism_InputStates>`.
-        The key of each entry is the name of an InputState, and its value is the InputState.  There is always
-        at least one entry, which identifies the Mechanism's `primary InputState <InputState_Primary>`
-        (i.e., the one in the its `InputState <Mechanism_Base.input_state>` attribute).
+        a list of the Mechanism's `InputStates <Mechanism_InputStates>`. The first (and possibly only) entry is always
+        the Mechanism's `primary InputState <InputState_Primary>` (i.e., the one in the its `input_state
+        <Mechanism_Base.input_state>` attribute).
 
     input_values : List[List or 1d np.array] : default variableInstanceDefault
-        a list of values, one for each `InputState <Mechanism_InputStates>` in the Mechanism's
-        `input_states <Mechanism_Base.input_states>` attribute.  The value of each item is the same as the corresponding
-        item in the Mechanism's `variable <Mechanism_Base.variable>` attribute.  The latter is a 2d np.array;
-        the `input_values <Mechanism_Base.input_values>` attribute provides this information in a simpler list format.
+        each item in the list corresponds to the `value <InputState.value>` of one of the Mechanism's `InputStates
+        <Mechanism_InputStates>` listed in its `input_states <Mechanism_Base.input_states>` attribute.  The value of
+        each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
+        attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
+        this information in a simpler list format.
 
     _parameter_states : ContentAddressableList[str, ParameterState]
-        a dictionary of ParameterStates, one for each of the specifiable parameters of the Mechanism and its function
-        (i.e., the ones for which there are arguments in their constructors).  The key of each entry in the
-        dictionary is the name of the ParameterState, and its value is the ParameterState itself.  The value of the
-        parameters of the Mechanism are also accessible as attributes of the Mechanism (using the name of the
-        parameter); the function parameters are listed in the Mechanism's
-        `function_params <Mechanism_Base.function_params>` attribute.
+        a list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its specifiable
+        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
+        arguments in their constructors).  The value of the parameters of the Mechanism are also accessible as
+        attributes of the Mechanism (using the name of the parameter); the function parameters are listed in the
+        Mechanism's `function_params <Mechanism_Base.function_params>` attribute, and as attributes of the `Function`
+        assigned to its `function_object <Mechanism_Base.function_object>` attribute.
 
     COMMENT:
        MOVE function and function_params (and add user_params) to Component docstring
     COMMENT
 
     function : Function, function or method
-        the primary function for the Mechanism, called when it is executed.  It takes the Mechanism's
-        `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the Mechanism's
-        `value <Mechanism_Base.value>` attribute.
+        the primary function for the Mechanism, called when it is `executed <Mechanism_Execution>`.  It takes the
+        Mechanism's `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the
+        Mechanism's `value <Mechanism_Base.value>` attribute.
 
     function_params : Dict[str, value]
-        a `parameter dictionary <ParameterState_Specification>` of the parameters for the Mechanism's primary
-        function.  The key of each entry is the name of a function parameter, and its value is the parameter's value.
-        Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
-        constructor for the function.
+        contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
+        name of a parameter of the function, and its value is the parameter's value.
 
     value : ndarray : default None
         output of the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array, with the
-        items of axis 0 corresponding to the values referenced by the `index <OutputState.index>` attributes of the
-        Mechanism's `OutputStates <OutputState>`, and the `primary OutputState <OutputState_Primary>` referring to
-        the first item (i.e., item 0) along axis 0.  The `value <Mechanism_Base.value>` is `None` until the Mechanism
+        items of axis 0 corresponding to the values referenced by the corresponding `index <OutputState.index>`
+        attribute of the Mechanism's `OutputStates <OutputState>`.  The first item is generally referenced by the
+        Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
+        <Mechanism_Base.output_state>` attribute).  The `value <Mechanism_Base.value>` is `None` until the Mechanism
         has been executed at least once.
 
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
-           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>` \s
-           of its `OutputStates <Mechanism_Base.outputStates>`.
+           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>`\\s
+           of its `OutputStates <Mechanism_Base.output_states>`.
 
     default_value : ndarray : default None
-        set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized;
-        maintains its value even when value is reset to None when (re-)initialized prior to execution.
+        set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
+        its value even when `value <Mechanism_Base.value>` is reset to None when (re-)initialized prior to execution.
 
     output_state : OutputState : default default OutputState
-        primary `OutputState <Mechanism_OutputStates>` for the Mechanism;  same as first entry of its
-        `OutputStates <Mechanism_Base.outputStates>` attribute.
+        `primary OutputState <OutputState_Primary>` for the Mechanism;  same as first entry of its `output_states
+        <Mechanism_Base.output_states>` attribute.
 
     output_states : ContentAddressableList[str, OutputState]
-        a dictionary of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
-        The key of each entry is the name of an OutputState, and its value is the OutputState.  There is always
+        a list of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
+
+        There is always
         at least one entry, which identifies the Mechanism's `primary OutputState <OutputState_Primary>`.
 
-    output_values : List[value] : default Mechanism_Base.function(variableInstanceDefault)
-        a list of values, one for each `OutputState <Mechanism_OutputStates>` in the Mechanism's
-        :keyword:`OutputStates` attribute.
+        a list of the Mechanism's `OutputStates <Mechanism_OutputStates>`. The first (and possibly only) entry is always
+        the Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
+        <Mechanism_Base.output_state>` attribute).
 
-        .. note:: The :keyword:`output_values` of a Mechanism is not necessarily the same as its
-                  `value <Mechanism_Base.value>` attribute, since the OutputState's
+    output_values : List[value] : default Mechanism_Base.function(variableInstanceDefault)
+        each item in the list corresponds to the `value <OutputState.value>` of one of the Mechanism's `OutputStates
+        <Mechanism_OutputStates>` listed in its `output_states <Mechanism_Base.output_states>` attribute.
+
+        .. note:: The `output_values <Mechanism_Base.output_values>` of a Mechanism is not necessarily the same as its
+                  `value <Mechanism_Base.value>` attribute, since an OutputState's
                   `function <OutputState.OutputState.function>` and/or its `calculate <Mechanism_Base.calculate>`
                   attribute may use the Mechanism's `value <Mechanism_Base.value>` to generate a derived quantity for
-                  the `value <OutputState.OutputState.value>` of the OutputState and its corresponding item in the
-                  the Mechanism's :keyword:`output_values` attribute.
+                  the `value <OutputState.OutputState.value>` of that OutputState (and its corresponding item in the
+                  the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
         COMMENT:
             EXAMPLE HERE
@@ -914,8 +930,8 @@ class Mechanism_Base(Mechanism):
                    it MUST also specify kwFunctionOutputStateValueMapping.
 
     is_finished : bool : default False
-        set by a Mechanism to signal completion of its execution; used by `Conditions_Component_Based` to predicate
-        the execution of one or more other Components on the Mechanism.
+        set by a Mechanism to signal completion of its `execution <Mechanism_Execution>`; used by
+        `Conditions_Component_Based` to predicate the execution of one or more other Components on the Mechanism.
 
     COMMENT:
         phaseSpec : int or float :  default 0
@@ -925,22 +941,20 @@ class Mechanism_Base(Mechanism):
     COMMENT
 
     processes : Dict[Process, str]:
-        a dictionary of the processes to which the Mechanism belongs, and a
-        `designation of its role <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a
-        Process to which the Mechanism belongs, and its value the Mechanism's
-        `designation in that Process <Process_Mechanisms>`.
+        a dictionary of the `Processes <Process>` to which the Mechanism belongs, that designates its  `role
+        <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a Process to which the Mechansim
+        belongs, and its value is the Mechanism's `role in that Process <Process_Mechanisms>`.
 
     systems : Dict[System, str]:
-        a dictionary of the systems to which the Mechanism belongs, and a
-        `designation of its role <Mechanism_Role_In_Processes_And_Systems>` in each.
-        The key of each entry is a System to which the Mechanism belongs, and its value the Mechanism's
-        `designation in that System <System_Mechanisms>`.
+        a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
+        <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
+        belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
 
     time_scale : TimeScale : default TimeScale.TRIAL
-        determines the default value of the `TimeScale` used by the Mechanism when executed.
+        determines the default value of the `TimeScale` used by the Mechanism when `executed <Mechanism_Execution>`.
 
     default_mechanism : Mechanism : default DDM
-        sublass of Mechanism instantiated when the `mechanism` function is called without a specification for its
+        type of Mechanism instantiated when the `mechanism` function is called without a specification for its
         **mech_spec** argument.
 
     name : str : default <Mechanism subclass>-<index>
