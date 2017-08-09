@@ -386,6 +386,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
+                 integrator_mode=False,
                  range=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
@@ -411,6 +412,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   output_states=output_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
+                                                  integrator_mode=integrator_mode,
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
@@ -475,7 +477,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
             time_constant = target_set[TIME_CONSTANT]
-            if not (isinstance(time_constant, float) and 0 <= time_constant <= 1):
+            if (not (isinstance(time_constant, float) and 0 <= time_constant <= 1)) and (time_constant != None):
                 raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
                                     format(time_constant, self.name))
 
@@ -630,6 +632,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         time_scale = self.time_scale
+        integrator_mode = self.integrator_mode
 
         #region ASSIGN PARAMETER VALUES
 
@@ -645,7 +648,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
-        if time_scale is TimeScale.TIME_STEP:
+        if integrator_mode:
+        # if time_scale is TimeScale.TIME_STEP:
 
             if not self.integrator_function:
 
@@ -664,8 +668,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                      RATE: self.time_constant},
                                                              context=context
                                                              )
-
-        elif time_scale is TimeScale.TRIAL:
+        else:
+        # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
@@ -674,10 +678,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 current_input = self.variable[0] + noise
             else:
                 current_input = self.variable[0]
-        else:
-            raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
-        self.previous_input = current_input
+        # self.previous_input = current_input
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
