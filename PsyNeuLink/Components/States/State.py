@@ -2074,9 +2074,9 @@ def _instantiate_state(owner,                  # Object to which state will belo
         if state_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state_spec.init_args[OWNER]:
                 state_spec.init_args[OWNER] = owner
-                state_spec.init_args[VARIABLE] = owner.variable[0]
+                state_spec.init_args[VARIABLE] = owner.instance_defaults.variable[0]
             if not hasattr(state_spec, 'reference_value'):
-                state_spec.reference_value = owner.variable[0]
+                state_spec.reference_value = owner.instance_defaults.variable[0]
             state_spec._deferred_init()
 
         # Check that State's value is compatible with Mechanism's variable
