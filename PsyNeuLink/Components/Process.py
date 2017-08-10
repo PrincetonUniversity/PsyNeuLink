@@ -907,7 +907,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET mechanism (see _check_for_target_mechanism),
+                 if it doesn't have a TARGET Mechanism (see _check_for_target_mechanism),
                  it will not need a target.
         """
 
@@ -980,7 +980,7 @@ class Process_Base(Process):
                 if it DOES already has a Projection, and it is from:
                     (A) the current Process input, leave intact
                     (B) another Process input, if verbose warn
-                    (C) another mechanism in the current process, if verbose warn about recurrence
+                    (C) another Mechanism in the current process, if verbose warn about recurrence
                     (D) a Mechanism not in the current Process or System, if verbose warn
                     (E) another Mechanism in the current System, OK so ignore
                     (F) from something other than a Mechanism in the System, so warn (irrespective of verbose)
@@ -1426,7 +1426,7 @@ class Process_Base(Process):
                                raise AttributeError
                        except AttributeError:
                            raise ProcessError("The last entry in the pathway for {} is a project specification {}, "
-                                              "so its receiver must be a mechanism in the pathway".
+                                              "so its receiver must be a Mechanism in the pathway".
                                               format(self.name, item))
 
                     # Projection spec is an instance of a MappingProjection
@@ -1603,19 +1603,19 @@ class Process_Base(Process):
         """Create Projection(s) for each item in Process input to InputState(s) of the specified Mechanism
 
         For each item in Process input:
-        - create process_input_state, as sender for MappingProjection to the mechanism.input_state
-        - create the MappingProjection (with process_input_state as sender, and mechanism as receiver)
+        - create process_input_state, as sender for MappingProjection to the Mechanism.input_state
+        - create the MappingProjection (with process_input_state as sender, and Mechanism as receiver)
 
         If len(Process.input) == len(mechanism.variable):
-            - create one Projection for each of the mechanism.input_state(s)
-        If len(Process.input) == 1 but len(mechanism.variable) > 1:
-            - create a Projection for each of the mechanism.input_states, and provide Process.input[value] to each
-        If len(Process.input) > 1 but len(mechanism.variable) == 1:
-            - create one Projection for each Process.input[value] and assign all to mechanism.input_state
-        Otherwise,  if len(Process.input) != len(mechanism.variable) and both > 1:
-            - raise exception:  ambiguous mapping from Process input values to mechanism's input_states
+            - create one Projection for each of the Mechanism.input_state(s)
+        If len(Process.input) == 1 but len(Mechanism.variable) > 1:
+            - create a Projection for each of the Mechanism.input_states, and provide Process.input[value] to each
+        If len(Process.input) > 1 but len(Mechanism.variable) == 1:
+            - create one Projection for each Process.input[value] and assign all to Mechanism.input_state
+        Otherwise,  if len(Process.input) != len(Mechanism.variable) and both > 1:
+            - raise exception:  ambiguous mapping from Process input values to Mechanism's input_states
 
-        :param mechanism:
+        :param Mechanism:
         :return:
         """
 
@@ -1754,13 +1754,13 @@ class Process_Base(Process):
             For learning:
                 go through _mechs in reverse order of pathway since
                     LearningProjections are processed from the output (where the training signal is provided) backwards
-                exhaustively check all of components of each mechanism,
+                exhaustively check all of Components of each Mechanism,
                     including all projections to its input_states and _parameter_states
                 initialize all items that specified deferred initialization
-                construct a _learning_mechs of mechanism tuples (mech, params, phase_spec):
+                construct a _learning_mechs of Mechanism tuples (mech, params, phase_spec):
                     assign phase_spec for each LearningMechanism = self._phaseSpecMax + 1 (i.e., execute them last)
                 add _learning_mechs to the Process' _mechs
-                assign input Projection from Process to first mechanism in _learning_mechs
+                assign input Projection from Process to first Mechanism in _learning_mechs
 
         IMPLEMENTATION NOTE: assume that the only Projection to a Projection is a LearningProjection
                              this is implemented to be fully general, but at present may be overkill
@@ -2023,7 +2023,7 @@ class Process_Base(Process):
 
         COMMENT:
             First check that input is provided (required) and appropriate.
-            Then execute each mechanism in the order they appear in the `pathway` list.
+            Then execute each Mechanism in the order they appear in the `pathway` list.
         COMMENT
 
         Arguments

@@ -69,7 +69,7 @@ attribute, and then calls the function to determine the `value <State_Base.value
 
 .. note::
    The change made to the parameter of the State's Function in response to the execution of a ModulatoryProjection
-   are not applied until the state is updated which, in turn, does not occur until the mechanism to which the state 
+   are not applied until the state is updated which, in turn, does not occur until the Mechanism to which the State
    belongs is next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 .. _ModulatoryProjection_Class_Reference:
