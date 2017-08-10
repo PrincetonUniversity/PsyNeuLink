@@ -7,6 +7,7 @@ PathwayProjection
    :maxdepth: 1
 
    MappingProjection
+   AutoAssociativeProjection
 
 .. automodule:: PathwayProjections.PathwayProjection
    :members:
