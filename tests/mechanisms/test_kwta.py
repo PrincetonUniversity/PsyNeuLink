@@ -291,7 +291,6 @@ class TestKWTAKValue:
             size=4
         )
         assert K.k_value == 0.5
-        assert K.int_k == 2
         p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [1, 2, 3, 4]})
@@ -303,7 +302,6 @@ class TestKWTAKValue:
             size=6
         )
         assert K.k_value == 0.5
-        assert K.int_k == 3
         p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
         s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
         s.run(inputs={K: [1, 2, 2, 3, 3, 4]})
@@ -317,22 +315,23 @@ class TestKWTAKValue:
             k_value=3
         )
         assert K.k_value == 3
-        assert K.int_k == 3
 
-    def test_kwta_k_value_float_0_4(self):
-        size_and_int_k_pairs = [(1, 0), (2, 1), (3, 1), (4, 2), (5, 2), (6, 2), (7, 3)]
-        for size_val, expected_int_k in size_and_int_k_pairs:
-            K = KWTA(
-                name='K',
-                size=size_val,
-                k_value=0.4
-            )
-            assert K.k_value == 0.4
-            assert K.int_k == expected_int_k
-            p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-            s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
-            input1 = list(range(size_val))
-            s.run(inputs={K: input1})
+    # This is a deprecated test used when the int_k optimization was being used. It's no longer useful since int_k is
+    # dynamically calculated as of 8/9/17 -CW
+    # def test_kwta_k_value_float_0_4(self):
+    #     size_and_int_k_pairs = [(1, 0), (2, 1), (3, 1), (4, 2), (5, 2), (6, 2), (7, 3)]
+    #     for size_val, expected_int_k in size_and_int_k_pairs:
+    #         K = KWTA(
+    #             name='K',
+    #             size=size_val,
+    #             k_value=0.4
+    #         )
+    #         assert K.k_value == 0.4
+    #         assert K.int_k == expected_int_k
+    #         p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
+    #         s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+    #         input1 = list(range(size_val))
+    #         s.run(inputs={K: input1})
 
     def test_kwta_k_value_bad_float(self):
         with pytest.raises(KWTAError) as error_text:
