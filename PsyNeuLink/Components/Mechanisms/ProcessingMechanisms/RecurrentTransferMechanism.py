@@ -28,13 +28,13 @@ It also allows its previous input to be decayed, and reports the energy and, if 
 Creating a RecurrentTransferMechanism
 -------------------------------------
 
-A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
-`mechanism() <Mechanism.mechanism>` function and specifying RECURRENT_TRANSFER_MECHANISM as its
-**mech_spec** argument.  The recurrent projection is automatically created using the **matrix**
-(or **auto** and **hetero**) argument of the Mechanism's constructor. If used, the **matrix** argument must specify
-either a square matrix or a `AutoAssociativeProjection` that uses one (the default is `FULL_CONNECTIVITY_MATRIX`).
-Alternatively, **auto** and **hetero** can be specified: these set the diagonal and off-diagonal terms, respectively.
-In all other respects, a RecurrentTransferMechanism is specified in the same way as a standard `TransferMechanism`.
+A RecurrentTransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and
+specifying RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument.  The recurrent projection is automatically
+created using the **matrix** (or **auto** and **hetero**) argument of the Mechanism's constructor. If used, the
+**matrix** argument must specify either a square matrix or a `AutoAssociativeProjection` that uses one (the default is
+`FULL_CONNECTIVITY_MATRIX`). Alternatively, **auto** and **hetero** can be specified: these set the diagonal and
+off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
+standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Structure:
 
@@ -187,11 +187,11 @@ class RecurrentTransferMechanism(TransferMechanism):
     ---------
 
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the mechanism to use if none is provided in a call to its
+        specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
-        of the mechanism.
+        of the Mechanism.
 
     size : int, list or np.ndarray of ints
         specifies variable as array(s) of zeros if **variable** is not passed as an argument;
@@ -212,7 +212,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
         1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
         **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
-        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
+        to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.
 
     hetero : number, 2D array, or None : default None
         specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
@@ -237,7 +237,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
+        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
          result = (time_constant * current input) +
@@ -251,21 +251,21 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
         This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
         parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -341,7 +341,7 @@ class RecurrentTransferMechanism(TransferMechanism):
           calculated using the `Stability` Function with the ENERGY metric;
         * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
           calculated using the `Stability` Function with the ENTROPY metric;
-          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
+          note:  this is only present if the Mechanism's :keyword:`function` is bounded between 0 and 1
           (e.g., the `Logistic` function).
 
     output_values : List[array(float64), float, float]
@@ -354,7 +354,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **entropy** of the result (if the ENTROPY outputState is present).
 
     time_scale :  TimeScale
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
         the name of the Mechanism.

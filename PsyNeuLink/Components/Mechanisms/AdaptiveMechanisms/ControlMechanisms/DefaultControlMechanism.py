@@ -59,9 +59,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
     COMMENT:
         Description:
             Implements default source of control signals, with one inputState and outputState for each.
-            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and ControlProjection(s)
+            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and
+            ControlProjection(s)
 
-            Every ControlProjection is assigned this mechanism as its sender by default (i.e., unless a sender is
+            Every ControlProjection is assigned this Mechanism as its sender by default (i.e., unless a sender is
                 explicitly specified in its constructor).
 
             An inputState and outputState is created for each ControlProjection assigned:

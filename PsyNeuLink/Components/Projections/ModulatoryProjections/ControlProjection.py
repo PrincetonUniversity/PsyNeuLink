@@ -137,7 +137,7 @@ class ControlProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The ControlProjection class is a type in the Projection category of Component.
-            It implements a projection to the ParameterState of a mechanism that modifies a parameter of its function.
+            It implements a projection to the ParameterState of a Mechanism that modifies a parameter of its function.
             It:
                - takes a scalar as its input (sometimes referred to as an "allocation")
                - uses its `function` to compute its value (sometimes referred to as its "intensity"
@@ -312,7 +312,7 @@ class ControlProjection(ModulatoryProjection_Base):
         # A Process can't be the sender of a ControlMechanism
         if isinstance(self.sender, Process):
             raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
-                                  "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
+                                  "to a Mechanism {0} in pathway list".format(self.name, self.sender.name))
 
         # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(self.sender, Mechanism):

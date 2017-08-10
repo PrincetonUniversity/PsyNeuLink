@@ -241,13 +241,13 @@ class MappingProjection(PathwayProjection_Base):
         name=None,                                          \
         prefs=None)
 
-    Implements a Projection that transmits the output of one mechanism to the input of another.
+    Implements a Projection that transmits the output of one Mechanism to the input of another.
 
 
     COMMENT:
         Description:
             The MappingProjection class is a type in the Projection category of Component.
-            It implements a Projection that takes the value of an OutputState of one mechanism, transforms it as
+            It implements a Projection that takes the value of an OutputState of one Mechanism, transforms it as
             necessary, and provides it to the inputState of another ProcessingMechanism.
             It's function conveys (and possibly transforms) the OutputState.value of a sender
                 to the InputState.value of a receiver.
@@ -488,7 +488,7 @@ class MappingProjection(PathwayProjection_Base):
 
             elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
+                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
                                       " must equal length of it InputState ({}) to use {}".
                                       format(mapping_output_len,
                                              self.name,

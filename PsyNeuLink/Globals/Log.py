@@ -137,9 +137,9 @@ SystemLogEntries = [kpCentralClock]
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
 from collections import MutableMapping
 class EntriesDict(MutableMapping,dict):
-    """Add setter method for entries that checks owner mechanism's prefs to see whether entry is currently recording
+    """Add setter method for entries that checks owner Mechanism's prefs to see whether entry is currently recording
 
-    If entry is in owner mechanism's prefs.logPref.setting list, then append attribute value to entry's list
+    If entry is in owner Mechanism's prefs.logPref.setting list, then append attribute value to entry's list
     Otherwise, either initialize or just update entry with value
     """
     def __init__(self, owner):

@@ -222,7 +222,7 @@ Targets
 ~~~~~~~
 
 If learning is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`, then target values
-for each `TRIAL` must be provided for each `TARGET` mechanism in the Process or System being run.  These
+for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
 are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
 any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
 `Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
@@ -265,7 +265,7 @@ other requirements are the same as the `Sequence format <Run_Inputs_Sequence_For
 
 Mechanism Format
 ^^^^^^^^^^^^^^^^
-*(Dict[mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
+*(Dict[Mechanism, List[values] or ndarray]):* -- there must be one entry in the dictionary for each of the `TARGET`
 Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
 easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
 `TRIAL`.  There are at most two levels of nesting (or dimensions) required for each entry: one for the `TRIAL`,
@@ -636,22 +636,22 @@ def _construct_stimulus_sets(object, stimuli, is_target=False):
 
     If inputs is a list:
         - the first item in the list can be a header:
-            it must contain the names of the origin mechanisms of the system
+            it must contain the names of the origin mechanisms of the System
             in the order in which the inputs are specified in each subsequent item
-        - the length of each item must equal the number of origin mechanisms in the system
-        - each item should contain a sub-list of inputs for each origin mechanism in the system
+        - the length of each item must equal the number of origin mechanisms in the System
+        - each item should contain a sub-list of inputs for each `ORIGIN` Mechanism in the System
 
     If inputs is a dict, for each entry:
-        - the number of entries must equal the number of origin mechanisms in the system
-        - key must be the name of an origin mechanism in the system
-        - value must be a list of input values for the mechanism, one for each exeuction
+        - the number of entries must equal the number of `ORIGIN` Mechanisms in the System
+        - key must be the name of an origin Mechanism in the System
+        - value must be a list of input values for the Mechanism, one for each exeuction
         - the length of all value lists must be the same
 
-    Automatically assign input values to proper phases for mechanism, and assigns zero to other phases
+    Automatically assign input values to proper phases for Mechanism, and assigns zero to other phases
 
     For each trial,
        for each time_step
-           for each origin mechanism:
+           for each `ORIGIN` Mechanism:
                if phase (from mech tuple) is modulus of time step:
                    draw from each list; else pad with zero
     DIMENSIONS:
@@ -702,11 +702,11 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
         del stimuli[0]
         for mech in object.origin_mechanisms:
             if not mech in headers:
-                raise RunError("Header is missing for origin mechanism {} in stimulus list".
+                raise RunError("Header is missing for ORIGIN Mechanism {} in stimulus list".
                                   format(mech.name, object.name))
         for mech in headers:
             if not mech in object.origin_mechanisms.mechanisms:
-                raise RunError("{} in header for stimulus list is not an origin mechanism in {}".
+                raise RunError("{} in header for stimulus list is not an ORIGIN Mechanism in {}".
                                   format(mech.name, object.name))
 
     inputs_array = np.array(stimuli)
@@ -787,7 +787,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
         for mech in object.origin_mechanisms:
             if not mech in stimuli:
-                raise RunError("ORIGIN mechanism {} is missing from the inputs dict for ".
+                raise RunError("ORIGIN Mechanism {} is missing from the inputs dict for ".
                                format(mech.name, object.name))
 
     # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
@@ -820,7 +820,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
             if not any(target is projection.receiver.owner for
                        projection in mech.output_state.efferents
                        for target in object.target_mechanisms):
-                raise RunError("{} is not a target mechanism in {}".format(mech.name, object.name))
+                raise RunError("{} is not a target Mechanism in {}".format(mech.name, object.name))
             # Get target mech (comparator) for each entry in stimuli dict:
             terminal_to_target_mapping[mech] = mech.output_state.efferents[0]
 
@@ -835,7 +835,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                projection in target.input_states[TARGET].path_afferents if
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
-                raise RunError("PROGRAM ERROR: No process found for target mechanism ({}) "
+                raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
                                "supposed to be in target_mechanism for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism

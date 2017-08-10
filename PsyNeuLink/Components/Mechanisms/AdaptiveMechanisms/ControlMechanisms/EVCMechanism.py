@@ -64,7 +64,7 @@ When an EVCMechanism is created explicitly (using its constructor), it creates:
 * a `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
   <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
 ..
-* a `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
+* a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
   <EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`,
   and assigns these to its `prediction_mechanisms` attribute.
 
@@ -281,12 +281,12 @@ The following example implements a system with an EVCMechanism (and two processe
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
 It uses the system's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
-references the Reward mechanism (not shown);  its `primary outputState <OutputState_Primary>` will be used by default.
-The second and third use keywords that are the names of outputStates of a  `DDM` mechanism (also not shown).
+references the Reward Mechanism (not shown);  its `primary outputState <OutputState_Primary>` will be used by default.
+The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
-computation will multiply the value of the primary outputState of the Reward mechanism by the value of the
-DDM_DECISION_VARIABLE outputState of the DDM mechanism, and then divide that by the value of the RESPONSE_TIME
-outputState of the DDM mechanism.
+computation will multiply the value of the primary outputState of the Reward Mechanism by the value of the
+DDM_DECISION_VARIABLE outputState of the DDM Mechanism, and then divide that by the value of the RESPONSE_TIME
+outputState of the DDM Mechanism.
 
 COMMENT:
 ADD: This example specifies the EVCMechanism on its own, and then uses it for a system.
@@ -435,7 +435,7 @@ class EVCMechanism(ControlMechanism_Base):
         specified in its **control_signals** argument.
 
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
-        the `Mechanism` class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
+        the `Mechanism` class used for `prediction Mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
         and assigned an `OutputState` with a name based on the same.
 
@@ -477,17 +477,18 @@ class EVCMechanism(ControlMechanism_Base):
         specifes whether to save every `allocation_policy` tested in `EVC_policies` and their values in `EVC_values`.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified
-        for parameters in the dictionary override any assigned to those parameters in arguments of the constructor.
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
+        Mechanism, its `function <EVCMechanism.function>`, and/or a custom function and its parameters.  Values
+        specified for parameters in the dictionary override any assigned to those parameters in arguments of the
+        constructor.
 
     name : str : default EVCMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
-        the `PreferenceSet` for the mechanism.
+        the `PreferenceSet` for the Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
 
@@ -512,23 +513,23 @@ class EVCMechanism(ControlMechanism_Base):
     origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
         dictionary of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the EVCMechanism's
         `system <EVCMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
-        entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction mechanism.
+        entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
 
     prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
-        the `ProcessingMechanism` class used for `prediction mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
-        Each instance is named based on `ORIGIN` mechanism + "PREDICTION_MECHANISM", and assigned an `OutputState`
+        the `ProcessingMechanism` class used for `prediction Mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
+        Each instance is named based on `ORIGIN` Mechanism + "PREDICTION_MECHANISM", and assigned an `OutputState`
         with a name based on the same.
 
     prediction_mechanism_params : Dict[param key, param value] : default None
         a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
-        the `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
+        the `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
         to all instances of `prediction_mechanism_type` created.
 
     predicted_input : Dict[ProcessingMechanism, value]
-        dictionary with the `value <Mechanism_Base.value>` of each `prediction mechanism
-        <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each ORIGIN
-        mechanism of the system. The key for each entry is the name of an ORIGIN mechanism, and its
-        value the `value <Mechanism_Base.value>` of the corresponding prediction mechanism.
+        dictionary with the `value <Mechanism_Base.value>` of each `prediction Mechanism
+        <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each `ORIGIN`
+        Mechanism of the System. The key for each entry is the name of an `ORIGIN` Mechanism, and its
+        value the `value <Mechanism_Base.value>` of the corresponding prediction Mechanism.
 
     monitoring_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCMechanism to evaluate the performance of its `system
@@ -574,12 +575,12 @@ class EVCMechanism(ControlMechanism_Base):
                 2d np.array with one array for each allocation value
 
             Following attributes are available:
-            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechamisms)
-            controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of ORIGIN mechanisms
+            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
+            controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of `ORIGIN` Mechanisms
             controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the mechanism outputStates being monitored for outcome
+            controller.monitored_states is a list of the Mechanism OutputStates being monitored for outcome
             controller.input_value is a list of current outcome values (values for monitored_states)
-            controller.monitor_for_control_weights_and_exponents is a list of parameterizations for outputStates
+            controller.monitor_for_control_weights_and_exponents is a list of parameterizations for OutputStates
             controller.control_signals is a list of control_signal objects
             controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
             control_signal.allocation_samples is the set of samples specified for that control_signal
@@ -589,7 +590,7 @@ class EVCMechanism(ControlMechanism_Base):
             controller.value_function - calls the three following functions (done explicitly, so each can be specified)
             controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
             controller.cost_function - aggregate costs of control signals
-            controller.combine_outcome_and_cost_function - combines outcoms and costs
+            controller.combine_outcome_and_cost_function - combines outcomes and costs
     COMMENT
 
     allocation_policy : 2d np.array : defaultControlAllocation
@@ -781,22 +782,23 @@ class EVCMechanism(ControlMechanism_Base):
         self._instantiate_monitoring_mechanism(context=context)
 
     def _instantiate_prediction_mechanisms(self, context=None):
-        """Add prediction mechanism and associated process for each ORIGIN (input) mechanism in the system
+        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in the System
 
-        Instantiate prediction_mechanisms for ORIGIN mechanisms in self.system; these will now be TERMINAL mechanisms
+        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in self.system; these will now be `TERMINAL`
+        Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
-            - therefore if an associated input mechanism must be monitored by the EVCMechanism, it must be specified
-                explicitly in an outputState, mechanism, controller or systsem MONITOR_FOR_CONTROL param (see below)
+            - therefore if an associated input Mechanism must be monitored by the EVCMechanism, it must be specified
+                explicitly in an OutputState, Mechanism, controller or System MONITOR_FOR_CONTROL param (see below)
 
-        For each ORIGIN mechanism in self.system:
+        For each `ORIGIN` Mechanism in self.system:
             - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction mechanism
+            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
             - add the process to self.system.processes
 
         Instantiate self.predicted_input dict:
-            - key for each entry is an ORIGIN mechanism of the system
+            - key for each entry is an `ORIGIN` Mechanism of the System
             - value of each entry is the value of the corresponding predictionMechanism:
-            -     each value is a 2d array, each item of which is the value of an inputState of the predictionMechanism
+            -     each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
 
         Args:
             context:
@@ -882,9 +884,9 @@ class EVCMechanism(ControlMechanism_Base):
             For each item in self.monitored_output_states:
             - if it is a OutputState, call _instantiate_monitoring_input_state()
             - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
-                (determined by whether it is a terminal mechanism and/or MonitoredOutputStatesOption specification)
+                (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
             - each inputState is assigned a name with the following format:
-                '<name of mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
+                '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
@@ -930,11 +932,11 @@ class EVCMechanism(ControlMechanism_Base):
         Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
             - if specification in outputState is None:
                  do NOT monitor this state (this overrides any other specifications)
-            - if an outputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
-            - if a mechanism is terminal and/or specified in the system or controller:
-                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) outputState
-                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its outputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
+            - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+            - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
 
         Notes:
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
@@ -943,7 +945,7 @@ class EVCMechanism(ControlMechanism_Base):
                 + PRIMARY_OUTPUT_STATES: assign only the `primary outputState <OutputState_Primary>` for each
                   TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
-            - precedence is given to MonitoredOutputStatesOptions specification in mechanism > controller > system
+            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > system
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
         * self.input_states is the usual ordered dict of states,
@@ -1212,7 +1214,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
 
     def _validate_monitored_state_in_system(self, state_spec, context=None):
-        """Validate specified outputstate is for a mechanism in the controller's system
+        """Validate specified OutputState is for a Mechanism in the controller's System
 
         Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_value() (in ControlMechanism)
         """
@@ -1224,15 +1226,15 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Confirm it is a mechanism in the system
         if not state_spec in self.system.mechanisms:
-            raise EVCError("Request for controller in {0} to monitor the outputState(s) of "
-                                              "a mechanism ({1}) that is not in {2}".
+            raise EVCError("Request for controller in {0} to monitor the OutputState(s) of "
+                                              "a Mechanism ({1}) that is not in {2}".
                                               format(self.system.name, state_spec.name, self.system.name))
 
         # Warn if it is not a terminalMechanism
         if not state_spec in self.system.terminalMechanisms.mechanisms:
             if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the outputState(s) of a mechanism ({1}) that is not"
-                      " a terminal mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
+                print("Request for controller in {0} to monitor the OutputState(s) of a Mechanism ({1}) that is not"
+                      " a TERMINAL Mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
 
     def _instantiate_attributes_after_function(self, context=None):
 
@@ -1395,10 +1397,9 @@ class EVCMechanism(ControlMechanism_Base):
         ----------
 
         inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the mechanism in the `system <System>`.  This
-            should be the `value <Mechanism_Base.value> for each
-            `prediction mechanism <EVCMechanism_Prediction_Mechanisms>` listed in the `prediction_mechanisms`
-            attribute.  The inputs are available from the `predicted_input` attribute.
+            the inputs used for each in a sequence of executions of the Mechanism in the `System`.  This should be the
+            `value <Mechanism_Base.value> for each `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` listed
+            in the `prediction_mechanisms` attribute.  The inputs are available from the `predicted_input` attribute.
 
         allocation_vector : (1D np.array)
             the allocation policy to use in running the simulation, with one allocation value for each of the
@@ -1410,7 +1411,7 @@ class EVCMechanism(ControlMechanism_Base):
             description.
 
         time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
+            specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
 
         """
 
