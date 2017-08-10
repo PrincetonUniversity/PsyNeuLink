@@ -179,7 +179,7 @@
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-ProcessingMechanisms.RecurrentTransferMechanism"></span><div class="section" id="overview">
-<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<span id="recurrent-transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A RecurrentTransferMechanism is a subclass of <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> referenced by the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter).
@@ -212,7 +212,7 @@ OutputState, that each report the respective values of the vector in it its
 <div class="section" id="execution">
 <span id="recurrent-transfer-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a RecurrentTransferMechanism executes, it includes in its input the value of its
-<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (after multiplication by the <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the recurrent projection) from its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (after multiplication by the <a class="reference internal" href="LCA.html#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the recurrent projection) from its
 last execution.</p>
 <p>Like a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, the function used to update each element can be assigned using its
 <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> parameter.  When a RecurrentTransferMechanism is executed,
@@ -248,7 +248,7 @@ of the Mechanism</dd>
 <dt><em>ENTROPY</em></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>The entropy of the result, which is calculated using the <a class="reference internal" href="Function.html#Function.Stability.function" title="Function.Stability.function"><code class="xref any py py-meth docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code></a> with the ENTROPY metric
-(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
+(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.function" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
 between 0 and 1 (e.g. the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
 </dl>
 </dd></dl>
@@ -338,7 +338,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix">
 <code class="descname">matrix</code><a class="headerlink" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.array</em> &#8211; the <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter of the <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
+<dd><p><em>2d np.array</em> &#8211; the <a class="reference internal" href="AutoAssociativeProjection.html#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -464,7 +464,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of RecurrentTransferMechanism</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-ProcessingMechanisms.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
 </tr>
 </tbody>
 </table>
