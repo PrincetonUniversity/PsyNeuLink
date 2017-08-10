@@ -444,7 +444,7 @@ class Composition(object):
             self.add_mechanism(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError("The first item in a linear processing pathway must be a Mechanism."
+            raise CompositionError("The first item in a linear processing pathway must be a Mechanism.")
         # Then, add all of the remaining mechanisms in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a mechanism, add it
