@@ -986,7 +986,7 @@ def _validate_receiver(sender_mech:Mechanism,
 
     #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
     if not receiver_systems & sender_systems:
-        raise ProjectionError("A {} specified {}for {} projects to a component that is not in the same system".
+        raise ProjectionError("A {} specified {}for {} projects to a Component that is not in the same System".
                                     format(projection.__class__.__name__,
                                            spec_type,
                                            sender_mech.name))

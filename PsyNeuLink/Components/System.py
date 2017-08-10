@@ -64,24 +64,20 @@ a `DefaultControlMechanism` is created.
 Structure
 ---------
 
-.. _System_Graph:
+The Components of a System are shown in the figure below and summarized in the sections that follow.
 
-Graph
-~~~~~
+.. figure:: _static/System_full_fig.svg
+   :alt: Overview of major PsyNeuLink components
+   :scale: 75 %
 
-When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
-`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System_Base.graph>` attribute.  A
-System's `graph <System_Base.graph>` can be displayed using its `System_Base.show_graph` method.  The `graph
-<System_Base.graph>` is stored as a dictionary of dependencies that can be passed to graph theoretical tools for
-analysis.  A System can have recurrent Processing pathways, such as feedback loops;  that is, the System's `graph
-<System_Base.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System_Base.graph>` to determine the order in
-which its Mechanisms are executed.  To do so in an orderly manner, however, the graph must be *acyclic*.  To address
-this, PsyNeuLink constructs an `executionGraph <System_Base.executionGraph>` from the System's `graph
-<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `executionGraph
-<System_Base.executionGraph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
-associated with Projections that close a loop have been removed. Note that this only impacts the order of execution;
-the Projections themselves remain in effect, and will be fully functional during the execution of the Mechanisms
-to and from which they project (see `System_Execution` below for a more detailed description).
+   Two `Processes <Process>` are shown, both belonging to the same System.  Each Process has a
+   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
+   that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
+   the System.  The `TERMINAL` Mechanism for both Processes projects to an `ObjectiveMechanism` that is used to
+   drive `learning <LearningProjection>` in Process B. It also projects to a separate ObjectiveMechanism that is used
+   for control of ProcessingMechanisms in both Processes A and B.  Note that the Mechanisms and
+   Projections responsible for learning and control belong to the System and can monitor and/or control Mechanisms
+   belonging to more than one Process (as shown for control in this figure).
 
 .. _System_Mechanisms:
 
@@ -118,8 +114,33 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
        `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
-    .. note: designations are stored in the Mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
+    .. note: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism`.
+    COMMENT:
+    (see _instantiate_graph below)
+    COMMENT
 
+.. _System_Graph:
+
+Graph
+~~~~~
+
+When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
+`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System_Base.graph>` attribute.  A
+System's `graph <System_Base.graph>` can be displayed using its `System_Base.show_graph` method.  The `graph
+<System_Base.graph>` is stored as a dictionary of dependencies that can be passed to graph theoretical tools for
+analysis.  A System can have recurrent Processing pathways, such as feedback loops;  that is, the System's `graph
+<System_Base.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System_Base.graph>` to determine the order in
+which its Mechanisms are executed.  To do so in an orderly manner, however, the graph must be *acyclic*.  To address
+this, PsyNeuLink constructs an `executionGraph <System_Base.executionGraph>` from the System's `graph
+<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `executionGraph
+<System_Base.executionGraph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
+associated with Projections that close a loop have been removed. Note that this only impacts the order of execution;
+the Projections themselves remain in effect, and will be fully functional during the execution of the Mechanisms
+to and from which they project (see `System_Execution` below for a more detailed description).
+
+COMMENT:
+    ADD FIGURE OF GRAPH FOR SYSTEM SHOWN IN FIGURE ABOVE
+COMMENT
 
 .. _System_Control:
 
@@ -130,10 +151,10 @@ Every System is assigned a `controller <System_Base.controller>` -- a `ControlMe
 parameters of other `Mechanisms <Mechanism>` in the System and/or their `function <Mechanism.function>`.
 If the `controller <System_Base.controller>` is not specified, a `DefaultControlMechanism` is created, and
 a `ControlSignal` and `ControlProjection` are assigned to each parameter that has been `specified for control
-<ControlMechanism_Control_Signals>`.  See `ControlMechanism` and `ModulatorySignals_Modulation` for additional details,
-of how control operates, and `System_Execution_Control` below for a description of how it is engaged when a System is
-executed.  The control Components of a System can be displayed using the System's `System_Base.show_graph` method with
-its **show_control** argument assigned as `True`.
+<ControlMechanism_Control_Signals>`.  See `ControlMechanism` and `ModulatorySignal_Modulation` for details of how
+control operates, and `below <System_Execution_Control>` for a description of how it is engaged when a System is
+executed.  The control Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>`
+method with its **show_control** argument assigned as `True`.
 
 .. _System_Learning:
 
@@ -141,39 +162,10 @@ Learning
 ~~~~~~~~
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
-<System_Base.processes>`
-XXX
+<System_Base.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
+<System_Execution_Learning>` as part of the System. The learning Components of a System can be displayed using the
+System's `System_Base.show_graph` method with its **show_learning** argument assigned as `True`.
 
-is assigned a `controller <System_Base.controller>` -- a `ControlMechanism` that can be used to control
-parameters of other `Mechanisms <Mechanism>` in the System and/or their `function <Mechanism.function>`.
-If the `controller <System_Base.controller>` is not specified, a `DefaultControlMechanism` is created, and
-a `ControlSignal` and `ControlProjection` are assigned to each parameter that has been `specified for control
-<ControlMechanism_Control_Signals>`.  See `ControlMechanism` for additional details, and `System_Execution_Control`
-below for a description of how operates when a System is executed.
-
-The learning Components of a System can be displayed using the System's `System_Base.show_graph` method with
-its **show_learning** argument assigned as `True`.
-
-    Based on Process
-
-COMMENT
-
-.. _System_Full_Fig:
-
-**Components of a System**
-
-.. figure:: _static/System_full_fig.svg
-   :alt: Overview of major PsyNeuLink components
-   :scale: 75 %
-
-   Two `Processes <Process>` are shown, both belonging to the same System.  Each Process has a
-   series of :doc:`ProcessingMechanisms <ProcessingMechanism>` linked by :doc:`MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism.  Each ProcessingMechanism is labeled with its designation in
-   the System.  The `TERMINAL` Mechanism for both Processes projects to an `ObjectiveMechanism` that is used to
-   drive `learning <LearningProjection>` in Process B. It also projects to a separate ObjectiveMechanism that is used
-   for control of ProcessingMechanisms in both Processes A and B.  Note that the Mechanisms and
-   Projections responsible for learning and control belong to the System and can monitor and/or control Mechanisms
-   belonging to more than one Process (as shown for control in this figure).
 
 .. _System_Execution:
 
@@ -182,10 +174,10 @@ Execution
 
 A System can be executed by calling either its `execute <System_Base.execute>` or `run <System_Base.execute>` methods.
 `execute <System_Base.execute>` executes the System once; that is, it executes a single `TRIAL`.
-`run <System_Base.run>` allows a series of `TRIAL` \s to be executed, one for each input in the **inputs** argument
+`run <System_Base.run>` allows a series of `TRIAL`\\s to be executed, one for each input in the **inputs** argument
 of the call to `run <System_Base.run>`.  For each `TRIAL`, it makes a series of calls to the `run <Scheduler.run>`
 method of the relevant `Scheduler` (see `System_Execution_Processing` and `System_Execution_Learning` below), and
-executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution) until every Component in
+executes the Components returned by that Scheduler (constituting a `TIME_STEP` of execution), until every Component in
 the System has been executed at least once, or another `termination condition <Scheduler_Termination_Conditions>` is
 met.  The execution of each `TRIAL` occurs in four phases: `initialization <System_Execution_Input_And_Initialization>`,
 `processing <System_Execution_Processing>`, `learning <System_Execution_Learning>`, and
@@ -196,17 +188,18 @@ met.  The execution of each `TRIAL` occurs in four phases: `initialization <Syst
 
 Input and Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
 The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
 `run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
-each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in
-`origin_mechanisms <System_Base.origin_mechanisms>`). If the `execute <System_Base.execute>` method is used, input for
-only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
-used for a sequence of `TRIAL` \s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
-cases, two other types of input can be provided:  a list or ndarray of initialization values, and a list or ndarray
-of target values. Initialization values are assigned, at the start of a `TRIAL`, as input to Mechanisms that close
-recurrent loops (designated as `INITIALIZE_CYCLE`, and listed in `recurrent_init_mechanisms`), and target values are
-assigned as the TARGET input of the System's `TARGET` Mechanisms (see learning below;  also, see `Run` for additional
-details of formatting input specifications).
+each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in the System's
+`origin_mechanisms <System_Base.origin_mechanisms>` attribute). If the `execute <System_Base.execute>` method is used,
+input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
+can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
+both cases, two other types of input can be provided in corresponding arguments of the `run <System_Base.run>` method:
+a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
+assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
+and listed in `recurrent_init_mechanisms`), and **target** values are assigned as the *TARGET* input of the System's
+`TARGET` Mechanisms (see learning below;  also, see `Run` for additional details of formatting input specifications).
 
 
 .. _System_Execution_Processing:
@@ -2257,6 +2250,7 @@ class System_Base(System):
             num_trials=None,
             reset_clock=True,
             initialize=False,
+            initial_values=None,
             targets=None,
             learning=None,
             call_before_trial=None,
@@ -2325,6 +2319,11 @@ class System_Base(System):
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learningExecutionGraph)
 
+        # initial_values = initial_values or self.initial_values
+        if initial_values is None and self.initial_values:
+            initial_values = self.initial_values
+
+
         logger.debug(inputs)
 
         from PsyNeuLink.Globals.Run import run
@@ -2333,6 +2332,7 @@ class System_Base(System):
                    num_trials=num_trials,
                    reset_clock=reset_clock,
                    initialize=initialize,
+                   initial_values=initial_values,
                    targets=targets,
                    learning=learning,
                    call_before_trial=call_before_trial,

@@ -209,7 +209,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         the `allocation` values to the ControlSignals for that simulation of the `system <EVCMechanism.system>`.
 
     * Simulate performance:
-        execute the system under the selected `allocation_policy` using the EVCMechanism's `run_simulation` method,
+        execute the System under the selected `allocation_policy` using the EVCMechanism's `run_simulation` method,
         and the `value <Mechanism_Base.value>` of its `prediction_mechanisms` (that use the history of previous trials
         to generate to generate an average expected input value) as the input to the `system <EVCMechanism.system>`.
 
@@ -252,7 +252,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         Description
         -----------
             * Called by ControlSignalGridSearch.
-            * Call system.execute for each `allocation_policy` in `control_signal_search_space`.
+            * Call System.execute for each `allocation_policy` in `control_signal_search_space`.
             * Store an array of values for outputStates in `monitored_output_states`
                 (i.e., the input_states in `input_states`) for each `allocation_policy`.
             * Call `_compute_EVC` for each allocation_policy to calculate the EVC, identify the  maximum,
@@ -262,8 +262,8 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
             * Return an allocation_policy.
 
             Note:
-            * runtime_params is used for self.__execute (that calculates the EVC for each call to system.execute);
-              it is NOT used for system.execute -- that uses the runtime_params provided for the Mechanisms in each
+            * runtime_params is used for self.__execute (that calculates the EVC for each call to System.execute);
+              it is NOT used for System.execute -- that uses the runtime_params provided for the Mechanisms in each
                 Process.configuration
 
             Return (2D np.array): value of outputState for each monitored state (in self.input_states) for EVC_max

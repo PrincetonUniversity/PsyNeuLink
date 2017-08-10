@@ -29,7 +29,7 @@ The control Components of a System can be displayed using the System's
 COMMENT
 
 The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
-`learning components <LearningMechanism>` in that system have been executed (see `System Execution <System_Execution>`).
+`learning components <LearningMechanism>` in that System have been executed (see `System Execution <System_Execution>`).
 
 .. _ControlMechanism_Creation:
 
