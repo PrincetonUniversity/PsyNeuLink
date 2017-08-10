@@ -926,7 +926,7 @@ def _validate_receiver(sender_mech:Mechanism,
                        expected_owner_type:type,
                        spec_type=None,
                        context=None):
-    """Check that projection is to expected_receiver_type and in the same system as the sender_mech (if specified)
+    """Check that Projection is to expected_receiver_type and in the same System as the sender_mech (if specified)
 
     expected_owner_type must be a Mechanism or a Projection
     spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL

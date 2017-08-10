@@ -377,7 +377,7 @@ def run(object,
     clock=CentralClock,          \
     time_scale=None)
 
-    Run a sequence of executions for a `process <Process>` or `system <System>`.
+    Run a sequence of executions for a `Process` or `System`.
 
     COMMENT:
         First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL`:
@@ -632,7 +632,7 @@ def run(object,
 
 @tc.typecheck
 def _construct_stimulus_sets(object, stimuli, is_target=False):
-    """Return an nparray of stimuli suitable for use as inputs arg for system.run()
+    """Return an nparray of stimuli suitable for use as inputs arg for System.run()
 
     If inputs is a list:
         - the first item in the list can be a header:
@@ -956,8 +956,8 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         inputs must be 3D (if inputs to each process are different lengths) or 4D (if they are homogenous):
             axis 0 (outer-most): inputs for each execution of the run (len == number of executions to be run)
                 (note: this is validated in super().run()
-            axis 1: inputs for each time step of a trial (len == _phaseSpecMax of system (no. of time_steps per trial)
-            axis 2: inputs to the system, one for each process (len == number of processes in system)
+            axis 1: inputs for each time step of a trial (len == _phaseSpecMax of System (no. of time_steps per trial)
+            axis 2: inputs to the System, one for each Process (len == number of Processes in System)
 
     returns number of input_sets (one per execution)
     """
@@ -1042,7 +1042,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
         if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
             raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "
-                              "does not match the number of processes in the system ({})".
+                              "does not match the number of Processes in the System ({})".
                               format(np.size(inputs,PROCESSES_DIM),
                                      object.name,
                                      len(object.origin_mechanisms)))
@@ -1179,7 +1179,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             # Check that number of target values in each execution equals the number of target mechanisms in the system
             if num_targets_per_set != len(object.target_mechanisms):
                 raise RunError("The number of target values for each execution ({}) in the call to {}.run() "
-                                  "does not match the number of processes in the system ({})".
+                                  "does not match the number of Processes in the System ({})".
                                   format(
                                          # np.size(targets,PROCESSES_DIM),
                                          num_targets_per_set,

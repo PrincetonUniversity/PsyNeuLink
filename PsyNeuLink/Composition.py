@@ -93,8 +93,8 @@ class MechanismRole(Enum):
     - TERMINAL
         A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
         that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` Mechanism, but a system may have many.  Note that the `TERMINAL`
-        Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the system to which it belongs,
+        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
+        Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
         as it may send Projections to other Processes in the System.  The `TERMINAL` Mechanisms of a Process
         or System are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details about `TERMINAL` Mechanisms in Processes, see

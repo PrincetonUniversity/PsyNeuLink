@@ -6394,11 +6394,11 @@ class Reinforcement(
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
-        system to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <Reinforcement.default_learning_rate>` is used.
+        `Process <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's
+        `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process_Base.learning_rate>`
+        specified for the Process to which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`,
+        then the `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are
+        `None`, then the `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
     default_learning_rate : float
         the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
@@ -6607,7 +6607,7 @@ class BackPropagation(LearningFunction):
         MATRIX parameterState.
 
     learning_rate : float : default default_learning_rate
-        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]

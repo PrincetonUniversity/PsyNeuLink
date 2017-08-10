@@ -175,7 +175,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
 `allocation_policy`:
 
   * **Implement the policy and simulate the system** - assign the `allocation <ControlSignal.allocation>` that the
-    selected `allocation_policy` specifies for each ControlSignal, and then simulate these system using the
+    selected `allocation_policy` specifies for each ControlSignal, and then simulate these System using the
     corresponding parameter values.
 
   * **Calculate outcome** - combine the `value <OutputState.value>` \s of the OutputStates listed in the
@@ -274,13 +274,13 @@ This procedure can be modified by specifying a custom function for any or all of
 Examples
 --------
 
-The following example implements a system with an EVCMechanism (and two processes not shown)::
+The following example implements a System with an EVCMechanism (and two processes not shown)::
 
     mySystem = system(processes=[myRewardProcess, myDecisionProcess],
                       controller=EVCMechanism,
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
-It uses the system's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
+It uses the System's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
 references the Reward Mechanism (not shown);  its `primary outputState <OutputState_Primary>` will be used by default.
 The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
@@ -289,7 +289,7 @@ DDM_DECISION_VARIABLE outputState of the DDM Mechanism, and then divide that by 
 outputState of the DDM Mechanism.
 
 COMMENT:
-ADD: This example specifies the EVCMechanism on its own, and then uses it for a system.
+ADD: This example specifies the EVCMechanism on its own, and then uses it for a System.
 COMMENT
 
 
@@ -395,9 +395,9 @@ class EVCMechanism(ControlMechanism_Base):
 
        PUT SOME OF THIS STUFF IN ATTRIBUTES, BUT USE DEFAULTS HERE
 
-        # - specification of system:  required param: SYSTEM
+        # - specification of System:  required param: SYSTEM
         # - kwDefaultController:  True =>
-        #         takes over all unassigned ControlProjections (i.e., without a sender) in its system;
+        #         takes over all unassigned ControlProjections (i.e., without a sender) in its System;
         #         does not take monitored states (those are created de-novo)
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
@@ -418,7 +418,7 @@ class EVCMechanism(ControlMechanism_Base):
        NOT CURRENTLY IN USE:
 
         system : System
-            system for which the EVCMechanism is the controller;  this is a required parameter.
+            System for which the EVCMechanism is the controller;  this is a required parameter.
 
         default_variable : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
 
@@ -496,11 +496,11 @@ class EVCMechanism(ControlMechanism_Base):
     ----------
 
     make_default_controller : bool : default True
-        if `True`, calls deferred_init() for each `ControlProjection` in its system without a sender,
+        if `True`, calls deferred_init() for each `ControlProjection` in its System without a sender,
         creates a `ControlSignal` for it, and assigns itself as its sender.
 
     system : System
-        the `system <System>` for which EVCMechanism is the `controller <System_Base.controller>`.
+        the `System` for which EVCMechanism is the `controller <System_Base.controller>`.
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
@@ -557,10 +557,10 @@ class EVCMechanism(ControlMechanism_Base):
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     function : function : default ControlSignalGridSearch
-        determines the `allocation_policy <EVCMechanism.allocation_policy>` to use for the next round of the system's
+        determines the `allocation_policy` to use for the next round of the System's
         execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
         combinations of the `allocation_samples` of its ControlSignals (and contained in its
-        `control_signal_search_space` attribute), by executing the system (using `run_simulation`) for each
+        `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
         combination, evaluating the result using `value_function`, and returning the `allocation_policy` that yielded
         the greatest `EVC <EVCMechanism_EVC>` value (see `EVCMechanism_Default_Configuration` for additional details).
         If a custom function is specified, it must accommodate a **controller** argument that specifies an EVCMechanism
@@ -929,7 +929,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     def _get_monitored_states(self, context=None):
         """
-        Parse paramsCurent[MONITOR_FOR_CONTROL] for system, controller, mechanisms and/or their outputStates:
+        Parse paramsCurent[MONITOR_FOR_CONTROL] for System, controller, Mechanisms and/or their OutputStates:
             - if specification in outputState is None:
                  do NOT monitor this state (this overrides any other specifications)
             - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
@@ -945,7 +945,7 @@ class EVCMechanism(ControlMechanism_Base):
                 + PRIMARY_OUTPUT_STATES: assign only the `primary outputState <OutputState_Primary>` for each
                   TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
-            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > system
+            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
         * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
             will be instantiated to a corresponding inputState of the ControlMechanism
         * self.input_states is the usual ordered dict of states,
@@ -1298,7 +1298,7 @@ class EVCMechanism(ControlMechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Determine allocation_policy for next run of system
+        """Determine `allocation_policy <EVCMechanism.allocation_policy>` for next run of System
 
         Update prediction mechanisms
         Construct control_signal_search_space (from allocation_samples of each item in control_signals):
@@ -1391,7 +1391,7 @@ class EVCMechanism(ControlMechanism_Base):
                        time_scale=TimeScale.TRIAL,
                        context=None):
         """
-        Run simulation of `system <System>` for which the EVCMechanism is the `controller`.
+        Run simulation of `System` for which the EVCMechanism is the `controller <System_Base.controller>`.
 
         Arguments
         ----------

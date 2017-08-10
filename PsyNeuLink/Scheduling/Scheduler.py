@@ -177,7 +177,7 @@ by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Conditi
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
 or its **termination_learning** argument to terminate the execution of learning::
 
-    system.run(
+    System.run(
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
@@ -306,8 +306,8 @@ class Scheduler(object):
         [**??IS THE FOLLOWING CORRECT]:
         K: not correct, there are no implicit System Conditions
         JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
-             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A system IS SUFFICIENT TO GENERATE A SCHEDULE,
-             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE system.
+             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A System IS SUFFICIENT TO GENERATE A SCHEDULE,
+             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE System.
         K: it's not that they're implicit, it's that we just set defaults to match the behavior of the
             naive scheduler
     COMMENT
@@ -381,7 +381,8 @@ class Scheduler(object):
                     for node in consideration_set:
                         self.nodes.append(node)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) or a graph dependency dict (kwarg graph)')
+            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) '
+                                 'or a graph dependency dict (kwarg graph)')
 
         self._init_counts()
 

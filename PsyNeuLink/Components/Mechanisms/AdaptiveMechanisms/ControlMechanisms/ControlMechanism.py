@@ -24,8 +24,8 @@ description of how modulation operates).  A ControlMechanism can regulate only t
 `System` for which it is the `controller <System_Execution_Control>`.  The control Components of a System can be
 displayed using the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
-The control components of a system can be displayed using the system's
-`show_graph` method with its **show_control** argument assigned as :keyword:``True`.
+The control Components of a System can be displayed using the System's
+`show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
 COMMENT
 
 The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and

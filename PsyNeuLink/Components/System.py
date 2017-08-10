@@ -50,7 +50,7 @@ created from one or more `Processes <Process>` that are specified in the **proce
 command, and listed in its `processes <System_Base.processes>` attribute.   Whenever a System is created, a
 `ControlMechanism` is created for it and assigned as its `controller <System_Base.controller>`.  The `controller
 <System_Base.controller>` can be specified by assigning an existing ControlMechanism to the **controller** argument
-of the `system` comman, or specifying a class of ControlMechanism; if none is specified,
+of the `system` command, or specifying a class of ControlMechanism; if none is specified,
 a `DefaultControlMechanism` is created.
 
 .. note::
@@ -276,7 +276,7 @@ COMMENT:
       confusing results.
 
    Module Contents
-   system() factory method:  instantiate system
+   system factory method:  instantiate System
    System_Base: class definition
 COMMENT
 
@@ -536,7 +536,7 @@ class System_Base(System):
 
     .. note::
        System is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-       It should be instantiated using the :func:`system` factory method (see it for description of parameters).
+       It should be instantiated using the `system` command (see it for description of parameters).
 
     COMMENT:
         Description
@@ -852,7 +852,7 @@ class System_Base(System):
             if self.controller.system is None:
                 self.controller.system = self
             elif not self.controller.system is self:
-                raise SystemError("The controller assigned to {} ({}) already belongs to another system ({})".
+                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
                                   format(self.name, self.controller.name, self.controller.system.name))
 
         # Instantiate controller from class specification
@@ -974,14 +974,14 @@ class System_Base(System):
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
-        """Instantiate processes of system
+        """Instantiate processes of System
 
         Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
         If input is not specified, compose from the input for each Process (value specified or, if None, default)
-        Note: specification of input for system takes precedence over specification for processes
+        Note: specification of input for System takes precedence over specification for Processes
 
         # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
         Iterate through Process._mechs for each Process;  for each sequential pair:
@@ -1160,15 +1160,15 @@ class System_Base(System):
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
-        """Construct graph (full) and executionGraph (acyclic) of system
+        """Construct graph (full) and executionGraph (acyclic) of System
 
-        Instantate a graph of all of the mechanisms in the system and their dependencies,
+        Instantate a graph of all of the Mechanisms in the System and their dependencies,
             designate a type for each Mechanism in the graph,
             instantiate the executionGraph, a subset of the graph with any cycles removed,
                 and topologically sorted into a sequentially ordered list of sets
                 containing mechanisms to be executed at the same time
 
-        graph contains a dictionary of dependency sets for all mechanisms in the system:
+        graph contains a dictionary of dependency sets for all Mechanisms in the System:
             reciever_object_item : {sender_object_item, sender_object_item...}
         executionGraph contains an acyclic subset of graph used to determine sequence of Mechanism execution;
 
@@ -1228,8 +1228,8 @@ class System_Base(System):
             # If sender_mech has no projections left, raise exception
             if not any(any(projection for projection in input_state.all_afferents)
                        for input_state in sender_mech.input_states):
-                raise SystemError("{} only receives projections from other processes or mechanisms not"
-                                  " in the current system ({})".format(sender_mech.name, self.name))
+                raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
+                                  " in the current System ({})".format(sender_mech.name, self.name))
 
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - is not an Objective Mechanism used for Learning or Control and
@@ -1732,8 +1732,8 @@ class System_Base(System):
             # If sender_mech has no projections left, raise exception
             if not any(any(projection for projection in input_state.path_afferents)
                        for input_state in sender_mech.input_states):
-                raise SystemError("{} only receives projections from other processes or mechanisms not"
-                                  " in the current system ({})".format(sender_mech.name, self.name))
+                raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
+                                  " in the current System ({})".format(sender_mech.name, self.name))
 
             for output_state in sender_mech.output_states:
 
@@ -1884,7 +1884,7 @@ class System_Base(System):
     def _assign_output_states(self):
         """Assign outputStates for System (the values of which will comprise System.value)
 
-        Assign the outputs of terminal Mechanisms in the graph to the system's output_values
+        Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
         Note:
         * Current implementation simply assigns terminal mechanisms as outputStates
@@ -1916,7 +1916,7 @@ class System_Base(System):
                 termination_learning=None,
                 # time_scale=TimeScale.TRIAL
                 context=None):
-        """Execute mechanisms in system at specified :ref:`phases <System_Execution_Phase>` in order \
+        """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
         specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
@@ -1929,12 +1929,12 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the input arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
-                As with a process, ORIGIN mechanisms will receive their input only once (first execution)
+            - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and System.input);
+                As with a process, `ORIGIN` Mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls Mechanism.execute() for each Mechanism in its execute_graph in sequence
-            - outputs of TERMINAL mechanisms are assigned as system.ouputValue
-            - system.controller is executed after execution of all mechanisms in the system
+            - outputs of `TERMINAL` Mechanisms are assigned as System.ouputValue
+            - System.controller is executed after execution of all Mechanisms in the System
             - notes:
                 * the same Mechanism can be listed more than once in a System, inducing recurrent processing
 
@@ -1944,13 +1944,13 @@ class System_Base(System):
             a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
-               specifies a default TimeScale for the system]
+               specifies a default TimeScale for the System]
 
             .. context : str
 
         Returns
         -------
-        output values of system : 3d ndarray
+        output values of System : 3d ndarray
             Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
 
         """
@@ -2284,11 +2284,11 @@ class System_Base(System):
             if True, resets the :py:class:`CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default :keyword:`False`
-            if `True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the system before a
+            if `True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the System before a
             sequence of executions.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the LearningMechanisms of the system for each execution.
+            the target values for the LearningMechanisms of the System for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2315,8 +2315,8 @@ class System_Base(System):
         Returns
         -------
 
-        <system>.results : List[Mechanism.OutputValue]
-            list of the OutputValue for each `TERMINAL` Mechanism of the system returned for each execution.
+        <System>.results : List[Mechanism.OutputValue]
+            list of the OutputValue for each `TERMINAL` Mechanism of the System returned for each execution.
 
         """
         if self.scheduler_processing is None:
@@ -2346,7 +2346,7 @@ class System_Base(System):
                    context=context)
 
     def _report_system_initiation(self, clock=CentralClock):
-        """Prints iniiation message, time_step, and list of processes in system being executed
+        """Prints iniiation message, time_step, and list of Processes in System being executed
         """
 
         if 'system' in self.name or 'System' in self.name:

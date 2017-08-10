@@ -358,7 +358,7 @@ def test_EVC_gratton():
             mech.function_object.rate = 1.0
             # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
-    print('new rate of integration mechanisms before system execution:')
+    print('new rate of integration mechanisms before System execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
     for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         print(mech.name)
