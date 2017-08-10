@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PathwayProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
   
 
   
@@ -34,9 +34,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="Projection" href="Projection.html"/>
-        <link rel="next" title="MappingProjection" href="MappingProjection.html"/>
-        <link rel="prev" title="Projection" href="Projection.html"/> 
+        <link rel="up" title="MappingProjection" href="MappingProjection.html"/>
+        <link rel="next" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
+        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -90,12 +90,12 @@
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">PathwayProjection</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-pathwayprojection">Creating a PathwayProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#creating-a-pathwayprojection">Creating a PathwayProjection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#structure">Structure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#execution">Execution</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
@@ -150,11 +150,15 @@
       
           <li><a href="Projection.html">Projection</a> &raquo;</li>
       
-    <li>PathwayProjection</li>
+          <li><a href="PathwayProjection.html">PathwayProjection</a> &raquo;</li>
+      
+          <li><a href="MappingProjection.html">MappingProjection</a> &raquo;</li>
+      
+    <li>AutoAssociativeProjection</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="_sources/PathwayProjection.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/AutoAssociativeProjection.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -164,32 +168,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pathwayprojection">
-<h1>PathwayProjection<a class="headerlink" href="#pathwayprojection" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound" id="pathwayprojection-subtypes">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-</ul>
-</div>
-<span class="target" id="module-PathwayProjections.PathwayProjection"></span><div class="section" id="overview">
-<span id="pathwayprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
-<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of one Mechanism (its <code class="xref any docutils literal"><span class="pre">sender</span></code>), and does whatever conversion is needed to transmit
-that information to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another Mechanism (its <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  The primary
-type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
-</div>
-<div class="section" id="creating-a-pathwayprojection">
-<span id="projection-creation"></span><h2>Creating a PathwayProjection<a class="headerlink" href="#creating-a-pathwayprojection" title="Permalink to this headline">¶</a></h2>
-<p>A PathwayProjection can be created on its own, by calling the constructor for the desired type of projection.  More
-commonly, however, projections are either specified <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">in context</span></a>, or
-are <a class="reference internal" href="Projection.html#projection-automatic-creation"><span class="std std-ref">created automatically</span></a>, as described below.</p>
-</div>
-<div class="section" id="structure">
-<span id="pathwayprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="execution">
-<span id="pathwayprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="pathwayprojection-class-reference"></span></div>
+  <div class="section" id="autoassociativeprojection">
+<h1>AutoAssociativeProjection<a class="headerlink" href="#autoassociativeprojection" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -199,10 +179,10 @@ are <a class="reference internal" href="Projection.html#projection-automatic-cre
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatoryProjection.html" class="btn btn-neutral float-right" title="ModulatoryProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Projection.html" class="btn btn-neutral" title="Projection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
