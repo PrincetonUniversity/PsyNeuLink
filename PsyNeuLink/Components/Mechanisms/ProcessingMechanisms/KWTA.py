@@ -13,7 +13,7 @@ Overview
 --------
 
 A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
-k-winners-take-all (kWTA) behavior.
+k-winners-take-all (KWTA) behavior.
 
 .. _KWTA_Creation:
 
@@ -22,14 +22,16 @@ Creating a KWTA
 
 Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created directly by calling its constructor, or by
 using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The
-**k_value**, **threshold**, and **ratio** arguments are KWTA's characteristic attributes. The **k_value** argument
+**k_value**, **threshold**, and **ratio** arguments specify KWTA's characteristic attributes. The **k_value** argument
 specifies the `k_value` attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the `threshold` attribute (which is specified by the **threshold** argument). For any input, there is a
-range of possible adjusted inputs that would satisfy the requirement for k elements to be above the threshold; the
-**ratio** argument specifies the `ratio` attribute, which determines where within this range the final adjusted input
-falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the accepted range. The
-**inhibition_only** argument is an option to specify whether the KWTA should be allowed to increase the overall value of
-the input. In all other respects, a KWTA is specified in the same way as a standard `RecurrentTransferMechanism`.
+should be above the `threshold` attribute (which is specified by the **threshold** argument).
+
+For any input, there is a range of possible adjusted inputs that would satisfy the requirement for k elements to be
+above the threshold; the **ratio** argument specifies the `ratio` attribute, which determines where within this range
+the final adjusted input falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the
+accepted range. The **inhibition_only** argument specifies the `inhibition_only <KWTA.inhibition_only>` attribute, which
+specifies whether the KWTA should be allowed to increase the overall value of the input. In all other respects, a KWTA
+is specified in the same way as a standard `RecurrentTransferMechanism`.
 
 COMMENT:
 
@@ -52,13 +54,14 @@ Like every `RecurrentTransferMechanism`, a KWTA has a recurrent `AutoAssociative
 from the previous execution by its `matrix <AutoAssociativeProjection.matrix>`, so that the output of the previous
 execution is added to the input.
 
-Afterwards, the KWTA does its characteristic adjustment of the input: an additive offset is calculated and added to the
-input such that a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
-`threshold <KWTA.threshold>`. As mentioned above, there is usually a range of possible offsets that would satisfy the
-conditions: within this range, the `ratio <KWTA.ratio>` is used to calculate the chosen offset, with higher values of
-`ratio <KWTA.ratio>` (closer to 1) leading to higher offsets, and lower values (closer to 0) leading to lower offsets.
-If the offset is greater than zero, and the `inhibition_only <KWTA.inhibition_only>` attribute is True, then the offset
-is set to 0. Finally, the input, added to the offset, is passed to the `function <KWTA.function>`.
+Afterwards, the KWTA does its adjustment of the input: an additive offset is calculated and added to the input such that
+a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
+`threshold <KWTA.threshold>`. (That is, the same offset is added to each input value.) As mentioned above, there is
+usually a range of possible offsets that would satisfy the conditions: within this range, the `ratio <KWTA.ratio>` is
+used to calculate the chosen offset, with higher values of `ratio <KWTA.ratio>` (closer to 1) leading to higher offsets,
+and lower values (closer to 0) leading to lower offsets. If the offset is greater than zero, and the
+`inhibition_only <KWTA.inhibition_only>` attribute is True, then the offset is set to 0. Finally, the input, added to
+the offset, is passed to the `function <KWTA.function>`.
 
 (Currently, averaged-based KWTA execution is not available: however, it will be added soon.)
 

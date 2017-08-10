@@ -1744,9 +1744,11 @@ class Component(object):
         # I see two options: one is to set self.prev_context to a nonsense value BEFORE attempting to call
         # _assign_params(): this could be done in the default property setter; the other option is to get rid of this
         # check entirely (all tests currently pass regardless)
-        if self.prev_context == context:
-            return
-        self.prev_context = context
+        # (8/10/17 CW): Note that the bug was quick-patched for `auto` and `hetero` but not truly solved.
+        # Thus, I have decided to comment out these three lines below. If recursion problems exist, please uncomment
+        # if self.prev_context == context:
+        #     return
+        # self.prev_context = context
         # MODIFIED 5/6/17 END
         # import uuid
         # try:
@@ -2739,10 +2741,6 @@ def make_property(name, default_value):
             # 'reset_initializer'
             if hasattr(param_state.function_object, 'initializer'):
                 param_state.function_object.reset_initializer = val
-
-            # (7/19/17 CW) NOTE: the parameter state's variable is NEVER USED in the current tests. Consider
-            # writing tests for this functionality, then. In particular, this functionality would probably be used if a
-            # user created a mechanism, then manually changed a parameter
 
     # Create the property
     prop = property(getter).setter(setter)
