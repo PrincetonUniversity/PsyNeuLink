@@ -120,12 +120,12 @@ class AutoAssociativeProjection(MappingProjection):
         identical to setting sender=myMechanism and receiver=myMechanism.
 
     sender : Optional[OutputState or Mechanism]
-        specifies the source of the Projection's input. If a mechanism is specified, its
+        specifies the source of the Projection's input. If a Mechanism is specified, its
         `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 
     receiver : Optional[InputState or Mechanism]
-        specifies the destination of the Projection's output.  If a mechanism is specified, its
+        specifies the destination of the Projection's output.  If a Mechanism is specified, its
         `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used.
 

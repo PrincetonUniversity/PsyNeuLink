@@ -32,12 +32,12 @@ approximation of a `DDM` Mechanism
 Creating an LCA
 ---------------
 
-An LCA can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function
-and specifying LCA as its **mech_spec** argument.  The set of mutually inhibitory connections are implemented as a
-recurrent `MappingProjection` with a `matrix <LCA.matrix>` of uniform negative weights specified by
-the **inhibition** argument of the LCA's constructor.  The default format of its `variable <LCA.variable>`, and default
-values of its `inhibition <LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and
-`noise <TransferMechanism.noise>` parameters implement an approximation of a `DDM`.
+An LCA can be created directly by calling its constructor, or using the `mechanism` command and specifying LCA as its
+**mech_spec** argument.  The set of mutually inhibitory connections are implemented as a recurrent `MappingProjection`
+with a `matrix <LCA.matrix>` of uniform negative weights specified by the **inhibition** argument of the LCA's
+constructor.  The default format of its `variable <LCA.variable>`, and default values of its `inhibition
+<LCA.inhibition>`, `decay <RecurrentTransferMechanism.decay>` and `noise <TransferMechanism.noise>` parameters
+implement an approximation of a `DDM`.
 
 .. _LCA_Structure:
 

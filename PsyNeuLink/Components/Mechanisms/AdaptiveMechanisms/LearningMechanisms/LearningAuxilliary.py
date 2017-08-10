@@ -30,7 +30,7 @@ COMMENT:
                                variable[1] = error_signal from error_mech ObjectiveMechanism (target for TERMINAL)
                                derivative = error_derivative (1 for TERMINAL)
                 role:LEARNING
-          • Use only one Learning mechanism with the following args:
+          • Use only one LearningMechanism with the following args:
                 variable[[ACTIVATION_INPUT_INDEX][ACTIVATION_OUTPUT_INDEX][ERROR_SIGNAL_INDEX]
                 activation_derivative
                 error_matrix
@@ -50,7 +50,7 @@ COMMENT:
                 Assign mapping projections:
                       nextLevel.outputState.value -> input_states[ACTIVITY] of ObjectiveMechanism
                       nextLevel.objective_mechanism.outputState.value  -> input_states[ERROR] of ObjectiveMechanism
-                NOTE: For TERMINAL mechanism:
+                NOTE: For `TERMINAL` Mechanism:
                           error_mech is Process or System InputState (function=Linear, so derivative =1), so that
                              error_mech.outputState.value is the target, and
                              error_derivative = 1
@@ -96,7 +96,7 @@ COMMENT:
                    monitor_values: [error_mech.outputState.value, error_mech.objective_mech.outputState.value]
                    names = [ACTIVITY/SAMPLE, ERROR/TARGET]
                    function = ErrorDerivative(derivative=error_derivative)
-                NOTE: For TERMINAL mechanism:
+                NOTE: For `TERMINAL` Mechanism:
                           error_mech is Process or System InputState (function=Linear, so derivative =1), so that
                              error_mech.outputState.value is the target, and
                              error_derivative = 1
@@ -172,15 +172,15 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     Instantiates a LearningMechanism or ObjectiveMechanism as the sender for each learning_projection in a learning
         sequence.  A learning sequence is defined as a sequence of ProcessingMechanisms, each of which has a
-        projection — that has been specified for learning — to the next mechanism in the sequence.  This method
+        projection — that has been specified for learning — to the next Mechanism in the sequence.  This method
         instantiates the components required to support learning for those projections (most importantly,
         the LearningMechanisms that provide them with the learning_signal required to modify the matrix of the
         projection, and the ObjectiveMechanism that calculates the error_signal used to generate the learning_signals).
 
 
     It instantiates a LearningMechanism or ObjectiveMechanism as the sender for the learning_projection:
-    - a LearningMechanism for projections to any Processing mechanism that is not the last in the learning sequence;
-    - an ObjectiveMechanism for projections to a Processing mechanism that is the last in the learning sequence
+    - a LearningMechanism for projections to any ProcessingMechanism that is not the last in the learning sequence;
+    - an ObjectiveMechanism for projections to a ProcessingMechanism that is the last in the learning sequence
 
     Assume that learning_projection's variable and parameters have been specified and validated,
        (which is the case when this method is called from the learning_projection itself in _instantiate_sender()).
@@ -189,8 +189,8 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     * Once the `receiver` for the learning_projection has been identified, or instantiated:
         - it is thereafter referred to (by reference to it owner) as the `activation_mech_projection`,
-            and the mechanism to which it projects as the `activation_mech`;
-        - the mechanism to which it projects is referred referred to as the error_mech (the source of the error_signal).
+            and the Mechanism to which it projects as the `activation_mech`;
+        - the Mechanism to which it projects is referred referred to as the error_mech (the source of the error_signal).
 
     * See LearningComponents class for the names of the components of learning used here.
 
@@ -202,7 +202,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             - each LearningMechanism can have only one LearningProjection
             - each ProcessingMechanism can have only one MappingProjection that is subject to learning
 
-      When searching downstream for projections that are being learned (to identify the error_mech mechanism as a
+      When searching downstream for projections that are being learned (to identify the error_mech Mechanism as a
       source for the LearningMechanism's error_signal), the method uses the first projection that it finds, beginning
       in `primary outputState <OutputState_Primary>` of the activation_mech_output, and continues similarly
       in the error_mech.  If any conflicting implementations of learning components are encountered,
@@ -582,20 +582,20 @@ class LearningComponents(object):
     each of which is found and/or validated if necessary before assignment:
 
     * `activation_mech_projection` (`MappingProjection`):  one being learned)
-    * `activation_mech_input` (`OutputState`):  input to mechanism to which projection being learned projections
-    * `activation_mech` (`ProcessingMechanism`):  mechanism to which projection being learned projects
+    * `activation_mech_input` (`OutputState`):  input to Mechanism to which Projection being learned Projections
+    * `activation_mech` (`ProcessingMechanism`):  Mechanism to which projection being learned projects
     * `activation_mech_output` (`OutputState`):  output of activation_mech
-    * `activation_mech_fct` (function):  function of mechanism to which projection being learned projects
+    * `activation_mech_fct` (function):  function of Mechanism to which projection being learned projects
     * `activation_derivative` (function):  derivative of function for activation_mech
     * `error_projection` (`MappingProjection`):  next projection in learning sequence after activation_mech_projection
     * `error_matrix` (`ParameterState`):  parameterState of error_projection with error_matrix
     * `error_derivative` (function):  deriviative of function of error_mech
-    * `error_mech` (ProcessingMechanism):  mechanism to which error_projection projects
+    * `error_mech` (ProcessingMechanism):  Mechanism to which error_projection projects
     * `error_mech_output` (OutputState):  outputState of error_mech, that projects either to the next
                                           ProcessingMechanism in the pathway, or to an ObjectiveMechanism
-    * `error_signal_mech` (LearningMechanism or ObjectiveMechanism):  mechanism from which LearningMechanism
+    * `error_signal_mech` (LearningMechanism or ObjectiveMechanism):  Mechanism from which LearningMechanism
                                                                       gets its error_signal (ObjectiveMechanism for
-                                                                      the last mechanism in a learning sequence; next
+                                                                      the last Mechanism in a learning sequence; next
                                                                       LearningMechanism in the sequence for all others)
     * `error_signal_mech_output` (OutputState): outputState of error_signal_mech, that projects to the preceeding
                                                 LearningMechanism in the learning sequence (or nothing for the 1st mech)
