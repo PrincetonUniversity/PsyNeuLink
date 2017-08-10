@@ -84,11 +84,28 @@
           
             
             
-                <ul>
+                <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Scheduler.html">Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Condition.html">Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Run</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#timing">Timing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#inputs">Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initial-values">Initial Values</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#targets">Targets</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
             
@@ -338,8 +355,8 @@ elements) that of the <a class="reference internal" href="InputState.html#InputS
 </div>
 <div class="section" id="targets">
 <span id="run-targets"></span><h3>Targets<a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h3>
-<p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then target values
-for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism in the Process or System being run.  These
+<p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or <code class="xref any docutils literal"><span class="pre">System</span></code>, then target values
+for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the Process or System being run.  These
 are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method, which can be in
 any of three formats.  The two formats used for <strong>inputs</strong> (<a class="reference internal" href="#run-inputs-sequence-format"><span class="std std-ref">Sequence</span></a> and
 <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism</span></a> format) can also be used for targets.  However, the format of the lists or
@@ -374,7 +391,7 @@ other requirements are the same as the <a class="reference internal" href="#run-
 </div>
 <div class="section" id="run-targets-mechanism-format">
 <span id="id2"></span><h4>Mechanism Format<a class="headerlink" href="#run-targets-mechanism-format" title="Permalink to this headline">¶</a></h4>
-<p><em>(Dict[mechanism, List[values] or ndarray]):</em> &#8211; there must be one entry in the dictionary for each of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>
+<p><em>(Dict[Mechanism, List[values] or ndarray]):</em> &#8211; there must be one entry in the dictionary for each of the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>
 Mechanisms in the Process or System being run, though the entries can be specified in any order (making this format
 easier to use. The value of each entry is a list or ndarray of the target values for that Mechanism, one for each
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  There are at most two levels of nesting (or dimensions) required for each entry: one for the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>,
@@ -413,7 +430,7 @@ inputs, then the inputs will be cycled until the number of <a class="reference i
 <li><strong>targets</strong> (<em>List[input] or np.ndarray(input) : default None</em>) &#8211; the target values assigned to the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> for each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (used for learning).
 The length must be equal to <strong>inputs</strong>.</li>
 <li><strong>learning</strong> (<em>bool :  default None</em>) &#8211; enables or disables learning during execution for a <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">Process</span></a> or
-<a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.  If it is not specified, the current state of learning is left intact.
+<code class="xref any docutils literal"><span class="pre">System</span></code>.  If it is not specified, the current state of learning is left intact.
 If it is <code class="xref any docutils literal"><span class="pre">True</span></code>, learning is forced on; if it is <code class="xref any docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
 <li><strong>call_before_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>
 <li><strong>call_after_trial</strong> (Function : default= <code class="xref any docutils literal"><span class="pre">None</span></code>) &#8211; called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in the sequence is run.</li>

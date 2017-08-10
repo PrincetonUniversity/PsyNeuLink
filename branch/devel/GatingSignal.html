@@ -405,7 +405,7 @@ details).</li>
 the ControlSignal and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
 <li><strong>name</strong> (<em>str : default OutputState-&lt;index&gt;</em>) &#8211; a string used for the name of the OutputState.
-If not is specified, a default is assigned by the StateRegistry of the mechanism to which the OutputState
+If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
 belongs (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : State.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the OutputState.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
@@ -457,13 +457,13 @@ passes the input to the GatingMechanism as value for the GatingSignal.</p>
 <dt>name</dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default &lt;State subclass&gt;-&lt;index&gt;</span><dd><p class="first">name of the OutputState.
 Specified in the <strong>name</strong> argument of the constructor for the OutputState.  If not is specified, a default is
-assigned by the StateRegistry of the mechanism to which the OutputState belongs
+assigned by the StateRegistry of the Mechanism to which the OutputState belongs
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 <div class="last admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Unlike other PsyNeuLink components, state names are &#8220;scoped&#8221; within a mechanism, meaning that states with
-the same name are permitted in different mechanisms.  However, they are <em>not</em> permitted in the same
-mechanism: states within a mechanism with the same base name are appended an index in the order of their
+<p class="last">Unlike other PsyNeuLink components, State names are &#8220;scoped&#8221; within a Mechanism, meaning that States with
+the same name are permitted in different Mechanisms.  However, they are <em>not</em> permitted in the same
+Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
 creation.</p>
 </div>
 </dd>

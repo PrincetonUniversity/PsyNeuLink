@@ -192,8 +192,8 @@ execution an AutoAssociativeProjection references parameters owned by its Recurr
 are <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
 <div class="section" id="configurable-attributes">
 <span id="auto-associative-configurable-attributes"></span><h3>Configurable Attributes<a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="Function.html#Function.BogaczEtAl.variable" title="Function.BogaczEtAl.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.function" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="Function.html#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="auto-associative-matrix">
@@ -234,10 +234,10 @@ the RecurrentTransferMechanism by a matrix, then presents the product as input t
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<em>Optional[Mechanism]</em>) &#8211; simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
 identical to setting sender=myMechanism and receiver=myMechanism.</li>
-<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the Projection&#8217;s input. If a mechanism is specified, its
+<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the Projection&#8217;s input. If a Mechanism is specified, its
 <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the Projection&#8217;s output.  If a mechanism is specified, its
+<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the Projection&#8217;s output.  If a Mechanism is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
 <li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform

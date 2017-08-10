@@ -187,13 +187,13 @@ It also allows its previous input to be decayed, and reports the energy and, if 
 </div>
 <div class="section" id="creating-a-recurrenttransfermechanism">
 <span id="recurrent-transfer-creation"></span><h2>Creating a RecurrentTransferMechanism<a class="headerlink" href="#creating-a-recurrenttransfermechanism" title="Permalink to this headline">¶</a></h2>
-<p>A RecurrentTransferMechanism can be created directly by calling its constructor, or using the
-<a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function and specifying RECURRENT_TRANSFER_MECHANISM as its
-<strong>mech_spec</strong> argument.  The recurrent projection is automatically created using the <strong>matrix</strong>
-(or <strong>auto</strong> and <strong>hetero</strong>) argument of the Mechanism&#8217;s constructor. If used, the <strong>matrix</strong> argument must specify
-either a square matrix or a <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that uses one (the default is <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>).
-Alternatively, <strong>auto</strong> and <strong>hetero</strong> can be specified: these set the diagonal and off-diagonal terms, respectively.
-In all other respects, a RecurrentTransferMechanism is specified in the same way as a standard <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
+<p>A RecurrentTransferMechanism can be created directly by calling its constructor, or using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> command and
+specifying RECURRENT_TRANSFER_MECHANISM as its <strong>mech_spec</strong> argument.  The recurrent projection is automatically
+created using the <strong>matrix</strong> (or <strong>auto</strong> and <strong>hetero</strong>) argument of the Mechanism&#8217;s constructor. If used, the
+<strong>matrix</strong> argument must specify either a square matrix or a <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that uses one (the default is
+<a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>). Alternatively, <strong>auto</strong> and <strong>hetero</strong> can be specified: these set the diagonal and
+off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
+standard <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
 </div>
 <div class="section" id="structure">
 <span id="recurrent-transfer-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -248,7 +248,7 @@ of the Mechanism</dd>
 <dt><em>ENTROPY</em></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>The entropy of the result, which is calculated using the <a class="reference internal" href="Function.html#Function.Stability.function" title="Function.Stability.function"><code class="xref any py py-meth docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code></a> with the ENTROPY metric
-(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.function" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
+(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
 between 0 and 1 (e.g. the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
 </dl>
 </dd></dl>
@@ -262,11 +262,11 @@ between 0 and 1 (e.g. the <a class="reference internal" href="Function.html#Func
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the input to the mechanism to use if none is provided in a call to its
+<li><strong>default_variable</strong> (<em>number, list or np.ndarray : default Transfer_DEFAULT_BIAS</em>) &#8211; specifies the input to the Mechanism to use if none is provided in a call to its
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
 <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
-of the mechanism.</li>
+of the Mechanism.</li>
 <li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
 if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
@@ -279,7 +279,7 @@ If <strong>auto</strong> and <strong>hetero</strong> are both specified, then ma
 <strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
 1 and all non-diagonal entries -1. if the <strong>matrix</strong> argument is specified, it will be overwritten by
 <strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>auto</strong> can be specified as a 1D array with length equal
-to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.</li>
+to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.</li>
 <li><strong>hetero</strong> (<em>number, 2D array, or None : default None</em>) &#8211; specifies matrix as a hollow matrix with all non-diagonal entries equal to <strong>hetero</strong>, if <strong>hetero</strong> is not None;
 If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
 <strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
@@ -294,7 +294,7 @@ each time it is executed.</li>
 <li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; a stochastically-sampled value added to the result of the <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
 if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
 if it is a function, it must return a scalar value.</li>
-<li><strong>time_constant</strong> (<em>float : default 1.0</em>) &#8211; <p>the time constant for exponential time averaging of input when the mechanism is executed with <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
+<li><strong>time_constant</strong> (<em>float : default 1.0</em>) &#8211; <p>the time constant for exponential time averaging of input when the Mechanism is executed with <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
 set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
 <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
@@ -306,15 +306,15 @@ the first item specifies the minimum allowable value of the result, and the seco
 any element of the result that exceeds the specified minimum or maximum value is set to the value of
 <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
 the dictionary override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
+<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) &#8211; specifies whether the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
 This must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> for the <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>
 parameter to have an effect.</li>
-<li><strong>name</strong> (<em>str : default RecurrentTransferMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>name</strong> (<em>str : default RecurrentTransferMechanism-&lt;index&gt;</em>) &#8211; a string used for the name of the Mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for mechanism.
+<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
 <li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) &#8211; string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
@@ -416,7 +416,7 @@ is <a class="reference internal" href="Function.html#Function.Logistic" title="F
 calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENERGY metric;</li>
 <li><code class="xref any docutils literal"><span class="pre">ENTROPY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the entropy of the result,
 calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENTROPY metric;
-note:  this is only present if the mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
+note:  this is only present if the Mechanism&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
 (e.g., the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function).</li>
 </ul>
 </dd></dl>
@@ -437,7 +437,7 @@ note:  this is only present if the mechanism&#8217;s <code class="xref std std-k
 <dl class="attribute">
 <dt id="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale">
 <code class="descname">time_scale</code><a class="headerlink" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>TimeScale</em> &#8211; specifies whether the mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
+<dd><p><em>TimeScale</em> &#8211; specifies whether the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -464,7 +464,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of RecurrentTransferMechanism</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-ProcessingMechanisms.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
 </tr>
 </tbody>
 </table>

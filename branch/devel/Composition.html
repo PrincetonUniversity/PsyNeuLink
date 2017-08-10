@@ -177,7 +177,7 @@ System are listed in its <code class="xref std std-keyword docutils literal"><sp
 method.  For additional details about <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms in Processes, see
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Process Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Output</span></code>;
 and for Systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
-<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Initialization</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -202,7 +202,7 @@ designated as such (since it will be assigned input and therefore be initialized
 that case it will be initialized in any event). An <code class="xref any docutils literal"><span class="pre">initial</span> <span class="pre">value</span></code> can be assigned to such
 Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
 information, see <a class="reference internal" href="Run.html#run-initial-values"><span class="std std-ref">Run</span></a>, <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">System Mechanisms</span></a> and
-<a class="reference internal" href="System.html#system-execution-input-and-initialization"><span class="std std-ref">System Input and Initialization</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">System</span> <span class="pre">Input</span> <span class="pre">and</span> <span class="pre">Initialization</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -210,12 +210,12 @@ information, see <a class="reference internal" href="Run.html#run-initial-values
 <dt>TERMINAL</dt>
 <dd><p class="first last">A <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is the last Mechanism of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> and/or <a class="reference internal" href="System.html"><span class="doc">System</span></a>, and
 that provides the output to the Process or System when it is <a class="reference internal" href="Run.html"><span class="doc">executed or run</span></a>.  A Process may
-have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism, but a system may have many.  Note that the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
-mechanism of a process is not necessarily a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanism of the system to which it belongs,
-as it may send projections to other processes in the system.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms of a process
-or system are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">terminalMechanisms</span></code> attribute, and can be displayed using its
-<code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional details about <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> mechanisms in processes, see
-<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process_Input_And_Output</span></code>; and for systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a>.</p>
+have only one <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism, but a system may have many.  Note that the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
+Mechanism of a Process is not necessarily a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of the system to which it belongs,
+as it may send Projections to other Processes in the System.  The <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms of a Process
+or System are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">terminalMechanisms</span></code> attribute, and can be displayed using its
+<code class="xref std std-keyword docutils literal"><span class="pre">show</span></code> method.  For additional details about <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms in Processes, see
+<a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <code class="xref any docutils literal"><span class="pre">Process_Input_And_Output</span></code>; and for Systems see <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">Mechanisms</span></a>.</p>
 </dd>
 </dl>
 </li>
@@ -397,7 +397,7 @@ used in learning).</p>
 <dt id="Composition.Composition.scheduler_processing">
 <code class="descname">scheduler_processing</code><a class="headerlink" href="#Composition.Composition.scheduler_processing" title="Permalink to this definition">¶</a></dt>
 <dd><p>The default <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> automatically generated by the Composition, used for the
-(<a class="reference internal" href="System.html#system-execution-processing"><span class="std std-ref">processing</span></a> phase of execution.</p>
+(<code class="xref any docutils literal"><span class="pre">processing</span></code> phase of execution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -412,7 +412,7 @@ used in learning).</p>
 <dt id="Composition.Composition.scheduler_learning">
 <code class="descname">scheduler_learning</code><a class="headerlink" href="#Composition.Composition.scheduler_learning" title="Permalink to this definition">¶</a></dt>
 <dd><p>The default <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> automatically generated by the Composition, used for the
-<a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">learning</span></a> phase of execution.</p>
+<code class="xref any docutils literal"><span class="pre">learning</span></code> phase of execution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -426,12 +426,12 @@ used in learning).</p>
 <dl class="method">
 <dt id="Composition.Composition.add_mechanism">
 <code class="descname">add_mechanism</code><span class="sig-paren">(</span><em>mech</em><span class="sig-paren">)</span><a class="headerlink" href="#Composition.Composition.add_mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a mechanism to the Composition, if it is not already added</p>
+<dd><p>Adds a Mechanism to the Composition, if it is not already added</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mech</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; the mechanism to add</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mech</strong> (<a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a>) &#8211; the Mechanism to add</td>
 </tr>
 </tbody>
 </table>
@@ -484,7 +484,7 @@ to receive and execute sets of mechanisms that are eligible to run until termina
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) &#8211; a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
+<li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) &#8211; a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
 the user. For each pair, the key is the Mechanism and the value is a list of inputs.</li>
 <li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
 <li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the Learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
@@ -496,7 +496,7 @@ the user. For each pair, the key is the Mechanism and the value is a list of inp
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output value of the final mechanism executed in the composition</strong></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output value of the final Mechanism executed in the Composition</strong></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">various</p>
@@ -516,24 +516,27 @@ to receive and execute sets of mechanisms that are eligible to run until termina
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) &#8211; a dictionary containing a key-value pair for each mechanism in the composition that receives inputs from
-the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the list                 corresponds to a certain <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a></li>
-<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the non-learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
-<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the Learning execution of this Composition.                 If not specified, the Composition will use its automatically generated scheduler</li>
-<li><strong>execution_id</strong> (<em>UUID</em>) &#8211; execution_id will typically be set to none and assigned randomly at runtime</li>
+<li><strong>inputs</strong> ({ <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> : list }) &#8211; a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
+the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the
+list corresponds to a certain <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
+<li><strong>scheduler_processing</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the non-learning execution of
+this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
+<li><strong>scheduler_learning</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; the scheduler object which owns the conditions that will instruct the Learning execution of
+this Composition. If not specified, the Composition will use its automatically generated scheduler.</li>
+<li><strong>execution_id</strong> (<em>UUID</em>) &#8211; execution_id will typically be set to none and assigned randomly at runtime.</li>
 <li><strong>num_trials</strong> (<em>int</em>) &#8211; typically, the composition will infer the number of trials from the length of its input specification.
 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
 or use default inputs, and select a number of trials with num_trials.</li>
-<li><strong>call_before_time_step</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed</li>
-<li><strong>call_after_time_step</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed</li>
-<li><strong>call_before_pass</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed</li>
-<li><strong>call_after_pass</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed</li>
-<li><strong>call_before_trial</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed</li>
-<li><strong>call_after_trial</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed</li>
+<li><strong>call_before_time_step</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
+<li><strong>call_after_time_step</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed.</li>
+<li><strong>call_before_pass</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
+<li><strong>call_after_pass</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed.</li>
+<li><strong>call_before_trial</strong> (<em>callable</em>) &#8211; will be called before each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
+<li><strong>call_after_trial</strong> (<em>callable</em>) &#8211; will be called after each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output value of the final mechanism executed in the composition</strong></p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>output value of the final Mechanism executed in the composition</strong></p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">various</p>

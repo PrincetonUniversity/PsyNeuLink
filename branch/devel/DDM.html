@@ -188,7 +188,7 @@ mode), or integrated numerically (in <a class="reference internal" href="TimeSca
 </div>
 <div class="section" id="creating-a-ddm-mechanism">
 <span id="ddm-creation"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
-<p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> function
+<p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> command
 and specifying DDM as its <strong>mech_spec</strong> argument.  The analytic solution used in <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode is selected
 using the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument, which can be simply the name of a DDM function (first example below),
 or a call to the function with arguments specifying its parameters (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below for a description of
@@ -210,7 +210,7 @@ decision process is executed, and what information is returned. The <a class="re
 analytic solution to use when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is  set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>
 (see <a class="reference internal" href="#ddm-functions"><span class="std std-ref">Functions</span></a> below); when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> set to  <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, the
 <strong>function</strong> argument must be assigned an <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function with an
-<code class="xref any docutils literal"><span class="pre">integration_type</span></code> of <em>DIFFUSION</em>, so that executing the DDM mechanism numerically
+<code class="xref any docutils literal"><span class="pre">integration_type</span></code> of <em>DIFFUSION</em>, so that executing the DDM Mechanism numerically
 integrates the path of the decision variable (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below). The number of <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.output_states" title="ProcessingMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> is determined by the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> in use (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> and
 <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a>).</p>
 <div class="section" id="ddm-functions">
@@ -276,7 +276,7 @@ returned by the DDM&#8217;s <a class="reference internal" href="#ProcessingMecha
 </div>
 <div class="section" id="execution">
 <span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>When a DDM mechanism is executed, it computes the decision process either analytically (in <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode) or by
+<p>When a DDM Mechanism is executed, it computes the decision process either analytically (in <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> mode) or by
 step-wise integration using the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a> (in <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> mode).
 It <code class="xref any docutils literal"><span class="pre">function</span></code> always returns its <em>DECISION_VARIABLE</em> and <em>RESPONSE_TIME</em> results
 (see <code class="xref any docutils literal"><span class="pre">DDM_Standard_OutputStates</span></code>), and assigns these as the first two items of its <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.value" title="ProcessingMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute.
@@ -373,25 +373,25 @@ when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scal
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]</em>) &#8211; the input to the mechanism to use if none is provided in a call to its
+<li><strong>default_variable</strong> (<em>value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]</em>) &#8211; the input to the Mechanism to use if none is provided in a call to its
 <code class="xref py py-data docutils literal"><span class="pre">execute</span></code> or <code class="xref py py-data docutils literal"><span class="pre">run</span></code> methods;
 also serves as a template to specify the length of <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.variable" title="ProcessingMechanisms.DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
-and the primary outputState of the mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creation&gt;` for how an input with a length
-of greater than 1 is handled).</li>
+and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the Mechanism (see <span class="xref std std-ref">Input</span> &lt;DDM_Creation&gt;` for how
+an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int, list or np.ndarray of ints</em>) &#8211; specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) &#8211; specifies the analytic solution to use for the decision process if <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>; can be <a class="reference internal" href="Function.html#Function.BogaczEtAl" title="Function.BogaczEtAl"><code class="xref any py py-class docutils literal"><span class="pre">BogaczEtAl</span></code></a> or <a class="reference internal" href="Function.html#Function.NavarroAndFuss" title="Function.NavarroAndFuss"><code class="xref any py py-class docutils literal"><span class="pre">NavarroAndFuss</span></code></a> (note:  the latter requires that the MatLab engine
 is installed). If <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> must
-be <a class="reference internal" href="Function.html#Function.DriftDiffusionIntegrator" title="Function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, and the mechanism
+be <a class="reference internal" href="Function.html#Function.DriftDiffusionIntegrator" title="Function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, and the Mechanism
 will return the result of one time step.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the mechanism is executed on the time_step or trial time scale.
+<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) &#8211; specifies whether the Mechanism is executed on the time_step or trial time scale.
 This must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> to use one of the analytic solutions specified by
 <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. This  must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> to numerically (path) integrate the
 decision variable.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for specification of a params dict).</li>
-<li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the mechanism.
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a dictionary that can be used to specify parameters of the Mechanism, parameters of its <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for specification of a params
+dict).</li>
+<li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) &#8211; a string used for the name of the Mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Mechanism.classPreferences]</em>) &#8211; the PreferenceSet for the process.
@@ -405,7 +405,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.variable">
 <code class="descname">variable</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value : default  FUNCTION_PARAMS[STARTING_POINT]</em> &#8211; the input to mechanism&#8217;s execute method.  Serves as the &#8220;stimulus&#8221; component of the drift rate.</p>
+<dd><p><em>value : default  FUNCTION_PARAMS[STARTING_POINT]</em> &#8211; the input to Mechanism&#8217;s execute method.  Serves as the &#8220;stimulus&#8221; component of the drift rate.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -413,14 +413,13 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <code class="descname">function</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>IntegratorFunction : default BogaczEtAl</em> &#8211; the function used to compute the outcome of the decision process when <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a>.  If <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.time_scale" title="ProcessingMechanisms.DDM.DDM.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a> is set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>, <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-must be <a class="reference internal" href="Function.html#Function.DriftDiffusionIntegrator" title="Function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, and the mechanism
-will return the result of one time step.</p>
+must be <a class="reference internal" href="Function.html#Function.DriftDiffusionIntegrator" title="Function.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, and the Mechanism will return the result of one time step.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.function_params">
 <code class="descname">function_params</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.function_params" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Dict[str, value]</em> &#8211; contains one entry for each parameter of the mechanism&#8217;s function.
+<dd><p><em>Dict[str, value]</em> &#8211; contains one entry for each parameter of the Mechanism&#8217;s function.
 The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter&#8217;s value.</p>
 </dd></dl>
 
@@ -452,7 +451,7 @@ and <a class="reference internal" href="#ddm-standard-outputstates"><span class=
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.name">
 <code class="descname">name</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; the name of the mechanism.
+<dd><p><em>str : default DDM-&lt;index&gt;</em> &#8211; the name of the Mechanism.
 Specified in the name argument of the call to create the projection;
 if not is specified, a default is assigned by MechanismRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
@@ -461,8 +460,8 @@ if not is specified, a default is assigned by MechanismRegistry
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; a PreferenceSet for the mechanism.
-Specified in the prefs argument of the call to create the mechanism;
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> &#8211; a PreferenceSet for the Mechanism.
+Specified in the prefs argument of the call to create the Mechanism;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref py py-class docutils literal"><span class="pre">PreferenceSet</span></code> for details).</p>
 </dd></dl>
@@ -478,7 +477,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>threshold</strong> (<em>float: default 10.0</em>) &#8211; specify the threshold at which the DDM will stop integrating</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>mechanism&#8217;s function plot</strong> &#8211; Matplotlib window of the mechanism&#8217;s function plotting dynamically over time with specified parameters
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Mechanism&#8217;s function plot</strong> &#8211; Matplotlib window of the Mechanism&#8217;s function plotting dynamically over time with specified parameters
 towards a specified threshold</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Matplotlib window</td>
