@@ -304,7 +304,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 

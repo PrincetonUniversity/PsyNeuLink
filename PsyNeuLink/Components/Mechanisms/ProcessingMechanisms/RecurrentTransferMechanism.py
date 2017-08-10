@@ -14,6 +14,7 @@
 # ****************************************  RecurrentTransferMechanism *************************************************
 
 """
+.. _Recurrent_Transfer_Overview:
 
 Overview
 --------
@@ -36,6 +37,14 @@ created using the **matrix** (or **auto** and **hetero**) argument of the Mechan
 off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
 standard `TransferMechanism`.
 
+COMMENT:
+8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
+created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function and specifying
+RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
+However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
+as MechanismRegistry is empty!
+COMMENT
+
 .. _Recurrent_Transfer_Structure:
 
 Structure
@@ -43,14 +52,14 @@ Structure
 
 The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`,
 `auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` parameters, which
-specify a self-projecting AutoAssociativeProjection;  that is, one that projects from the Mechanism's
+specify a self-projecting `AutoAssociativeProjection`;  that is, one that projects from the Mechanism's
 `primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.
 In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
-decrements its `previous_input <TransferMechanism.previous_input>` value by the specified factor each time it is
+multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it is
 executed.  It also has two additional OutputStates:  an ENERGY OutputState and, if its
-`function <TransferMechanisms.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
+`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
 OutputState, that each report the respective values of the vector in it its
 `primary (RESULTS) OutputState <OutputState_Primary>`.
 
@@ -60,12 +69,21 @@ Execution
 ---------
 
 When a RecurrentTransferMechanism executes, it includes in its input the value of its
-`primary OutputState <OutputState_Primary>` from its last execution.
+`primary OutputState <OutputState_Primary>` (after multiplication by the `matrix` of the recurrent projection) from its
+last execution.
+
+COMMENT:
+Previous version of sentence above: "When a RecurrentTransferMechanism executes, it includes in its input the value of
+its `primary OutputState <OutputState_Primary>` from its last execution."
+8/9/17 CW: Changed the sentence above. Rationale: If we're referring to the fact that the recurrent projection
+takes the previous output before adding it to the next input, we should specifically mention the matrix transformation
+that occurs along the way.
+COMMENT
 
 Like a `TransferMechanism`, the function used to update each element can be assigned using its
-`function <TransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
+`function <RecurrentTransferMechanism.function>` parameter.  When a RecurrentTransferMechanism is executed,
 if its `decay <RecurrentTransferMechanism.decay>` parameter is specified (and is not 1.0), it
-decays the value of its `previous_input <TransferMechanism.previous_input>` parameter by the
+decays the value of its `previous_input <RecurrentTransferMechanism.previous_input>` parameter by the
 specified factor.  It then transforms its input (including from the recurrent projection) using the specified
 function and parameters (see `Transfer_Execution`), and returns the results in its OutputStates.
 
@@ -86,9 +104,11 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.States.State import _instantiate_state
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
+from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
+    get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
+from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, \
+    MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -189,8 +209,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
-        `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
+        also serves as a template to specify the length of `variable <RecurrentTransferMechanism.variable>` for
+        `function <RecurrentTransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
         of the Mechanism.
 
     size : int, list or np.ndarray of ints
@@ -222,17 +242,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
         equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
 
-    decay : number : default 1.0
-        specifies the amount by which to decrement its `previous_input <TransferMechanism.previous_input>`
-        each time it is executed.
-
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if
-        `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        `time_constant <RecurrentTransferMechanism.time_constant>` is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
+    decay : number : default 1.0
+        specifies the amount by which to decrement its `previous_input <RecurrentTransferMechanism.previous_input>`
+        each time it is executed.
+
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <TransferMechanism.function>`:
+        a stochastically-sampled value added to the result of the `function <RecurrentTransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -244,10 +264,10 @@ class RecurrentTransferMechanism(TransferMechanism):
          (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
-        specifies the allowable range for the result of `function <TransferMechanism.function>`:
+        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`:
         the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
         any element of the result that exceeds the specified minimum or maximum value is set to the value of
-        `range <TransferMechanism.range>` that it exceeds.
+        `range <RecurrentTransferMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
@@ -256,10 +276,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     time_scale :  TimeScale : TimeScale.TRIAL
         specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
+        This must be set to `TimeScale.TIME_STEP` for the `time_constant <RecurrentTransferMechanism.time_constant>`
         parameter to have an effect.
 
-    name : str : default TransferMechanism-<index>
+    name : str : default RecurrentTransferMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -289,19 +309,19 @@ class RecurrentTransferMechanism(TransferMechanism):
         back to its `primary inputState <Mechanism_InputStates>`.
 
     decay : float : default 1.0
-        determines the amount by which to multiply the `previous_input <TransferMechanism.previous_input>` value
-        each time it is executed.
+        determines the amount by which to multiply the `previous_input <RecurrentTransferMechanism.previous_input>`
+        value each time it is executed.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
         determines the starting value for time-averaged input
-        (only relevant if `time_constant <TransferMechanism.time_constant>` parameter is not 1.0).
+        (only relevant if `time_constant <RecurrentTransferMechanism.time_constant>` parameter is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <RecurrentTransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -314,15 +334,16 @@ class RecurrentTransferMechanism(TransferMechanism):
     range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
-        is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
-        is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
+        is set to the value of `range <RecurrentTransferMechanism.range>` it exceeds.  If
+        `function <RecurrentTransferMechanism.function>`
+        is `Logistic`, `range <RecurrentTransferMechanism.range>` is set by default to (0,1).
 
     previous_input : 1d np.array of floats
         the value of the input on the previous execution, including the value of `recurrent_projection`.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`; same value as first item of
-        `output_values <TransferMechanism.output_values>`.
+        result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
+        `output_values <RecurrentTransferMechanism.output_values>`.
 
     COMMENT:
         CORRECTED:
@@ -334,7 +355,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     outputStates : Dict[str, OutputState]
         an OrderedDict with the following `outputStates <OutputState>`:
 
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
+        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <RecurrentTransferMechanism.function>`;
         * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
         * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
         * `ENERGY`, the :keyword:`value` of which is the energy of the result,
@@ -356,7 +377,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     time_scale :  TimeScale
         specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
-    name : str : default TransferMechanism-<index>
+    name : str : default RecurrentTransferMechanism-<index>
         the name of the Mechanism.
         Specified in the **name** argument of the constructor for the Projection;
         if not is specified, a default is assigned by `MechanismRegistry`
@@ -384,16 +405,16 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states: tc.optional(tc.any(list, dict))=None,
+                 function=Linear,
                  matrix=FULL_CONNECTIVITY_MATRIX,
                  auto=None,
                  hetero=None,
-                 function=Linear,
                  initial_value=None,
                  decay: is_numeric_or_none=None,
                  noise: is_numeric_or_none=0.0,
                  time_constant: is_numeric_or_none=1.0,
                  range=None,
+                 input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
@@ -644,7 +665,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         if context is None or (INITIALIZING not in context):
             if self.decay is not None and self.decay != 1.0:
-                self.previous_input *= self.decay
+                self.previous_input = self.previous_input * float(self.decay)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

@@ -583,6 +583,16 @@ class MappingProjection(PathwayProjection_Base):
 
         self.function_object.matrix = matrix
 
+        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
+        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
+        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
+        # fix this bug and make setting myMappingProjection.matrix effective.
+        # REMOVED 7/26/17 CW: feel free to remove all this commented block
+        # if MATRIX in self._parameter_states.key_values:
+        #     if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
+        #         self._parameter_states[MATRIX].function_object.variable = matrix
+        #         self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
+
     @property
     def _matrix_spec(self):
         """Returns matrix specification in self.paramsCurrent[FUNCTION_PARAMS][MATRIX]
