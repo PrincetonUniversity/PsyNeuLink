@@ -20,7 +20,52 @@ k-winners-take-all (kWTA) behavior.
 Creating a KWTA
 ---------------
 
+Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created directly by calling its constructor, or by
+using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The
+**k_value**, **threshold**, and **ratio** arguments are KWTA's characteristic attributes. The **k_value** argument
+specifies the `k_value` attribute of the KWTA, which is the number (or proportion) of values in the input vector that
+should be above the `threshold` attribute (which is specified by the **threshold** argument). For any input, there is a
+range of possible adjusted inputs that would satisfy the requirement for k elements to be above the threshold; the
+**ratio** argument specifies the `ratio` attribute, which determines where within this range the final adjusted input
+falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the accepted range. The
+**inhibition_only** argument is an option to specify whether the KWTA should be allowed to increase the overall value of
+the input. In all other respects, a KWTA is specified in the same way as a standard `RecurrentTransferMechanism`.
 
+COMMENT:
+
+CW: I know that some of the stuff above should be moved down to the Structure section but I don't understand which stuff
+belongs in Structure and which belongs in the Creation section, so I skipped the Structure section for now.
+
+.. _KWTA_Structure:
+
+Structure
+---------
+
+COMMENT
+
+.. _KWTA_Execution:
+
+Execution
+---------
+
+Like every `RecurrentTransferMechanism`, a KWTA has a recurrent `AutoAssociativeProjection` which multiplies its output
+from the previous execution by its `matrix <AutoAssociativeProjection.matrix>`, so that the output of the previous
+execution is added to the input.
+
+Afterwards, the KWTA does its characteristic adjustment of the input: an additive offset is calculated and added to the
+input such that a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
+`threshold <KWTA.threshold>`. As mentioned above, there is usually a range of possible offsets that would satisfy the
+conditions: within this range, the `ratio <KWTA.ratio>` is used to calculate the chosen offset, with higher values of
+`ratio <KWTA.ratio>` (closer to 1) leading to higher offsets, and lower values (closer to 0) leading to lower offsets.
+If the offset is greater than zero, and the `inhibition_only <KWTA.inhibition_only>` attribute is True, then the offset
+is set to 0. Finally, the input, added to the offset, is passed to the `function <KWTA.function>`.
+
+(Currently, averaged-based KWTA execution is not available: however, it will be added soon.)
+
+.. _KWTA_Reference:
+
+Class Reference
+---------------
 
 """
 
@@ -52,7 +97,261 @@ class KWTAError(Exception):
         return repr(self.error_value)
 
 class KWTA(RecurrentTransferMechanism):
-    """Subclass of `RecurrentTransferMechanism` that dynamically regulates the "activity" of its elements.
+    """
+    KWTA(                       \
+    default_variable=None,      \
+    size=None,                  \
+    function=Logistic,          \
+    matrix=None,                \
+    auto=None,                  \
+    hetero=None,                \
+    initial_value=None,         \
+    decay=1.0,                  \
+    noise=0.0,                  \
+    time_constant=1.0,          \
+    k_value=0.5,                \
+    threshold=0,                \
+    ratio=0.5,                  \
+    inhibition_only=True,       \
+    range=None,                 \
+    time_scale=TimeScale.TRIAL, \
+    params=None,                \
+    name=None,                  \
+    prefs=None)
+
+    Subclass of `RecurrentTransferMechanism` that dynamically regulates its input relative to a given threshold.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+        specifies the input to the mechanism to use if none is provided in a call to its
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
+        also serves as a template to specify the length of `variable <KWTA.variable>` for
+        `function <KWTA.function>`, and the `primary outputState <OutputState_Primary>`
+        of the mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
+        if **variable** is specified, it takes precedence over the specification of **size**.
+
+    function : TransferFunction : default Linear
+        specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
+        or a custom function.
+
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
+        or a AutoAssociativeProjection to use. If **auto** or **hetero** arguments are specified, the **matrix** argument
+        will be ignored in favor of those arguments.
+
+    auto : number, 1D array, or None : default None
+        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
+        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
+
+    hetero : number, 2D array, or None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
+        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+
+    initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
+        specifies the starting value for time-averaged input (only relevant if
+        `time_constant <KWTA.time_constant>` is not 1.0).
+        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+
+    decay : number : default 1.0
+        specifies the amount by which to decrement its `previous_input <KWTA.previous_input>` each time it is executed.
+
+    noise : float or function : default 0.0
+        a stochastically-sampled value added to the result of the `function <KWTA.function>`:
+        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+        if it is a function, it must return a scalar value.
+
+    time_constant : float : default 1.0
+        the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
+        set to `TimeScale.TIME_STEP`::
+
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
+
+    k_value : number : default 0.5
+        the proportion or number of input values (within the input vector) that should be above the
+        `threshold <KWTA.threshold>` of the KWTA. A `k_value` greater than zero and less than one specifies the
+        proportion of input values that should be above the `threshold <KWTA.threshold>`, while a positive integer
+        `k_value` specifies the number of values that should be above the `threshold <KWTA.threshold>`. A
+        negative integer `k_value` specifies the number of values that should be below the threshold.
+
+    threshold : number : default 0
+        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
+        values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below. Generally, the
+        threshold should be some intermediate value such that inputs above the threshold are considered "high" while
+        inputs below the threshold are considered "low".
+
+    ratio : number : default 0.5
+        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`:
+        `ratio` should be a number between 0 and 1. There is generally a range of possible offsets that satisfy the
+        constraints set by `k_value <KWTA.k_value>` and `threshold <KWTA.threshold>`: a `ratio` of 1 results in using
+        the greatest offset, a `ratio` of 0 results in using the least offset, etc.
+
+    inhibition_only : boolean : default True
+        specifies whether the KWTA should be allowed to use positive offsets. If set to False, the KWTA will use any
+        offset value, including positive offsets, ensuring that there are always the expected number of values above and
+        below the threshold. If `inhibition_only` is True, then the KWTA will only use negative or zero offsets,
+        changing all positive offsets to zero. This may be the desired behavior: for example, the user might expect the
+        KWTA to only "inhibit" neurons rather than "excite" them, or might expect that after many low inputs, the KWTA
+        should settle into an entirely non-excited state with no values above the `threshold <KWTA.threshold`
+
+    range : Optional[Tuple[float, float]]
+        specifies the allowable range for the result of `function <KWTA.function>`:
+        the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
+        any element of the result that exceeds the specified minimum or maximum value is set to the value of
+        `range <KWTA.range>` that it exceeds.
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        the dictionary override any assigned to those parameters in arguments of the constructor.
+
+    time_scale :  TimeScale : TimeScale.TRIAL
+        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        This must be set to `TimeScale.TIME_STEP` for the `time_constant <KWTA.time_constant>`
+        parameter to have an effect.
+
+    name : str : default KWTA-<index>
+        a string used for the name of the mechanism.
+        If not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+        the `PreferenceSet` for mechanism.
+        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    context : str : default componentType+INITIALIZING
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
+
+    Attributes
+    ----------
+
+    variable : value
+        the input to Mechanism's `function <KWTA.variable>`.
+
+    function : Function
+        the Function used to transform the input.
+
+    matrix : 2d np.array
+        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
+
+    recurrent_projection : AutoAssociativeProjection
+        an `AutoAssociativeProjection` that projects from the Mechanism's `primary outputState <OutputState_Primary>`
+        back to its `primary inputState <Mechanism_InputStates>`.
+
+    decay : float : default 1.0
+        determines the amount by which to multiply the `previous_input <KWTA.previous_input>` value
+        each time it is executed.
+
+    COMMENT:
+       THE FOLLOWING IS THE CURRENT ASSIGNMENT
+    COMMENT
+    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
+        determines the starting value for time-averaged input
+        (only relevant if `time_constant <KWTA.time_constant>` parameter is not 1.0).
+        :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
+
+    noise : float or function : default 0.0
+        a stochastically-sampled value added to the output of the `function <KWTA.function>`:
+        if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+        if it is a function, it must return a scalar value.
+
+    time_constant : float
+        the time constant for exponential time averaging of input
+        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+
+          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+
+    k_value : number
+        the proportion or number of input values (within the input vector) that should be above the
+        `threshold <KWTA.threshold>` of the KWTA.
+
+    threshold : number
+        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
+        values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below
+
+    ratio : number
+        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`.
+        Higher ratios result in greater offsets, lower ratios result in lower offsets, within the appropriate range.
+
+    inhibition_only : boolean : default True
+        specifies whether the KWTA is allowed to use positive offsets (if `inhibition_only` is True, then the KWTA will
+        set all positive offsets to 0 instead).
+
+    range : Tuple[float, float]
+        determines the allowable range of the result: the first value specifies the minimum allowable value
+        and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+        is set to the value of `range <KWTA.range>` it exceeds.  If `function <KWTA.function>`
+        is `Logistic`, `range <KWTA.range>` is set by default to (0,1).
+
+    previous_input : 1d np.array of floats
+        the value of the input on the previous execution, including the value of `recurrent_projection`.
+
+    value : 2d np.array [array(float64)]
+        result of executing `function <KWTA.function>`; same value as first item of
+        `output_values <KWTA.output_values>`.
+
+    COMMENT:
+        CORRECTED:
+        value : 1d np.array
+            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
+            and the first item of ``output_values``.
+    COMMENT
+
+    outputStates : Dict[str, OutputState]
+        an OrderedDict with the following `outputStates <OutputState>`:
+
+        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <KWTA.function>`;
+        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
+        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
+        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
+          calculated using the `Stability` Function with the ENERGY metric;
+        * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
+          calculated using the `Stability` Function with the ENTROPY metric;
+          note:  this is only present if the mechanism's :keyword:`function` is bounded between 0 and 1
+          (e.g., the `Logistic` function).
+
+    output_values : List[array(float64), float, float]
+        a list with the following items:
+
+        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
+        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
+        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState);
+        * **energy** of the result (``value`` of ENERGY outputState);
+        * **entropy** of the result (if the ENTROPY outputState is present).
+
+    time_scale :  TimeScale
+        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+
+    name : str : default KWTA-<index>
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Projection;
+        if not is specified, a default is assigned by `MechanismRegistry`
+        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    Returns
+    -------
+    instance of KWTA : KWTA
+
     """
 
     componentType = KWTA
@@ -66,74 +365,47 @@ class KWTA(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states: tc.optional(tc.any(list, dict)) = None,
-                 gain=1,
-                 bias=0,
-                 initial_value=None,
-                 matrix=None,  # None defaults to a hollow uniform inhibition matrix
+                 function=Logistic,
+                 matrix=None,
                  auto: is_numeric_or_none=None,
                  hetero: is_numeric_or_none=None,
+                 initial_value=None,
                  decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
+                 inhibition_only=True,
                  range=None,
-                 output_states: tc.optional(tc.any(list, dict)) = [RESULT],
+                 input_states: tc.optional(tc.any(list, dict)) = None,
+                 output_states: tc.optional(tc.any(list, dict))=None,
                  time_scale=TimeScale.TRIAL,
                  params=None,
                  name=None,
                  prefs: is_pref_set = None,
                  context=componentType + INITIALIZING,
                  ):
-
-        kwta_log_function = Logistic(gain=gain, bias=bias) # the user doesn't get to choose the function of the KWTA
-
-        if default_variable is None and size is None:
-            default_variable = self.variableClassDefault
-
-        # IMPLEMENTATION NOTE: somewhat redundant with the call to _handle_size() in Component: but this allows us
-        # to append zeros to default_variable immediately below, rather than wait to do it in
-        # _instantiate_attributes_before_function or elsewhere: the longer we wait, the more bugs are likely to exist
-        default_variable = self._handle_size(size, default_variable)
-
-        # append an array of zeros to default_variable, to represent the zero outside input to the inhibition vector.
-        d = list(default_variable)
-        d.append(np.zeros(len(default_variable[0])))
-        default_variable = np.array(d)
-
-        # region set up the additional input_state that will represent inhibition
-        if isinstance(input_states, dict):
-            input_states = [input_states]
-
-        if input_states is None or len(input_states) == 0:
-            input_states = ["Default_input_state"]
-
-        if isinstance(input_states, list) and len(input_states) > 1:
-            # probably useless since self never has an attribute `prefs` at this point?
-            if hasattr(self, 'prefs') and hasattr(self.prefs, kpVerbosePref) and self.prefs.verbosePref:
-                warnings.warn("kWTA adjusts only the FIRST input state. If you have multiple input states, "
-                              "only the primary one will be adjusted to have k values above the threshold.")
-
-        input_states.append("Inhibition_input_state")
-        # endregion
+        if output_states is None:
+            output_states = [RESULT]
 
         params = self._assign_args_to_param_dicts(input_states=input_states,
                                                   k_value=k_value,
                                                   threshold=threshold,
-                                                  ratio=ratio)
-        # this defaults the matrix to be a hollow uniform inhibition matrix
+                                                  ratio=ratio,
+                                                  inhibition_only=inhibition_only)
+
+        # this defaults the matrix to be an identity matrix (self excitation)
         if matrix is None:
             if auto is None:
-                auto = 0
+                auto = 5 # this value is bad: there should be a better way to estimate this?
             if hetero is None:
-                hetero = -1
+                hetero = 0
 
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_states=input_states,
-                         function=kwta_log_function,
+                         function=function,
                          matrix=matrix,
                          auto=auto,
                          hetero=hetero,
@@ -149,68 +421,6 @@ class KWTA(RecurrentTransferMechanism):
                          prefs=prefs,
                          context=context)
 
-    # def _instantiate_input_states(self, context=None):
-    #     # this code is copied heavily from InputState.py, devel branch 6/26/17
-    #     # the reason for this is to override the param-check that causes InputState to throw an exception
-    #     # because the number of input_states is different from the length of the mechanism's "variable"
-    #     owner = self
-    #
-    #     # extendedSelfVariable = list(self.variable)
-    #     # extendedSelfVariable.append(np.ones(self.size[0]))
-    #     # extendedSelfVariable = np.array(extendedSelfVariable)
-    #
-    #     from PsyNeuLink.Components.States.State import _instantiate_state_list
-    #     state_list = _instantiate_state_list(owner=owner,
-    #                                          state_list=owner.input_states,
-    #                                          state_type=InputState,
-    #                                          state_param_identifier=INPUT_STATE,
-    #                                          constraint_value=self.variable,
-    #                                          constraint_value_name="kwta-extended function variable",
-    #                                          context=context)
-    #
-    #     # FIX: 5/23/17:  SHOULD APPEND THIS TO LIST OF EXISTING INPUT_STATES RATHER THAN JUST ASSIGN;
-    #     #                THAT WAY CAN USE INCREMENTALLY IN COMPOSITION
-    #     # if context and 'COMMAND_LINE' in context:
-    #     #     if owner.input_states:
-    #     #         owner.input_states.extend(state_list)
-    #     #     else:
-    #     #         owner.input_states = state_list
-    #     # else:
-    #     #     if owner._input_states:
-    #     #         owner._input_states.extend(state_list)
-    #     #     else:
-    #     #         owner._input_states = state_list
-    #
-    #     # FIX: This is a hack to avoid recursive calls to assign_params, in which output_states never gets assigned
-    #     # FIX: Hack to prevent recursion in calls to setter and assign_params
-    #     if context and 'COMMAND_LINE' in context:
-    #         owner.input_states = state_list
-    #     else:
-    #         owner._input_states = state_list
-    #
-    #     # Check that number of input_states and their variables are consistent with owner.variable,
-    #     #    and adjust the latter if not
-    #     for i in builtins.range(len(owner.input_states)):
-    #         input_state = owner.input_states[i]
-    #         try:
-    #             variable_item_is_OK = iscompatible(self.variable[i], input_state.value)
-    #             if not variable_item_is_OK:
-    #                 break
-    #         except IndexError:
-    #             variable_item_is_OK = False
-    #             break
-    #
-    #     if not variable_item_is_OK:
-    #         old_variable = owner.variable
-    #         new_variable = []
-    #         for state_name, state in owner.input_states:
-    #             new_variable.append(state.value)
-    #         owner.variable = np.array(new_variable)
-    #         if owner.verbosePref:
-    #             warnings.warn("Variable for {} ({}) has been adjusted "
-    #                           "to match number and format of its input_states: ({})".
-    #                           format(old_variable, append_type_to_name(owner), owner.variable))
-
     # adds indexOfInhibitionInputState to the attributes of KWTA
     def _instantiate_attributes_before_function(self, context=None):
 
@@ -221,9 +431,26 @@ class KWTA(RecurrentTransferMechanism):
         # so it shouldn't be a problem)
         self.indexOfInhibitionInputState = len(self.input_states) - 1
 
+        # try:
+        #     int_k_value = int(self.k_value[0])
+        # except TypeError: # if self.k_value is a single value rather than a list or array
+        #     int_k_value = int(self.k_value)
+        # # ^ this is hacky but necessary for now, since something is
+        # # incorrectly turning self.k_value into an array of floats
+        # n = self.size[0]
+        # if (self.k_value[0] > 0) and (self.k_value[0] < 1):
+        #     k = int(round(self.k_value[0] * n))
+        # elif (int_k_value < 0):
+        #     k = n - int_k_value
+        # else:
+        #     k = int_k_value
+        #
+        # self.int_k = k
+
+    def _kwta_scale(self, current_input, context=None):
         try:
             int_k_value = int(self.k_value[0])
-        except:
+        except TypeError: # if self.k_value is a single value rather than a list or array
             int_k_value = int(self.k_value)
         # ^ this is hacky but necessary for now, since something is
         # incorrectly turning self.k_value into an array of floats
@@ -234,116 +461,35 @@ class KWTA(RecurrentTransferMechanism):
             k = n - int_k_value
         else:
             k = int_k_value
+        # k = self.int_k
 
-        self.int_k = k
+        diffs = self.threshold - current_input[0]
 
-        a = get_auto_matrix(self.auto, self.size[0])
-        h = get_hetero_matrix(self.hetero, self.size[0])
-        mat = a + h
-        flat_mat = mat.flatten()
-        if not (flat_mat <= 0).all() and not (flat_mat >= 0).all():
-            raise KWTAError("matrix {} for {} should be non-positive, or "
-                            "non-negative. Mixing positive and negative values can create non-supported "
-                            "inhibition vectors".format(mat, self))
+        sorted_diffs = sorted(diffs)
 
-    # this function returns the KWTA-scaled current_input, which is scaled based on
-    # self.k_value, self.threshold, self.ratio, and of course the inhibition vector
-    def _kwta_scale(self, current_input, context=None):
+        if k == 0:
+            final_diff = sorted_diffs[k]
+        elif k == len(sorted_diffs):
+            final_diff = sorted_diffs[k - 1]
+        elif k > len(sorted_diffs):
+            raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
+                            format(k, current_input[0], self.name))
+        else:
+            final_diff = sorted_diffs[k] * self.ratio + sorted_diffs[k-1] * (1 - self.ratio)
 
-        k = self.int_k
+        if self.inhibition_only and final_diff > 0:
+            final_diff = 0
 
-        inhibVector = self.input_states[self.indexOfInhibitionInputState].value  # inhibVector is the inhibition input
-        inhibVector = self._validate_inhib(inhib=inhibVector, inp=current_input, context=context)
-
-        if not isinstance(current_input, np.ndarray):
-            logger.warning("input ({}) of type {} was not a numpy array: this may cause unexpected KWTA behavior".
-                           format(current_input, current_input.__class__.__name__))
-
-        sortedInput = sorted(current_input, reverse=True)  # sortedInput is the values of current_input, sorted
-
-        # current_input[indices[i - 1]] is the i-th largest element of current_input
-        indices = []
-        for i in builtins.range(int(self.size[0])):
-            j = 0
-            w = np.where(current_input == sortedInput[i])
-            while w[0][j] in indices:
-                j += 1
-            indices.append(np.where(current_input == sortedInput[i])[0][j])
-        indices = np.array(indices)
-
-        # scales[i] is the scale on inhibition that would put the (i+1)-th largest
-        # element in current_input at the threshold
-        scales = np.zeros(int(self.size[0]))
-        for i in builtins.range(int(self.size[0])):
-            inhib = inhibVector[indices[i]]
-            if inhib == 0:
-                pass
-            else:
-                scales[i] = (self.threshold - current_input[indices[i]]) / inhib
-
-        # ratio determines where between the two scales our final scale will lie
-        # for most situations where the inhibition vector is negative, a lower ratio means more inhibition
-        sk = sorted(scales, reverse=True)[k]
-        skMinusOne = sorted(scales, reverse=True)[k - 1]
-        final_scale = sk * self.ratio + skMinusOne * (1 - self.ratio)
-
-        out = current_input + final_scale * inhibVector
-
-        if (sum(out > self.threshold) > k) or (sum(out < self.threshold) > len(out) - k):
-            warnings.warn("KWTA scaling was not fully successful. The input was {}, the inhibition vector was {}, "
-                          "and the KWTA-scaled input was {}".format(current_input, inhibVector, out))
-
-        return out
-
-    def _validate_inhib(self, inhib, inp, context=None):
-        inhib = np.array(inhib)
-        if (inhib == 0).all():
-            if type(context) == str and INITIALIZING not in context:
-                logger.info("inhib vector ({}) was all zeros (while input was ({})), so inhibition will be uniform".
-                      format(inhib, inp))
-            inhib = np.ones(int(self.size[0]))
-        if (inhib > 0).all():
-            inhib = -1 * inhib
-        if (inhib == 0).any():
-            raise KWTAError("inhibition vector ({}) for {} contained some, but not all, zeros: not "
-                            "currently supported".format(inhib, self))
-        if (inhib > 0).any():
-            raise KWTAError("inhibition vector ({}) for {} was not all positive or all negative: not "
-                            "currently supported".format(inhib, self))
-        if len(inhib) != len(inp):
-            raise KWTAError("The inhibition vector ({}) for {} is of a different length than the"
-                            " current primary input vector ({}).".format(inhib, self, input))
-
-        return inhib
-
-    # # deprecated: used when variable was length 1.
-    # def execute(self,
-    #             input=None,
-    #             runtime_params=None,
-    #             clock=CentralClock,
-    #             time_scale=TimeScale.TRIAL,
-    #             ignore_execution_id = False,
-    #             context=None):
-    #     context = context or NO_CONTEXT
-    #     if EXECUTING not in context and EVC_SIMULATION not in context:
-    #         if input is None:
-    #             input = self.variableInstanceDefault
-    #         if isinstance(input, list):
-    #             input.append(np.zeros(self.size[0]))
-    #         elif isinstance(input, np.ndarray):
-    #             new_input = list(input)
-    #             new_input.append(np.zeros(self.size[0]))
-    #             input = np.array(new_input)
-    #
-    #     return super().execute(input=input,
-    #                            runtime_params=runtime_params,
-    #                            clock=clock,
-    #                            time_scale=time_scale,
-    #                            ignore_execution_id=ignore_execution_id,
-    #                            context=context)
-
-    # this is the exact same as _execute in TransferMechanism, except that this _execute calls _kwta_scale()
-    # and implements decay as self.previous_input *= self.decay
+        new_input = np.array(current_input[0] + final_diff)
+        if (sum(new_input > self.threshold) > k):
+            warnings.warn("KWTA scaling was not successful: the result was too high. The original input was {}, "
+                          "and the KWTA-scaled result was {}".format(current_input, new_input))
+        new_input = list(new_input)
+        for i in range(1, len(current_input)):
+            new_input.append(current_input[i])
+        print('current_input: ', current_input)
+        print('new_input: ', new_input)
+        return np.atleast_2d(new_input)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of matrix and decay.
@@ -357,56 +503,49 @@ class KWTA(RecurrentTransferMechanism):
                 if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
                     raise KWTAError("ratio parameter ({}) for {} must be a single number".format(ratio_param, self))
 
+            if ratio_param > 1 or ratio_param < 0:
+                raise KWTAError("ratio parameter ({}) for {} must be between 0 and 1".format(ratio_param, self))
+
         if K_VALUE in target_set:
             k_param = target_set[K_VALUE]
             if not isinstance(k_param, numbers.Real):
                 if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
+            if (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+                k_num = k_param[0]
+            else:
+                k_num = k_param
+            if not isinstance(k_num, int):
+                try:
+                    if not k_num.is_integer() and (k_num > 1 or k_num < 0):
+                        raise KWTAError("k-value parameter ({}) for {} must be an integer, or between 0 and 1.".
+                                        format(k_param, self))
+                except AttributeError:
+                    raise KWTAError("k-value parameter ({}) for {} was an unexpected type.".format(k_param, self))
+            if abs(k_num) > self.size[0]:
+                raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
+                                format(k_param, self))
 
         if THRESHOLD in target_set:
             threshold_param = target_set[THRESHOLD]
             if not isinstance(threshold_param, numbers.Real):
                 if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):
-                    raise KWTAError(
-                        "k-value parameter ({}) for {} must be a single number".format(threshold_param, self))
-
-        # Validate MATRIX
-        if MATRIX in target_set:
-
-            matrix_param = target_set[MATRIX]
-            size = len(self.variable[0])
-            if isinstance(matrix_param, MappingProjection):
-                matrix = matrix_param.matrix
-            else:
-                matrix = get_matrix(matrix_param, size, size)
-            if matrix is not None:
-                flat_mat = matrix.flatten()
-                if not (flat_mat <= 0).all() and not (flat_mat >= 0).all():
-                    raise KWTAError("matrix {} (from matrix specification {}) for {} should be non-positive, or "
-                                    "non-negative. Mixing positive and negative values can create non-supported "
-                                    "inhibition vectors".format(matrix, matrix_param, self))
-
-            # 8/1/17 CW: if matrix is not all non-negative or non-positive, then it may result in inappropriate
-            # inhibition vectors since KWTA currently does not support inhibVectors that are part positive part negative
+                    raise KWTAError("k-value parameter ({}) for {} must be a single number".
+                                    format(threshold_param, self))
 
     def execute(self,
                 input=None,
                 runtime_params=None,
                 clock=CentralClock,
                 time_scale=TimeScale.TRIAL,
-                ignore_execution_id = False,
+                ignore_execution_id=False,
                 context=None):
         if isinstance(input, str) or (isinstance(input, (list, np.ndarray)) and isinstance(input[0], str)):
             raise KWTAError("input ({}) to {} was a string, which is not supported for {}".
                             format(input, self, self.__class__.__name__))
-        if input is not None:
-            input = list(np.atleast_2d(input))
-            if (input is not None) and len(input) == len(self.variable) - 1:
-                input.append(np.zeros(self.size[0]))
-            input = np.array(input)
-
         return super().execute(input=input, runtime_params=runtime_params, clock=clock, time_scale=time_scale,
                                ignore_execution_id=ignore_execution_id, context=context)
+
     def _execute(self,
                 variable=None,
                 runtime_params=None,
@@ -414,7 +553,7 @@ class KWTA(RecurrentTransferMechanism):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        self.variable[0] = self._kwta_scale(self.variable[0], context=context)
+        self.variable = self._kwta_scale(self.variable, context=context)
 
         return super()._execute(variable=self.variable,
                        runtime_params=runtime_params,
@@ -557,20 +696,49 @@ class KWTA(RecurrentTransferMechanism):
         # return output_vector
         # #endregion
 
-    @tc.typecheck
-    def _instantiate_recurrent_projection(self,
-                                          mech: Mechanism_Base,
-                                          matrix=FULL_CONNECTIVITY_MATRIX,
-                                          context=None):
-        """Instantiate a MappingProjection from mech to itself
+    # @tc.typecheck
+    # def _instantiate_recurrent_projection(self,
+    #                                       mech: Mechanism_Base,
+    #                                       matrix=FULL_CONNECTIVITY_MATRIX,
+    #                                       context=None):
+    #     """Instantiate a MappingProjection from mech to itself
+    #
+    #     """
+    #
+    #     if isinstance(matrix, str):
+    #         size = len(mech.variable[0])
+    #         matrix = get_matrix(matrix, size, size)
+    #
+    #     return AutoAssociativeProjection(sender=mech,
+    #                                      receiver=mech.input_states[mech.indexOfInhibitionInputState],
+    #                                      matrix=matrix,
+    #                                      name=mech.name + ' recurrent projection')
 
-        """
-
-        if isinstance(matrix, str):
-            size = len(mech.variable[0])
-            matrix = get_matrix(matrix, size, size)
-
-        return AutoAssociativeProjection(sender=mech,
-                                         receiver=mech.input_states[mech.indexOfInhibitionInputState],
-                                         matrix=matrix,
-                                         name=mech.name + ' recurrent projection')
+    # @property
+    # def k_value(self):
+    #     return super(KWTA, self.__class__).k_value.fget(self)
+    #
+    # @k_value.setter
+    # def k_value(self, setting):
+    #     super(KWTA, self.__class__).k_value.fset(self, setting)
+    #     try:
+    #         int_k_value = int(setting[0])
+    #     except TypeError: # if setting is a single value rather than a list or array
+    #         int_k_value = int(setting)
+    #     n = self.size[0]
+    #     if (setting > 0) and (setting < 1):
+    #         k = int(round(setting * n))
+    #     elif (int_k_value < 0):
+    #         k = n - int_k_value
+    #     else:
+    #         k = int_k_value
+    #     self._int_k = k
+    #
+    # @property
+    # def int_k(self):
+    #     return self._int_k
+    #
+    # @int_k.setter
+    # def int_k(self, setting):
+    #     self._int_k = setting
+    #     self.k_value = setting
