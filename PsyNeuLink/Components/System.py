@@ -2281,6 +2281,9 @@ class System_Base(System):
             if `True`, calls the :py:meth:`initialize <System_Base.initialize>` method of the System before a
             sequence of executions.
 
+        initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
+            the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
+
         targets : List[input] or np.ndarray(input) : default `None`
             the target values for the LearningMechanisms of the System for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
