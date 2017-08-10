@@ -510,7 +510,7 @@ class Component(object):
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when process, mechanism, state and projections objects are updated);
+            (e.g., it is the one called when Process, Mechanism, State and Projections objects are updated);
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
@@ -572,7 +572,7 @@ class Component(object):
     Class attributes:
         + className
         + suffix - " " + className (used to create subclass and instance names)
-        + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
+        + componentCategory - category of Component (i.e., Process, Mechanism, Projection, Function)
         + componentType - type of Component within a category
                              (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;

@@ -13,15 +13,15 @@ Overview
 --------
 
 A CompositionInterfaceMechanism stores an input from the outside world so that the input can be delivered to a
-Composition's origin mechanism via a projection.
+Composition's `ORIGIN` Mechanism via a Projection.
 
 .. _CompositionInterfaceMechanism_Creation:
 
 Creating an CompositionInterfaceMechanism
 -------------------------------
 
-A CompositionInterfaceMechanism is created automatically when an Origin mechanism is identified in a Composition. When
-created, the CompositionInterfaceMechanism's outputState is set directly by the composition. This mechanism should never
+A CompositionInterfaceMechanism is created automatically when an `ORIGIN` Mechanism is identified in a Composition. When
+created, the CompositionInterfaceMechanism's OutputState is set directly by the Composition. This Mechanism should never
 be executed, and should never be created by a user.
 
 .. _CompositionInterfaceMechanism_Structure
@@ -72,11 +72,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     ---------
 
     default_input_value : number, list or np.ndarray
-        the input to the mechanism to use if none is provided in a call to its
+        the input to the Mechanism to use if none is provided in a call to its
         `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
         `function <CompositionInterfaceMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
-        mechanism.
+        Mechanism.
 
     size : int, list or np.ndarray of ints
         specifies default_input_value as array(s) of zeros if **default_input_value** is not passed as an argument;
@@ -87,22 +87,22 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         of values, and return one of the same form.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed on the TIME_STEP or TRIAL time scale.
+        specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
         This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the mechanism, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a custom function and its
-        parameters.  Values specified for parameters in the dictionary override any assigned to those parameters in
-        arguments of the constructor.
+        the `Mechanism`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a custom
+        function and its parameters.  Values specified for parameters in the dictionary override any assigned to those
+        parameters in arguments of the constructor.
 
     name : str : default CompositionInterfaceMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
