@@ -87,10 +87,10 @@ def register_category(entry,
         # #
         # # Dictionary of registered Mechanism subclasses; each entry has:
         # #     - key: Mechanism component type name (componentType)
-        # #     - value: MechanismEntry tuple (mechanism, instanceCount, default)
+        # #     - value: MechanismEntry tuple (Mechanism, instanceCount, default)
         # #              Notes:
         # #              * instanceCount is incremented each time a new default instance is created
-        # #              * only one default is allowed;  if a mechanism registers itself as default,
+        # #              * only one default is allowed;  if a Mechanism registers itself as default,
         # #                  that displaces whatever was the default previously;  initially it is DDM
         #
         # # MechanismRegistry = {DefaultReceiver.name:(DefaultReceiverMechanism, 1)}

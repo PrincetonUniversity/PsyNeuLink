@@ -35,34 +35,28 @@ A System is a `Composition` that is a collection of `Processes <Process>` all of
 Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
 `Projections <Projection>` between Mechanisms in different Processes within the System are permitted,
 as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
-support ESP).  A System can include two types of Mechanisms:
-
-* `ProcessingMechanism`d
-    These receive input from one or more `Projections <Projection>`, transform their input in some way,
-    and assign the result as their output.
-
-* `AdaptiveMechanism`
-    These are used to adjust the operation of other components.  There are two types:
-    `LearningMechanisms <LearningMechanism>` that adjust Projections, and `ControlMechanisms <ControlMechanism>`
-    that adjust the parameters of other Mechanisms and/or their functions.
+support ESP).  Every System is associated with a `controller <System_Base.controller>` -- a `ControlMechanism` that
+can be used to control parameters of other `Mechanisms <Mechanism>` (or their `functions <Mechanism_Base.function>`
+within the System.
 
 .. _System_Creation:
 
 Creating a System
 -----------------
 
-Systems are created by calling :py:func:`system`.  If no arguments are provided, a System with a single `Process`
-containing a single `default_mechanism <Mechanism_Base.default_mechanism>` will be created.  More generally, a System
-is created from one or more `Processes <Process>` that are specified in the **processes** argument of its constructor.
-Whenever a System is created, a `ControlMechanism <ControlMechanism>` is created for it and assigned as its
-`controller`.  The controller can be specified by assigning an existing ControlMechanism to the **controller**
-argument of the System's constructor, or specifying a class of ControlMechanism;  if none is specified,
+Systems are created by calling the `system` command.  If no arguments are provided, a System with a single `Process`
+containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
+created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
+command, and listed in its `processes <System_Base.processes>` attribute.   Whenever a System is created, a
+`ControlMechanism` is created for it and assigned as its `controller <System_Base.controller>`.  The `controller
+<System_Base.controller>` can be specified by assigning an existing ControlMechanism to the **controller** argument
+of the `system` comman, or specifying a class of ControlMechanism; if none is specified,
 a `DefaultControlMechanism` is created.
 
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
-   must be included in the **processes** argument of the constructor for the System.
+   must be included in the **processes** argument of the `system` command.
 
 
 .. _System_Structure:
@@ -76,42 +70,45 @@ Graph
 ~~~~~
 
 When a System is created, a graph is constructed that describes the `Projections <Projection>` (edges) among its
-`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph` attribute.  A System's graph can be
-displayed using its `show_graph` method.  The graph is stored as a dictionary of dependencies, that can be passed to
-graph theoretical tools for analysis.  A System can have recurrent Processing pathways, such as feedback loops, in
-which case the System will have a cyclic graph.  PsyNeuLink also uses the graph of a System to determine the order
-in which its Mechanisms are executed.  In order to do so in an orderly manner, however, the graph must be acyclic.
-So, for execution, PsyNeuLink constructs an `executionGraph` from the System's `graph`. If the  System is acyclic,
-these are the same. If the System is cyclic, then the `executionGraph` is a subset of the `graph` in which the
-dependencies (edges) associated with Projections that close a loop have been removed. Note that this only impacts
-the order of execution; the Projections themselves remain in effect, and will be fully functional during the
-execution of the affected Mechanisms (see `System_Execution` below for a more detailed description).
+`Mechanisms <Mechanism>` (nodes). The graph is assigned to the System's `graph <System_Base.graph>` attribute.  A
+System's `graph <System_Base.graph>` can be displayed using its `System_Base.show_graph` method.  The `graph
+<System_Base.graph>` is stored as a dictionary of dependencies that can be passed to graph theoretical tools for
+analysis.  A System can have recurrent Processing pathways, such as feedback loops;  that is, the System's `graph
+<System_Base.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System_Base.graph>` to determine the order in
+which its Mechanisms are executed.  To do so in an orderly manner, however, the graph must be *acyclic*.  To address
+this, PsyNeuLink constructs an `executionGraph <System_Base.executionGraph>` from the System's `graph
+<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `executionGraph
+<System_Base.executionGraph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
+associated with Projections that close a loop have been removed. Note that this only impacts the order of execution;
+the Projections themselves remain in effect, and will be fully functional during the execution of the Mechanisms
+to and from which they project (see `System_Execution` below for a more detailed description).
 
 .. _System_Mechanisms:
 
 Mechanisms
 ~~~~~~~~~~
 
-The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph`
-and/or the role they play in a System:
+The `Mechanisms <Mechanism>` in a System are assigned designations based on the position they occupy in the `graph
+<System_Base.graph>` and/or the role they play in a System:
 
-    `ORIGIN`: receives input to the System, and does not receive a `Projection` from any other
-    `ProcessingMechanisms <ProcessingMechanism>`;
+    `ORIGIN`: receives input to the System (provided in the `execute <System_Base.execute>` or `run
+    <System_Base.run> method), and does not receive a `Projection` from any other `ProcessingMechanisms
+    <ProcessingMechanism>`.
 
-    `TERMINAL`: provides output from the System, and does not send Projections to any other ProcessingMechanisms;
+    `TERMINAL`: provides output from the System, and does not send Projections to any other ProcessingMechanisms.
 
-    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` Mechanism;
+    `SINGLETON`: both an `ORIGIN` and a `TERMINAL` Mechanism.
 
-    `INITIALIZE_CYCLE`: sends a Projection that closes a recurrent loop;
-    can be assigned an initial value;
+    `INITIALIZE_CYCLE`: sends a Projection that closes a recurrent loop; can be assigned an initial value.
 
-    `CYCLE`: receives a Projection that closes a recurrent loop;
+    `CYCLE`: receives a Projection that closes a recurrent loop.
 
-    `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values;
+    `CONTROL`: monitors the value of another Mechanism for use in controlling parameter values.
 
-    `LEARNING`: monitors the value of another Mechanism for use in learning;
+    `LEARNING`: monitors the value of another Mechanism for use in learning.
 
-    `TARGET`: ObjectiveMechanism that monitors a `TERMINAL` Mechanism of a Process
+    `TARGET`: ComparatorMechanism that monitors a `TERMINAL` Mechanism of a Process and compares it to a corresponding
+    value provided in the `execute <System_Base.execute>` or `run <System_Base.run> method.
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
@@ -124,14 +121,38 @@ and/or the role they play in a System:
     .. note: designations are stored in the Mechanism.systems attribute (see _instantiate_graph below, and Mechanism)
 
 
-COMMENT:
-    .. _System_Control:
-    Control
-    ~~~~~~~
+.. _System_Control:
 
-    .. _System_Learning:
-    Learning
-    ~~~~~~~~
+Control
+~~~~~~~
+
+Every System is assigned a `controller <System_Base.controller>` -- a `ControlMechanism` that can be used to control
+parameters of other `Mechanisms <Mechanism>` in the System and/or their `function <Mechanism.function>`.
+If the `controller <System_Base.controller>` is not specified, a `DefaultControlMechanism` is created, and
+a `ControlSignal` and `ControlProjection` are assigned to each parameter that has been `specified for control
+<ControlMechanism_Control_Signals>`.  See `ControlMechanism` and `ModulatorySignals_Modulation` for additional details,
+of how control operates, and `System_Execution_Control` below for a description of how it is engaged when a System is
+executed.  The control Components of a System can be displayed using the System's `System_Base.show_graph` method with
+its **show_control** argument assigned as `True`.
+
+.. _System_Learning:
+
+Learning
+~~~~~~~~
+
+A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
+<System_Base.processes>`
+XXX
+
+is assigned a `controller <System_Base.controller>` -- a `ControlMechanism` that can be used to control
+parameters of other `Mechanisms <Mechanism>` in the System and/or their `function <Mechanism.function>`.
+If the `controller <System_Base.controller>` is not specified, a `DefaultControlMechanism` is created, and
+a `ControlSignal` and `ControlProjection` are assigned to each parameter that has been `specified for control
+<ControlMechanism_Control_Signals>`.  See `ControlMechanism` for additional details, and `System_Execution_Control`
+below for a description of how operates when a System is executed.
+
+The learning Components of a System can be displayed using the System's `System_Base.show_graph` method with
+its **show_learning** argument assigned as `True`.
 
     Based on Process
 
@@ -202,7 +223,7 @@ devoid of recurrent loops).  While the `executionGraph` is acyclic, all recurren
 intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at the start of execution.
 The order in which Components are executed can also be customized, using the System's Scheduler in combination with
 `Condition` specifications for individual Components, to execute different Components at different time scales, or to
-introduce dependencies among them (e.g., require that a recurrent mechanism settle before another one execute --
+introduce dependencies among them (e.g., require that a recurrent Mechanism settle before another one execute --
 see `example <Condition_Recurrent_Example>`).
 
 
@@ -255,7 +276,7 @@ COMMENT:
       confusing results.
 
    Module Contents
-   system() factory method:  instantiate system
+   system() factory method:  instantiate System
    System_Base: class definition
 COMMENT
 
@@ -1142,25 +1163,25 @@ class System_Base(System):
         """Construct graph (full) and executionGraph (acyclic) of system
 
         Instantate a graph of all of the mechanisms in the system and their dependencies,
-            designate a type for each mechanism in the graph,
+            designate a type for each Mechanism in the graph,
             instantiate the executionGraph, a subset of the graph with any cycles removed,
                 and topologically sorted into a sequentially ordered list of sets
                 containing mechanisms to be executed at the same time
 
         graph contains a dictionary of dependency sets for all mechanisms in the system:
             reciever_object_item : {sender_object_item, sender_object_item...}
-        executionGraph contains an acyclic subset of graph used to determine sequence of mechanism execution;
+        executionGraph contains an acyclic subset of graph used to determine sequence of Mechanism execution;
 
         They are constructed as follows:
-            sequence through self.processes;  for each process:
-                begin with process.firstMechanism (assign as ORIGIN if it doesn't receive any projections)
-                traverse all projections
-                for each mechanism encountered (receiver), assign to its dependency set the previous (sender) mechanism
+            sequence through self.processes;  for each Process:
+                begin with process.firstMechanism (assign as `ORIGIN` if it doesn't receive any Projections)
+                traverse all Projections
+                for each Mechanism encountered (receiver), assign to its dependency set the previous (sender) Mechanism
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
-                    eliminate the dependent from the executionGraph, and designate it as CYCLE (unless it is an ORIGIN)
-                    designate the sender as INITIALIZE_CYCLE (it can receive and initial_value specification)
-                if a mechanism doe not project to any other ProcessingMechanisms (ignore learning and control mechs):
-                    assign as TERMINAL unless it is already an ORIGIN, in which case assign as SINGLETON
+                    eliminate the dependent from executionGraph, and designate it as `CYCLE` (unless it is an `ORIGIN`)
+                    designate the sender as `INITIALIZE_CYCLE` (it can receive and initial_value specification)
+                if a Mechanism doe not project to any other ProcessingMechanisms (ignore learning and control mechs):
+                    assign as `TERMINAL` unless it is already an `ORIGIN`, in which case assign as `SINGLETON`
 
         Construct execution_sets and exeuction_list
 
@@ -1381,11 +1402,11 @@ class System_Base(System):
 
         # Print graph
         if self.verbosePref:
-            warnings.warn("In the system graph for \'{}\':".format(self.name))
+            warnings.warn("In the System graph for \'{}\':".format(self.name))
             for receiver_object_item, dep_set in self.executionGraph.items():
                 mech = receiver_object_item
                 if not dep_set:
-                    print("\t\'{}\' is an {} mechanism".
+                    print("\t\'{}\' is an {} Mechanism".
                           format(mech.name, mech.systems[self]))
                 else:
                     status = mech.systems[self]
@@ -1393,7 +1414,7 @@ class System_Base(System):
                         status = 'a ' + status
                     elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
-                    print("\t\'{}\' is {} mechanism that receives projections from:".format(mech.name, status))
+                    print("\t\'{}\' is {} Mechanism that receives Projections from:".format(mech.name, status))
                     for sender_object_item in dep_set:
                         print("\t\t\'{}\'".format(sender_object_item.name))
 
@@ -1516,7 +1537,7 @@ class System_Base(System):
             for j in range(len(origin_mech.input_states)):
                 if len(self.variable[i][j]) != len(origin_mech.input_states[j].variable):
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
-                                      "corresponding ORIGIN mechanism ()".
+                                      "corresponding ORIGIN Mechanism ()".
                                       format(i,
                                              len(self.variable[i][j]),
                                              len(origin_mech.input_states[j].variable),
@@ -1653,8 +1674,8 @@ class System_Base(System):
                     # FIX:  NEED TO ALSO REASSIGN learning_mech.function_object.error_matrix TO ONE FOR sender_mech
                     if error_signal_projection:
                         if self.verbosePref:
-                            warnings.warn("Although {} a TERMINAL mechanism for the {} process, it is an "
-                                          "internal mechanism for other proesses in the {} system; therefore "
+                            warnings.warn("Although {} a TERMINAL Mechanism for the {} Process, it is an "
+                                          "INTERNAL Mechanism for other Proesses in the {} System; therefore "
                                           "its ObjectiveMechanism ({}) will be replaced with the {} LearningMechanism".
                                           format(error_source_mech.name,
                                                  process.name,
@@ -1842,7 +1863,7 @@ class System_Base(System):
             #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
             if len(self.targets[i]) != len(target_mech_TARGET_input_state.variable):
                 raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
-                                  "expected for its TARGET mechanism {}".
+                                  "expected for its TARGET Mechanism {}".
                                    format(len(self.targets[i]),
                                           self.targets[i],
                                           len(target_mech_TARGET_input_state.variable),
@@ -1911,16 +1932,16 @@ class System_Base(System):
             - the input arg in system.execute() or run() is provided as input to ORIGIN mechanisms (and system.input);
                 As with a process, ORIGIN mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
-            - execute() calls mechanism.execute() for each mechanism in its execute_graph in sequence
+            - execute() calls Mechanism.execute() for each Mechanism in its execute_graph in sequence
             - outputs of TERMINAL mechanisms are assigned as system.ouputValue
             - system.controller is executed after execution of all mechanisms in the system
             - notes:
-                * the same mechanism can be listed more than once in a system, inducing recurrent processing
+                * the same Mechanism can be listed more than once in a System, inducing recurrent processing
 
         Arguments
         ---------
         input : list or ndarray
-            a list or array of input value arrays, one for each `ORIGIN` mechanism in the system.
+            a list or array of input value arrays, one for each `ORIGIN` Mechanism in the System.
 
             .. [TBI: time_scale : TimeScale : default TimeScale.TRIAL
                specifies a default TimeScale for the system]
@@ -1930,7 +1951,7 @@ class System_Base(System):
         Returns
         -------
         output values of system : 3d ndarray
-            Each item is a 2d array that contains arrays for each outputState.value of each TERMINAL mechanism
+            Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
 
         """
         if self.scheduler_processing is None:
@@ -2075,7 +2096,7 @@ class System_Base(System):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
             for mechanism in next_execution_set:
-                logger.debug('\tRunning mechanism {0}'.format(mechanism))
+                logger.debug('\tRunning Mechanism {0}'.format(mechanism))
                 for p in self.processes:
                     try:
                         rt_params = p.runtime_params_dict[mechanism]
@@ -2091,7 +2112,7 @@ class System_Base(System):
                                   # time_scale=time_scale,
                                   runtime_params=rt_params,
                                   context=context +
-                                          "| mechanism: " + mechanism.name +
+                                          "| Mechanism: " + mechanism.name +
                                           " [in processes: " + str(process_names) + "]")
 
 
@@ -2646,7 +2667,7 @@ class System_Base(System):
 
         Returns
         -------
-        all mechanisms in the system : List[mechanism]
+        all mechanisms in the system : List[Mechanism]
 
         """
         return self._allMechanisms.mechanisms
@@ -2882,11 +2903,11 @@ SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
 
 from PsyNeuLink.Components.States.OutputState import OutputState
 class SystemInputState(OutputState):
-    """Encodes target for the system and transmits it to a `TARGET` mechanism in the system
+    """Encodes target for the system and transmits it to a `TARGET` Mechanism in the System
 
     Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
     `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
-    mechanism of the system.
+    Mechanism of the System.
 
     .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
