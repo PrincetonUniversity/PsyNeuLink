@@ -218,7 +218,7 @@ and Compositions (combinations of Components that implement a model).</p>
 <dd><p class="first">A Mechanism takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
 uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to combine and/or transform these in some way, and makes the output
 available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-ProcessingMechansms and AdapativeMechanisms:</p>
+ProcessingMechanisms and AdaptiveMechanisms:</p>
 <ul class="last">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
@@ -362,7 +362,7 @@ State&#8217;s <code class="xref any docutils literal"><span class="pre">value</s
 <dt><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a></dt>
 <dd><p class="first last">A Function is the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> has a Function
 object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
-This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
+This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
 to modulation by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, and for Functions to be swapped out for one another
 or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
 non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
@@ -444,7 +444,7 @@ own set of preferences, as does every class of object.  Any preference for an ob
 to default to the value of any of its parent classes for that preference (e.g., an instance of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> can be assigned
 its own preference for reporting, or use the default value for all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
 all <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, or all <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  There are preferences for reporting to the
-console during execution, logging, warnings, and validation (useful for debugging, but suppressable for efficiency of
+console during execution, logging, warnings, and validation (useful for debugging, but suppressible for efficiency of
 execution).</p>
 </div>
 </div>

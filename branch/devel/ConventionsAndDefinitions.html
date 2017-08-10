@@ -197,7 +197,7 @@ and Compositions (combinations of Components that implement a model).</p>
 <li><p class="first"><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> - takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
 uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to combine and/or transform these in some way, and makes the output
 available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-ProcessingMechansms and AdapativeMechanisms:</p>
+ProcessingMechanisms and AdaptiveMechanisms:</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
@@ -364,7 +364,7 @@ they belong is run.  Compositions are run iteratively in <code class="xref any d
 composition is given an opportunity to execute.  By default, each Mechanism in a Composition executes exactly once
 per round of execution.  However, a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to specify one or more conditions for each Mechanism
 that determine whether it runs in a given round of execution.  This can be used to determine when a Mechanism begins
-and/or ends executing, how many times it executes or the frequency with which it exeuctes relative to other
+and/or ends executing, how many times it executes or the frequency with which it executes relative to other
 Mechanisms, as well as dependencies among Mechanisms (e.g., that one begins only when another has completed).</p>
 <p>Since Mechanisms can implement any function, Projections insure that they can &#8220;communicate&#8221; with
 each other seamlessly, and a Scheduler can be used to specify any pattern of execution among Mechanisms in a

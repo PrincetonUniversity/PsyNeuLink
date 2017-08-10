@@ -66,7 +66,7 @@ There are four types of Components in PsyNeuLink:  Mechanisms, Projections, Stat
      A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
      uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
      available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-     ProcessingMechansms and AdapativeMechanisms:
+     ProcessingMechanisms and AdaptiveMechanisms:
 
      + `ProcessingMechanism`
          Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
@@ -149,7 +149,7 @@ There are four types of Components in PsyNeuLink:  Mechanisms, Projections, Stat
 * `Functions <Function>`
    A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
    object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
-   This allows parameters to be maintained from one call of a ffunction to the next, for those parameters to be subject
+   This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
    to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
    or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
    non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
@@ -237,5 +237,5 @@ own set of preferences, as does every class of object.  Any preference for an ob
 to default to the value of any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
 its own preference for reporting, or use the default value for all `ProcessingMechanisms <ProcessingMechanism>`,
 all `Mechanisms <Mechanism>`, or all `Components <Component>`.  There are preferences for reporting to the
-console during execution, logging, warnings, and validation (useful for debugging, but suppressable for efficiency of
+console during execution, logging, warnings, and validation (useful for debugging, but suppressible for efficiency of
 execution).

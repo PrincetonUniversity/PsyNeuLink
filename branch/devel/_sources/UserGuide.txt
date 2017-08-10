@@ -34,7 +34,7 @@ Components
     information, taking the inputs to a model and generating its outputs. The primary types of ProcessingMechanisms
     are `TransferMechanisms <TransferMechanism>` (that perform a "memory-less" transformation of
     their input), IntegratorMechanisms (that maintain a memory of their prior state, and integrate that with new
-    inputs), and ObjectiveMechanisms (that evalute and/or compare different sources of input).
+    inputs), and ObjectiveMechanisms (that evaluate and/or compare different sources of input).
 
 
 
@@ -46,7 +46,7 @@ Components
 (`States <State>` and `Functions <Function>`), that are described in the section below on
 `Components <User_Guide_Components>`.  The other primary type of object, `Composition`, has two primary types:
 `Processes <Process>` and `Systems <System>` that allow Compositions of different degrees of size and complexity to
-be created.  These are described in the section below on `Compositions <User_Guide_Compnents>`.  In each case,
+be created.  These are described in the section below on `Compositions <User_Guide_Components>`.  In each case,
 examples are provided that illustrate how these objects are implemented, and that parallel those used in the
 interactive `Tutorial <LINK>`.
 

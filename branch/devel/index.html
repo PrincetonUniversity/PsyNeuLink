@@ -200,7 +200,7 @@ constraints as possible on what it is possible to implement or ask the model to 
 disparate existing models into a single, integrated system in which interactions among them can be examined.
 While it is fully general, and can be used to implement virtually any kind of model, it is less well suited to other
 kinds of efforts, that involve massively large computations and/or specialized functions and data types that it
-currenty does not support, such as:</p>
+currently does not support, such as:</p>
 <blockquote>
 <div><ul class="simple">
 <li>extensive model fitting</li>
@@ -229,7 +229,7 @@ to integration, documentation, and dissemination.</p>
 <div class="section" id="overview-and-sampler">
 <span id="id3"></span><h2>Overview and Sampler<a class="headerlink" href="#overview-and-sampler" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is written in Python, and conforms to the syntax and coding standards for the language.
-The secionts below provide some examples of what PsyNeuLink models look like and some of its capabilities.
+The sections below provide some examples of what PsyNeuLink models look like and some of its capabilities.
 <code class="xref any docutils literal"><span class="pre">Structure_Basic_Constructs</span></code> provides an overview of PsyNeuLink Components, Compositions, and their execution.
 The <code class="xref any docutils literal"><span class="pre">UsersGuide</span></code> provides a more thorough description of how PsyNeuLink is organized and its basic principles of
 operation.  The <code class="xref any docutils literal"><span class="pre">Tutorial</span></code> provides an interactive guide to the construction of models using PsyNeuLink.</p>
@@ -249,7 +249,7 @@ taking the inputs to a model and generating its outputs;  and ones that <em>modu
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information; and there
 LearningMechanisms, ControlMechanisms, and GatingMechanism that can be used to modulate those processes.</p>
-<p>Since Mechanisms can implement any function, Projections insure that they can &#8220;communicate&#8221; with
+<p>Since Mechanisms can implement any function, Projections ensure that they can &#8220;communicate&#8221; with
 each other seamlessly, and a Scheduler together with Conditions can be used to specify any pattern of execution among
 Mechanisms in a Composition, PsyNeuLink can be used to integrate Mechanisms of different types, levels of analysis,
 and/or time scales of operation, composing heterogeneous Components into a single integrated system.  This affords
@@ -322,7 +322,7 @@ trained using backpropagation simply by adding an argument to the constructor fo
                <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">Backpropation</span></code></a> is the default learning method, but PsyNeuLink also currently supports
+<p><a class="reference internal" href="Function.html#Function.BackPropagation" title="Function.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">Backpropagation</span></code></a> is the default learning method, but PsyNeuLink also currently supports
 <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, and others are currently being implemented (including Hebbian, Temporal
 Differences, and supervised learning for recurrent networks).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
@@ -369,7 +369,7 @@ as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
-<span class="n">recurent_layer</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">recurrent_layer</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 
 <span class="n">feed_forward_network</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 <span class="n">recurrent_network</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">hidden_layer</span><span class="p">,</span> <span class="n">recurrent_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
@@ -436,7 +436,7 @@ Instead, you can clone the github repo (<a class="reference external" href="http
 Clone the master branch.
 Download the package with the green &#8220;Clone or download&#8221; button on the right side of the page and &#8220;Download ZIP.&#8221;</p>
 <p>Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
-repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get acccess.</p>
+repo is currently private, so if the link leads to a dead page, reach out to one of the developers to get access.</p>
 <p>PsyNeuLink is compatible with any version of python 3, but the tutorial (see below) requires a 3.5 installation with
 the latest versions of IPython, jupyter, and matplotlib installed.</p>
 <p>To install the package, navigate to the cloned directory in a terminal,
