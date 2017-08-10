@@ -276,7 +276,7 @@ COMMENT:
       confusing results.
 
    Module Contents
-   system() factory method:  instantiate system
+   system() factory method:  instantiate System
    System_Base: class definition
 COMMENT
 
