@@ -97,10 +97,10 @@ description of the two formats.
 .. _Run_Nesting_Factors:
 
 * **Number of TRIALS**.  If the **inputs** argument contains the input for more than one `TRIAL`, then the outermost
-  level of the list, or axis 0 of the ndarray, is used for the `TRIAL` \s, each item of which contains the
+  level of the list, or axis 0 of the ndarray, is used for the `TRIAL` \\s, each item of which contains the
   set inputs for a given `TRIAL`.  Otherwise, it is used for the next relevant factor in the list below.  If the
-  number of inputs specified is less than the number of `TRIAL` \s, then the input list is cycled until the full
-  number of `TRIAL` \s is completed.
+  number of inputs specified is less than the number of `TRIAL` \\s, then the input list is cycled until the full
+  number of `TRIAL` \\s is completed.
 ..
 * **Number of Mechanisms.** If :keyword:`run` is used for a System, and it has more than one `ORIGIN` Mechanism, then
   the next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` Mechanisms, with
@@ -192,7 +192,7 @@ Process or System being run.  The key for each entry is the `ORIGIN` Mechanism, 
 or ndarray specifying the sequence of inputs for that Mechanism, one for each `TRIAL` to be run.  If a list is used,
 and the Mechanism has more than one InputState, then a sublist is used in each item of the list to specify the inputs
 for each of the Mechanism's InputStates for that `TRIAL`.  If an ndarray is used, axis 0 is used for the sequence of
-`TRIAL` \s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
+`TRIAL` \\s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
 Mechanism has multiple InputStates, then axis 1 is used for the InputStates, and axis 2 is used for the input to each
 InputState for each `TRIAL`.
 
@@ -233,8 +233,8 @@ Details concerning the use of the `Sequence <Run_Targets_Sequence_Format>`  and
 as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
 
 If either the Sequence or Mechanism format is used, then the number of targets specified for each Mechanism must equal
-the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \s specified is greater
-than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \s specified is
+the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \\s specified is greater
+than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \\s specified is
 completed.  If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
@@ -255,7 +255,7 @@ Sequence Format
 ^^^^^^^^^^^^^^^
 
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-targets:  one for `TRIAL` \s, one for Mechanisms, and one for the elements of each input.  For a System
+targets:  one for `TRIAL` \\s, one for Mechanisms, and one for the elements of each input.  For a System
 with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
 `target_mechanisms <System.System_Base.target_mechanisms>` attribute.  This should be the same order in which
 they are declared, and can be displayed using the System's `show <System.System_Base.show>` method). All
@@ -408,12 +408,12 @@ def run(object,
         requirements and options).
 
     num_trials : int : default None
-        the number of `TRIAL` \s to run.  If it is `None` (the default), then a number of `TRIAL` \s run will be equal
+        the number of `TRIAL` \\s to run.  If it is `None` (the default), then a number of `TRIAL` \\s run will be equal
         equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
-        inputs, then the inputs will be cycled until the number of `TRIAL` \s specified have been run.
+        inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
 
     reset_clock : bool : default True
-        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \s.
+        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \\s.
 
     initialize : bool default False
         calls the `initialize <System.System_Base.initialize>` method of the System prior to the first `TRIAL`.
