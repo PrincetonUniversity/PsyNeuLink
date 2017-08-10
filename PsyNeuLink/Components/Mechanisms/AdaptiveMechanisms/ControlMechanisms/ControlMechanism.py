@@ -50,21 +50,25 @@ used to control the parameters specified in **control_signals**, as described be
 created by a ControlMechanism, and how it evaluates the values it monitors, depends on the `subclass <LINK>` of
 ControlMechanism.
 
-.. _ControlMechanism_Monitored_Values:
+.. _ControlMechanism_Monitored_OutputStates:
+
 
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
-evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor
-(or of the System that created the ControlMechanism). The **monitor_for_control** argument must be a list,
-each item of which must refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the
-ObjectiveMechanism's `monitored_values <ObjectiveMechanism>` attribute, and the ObjectiveMechanism is referenced by
-the ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The
-ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism's `monitor_for_control
-<ControlMechanism_Base.monitor_for_control>` attribute, and evaluates them using the its `function
-<ControlMechanism_Base.function>`. This information is used to set the `allocation <ControlSignal.allocation>` for
-each of the ControlMechanism's ControlSignals.
+evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor (or of the
+System that created the ControlMechanism). The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's `monitored_values
+<ObjectiveMechanism>` attribute (and the ControlMechanism's `monitored_output_states`
+<ControlMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
+ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
+attribute (and the ControlMechanism's `monitored_output_states` <ControlMechanism_Base.monitored_output_states>`
+attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
+`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the ControlMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
+ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of the ControlMechanism's ControlSignals.
 
 .. _ControlMechanism_Control_Signals:
 

@@ -73,7 +73,7 @@ class Keywords:
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
         Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
         :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
+        details, see `TARGET Mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
 
 
     """

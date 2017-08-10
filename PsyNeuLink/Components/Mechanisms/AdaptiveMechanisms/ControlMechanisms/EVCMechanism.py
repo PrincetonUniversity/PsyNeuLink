@@ -1461,7 +1461,7 @@ class EVCMechanism(ControlMechanism_Base):
     @value_function.setter
     def value_function(self, assignment):
         if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(function)
+            self._value_function = ValueFunction(assignment)
         elif assignment is ValueFunction:
             self._value_function = ValueFunction()
         else:
