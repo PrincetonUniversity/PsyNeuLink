@@ -11,6 +11,7 @@ Processing Mechanism
    DDM
    RecurrentTransferMechanism
    LCA
+   KWTA
    ObjectiveMechanism
    ComparatorMechanism
 
