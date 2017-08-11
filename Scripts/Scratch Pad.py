@@ -657,7 +657,6 @@ import numpy as np
 #
 #endregion
 
-
 #region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 print("TEST SYSTEM test_system")
 
@@ -677,7 +676,6 @@ s = system(
 
 inputs = {a: [2, 2]}
 s.run(inputs)
-
 
 
 #region TEST INPUT FORMATS

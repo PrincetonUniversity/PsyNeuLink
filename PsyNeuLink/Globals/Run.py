@@ -467,7 +467,7 @@ def run(object,
         if object_type is MECHANISM:
             mech_len = np.size(object.variable)
         else:
-            mech_len = np.size(object.firstMechanism.variable)
+            mech_len = np.size(object.first_mechanism.variable)
         # If input dimension is 1 and size is same as input for first mechanism,
         # there is only one input for one execution, so promote dimensionality to 3
         if inputs.ndim == 1 and np.size(inputs) == mech_len:
@@ -839,7 +839,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                "supposed to be in target_mechanism for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
-            terminal_mech = process.terminalMechanisms[0]
+            terminal_mech = process.terminal_mechanisms[0]
             try:
                 ordered_targets[terminal_mech] = stimuli[terminal_mech]
             except KeyError:
@@ -977,7 +977,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             # Get a sample length (use first, since it is convenient and all are the same)
-            mech_len = len(object.firstMechanism.variable)
+            mech_len = len(object.first_mechanism.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise RunError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))

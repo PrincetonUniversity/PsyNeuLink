@@ -1200,7 +1200,7 @@ class System_Base(System):
 
         They are constructed as follows:
             sequence through self.processes;  for each Process:
-                begin with process.firstMechanism (assign as `ORIGIN` if it doesn't receive any Projections)
+                begin with process.first_mechanism (assign as `ORIGIN` if it doesn't receive any Projections)
                 traverse all Projections
                 for each Mechanism encountered (receiver), assign to its dependency set the previous (sender) Mechanism
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
@@ -1370,7 +1370,7 @@ class System_Base(System):
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
         for process in sorted_processes:
-            first_mech = process.firstMechanism
+            first_mech = process.first_mechanism
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState)
@@ -1483,7 +1483,7 @@ class System_Base(System):
                     self._control_object_item.append(object_item)
 
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
-        self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
+        self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
         self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
@@ -1917,7 +1917,7 @@ class System_Base(System):
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
-        for mech in self.terminalMechanisms.mechanisms:
+        for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
     def initialize(self):
@@ -2108,7 +2108,7 @@ class System_Base(System):
         if self._report_system_output:
             self._report_system_completion(clock=clock)
 
-        return self.terminalMechanisms.outputStateValues
+        return self.terminal_mechanisms.outputStateValues
 
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
     def _execute_processing(self, clock=CentralClock, context=None):
@@ -2604,7 +2604,7 @@ class System_Base(System):
 
         output_state_names = []
         output_value_array = []
-        for mech in list(self.terminalMechanisms.mechanisms):
+        for mech in list(self.terminal_mechanisms.mechanisms):
             output_value_array.append(mech.output_values)
             for name in mech.output_states:
                 output_state_names.append(name)
@@ -2639,7 +2639,7 @@ class System_Base(System):
             INPUT_ARRAY: input_array,
             RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
-            TERMINAL_MECHANISMS: self.terminalMechanisms.mechanisms,
+            TERMINAL_MECHANISMS: self.terminal_mechanisms.mechanisms,
             OUTPUT_STATE_NAMES: output_state_names,
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,
