@@ -710,7 +710,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
                                   format(mech.name, object.name))
 
     inputs_array = np.array(stimuli)
-    if inputs_array.dtype in {np.dtype('int64'),np.dtype('float64')}:
+    if inputs_array.dtype in {np.dtype('int'), np.dtype('float')}:
         max_dim = 2
     elif inputs_array.dtype is np.dtype('O'):
         max_dim = 1
@@ -975,7 +975,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                               format(object.name))
 
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
-        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+        if inputs.dtype in {np.dtype('int'),np.dtype('float')}:
             # Get a sample length (use first, since it is convenient and all are the same)
             mech_len = len(object.first_mechanism.instance_defaults.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
@@ -999,7 +999,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
 
         states_per_mech_heterog = False
         size_of_states_heterog = False
-        if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
+        if inputs.dtype in {np.dtype('int'), np.dtype('float')}:
             input_homogenity = HOMOGENOUS
         elif inputs.dtype is np.dtype('O'):
             input_homogenity = HETEROGENOUS
@@ -1153,7 +1153,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             HOMOGENOUS_TARGETS = 1
             HETEROGENOUS_TARGETS = 0
 
-            if targets.dtype in {np.dtype('int64'),np.dtype('float64')}:
+            if targets.dtype in {np.dtype('int'), np.dtype('float')}:
                 process_structure = HOMOGENOUS_TARGETS
             elif targets.dtype is np.dtype('O'):
                 process_structure = HETEROGENOUS_TARGETS
