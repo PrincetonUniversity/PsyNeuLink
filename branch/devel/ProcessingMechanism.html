@@ -188,12 +188,13 @@
 </div>
 <span class="target" id="module-ProcessingMechanisms.ProcessingMechanism"></span><div class="section" id="overview">
 <span id="processingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that transforms its input in some way.  A
-ProcessingMechanism always receives its input either from another ProcessingMechanism, or from the input to a <a class="reference internal" href="Process.html"><span class="doc">process</span></a> or <a class="reference internal" href="System.html"><span class="doc">system</span></a> when it is executed.  Similarly, its output is generally conveyed to another
-ProcessingMechanism or used as the ouput for a process or system.  However, the output of a ProcessingMechanism may
-also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modify the parameters of other components (or its own). ProcessingMechanisms
-are always executed before all AdaptiveMechanisms in the Process and/or System to which they belong, so that any
-modificatons made by the AdpativeMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+<p>A ProcessingMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that transforms its input in some way.  A ProcessingMechanism always
+receives its input either from another ProcessingMechanism, or from the input to a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> when it is
+executed.  Similarly, its output is generally conveyed to another ProcessingMechanism or used as the ouput for a Process
+or System.  However, the output of a ProcessingMechanism may also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modify the
+parameters of other components (or its own). ProcessingMechanisms are always executed before all AdaptiveMechanisms in
+the Process and/or System to which they belong, so that any modificatons made by the AdpativeMechanism are available to
+all ProcessingMechanisms in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
@@ -208,8 +209,7 @@ individual subtypes of ProcessingMechanism for more specific information about t
 </div>
 <div class="section" id="execution">
 <span id="comparator-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism always executes before any <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanisms</span></a> in the process or
-system to which it belongs.</p>
+<p>A ProcessingMechanism always executes before any <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanisms</span></a> in the <a class="reference internal" href="Process.html#process-execution"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">System</span></a> to which it belongs.</p>
 </div>
 </div>
 

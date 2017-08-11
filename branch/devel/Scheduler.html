@@ -181,8 +181,8 @@ for a <a class="reference internal" href="Composition.html"><span class="doc">Co
 to be executed and their order must be specified in the Scheduler&#8217;s constructor using one the following:</p>
 <ul class="simple">
 <li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
-the Scheduler is created using the Components in the System&#8217;s <code class="xref any docutils literal"><span class="pre">executionList</span></code> and an order
-of execution specified by the dependencies among the Components in its <code class="xref any docutils literal"><span class="pre">executionGraph</span></code>.</li>
+the Scheduler is created using the Components in the System&#8217;s <code class="xref any docutils literal"><span class="pre">execution_list</span></code> and an order
+of execution specified by the dependencies among the Components in its <code class="xref any docutils literal"><span class="pre">execution_graph</span></code>.</li>
 <li>a <em>graph specification dictionary</em> in the <strong>graph</strong> argument -
 each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
 zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
@@ -194,7 +194,7 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition_set" title="Scheduling.Condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+<a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition_set" title="Scheduling.Scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
@@ -299,7 +299,7 @@ when all of its constituent trials have terminated. These defaults may be overri
 by passing a dictionary mapping <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScales</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> in the
 <strong>termination_processing</strong> argument of a call to <a class="reference internal" href="Composition.html#Composition.Composition.run" title="Composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.run</span></code></a> (to terminate the execution of processing),
 or its <strong>termination_learning</strong> argument to terminate the execution of learning:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">system</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">System</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
     <span class="o">...</span><span class="p">,</span>
     <span class="n">termination_processing</span><span class="o">=</span><span class="p">{</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">WhenFinished</span><span class="p">(</span><span class="n">ddm</span><span class="p">)}</span>
     <span class="p">)</span>
@@ -404,7 +404,7 @@ dictionary, possibly determined by a set of <a class="reference internal" href="
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>system</strong> (<a class="reference internal" href="System.html#module-System" title="System"><em>System</em></a>) &#8211; specifies the Components to be ordered for execution, and any dependencies among them, based on the
-System&#8217;s <code class="xref any docutils literal"><span class="pre">executionGraph</span></code> and <code class="xref any docutils literal"><span class="pre">executionList</span></code>.</li>
+System&#8217;s <code class="xref any docutils literal"><span class="pre">execution_graph</span></code> and <code class="xref any docutils literal"><span class="pre">execution_list</span></code>.</li>
 <li><strong>condition_set</strong> (<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><em>ConditionSet</em></a>) &#8211; set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>system</strong>
 execute and any dependencies among them</li>
 <li><strong>graph</strong> (<em>dict{Component: set(Component)}</em>) &#8211; a graph specification dictionary - each entry of the dictionary must be a Component,

@@ -197,10 +197,14 @@ appropriate matrix by context);</li>
 <li>by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, between it and the other components required to implement learning
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a> for details);</li>
 </ul>
-<ul class="simple">
-<li>by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, from the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-values"><span class="std std-ref">it creates</span></a> to its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a>, and from the OutputStates
-listed in the ControlMechanism&#8217;s <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
-attribute) to the ObjectiveMechanism (as described above; an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for all of these).</li>
+<ul>
+<li><p class="first">by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, from the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that <code class="xref any docutils literal"><span class="pre">it</span> <span class="pre">creates</span></code>
+to its <em>ERROR_SIGNAL</em> <a href="#id1"><span class="problematic" id="id2">``</span></a>, and from the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> listed in the ControlMechanism&#8217;s
+<a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute) to the ObjectiveMechanism (as</p>
+<blockquote>
+<div><p>described above; an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for all of these).</p>
+</div></blockquote>
+</li>
 </ul>
 </div></blockquote>
 <div class="section" id="specifying-the-matrix-parameter">
