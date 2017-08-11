@@ -1575,7 +1575,7 @@
 #           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
 #           INITIALIZE_CYCLE: mechanism that has an outgoing projection that closes a cycle (feedback loop),
 #                       so it should be properly initialized
-#                       NOTE: self.executionGraph elides the projection that closes the loop so that an acyclic graph can be
+#                       NOTE: self.execution_graph elides the projection that closes the loop so that an acyclic graph can be
 #                             constructed to generate an execution list / sequence;  however, the projection is
 #                             still operational in the system and will support recurrent (feedback) processing)
 #           TERMINAL: terminal mechanism of a process that does not project to any other processing mechanisms
@@ -2207,7 +2207,7 @@
 #
 # IMPLEMENT!! Ted's toposort
 # IMPLEMENT OrderedSet for toposort execution sets
-# IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
+# IMPLEMENT Replace execution_list with sorted_execution_list (i.e., sort once formed, so there is only one version)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
 # **IMPLEMENT: System.monitored_output_states:
@@ -2352,9 +2352,9 @@
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
-# IMPLEMENT: *** ADD System.controller to executionList and
+# IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
-# IMPLEMENT: *** sort System.executionList (per System.show() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)

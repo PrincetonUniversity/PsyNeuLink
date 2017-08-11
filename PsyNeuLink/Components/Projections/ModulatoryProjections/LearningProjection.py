@@ -92,16 +92,15 @@ the LearningProjection's `learning_rate <LearningProjection.learning_rate>` para
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate
 <LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-:keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or `System
-<System.System_Base.learning_rate>` to which the LearningMechanism from which it projects belongs (see `learning_rate
-<LearningMechanism_Learning_Rate>` for additional details).  However, its `learning_rate
-<LearningProjection.learning_rate>` can be specified by the `LearningSignal <LearningSignal_Learning_Rate>` that
-is its `sender <LearningProjection.sender>`;  that specification takes precedence over the direct specification of
-the `learning_rate <LearningProjection.learning_rate>` for the LearningProjection (i.e., in the **learning_rate**
-argument of its constructor, or by direct assignment of a value to the attribute).  If a `learning_rate
-<LearningProjection.learning_rate>` is not specified for the LearningProjection, then the result of its `function
-<LearningProjection.function>` is assigned unmodified as the LearningProjection's `value <LearningProjection.value>`
-(and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
+:keyword:`learning_rate` for any `Process <Process_Learning` and/or `System <System_Learning>` to which the
+LearningMechanism from which it projects belongs (see `learning_rate <LearningMechanism_Learning_Rate>` for additional
+details).  However, its `learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
+<LearningSignal_Learning_Rate>` that is its `sender <LearningProjection.sender>`;  that specification takes precedence
+over the direct specification of the `learning_rate <LearningProjection.learning_rate>` for the LearningProjection
+(i.e., in the **learning_rate** argument of its constructor, or by direct assignment of a value to the attribute).  If a
+`learning_rate <LearningProjection.learning_rate>` is not specified for the LearningProjection, then the result of its
+`function <LearningProjection.function>` is assigned unmodified as the LearningProjection's `value
+<LearningProjection.value>` (and `weight_change_matrix <LearningProjection.weight_change_matrix>` attributes.
 
 .. _LearningProjection_Receiver:
 
@@ -265,12 +264,11 @@ class LearningProjection(ModulatoryProjection_Base):
         if specified, it is applied multiplicatively to the `learning_signal <LearningProjection.learning_signal>`
         received from the `sender <LearningProjection.sender>`; specification of the `learning_rate
         <LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-        :keyword:`learning_rate` for any `Process <Process.Process_Base.learning_rate>` and/or `System
-        <System.System_Base.learning_rate>` to which the LearningProjection belongs, and is
-        applied in addition to any effects of the `learning_rate <LearningMechanism.learning_rate>` for the
-        `LearningMechanism` from which the LearningProjection receives its `learning_signal
-        <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for additional
-        details).
+        :keyword:`learning_rate` for any `Process <Process_Learning>` and/or `System <System_Learning>` to which the
+        LearningProjection belongs, and is applied in addition to any effects of the `learning_rate
+        <LearningMechanism.learning_rate>` for the `LearningMechanism` from which the LearningProjection receives its
+        `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
+        additional details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the

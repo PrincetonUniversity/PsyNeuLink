@@ -24,12 +24,12 @@ description of how modulation operates).  A ControlMechanism can regulate only t
 `System` for which it is the `controller <System_Execution_Control>`.  The control Components of a System can be
 displayed using the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
-The control components of a system can be displayed using the system's
-`show_graph` method with its **show_control** argument assigned as :keyword:``True`.
+The control Components of a System can be displayed using the System's
+`show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
 COMMENT
 
 The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
-`learning components <LearningMechanism>` in that system have been executed (see `System Execution <System_Execution>`).
+`learning components <LearningMechanism>` in that System have been executed (see `System Execution <System_Execution>`).
 
 .. _ControlMechanism_Creation:
 
@@ -50,21 +50,25 @@ used to control the parameters specified in **control_signals**, as described be
 created by a ControlMechanism, and how it evaluates the values it monitors, depends on the `subclass <LINK>` of
 ControlMechanism.
 
-.. _ControlMechanism_Monitored_Values:
+.. _ControlMechanism_Monitored_OutputStates:
+
 
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
-evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor
-(or of the System that created the ControlMechanism). The **monitor_for_control** argument must be a list,
-each item of which must refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the
-ObjectiveMechanism's `monitored_values <ObjectiveMechanism>` attribute, and the ObjectiveMechanism is referenced by
-the ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The
-ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism's `monitor_for_control
-<ControlMechanism_Base.monitor_for_control>` attribute, and evaluates them using the its `function
-<ControlMechanism_Base.function>`. This information is used to set the `allocation <ControlSignal.allocation>` for
-each of the ControlMechanism's ControlSignals.
+evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor (or of the
+System that created the ControlMechanism). The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's `monitored_values
+<ObjectiveMechanism>` attribute (and the ControlMechanism's `monitored_output_states`
+<ControlMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
+ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
+attribute (and the ControlMechanism's `monitored_output_states` <ControlMechanism_Base.monitored_output_states>`
+attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
+`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the ControlMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
+ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of the ControlMechanism's ControlSignals.
 
 .. _ControlMechanism_Control_Signals:
 
@@ -185,7 +189,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
-                    System.executionGraph by default
+                    System.execution_graph by default
                 if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
                     no OutputStates are listed; it is overridden for any Mechanism for which OutputStates are
                     explicitly listed

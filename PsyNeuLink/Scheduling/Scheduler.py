@@ -43,8 +43,8 @@ COMMENT:
 COMMENT
 
 * a `System` in the **system** argument - if a System is specified,
-  the Scheduler is created using the Components in the System's `executionList <System.executionList>` and an order
-  of execution specified by the dependencies among the Components in its `executionGraph <System.executionGraph>`.
+  the Scheduler is created using the Components in the System's `execution_list <System.execution_list>` and an order
+  of execution specified by the dependencies among the Components in its `execution_graph <System.execution_graph>`.
 
 * a *graph specification dictionary* in the **graph** argument -
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
@@ -177,7 +177,7 @@ by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Conditi
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing),
 or its **termination_learning** argument to terminate the execution of learning::
 
-    system.run(
+    System.run(
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
@@ -300,14 +300,14 @@ class Scheduler(object):
 
     system : System
         specifies the Components to be ordered for execution, and any dependencies among them, based on the
-        System's `executionGraph <System.executionGraph>` and `executionList <System.executionList>`.
+        System's `execution_graph <System.execution_graph>` and `execution_list <System.execution_list>`.
 
     COMMENT:
         [**??IS THE FOLLOWING CORRECT]:
         K: not correct, there are no implicit System Conditions
         JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
-             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A system IS SUFFICIENT TO GENERATE A SCHEDULE,
-             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE system.
+             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A System IS SUFFICIENT TO GENERATE A SCHEDULE,
+             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE System.
         K: it's not that they're implicit, it's that we just set defaults to match the behavior of the
             naive scheduler
     COMMENT
@@ -365,7 +365,7 @@ class Scheduler(object):
         self.update_termination_conditions(termination_conds)
 
         if system is not None:
-            self.nodes = [m for m in system.executionList]
+            self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
         elif composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
@@ -381,7 +381,8 @@ class Scheduler(object):
                     for node in consideration_set:
                         self.nodes.append(node)
         else:
-            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) or a graph dependency dict (kwarg graph)')
+            raise SchedulerError('Must instantiate a Scheduler with either a System (kwarg system) '
+                                 'or a graph dependency dict (kwarg graph)')
 
         self._init_counts()
 
@@ -389,7 +390,7 @@ class Scheduler(object):
     # order in which they should be checked to ensure that all parents have a chance to run before their children
     def _init_consideration_queue_from_system(self, system):
         dependencies = []
-        for dependency_set in list(toposort(system.executionGraph)):
+        for dependency_set in list(toposort(system.execution_graph)):
             new_set = set()
             for d in dependency_set:
                 new_set.add(d)

@@ -264,7 +264,7 @@ print ('F: ',f.systems[s])
 #         print('\t', sender[0].name, ":")
 #
 # print("\nEXECUTION GRAPH:")
-# for receiver, senders in s.executionGraph.items():
+# for receiver, senders in s.execution_graph.items():
 #     print(receiver[0].name, ":")
 #     for sender in senders:
 #         print('\t', sender[0].name, ":")

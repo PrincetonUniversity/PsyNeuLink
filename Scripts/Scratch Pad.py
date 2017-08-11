@@ -46,26 +46,26 @@ import numpy as np
 
 #region SIMPLE NN EXAMPLE:
 
-print("SIMPLE NN EXAMPLE")
-# input_layer = TransferMechanism(size=5)
-# hidden_layer = TransferMechanism(size=2, function=Logistic)
-# output_layer = TransferMechanism(size=5, function=Logistic)
-input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
-hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
-output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
-# my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
-my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
-
-# my_system = system(processes=[my_process], targets=[0,0,0,0,0])
-my_system = system(processes=[my_process])
-# my_system.show_graph(show_learning=True, direction='TB')
-my_system.show_graph(show_control=True, direction='TB')
-# MappingProjection(sender=output_layer,
-#                   receiver=hidden_layer,
-#                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
-# print(output_layer.execute([2,2,2,2,2]))
-
-# print(process.execute([2,2,2,2,2]))
+# print("SIMPLE NN EXAMPLE")
+# # input_layer = TransferMechanism(size=5)
+# # hidden_layer = TransferMechanism(size=2, function=Logistic)
+# # output_layer = TransferMechanism(size=5, function=Logistic)
+# input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
+# hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
+# output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
+# # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+# my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+#
+# # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
+# my_system = system(processes=[my_process])
+# # my_system.show_graph(show_learning=True, direction='TB')
+# my_system.show_graph(show_control=True, direction='TB')
+# # MappingProjection(sender=output_layer,
+# #                   receiver=hidden_layer,
+# #                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
+# # print(output_layer.execute([2,2,2,2,2]))
+#
+# # print(process.execute([2,2,2,2,2]))
 
 #endregion
 
@@ -656,6 +656,29 @@ my_system.show_graph(show_control=True, direction='TB')
 # a.execute()
 #
 #endregion
+
+
+#region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST SYSTEM test_system")
+
+a = TransferMechanism(name='a', default_variable=[0, 0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
+
+p1 = process(pathway=[a, b, c], name='p1')
+p2 = process(pathway=[a, b, d], name='p2')
+
+s = system(
+    processes=[p1, p2],
+    name='Branch System',
+    initial_values={a: [1, 1]},
+)
+
+inputs = {a: [2, 2]}
+s.run(inputs)
+
+
 
 #region TEST INPUT FORMATS
 
