@@ -249,7 +249,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` of a `Mechanism` specified in the **monitor_for_control** argument of the
-        ControlMechanism's constructor, the `value <OutputState.value>` \s of which serve as the items of the
+        ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
         ControlMechanism's `variable <Mechanism_Base.variable>`.
 
     control_signals : List[ControlSignal]
