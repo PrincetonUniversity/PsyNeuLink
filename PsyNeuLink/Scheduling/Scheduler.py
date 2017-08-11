@@ -43,8 +43,8 @@ COMMENT:
 COMMENT
 
 * a `System` in the **system** argument - if a System is specified,
-  the Scheduler is created using the Components in the System's `executionList <System.executionList>` and an order
-  of execution specified by the dependencies among the Components in its `executionGraph <System.executionGraph>`.
+  the Scheduler is created using the Components in the System's `execution_list <System.execution_list>` and an order
+  of execution specified by the dependencies among the Components in its `execution_graph <System.execution_graph>`.
 
 * a *graph specification dictionary* in the **graph** argument -
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
@@ -300,7 +300,7 @@ class Scheduler(object):
 
     system : System
         specifies the Components to be ordered for execution, and any dependencies among them, based on the
-        System's `executionGraph <System.executionGraph>` and `executionList <System.executionList>`.
+        System's `execution_graph <System.execution_graph>` and `execution_list <System.execution_list>`.
 
     COMMENT:
         [**??IS THE FOLLOWING CORRECT]:
@@ -365,7 +365,7 @@ class Scheduler(object):
         self.update_termination_conditions(termination_conds)
 
         if system is not None:
-            self.nodes = [m for m in system.executionList]
+            self.nodes = [m for m in system.execution_list]
             self._init_consideration_queue_from_system(system)
         elif composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
@@ -390,7 +390,7 @@ class Scheduler(object):
     # order in which they should be checked to ensure that all parents have a chance to run before their children
     def _init_consideration_queue_from_system(self, system):
         dependencies = []
-        for dependency_set in list(toposort(system.executionGraph)):
+        for dependency_set in list(toposort(system.execution_graph)):
             new_set = set()
             for d in dependency_set:
                 new_set.add(d)

@@ -862,9 +862,9 @@ class EVCMechanism(ControlMechanism_Base):
             # prediction_object_item = prediction_mechanism
             self.prediction_mechs.append(prediction_mechanism)
 
-            # Add to system executionGraph and executionList
-            self.system.executionGraph[prediction_mechanism] = set()
-            self.system.executionList.append(prediction_mechanism)
+            # Add to system execution_graph and execution_list
+            self.system.execution_graph[prediction_mechanism] = set()
+            self.system.execution_list.append(prediction_mechanism)
 
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
@@ -924,8 +924,8 @@ class EVCMechanism(ControlMechanism_Base):
                           name = self.system.name + ' outcome signal'
                           )
 
-        self.system.executionList.append(self.monitoring_mechanism)
-        self.system.executionGraph[self.monitoring_mechanism] = set(self.system.executionList[:-1])
+        self.system.execution_list.append(self.monitoring_mechanism)
+        self.system.execution_graph[self.monitoring_mechanism] = set(self.system.execution_list[:-1])
 
     def _get_monitored_states(self, context=None):
         """

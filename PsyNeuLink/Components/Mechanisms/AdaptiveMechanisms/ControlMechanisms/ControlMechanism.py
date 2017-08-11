@@ -189,7 +189,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
-                    System.executionGraph by default
+                    System.execution_graph by default
                 if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
                     no OutputStates are listed; it is overridden for any Mechanism for which OutputStates are
                     explicitly listed

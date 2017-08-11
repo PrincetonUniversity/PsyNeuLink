@@ -362,9 +362,9 @@ def run(object,
         termination_processing=None,
         termination_learning=None,
         context=None):
-    """run(                         \
+    """run(                      \
     inputs,                      \
-    num_trials=None,         \
+    num_trials=None,             \
     reset_clock=True,            \
     initialize=False,            \
     intial_values=None,          \
@@ -418,7 +418,7 @@ def run(object,
     initialize : bool default False
         calls the `initialize <System.System_Base.initialize>` method of the System prior to the first `TRIAL`.
 
-    initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
+    initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : List[input] or np.ndarray(input) : default None

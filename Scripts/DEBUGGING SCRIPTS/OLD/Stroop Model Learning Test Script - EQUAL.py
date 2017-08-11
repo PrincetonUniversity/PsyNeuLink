@@ -105,7 +105,7 @@ mySystem.run(num_trials=2,
             call_after_trial=show_target)
 
 # print()
-# for m in mySystem.learningExecutionList:
+# for m in mySystem.learningexecution_list:
 #     print (m.name)
 #
 # PsyNeuLink response & weights after 1st trial:

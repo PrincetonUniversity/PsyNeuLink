@@ -131,9 +131,9 @@ System's `graph <System_Base.graph>` can be displayed using its `System_Base.sho
 analysis.  A System can have recurrent Processing pathways, such as feedback loops;  that is, the System's `graph
 <System_Base.graph> can be *cyclic*.  PsyNeuLink also uses the `graph <System_Base.graph>` to determine the order in
 which its Mechanisms are executed.  To do so in an orderly manner, however, the graph must be *acyclic*.  To address
-this, PsyNeuLink constructs an `executionGraph <System_Base.executionGraph>` from the System's `graph
-<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `executionGraph
-<System_Base.executionGraph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
+this, PsyNeuLink constructs an `execution_graph <System_Base.execution_graph>` from the System's `graph
+<System_Base.graph>`. If the  System is acyclic, these are the same. If the System is cyclic, then the `execution_graph
+<System_Base.execution_graph>` is a subset of the `graph <System_Base.graph>` in which the dependencies (edges)
 associated with Projections that close a loop have been removed. Note that this only impacts the order of execution;
 the Projections themselves remain in effect, and will be fully functional during the execution of the Mechanisms
 to and from which they project (see `System_Execution` below for a more detailed description).
@@ -228,9 +228,9 @@ Processing
 Once the relevant inputs have been assigned, the `ProcessingMechanisms <ProcessingMechanism>` of the System are executed
 in the order they are listed in the `Processes <Process>` used to construct the System.  When a Mechanism is executed,
 it receives input from any other Mechanisms that project to it within the System,  but not from any Mechanisms outside
-the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's `executionGraph`
+the System (PsyNeuLink does not support ESP).  The order of execution is determined by the System's `execution_graph`
 attribute, which is a subset of the System's `graph <System_Base.graph>` that has been "pruned" to be acyclic (i.e.,
-devoid of recurrent loops (see `System_Graph` above).  While the `executionGraph` is acyclic, all recurrent Projections
+devoid of recurrent loops (see `System_Graph` above).  While the `execution_graph` is acyclic, all recurrent Projections
 in the System remain intact during execution and can be `initialized <System_Execution_Input_And_Initialization>` at
 the start of execution. The order in which Components are executed can also be customized, using the System's
 `System_Scheduler` in combination with `Condition` specifications for individual Components, to execute different
@@ -582,10 +582,10 @@ class System_Base(System):
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
-        - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs executionList
+        - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs execution_list
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
-        - execute(input, time_scale, context):  executes Mechanisms in order specified by executionList
+        - execute(input, time_scale, context):  executes Mechanisms in order specified by execution_list
         - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
 
        SystemRegistry
@@ -614,7 +614,7 @@ class System_Base(System):
         .. _processList : ProcessList
             Provides access to (process, input) tuples.
             Derived from self.input and self.processes.
-            Used to construct :py:data:`executionGraph <System_Base.executionGraph>` and execute the System
+            Used to construct :py:data:`execution_graph <System_Base.execution_graph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
         the `ControlMechanism` used to monitor the `value <OutputState.value>` of the `OutputState(s) <OutputState>`
@@ -645,7 +645,7 @@ class System_Base(System):
         sender...} dependencies.  The key of each entry is a receiver Component, and the value is a set of Mechanisms
         that send Projections to that receiver. If a key (receiver) has no dependents, its value is an empty set.
 
-    executionGraph : OrderedDict
+    execution_graph : OrderedDict
         contains an acyclic subset of the System's `graph <System_Base.graph>`, hierarchically organized by a
         `toposort <https://en.wikipedia.org/wiki/Topological_sorting>`_. Used to specify the order in which
         Components are `executed <System_Execution>`.
@@ -654,9 +654,9 @@ class System_Base(System):
         contains a list of Component sets. Each set contains Components to be executed at the same time.
         The sets are ordered in the sequence with which they should be executed.
 
-    executionList : list of Mechanisms and/or Projections
+    execution_list : list of Mechanisms and/or Projections
         contains a list of Components in the order in which they are `executed <System_Execution>`.
-        The list is a random sample of the permissible orders constrained by the `executionGraph` and produced by the
+        The list is a random sample of the permissible orders constrained by the `execution_graph` and produced by the
         `toposort <https://en.wikipedia.org/wiki/Topological_sorting>`_.
 
     mechanisms : list of Mechanism objects
@@ -736,12 +736,13 @@ class System_Base(System):
         thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
-    control_mechanism : MechanismList
-        contains the `ControlMechanism` that is the `controller <System_Base.controller>` of the System
-        COMMENT:
-            ??and any other `ControlMechanisms <ControlMechanism>` in the System
-            (based on _control_mechs).
-        COMMENT
+
+        .. control_mechanism : MechanismList
+            contains the `ControlMechanism` that is the `controller <System_Base.controller>` of the System
+            COMMENT:
+                ??and any other `ControlMechanisms <ControlMechanism>` in the System
+                (based on _control_mechs).
+            COMMENT
 
     value : 3D ndarray
         contains an array of 2D arrays, each of which is the `output_values <Mechanism_Base.output_values>` of a
@@ -1011,7 +1012,7 @@ class System_Base(System):
         # ??STILL THE CASE, OR MOVED TO _instantiate_graph:
         Iterate through Process._mechs for each Process;  for each sequential pair:
             - create set entry:  <receiving Mechanism>: {<sending Mechanism>}
-            - add each pair as an entry in self.executionGraph
+            - add each pair as an entry in self.execution_graph
         """
 
         # # MODIFIED 2/8/17 OLD:  [SEE BELOW]
@@ -1185,17 +1186,17 @@ class System_Base(System):
         self.processes = self._processList.processes
 
     def _instantiate_graph(self, context=None):
-        """Construct graph (full) and executionGraph (acyclic) of System
+        """Construct graph (full) and execution_graph (acyclic) of System
 
         Instantate a graph of all of the Mechanisms in the System and their dependencies,
             designate a type for each Mechanism in the graph,
-            instantiate the executionGraph, a subset of the graph with any cycles removed,
+            instantiate the execution_graph, a subset of the graph with any cycles removed,
                 and topologically sorted into a sequentially ordered list of sets
                 containing mechanisms to be executed at the same time
 
         graph contains a dictionary of dependency sets for all Mechanisms in the System:
             reciever_object_item : {sender_object_item, sender_object_item...}
-        executionGraph contains an acyclic subset of graph used to determine sequence of Mechanism execution;
+        execution_graph contains an acyclic subset of graph used to determine sequence of Mechanism execution;
 
         They are constructed as follows:
             sequence through self.processes;  for each Process:
@@ -1203,7 +1204,7 @@ class System_Base(System):
                 traverse all Projections
                 for each Mechanism encountered (receiver), assign to its dependency set the previous (sender) Mechanism
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
-                    eliminate the dependent from executionGraph, and designate it as `CYCLE` (unless it is an `ORIGIN`)
+                    eliminate the dependent from execution_graph, and designate it as `CYCLE` (unless it is an `ORIGIN`)
                     designate the sender as `INITIALIZE_CYCLE` (it can receive and initial_value specification)
                 if a Mechanism doe not project to any other ProcessingMechanisms (ignore learning and control mechs):
                     assign as `TERMINAL` unless it is already an `ORIGIN`, in which case assign as `SINGLETON`
@@ -1307,7 +1308,7 @@ class System_Base(System):
                         self.graph[receiver] = {sender_mech}
 
                     # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                    # Do not include dependency (or receiver on sender) in executionGraph for this projection
+                    # Do not include dependency (or receiver on sender) in execution_graph for this projection
                     #  and end this branch of the traversal if the receiver has already been encountered,
                     #  but do mark for initialization
                     # Notes:
@@ -1318,24 +1319,24 @@ class System_Base(System):
                     # * Check for receiver mechanism and not its tuple,
                     #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
                     #     and would introduce a cycle irrespective of the tuple in which it appears in the graph
-                    # FIX: MODIFY THIS TO (GO BACK TO) USING if receiver_tuple in self.executionGraph
+                    # FIX: MODIFY THIS TO (GO BACK TO) USING if receiver_tuple in self.execution_graph
                     # FIX  BUT CHECK THAT THEY ARE IN DIFFERENT PHASES
-                    if receiver in self.executionGraph:
+                    if receiver in self.execution_graph:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver_tuple already has dependencies in its set, add sender_mech to set
-                            if self.executionGraph[receiver]:
-                                self.executionGraph[receiver].\
+                            if self.execution_graph[receiver]:
+                                self.execution_graph[receiver].\
                                     add(sender_mech)
                             # If receiver set is empty, assign sender_mech to set
                             else:
-                                self.executionGraph[receiver] = \
+                                self.execution_graph[receiver] = \
                                     {sender_mech}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                            list(toposort(self.executionGraph))
+                            list(toposort(self.execution_graph))
                         # If making receiver dependent on sender produced a cycle (feedback loop), remove from graph
                         except ValueError:
-                            self.executionGraph[receiver].\
+                            self.execution_graph[receiver].\
                                 remove(sender_mech)
                             # Assign sender_mech INITIALIZE_CYCLE as system status if not ORIGIN or not yet assigned
                             if not sender_mech.systems or not (sender_mech.systems[self] in {ORIGIN, SINGLETON}):
@@ -1349,10 +1350,10 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.executionGraph[receiver].\
+                            self.execution_graph[receiver].\
                                 add(sender_mech)
                         except KeyError:
-                            self.executionGraph[receiver] = \
+                            self.execution_graph[receiver] = \
                                 {sender_mech}
 
                     if not sender_mech.systems:
@@ -1362,7 +1363,7 @@ class System_Base(System):
                     build_dependency_sets_by_traversing_projections(receiver)
 
         self.graph = OrderedDict()
-        self.executionGraph = OrderedDict()
+        self.execution_graph = OrderedDict()
 
 
         # Sort for consistency of output
@@ -1406,7 +1407,7 @@ class System_Base(System):
                 # Assign its set value as empty, marking it as a "leaf" in the graph
                 object_item = first_mech
                 self.graph[object_item] = set()
-                self.executionGraph[object_item] = set()
+                self.execution_graph[object_item] = set()
                 first_mech.systems[self] = ORIGIN
 
             build_dependency_sets_by_traversing_projections(first_mech)
@@ -1428,7 +1429,7 @@ class System_Base(System):
         # Print graph
         if self.verbosePref:
             warnings.warn("In the System graph for \'{}\':".format(self.name))
-            for receiver_object_item, dep_set in self.executionGraph.items():
+            for receiver_object_item, dep_set in self.execution_graph.items():
                 mech = receiver_object_item
                 if not dep_set:
                     print("\t\'{}\' is an {} Mechanism".
@@ -1452,7 +1453,7 @@ class System_Base(System):
         self.recurrent_init_mechs = []
         self._control_object_item = []
 
-        for object_item in self.executionGraph:
+        for object_item in self.execution_graph:
 
             mech = object_item
 
@@ -1488,7 +1489,7 @@ class System_Base(System):
                                                                               # are multiple controllers in the future
 
         try:
-            self.execution_sets = list(toposort(self.executionGraph))
+            self.execution_sets = list(toposort(self.execution_graph))
         except ValueError as e:
             if 'Cyclic dependencies exist' in e.args[0]:
                 # if self.verbosePref:
@@ -1499,10 +1500,10 @@ class System_Base(System):
 
         # Create instance of sequential (execution) list:
         # MODIFIED 10/31/16 OLD:
-        # self.executionList = toposort_flatten(self.executionGraph, sort=False)
+        # self.execution_list = toposort_flatten(self.execution_graph, sort=False)
         # MODIFIED 10/31/16 NEW:
-        temp = toposort_flatten(self.executionGraph, sort=False)
-        self.executionList = self._toposort_with_ordered_mechs(self.executionGraph)
+        temp = toposort_flatten(self.execution_graph, sort=False)
+        self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
         # MODIFIED 10/31/16 END
 
         # MODIFIED 6/27/17 NEW: (CW)
@@ -1533,7 +1534,7 @@ class System_Base(System):
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
-                if not mech in self.executionGraph:
+                if not mech in self.execution_graph:
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
                 mech._update_value
@@ -1588,7 +1589,7 @@ class System_Base(System):
         """
 
         self.learningGraph = OrderedDict()
-        self.learningExecutionGraph = OrderedDict()
+        self.learningexecution_graph = OrderedDict()
 
         def build_dependency_sets_by_traversing_projections(sender_mech, process):
 
@@ -1631,7 +1632,7 @@ class System_Base(System):
 
             # FIX: RELABEL "sender_mech" as "obj_mech" here
 
-            if isinstance(sender_mech, ObjectiveMechanism) and len(self.learningExecutionGraph):
+            if isinstance(sender_mech, ObjectiveMechanism) and len(self.learningexecution_graph):
 
                 # TERMINAL CONVERGENCE
                 # All of the mechanisms that project to sender_mech
@@ -1639,8 +1640,8 @@ class System_Base(System):
                 if all(
                         any(
                                 (isinstance(receiver_mech, ObjectiveMechanism) and
-                                 # its already in a dependency set in the learningExecutionGraph
-                                         receiver_mech in set.union(*list(self.learningExecutionGraph.values())) and
+                                 # its already in a dependency set in the learningexecution_graph
+                                         receiver_mech in set.union(*list(self.learningexecution_graph.values())) and
                                      not receiver_mech is sender_mech)
                                 # receivers of senders to sender_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
@@ -1770,7 +1771,7 @@ class System_Base(System):
                         self.learningGraph[receiver] = {sender_mech}
 
                     # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                    # Do not include dependency (or receiver on sender) in learningExecutionGraph for this projection
+                    # Do not include dependency (or receiver on sender) in learningexecution_graph for this projection
                     #  and end this branch of the traversal if the receiver has already been encountered,
                     #  but do mark for initialization
                     # Notes:
@@ -1782,21 +1783,21 @@ class System_Base(System):
                     #     since the same mechanism can appear in more than one tuple (e.g., with different phases)
                     #     and would introduce a cycle irrespective of the tuple in which it appears in the learningGraph
 
-                    if receiver in self.learningExecutionGraph:
+                    if receiver in self.learningexecution_graph:
                     # if receiver in self.learning_execution_graph_mechs:
                         # Try assigning receiver as dependent of current mechanism and test toposort
                         try:
                             # If receiver already has dependencies in its set, add sender_mech to set
-                            if self.learningExecutionGraph[receiver]:
-                                self.learningExecutionGraph[receiver].add(sender_mech)
+                            if self.learningexecution_graph[receiver]:
+                                self.learningexecution_graph[receiver].add(sender_mech)
                             # If receiver set is empty, assign sender_mech to set
                             else:
-                                self.learningExecutionGraph[receiver] = {sender_mech}
+                                self.learningexecution_graph[receiver] = {sender_mech}
                             # Use toposort to test whether the added dependency produced a cycle (feedback loop)
-                            list(toposort(self.learningExecutionGraph))
+                            list(toposort(self.learningexecution_graph))
                         # If making receiver dependent on sender produced a cycle, remove from learningGraph
                         except ValueError:
-                            self.learningExecutionGraph[receiver].remove(sender_mech)
+                            self.learningexecution_graph[receiver].remove(sender_mech)
                             receiver.systems[self] = CYCLE
                             continue
 
@@ -1805,9 +1806,9 @@ class System_Base(System):
                         try:
                             # FIX: THIS WILL ADD SENDER_MECH IF RECEIVER IS IN GRAPH BUT = set()
                             # FIX: DOES THAT SCREW UP ORIGINS?
-                            self.learningExecutionGraph[receiver].add(sender_mech)
+                            self.learningexecution_graph[receiver].add(sender_mech)
                         except KeyError:
-                            self.learningExecutionGraph[receiver] = {sender_mech}
+                            self.learningexecution_graph[receiver] = {sender_mech}
 
                     if not sender_mech.systems:
                         sender_mech.systems[self] = LEARNING
@@ -1825,8 +1826,8 @@ class System_Base(System):
                 build_dependency_sets_by_traversing_projections(process.learning_mechanisms[0], process)
 
         # FIX: USE TOPOSORT TO FIND, OR AT LEAST CONFIRM, TARGET MECHANISMS, WHICH SHOULD EQUAL COMPARATOR MECHANISMS
-        self.learningExecutionList = toposort_flatten(self.learningExecutionGraph, sort=False)
-        # self.learningExecutionList = self._toposort_with_ordered_mechs(self.learningExecutionGraph)
+        self.learningexecution_list = toposort_flatten(self.learningexecution_graph, sort=False)
+        # self.learningexecution_list = self._toposort_with_ordered_mechs(self.learningexecution_graph)
 
         # Construct learning_mechanisms and target_mechanisms MechanismLists
 
@@ -1834,7 +1835,7 @@ class System_Base(System):
         self._target_mechs = []
 
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-        for item in self.learningExecutionList:
+        for item in self.learningexecution_list:
             if isinstance(item, MappingProjection):
                 continue
 
@@ -1942,11 +1943,11 @@ class System_Base(System):
                 # time_scale=TimeScale.TRIAL
                 context=None):
         """Execute mechanisms in System at specified :ref:`phases <System_Execution_Phase>` in order \
-        specified by the :py:data:`executionGraph <System_Base.executionGraph>` attribute.
+        specified by the :py:data:`execution_graph <System_Base.execution_graph>` attribute.
 
         Assign items of input to `ORIGIN` mechanisms
 
-        Execute mechanisms in the order specified in executionList and with phases equal to
+        Execute mechanisms in the order specified in execution_list and with phases equal to
         ``CentralClock.time_step % numPhases``.
 
         Execute any learning components specified at the appropriate phase.
@@ -1983,7 +1984,7 @@ class System_Base(System):
             self.scheduler_processing = Scheduler(system=self)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learningExecutionGraph)
+            self.scheduler_learning = Scheduler(graph=self.learningexecution_graph)
 
         if not context:
             context = EXECUTING + " " + SYSTEM + " " + self.name
@@ -1993,10 +1994,10 @@ class System_Base(System):
         from PsyNeuLink.Globals.Run import _get_unique_id
         self._execution_id = execution_id or _get_unique_id()
         # FIX: GO THROUGH LEARNING GRAPH HERE AND ASSIGN EXECUTION TOKENS FOR ALL MECHANISMS IN IT
-        # self.learningExecutionList
-        for mech in self.executionGraph:
+        # self.learningexecution_list
+        for mech in self.execution_graph:
             mech._execution_id = self._execution_id
-        for learning_mech in self.learningExecutionList:
+        for learning_mech in self.learningexecution_list:
             learning_mech._execution_id = self._execution_id
         self.controller._execution_id = self._execution_id
         if self.enable_controller and self.controller.input_states:
@@ -2066,9 +2067,9 @@ class System_Base(System):
         #region EXECUTE MECHANISMS
 
         # TEST PRINT:
-        # for i in range(len(self.executionList)):
-        #     print(self.executionList[i][0].name)
-        # sorted_list = list(object_item[0].name for object_item in self.executionList)
+        # for i in range(len(self.execution_list)):
+        #     print(self.execution_list[i][0].name)
+        # sorted_list = list(object_item[0].name for object_item in self.execution_list)
 
         # Execute system without learning on projections (that will be taken care of in _execute_learning()
         self._execute_processing(clock=clock, context=context)
@@ -2111,7 +2112,7 @@ class System_Base(System):
 
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
     def _execute_processing(self, clock=CentralClock, context=None):
-        # Execute each Mechanism in self.executionList, in the order listed during its phase
+        # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
         if self.scheduler_processing is None:
@@ -2171,7 +2172,7 @@ class System_Base(System):
             i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
-        # Execute each LearningMechanism as well as LearningProjections in self.learningExecutionList
+        # Execute each LearningMechanism as well as LearningProjections in self.learningexecution_list
 
         # FIRST, if targets were specified as a function, call the function now
         #    (i.e., after execution of the pathways, but before learning)
@@ -2352,7 +2353,7 @@ class System_Base(System):
             self.scheduler_processing = Scheduler(system=self)
 
         if self.scheduler_learning is None:
-            self.scheduler_learning = Scheduler(graph=self.learningExecutionGraph)
+            self.scheduler_learning = Scheduler(graph=self.learningexecution_graph)
 
         # initial_values = initial_values or self.initial_values
         if initial_values is None and self.initial_values:
@@ -2441,8 +2442,8 @@ class System_Base(System):
     #     """
     #     EXECUTION_SETS = ()
     #     """Show `execution_sets` attribute."""
-    #     ExecutionList = ()
-    #     """Show `executionList` attribute."""
+    #     execution_list = ()
+    #     """Show `execution_list` attribute."""
     #     ATTRIBUTES = ()
     #     """Show system's attributes."""
     #     ALL_OUTPUTS = ()
@@ -2463,7 +2464,7 @@ class System_Base(System):
     #     """"""
 
     def show(self, options=None):
-        """Print ``execution_sets``, ``executionList``, `ORIGIN`, `TERMINAL` Mechanisms,
+        """Print ``execution_sets``, ``execution_list``, `ORIGIN`, `TERMINAL` Mechanisms,
         `TARGET` Mechanisms, ``outputs`` and their labels for the System.
 
         Arguments
@@ -2502,10 +2503,10 @@ class System_Base(System):
                 print("{0} ".format(name), end='')
             print("}")
 
-        # Print executionList sorted by phase and including EVC mechanism
+        # Print execution_list sorted by phase and including EVC mechanism
 
-        # Sort executionList by phase
-        sorted_execution_list = self.executionList.copy()
+        # Sort execution_list by phase
+        sorted_execution_list = self.execution_list.copy()
 
 
         # Sort by phaseSpec and, within each phase, by mechanism name
@@ -2517,7 +2518,7 @@ class System_Base(System):
             sorted_execution_list.append(self.controller)
 
 
-        mech_names_from_exec_list = list(object_item.name for object_item in self.executionList)
+        mech_names_from_exec_list = list(object_item.name for object_item in self.execution_list)
         mech_names_from_sorted_exec_list = list(object_item.name for object_item in sorted_execution_list)
 
         # print ("\n\tExecution list: ".format(self.name))
@@ -2737,11 +2738,11 @@ class System_Base(System):
 
     # @property
     # def execution_graph_mechs(self):
-    #     """Mechanisms whose mechs appear as keys in self.executionGraph
+    #     """Mechanisms whose mechs appear as keys in self.execution_graph
     #
     #     :rtype: list of Mechanism objects
     #     """
-    #     return self.executionGraph
+    #     return self.execution_graph
 
     def show_graph(self,
                    direction = 'BT',
@@ -2915,7 +2916,7 @@ class System_Base(System):
                     G.edge(sndr_name, objmech.name, label=proj.name, color=control_color)
 
             # prediction mechanisms
-            for object_item in self.executionList:
+            for object_item in self.execution_list:
                 # MODIFIED 7/20/17 (CW) OLD:
                 # mech = object_item[0]
                 # MODIFIED 7/20/17 (CW) NEW:
