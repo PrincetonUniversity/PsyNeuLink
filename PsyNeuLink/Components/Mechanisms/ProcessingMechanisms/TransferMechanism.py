@@ -36,10 +36,10 @@ or an an array of scalars (list or 1d np.array).  The function used can be selec
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
-function and specifying *TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.funtion>`
-is specified in the **function** argument, which can be simply the name of the class (first example below),
-or a call to its constructor which can include arguments specifying the function's parameters (second example)::
+A TransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
+*TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.funtion>` is specified in the
+**function** argument, which can be simply the name of the class (first example below), or a call to its constructor
+which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
@@ -218,11 +218,11 @@ class TransferMechanism(ProcessingMechanism_Base):
     ---------
 
     default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the mechanism to use if none is provided in a call to its
-        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
+        specifies the input to the Mechanism to use if none is provided in a call to its
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
-        of the mechanism.
+        of the Mechanism.
 
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
@@ -243,7 +243,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
+        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
          result = (time_constant * current input) +
@@ -257,21 +257,21 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
         This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
         parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -304,7 +304,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -352,7 +352,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         Specified in the **prefs** argument of the constructor for the Mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -430,7 +430,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                 context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate FUNCTION and mechanism params
+        """Validate FUNCTION and Mechanism params
 
         """
 
@@ -605,7 +605,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             + NOISE (float)
             + TIME_CONSTANT (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in

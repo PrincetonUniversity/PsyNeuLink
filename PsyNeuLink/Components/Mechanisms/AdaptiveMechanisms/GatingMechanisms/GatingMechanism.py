@@ -220,7 +220,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_signals : List[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
         `GatingProjection(s) <GatingProjection>` to the `InputState(s) <InputState>` and/or `OutputStates <OutputState>`
-        that it gates; same as GatingMechanisms `output_states <Mechanism.output_states>` attribute.
+        that it gates; same as GatingMechanisms `output_states <Mechanism_Base.output_states>` attribute.
 
     gating_projections : List[GatingProjection]
         list of all of the `GatingProjections <GatingProjection>` assigned to the GatingMechanism's
@@ -596,9 +596,9 @@ def _add_gating_mechanism_to_system(owner:GatingMechanism):
         for gating_signal in owner.gating_signals:
             for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
                 for system in mech.systems:
-                    if owner not in system.executionList:
-                        system.executionList.append(owner)
-                        system.executionGraph[owner] = set()
+                    if owner not in system.execution_list:
+                        system.execution_list.append(owner)
+                        system.execution_graph[owner] = set()
                         # FIX: NEED TO ALSO ADD SystemInputState (AND ??ProcessInputState) PROJECTIONS
                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
                         # if not any(state.path_afferents for state in owner.input_states):

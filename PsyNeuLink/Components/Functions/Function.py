@@ -55,12 +55,12 @@ Learning Functions:
 Overview
 --------
 
-A Function is a `component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other PsyNeuLink components.  Every `component <Component>` in PsyNeuLink is assigned a Function; when that
-component is executed, its Function's `function <Function_Base.function>` is executed.  The
+A Function is a `Component` that "packages" a function (in its `function <Function_Base.function>` method)
+for use by other Components.  Every `Component` in PsyNeuLink is assigned a Function; when that
+Component is executed, its Function's `function <Function_Base.function>` is executed.  The
 `function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
 (and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
-packages functions in a Function component: to *manage parameters*, and for *modularity*.
+packages functions in a Function Component: to *manage parameters*, and for *modularity*.
 
 **Manage parameters**. Parameters are attributes of a Function that either remain stable over multiple calls to the
 function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
@@ -70,9 +70,9 @@ function's variable, and not have to provide them every time the function is cal
 PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
 the time the Function is created (in arguments to its constructor), and can be modified independently
 of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
-PsyNeuLink components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
+PsyNeuLink Components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
 
-**Modularity**. By providing a standard interface, any Function assigned to a components in PsyNeuLink can be replaced
+**Modularity**. By providing a standard interface, any Function assigned to a Components in PsyNeuLink can be replaced
 with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards
 (the PsyNeuLink :ref:`Function API <LINK>`).
 
@@ -82,7 +82,7 @@ Creating a Function
 -------------------
 
 A Function can be created directly by calling its constructor.  Functions are also created automatically whenever
-any other type of PsyNeuLink component is created (and its :keyword:`function` is not otherwise specified). The
+any other type of PsyNeuLink Component is created (and its :keyword:`function` is not otherwise specified). The
 constructor for a Function has an argument for its `variable <Function_Base.variable>` and each of the parameters of
 its `function <Function_Base.function>`.  The `variable <Function_Base.variable>` argument is used both to format the
 input to the `function <Function_Base.function>`, and assign its default value.  The arguments for each parameter can
@@ -97,10 +97,10 @@ Structure
 Every Function has a `variable <Function_Base.variable>` that provides the input to its
 `function <Function_Base.function>` method.  Its core attribute is its `function <Function_Base.function>` attribute
 that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
-method of some kind). Unlike other PsyNeuLink `Components`, it *cannot* be (another) Function object (it can't be
-"turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
-<Function_Base.function>`.   If a Function has been assigned to another component, then it also has an `owner
-<Function_Base.owner>` attribute that refers to that component.  The Function itself is assigned as the component's
+method of some kind). Unlike other PsyNeuLink `Components <Component>`, it *cannot* be (another) Function object (it
+can't be "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
+<Function_Base.function>`.   If a Function has been assigned to another Component, then it also has an `owner
+<Function_Base.owner>` attribute that refers to that Component.  The Function itself is assigned as the Component's
 `function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
 `parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
@@ -2244,7 +2244,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
-        return 1 / (1 + np.exp(-(gain * self.variable) + bias))
+        try:
+            return_val = 1 / (1 + np.exp(-(gain * self.variable) + bias))
+        except (Warning):
+            # handle RuntimeWarning: overflow in exp
+            return_val = 0
+
+        return return_val
 
     def derivative(self, output, input=None):
         """
@@ -6458,7 +6464,7 @@ class Reinforcement(
         specifies the function of the Mechanism that generates `activation_output <Reinforcement.activation_output>`.
 
     learning_rate : float : default default_learning_rate
-        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <Reinforcement.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]
@@ -6502,11 +6508,11 @@ class Reinforcement(
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <Reinforcement.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
-        which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`, then the learning_rate for the
-        system to which it belongs is used. If all are `None`, then the
-        `default_learning_rate <Reinforcement.default_learning_rate>` is used.
+        `Process <Process_Base_Learning>` and/or `System <System_Learning>` to which the function's
+        `owner <Reinforcement.owner>` belongs.  If it is `None`, then the `learning_rate <Process_Base.learning_rate>`
+        specified for the Process to which the `owner <Reinforcement.owner>` belongs is used;  and, if that is `None`,
+        then the `learning_rate <System_Base.learning_rate>` for the System to which it belongs is used. If all are
+        `None`, then the `default_learning_rate <Reinforcement.default_learning_rate>` is used.
 
     default_learning_rate : float
         the value used for the `learning_rate <Reinforcement.learning_rate>` if it is not otherwise specified.
@@ -6715,7 +6721,7 @@ class BackPropagation(LearningFunction):
         MATRIX parameterState.
 
     learning_rate : float : default default_learning_rate
-        supersedes any specification for the `process <Process>` and/or `system <System>` to which the function's
+        supersedes any specification for the `Process` and/or `System` to which the function's
         `owner <Function.owner>` belongs (see `learning_rate <BackPropagation.learning_rate>` for details).
 
     params : Optional[Dict[param keyword, param value]]

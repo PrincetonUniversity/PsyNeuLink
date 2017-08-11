@@ -27,7 +27,7 @@ a different type of State, as described below (and shown in the `figure <Modulat
 ..
 * `ControlSignal`
     takes the `value <ControlSignal.value>` assigned to it by the `ControlMechanism` to which it belongs,
-    and uses it to modulate the parameter of a `Mechanism` or its `function <Mechanism.function>`.
+    and uses it to modulate the parameter of a `Mechanism` or its `function <Mechanism_Base.function>`.
 ..
 * `GatingSignal`
     takes the `value <GatingSignal.value>` assigned to it by the `GatingMechanism` to which it belongs,

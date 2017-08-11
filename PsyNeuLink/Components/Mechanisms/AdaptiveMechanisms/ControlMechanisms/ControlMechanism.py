@@ -14,22 +14,22 @@ Overview
 
 A ControlMechanism is an `AdaptiveMechanism` that modifies the parameter(s) of one or more
 `Components <Component>`. Its `function <ControlMechanism_Base.function>` takes an evaluative signal (usually the
-output of an `ObjectiveMechanism`) and uses that to calculate an
-`allocation_policy <ControlMechanism_Base.allocation_policy>`:  a list of `allocation <ControlSignal.allocation>`
-values for each of its `ControlSignals <ControlSignal>`.  This is used by each ControlSignal to calculate its
-`intensity`, which is then conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
-`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState then uses the value received by a
-ControlProjection to modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation`
-for a more detailed description of how modulation operates).  A ControlMechanism can regulate only the parameters of
-Components in the System for which it is the `controller <System_Execution_Control>`.  The control Components of a
-system can be displayed using the System's `show_graph` method with its **show_control** argument assigned as `True`.
+output of an `ObjectiveMechanism`) and uses that to calculate an `allocation_policy
+<ControlMechanism_Base.allocation_policy>`:  a list of `allocation <ControlSignal.allocation>` values for each of its
+`ControlSignals <ControlSignal>`.  This is used by each ControlSignal to calculate its `intensity`, which is then
+conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the `ParameterState(s)
+<ParameterState>` to which they project.  Each ParameterState then uses the value received by a ControlProjection to
+modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation` for a more detailed
+description of how modulation operates).  A ControlMechanism can regulate only the parameters of Components in the
+`System` for which it is the `controller <System_Execution_Control>`.  The control Components of a System can be
+displayed using the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
-The control components of a system can be displayed using the system's
-`show_graph` method with its **show_control** argument assigned as :keyword:``True`.
+The control Components of a System can be displayed using the System's
+`show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
 COMMENT
 
 The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
-`learning components <LearningMechanism>` in that system have been executed (see `System Execution <System_Execution>`).
+`learning components <LearningMechanism>` in that System have been executed (see `System Execution <System_Execution>`).
 
 .. _ControlMechanism_Creation:
 
@@ -50,21 +50,25 @@ used to control the parameters specified in **control_signals**, as described be
 created by a ControlMechanism, and how it evaluates the values it monitors, depends on the `subclass <LINK>` of
 ControlMechanism.
 
-.. _ControlMechanism_Monitored_Values:
+.. _ControlMechanism_Monitored_OutputStates:
+
 
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
-evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor
-(or of the System that created the ControlMechanism). The **monitor_for_control** argument must be a list,
-each item of which must refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the
-ObjectiveMechanism's `monitored_values <ObjectiveMechanism>` attribute, and the ObjectiveMechanism is referenced by
-the ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The
-ObjectiveMechanism monitors each Mechanism and/or OutputState listed in the ControlMechanism's `monitor_for_control
-<ControlMechanism_Base.monitor_for_control>` attribute, and evaluates them using the its `function
-<ControlMechanism_Base.function>`. This information is used to set the `allocation <ControlSignal.allocation>` for
-each of the ControlMechanism's ControlSignals.
+evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor (or of the
+System that created the ControlMechanism). The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's `monitored_values
+<ObjectiveMechanism>` attribute (and the ControlMechanism's `monitored_output_states`
+<ControlMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
+ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
+attribute (and the ControlMechanism's `monitored_output_states` <ControlMechanism_Base.monitored_output_states>`
+attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
+`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the ControlMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
+ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of the ControlMechanism's ControlSignals.
 
 .. _ControlMechanism_Control_Signals:
 
@@ -106,7 +110,7 @@ Execution
 A ControlMechanism that is a System's `controller` is always the last `Mechanism` to be executed in a `TRIAL` for that
 System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The ControlMechanism's
 `function <ControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of its *ERROR_SIGNAL*
-`input_state <Mechanism.input_state>`, and uses that to determine its
+`input_state <Mechanism_Base.input_state>`, and uses that to determine its
 `allocation_policy <ControlMechanism_Base.allocation_policy>` which specifies the value assigned to the
 `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
@@ -185,7 +189,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
-                    System.executionGraph by default
+                    System.execution_graph by default
                 if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
                     no OutputStates are listed; it is overridden for any Mechanism for which OutputStates are
                     explicitly listed
@@ -241,17 +245,17 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     monitoring_mechanism : ObjectiveMechanism
         Mechanism that monitors and evaluates the values specified in the ControlMechanism's **monitor_for_control**
         argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
-        `input_state <Mechanism.input_state>`.
+        `input_state <Mechanism_Base.input_state>`.
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` of a `Mechanism` specified in the **monitor_for_control** argument of the
-        ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
-        ControlMechanism's `variable <Mechanism.variable>`.
+        ControlMechanism's constructor, the `value <OutputState.value>` \s of which serve as the items of the
+        ControlMechanism's `variable <Mechanism_Base.variable>`.
 
     control_signals : List[ControlSignal]
         list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
         to the `ParameterState` for the parameter it controls (same as ControlMechanism's
-        `output_states <Mechanism.output_states>` attribute).
+        `output_states <Mechanism_Base.output_states>` attribute).
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -264,7 +268,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     allocation_policy : 2d np.array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
-        ControlMechanism's `value <Mechanism.value>` attribute).
+        ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,

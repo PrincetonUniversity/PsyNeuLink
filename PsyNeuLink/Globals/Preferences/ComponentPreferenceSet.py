@@ -125,7 +125,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - log (bool): enables/disables logging for a given object
             - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
         Implement the following preference levels:
-            - SYSTEM: system level default settings (Function.classPreferences)
+            - SYSTEM: System level default settings (Function.classPreferences)
             - CATEGORY: category-level default settings:
                 Mechanism.classPreferences
                 State.classPreferences

@@ -315,7 +315,7 @@ class GatingSignal(ModulatorySignal):
 
     name : str : default OutputState-<index>
         a string used for the name of the OutputState.
-        If not is specified, a default is assigned by the StateRegistry of the mechanism to which the OutputState
+        If not is specified, a default is assigned by the StateRegistry of the Mechanism to which the OutputState
         belongs (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : State.classPreferences]
@@ -356,13 +356,13 @@ class GatingSignal(ModulatorySignal):
     name : str : default <State subclass>-<index>
         name of the OutputState.
         Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
-        assigned by the StateRegistry of the mechanism to which the OutputState belongs
+        assigned by the StateRegistry of the Mechanism to which the OutputState belongs
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
         .. note::
-            Unlike other PsyNeuLink components, state names are "scoped" within a mechanism, meaning that states with
-            the same name are permitted in different mechanisms.  However, they are *not* permitted in the same
-            mechanism: states within a mechanism with the same base name are appended an index in the order of their
+            Unlike other PsyNeuLink components, State names are "scoped" within a Mechanism, meaning that States with
+            the same name are permitted in different Mechanisms.  However, they are *not* permitted in the same
+            Mechanism: States within a Mechanism with the same base name are appended an index in the order of their
             creation.
 
     prefs : PreferenceSet or specification dict : State.classPreferences

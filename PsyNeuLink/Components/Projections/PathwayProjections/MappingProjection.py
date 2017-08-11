@@ -32,8 +32,8 @@ A MappingProjection can be created in any of the ways that can be used to create
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
 
-  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process.pathway>` do not already have a
-    Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
+  * by a `Process`, when two adjacent `Mechanisms <Mechanism>` in its `pathway <Process_Base.pathway>` do not already
+    have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
   * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_values
@@ -44,10 +44,10 @@ MappingProjections are also generated automatically in the following circumstanc
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
-    <ControlMechanism_Monitored_Values>` to its `primary InputState <InputState_Primary>`, and from the OutputStates
-    listed in the ControlMechanism's `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
-    attribute) to the ObjectiveMechanism (as described above; an `IDENTITY_MATRIX` is used for all of these).
+  * by a `ControlMechanism`, from the `ObjectiveMechanism` that `it creates <_ControlMechanism_Monitored_OutputStates>`
+    to its *ERROR_SIGNAL* ``, and from the `OutputStates <OutputState>` listed in the ControlMechanism's
+    `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute) to the ObjectiveMechanism (as
+     described above; an `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
 
@@ -241,13 +241,13 @@ class MappingProjection(PathwayProjection_Base):
         name=None,                                          \
         prefs=None)
 
-    Implements a Projection that transmits the output of one mechanism to the input of another.
+    Implements a Projection that transmits the output of one Mechanism to the input of another.
 
 
     COMMENT:
         Description:
             The MappingProjection class is a type in the Projection category of Component.
-            It implements a Projection that takes the value of an OutputState of one mechanism, transforms it as
+            It implements a Projection that takes the value of an OutputState of one Mechanism, transforms it as
             necessary, and provides it to the inputState of another ProcessingMechanism.
             It's function conveys (and possibly transforms) the OutputState.value of a sender
                 to the InputState.value of a receiver.
@@ -488,7 +488,7 @@ class MappingProjection(PathwayProjection_Base):
 
             elif self._matrix_spec == IDENTITY_MATRIX or self._matrix_spec == HOLLOW_MATRIX:
                 # Identity matrix is not reshapable
-                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to mechanism \'{}\'"
+                raise ProjectionError("Output length ({}) of \'{}{}\' from {} to Mechanism \'{}\'"
                                       " must equal length of it InputState ({}) to use {}".
                                       format(mapping_output_len,
                                              self.name,
@@ -582,6 +582,16 @@ class MappingProjection(PathwayProjection_Base):
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         self.function_object.matrix = matrix
+
+        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
+        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
+        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
+        # fix this bug and make setting myMappingProjection.matrix effective.
+        # REMOVED 7/26/17 CW: feel free to remove all this commented block
+        # if MATRIX in self._parameter_states.key_values:
+        #     if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
+        #         self._parameter_states[MATRIX].function_object.variable = matrix
+        #         self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
 
     @property
     def _matrix_spec(self):

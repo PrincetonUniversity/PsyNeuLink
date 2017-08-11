@@ -63,7 +63,7 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
 * `Mechanisms <Mechanism>` - takes one or more inputs received from its afferent `Projections <Projection>`,
   uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
   available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-  ProcessingMechansms and AdapativeMechanisms:
+  ProcessingMechanisms and AdaptiveMechanisms:
 
   + `ProcessingMechanism`
       Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
@@ -190,7 +190,7 @@ they belong is run.  Compositions are run iteratively in `rounds of execution`, 
 composition is given an opportunity to execute.  By default, each Mechanism in a Composition executes exactly once
 per round of execution.  However, a `Scheduler` can be used to specify one or more conditions for each Mechanism
 that determine whether it runs in a given round of execution.  This can be used to determine when a Mechanism begins
-and/or ends executing, how many times it executes or the frequency with which it exeuctes relative to other
+and/or ends executing, how many times it executes or the frequency with which it executes relative to other
 Mechanisms, as well as dependencies among Mechanisms (e.g., that one begins only when another has completed).
 
 Since Mechanisms can implement any function, Projections insure that they can "communicate" with

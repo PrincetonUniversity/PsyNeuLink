@@ -84,7 +84,6 @@ OutputStates).
 
 .. _GatingProjection_Class_Reference:
 
-
 Class Reference
 ---------------
 
@@ -130,7 +129,7 @@ class GatingProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The GatingProjection class is a type in the Projection category of Component.
-            It implements a projection to the inputState or outputState of a mechanism that modulates the value of
+            It implements a projection to the InputState or OutputState of a Mechanism that modulates the value of
             that state
             It:
                - takes a scalar as its input (sometimes referred to as a "gating signal")
@@ -282,7 +281,7 @@ class GatingProjection(ModulatoryProjection_Base):
         # A Process can't be the sender of a GatingProjection
         if isinstance(self.sender, Process):
             raise ProjectionError("PROGRAM ERROR: attempt to add a {} from a Process {0} "
-                                  "to a mechanism {0} in pathway list".
+                                  "to a Mechanism {0} in pathway list".
                                   format(GATING_PROJECTION, self.name, self.sender.name))
 
         # If sender is specified as a Mechanism, validate that it is a GatingMechanism

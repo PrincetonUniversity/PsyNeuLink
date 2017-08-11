@@ -30,7 +30,7 @@ mode), or integrated numerically (in `TIME_STEP` mode).
 
 Creating a DDM Mechanism
 -----------------------------
-A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
+A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` command
 and specifying DDM as its **mech_spec** argument.  The analytic solution used in `TRIAL` mode is selected
 using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example below),
 or a call to the function with arguments specifying its parameters (see `DDM_Execution` below for a description of
@@ -60,7 +60,7 @@ Structure
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState` the
 `value <DDM.value>` of which is assigned to the `input <DDM.input>` specified by its
-`execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` methods,
+`execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods,
 and that is used as the stimulus component of the `drift rate <DDM_Drift_Rate>` for the decision process.  The
 decision process can be configured to execute in different modes.
 
@@ -69,21 +69,21 @@ decision process is executed, and what information is returned. The `function <D
 analytic solution to use when `time_scale <DDM.time_scale>` is  set to `TimeScale.TRIAL`
 (see `Functions <DDM_Functions>` below); when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the
 **function** argument must be assigned an `Integrator` Function with an
-`integration_type <Integrator.integration_type>` of *DIFFUSION*, so that executing the DDM mechanism numerically
+`integration_type <Integrator.integration_type>` of *DIFFUSION*, so that executing the DDM Mechanism numerically
 integrates the path of the decision variable (see `Execution <DDM_Execution>` below). The number of `output_states
 <DDM.output_states>` is determined by the `function <DDM.function>` in use (see `DDM_Execution` and
 `Standard OutputStates <DDM_Standard_OutputStates>`).
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-The DDM mechanism implements a general form of the decision process.  A DDM mechanism assigns one **inputState** to
+The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputState** to
 each item in the `default_variable` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
 the analytical solution to use when `time_scale <DDM.time_scale>` is  set to :keyword:`TimeScale.TRIAL` (see
 :ref:`Functions <DDM_Functions>` below); when `time_scale <DDM.time_scale>` set to `TimeScale.TIME_STEP`,
-executing the DDM mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
+executing the DDM Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
 below).  The number of `outputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
 COMMENT
@@ -128,8 +128,8 @@ using the keywords in the list below, as in the following example::
                  time_scale=TimeScale.TRIAL)
 
 .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
-   `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a mechanism's constructor
-   override corresponding ones specified as arguments of its `function <Mechanism.Mechanism_Base.function>`
+   `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
+   override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
    (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
    set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
    as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
@@ -141,7 +141,7 @@ is set to `BogaczEtAl` or `NavarroAndFuss` are:
 .. _DDM_Drift_Rate:
 
 * `DRIFT_RATE <drift_rate>` (default 0.0)
-  - multiplies the input to the mechanism before assigning it to the `variable <DDM.variable>` on each call of
+  - multiplies the input to the Mechanism before assigning it to the `variable <DDM.variable>` on each call of
   `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to the
   `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component (baseline
   strength) of the decision process, the value received from a ControlProjection as the "attentional" component,
@@ -212,22 +212,22 @@ DDM Results
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
-When a DDM mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
+When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
 or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
 it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
 with each element of the input used for the corresponding process.  All use the same set of parameters,
 so the analytic solutions (used in TRIAL mode) for a given input will be the same; to implement processes in
-this mode that use different parameters, a separate DDM mechanism should explicitly be created for each. In
+this mode that use different parameters, a separate DDM Mechanism should explicitly be created for each. In
 TIME_STEP mode, the noise term will resolve to different values in each time step, so the integration
 paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
 single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism.Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods)
-   differently than standard Components: runtime parameters are added to the mechanism's current value of the
-   corresponding parameterState (rather than overriding it);  that is, they are combined additively with the value of
-   any `ControlProjection` it receives to determine the parameter's value for that execution.  The parameterState's
+   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
+   differently than standard Components: runtime parameters are added to the Mechanism's current value of the
+   corresponding ParameterState (rather than overriding it);  that is, they are combined additively with the value of
+   any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterState's
    value is then restored to its original value (i.e., either its default value or the one assigned when it was
    created) for the next execution.
 
@@ -253,7 +253,7 @@ returned by the DDM's `function <DDM.function>`: `DECISION_VARIABLE <DDM_DECISIO
 Execution
 ---------
 
-When a DDM mechanism is executed, it computes the decision process either analytically (in `TRIAL` mode) or by
+When a DDM Mechanism is executed, it computes the decision process either analytically (in `TRIAL` mode) or by
 step-wise integration using the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ (in `TIME_STEP` mode).
 It `function <DDM>function>` always returns its *DECISION_VARIABLE* and *RESPONSE_TIME* results
 (see `DDM_Standard_OutputStates`), and assigns these as the first two items of its `value <DDM.value>` attribute.
@@ -461,11 +461,11 @@ class DDM(ProcessingMechanism_Base):
     Arguments
     ---------
     default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
-        the input to the mechanism to use if none is provided in a call to its
-        :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
+        the input to the Mechanism to use if none is provided in a call to its
+        :py:data:`execute <Mechanism_Base.execute>` or :py:data:`run <Mechanism_Base.run>` methods;
         also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
-        and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
-        of greater than 1 is handled).
+        and the `primary OutputState <OuputState_Primary>` of the Mechanism (see :ref:`Input` <DDM_Creation>` for how
+        an input with a length of greater than 1 is handled).
     size : int, list or np.ndarray of ints
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
         if **default_variable** is specified, it takes precedence over the specification of **size**.
@@ -473,18 +473,19 @@ class DDM(ProcessingMechanism_Base):
         specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
         `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine
         is installed). If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>` must
-        be `DriftDiffusionIntegrator`, and the mechanism
+        be `DriftDiffusionIntegrator`, and the Mechanism
         will return the result of one time step.
     time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the mechanism is executed on the time_step or trial time scale.
+        specifies whether the Mechanism is executed on the time_step or trial time scale.
         This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
         `function <DDM.function>`. This  must be set to `TimeScale.TIME_STEP` to numerically (path) integrate the
         decision variable.
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
+        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism` for specification of a params
+        dict).
     name : str : default DDM-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
@@ -499,14 +500,13 @@ class DDM(ProcessingMechanism_Base):
     Attributes
     ----------
     variable : value : default  FUNCTION_PARAMS[STARTING_POINT]
-        the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
+        the input to Mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
     function :  IntegratorFunction : default BogaczEtAl
         the function used to compute the outcome of the decision process when `time_scale <DDM.time_scale>` is
         `TimeScale.TRIAL`.  If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>`
-        must be `DriftDiffusionIntegrator`, and the mechanism
-        will return the result of one time step.
+        must be `DriftDiffusionIntegrator`, and the Mechanism will return the result of one time step.
     function_params : Dict[str, value]
-        contains one entry for each parameter of the mechanism's function.
+        contains one entry for each parameter of the Mechanism's function.
         The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
         result of executing DDM `function <DDM.function>`;  see `DDM_Execution` for a description of item assignments,
@@ -519,13 +519,13 @@ class DDM(ProcessingMechanism_Base):
     time_scale : TimeScale : default TimeScale.TRIAL
         determines the `TimeScale` at which the decision process is executed.
     name : str : default DDM-<index>
-        the name of the mechanism.
+        the name of the Mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        a PreferenceSet for the mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
+        a PreferenceSet for the Mechanism.
+        Specified in the prefs argument of the call to create the Mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
     COMMENT:
@@ -642,8 +642,8 @@ class DDM(ProcessingMechanism_Base):
 
         Returns
         -------
-        mechanism's function plot : Matplotlib window
-            Matplotlib window of the mechanism's function plotting dynamically over time with specified parameters
+        Mechanism's function plot : Matplotlib window
+            Matplotlib window of the Mechanism's function plotting dynamically over time with specified parameters
             towards a specified threshold
 
         """
@@ -828,7 +828,7 @@ class DDM(ProcessingMechanism_Base):
             + kwDDM_Bias (float)
             + NON_DECISION_TIME (float)
             + NOISE (float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
         Returns the following values in self.value (2D np.array) and in
             the value of the corresponding outputState in the self.outputStates dict:

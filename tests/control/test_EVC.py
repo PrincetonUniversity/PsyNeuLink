@@ -109,8 +109,8 @@ def test_EVC():
         inputs=stim_list_dict,
     )
 
-    RewardPrediction = mySystem.executionList[3]
-    InputPrediction = mySystem.executionList[4]
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []
@@ -358,7 +358,7 @@ def test_EVC_gratton():
             mech.function_object.rate = 1.0
             # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
-    print('new rate of integration mechanisms before system execution:')
+    print('new rate of integration mechanisms before System execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
     for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         print(mech.name)
@@ -545,8 +545,8 @@ def test_laming_validation_specify_control_signals():
         inputs=stim_list_dict
     )
 
-    RewardPrediction = mySystem.executionList[3]
-    InputPrediction = mySystem.executionList[4]
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []

@@ -19,8 +19,8 @@ or System.  If the InputState belongs to an `ORIGIN` Mechanism (see
 specified when that Process or System is `run <Run>`.  The Projections received by an InputState are
 listed in its `path_afferents <InputState.path_afferents>` attribute. Its
 `function <InputState.function>` combines the values of these inputs, and the result is assigned to an item
-corresponding to the InputState in the owner Mechanism's :keyword:`variable <Mechanism.Mechanism_Base.variable>` and
-`input_values <Mechanism.Mechanism_Base.input_values>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
+corresponding to the InputState in the owner Mechanism's :keyword:`variable <Mechanism_Base.variable>` and
+`input_values <Mechanism_Base.input_values>` attributes  (see `Mechanism InputStates <Mechanism_InputStates>`
 for additional details about the role of InputStates in Mechanisms).
 
 
@@ -74,7 +74,7 @@ InputStates are specified in the parameter dictionary, any specified in the **in
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
 InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states` method.  However, this has
-consequences for the Mechanism's `variable <Mechanism.variable>` and possbily their relationship to the Mechanism's
+consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possbily their relationship to the Mechanism's
 `function <Mechanism_Base.function>` (these are discussed `below <InputStates_Mechanism_Variable_and_Function>`).
 If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
 with a numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list
@@ -137,11 +137,11 @@ COMMENT:
              reference_value IS THE ITEM OF variable CORRESPONDING TO THE InputState
 COMMENT
 
-The values of a Mechanism's InputStates are assigned as items in its `input_values <Mechanism.input_values>`
+The values of a Mechanism's InputStates are assigned as items in its `input_values <Mechanism_Base.input_values>`
 attribute, in the order in which they are assigned in the constructor and/or added using the Mechanism's `add_states`
-method, and in which they are listed in the Mechanism's `input_states <Mechanism.input_states>` attribute.  Note
+method, and in which they are listed in the Mechanism's `input_states <Mechanism_Base.input_states>` attribute.  Note
 that a Mechanism's `input_value <Mechanism_Base.input_value>` attribute has the same information as the
-Mechanism's `variable <Mechanism.variable>`, but in a different format:  the former is a list and the latter a
+Mechanism's `variable <Mechanism_Base.variable>`, but in a different format:  the former is a list and the latter a
 2d np.array.
 
 
@@ -167,7 +167,7 @@ InputState added.
     explicit assignment of InputStates to a Mechanism is coordinated with the assignment of its
     `function <Mechanism_Base.function>`, so that the total number of InputStates (listed in the Mechanism's
     `input_states <Mechanism_Base.input_states>` attribute matches the number of items expected for the input to the
-    function specified in the Mechanism's `function <Mechanism.function>` attribute  (i.e., its size along axis 0).
+    function specified in the Mechanism's `function <Mechanism_Base.function>` attribute  (i.e., its size along axis 0).
 
 
 COMMENT:
@@ -232,7 +232,7 @@ Like all PsyNeuLink components, an InputState also has the three following core 
 * `value <InputState.value>`:  this is the aggregated value of the `Projections <Projection>` received by the
   InputState and assigned to it by the InputState's `function <InputState.function>`, possibly modified by the
   influence of any `GatingProjections <GatingProjection>` received by the InputState. It must be compatible with the
-  item of the owner Mechanism's `variable <Mechanism.Mechanism_Base.variable>` to which the InputState has been
+  item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been
   assigned.
 
 .. _InputState_Execution:
@@ -246,8 +246,8 @@ When this occurs, the InputState executes any `Projections <Projection>` it rece
 (listed in its its `path_afferents  <InputState.path_afferents>` attribute) and modulate them in response to any
 `GatingProjections <GatingProjection>` (listed in its `mod_afferents <InputState.mod_afferents>` attribute),
 and then assigns the result to the InputState's `value <InputState.value>` attribute.
-This, in turn, is assigned to the item of the Mechanism's  `variable <Mechanism.Mechanism_Base.variable>` and
-`input_values <Mechanism.Mechanism_Base.input_values>` attributes  corresponding to that InputState (see `Mechanism
+This, in turn, is assigned to the item of the Mechanism's  `variable <Mechanism_Base.variable>` and
+`input_values <Mechanism_Base.input_values>` attributes  corresponding to that InputState (see `Mechanism
 variable and input_values attributes <Mechanism_Variable>` for additional details).
 
 .. _InputState_Class_Reference:
@@ -344,7 +344,7 @@ class InputState(State_Base):
         the InputState is created.
 
     reference_value : number, list or np.ndarray
-        the value of the item of the owner Mechanism's `variable <Mechanism.Mechanism_Base.variable>` attribute to which
+        the value of the item of the owner Mechanism's `variable <Mechanism_Base.variable>` attribute to which
         the InputState is assigned; used as the template for the InputState's `value <InputState.value>` attribute.
 
     variable : number, list or np.ndarray
@@ -354,7 +354,7 @@ class InputState(State_Base):
         specifies the function used to aggregate the `values <Projection.value>` of the `Projections <Projection>`
         received by the InputState, under the possible influence of `GatingProjections <GatingProjection>` received
         by the InputState.  It must produce a result that has the same format (number and type of elements) as the
-        item of its owner Mechanism's `variable <Mechanism.variable>` to which the InputState has been assigned.
+        item of its owner Mechanism's `variable <Mechanism_Base.variable>` to which the InputState has been assigned.
 
     projections : list of Projection specifications
         species the `MappingProjection(s) <MappingProjection>` and/or `GatingProjection(s) <GatingProjection>` to be
@@ -384,7 +384,7 @@ class InputState(State_Base):
     owner : Mechanism
         the Mechanism to which the InputState belongs.
 
-    pathway_afferents : List[MappingProjection]
+    path_afferents : List[MappingProjection]
         a list of the `MappingProjections <MappingProjection>` received by the InputState
         (i.e., for which it is a `receiver <Projection.Projection.receiver>`).
 
@@ -406,9 +406,12 @@ class InputState(State_Base):
         by the InputState.
 
     value : value or ndarray
-        the aggregated value of the Projections received by the InputState; output of `function <InputState.function>`.
-        If it is an ndarray, the full array is assigned as the value of an item of the owner Mechanism's
-        `variable <Mechamism_Base.variable>`.
+        the output of the InputState's `function <InputState.function>`, which is the the aggregated value of the
+        `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
+        InputState (and listed in its `path_afferents <InputState.path_afferents>` attribute), possibly `modulated
+        <ModulatorySignal_Modulation>` by any `GatingProjections <GatingProjection>` it receives (listed in its
+        `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
+        assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
     name : str : default <State subclass>-<index>
         the name of the InputState.

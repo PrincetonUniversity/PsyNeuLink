@@ -85,8 +85,8 @@ comp = Composition()
             number=count
         )
         print()
-        logger.info('completed {0} addition{2} of a mechanism to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
-
+        logger.info('completed {0} addition{2} of a Mechanism to a Composition in {1:.8f}s'.
+                    format(count, t, 's' if count != 1 else ''))
 
 # Unit tests for Composition.add_projection
 @pytest.mark.skip
@@ -1013,7 +1013,8 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, B_to_C, A_to_B, B, C])
 
-        assert "A projection in a linear processing pathway must be preceded by a mechanism and followed by a mechanism" \
+        assert "A projection in a linear processing pathway must be preceded by a Mechanism and followed by a " \
+               "Mechanism" \
                in str(error_text.value)
 
     def test_LPP_start_with_projection(self):
@@ -1024,7 +1025,7 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
 
-        assert "The first item in a linear processing pathway must be a mechanism." in str(
+        assert "The first item in a linear processing pathway must be a Mechanism." in str(
             error_text.value)
 
     def test_LPP_wrong_component(self):

@@ -20,7 +20,7 @@ of one or more `MappingProjections <MappingProjection>`.  Its function takes an 
 as well as information about the `MappingProjection and activity <LearningMechanism_Additional_Attributes>` that
 generated the error, calculates a `learning_signal` that is used to modify the MappingProjection(s) by way of
 `LearningProjection(s) <LearningProjection>`.  Typically, a LearningMechanism is used to "train" a single
-MappingProjection (its `primary_learned_projection`), using the output of the mechanism to which that
+MappingProjection (its `primary_learned_projection`), using the output of the Mechanism to which that
 MappingProjection projects (its `output_source`) as the source of the error it attempts to reduce.  A LearningMechanism
 can be used to train multiple MappingProjections, by assigning it `additional LearningProjections
 <LearningMechanism_Multiple_LearningSignals>`; however, these will all use the same `learning_signal

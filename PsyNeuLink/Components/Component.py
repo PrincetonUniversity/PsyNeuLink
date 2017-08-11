@@ -80,7 +80,7 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
   .. note::
      The `function <Component.function>` of a Component can be assigned either a `Function` object or any other
-     callable object in python.  If the latter is assigned, it will be "wrapped" in a `UserDefinedFunction`.
+     callable object in python.  If the latter is assigned, it is "wrapped" in a `UserDefinedFunction`.
 
   All Components have a default `function <Component.function>` (with a default set of parameters), that is used if it
   is not otherwise specified.  The `function <Component.function>` can be specified in the
@@ -148,8 +148,14 @@ Core Informational Attributes
 .. _Component_User_Params:
 
 * **user_params** - this contains a dictionary of all of the configurable attributes for a given Component.
-  The dictionary is read-only.  Changes to the value of an attribute must be made by assigning a
-  value to the attribute directly (see <>), or using the Component's `assign_params <Component.assign_params>` method.
+  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+  class `UserDict <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+  value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
+  however, to access a full list of entries it's data attribute must be used (e.g.,
+  ``my_component.user_params.data``).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
+  changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
+  ``my_component.my_parameter``), or using the Component's `assign_params <Component.assign_params>` method.
+
 ..
 COMMENT:
   INCLUDE IN DEVELOPERS' MANUAL
@@ -163,17 +169,21 @@ COMMENT
 * **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
   The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
   Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-  those parameters (see `function_params <Component.function_params>` above).
+  those parameters (see `function_params <Component_Function_Params>` below).
 
 .. _Component_Function_Params:
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
-  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and
-  its value the value of that parameter.  This dictionary is read-only. Changes to the value of the function's
-  parameters must be made by assigning a value to the corresponding attribute of the Component's
-  `function_object <Component.function_object>` attribute (e.g., myMechanism.function_object.my_parameter),
-  or in a FUNCTION_PARAMS dict using its `assign_params` method.  The parameters for the function can be specified
-  when the Component is created in one of the following ways:
+  for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
+  value the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+  class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+  value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
+  however, to access a full list of entries it's data attribute must be used (e.g.,
+  ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
+  Rather, changes to the value of the function's parameters must be made by assigning a value to the corresponding
+  attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
+  ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
+  parameters for the function can be specified when the Component is created in one of the following ways:
 
   * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
     as in the following example::
@@ -193,8 +203,12 @@ COMMENT
         my_component = SomeComponent(function=SomeFunction
                                      params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
-  See `ParameterState_Specification` for details concerning different ways in which the value of a parameter
-  can be specified.
+  The parameters of functions for some Components may allow other forms of specification (see
+  `ParameterState_Specification` for details concerning different ways in which the value of a
+  parameter can be specified).
+
+
+
 
 COMMENT:
 * **log**
@@ -496,7 +510,7 @@ class Component(object):
          - class and instance variable defaults
          - class and instance param defaults
         The Components's execute method (<subclass>.execute is the Component's primary method
-            (e.g., it is the one called when process, mechanism, state and projections objects are updated);
+            (e.g., it is the one called when Process, Mechanism, State and Projections objects are updated);
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
@@ -558,7 +572,7 @@ class Component(object):
     Class attributes:
         + className
         + suffix - " " + className (used to create subclass and instance names)
-        + componentCategory - category of Component (i.e., process, mechanism, projection, learning, function)
+        + componentCategory - category of Component (i.e., Process, Mechanism, Projection, Function)
         + componentType - type of Component within a category
                              (e.g., TransferMechanism, MappingProjection, ControlProjection, etc.)
         + requiredParamClassDefaultTypes - dict of param names & types that all subclasses of Component must implement;
@@ -1853,7 +1867,7 @@ class Component(object):
 
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
-        Single state array (vector) variable:                         [0, 1] -> [array([0, 1])
+        Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
         Perform top-level type validation of variable against the variableClassDefault;
@@ -2680,7 +2694,7 @@ def make_property(name, default_value):
         except (AttributeError, TypeError):
             try:
                 # Get value of param from Component's own ParameterState.value
-                #    case: request is for the value of a parameter of a Mechanism or Project that has a ParameterState
+                #    case: request is for value of a parameter of a Mechanism or Projection that has a ParameterState
                 #    example: matrix parameter of a MappingProjection)
                 #    rationale: next most common case
                 #    note: use backing_field[1:] to get name of parameter as index into _parameter_states)

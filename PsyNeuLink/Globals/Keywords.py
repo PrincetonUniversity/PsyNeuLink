@@ -53,12 +53,12 @@ class Keywords:
     TERMINAL
         A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
         that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` mechanism, but a system may have many.  Note that the `TERMINAL`
-        mechanism of a process is not necessarily a `TERMINAL` mechanism of the system to which it belongs,
-        as it may send projections to other processes in the system.  The `TERMINAL` mechanisms of a process
-        or system are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details about `TERMINAL` mechanisms in processes, see
-        `Process_Mechanisms` and `Process_Input_And_Output`; and for systems see `System_Mechanisms`.
+        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
+        Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
+        as it may send projections to other processes in the System.  The `TERMINAL` Mechanisms of a Process
+        or System are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
+        :keyword:`show` method.  For additional details about `TERMINAL` Mechanisms in Processes, see
+        `Process_Mechanisms` and `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
 
     SINGLETON
         A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
@@ -73,7 +73,7 @@ class Keywords:
         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It must be associated with the `TERMINAL`
         Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or System are listed in its
         :keyword:`target_mechanisms` attribute, and can be displayed using its :keyword:`show` method.  For additional
-        details, see `TARGET mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
+        details, see `TARGET Mechanisms <LearningMechanism_Targets>` and specifying `target values <Run_Targets>`.
 
 
     """

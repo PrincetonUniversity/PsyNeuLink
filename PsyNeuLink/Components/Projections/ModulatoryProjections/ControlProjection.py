@@ -48,7 +48,7 @@ a ControlProjection to be created before its `sender <ControlProjection.sender>`
 specifying its **sender** or **receiver** arguments. However, for the ControlProjection to be operational,
 initialization must be completed by calling its `deferred_init` method. This is not necessary if the ControlProjection
 is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a `Mechanism` or its
-`function <Mechanism.function>`, in which case the deferred initialization is completed automatically when the
+`function <Mechanism_Base.function>`, in which case the deferred initialization is completed automatically when the
 `ControlMechanism` is created for the `System` to which the parameter's owner belongs (see `ControlMechanism_Creation`).
 
 
@@ -66,7 +66,7 @@ ControlProjection is an identity function (`Linear` with **slope**\\ =1 and **in
 conveys the value of its `control_signal <ControlProjection.control_signal>` to its `receiver
 <ControlProjection.receiver>`, for use in modifying the value of the parameter that it controls. Its `receiver
 <ControlProjection.receiver>` is the `ParameterState` for the parameter of the `Mechanism` or its `function
-<Mechanism.function>` that is controlled by the ControlProjection.
+<Mechanism_Base.function>` that is controlled by the ControlProjection.
 
 .. _ControlProjection_Execution:
 
@@ -137,7 +137,7 @@ class ControlProjection(ModulatoryProjection_Base):
     COMMENT:
         Description:
             The ControlProjection class is a type in the Projection category of Component.
-            It implements a projection to the ParameterState of a mechanism that modifies a parameter of its function.
+            It implements a projection to the ParameterState of a Mechanism that modifies a parameter of its function.
             It:
                - takes a scalar as its input (sometimes referred to as an "allocation")
                - uses its `function` to compute its value (sometimes referred to as its "intensity"
@@ -312,7 +312,7 @@ class ControlProjection(ModulatoryProjection_Base):
         # A Process can't be the sender of a ControlMechanism
         if isinstance(self.sender, Process):
             raise ProjectionError("PROGRAM ERROR: attempt to add a ControlProjection from a Process {0} "
-                                  "to a mechanism {0} in pathway list".format(self.name, self.sender.name))
+                                  "to a Mechanism {0} in pathway list".format(self.name, self.sender.name))
 
         # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(self.sender, Mechanism):

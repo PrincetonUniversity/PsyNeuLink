@@ -34,6 +34,7 @@ class ScratchPadError(Exception):
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
 
+
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -41,6 +42,7 @@ from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 import numpy as np
+
 
 #region SIMPLE NN EXAMPLE:
 
@@ -56,7 +58,8 @@ import numpy as np
 #
 # # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
 # my_system = system(processes=[my_process])
-# my_system.show_graph(show_learning=True, direction='TB')
+# # my_system.show_graph(show_learning=True, direction='TB')
+# my_system.show_graph(show_control=True, direction='TB')
 # # MappingProjection(sender=output_layer,
 # #                   receiver=hidden_layer,
 # #                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
@@ -426,44 +429,44 @@ import numpy as np
 
 #region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
-    import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
-    import LearningMechanism
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
-
-my_Mech_A = TransferMechanism(size=10)
-my_Mech_B = TransferMechanism(size=10)
-my_Mech_C = TransferMechanism(size=10)
-my_mapping_AB = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
-my_mapping_AC = MappingProjection(sender=my_Mech_A, receiver=my_Mech_C)
-
-my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
-                                    # FIX: DOESN'T WORK WITHOUT EXPLICITY SPECIFIYING input_states, BUT SHOULD
-                                    input_states=[{NAME:SAMPLE,
-                                                   VARIABLE:my_Mech_B.output_state.value,
-                                                   WEIGHT:-1
-                                                   },
-                                                  {NAME:TARGET,
-                                                   VARIABLE:my_Mech_B.output_state.value,
-                                                   # WEIGHT:1
-                                                   }]
-                                    )
-my_learning = LearningMechanism(variable=[my_Mech_A.output_state.value,
-                                          my_Mech_B.output_state.value,
-                                          my_comparator.output_state.value],
-                                error_source=my_comparator,
-                                function=BackPropagation(default_variable=[my_Mech_A.output_state.value,
-                                                                           my_Mech_B.output_state.value,
-                                                                           my_Mech_B.output_state.value],
-                                                         activation_derivative_fct=my_Mech_A.function_object.derivative,
-                                                         error_derivative_fct=my_Mech_A.function_object.derivative,
-                                                         error_matrix=my_mapping_AB.matrix),
-                                learning_signals=[my_mapping_AB, my_mapping_AC])
-
-TEST = True
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+#     import ComparatorMechanism
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+#     import LearningMechanism
+# from PsyNeuLink.Components.Functions.Function import *
+# from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+#
+# my_Mech_A = TransferMechanism(size=10)
+# my_Mech_B = TransferMechanism(size=10)
+# my_Mech_C = TransferMechanism(size=10)
+# my_mapping_AB = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+# my_mapping_AC = MappingProjection(sender=my_Mech_A, receiver=my_Mech_C)
+#
+# my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
+#                                     # FIX: DOESN'T WORK WITHOUT EXPLICITY SPECIFIYING input_states, BUT SHOULD
+#                                     input_states=[{NAME:SAMPLE,
+#                                                    VARIABLE:my_Mech_B.output_state.value,
+#                                                    WEIGHT:-1
+#                                                    },
+#                                                   {NAME:TARGET,
+#                                                    VARIABLE:my_Mech_B.output_state.value,
+#                                                    # WEIGHT:1
+#                                                    }]
+#                                     )
+# my_learning = LearningMechanism(variable=[my_Mech_A.output_state.value,
+#                                           my_Mech_B.output_state.value,
+#                                           my_comparator.output_state.value],
+#                                 error_source=my_comparator,
+#                                 function=BackPropagation(default_variable=[my_Mech_A.output_state.value,
+#                                                                            my_Mech_B.output_state.value,
+#                                                                            my_Mech_B.output_state.value],
+#                                                          activation_derivative_fct=my_Mech_A.function_object.derivative,
+#                                                          error_derivative_fct=my_Mech_A.function_object.derivative,
+#                                                          error_matrix=my_mapping_AB.matrix),
+#                                 learning_signals=[my_mapping_AB, my_mapping_AC])
+#
+# TEST = True
 
 #endregion
 
@@ -653,6 +656,29 @@ TEST = True
 # a.execute()
 #
 #endregion
+
+
+#region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST SYSTEM test_system")
+
+a = TransferMechanism(name='a', default_variable=[0, 0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
+
+p1 = process(pathway=[a, b, c], name='p1')
+p2 = process(pathway=[a, b, d], name='p2')
+
+s = system(
+    processes=[p1, p2],
+    name='Branch System',
+    initial_values={a: [1, 1]},
+)
+
+inputs = {a: [2, 2]}
+s.run(inputs)
+
+
 
 #region TEST INPUT FORMATS
 
