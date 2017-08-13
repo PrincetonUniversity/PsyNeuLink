@@ -705,28 +705,29 @@ class System_Base(System):
             Tuple for the controller in the System.
 
     origin_mechanisms : MechanismList
-        contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any
-        other `Mechanisms <Mechanism>`.
+        all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any other
+        `Mechanisms <Mechanism>`, listed in `origin_mechanisms.data`.
 
         .. based on _origin_mechs
            System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
-        contains all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
-        <ProcessingMechanism>`).
+        all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
+        <ProcessingMechanism>`), listed in terminalMechanisms.data.
 
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
-        contains `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for
-        `initialization <System_Execution_Input_And_Initialization>`.
+        `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for `initialization
+        <System_Execution_Input_And_Initialization>`, listed in recurrent_init_mechanisms.data.
 
     learning_mechanisms : MechanismList
-        contains all `LearningMechanisms <LearningMechanism>` in the System.
+        all `LearningMechanisms <LearningMechanism>` in the System, listed in `learning_mechanisms.data`.
 
     target_mechanisms : MechanismList
-        contains all `TARGET` Mechanisms in the System (used for `learning <_System_Execution_Learning>`).
+        all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
+        `target_mechanisms.data`.
         COMMENT:
             based on _target_mechs)
         COMMENT

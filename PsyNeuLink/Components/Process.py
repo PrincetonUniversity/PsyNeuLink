@@ -109,26 +109,31 @@ methods. The last Mechanism listed in the `pathway <Process_Base.pathway>` is de
 and is assigned to its `terminal_mechanism <Process_Base.terminal_mechanism>` attribute; its `output_value
 <Mechanism.output_value>` is assigned as the `output <Process_Input_And_Output>` of the Process.
 
+.. _Process_Mechanism_Initialize_Cycle:
+
 Any Mechanism that sends a Projection that closes a recurrent loop within the `pathway <Process_Base.pathway>` is
-designated as `INITIALIZE_CYCLE`, and is assigned any `initial_values` that are specified in the Process' `execute
-<Process_Base.execute>` or `run <Process_Base.run>` methods.  Mechanisms that receive such a Projection are designated
-as `CYCLE`, and all others in the `pathway <Process_Base.pathway>` are designated `INTERNAL`
+designated as `INITIALIZE_CYCLE`, and is assigned the value specified for it in the **initial_values** argument of the
+Process' `execute <Process_Base.execute>` or `run <Process_Base.run>` methods whenever the Mechanism is `initialized
+<Process_Execution_Initialization>`. Mechanisms that receive a Projection from one designated `INITIALIZE_CYCLE` are
+themselves designated as `CYCLE`.  All other Mechanisms in the `pathway <Process_Base.pathway>` are designated as
+`INTERNAL`.
 
 .. note::
-   The `ORIGIN` and `TERMINAL` Mechanisms of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms of
-   the `System(s) <System_Mechanisms>` to which the Process belongs (see `example
-   <LearningProjection_Target_vs_Terminal_Figure>`).  The designations of a Mechanism's status in the Process(es) to
-   which it belongs are listed in its `processes <Mechanism_Base.processes>` attribute.
+   The `origin_mechanism <Process_Base.origin_mechanism>` and `terminal_mechanism <Process_Base.terminal_mechanism>`
+   of a Process are not necessarily the `ORIGIN` and/or `TERMINAL` Mechanisms of the `System(s) <System_Mechanisms>`
+   to which the Process belongs (see `example <LearningProjection_Target_vs_Terminal_Figure>`).  The designations of
+   a Mechanism's status in the Process(es) to which it belongs are listed in its `processes
+   <Mechanism_Base.processes>` attribute.
 
 .. _Process_Mechanism_Specification:
 
 Mechanisms can be specified in the **pathway** argument of the `process` command in one of two ways: directly or in a
 *MechanismTuple*.  Direct specification can use any of the ways used to `specify a Mechanism <Mechanism_Creation>`.
-Alternatively, Mechanisms can be specified using a MechanismTuple, the first item of which is the Mechanism, and the
-second a set of `runtime parameters <Mechanism_Runtime_Parameters>`. Runtime parameters are used for that Mechanism
-when the Process (or a System to which it belongs) is executed; otherwise they do not remain associated with the
-Mechanism. The same Mechanism can appear more than once in a `pathway <Process_Base.pathway>`, as one means of
-generating a recurrent processing loop (another is to specify this in the Projections -- see below).
+Alternatively, Mechanisms can be specified using a MechanismTuple, the first item of which is a specification for the
+Mechanism, and the second a set of `runtime parameters <Mechanism_Runtime_Parameters>`. Runtime parameters are used
+for that Mechanism when the Process (or a System to which it belongs) is executed; otherwise they do not remain
+associated with the Mechanism. The same Mechanism can appear more than once in a `pathway <Process_Base.pathway>`,
+as one means of generating a recurrent processing loop (another is to specify this in the Projections -- see below).
 
 .. _Process_Projections:
 
@@ -142,7 +147,21 @@ ways:
     A Projection specification can be interposed between any two Mechanisms in the `pathway <Process_Base.pathway>`
     list.  This creates a Projection from the preceding Mechanism in the list to the one that follows it.  The
     Projection specification can be an existing `MappingProjection`, the class, a `matrix keyword <Matrix_Keywords>`
-    for a type of MappingProjection, or a dictionary with `specifications for the Projection <Projection_Creation>`.
+    for a type of MappingProjection, a dictionary with `specifications for the Projection <Projection_Creation>`,
+
+XXX TUPLE SPECIFICATION:
+    or a tuple the first item of which is a specification for the Projection and the second a specification
+    for learning
+
+         tuples, the LearningProjection specification can
+        be a `LearningProjection` object,
+        the class or the
+        `LEARNING_PROJECTION` keyword (which specifies a default instance) or the constructor for a LearningProjection
+        (including parameters).
+        .  The
+        specification for each MappingProjection can be the class name (creates a default instance), an instance,
+        or a `specification dictionary <Projection_Creation>`.
+
 
 * Stand-alone Projection
     When a Projection is `created <Projection_Creation>` on its own, it can be assigned a `sender
@@ -172,20 +191,25 @@ Process input and output
 The `input <Process_Base.input>` of a Process is a list or 2d np.array provided as the **input** argument in its
 `execute <Process_Base.execute>` method, or the **inputs** argument of its `run <Process_Base.run>` method. When a
 Process is created, a set of `ProcessInputStates <process_input_states>` and `MappingProjections <MappingProjection>`
-are automatically created to transmit the Process' `input <Process_Base.input>` to its `ORIGIN` Mechanism, as follows:
+are automatically created to transmit the Process' `input <Process_Base.input>` to its `ORIGIN` Mechanism
+(`origin_mechanism <Process_Base.origin_mechanism>`), as follows:
 
-* if the number of items in the **input** is the same as the number of `ORIGIN` Mechanism's `InputStates <InputState>`,
-    a MappingProjection is created for each item of the input to a distinct InputState of the `ORIGIN` Mechanism;
+* if the number of items in the **input** is the same as the number of `InputStates <InputState>` for the
+  `origin_mechanism <Process_Base.origin_mechanism>`, a MappingProjection is created for each item of the input to a
+  distinct InputState of the `origin_mechanism <Process_Base.origin_mechanism>`;
 
-* if the **input** has only one item but the `ORIGIN` Mechanism has more than one InputState,
-    a single ProcessInputState is created with Projections to each of the `ORIGIN` Mechanism InputStates;
+* if the **input** has only one item but the `origin_mechanism <Process_Base.origin_mechanism>` has more than one
+  InputState, a single ProcessInputState is created with Projections to each of the `origin_mechanism
+  <Process_Base.origin_mechanism>`'s InputStates;
 
-* if the **input** has more than one item but the `ORIGIN` Mechanism has only one InputState,
-    a ProcessInputState is created for each item of the input, and all project to the `ORIGIN` Mechanism's InputState;
+* if the **input** has more than one item but the `origin_mechanism <Process_Base.origin_mechanism>` has only one
+  InputState, a ProcessInputState is created for each item of the input, and all project to the `origin_mechanism
+  <Process_Base.origin_mechanism>`'s InputState;
 
-* otherwise, if the **input** has more than one item and the `ORIGIN` Mechanism has more than one InputState,
-  but the numbers are not equal, an error message is generated indicating that there is an ambiguous mapping from
-  the Process' **input** value to `ORIGIN` Mechanism's InputStates.
+* otherwise, if the **input** has more than one item and the `origin_mechanism <Process_Base.origin_mechanism>` has
+  more than one InputState, but the numbers are not equal, an error message is generated indicating that there is an
+  ambiguous mapping from the Process' **input** value to `origin_mechanism <Process_Base.origin_mechanism>`'s
+  InputStates.
 
 The output of a Process is assigned as the `output_values <OutputState.output_values>` attribute of its `TERMINAL`
 Mechanism.
@@ -215,10 +239,10 @@ assigning one of the following to the **learning** argument of the Process' cons
     * the keyword *ENABLED*.
 
 Specifying learning for a Process implements it for all MappingProjections in the Process (except those that project
-from the `ProcessInputStates <process_input_states>` to the `ORIGIN` Mechanism), which are treated as a single
-learning sequence.  Mechanisms that receive MappingProjections for which learning has been specified must be compatible
-with learning (that is, their `function <Mechanism_Base.function>` must be compatible with the `function
-<LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
+from the `ProcessInputStates <process_input_states>` to the `origin_mechanism <Process_Base.origin_mechanism>`), which
+are treated as a single learning sequence.  Mechanisms that receive MappingProjections for which learning has been
+specified must be compatible with learning (that is, their `function <Mechanism_Base.function>` must be compatible with
+the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
 `LearningMechanism_Function`).
 
 The following Components are created for each learning sequence specified (see figure below):
@@ -278,20 +302,40 @@ Execution
 A Process can be executed as part of a `System <System>` or on its own.  On its own, it is executed by calling
 either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>`
 executes the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of
-`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `ORIGIN` Mechanism (first
-Mechanism in the pathway).  By default, the the input is presented only once.  If the `ORIGIN` Mechanism is
-executed again in the same `PASS` of execution (e.g., if it appears again in the pathway, or receives recurrent
-projections), the input is not presented again. However, the input can be "clamped" on using the **clamp_input**
-argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.  After the `ORIGIN` Mechanism is executed,
-each subsequent Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a
-`MechanismTuple <Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is
-executed using them (see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism
-(last one in the pathway) is assigned as the output of the Process.
+`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism
+<Process_Base.origin_mechanism>` (first Mechanism in the pathway).  By default, the the input is presented only
+once.  If the `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of execution
+(e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
+However, the input can be "clamped" on using the **clamp_input** argument of `execute <Process_Base.execute>` or
+`run <Process_Base.run>`.  After the `origin_mechanism <Process_Base.origin_mechanism>` is executed, each subsequent
+Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a `MechanismTuple
+<Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is executed using them
+(see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism (last one in the
+pathway) is assigned as the output of the Process.
 
 .. note::
    Processes do not use a `Scheduler`; each Mechanism is executed once, in the order listed in the `pathway`.
    To more precisely control the order of and/or any dependencies in the sequence of executions, the Process
    should be used to construct as `System`, together with `Conditions <Conditions>` to implement a custom schedule.
+
+
+XXX FIX:
+.. _Process_Execution_Initialization
+
+The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
+`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
+each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in the System's
+`origin_mechanisms <System_Base.origin_mechanisms>` attribute). If the `execute <System_Base.execute>` method is used,
+input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
+can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
+both cases, two other types of input can be provided in corresponding arguments of the `run <System_Base.run>` method:
+a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
+assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
+and listed in the System's `recurrent_init_mechanisms <System_Base.recurrent_init_mechanisms>` attribute), and
+**target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
+`System_Execution_Learning` below;  also, see `Run` for additional details of formatting input specifications).
+
+
 
 .. _Process_Execution_Learning:
 
@@ -492,60 +536,75 @@ def process(process_spec=None,
     Arguments
     ---------
 
-    process_spec : Optional[str or Dict[param keyword, param value]]
-        specification for the Process to create.
-        If it is `None`, returns an instance of Process with a single :ref:`DefaultMechanism <LINK>`;
+    process_spec : Optional[str or Dict[param keyword, param value]] : default Process with a single default_mechanism
+        specifies the Process to create.
+        If it is `None`, returns a Process with a single `default_mechanism <Mechanism_Base.default_mechanism>`;
         if it is a string, uses it as the name for the Process;
-        if it is a dict, the key for each entry must be a parameter name, and its value the value to assign to that
-        parameter (these will be used to instantiate the Process, and will override any values assigned
-        to the arguments in the call to :py:func:`process`). If a name is not specified, the nth instance created
-        will be named by using the Process' `componentType <Process_Base.componentType>` attribute as the base and
-        adding an indexed suffix: componentType-n.
+        if it is a dictionary, the key for each entry must be an argument name, and its value the value to assign to
+        the corresponding parameter (these will be used to instantiate the Process, and will override any values
+        assigned to the arguments in the call to `process` command. If a name is not specified, the nth instance
+        created will be named by using the Process' `componentType <Process_Base.componentType>` attribute as the
+        base and adding an indexed suffix: componentType-n.
 
-    default_variable : List[values] or ndarray :  default default input value of ORIGIN Mechanism
-        the input to the Process used if none is provided in a call to the `execute <Process_Base.execute>` or `run
-        <Process_Base.run>` method. This must be the same length as the `ORIGIN` Mechanism's input.
+    default_variable : List[values] or ndarray :  default default input value of origin_mechanism
+        specifies the input to the Process used if none is provided in a call to its `execute <Process_Base.execute>`
+        or `run <Process_Base.run>` methods. This must be the same length as the `variable <Mechanism_Base.variable>`
+        of the `origin_mechanism <Process_Base.origin_mechanism>`.
 
-    pathway : List[Mechanism spec[, Projection spec], Mechanism spec...] : default List[DefaultMechanism]
-        the set of Mechanisms and projections between them to execute when the Process is executed.  Each Mechanism
-        must a `ProcessingMechanism <ProcessingMechanism>`.  The specification for each can be an instance,
-        a class name (creates a default instance), or a `specification dictionary <Mechanism_Creation>`.  Each
-        Projection must be a `MappingProjection`. The specification for each can be the class name (creates a
-        default instance), an instance, or a `specification dictionary <Projection_Creation>`.
+    pathway : List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...] : default List[
+    default_mechanism]
+        specifies the set of `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
+        between them to execute when the Process is executed.  ProcessingMechanisms can be specified using any
+        of the ways used to `specify a Mechanism <Mechanism_Creation>`, or a using a `MechanismTuple
+        <Process_Mechanism_Specification>` to include `runtime parameters <Mechanism_Runtime_Parameters>`.
+        MappingProjections can be specified using any of the ways to `specify a Projection
+        <Projection_In_Context_Specification>`, or using a `tuple <Process_Projections>` to `specify it for learning
+        <Process_Learning_Sequence>`.
 
-    initial_values : Optional[Dict[Mechanism, param value]] : default None
-        a dictionary of values used to initialize the specified Mechanisms. The key for each entry must be a Mechanism
-        object, and the value must be a number, list or np.array that must be compatible with the format of
-        the Mechanism's `value <Mechanism_Base.value>` attribute. Mechanisms not specified will be initialized
-        with their `default_variable <Mechanism_Base.default_variable>`.
+    initial_values : Optional[Dict[ProcessingMechanism, param value]] : default None
+        specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`. The key for
+        each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
+        `INITIALIZE_CYCLE`, and the value must be a number, list or np.array that
+        is compatible with the format of the ProcessingMechanism's `value <Mechanism_Base.value>` attribute.
+        ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized
+        with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
 
     clamp_input : Optional[keyword] : default None
-        specifies whether the input to the Process continues to be applied to the `ORIGIN` Mechanism after
-        its initial execution.  The following keywords can be used:
+        specifies whether the Process' `input <Process_Base.input>` continues to be applied to the `origin_mechanism
+        <Process_Base.origin_mechanism>` after its initial execution. The following keywords can be used:
 
-            * `None`: Process input is used only for the first execution of the `ORIGIN` Mechanism
-              in a `PASS` of executions.
+            * `None`: `input <Process_Base.input>` is used only for the first execution of the `origin_mechanism
+              <Process_Base.origin_mechanism>` in a `PASS` of executions.
 
-            * SOFT_CLAMP: combines the Process' input with input from any other projections to the
-              `ORIGIN` Mechanism every time it is executed in a `PASS` of executions.
+            * SOFT_CLAMP: combines the `input <Process_Base.input>` with input from any other Projections to the
+              `origin_mechanism <Process_Base.origin_mechanism>` every time it is executed in a `PASS` of executions.
 
-            * HARD_CLAMP: applies the Process' input in place of any other sources of input to the
-              `ORIGIN` Mechanism every time it is executed in a `PASS` of executions.
+            * HARD_CLAMP: applies `input <Process_Base.input>` in place of any other sources of input to the
+              `origin_mechanism <Process_Base.origin_mechanism>` every time it is executed in a `PASS` of executions.
 
     default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
-        the type of matrix used for default projections (see `matrix` parameter for `MappingProjection`).
+        specifies the type of matrix used for default projections (see `matrix <MappingProjection.matrix>` parameter for
+        `MappingProjection`).
 
-    learning : Optional[LearningProjection spec]
-        implements `learning <LearningProjection_CreationLearningSignal>` for all eligible projections in the Process.
+    learning : Optional[LearningProjection spec] : default None
+        `specifies learning <Process_Learning_Sequence>` for all eligible Projections in the Process.
 
-    learning_rate : float : None
-        set the learning rate for all Mechanisms in the Process (see `learning_rate` attribute for additional
-        information).
+        .. note::  If an existing `LearningProjection` or a call to the constructor is used for the specification,
+                   the object itself will **not** be used as the LearningProjection for the Process. Rather it
+                   will be used as a template (including any parameters that are specified) for creating
+                   LearningProjections for all of the `MappingProjections <MappingProjection>` in the Process.
+
+    learning_rate : float : default None
+        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms associated with the
+        Process <Process_Learning_Sequence>` (see Process' `learning_rate <Process_Base.learning_rate>` attribute for
+        additional information).
 
     target : List or ndarray : default ndarray of zeroes
-        the value assigned as the TARGET input for the `ComparatorMechanism` to which the `TERMINAL` Mechanism of the
-        Process projects (and assigned as its `TARGET` Mechanism; used for `learning <Process_Learning_Sequence>`).
-        It must be the same length as the `TERMINAL` Mechanism's output.
+        each item specifies the value of the *TARGET* `InputState <ComparatorMechanism_Structure>` for the
+        `TARGET` `ComparatorMechanism` a corresponding `learning sequence <Process_Learning_Sequence>`
+        specified for the Process.  Each item must be the same length as the `value <OutputState.value>` of the
+        `OutputState` specified for learning <LearningMechanism_Activation_Output>` of the last ProcessingMechanism
+        in the corresponding learning sequence (see `Processing_Learning_Sequence` for additional detais).
 
     params : Optional[Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
@@ -691,75 +750,70 @@ class Process_Base(Process):
 
     componentType : "Process"
 
-    pathway : List[(Mechanism, dict, int), (Projection, LearningProjection spec, None), (Mechanism, dict, int)...]
-        specifies the list of Mechanisms that are executed (in the order specified) when the Process executes.
-        Entries are alternating tuples specifying Mechanisms and projections.  For Mechanism tuples, the dict specifies
-        a set of `runtime parameters <Mechanism_Runtime_Parameters>` to use for execution of the Mechanism. For
-        Projection tuples, the LearningProjection specification can be a `LearningProjection` object, the class or the
-        `LEARNING_PROJECTION` keyword (which specifies a default instance) or the constructor for a LearningProjection
-        (including parameters).
+    pathway : List[ProcessingMechanism, MappingProjection, ProcessingMechanism...]
+        lists the ProcessingMechanisms, and the MappingProjections betwen them, that are executed (in the order
+        specified) when the Process executes.
 
-        .. note::
-             The value of this attribute is constructed from the `pathway` argument of the :py:func:`process`
-             function, the entries of which do not necessarily have to have all items in a tuple, or even be in tuple
-             form.  All entries of the `pathway` argument are converted to tuples when assigned to the `pathway`
-             attribute.  Entries that are not tuples must be a Mechanism or Projection.  For tuple entries,
-             the first item must be a Mechanism or Projection;  the second is optional, and `None` is entered for
-             missing values; the third item is optional for Mechanism tuples (0 is the default) and is currently
-             ignored for Projection tuples (and assigned `None`, as it is not currently in use).
+    process_input_states : List[ProcessInputState]
+        used to represent the input to the Process, and transmit this to the InputState(s) of its `origin_mechanism
+        <Process_Base.origin_mechanism>`.  Each ProcessInputState sends a MappingProjection to one or more InputStates
+        of the `origin_mechanism <Process_Base.origin_mechanism>` (see `Process_Input_And_Output` for details).
 
-    process_input_states : Optional[List[ProcessInputState]]
-        used to represent the input to the Process, and transmit this to the InputState(s) of its `ORIGIN`
-        Mechanism.  Each ProcessInputState sends a MappingProjection to one or more InputStates of the
-        `ORIGIN` Mechanism.
-
-    input :  Optional[List[value] or ndarray]
+    input :  List[value] or ndarray
         input to the Process for each `TRIAL` of execution;  it is assigned the value of the **input** argument
         in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
         assigned the `value <InputState.value>` of the corresponding ProcessInputStates in `process_input_states`,
         and must match the format of the corresponding items of the `variable <Mechanism_Base.variable>` for the
-        Process' `ORIGIN` Mechanism (listed in its `origin_mechanism <Process_Base.origin_mechanism>` attribute).
+        Process' `origin_mechanism <Process_Base.origin_mechanism>`.
 
-        .. note:: The :keyword:`input` attribute of a Process preserves its value throughout the execution of the
-                  Process. It's value is assigned to the `variable <Mechanism_Base.variable>` attribute of
-                  the `ORIGIN` Mechanism at the start of execution.  After that, by default, that Mechanism's
-                  :keyword:`variable` attribute is zeroed. This is so that if the `ORIGIN` Mechanism is executed
-                  again in the same `PASS` of executions (e.g., if it is part of a recurrent loop) it does not continue
-                  to receive the initial input to the Process.  However, this behavior can be modified with the Process'
-                  `clamp_input` attribute.
+        .. note::
+            The `input <Process_Base.input>` attribute of a Process preserves its value throughout the execution of the
+            Process. It's value is assigned to the `variable <Mechanism_Base.variable>` attribute of the
+            `origin_mechanism <Process_Base.origin_mechanism>` at the start of execution.  After that, by default, that
+            Mechanism's `variable <Mechanism_Base.variable>` attribute is zeroed. This is so that if the
+            `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of executions
+            (e.g., if it is part of a recurrent loop) it does not continue to receive the initial input to the
+            Process.  However, this behavior can be modified with the Process' `clamp_input <Process_Base.clamp_input>`
+            attribute.
 
-    input_value :  2d np.array : default ``variableInstanceDefault``
-        same as the `variable <Process_Base.variable>` attribute of the Process; contains the values of the
-        ProcessInputStates in its `process_input_states` attribute.
+    COMMENT
+        input_value :  2d np.array : default ``variableInstanceDefault``
+            same as the `variable <Process_Base.variable>` attribute of the Process; contains the `value
+            <InputState.value>` of each ProcessInputState in its `process_input_states` attribute.
+    COMMENT
 
     clamp_input : Optional[keyword]
-        determines whether the Process' input continues to be applied to the `ORIGIN` Mechanism if it is executed again
-        within the same `TRIAL`.  It can take the following values:
+        determines whether the Process' `input <Process_Base.input>` continues to be applied to the `origin_mechanism
+        <Process_Base.origin_mechanism>` if it is executed again within the same `TRIAL`.  It can take the following
+        values:
 
-        * `None`: applies the Process' `input` to the `ORIGIN` Mechanism only once (the first time it is executed)
-          in a given round of the Process' execution.
+        * `None`: applies the Process' `input <Process_Base.input>` to the `origin_mechanism
+          <Process_Base.origin_mechanism>` only once (the first time it is executed) in a given `TRIAL` of execution.
 
-        * `SOFT_CLAMP`: combines the Process' `input` with input from any other projections to the
-          `ORIGIN` Mechanism every time the latter is executed within a round of the Process' execution.
+        * `SOFT_CLAMP`: combines the Process' `input <Process_Base.input>` with input from any other Projections to the
+          `origin_mechanism <Process_Base.origin_mechanism>` every time the latter is executed within a `TRIAL` of
+          execution.
 
-        * `HARD_CLAMP`: applies the Process' `input` to the `ORIGIN` Mechanism in place of any other sources of input
-          every time it is executed.
+        * `HARD_CLAMP`: applies the Process' `input <Process_Base.input>` to the `origin_mechanism
+          <Process_Base.origin_mechanism>` in place of any other sources of input every time it is executed.
 
-    initial_values : Optional[Dict[Mechanism, param value]]
-        a dictionary of values used to initialize the specified Mechanisms. The key for each entry is a Mechanism
-        object, and the value is a number, list or np.array that must be compatible with the format of
-        the Mechanism's `value <Mechanism_Base.value>` attribute. Mechanisms not specified will be
-        initialized with their `default_variable <Mechanism_Base.default_variable>`.
+    initial_values : Dict[ProcessingMechanism, param value]
+        values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE`. The key for each entry is a
+        ProcessingMechanism, and the value is a number, list or np.array that is assigned to the Mechanism's
+        `value <Mechanism_Base.value>` attribute whenever it is `initialized <Process_Execution_Initialization>`.
+        ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not included in the dictionary are initialized
+        with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
 
-    value: 2d. np.array
-        the value of the `primary OutputState <OutputState_Primary>` of the `TERMINAL` Mechanism of the Process.
+    value: 2d np.array
+        same as the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of
+        `terminal_mechanism <Process_Base.terminal_mechanism>`.
 
     output_state : State
-        the `primary OutputState <OutputState_Primary>` of the `TERMINAL` Mechanism in the Process.
+        the `primary OutputState <OutputState_Primary>` of `terminal_mechanism <Process_Base.terminal_mechanism>`.
 
     output : list
-        same as the `output_values <OutputState.output_values>` attribute of its `TERMINAL` Mechanism (listed in
-        its `terminal_mechanisms <Process_Base.termina_mechanisms>` attribute.
+        same as the `output_values <OutputState.output_values>` attribute of `terminal_mechanism
+        <Process_Base.termina_mechanisms>`.
 
       .. _mechs : List[MechanismTuple]
              :class:`MechanismTuple` for all Mechanisms in the Process, listed in the order specified in pathway.
@@ -791,15 +845,16 @@ class Process_Base(Process):
              property that points to _allMechanisms.mechanisms (see below).
 
     mechanismNames : List[str]
-        the names of the Mechanisms in the Process.
+        the names of the mechanisms listed in `mechanisms <Process_Base.mechanisms>`.
 
         .. property that points to _allMechanisms.names (see below).
 
     mechanisms : List[Mechanism]
-        a list of the Mechanisms in the Process.
+        *all* of the Mechanisms in the Process, including those in the `pathway <Process_Base.pathway>`
+        and those created for `learning <Process_Learning_Sequence>`.
 
-    origin_mechanisms : Mechanism
-        the 'ORIGIN' Mechanism of the Process (see `Process_Mechanisms` for a description).
+    origin_mechanism : Mechanism
+        the `ORIGIN` Mechanism of the Process (see `Process_Mechanisms` for a description).
 
     ..  origin_mechanisms : MechanismList
             a list with the `ORIGIN` Mechanism of the Process.
@@ -808,7 +863,7 @@ class Process_Base(Process):
                       methods that are also used for Systems.
 
     terminal_mechanism : Mechanism
-        the 'TERMINAL' Mechanism of the Process (see `Process_Mechanisms` for a description).
+        the `TERMINAL` Mechanism of the Process (see `Process_Mechanisms` for a description).
 
     ..  terminalMechanisms : MechanismList
             a list with the `TERMINAL` Mechanism of the Process.
@@ -817,25 +872,29 @@ class Process_Base(Process):
                       methods that are also used for Systems.
 
     learning_mechanisms : MechanismList
-        a list of all of the `LearningMechanisms <LearningMechanisms>` in the Process.
+        all of the `LearningMechanisms in the Process <Process_Learning_Sequence>`, listed in `learning_mechanism.data`.
 
         .. based on _learning_mechs
 
-    target_mechanism : Mechanism
-        the 'TARGET' Mechanism of the Process (see `Process_Mechanisms` for a description).
+    ..  target_mechanism : Mechanism
+            the 'TARGET' Mechanism of the Process (see `Process_Mechanisms` for a description).
 
-    ..  target_mechanisms : MechanismList
-            a list with the `TARGET` Mechanism (`ComparatorMechanism`) of the Process.
+    target_mechanisms : MechanismList
+        the `TARGET` Mechanisms for the Process, listed in `target_mechanisms.data`;  each is a `ComparatorMechanism`
+        associated with the last ProcessingMechanism of a `learning sequence <Process_Learning_Sequence>` in the
+        Process;
 
-            .. note:: A Process can have only one `TARGET` Mechanism; the use of a list is for compatibility with
-                      methods that are also used for Systems.
+        COMMENT:
+        .. note:: A Process can have only one `TARGET` Mechanism; the use of a list is for compatibility with
+                  methods that are also used for Systems.
+        COMMENT
 
         COMMENT:
             based on _target_mechs
         COMMENT
 
     systems : List[System]
-        a list of the Systems to which the Process belongs.
+        the `Systems <System>` to which the Process belongs.
 
       .. _phaseSpecMax : int : default 0
              phase of last (set of) ProcessingMechanism(s) to be executed in the Process.
@@ -853,8 +912,10 @@ class Process_Base(Process):
 
     learning : Optional[LearningProjection]
         determines whether the Process is configured for learning.  The value can be a `LearningProjection`,
-        the keyword `LEARNING_PROJECTION`, the name of the class, or a call to its constructor.
+        the keyword `LEARNING_PROJECTION`, or the name of the class;  if it is `None`, the Process is not configured
+        for learning (though one or MappingProjections within it may be).
 
+        COMMENT:
         .. note::  If an existing `LearningProjection` or a call to the constructor is used for the specification,
                    the object itself will **not** be used as the LearningProjection for the Process. Rather it
                    will be used as a template (including any parameters that are specified) for creating
@@ -863,16 +924,23 @@ class Process_Base(Process):
                    .. _learning_enabled : bool
                       indicates whether or not learning is enabled.  This only has effect if the ``learning`` parameter
                       has been specified (see above).
+        COMMENT
 
     learning_rate : float : default None
-        determines the learning rate for all Mechanisms in the Process.  This overrides any values set for the
-        function of individual LearningProjections, and persists for all subsequent runs of the System.  If it is
-        set to None, then the learning_rate is determined by the last value assigned to each LearningProjection
-        (either directly, or following a run of any Process or System to which the LearningProjection belongs and
-        for which a learning_rate was set).
+        determines the `learning_rate <LearningMechanisms.learning_rate>` used for all the `MappingProjections`
+        `specified for learning <Process_Learning_Sequence>` in the Process that do not have it otherwise specified
+        (i.e., by their associated `LearningMechanism <LearningMechanism_Learning_Rate>`.   If is `None`,
+        and the Process is executed as part of a `System`, then the  `learning_rate <System.learning_rate>` for the
+        `System` is used if that is specified.  Otherwise, for each MappingProjection being learned, the default value
+        of the `learning_rate` parameter for the `function <LearningMechanism.function>` of the `LearningMechanism
+        associated with that MappingProjection <Process_Learning_Squence>` is used.  If a :keyword:`learning_rate`
+        is specified for the `LearningSignal <LearningSignal_Learning_Rate>` or `LearningProjection
+        <LearningProjection_Function_and_Learning_Rate>` associated with a MappingProjection, that is applied in
+        addition to any specified for the Process or any of its LearningMechanisms (see
+        `LearningSignal_Learning_Rate`)
 
     results : List[OutputState.value]
-        a list of return values from a sequence of executions of the Process.
+        return values from a sequence of executions of the Process;  `None` if the Process has not been executed.
 
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the pathway.

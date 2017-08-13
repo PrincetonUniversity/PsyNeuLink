@@ -274,8 +274,8 @@ refer to the Components being learned and/or its operation:
   LearningMechanism belongs.  The default value for a LearningMechanism's `learning_rate
   <LearningMechanism.learning_rate>` attribute is `None`, in which case the LearningMechanism (and its `function
   <LearningMechanism.function>`) inherit the specification of the `learning_rate <Process_Base.learning_rate>` for
-  the Process in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
-  <System_Base.learning_rate>` specification of the System in which it is executed.  If that is also `None`, then it
+  the `Process` in which the LearningMechanism is executed. If that is `None`, then it inherits the `learning_rate
+  <System_Base.learning_rate>` specification of the `System` in which it is executed.  If that is also `None`, then it
   uses the default value of the :keyword:`learning_rate` parameter for its `function <LearningMechanism.function>`.
   A :keyword:`learning_rate` parameter can also be specified for individual `LearningSignals <LearningSignal>` and/or
   their associated `LearningProjections <LearningProjection>`.  Those have a direct multiplicative effect on the
