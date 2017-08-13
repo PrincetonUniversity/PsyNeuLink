@@ -221,8 +221,8 @@ elements) that of the `variable <InputState.InputState.variable>` for the corres
 Targets
 ~~~~~~~
 
-If learning is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`, then target values
-for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
+If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
+target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
 are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
 any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
 `Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
@@ -426,7 +426,7 @@ def run(object,
         The length must be equal to **inputs**.
 
     learning : bool :  default None
-        enables or disables learning during execution for a `Process <Process_Learning>` or
+        enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 

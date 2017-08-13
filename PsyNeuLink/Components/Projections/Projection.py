@@ -56,7 +56,7 @@ differ in the type of information they transmit, how they do this, and the type 
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
       this to the `ParameterState` of a `MappingProjection` that uses this to modify its `matrix
       <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
-      been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
+      been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
       takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
@@ -166,7 +166,8 @@ Automatic creation
 Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
 `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
 <Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
-when :keyword:`learning` is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`).
+when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>` or `System
+<System_Execution_Learning>`).
 
 .. _MappingProjection_Deferred_Initialization:
 

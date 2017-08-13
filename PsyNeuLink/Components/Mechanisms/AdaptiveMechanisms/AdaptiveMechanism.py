@@ -58,9 +58,9 @@ AdaptiveMechanisms of the appropriate subtype are also created automatically whe
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism` is automatically created
 as part of a `System <System.System_Creation>` (for use as its `controller <System_Base.controller>`), or when
 `control is specified <ControlMechanism_Control_Signals>` for the parameter of a `Mechanism`; and one or more
-`LearningMechanisms <LearningMechanism>` are created when learning is specified for a `System <System_Learning>` or a
-`Process <Process_Learning>` (see the documentation for `subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms
-for more specific information about how to create them).
+`LearningMechanisms <LearningMechanism>` are created when learning is specified for a `Process
+<Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for `subtypes
+<AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms for more specific information about how to create them).
 
 .. _AdaptiveMechanism_Structure:
 

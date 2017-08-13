@@ -180,8 +180,10 @@ Learning
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
 <System_Base.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
-<System_Execution_Learning>` as part of the System. The learning Components of a System can be displayed using the
-System's `System_Base.show_graph` method with its **show_learning** argument assigned as `True`.
+<System_Execution_Learning>` as part of the System.  Note, however, that for the learning Components of a Process to
+be implemented by a System, learning must be `specified for the entire Process <Process_Learning_Specification>`. The
+learning Components of a System can be displayed using the System's `System_Base.show_graph` method with its
+**show_learning** argument assigned as `True`.
 
 
 .. _System_Execution:
@@ -243,15 +245,15 @@ settle before another one execute -- see `example <Condition_Recurrent_Example>`
 Learning
 ~~~~~~~~
 
-A System executes learning if it is specified for any `Process <Process_Learning>` in the System.  The System's
-`learning <System_Base.learning>` attribute indicates whether learning is enabled for the System. `Learning
-<Process_Learning>` is executed for any Components (individual Projections or Processes) for which it is specified
-after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but before the `controller
-<System_Base.controller> is executed <System_Execution_Control>`.  The learning Components of a System can be displayed
-using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats, Sequence or
-Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both formats require that an
-input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
+A System executes learning if it is specified for one or more `Processes <Process_Learning_Sequence>` in the System.
+The System's `learning <System_Base.learning>` attribute indicates whether learning is enabled for the System. Learning
+is executed for any Components (individual Projections or Processes) for which it is `specified
+<Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
+before the `controller <System_Base.controller> is executed <System_Execution_Control>`.  The learning Components of a
+System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its **show_learning**
+argument assigned `True`. The stimuli used for learning (both inputs and targets) can be specified in either of two
+formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
 <System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
 in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function

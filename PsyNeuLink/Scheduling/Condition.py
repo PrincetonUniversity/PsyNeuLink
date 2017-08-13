@@ -28,7 +28,7 @@ can reference any Component or its attributes in PsyNeuLink, thus providing cons
     Any Component that is part of a collection `specified to a Scheduler for execution <Scheduler_Creation>` can be
     associated with a Condition.  Most commonly, these are `Mechanisms <Mechanism>`.  However, in some circumstances
     `Projections <Projection>` can be included in the specification to a Scheduler (e.g., for
-    `learning <Process_Learning>`) in which case these can also be assigned Conditions.
+    `learning <Process_Learning_Sequence>`) in which case these can also be assigned Conditions.
 
 
 

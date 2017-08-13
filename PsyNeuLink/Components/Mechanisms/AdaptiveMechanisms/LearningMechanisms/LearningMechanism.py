@@ -40,7 +40,8 @@ Creating a LearningMechanism
 A LearningMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
 More commonly, however, LearningMechanisms are created automatically when:
 
-* the learning attribute is specified for a `System <System_Execution_Learning>` or `Process <Process_Learning>`;
+* the learning attribute is specified for a `System <System_Execution_Learning>` or `Process
+  <Process_Learning_Sequence>`;
 ..
 * a `LearningProjection` (or the keyword *LEARNING*) is specified as the second item of a
   `tuple specification` for the matrix parameter <Mapping_Matrix_Specification>` of a `MappingProjection` in
@@ -153,8 +154,8 @@ InputStates (described `above <LearningMechanism_InputStates>`) to calculate the
      (see `error_signal <LearningMechanism_Error_Signal>` above).
 
 The default `function <LearningMechanism.function>` of a LearningMechanism is `BackPropagation` (also known as the
-*Generalized Delta Rule*;
-see `Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_).  However, it can be
+*Generalized Delta Rule*; see
+`Rumelhart et al., 1986 <http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html>`_).  However, it can be
 assigned any other PsyNeuLink `LearningFunction`, or any other Python function that takes as its input a value with
 three 1d arrays or lists and returns two 1d arrays or lists.  The two values it returns are assigned to the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` and `error_signal
@@ -232,7 +233,7 @@ Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
 In addition to its `InputStates <LearningMechanism_InputStates>`, `function <LearningMechanism_Function>` and
-`OutpuStates <LearningMechanism_OutputStates>`, a LearningMechanism has the following attributes that
+`OutputStates <LearningMechanism_OutputStates>`, a LearningMechanism has the following attributes that
 refer to the Components being learned and/or its operation:
 
 .. _LearningMechanism_Primary_Learned_Projection:
@@ -290,11 +291,15 @@ COMMENT
 Learning Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When learning is specified for a `MappingProjection <Mapping_Matrix_Specification>`, a `Process <Process_Learning>`,
-or a `System <System_Execution_Learning>`, all of the Components required for learning are created automatically.
-The types of Components that are generated depend on the `LearningFunction <LearningFunction>` specified,
-and the configuration of the `Composition`.  All of the learning Components of a System can be displayed using the
-System's `show_graph` method with its **show_learning** argument assigned `True`.
+When learning is specified for a `MappingProjection <Mapping_Matrix_Specification>`, a `Process
+<Process_Learning_Sequence>`, or a `System <System_Execution_Learning>`, all of the Components required for learning are
+created automatically. The types of Components that are generated depend on the `LearningFunction <LearningFunction>`
+specified, and the configuration of the `Composition`, as described below.  If learning is `specified for individual
+Projections <Process_Learning_Specification>` in the `pathway <Process_Base.pathway>` of a Process, it takes effect only
+if that Process is executed on its own (i.e., using the Process' `execute <Process_Base.execute>` or `run
+<Process_Base.run>` methods.  For the learning Components associated with a Process to be implemented by a System,
+learning must be `specified for the entire Process <Process_Learning_Specification>`.  All of the learning Components of
+a System can be displayed using the System's `show_graph` method with its **show_learning** argument assigned `True`.
 
 .. _LearningMechanism_Single_Layer_Learning:
 
@@ -391,23 +396,21 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 .. _LearningMechanism_Targets:
 
 **TARGET Mechanisms**. When a learning function is specified for a LearningMechanism that requires a target (e.g.,
-`BackPropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified to receive the target.  For
-`multilayer learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source
-<LearningMechanism.error_source>` for the last MappingProjection in each learning sequence.  When
-learning is specified for a `Composition` (i.e., a `Process <Process_Learning>`
-or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s) <ComparatorMechanism>` that receive the
-`targets <Run_Targets>`  are
-identified and designated as `TARGET` Mechanisms, and are listed in the Composition's `target_mechanisms` attribute.
-If a `TERMINAL` Mechanism of a Composition receives a MappingProjection that is specified for learning, then it always
-projects to a `TARGET` Mechanism in that Composition. It is important to note, in this context, the status of a
-Mechanism in a System takes precedence over its status in any of the Processes to which it belongs. This means that
-even if a Mechanism is the `TERMINAL` of a particular Process, if that Process is combined with others in a System,
-and the Mechanism appears in any of those other Processes, and it is not the `TERMINAL` of *all* of them, then it will
-*not* be the `TERMINAL` for the System.  As a consequence, although it will project to a `TARGET` Mechanism in the
-Process for which it is the `TERMINAL`, it will not do so in the System (see `figure below
-<LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a Mechanisms is the `TERMINAL` for more
-than one Process used to create a System (that is, the pathways for those Processes converge on that Mechanism),
-only one ComparatorMechanism will be created for it in the System.
+`BackPropagation` or `Reinforcement`), a `ComparatorMechanism` must be specified to receive the target.  For `multilayer
+learning <LearningMechanism_Multilayer_Learning>`, this is the `error_source <LearningMechanism.error_source>` for the
+last MappingProjection in each learning sequence.  When learning is specified for a `Composition` (i.e., a `Process
+<Process_Learning_Sequence>` or a `System <System_Execution_Learning>`), the `ComparatorMechanism(s)
+<ComparatorMechanism>` that receive the `targets <Run_Targets>`  are identified and designated as `TARGET` Mechanisms,
+and are listed in the Composition's `target_mechanisms` attribute. If a `TERMINAL` Mechanism of a Composition receives a
+MappingProjection that is specified for learning, then it always projects to a `TARGET` Mechanism in that Composition.
+It is important to note, in this context, the status of a Mechanism in a System takes precedence over its status in any
+of the Processes to which it belongs. This means that even if a Mechanism is the `TERMINAL` of a particular Process, if
+that Process is combined with others in a System, and the Mechanism appears in any of those other Processes, and it is
+not the `TERMINAL` of *all* of them, then it will *not* be the `TERMINAL` for the System.  As a consequence, although it
+will project to a `TARGET` Mechanism in the Process for which it is the `TERMINAL`, it will not do so in the System (see
+`figure below <LearningProjection_Target_vs_Terminal_Figure>` for an example).  Finally, if a Mechanisms is the
+`TERMINAL` for more than one Process used to create a System (that is, the pathways for those Processes converge on that
+Mechanism), only one ComparatorMechanism will be created for it in the System.
 
 .. _LearningProjection_Target_vs_Terminal_Figure:
 

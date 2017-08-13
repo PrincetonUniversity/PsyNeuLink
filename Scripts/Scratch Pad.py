@@ -657,25 +657,60 @@ import numpy as np
 #
 #endregion
 
-#region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST SYSTEM test_system")
+# #region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST SYSTEM test_system")
+#
+# a = TransferMechanism(name='a', default_variable=[0, 0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+#
+# p1 = process(pathway=[a, b, c], name='p1')
+# p2 = process(pathway=[a, b, d], name='p2')
+#
+# s = system(
+#     processes=[p1, p2],
+#     name='Branch System',
+#     initial_values={a: [1, 1]},
+# )
+#
+# inputs = {a: [2, 2]}
+# s.run(inputs)
+# #endregion
+
+#region TEST MUTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST MUTIPLE LEARNING SEQUENCES IN A PROCESS")
 
 a = TransferMechanism(name='a', default_variable=[0, 0])
 b = TransferMechanism(name='b')
 c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
 
-p1 = process(pathway=[a, b, c], name='p1')
-p2 = process(pathway=[a, b, d], name='p2')
+p1 = process(pathway=[a,
+                      MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
+                                        name="MP-1"),
+                      b,
+                      c,
+                      MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
+                                        name="MP-2"),
+                      d],
+             # learning=LEARNING,
+             name='p1')
 
 s = system(
-    processes=[p1, p2],
-    name='Branch System',
-    initial_values={a: [1, 1]},
+    processes=[p1],
+    name='Double Learning System',
+    # initial_values={a: [1, 1]},
 )
 
-inputs = {a: [2, 2]}
-s.run(inputs)
+# inputs = {a: [2, 2]}
+# s.run(inputs)
+s.show_graph(show_learning=True)
+
+TEST=True
+
+#endregion
+
 
 
 #region TEST INPUT FORMATS

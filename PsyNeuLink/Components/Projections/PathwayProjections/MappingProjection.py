@@ -107,7 +107,7 @@ LearningProjection can be assigned to a MappingProjection in any of the followin
     * specifying the the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
       the constructor for a `LearningMechanism <LearningSignal_Specification>`.
     ..
-    * by `specifying learning <Process_Learning>` for a `Process`, which assigns `LearningProjections
+    * by `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
       <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process_Base.pathway>`;
 
 
