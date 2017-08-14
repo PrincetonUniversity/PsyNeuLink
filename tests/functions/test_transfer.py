@@ -4,7 +4,7 @@ import PsyNeuLink.Globals.Keywords as kw
 import numpy as np
 import pytest
 
-SIZE=5
+SIZE=1000
 test_var = np.random.rand(SIZE)
 test_matrix = np.random.rand(SIZE, SIZE)
 
@@ -51,4 +51,26 @@ def test_basic(func, variable, params, fail, expected, benchmark):
     f = func(default_variable=variable, **params)
     benchmark.group = func.componentName;
     res = benchmark(f.function, variable)
+    assert np.allclose(res, expected)
+
+
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
+@pytest.mark.benchmark
+def test_llvm(func, variable, params, fail, expected, benchmark):
+    if fail is not None:
+        # This is a rather ugly hack to stop pytest benchmark complains
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.xfail(fail)
+        return
+    f = func(default_variable=variable, **params)
+    benchmark.group = func.componentName;
+    if not hasattr(f, 'bin_function'):
+        benchmark.disabled = True
+        benchmark(lambda _:0,0)
+        pytest.skip("not implemented")
+        return
+    res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)
