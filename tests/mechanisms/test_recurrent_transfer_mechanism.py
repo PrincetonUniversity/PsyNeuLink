@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, get_matrix, Linear, Logistic, Reduce, Reinforcement, FunctionError, ExponentialDist, NormalDist
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
-from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
@@ -451,13 +451,13 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([1, 2, 3, 4]).tolist()
         assert val == [[.98, 1.78, 2.5800000000000005, 3.3800000000000003]] # due to inevitable floating point errors
 
- def test_recurrent_mech_time_constant_0_8_initial_1_8(self):
-     R = RecurrentTransferMechanism(
-         name='R',
-         default_variable=[0, 0, 0, 0],
-         function=Linear(),
-         time_constant=0.8,
-         initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
+    def test_recurrent_mech_time_constant_0_8_initial_1_8(self):
+        R = RecurrentTransferMechanism(
+            name='R',
+            default_variable=[0, 0, 0, 0],
+            function=Linear(),
+            time_constant=0.8,
+            initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
             time_scale=TimeScale.TIME_STEP
         )
         val = R.execute([1, 1, 1, 1]).tolist()
@@ -475,8 +475,8 @@ class TestRecurrentTransferMechanismTimeConstant:
             time_constant=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
          time_scale=TimeScale.TIME_STEP
-     )
-     val = R.execute([3, 2,1, 0]).tolist()
+        )
+        val = R.execute([3, 2,1, 0]).tolist()
         assert val == [[2.2,1.8, .40000000000000013, .3999999999999999]]
 
 # (7/28/17 CW): the below are used because it's good to test System and Process anyways, and because the recurrent
@@ -502,18 +502,21 @@ class TestRecurrentTransferMechanismInProcess:
         R = RecurrentTransferMechanism(
             size=4,
             auto=0,
-            hetero=- 1)T = TransferMechanism(
+            hetero=-1
+        )
+        T = TransferMechanism(
             size=3,
-            function=Linear)
+            function=Linear
+        )
         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         p.run(inputs=[[[1, 2, 3, 4]]])
         assert (R.value.tolist()== [[1., 2., 3., 4.]])
-     assert (T.value.tolist() == [[10., 10., 10.]])
+        assert (T.value.tolist() == [[10., 10., 10.]])
         p.run(inputs=[[[5, 6, 7, 8]]])
         assert (R.value.tolist() == [[-4, -2,0, 2]])
         assert (T.value.tolist() == [[-4, -4, -4]])
         p.run(inputs=[[[-1, 2, -2, 5.5]]])
-        assert (R.value.tolist() == [[-1. 0, 4.0, 2.0, 11.5]])
+        assert (R.value.tolist() == [[-1.0, 4.0, 2.0, 11.5]])
         assert (T.value.tolist() == [[16.5, 16.5, 16.5]])
 
     def test_recurrent_mech_process_matrix_change(self):
@@ -643,9 +646,10 @@ class TestRecurrentTransferMechanismInSystem:
         assert (T.value.tolist() == [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
         s.run(inputs={R: [12, 11, 10,9]})
-assert (R.value.tolist() == [[12, 11, 10, 9]])
-assert (T.value.tolist() == [[42, 42, 42, 42, 42]])
-def test_recurrent_mech_system_matrix_change(self):
+        assert (R.value.tolist() == [[12, 11, 10, 9]])
+        assert (T.value.tolist() == [[42, 42, 42, 42, 42]])
+
+    def test_recurrent_mech_system_matrix_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=1,
@@ -656,7 +660,7 @@ def test_recurrent_mech_system_matrix_change(self):
         p = process(size=4, pathway=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         s = system(processes=[p], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
-s.run(inputs = {T: [1, 2, 3, 4]})
+        s.run(inputs = {T: [1, 2, 3, 4]})
         assert(T.value.tolist() == [[1, 2, 3, 4]])
         assert(R.value.tolist() == [[1, 2, 3, 4]])
         s.run(inputs = {T: [1, 3, 2, 5]})
