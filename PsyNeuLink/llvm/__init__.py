@@ -90,6 +90,8 @@ def _llvm_build():
     global __mod
     if __mod is not None:
         _engine.remove_module(__mod);
+    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
+        print(_module)
 
     # IR module is not the same as binding module.
     # "assembly" in this case is LLVM IR assembly.
@@ -177,8 +179,6 @@ class LLVMBinaryFunction:
         return _binaries[name];
 
 def _updateNativeBinaries(module, buffer):
-    if __dumpenv is not None and __dumpenv.find("llvm") != -1:
-        print(module)
     # update all pointers that might have been modified
     for k, v in _binaries.items():
        new_ptr = _engine.get_function_address(k)
