@@ -2659,7 +2659,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         return variable
 
 
-    def _validate_params(self, request_set, target_set=None, variable=None, context=None):
+    def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign to targets
 
         This overrides the class method, to perform more detailed type checking (see explanation in class method).
@@ -2673,7 +2673,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         super()._validate_params(request_set, target_set, context)
         param_set = target_set
-        sender = variable
+        sender = self.instance_defaults.variable
         # Note: this assumes variable is a 1D np.array, as enforced by _validate_variable
         sender_len = sender.size
 
