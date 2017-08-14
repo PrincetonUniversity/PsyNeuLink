@@ -2116,6 +2116,66 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
+        self.__llvm_func_name = self.__get_llvm_function(default_variable)
+        self.__bin_function = None
+
+    def __gen_llvm_exponential(self, builder, index, ctx, vi, vo):
+        ptri = builder.gep(vi, [index])
+        ptro = builder.gep(vo, [index])
+
+        exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
+        val = builder.load(ptri)
+        val = builder.fmul(val, ctx.float_ty(self.rate))
+        val = builder.call(exp_f, [val])
+        val = builder.fmul(val, ctx.float_ty(self.scale))
+
+        builder.store(val, ptro)
+
+    def __get_llvm_function(self, default_variable):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("exponential")
+            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
+            func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty))
+            vector_length = ctx.int32_ty(len(default_variable))
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            vi, vo = llvm_func.args
+            for a in vi, vo:
+                a.attributes.add('nonnull')
+                a.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo}
+            inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
+
+            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "exponential")
+
+            builder.ret_void()
+        return func_name
+
+    def bin_function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+
+        # TODO: Port this to llvm
+        # Validate variable and assign to self.variable, and validate params
+        self._check_args(variable=variable, params=params, context=context)
+
+        if self.__bin_function is None:
+            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        ret = np.zeros(len(self.variable))
+
+        ct_vi = self.variable.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+        self.__bin_function(ct_vi, ct_vo)
+
+        return ret
 
     def function(self,
                  variable=None,
