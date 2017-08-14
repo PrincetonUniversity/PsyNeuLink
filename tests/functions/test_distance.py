@@ -54,7 +54,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    benchmark.group = metric + ("-normalized" if normalize else "")
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
 
@@ -70,6 +70,6 @@ def test_llvm(variable, metric, normalize, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = Function.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    benchmark.group = metric + ("-normalized" if normalize else "")
+    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     res = benchmark(f.bin_function, variable)
     assert np.allclose(res, expected)

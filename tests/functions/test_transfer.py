@@ -49,7 +49,7 @@ def test_basic(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = func(default_variable=variable, **params)
-    benchmark.group = func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName;
     res = benchmark(f.function, variable)
     assert np.allclose(res, expected)
 
@@ -66,7 +66,7 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
         pytest.xfail(fail)
         return
     f = func(default_variable=variable, **params)
-    benchmark.group = func.componentName;
+    benchmark.group = "TransferFunction " + func.componentName;
     if not hasattr(f, 'bin_function'):
         benchmark.disabled = True
         benchmark(lambda _:0,0)
