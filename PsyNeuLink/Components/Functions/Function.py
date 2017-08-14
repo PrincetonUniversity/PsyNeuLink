@@ -6180,7 +6180,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=variableClassDefault,
-                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
+                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -6255,6 +6255,18 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fsub(acc_val, prod)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_correlate(self, builder, index, ctx, v1, v2, acc):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # This should be conjugate, but we don't deal with complex numbers
+        mul = builder.fmul(val1, val2)
+        acc_val = builder.load(acc)
+        new_acc = builder.fadd(acc_val, mul)
+        builder.store(new_acc, acc)
+
     def __get_llvm_function(self, default_variable):
         func_name = None
         llvm_func = None
@@ -6285,6 +6297,8 @@ class Distance(ObjectiveFunction):
                 inner = functools.partial(self.__gen_llvm_euclidean, **kwargs)
             elif (self.metric == CROSS_ENTROPY):
                 inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
+            elif (self.metric == CORRELATION):
+                inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
             else:
                 raise RuntimeError('Unsupported metric')
 
