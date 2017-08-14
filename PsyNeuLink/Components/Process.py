@@ -319,23 +319,21 @@ pathway) is assigned as the output of the Process.
    should be used to construct as `System`, together with `Conditions <Conditions>` to implement a custom schedule.
 
 
-XXX FIX:
 .. _Process_Execution_Initialization
 
-The input to a System is specified in the **input** argument of either its `execute <System_Base.execute>` or
-`run <System_Base.run>` method. In both cases, the input for a single `TRIAL` must be a list or ndarray of values,
-each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (listed in the System's
-`origin_mechanisms <System_Base.origin_mechanisms>` attribute). If the `execute <System_Base.execute>` method is used,
+The input to a Process is specified in the **input** argument of either its `execute <Process_Base.execute>` or
+`run <Process_Base.run>` method. In both cases, the input for a single `TRIAL` must be a number, list or ndarray of
+values that is compatible with the `variable <Mechanism_Base.variable>` of the `origin_mechanism
+<Process_Base.origin_mechanism>`. If the `execute <Process_Base.execute>` method is used,
 input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
 can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
-both cases, two other types of input can be provided in corresponding arguments of the `run <System_Base.run>` method:
-a  list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
-assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
-and listed in the System's `recurrent_init_mechanisms <System_Base.recurrent_init_mechanisms>` attribute), and
-**target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
-`System_Execution_Learning` below;  also, see `Run` for additional details of formatting input specifications).
-
-
+both cases, two other types of input can be provided in corresponding arguments of the `execute <Process_Base.execute>`
+and `run <Process_Base.run>` methods: a  list or ndarray of **initial_values**, and a list or ndarray of **target**
+values. The **initial_values** are assigned as input to Mechanisms that close recurrent
+loops (designated as `INITIALIZE_CYCLE`) at the start of a `TRIAL` (if **initialize** is set to `True`), and/or
+whenever the Process` `initialize <Process_Base.initialize>` method is called; **target** values are assigned as the
+*TARGET* input of the `target_mechanisms <Process_Base.target_mechanisms>` in each `TRIAL` of execution (see
+`Process_Execution_Learning` below;  also, see `Run` for additional details of formatting input specifications).
 
 .. _Process_Execution_Learning:
 
@@ -546,13 +544,13 @@ def process(process_spec=None,
         created will be named by using the Process' `componentType <Process_Base.componentType>` attribute as the
         base and adding an indexed suffix: componentType-n.
 
-    default_variable : List[values] or ndarray :  default default input value of origin_mechanism
+    default_variable : Optional[List[values] or ndarray] :  default default input value of origin_mechanism
         specifies the input to the Process used if none is provided in a call to its `execute <Process_Base.execute>`
         or `run <Process_Base.run>` methods. This must be the same length as the `variable <Mechanism_Base.variable>`
         of the `origin_mechanism <Process_Base.origin_mechanism>`.
 
-    pathway : List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...] : default List[
-    default_mechanism]
+    pathway : Optional[List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...]] : default
+    List[default_mechanism]
         specifies the set of `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
         between them to execute when the Process is executed.  ProcessingMechanisms can be specified using any
         of the ways used to `specify a Mechanism <Mechanism_Creation>`, or a using a `MechanismTuple
@@ -562,12 +560,13 @@ def process(process_spec=None,
         <Process_Learning_Sequence>`.
 
     initial_values : Optional[Dict[ProcessingMechanism, param value]] : default None
-        specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`. The key for
-        each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
-        `INITIALIZE_CYCLE`, and the value must be a number, list or np.array that
-        is compatible with the format of the ProcessingMechanism's `value <Mechanism_Base.value>` attribute.
-        ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized
-        with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
+        specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`
+        whenever its `initialize <Process_Base.initialize>` method is called. The key each entry must be a
+        ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and the value must
+        be a number, list or np.array that is compatible with the format of the ProcessingMechanism's `value
+        <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in
+        **initial_values** are initialized with the value of their `default_variable
+        <Mechanism_Base.default_variable>` attribute.
 
     clamp_input : Optional[keyword] : default None
         specifies whether the Process' `input <Process_Base.input>` continues to be applied to the `origin_mechanism
@@ -582,7 +581,7 @@ def process(process_spec=None,
             * HARD_CLAMP: applies `input <Process_Base.input>` in place of any other sources of input to the
               `origin_mechanism <Process_Base.origin_mechanism>` every time it is executed in a `PASS` of executions.
 
-    default_projection_matrix : keyword, list or ndarray : default DEFAULT_PROJECTION_MATRIX,
+    default_projection_matrix : Optional[keyword, list or ndarray] : default DEFAULT_PROJECTION_MATRIX,
         specifies the type of matrix used for default projections (see `matrix <MappingProjection.matrix>` parameter for
         `MappingProjection`).
 
@@ -594,12 +593,12 @@ def process(process_spec=None,
                    will be used as a template (including any parameters that are specified) for creating
                    LearningProjections for all of the `MappingProjections <MappingProjection>` in the Process.
 
-    learning_rate : float : default None
+    learning_rate : Optional[float] : default None
         specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms associated with the
         Process <Process_Learning_Sequence>` (see Process' `learning_rate <Process_Base.learning_rate>` attribute for
         additional information).
 
-    target : List or ndarray : default ndarray of zeroes
+    target : Optional[List or ndarray] : default ndarray of zeroes
         each item specifies the value of the *TARGET* `InputState <ComparatorMechanism_Structure>` for the
         `TARGET` `ComparatorMechanism` a corresponding `learning sequence <Process_Learning_Sequence>`
         specified for the Process.  Each item must be the same length as the `value <OutputState.value>` of the
@@ -798,11 +797,12 @@ class Process_Base(Process):
           <Process_Base.origin_mechanism>` in place of any other sources of input every time it is executed.
 
     initial_values : Dict[ProcessingMechanism, param value]
-        values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE`. The key for each entry is a
-        ProcessingMechanism, and the value is a number, list or np.array that is assigned to the Mechanism's
-        `value <Mechanism_Base.value>` attribute whenever it is `initialized <Process_Execution_Initialization>`.
-        ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not included in the dictionary are initialized
-        with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
+        values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE` whenever its `initialize
+        <Process_Base.initialize>` method is called. The key for each entry is a ProcessingMechanism, and the value
+        is a number, list or np.array that is assigned to the Mechanism's `value <Mechanism_Base.value>` attribute
+        whenever it is `initialized <Process_Execution_Initialization>`. ProcessingMechanisms designated as
+        `INITIALIZE_CYCLE` but not included in the dictionary are initialized with the value of their `default_variable
+        <Mechanism_Base.default_variable>` attribute.
 
     value: 2d np.array
         same as the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of
@@ -929,15 +929,14 @@ class Process_Base(Process):
     learning_rate : float : default None
         determines the `learning_rate <LearningMechanisms.learning_rate>` used for all the `MappingProjections`
         `specified for learning <Process_Learning_Sequence>` in the Process that do not have it otherwise specified
-        (i.e., by their associated `LearningMechanism <LearningMechanism_Learning_Rate>`.   If is `None`,
-        and the Process is executed as part of a `System`, then the  `learning_rate <System.learning_rate>` for the
-        `System` is used if that is specified.  Otherwise, for each MappingProjection being learned, the default value
-        of the `learning_rate` parameter for the `function <LearningMechanism.function>` of the `LearningMechanism
-        associated with that MappingProjection <Process_Learning_Squence>` is used.  If a :keyword:`learning_rate`
-        is specified for the `LearningSignal <LearningSignal_Learning_Rate>` or `LearningProjection
+        (i.e., by their associated `LearningMechanism <LearningMechanism_Learning_Rate>`.   If is `None`, and the
+        Process is executed as part of a `System`, then the  `learning_rate <System.learning_rate>` for the `System` is
+        used if that is specified.  Otherwise, for each MappingProjection being learned, the default value of the
+        `learning_rate` parameter for the `function <LearningMechanism.function>` of the `LearningMechanism associated
+        with that MappingProjection <Process_Learning_Squence>` is used.  If a :keyword:`learning_rate` is specified
+        for the `LearningSignal <LearningSignal_Learning_Rate>` or `LearningProjection
         <LearningProjection_Function_and_Learning_Rate>` associated with a MappingProjection, that is applied in
-        addition to any specified for the Process or any of its LearningMechanisms (see
-        `LearningSignal_Learning_Rate`)
+        addition to any specified for the Process or any of its LearningMechanisms (see `LearningSignal_Learning_Rate`).
 
     results : List[OutputState.value]
         return values from a sequence of executions of the Process;  `None` if the Process has not been executed.
@@ -2176,9 +2175,16 @@ class Process_Base(Process):
         Arguments
         ---------
 
-        input : List[value] or ndarray: default input to process
-            input used to execute the process.
-            This must be compatible with the input of the `ORIGIN` Mechanism (the first in its `pathway`).
+        input : List[value] or ndarray: default zeroes
+            assigned as the value of the Process` `input <Process_Base.input>` and provided as the input to the
+            `origin_mechanism <Process_Base.origin_mechanism>` when the Process is `executed <Process_Execution>`;
+            must be compatible (in number and type of items) with the `variable <Mechanism_Base.variable>` of the
+            `origin_mechanism <Process_Base.origin_mechanism>`.
+
+        target : List[value] or ndarray: default None
+            each item is assigned as the input to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
+            corresponding `ComparatorMechanism` in `target_mechanisms <Process_Base.target_mechanisms>`;  the number
+            of items must equal the length of `target_mechanisms <Process_Base.target_mechanism>`.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether Mechanisms are executed for a single time step or a trial.
@@ -2197,7 +2203,7 @@ class Process_Base(Process):
         -------
 
         output of process : ndarray
-            output of process` `TERMINAL` Mechanism (the last in its `pathway`).
+            output of `terminal_mechanism <Process_Base.terminal_mechanism>`.
 
         COMMENT:
            IMPLEMENTATION NOTE:
@@ -2396,49 +2402,72 @@ class Process_Base(Process):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_variable for a single execution
-            input for each in a sequence of executions (see :doc:`Run` for a detailed description of formatting
-            requirements and options).
+            specifies the input for each `TRIAL` in a sequence (see `Run` for a detailed description of formatting
+            requirements and options).  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
+            corresponds to a single `TRIAL`, and is assigned as the input to the `origin_mechanism
+            <Process_Base.origin_mechanism>` for that `TRIAL` and so must be compatible (in number and type of items)
+            with the `variable <Mechanism_Base.variable>` of the `origin_mechanism <Process_Base.origin_mechanism>`.
+            If the number of items is less than **num_trials**, the values are cycled until the number of `TRIALS`\\s
+            specified in **num_trials** has been executed.
+
+        num_trials : int : default None
+            number of `TRIAL`\\s to execute.  If the number exceeds the number of **inputs** specified, they are cycled
+            until the number of `TRIALS`\\s specified in **num_trials** has been executed.
 
         reset_clock : bool : default True
             reset `CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default False
-            call the process' `initialize` method before a sequence of executions.
+            if set to `True`, the Process calls its `initialize <Process_Base.initialize>` method before executing
+            the sequence of `TRIAL`\\s, which assigns initial values to ProcessingMechanisms specified in the
+            **initial_values** argument.
 
-        initial_values : Dict[Mechanism, List[input] or np.ndarray(input)] : default None
-            the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
+        initial_values : Optional[Dict[ProcessingMechanism, List[input] or np.ndarray(input)]] : default None
+            specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`
+            whenever its `initialize <Process_Base.initialize>` method is called. The key for each entry must be a
+            ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and the value
+            must be a list or np.array of items, each of which is a value used to initialize the ProcessingMechanism
+            for the corresponding `TRIAL` of execution, and thus must be compatible with the format of the
+            ProcessingMechanism's `value <Mechanism_Base.value>` attribute.  If the number of items is less than
+            **num_trials**, the values are cycled until the number of `TRIALS`\\s specified in **num_trials** has been
+            executed.  ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in **initial_values**
+            are initialized with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
 
-        targets : List[input] or np.ndarray(input) : default None
-            target value(s) assigned to the process` `target <Process_Base.target_mechanism>` Mechanism for each
-            execution (during learning).  The length (of the outermost level if a nested list, or lowest axis if an
-            ndarray) must be equal to that of the `inputs` argument (see above).
+        targets : Optional[List[input] or np.ndarray(input)] : default None
+            specifies the target value(s) assigned to the `target_mechanisms <Process_Base.target_mechanisms>` in
+            each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
+            corresponds to a single `TRIAL`;  the number of items must equal the number specified in the **inputs**
+            argument.  Each item is assigned as the target(s) the input to the *TARGET* `InputState
+            <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_mechanisms
+            <Process_Base.target_mechanisms>` for that `TRIAL`;  the number of items must equal the length of
+            `target_mechanisms <Process_Base.target_mechanism>`.
 
         learning : bool :  default None
-            enables or disables learning during execution.
-            If it is not specified, current state is left intact.
-            If `True`, learning is forced on; if :keyword:`False`, learning is forced off.
+            enables or disables `learning <Process_Execution_Learning>` during execution.
+            If it is not specified, its current value is left intact.
+            If `True`, learning is forced on; if `False`, learning is forced off.
 
         call_before_trial : Function : default None
-            called before each trial in the sequence is executed.
+            called before each `TRIAL` in the sequence is executed.
 
         call_after_trial : Function : default None
-            called after each trial in the sequence is executed.
+            called after each `TRIAL` in the sequence is executed.
 
         call_before_time_step : Function : default None
-            called before each time_step of each trial is executed.
+            called before each `TIME_STEP` of each trial is executed.
 
         call_after_time_step : Function : default None
-            called after each time_step of each trial is executed.
+            called after each `TIME_STEP` of each trial is executed.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
-            specifies whether Mechanisms are executed for a single `time_step or a trial <Run_Timing>`.
+            specifies whether Mechanisms are executed for a single `TIME_STEP or a TRIAL <Run_Timing>`.
 
         Returns
         -------
 
         <process>.results : List[OutputState.value]
-            list of the value of the OutputState for each `TERMINAL` Mechanism of the system returned for
-            each execution.
+            list of the `value <OutputState.value>`\\s of the `OutputState` for the `terminal_mechanism
+            <Process_Base.terminal_mechanism>` of the Process returned for each execution.
 
         """
 
@@ -2527,8 +2556,10 @@ class Process_Base(Process):
         Arguments
         ---------
 
+        COMMENT:
         options : InspectionOptions
             [TBI]
+        COMMENT
         """
 
         # # IMPLEMENTATION NOTE:  Stub for implementing options:
@@ -2546,18 +2577,16 @@ class Process_Base(Process):
 
         print ("\n\tMechanisms:")
         for object_item in self._mechs:
-            print ("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
+            print ("\t\t{}".format(object_item.name))
 
 
         print ("\n\tOrigin Mechanism: ".format(self.name))
-        for object_item in self.origin_mechanisms.mechs_sorted:
-            print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
+        print("\t\t{}".format(self.origin_mechanism.name))
 
         print ("\n\tTerminal Mechanism: ".format(self.name))
-        for object_item in self.terminal_mechanisms.mechs_sorted:
-            print("\t\t{} (phase: {})".format(object_item.name, object_item.phase))
-            for output_state_name in object_item.output_states:
-                print("\t\t\t{0}".format(output_state_name))
+        print("\t\t{}".format(self.terminal_mechanism.name))
+        for output_state in self.terminal_mechanism.output_states:
+            print("\t\t\t{0}".format(output_state.name))
 
         print ("\n---------------------------------------------------------")
 

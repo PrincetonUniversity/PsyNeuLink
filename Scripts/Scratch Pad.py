@@ -705,7 +705,7 @@ s = system(
 
 # inputs = {a: [2, 2]}
 # s.run(inputs)
-s.show_graph(show_learning=True)
+# s.show_graph(show_learning=True)
 
 TEST=True
 
