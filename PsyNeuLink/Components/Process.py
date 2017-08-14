@@ -654,7 +654,7 @@ class Process_Base(Process):
                   to receive the initial input to the Process.  However, this behavior can be modified with the Process'
                   `clamp_input` attribute.
 
-    input_value :  2d np.array : default ``variableInstanceDefault``
+    input_value :  2d np.array : default ``instance_defaults.variable``
         same as the :keyword:`variable` attribute of the Process; contains the values of the ProcessInputStates in its
         `process_input_states` attribute.
 
@@ -897,13 +897,15 @@ class Process_Base(Process):
         :return:
         """
 
-        super(Process_Base, self)._validate_variable(variable, context)
+        variable = super(Process_Base, self)._validate_variable(variable, context)
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.ClassDefaults.variable:
             self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         if variable is not None:
-            self.variable = convert_to_np_array(self.variable, 2)
+            variable = convert_to_np_array(variable, 2)
+
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
@@ -1209,7 +1211,7 @@ class Process_Base(Process):
                 if not mech in self.mechanisms:
                     raise SystemError("{} (entry in initial_values arg) is not a Mechanism in pathway for \'{}\'".
                                       format(mech.name, self.name))
-                if not iscompatible(value, mech.variable):
+                if not iscompatible(value, mech.instance_defaults.variable):
                     raise SystemError("{} (in initial_values arg for {}) is not a valid value for {}".
                                       format(value,
                                              append_type_to_name(self),
@@ -1607,13 +1609,13 @@ class Process_Base(Process):
         - create process_input_state, as sender for MappingProjection to the Mechanism.input_state
         - create the MappingProjection (with process_input_state as sender, and Mechanism as receiver)
 
-        If len(Process.input) == len(mechanism.variable):
+        If len(Process.input) == len(mechanism.instance_defaults.variable):
             - create one Projection for each of the Mechanism.input_state(s)
-        If len(Process.input) == 1 but len(Mechanism.variable) > 1:
+        If len(Process.input) == 1 but len(mechanism.instance_defaults.variable) > 1:
             - create a Projection for each of the Mechanism.input_states, and provide Process.input[value] to each
-        If len(Process.input) > 1 but len(Mechanism.variable) == 1:
+        If len(Process.input) > 1 but len(mechanism.instance_defaults.variable) == 1:
             - create one Projection for each Process.input[value] and assign all to Mechanism.input_state
-        Otherwise,  if len(Process.input) != len(Mechanism.variable) and both > 1:
+        Otherwise,  if len(Process.input) != len(mechanism.instance_defaults.variable) and both > 1:
             - raise exception:  ambiguous mapping from Process input values to Mechanism's input_states
 
         :param Mechanism:
@@ -1623,8 +1625,8 @@ class Process_Base(Process):
         # FIX: LENGTH OF EACH PROCESS INPUT STATE SHOUD BE MATCHED TO LENGTH OF INPUT STATE FOR CORRESPONDING ORIGIN MECHANISM
 
         # If input was not provided, generate defaults to match format of ORIGIN mechanisms for process
-        if self.variable is None:
-            self.variable = []
+        if self.instance_defaults.variable is None:
+            self.instance_defaults.variable = []
             seen = set()
             # mech_list = list(object_item for object_item in self._mechs)
             for mech in self._mechs:
@@ -1634,16 +1636,16 @@ class Process_Base(Process):
                 else:
                     seen.add(mech)
                 if mech.processes[self] in {ORIGIN, SINGLETON}:
-                    self.variable.extend(mech.variable)
-        process_input = convert_to_np_array(self.variable,2)
+                    self.instance_defaults.variable.extend(mech.instance_defaults.variable)
+        process_input = convert_to_np_array(self.instance_defaults.variable, 2)
 
         # Get number of Process inputs
         num_process_inputs = len(process_input)
 
         # Get number of mechanism.input_states
-        #    - assume mechanism.variable is a 2D np.array, and that
-        #    - there is one inputState for each item (1D array) in mechanism.variable
-        num_mechanism_input_states = len(mechanism.variable)
+        #    - assume mechanism.instance_defaults.variable is a 2D np.array, and that
+        #    - there is one inputState for each item (1D array) in mechanism.instance_defaults.variable
+        num_mechanism_input_states = len(mechanism.instance_defaults.variable)
 
         # There is a mismatch between number of Process inputs and number of mechanism.input_states:
         if num_process_inputs > 1 and num_mechanism_input_states > 1 and num_process_inputs != num_mechanism_input_states:
@@ -1667,7 +1669,7 @@ class Process_Base(Process):
             for i in range(num_mechanism_input_states):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
-                input_state_variable = mechanism.input_states[i].variable
+                input_state_variable = mechanism.input_states[i].instance_defaults.variable
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
@@ -1690,11 +1692,11 @@ class Process_Base(Process):
         else:
             for i in range(num_mechanism_input_states):
                 for j in range(num_process_inputs):
-                    if not iscompatible(process_input[j], mechanism.variable[i]):
+                    if not iscompatible(process_input[j], mechanism.instance_defaults.variable[i]):
                         raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "
                                            "variable ({3}) for inputState {4} of {5}".
                                            format(j, process_input[j], self.name,
-                                                  mechanism.variable[i], i, mechanism.name))
+                                                  mechanism.instance_defaults.variable[i], i, mechanism.name))
                     # Create MappingProjection from Process buffer_intput_state to corresponding mechanism.input_state
                     MappingProjection(sender=self.process_input_states[j],
                             receiver=mechanism.input_states[i],
@@ -1718,7 +1720,7 @@ class Process_Base(Process):
         """
         # Validate input
         if input is None:
-            input = self.firstMechanism.variableInstanceDefault
+            input = self.firstMechanism.instance_defaults.variable
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
@@ -1984,9 +1986,9 @@ class Process_Base(Process):
         target_mech_target = self.target_mechanism.input_states[TARGET]
 
         # Check that length of process' target input matches length of targetMechanism's target input
-        if len(target) != len(target_mech_target.variable):
+        if len(target) != len(target_mech_target.instance_defaults.variable):
             raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
-                               format(len(target), len(target_mech_target.variable)))
+                               format(len(target), len(target_mech_target.instance_defaults.variable)))
 
         target_input_state = ProcessInputState(owner=self,
                                                 variable=target,
@@ -2085,7 +2087,7 @@ class Process_Base(Process):
         self.timeScale = time_scale or TimeScale.TRIAL
 
         # Use Process self.input as input to first Mechanism in Pathway
-        self.variable = self.input
+        variable = self.input
 
         # Generate header and report input
         if report_output:
@@ -2110,7 +2112,7 @@ class Process_Base(Process):
             if mechanism is self.firstMechanism and not self.clamp_input:
                 # Zero self.input to first mechanism after first run
                 #     in case it is repeated in the pathway or receives a recurrent Projection
-                self.variable = self.variable * 0
+                variable = variable * 0
 
         # Execute LearningMechanisms
         if self._learning_enabled:
@@ -2157,7 +2159,7 @@ class Process_Base(Process):
         for process in list(self.target_mechanisms)[0].processes:
             process.target_input_states[0].value *= 0
         if callable(self.target):
-            self.target_input_states[0].variable = self.target()
+            self.target_input_states[0].instance_defaults.variable = self.target()
         else:
             self.target_input_states[0].value = np.array(self.target)
 

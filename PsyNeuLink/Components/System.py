@@ -932,21 +932,11 @@ class System_Base(System):
         """
         super(System_Base, self)._validate_variable(variable, context)
 
-        # # MODIFIED 6/26/16 OLD:
-        # # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
-        # self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        # self.variable = convert_to_np_array(self.variable, 2)
-        # FIX:  THIS CURRENTLY FAILS:
-        # # MODIFIED 6/26/16 NEW:
-        # # Force System variable specification to be a 3D array (to accommodate input states for each Process):
-        # self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 3)
-        # self.variable = convert_to_np_array(self.variable, 3)
-        # MODIFIED 10/2/16 NEWER:
         # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
         if variable is None:
             return
         self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
@@ -974,7 +964,7 @@ class System_Base(System):
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
         """
-        self._instantiate_processes(input=self.variable, context=context)
+        self._instantiate_processes(input=self.instance_defaults.variable, context=context)
         self._instantiate_graph(context=context)
         self._instantiate_learning_graph(context=context)
 
@@ -1512,18 +1502,18 @@ class System_Base(System):
         # changed "orig_mech_input.extend(input_state.value)" to "orig_mech_input.append(input_state.value)"
         # this is accompanied by a change to the code around line 1510 where a for loop was added.
         # MODIFIED 2/8/17 NEW:
-        # Construct self.variable from inputs to ORIGIN mechanisms
-        self.variable = []
+        # Construct self.instance_defaults.variable from inputs to ORIGIN mechanisms
+        self.instance_defaults.variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
-            self.variable.append(orig_mech_input)
-        self.variable = convert_to_np_array(self.variable, 2)  # should add Utility to allow conversion to 3D array
+            self.instance_defaults.variable.append(orig_mech_input)
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)  # should add Utility to allow conversion to 3D array
         # MODIFIED 2/8/17 END
-        # An example: when input state values are vectors, then self.variable is a 3D array because an origin
+        # An example: when input state values are vectors, then self.instance_defaults.variable is a 3D array because an origin
         # mechanism could have multiple input states if there is a recurrent input state. However, if input state values
-        # are all non-vector objects, such as strings, then self.variable would be a 2D array. so we should
+        # are all non-vector objects, such as strings, then self.instance_defaults.variable would be a 2D array. so we should
         # convert that to a 3D array
         # MODIFIED 6/27/17 END
 
@@ -1560,20 +1550,20 @@ class System_Base(System):
             # MODIFIED 6/27/17 NEW:
             # added a for loop to iterate over origin_mech.input_states to allow for
             # multiple input states in an origin mechanism (useful only if the origin mechanism is a KWTA)
-            # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.variable matches the
-            # length of the ORIGIN inputState's variable attribute
+            # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.instance_defaults.variable matches the
+            # length of the ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
-                if len(self.variable[i][j]) != len(origin_mech.input_states[j].variable):
+                if len(self.instance_defaults.variable[i][j]) != len(origin_mech.input_states[j].instance_defaults.variable):
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
-                                             len(self.variable[i][j]),
-                                             len(origin_mech.input_states[j].variable),
+                                             len(self.instance_defaults.variable[i][j]),
+                                             len(origin_mech.input_states[j].instance_defaults.variable),
                                              origin_mech.name))
             # MODIFIED 6/27/17 END
 
             stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_state.variable,
+                                                        variable=origin_mech.input_state.instance_defaults.variable,
                                                         prefs=self.prefs,
                                                         name="System Input {}".format(i))
             self.stimulusInputStates.append(stimulus_input_state)
@@ -1888,17 +1878,17 @@ class System_Base(System):
             target_mech_TARGET_input_state = target_mech.input_states[TARGET]
 
             # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-            #    of the TARGET (ComparatorMechanism) target inputState's variable attribute
-            if len(self.targets[i]) != len(target_mech_TARGET_input_state.variable):
+            #    of the TARGET (ComparatorMechanism) target inputState's instance_defaults.variable attribute
+            if len(self.targets[i]) != len(target_mech_TARGET_input_state.instance_defaults.variable):
                 raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                   "expected for its TARGET Mechanism {}".
                                    format(len(self.targets[i]),
                                           self.targets[i],
-                                          len(target_mech_TARGET_input_state.variable),
+                                          len(target_mech_TARGET_input_state.instance_defaults.variable),
                                           target_mech.name))
 
             system_target_input_state = SystemInputState(owner=self,
-                                                        variable=target_mech_TARGET_input_state.variable,
+                                                        variable=target_mech_TARGET_input_state.instance_defaults.variable,
                                                         prefs=self.prefs,
                                                         name="System Target {}".format(i))
             self.target_input_states.append(system_target_input_state)
@@ -2022,9 +2012,9 @@ class System_Base(System):
             if (self.prefs.verbosePref and
                     not (not context or COMPONENT_INIT in context)):
                 print("- No input provided;  default will be used: {0}")
-            input = np.zeros_like(self.variable)
+            input = np.zeros_like(self.instance_defaults.variable)
             for i in range(num_origin_mechs):
-                input[i] = self.origin_mechanisms[i].variableInstanceDefault
+                input[i] = self.origin_mechanisms[i].instance_defaults.variable
 
         else:
             num_inputs = np.size(input,0)
@@ -2170,7 +2160,8 @@ class System_Base(System):
                 # Zero input to first mechanism after first run (in case it is repeated in the pathway)
                 # IMPLEMENTATION NOTE:  in future version, add option to allow Process to continue to provide input
                 # FIX: USE clamp_input OPTION HERE, AND ADD HARD_CLAMP AND SOFT_CLAMP
-                self.variable = convert_to_np_array(self.input, 2) * 0
+                # self.variable = convert_to_np_array(self.input, 2) * 0
+                pass
             i += 1
 
     def _execute_learning(self, clock=CentralClock, context=None):
