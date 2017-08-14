@@ -43,6 +43,7 @@ names = [
 ]
 
 @pytest.mark.function
+@pytest.mark.distance_function
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_basic(variable, metric, normalize, fail, expected, benchmark):
@@ -58,6 +59,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark):
     assert np.allclose(res, expected)
 
 @pytest.mark.function
+@pytest.mark.distance_function
 @pytest.mark.parametrize("variable, metric, normalize, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
 def test_llvm(variable, metric, normalize, fail, expected, benchmark):
