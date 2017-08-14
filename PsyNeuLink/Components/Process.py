@@ -1364,7 +1364,7 @@ class Process_Base(Process):
 
         # ASSIGN DEFAULT PROJECTION PARAMS
 
-        # If learning is specified for the Process, add to default Projection params
+        # If learning is specified for the Process, add learning specification to default Projection params
         if self.learning:
 
             # if spec is LEARNING or ENABLED (convenience spec),
@@ -1386,7 +1386,7 @@ class Process_Base(Process):
 
         for i in range(len(pathway)):
                 item = pathway[i]
-
+                learning_projection_specified = False
                 #region FIRST ENTRY
 
                 # Must be a Mechanism (enforced above)
@@ -1659,10 +1659,16 @@ class Process_Base(Process):
                     elif (isinstance(item, (np.matrix, str, tuple)) or
                               (isinstance(item, np.ndarray) and item.ndim == 2)):
                         # If a LearningProjection is explicitly specified for this Projection, use it
+                        # MODIFIED 8/14/17 OLD [WAS ALREADY COMMENTED OUT]:
                         # if params:
                         #     matrix_spec = (item, params)
+                        # MODIFIED 8/14/17 NEW:
+                        if isinstance(item, tuple):
+                            matrix_spec = item
+                            learning_projection_specified = True
+                        # MODIFIED 8/14/17 END
                         # If a LearningProjection is not specified for this Projection but self.learning is, use that
-                        if self.learning:
+                        elif self.learning:
                             matrix_spec = (item, self.learning)
                         # Otherwise, do not include any LearningProjection
                         else:
@@ -1677,6 +1683,9 @@ class Process_Base(Process):
                     #    with Projection as OBJECT item and original params as PARAMS item of the tuple
                     # IMPLEMENTATION NOTE:  params is currently ignored
                     pathway[i] = projection
+
+        if learning_projection_specified:
+            self.learning = LEARNING
 
 
     def _issue_warning_about_existing_projections(self, mechanism, context=None):
@@ -2096,7 +2105,7 @@ class Process_Base(Process):
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
 
         elif len(target_mechs) > 1:
-            target_mech_names = list(targetMechanism.name for targetMechanism in target_mechs)
+            target_mech_names = list(target_mechanism.name for target_mechanism in target_mechs)
             raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
                                format(self.name, target_mech_names))
 
@@ -2125,10 +2134,10 @@ class Process_Base(Process):
 
         target = np.atleast_1d(self.target)
 
-        # Create ProcessInputState for target and assign to targetMechanism's target inputState
+        # Create ProcessInputState for target and assign to target_mechanism's target inputState
         target_mech_target = self.target_mechanism.input_states[TARGET]
 
-        # Check that length of process' target input matches length of targetMechanism's target input
+        # Check that length of process' target input matches length of target_mechanism's target input
         if len(target) != len(target_mech_target.variable):
             raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
                                format(len(target), len(target_mech_target.variable)))
@@ -2300,7 +2309,7 @@ class Process_Base(Process):
             self.target = self.targets()
             # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
 
-        # Assign target to targetInputState (ProcessInputState that projects to targetMechanism for the process)
+        # Assign target to targetInputState (ProcessInputState that projects to target_mechanism for the process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
             target_input_state.value = self.target[i]
 
