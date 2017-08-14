@@ -678,8 +678,8 @@ import numpy as np
 # s.run(inputs)
 # #endregion
 
-#region TEST MUTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST MUTIPLE LEARNING SEQUENCES IN A PROCESS")
+#region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
 
 a = TransferMechanism(name='a', default_variable=[0, 0])
 b = TransferMechanism(name='b')

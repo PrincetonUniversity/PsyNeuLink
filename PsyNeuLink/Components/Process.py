@@ -1627,6 +1627,9 @@ class Process_Base(Process):
                                                        format(item.init_args[NAME],
                                                               i, self.name, receiver_mech.name))
 
+                            # Check if it is specified for learning
+                            TEST = True
+
                             # Complete initialization of Projection
                             item._deferred_init()
 
