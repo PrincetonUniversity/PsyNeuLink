@@ -6180,7 +6180,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=variableClassDefault,
-                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
+                 metric:tc.enum(PEARSON, EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -6267,12 +6267,46 @@ class Distance(ObjectiveFunction):
         new_acc = builder.fadd(acc_val, mul)
         builder.store(new_acc, acc)
 
+    def __gen_llvm_pearson(self, builder, index, ctx, v1, v2, acc_x, acc_y, acc_xy, acc_x2, acc_y2):
+        ptr1 = builder.gep(v1, [index])
+        ptr2 = builder.gep(v2, [index])
+        val1 = builder.load(ptr1)
+        val2 = builder.load(ptr2)
+
+        # Sum X
+        acc_x_val = builder.load(acc_x)
+        acc_x_val = builder.fadd(acc_x_val, val1)
+        builder.store(acc_x_val, acc_x)
+
+        # Sum Y
+        acc_y_val = builder.load(acc_y)
+        acc_y_val = builder.fadd(acc_y_val, val2)
+        builder.store(acc_y_val, acc_y)
+
+        # Sum XY
+        acc_xy_val = builder.load(acc_xy)
+        xy = builder.fmul(val1, val2)
+        acc_xy_val = builder.fadd(acc_xy_val, xy)
+        builder.store(acc_xy_val, acc_xy)
+
+        # Sum X2
+        acc_x2_val = builder.load(acc_x2)
+        x2 = builder.fmul(val1, val1)
+        acc_x2_val = builder.fadd(acc_x2_val, x2)
+        builder.store(acc_x2_val, acc_x2)
+
+        # Sum Y2
+        acc_y2_val = builder.load(acc_y2)
+        y2 = builder.fmul(val2, val2)
+        acc_y2_val = builder.fadd(acc_y2_val, y2)
+        builder.store(acc_y2_val, acc_y2)
+
+
     def __get_llvm_function(self, default_variable):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
-            if (self.metric == EUCLIDEAN):
-                sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
+            sqrt = ctx.module.declare_intrinsic("llvm.sqrt", [ctx.float_ty])
             func_name = ctx.module.get_unique_name("distance")
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
@@ -6299,6 +6333,21 @@ class Distance(ObjectiveFunction):
                 inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
             elif (self.metric == CORRELATION):
                 inner = functools.partial(self.__gen_llvm_correlate, **kwargs)
+            elif (self.metric == PEARSON):
+                acc_x_ptr = builder.alloca(ctx.float_ty)
+                acc_y_ptr = builder.alloca(ctx.float_ty)
+                acc_xy_ptr = builder.alloca(ctx.float_ty)
+                acc_x2_ptr = builder.alloca(ctx.float_ty)
+                acc_y2_ptr = builder.alloca(ctx.float_ty)
+                for loc in [acc_x_ptr, acc_y_ptr, acc_xy_ptr, acc_x2_ptr, acc_y2_ptr]:
+                    builder.store(ctx.float_ty(0), loc)
+                del kwargs['acc']
+                kwargs['acc_x'] = acc_x_ptr
+                kwargs['acc_y'] = acc_y_ptr
+                kwargs['acc_xy'] = acc_xy_ptr
+                kwargs['acc_x2'] = acc_x2_ptr
+                kwargs['acc_y2'] = acc_y2_ptr
+                inner = functools.partial(self.__gen_llvm_pearson, **kwargs)
             else:
                 raise RuntimeError('Unsupported metric')
 
@@ -6307,6 +6356,32 @@ class Distance(ObjectiveFunction):
             ret = builder.load(acc_ptr)
             if (self.metric == EUCLIDEAN):
                 ret = builder.call(sqrt, [ret])
+            elif (self.metric == PEARSON):
+                # (n * acc_xy - acc_x * acc_y) /
+                # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
+                fn = ctx.float_ty(len(default_variable[0]))
+                acc_xy = builder.load(acc_xy_ptr)
+                acc_x = builder.load(acc_x_ptr)
+                acc_y = builder.load(acc_y_ptr)
+                acc_x2 = builder.load(acc_x2_ptr)
+                acc_y2 = builder.load(acc_y2_ptr)
+
+                nxy = builder.fmul(fn, acc_xy)
+                axay = builder.fmul(acc_x, acc_y)
+                numerator = builder.fsub(nxy, axay)
+
+                nx2 = builder.fmul(fn, acc_x2)
+                sx2 = builder.fmul(acc_x, acc_x)
+                rx = builder.fsub(nx2, sx2)
+
+                ny2 = builder.fmul(fn, acc_y2)
+                sy2 = builder.fmul(acc_y, acc_y)
+                ry = builder.fsub(ny2, sy2)
+
+                denominator = builder.fmul(rx, ry)
+                denominator = builder.call(sqrt, [denominator])
+
+                ret = builder.fdiv(numerator, denominator)
 
             # len(self.argument) is always 2, perhaps the size of vector
             # should be used instead
@@ -6332,7 +6407,13 @@ class Distance(ObjectiveFunction):
             self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
         ct_v1 = v1.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
         ct_v2 = v2.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        return self.__bin_function(ct_v1, ct_v2)
+        ret = self.__bin_function(ct_v1, ct_v2)
+
+        # FIXME: PEARSON breaks output format
+        if (self.metric == PEARSON):
+            selfcor = 0.5 if self.normalize else 1
+            return np.array([[selfcor, ret], [ret, selfcor]])
+        return ret
 
     def function(self,
                  variable=None,
