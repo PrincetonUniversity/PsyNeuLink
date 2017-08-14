@@ -2137,43 +2137,80 @@ class Process_Base(Process):
         # MODIFIED 8/14/17 END
 
 
+    # # MODIFIED 8/14/17 OLD:
+    # def _instantiate_target_input(self, context=None):
+    #
+    #     if self.target is None:
+    #         # target arg was not specified in Process' constructor,
+    #         #    so use the value of the TARGET InputState for the TARGET Mechanism as the default
+    #         self.target = self.target_mechanism.input_states[TARGET].value
+    #         if self.verbosePref:
+    #             warnings.warn("Learning has been specified for {} and it has a TARGET Mechanism, but its "
+    #                           "\'target\' argument was not specified; default value will be used ({})".
+    #                           format(self.name, self.target))
+    #
+    #     target = np.atleast_1d(self.target)
+    #
+    #     # Create ProcessInputState for target and assign to target_mechanism's target inputState
+    #     target_mech_target = self.target_mechanism.input_states[TARGET]
+    #
+    #     # Check that length of process' target input matches length of target_mechanism's target input
+    #     if len(target) != len(target_mech_target.variable):
+    #         raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
+    #                            format(len(target), len(target_mech_target.variable)))
+    #
+    #     target_input_state = ProcessInputState(owner=self,
+    #                                             variable=target,
+    #                                             prefs=self.prefs,
+    #                                             name=TARGET)
+    #     self.target_input_states.append(target_input_state)
+    #
+    #     # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
+    #     from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+    #     MappingProjection(sender=target_input_state,
+    #             receiver=target_mech_target,
+    #             name=self.name+'_Input Projection to '+target_mech_target.name)
+
+    # MODIFIED 8/14/17 NEW:
     def _instantiate_target_input(self, context=None):
 
         if self.target is None:
-            # # MODIFIED 6/26/17 OLD:
-            # raise ProcessError("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
-            #                    "so it must also have a target input when run.".format(self.name))
-            # MODIFIED 6/26/17 NEW:
             # target arg was not specified in Process' constructor,
-            #    so use the value of the TARGET InputState for the TARGET Mechanism as the default
-            self.target = self.target_mechanism.input_states[TARGET].value
+            #    so use the value of the TARGET InputState for each TARGET Mechanism as the default
+            self.target = [mech.input_states[TARGET].value for mech in self.target_mechanisms]
             if self.verbosePref:
-                warnings.warn("Learning has been specified for {} and it has a TARGET ObjectiveMechanism, "
-                              " but its \'target\' argument was not specified; default will be used ({})".
+                warnings.warn("Learning has been specified for {} and it has TARGET Mechanism(s), but its "
+                              "\'target\' argument was not specified; default value(s) will be used ({})".
                               format(self.name, self.target))
-            # MODIFIED 6/26/17 END
 
         target = np.atleast_1d(self.target)
 
-        # Create ProcessInputState for target and assign to target_mechanism's target inputState
-        target_mech_target = self.target_mechanism.input_states[TARGET]
+        # Create ProcessInputState for each item of target and
+        #   assign to TARGET inputState of each item of target_mechanisms
+        for target_mech, target in zip(self.target_mechanisms, self.target):
+            target_mech_target = target_mech.input_states[TARGET]
 
-        # Check that length of process' target input matches length of target_mechanism's target input
-        if len(target) != len(target_mech_target.variable):
-            raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
-                               format(len(target), len(target_mech_target.variable)))
+            # Check that length of process' target input matches length of target_mechanism's target input
+            if len(target) != len(target_mech_target.variable):
+                raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
+                                   format(len(target),
+                                          target_mech.name,
+                                          len(target_mech_target.variable)))
 
-        target_input_state = ProcessInputState(owner=self,
-                                                variable=target,
-                                                prefs=self.prefs,
-                                                name=TARGET)
-        self.target_input_states.append(target_input_state)
+            target_input_state = ProcessInputState(owner=self,
+                                                    variable=target,
+                                                    prefs=self.prefs,
+                                                    name=TARGET)
+            self.target_input_states.append(target_input_state)
 
-        # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
-        from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-        MappingProjection(sender=target_input_state,
-                receiver=target_mech_target,
-                name=self.name+'_Input Projection to '+target_mech_target.name)
+            # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
+            from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+            MappingProjection(sender=target_input_state,
+                    receiver=target_mech_target,
+                    name=self.name+'_Input Projection to '+target_mech_target.name)
+    # MODIFIED 8/14/17 END
+
+
 
     def initialize(self):
         """Assign the values specified for each Mechanism in the process' `initial_values` attribute.
