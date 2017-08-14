@@ -798,8 +798,8 @@ class System_Base(System):
     #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
-    # variableClassDefault = inputValueSystemDefault
-    variableClassDefault = None
+    class ClassDefaults(System.ClassDefaults):
+        variable = None
 
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({TIME_SCALE: TimeScale.TRIAL,
