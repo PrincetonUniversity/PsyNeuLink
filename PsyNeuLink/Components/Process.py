@@ -456,6 +456,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.Lear
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _is_projection_spec
@@ -1187,7 +1188,7 @@ class Process_Base(Process):
 
         if self.learning:
             self._check_for_target_mechanism()
-            if self.target_mechanism:
+            if self.target_mechanisms:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
         else:
@@ -1628,7 +1629,11 @@ class Process_Base(Process):
                                                               i, self.name, receiver_mech.name))
 
                             # Check if it is specified for learning
-                            TEST = True
+                            matrix_spec = item.function_params[MATRIX]
+                            if (isinstance(matrix_spec, tuple) and
+                                        (matrix_spec[1] in {LEARNING, LEARNING_PROJECTION} or
+                                             isinstance(matrix_spec[1], (LearningProjection, LearningSignal)))):
+                                self.learning = True
 
                             # Complete initialization of Projection
                             item._deferred_init()
@@ -1642,6 +1647,9 @@ class Process_Base(Process):
                                                "{} is not the Mechanism ({}) that follows it in the pathway".
                                                format(item.name, i, self.name, sender_mech.name))
                         projection = item
+
+                        if projection.has_learning_projection is True:
+                            self.learning = True
 
                         # TEST
                         # if params:
@@ -2107,17 +2115,27 @@ class Process_Base(Process):
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
 
-        elif len(target_mechs) > 1:
-            target_mech_names = list(target_mechanism.name for target_mechanism in target_mechs)
-            raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
-                               format(self.name, target_mech_names))
-
+        # # MODIFIED 8/14/17 OLD:
+        # elif len(target_mechs) > 1:
+        #     target_mech_names = list(target_mechanism.name for target_mechanism in target_mechs)
+        #     raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
+        #                        format(self.name, target_mech_names))
+        #
+        # else:
+        #     self.target_mechanism = target_mechs[0]
+        #     self._target_mechs.append(target_mechs[0])
+        #     if self.prefs.verbosePref:
+        #         print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
+        #               format(self.target_mechanism.name, self.name))
+        # MODIFIED 8/14/17 NEW:
         else:
-            self.target_mechanism = target_mechs[0]
-            self._target_mechs.append(target_mechs[0])
+            # self._target_mechs.append(target_mechs[0])
+            self.target_mechanisms = target_mechs
             if self.prefs.verbosePref:
-                print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
-                      format(self.target_mechanism.name, self.name))
+                print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
+                      format([mech.name for mech in self.target_mechanisms], self.name))
+        # MODIFIED 8/14/17 END
+
 
     def _instantiate_target_input(self, context=None):
 
