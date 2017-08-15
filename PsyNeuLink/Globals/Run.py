@@ -239,7 +239,7 @@ completed.  If a function is used for the **targets**, then it will be used to g
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanism <Process.Process_Base.target_mechanism>` or
+`target_mechanisms <Process.Process_Base.target_mechanisms>` or
 System `targetMechanism <System.System_Base.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
@@ -836,7 +836,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
-                               "supposed to be in target_mechanism for {}".
+                               "supposed to be in target_mechanisms for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
             terminal_mech = process.terminal_mechanisms[0]

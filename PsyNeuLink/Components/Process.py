@@ -877,9 +877,6 @@ class Process_Base(Process):
 
         .. based on _learning_mechs
 
-    ..  target_mechanism : Mechanism
-            the 'TARGET' Mechanism of the Process (see `Process_Mechanisms` for a description).
-
     target_mechanisms : MechanismList
         the `TARGET` Mechanisms for the Process, listed in `target_mechanisms.data`;  each is a `ComparatorMechanism`
         associated with the last ProcessingMechanism of a `learning sequence <Process_Learning_Sequence>` in the
@@ -2053,9 +2050,8 @@ class Process_Base(Process):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
-         Check that there is one and only one TARGET ObjectiveMechanism for the process
-         Assign target_mechanism to self.target_mechanism,
-             assign self to target_mechanism.processes,
+         Identify TARGET Mechanisms and assign to self.target_mechanisms,
+             assign self to each TARGET Mechanism
              and report assignment if verbose
         """
 
@@ -2110,7 +2106,6 @@ class Process_Base(Process):
                                                              # list(self.terminalMechanisms)[0].name,
                                                              self.last_mechanism.name,
                                                              list(process.name for process in target_mech.processes)))
-                self.target_mechanism = None
             else:
 
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
@@ -2143,7 +2138,7 @@ class Process_Base(Process):
 
             target = np.atleast_1d(target)
 
-            # Check that length of process' target input matches length of target_mechanism's target input
+            # Check that length of process' target input matches length of TARGET Mechanism's target input
             if len(target) != len(target_mech_target.variable):
                 raise ProcessError("Length of target ({}) does not match length of input for TARGET Mechanism {} ({})".
                                    format(len(target),
@@ -2204,7 +2199,7 @@ class Process_Base(Process):
         target : List[value] or ndarray: default None
             each item is assigned as the input to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
             corresponding `ComparatorMechanism` in `target_mechanisms <Process_Base.target_mechanisms>`;  the number
-            of items must equal the length of `target_mechanisms <Process_Base.target_mechanism>`.
+            of items must equal the length of `target_mechanisms <Process_Base.target_mechanisms>`.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether Mechanisms are executed for a single time step or a trial.
@@ -2443,7 +2438,7 @@ class Process_Base(Process):
             argument.  Each item is assigned as the target(s) the input to the *TARGET* `InputState
             <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_mechanisms
             <Process_Base.target_mechanisms>` for that `TRIAL`;  the number of items must equal the length of
-            `target_mechanisms <Process_Base.target_mechanism>`.
+            `target_mechanisms <Process_Base.target_mechanisms>`.
 
         learning : bool :  default None
             enables or disables `learning <Process_Execution_Learning>` during execution.
