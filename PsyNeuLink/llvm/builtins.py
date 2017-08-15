@@ -40,7 +40,7 @@ def setup_vxm(ctx):
 
     # zero the output array
     zero_array = functools.partial(__set_array_body, **kwargs)
-    builder = helpers.for_loop(builder, ctx.int32_ty(0), y, ctx.int32_ty(1), zero_array, "zero")
+    builder = helpers.for_loop_zero_inc(builder, y, zero_array, "zero")
 
     # Multiplication
 

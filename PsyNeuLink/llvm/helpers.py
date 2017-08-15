@@ -38,3 +38,8 @@ def for_loop(builder, start, stop, inc, body_func, id):
         out_block = builder.block
 
     return ir.IRBuilder(out_block)
+
+def for_loop_zero_inc(builder, stop, body_func, id):
+    start = stop.type(0)
+    inc = stop.type(1)
+    return for_loop(builder, start, stop, inc, body_func, id)

@@ -1896,7 +1896,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo}
             inner = functools.partial(self.__gen_llvm_linear, **kwargs)
 
-            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "linear")
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
         return func_name
@@ -2152,7 +2152,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo}
             inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
 
-            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "exponential")
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
             builder.ret_void()
         return func_name
@@ -2369,7 +2369,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo}
             inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
 
-            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "logistic")
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
 
             builder.ret_void()
         return func_name
@@ -2626,7 +2626,7 @@ class SoftMax(TransferFunction):
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
 
-            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "exp_sum_max")
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_sum_max")
 
             output_type = self.params[OUTPUT_TYPE]
             exp_sum = builder.load(exp_sum_ptr)
@@ -2636,7 +2636,7 @@ class SoftMax(TransferFunction):
             if output_type == ALL:
                 kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
                 inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
-                builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, "exp_div")
+                builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
             elif output_type == MAX_VAL:
                 ptri = builder.gep(vi, [index])
                 exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
@@ -6649,7 +6649,7 @@ class Distance(ObjectiveFunction):
                 raise RuntimeError('Unsupported metric')
 
 
-            builder = helpers.for_loop(builder, ctx.int32_ty(0), vector_length, ctx.int32_ty(1), inner, self.metric)
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, self.metric)
             ret = builder.load(acc_ptr)
             if (self.metric == EUCLIDEAN):
                 ret = builder.call(sqrt, [ret])
