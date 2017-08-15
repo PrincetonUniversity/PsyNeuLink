@@ -6174,7 +6174,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=variableClassDefault,
-                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
+                 metric:tc.enum(PEARSON, EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
