@@ -1817,7 +1817,7 @@ class Mechanism_Base(Mechanism):
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context:
             for state in self.input_states:
-                self.input_states[state].value = self.input_states[state].variable
+                self.input_states[state].value = self.input_states[state].instance_defaults.variable
             for state in self._parameter_states:
                 self._parameter_states[state].value =  getattr(self, '_'+state)
             for state in self.output_states:
