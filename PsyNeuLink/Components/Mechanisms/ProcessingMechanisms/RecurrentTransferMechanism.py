@@ -472,8 +472,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 1D numeric array".format(auto_param, self))
             if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
-                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the variable "
-                                             "({2}) of its owner, {1}.".format(auto_param, self, self.variable))
+                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
+                                             "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
@@ -483,8 +483,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
-                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the variable "
-                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.variable))
+                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
+                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
                     raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
