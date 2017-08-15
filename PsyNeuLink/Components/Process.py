@@ -2309,7 +2309,7 @@ class Process_Base(Process):
         # If target was provided to execute, use that;  otherwise, will use value provided on instantiation
         #
         if target is not None:
-            self.target = target
+            self.target = np.atleast_2d(target)
 
         # If targets were specified as a function in call to Run() or in System (and assigned to self.targets),
         #  call the function now (i.e., after execution of the pathways, but before learning)
