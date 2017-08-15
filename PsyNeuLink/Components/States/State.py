@@ -1345,7 +1345,7 @@ class State_Base(State):
                                               context=context)
 
         # Check that self.value is compatible with projection's function variable
-        if not iscompatible(self.value, projection_spec.variable):
+        if not iscompatible(self.value, projection_spec.instance_defaults.variable):
             raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of function for {4}".
                   format(
                          # item_prefix_string,
@@ -1357,7 +1357,7 @@ class State_Base(State):
                          item_prefix_string,
                          self.value,
                          item_suffix_string,
-                         projection_spec.variable,
+                         projection_spec.instance_defaults.variable,
                          projection_spec.name
                          ))
 
