@@ -609,11 +609,11 @@ class KWTA(RecurrentTransferMechanism):
         #
         # # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # # Use self.variable to initialize state of input
+        # # Use self.instance_defaults.variable to initialize state of input
         #
         #
         # if INITIALIZING in context:
-        #     self.previous_input = self.variable
+        #     self.previous_input = self.instance_defaults.variable
         #
         # if self.decay is not None and self.decay != 1.0:
         #     self.previous_input *= self.decay
@@ -640,13 +640,13 @@ class KWTA(RecurrentTransferMechanism):
         #     if not self.integrator_function:
         #
         #         self.integrator_function = AdaptiveIntegrator(
-        #                                     self.variable,
+        #                                     self.instance_defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
         #                                     rate = self.time_constant
         #                                     )
         #
-        #     current_input = self.integrator_function.execute(self.variable,
+        #     current_input = self.integrator_function.execute(variable,
         #                                                 # Should we handle runtime params?
         #                                                      # params={INITIALIZER: self.previous_input,
         #                                                      #         INTEGRATION_TYPE: ADAPTIVE,

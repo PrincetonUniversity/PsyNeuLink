@@ -399,7 +399,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output.
 
     value : value
-        Output of Projection, transmitted to InputState.variable of receiver.
+        Output of Projection, transmitted as variable to InputState of receiver.
 
     COMMENT:
         projectionSender : Mechanism, State, or Object

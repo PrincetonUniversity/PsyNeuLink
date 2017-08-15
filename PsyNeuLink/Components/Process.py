@@ -890,7 +890,7 @@ class Process_Base(Process):
 
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
+        """Convert variableClassDefault, instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
 
         :param variable:
         :param context:
@@ -996,7 +996,7 @@ class Process_Base(Process):
                 - if Projection is NOT explicitly specified,
                     but the next Mechanism already has a Projection from the previous one, use that;
                 - otherwise, instantiate a default MappingProjection from previous Mechanism to next:
-                    use kwIdentity (identity matrix) if len(sender.value == len(receiver.variable)
+                    use kwIdentity (identity matrix) if len(sender.value) == len(receiver.instance_defaults.variable)
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if the lengths are not equal
                     use FULL_CONNECTIVITY_MATRIX (full connectivity matrix with unit weights) if LEARNING has been set
 
@@ -1632,7 +1632,7 @@ class Process_Base(Process):
             seen = set()
             # mech_list = list(object_item for object_item in self._mechs)
             for mech in self._mechs:
-                # Skip repeat mechansims (don't add another element to self.variable)
+                # Skip repeat mechansims (don't add another element to self.instance_defaults.variable)
                 if mech in seen:
                     continue
                 else:
@@ -2079,7 +2079,7 @@ class Process_Base(Process):
         report_output = self.prefs.reportOutputPref and context and EXECUTING in context
 
 
-        # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASIGNMENT OF input TO self.variable
+        # FIX: CONSOLIDATE/REARRANGE _assign_input_values, _check_args, AND ASSIGNMENT OF input TO variable
         # FIX: (SO THAT assign_input_value DOESN'T HAVE TO RETURN input
 
         self.input = self._assign_input_values(input=input, context=context)
@@ -2331,16 +2331,10 @@ class Process_Base(Process):
               format(append_type_to_name(self),
               # format(self.name,
                      re.sub(r'[\[,\],\n]','',str(self.mechanismNames))))
-        # # MODIFIED 2/17/17 OLD:
-        # variable = [list(i) for i in self.variable]
-        # print("- variable: {1}".format(self, re.sub('[\[,\],\n]','',
-        #                                          str([[float("{:0.3}".format(float(i)))
-        #                                                for i in value] for value in variable]))))
-        # MODIFIED 2/17/17 NEW:
+
         if input is None:
             input = self.input
         print("- input: {}".format(input))
-        # MODIFIED 2/17/17 END
 
 
     def _report_mechanism_execution(self, mechanism):
@@ -2419,10 +2413,6 @@ class Process_Base(Process):
     @property
     def mechanismNames(self):
         return self._allMechanisms.names
-
-    # @property
-    # def input_value(self):
-    #     return self.variable
 
     @property
     def output_state(self):

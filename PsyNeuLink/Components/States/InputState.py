@@ -261,13 +261,13 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import Linear, LinearCombination
 from PsyNeuLink.Components.States.State import StateError, State_Base, _instantiate_state_list, state_type_keywords
 from PsyNeuLink.Globals.Keywords import EXPONENT, FUNCTION, INPUT_STATE, INPUT_STATE_PARAMS, MAPPING_PROJECTION, PROJECTION_TYPE, SUM, VARIABLE, WEIGHT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
-from PsyNeuLink.Components.Component import InitStatus
 state_type_keywords = state_type_keywords.update({INPUT_STATE})
 
 # InputStatePreferenceSet = ComponentPreferenceSet(log_pref=logPrefTypeDefault,
@@ -549,7 +549,7 @@ class InputState(State_Base):
                                              self.owner.name,
                                              self.function.__self__.componentName, ))
 
-        # Insure that self.value is compatible with (relevant item of) self.owner.variable
+        # Insure that self.value is compatible with (relevant item of) self.reference_value
         if not iscompatible(self.value, self.reference_value):
             raise InputStateError("Value ({}) of {} {} for {} is not compatible with "
                                            "the variable ({}) of its function".
@@ -618,7 +618,7 @@ def _instantiate_input_states(owner, input_states=None, context=None):
         - if there is only one InputState, it is assigned the full value
 
     Note: State._instantiate_state_list()
-              parses self.variable (2D np.array, passed in constraint_value)
+              parses self.instance_defaults.variable (2D np.array, passed in constraint_value)
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)

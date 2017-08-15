@@ -829,7 +829,7 @@ class EVCMechanism(ControlMechanism_Base):
             # variables = []
             # for state_name in origin_mech.input_states.keys():
             #     state_names.append(state_name)
-            #     variables.append(origin_mech_intputStates[state_name].variable)
+            #     variables.append(origin_mech_intputStates[state_name].instance_defaults.variable)
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](

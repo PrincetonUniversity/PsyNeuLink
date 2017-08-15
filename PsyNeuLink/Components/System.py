@@ -928,7 +928,7 @@ class System_Base(System):
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each input state
+        """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
         """
         super(System_Base, self)._validate_variable(variable, context)
 
@@ -1009,9 +1009,6 @@ class System_Base(System):
             - add each pair as an entry in self.execution_graph
         """
 
-        # # MODIFIED 2/8/17 OLD:  [SEE BELOW]
-        # self.variable = []
-        # MODIFIED 2/8/17 END
         self.mechanismsDict = {}
         self._all_mechs = []
         self._allMechanisms = MechanismList(self, self._all_mechs)
@@ -1086,11 +1083,6 @@ class System_Base(System):
 
             process = processes_spec[i].process
             process_input = processes_spec[i].input
-
-            # # MODIFIED 2/8/17 OLD: [MOVED ASSIGNMENT OF self.variable TO _instantiate_graph()
-            # #                       SINCE THAT IS WHERE SYSTEM'S ORIGIN MECHANISMS ARE IDENTIFIED]
-            # self.variable.append(process_input)
-            # # MODIFIED 2/8/17 END
 
             # IMPLEMENT: THIS IS WHERE LEARNING SPECIFIED FOR A SYSTEM SHOULD BE IMPLEMENTED FOR EACH PROCESS IN THE
             #            SYSTEM;  NOTE:  IF THE PROCESS IS ALREADY INSTANTIATED WITHOUT LEARNING
@@ -1169,10 +1161,6 @@ class System_Base(System):
 
             process._allMechanisms = MechanismList(process, components_list=process._mechs)
 
-        # # MODIFIED 2/8/17 OLD: [SEE ABOVE]
-        # self.variable = convert_to_np_array(self.variable, 2)
-        # # MODIFIED 2/8/17 END
-        #
         # # Instantiate processList using process_tuples, and point self.processes to it
         # # Note: this also points self.params[PROCESSES] to self.processes
         self.process_tuples = processes_spec
@@ -2708,16 +2696,6 @@ class System_Base(System):
     # def processes(self):
     #     return sorted(self._processList.processes)
 
-    # @property
-    # def input_value(self):
-    #     """Value of input to system
-    #
-    #     Returns
-    #     -------
-    #     value of input to system : ndarray
-    #     """
-    #     return self.variable
-
     @property
     def numPhases(self):
         """Number of phases required to execute all ProcessingMechanisms in the system
@@ -2818,8 +2796,6 @@ class System_Base(System):
         rcvrs = list(system_graph.keys())
         # loop through receivers
         for rcvr in rcvrs:
-            # rcvr_name = rcvr[0].name
-            # rcvr_shape = rcvr[0].variable.shape[1]
             rcvr_name = rcvr.name
             rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name

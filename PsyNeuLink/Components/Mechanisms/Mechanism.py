@@ -1298,7 +1298,7 @@ class Mechanism_Base(Mechanism):
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, 2-item tuple, or numeric value(s)>;
-                if it is missing or not one of the above types, it is set to self.variable
+                if it is missing or not one of the above types, it is set to self.instance_defaults.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
                 ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
@@ -1366,7 +1366,7 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, dict) or            # InputState specification dict
                             isinstance(item, str) or             # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
-                    # set to None, so it is set to default (self.variable) in instantiate_inputState
+                    # set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
                     param_value[key] = None
                     if self.prefs.verbosePref:
                         print(
@@ -1392,7 +1392,7 @@ class Mechanism_Base(Mechanism):
                 pass
             else:
                 # INPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+                # - set to None, so that it is set to default (self.instance_defaults.variable) in instantiate_inputState
                 # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
                 params[INPUT_STATES] = None
 

@@ -500,7 +500,7 @@ class Component(object):
         Every Component is associated with:
          - child class componentName
          - type
-         - input (self.variable)
+         - input
          - execute (method): called to execute it;  it in turn calls self.function
          - function (method): carries out object's core computation
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
@@ -514,7 +514,7 @@ class Component(object):
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
-            the latter is used for typing and/or templating other variables (e.g., self.variable):
+            the latter is used for typing and/or templating other variables (e.g., self.instance_defaults.variable):
                 type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
                     if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
                     if the template is empty (e.g., [], {}, or ()), length will not be checked
@@ -553,9 +553,9 @@ class Component(object):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
-                            it is instantiated using self.variable and FUNCTION_PARAMS (if they are there too)
+                            it is instantiated using self.instance_defaults.variable and FUNCTION_PARAMS (if they are there too)
                             this works, since _validate_params is always called after _validate_variable
-                            so self.variable can be used to initialize function
+                            so self.instance_defaults.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
@@ -1892,7 +1892,7 @@ class Component(object):
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
         Perform top-level type validation of variable against the self.ClassDefaults.variable;
-            if the type is OK, the value is assigned to self.variable (which should be used by the function)
+            if the type is OK, the value is returned (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
         It is called only if the parameter_validation attribute is `True` (which it is by default)
 
@@ -1939,17 +1939,12 @@ class Component(object):
         # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
         # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
-        # Note: this insures that self.variable will be AT LEAST 1D;  however, can also be higher:
+        # Note: this insures that variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
         variable = convert_to_np_array(variable, 1)
 
         # If self.ClassDefaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
-            # If variable type matches self.ClassDefaults.variable
-            #    then assign variable to self.variable
-            # if (type(variable) == type(self.ClassDefaults.variable) or
-            #         (isinstance(variable, numbers.Number) and
-            #              isinstance(self.ClassDefaults.variable, numbers.Number))):
             if not variable.dtype is self.ClassDefaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
                     format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)

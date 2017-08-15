@@ -809,8 +809,6 @@ class State_Base(State):
             accordingly, their variable and value must be compatible
         """
 
-        # NOTE: stateful - it seems like this is a structural self.variable, so using self.instance_defaults.variable
-
         var_is_matrix = False
         # If variable is a matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
         #     it needs to be embedded in a list so that it is properly handled by LinearCombination
@@ -1348,12 +1346,6 @@ class State_Base(State):
         if not iscompatible(self.value, projection_spec.instance_defaults.variable):
             raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of function for {4}".
                   format(
-                         # item_prefix_string,
-                         # self.value,
-                         # self.name,
-                         # projection_spec.variable,
-                         # projection_spec.name,
-                         # item_suffix_string))
                          item_prefix_string,
                          self.value,
                          item_suffix_string,
@@ -2354,7 +2346,7 @@ def _parse_state_spec(owner,
     #             else:
     #                 state.params[param] = filter_params(state.params[param])
     #     return dict(**{NAME:state.name,
-    #                   VARIABLE:state.variable,
+    #                   VARIABLE:variable,
     #                   VALUE:state.value,
     #                   # PARAMS:{PROJECTIONS:state.pathway_projections}})
     #                   PARAMS:state.params})
@@ -2424,8 +2416,7 @@ def _parse_state_spec(owner,
     #     if state_spec is state_type:
     #         name = state_spec.name
     #         # variable = state_spec.value
-    #         # variable = state_spec.variableClassDefault
-    #         variable = state_spec.variable
+    #         # variable = state_spec.ClassDefaults.variable
     #         value = state_spec.value
     #         modulatory_projections =  state_spec.mod_projections
     #         params = state_spec.user_params.copy()
