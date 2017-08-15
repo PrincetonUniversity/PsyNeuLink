@@ -76,16 +76,17 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+import logging
+
 from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, K_VALUE, KWTA, MATRIX, RATIO, RESULT, THRESHOLD
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import AUTO, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, KWTA, K_VALUE, MATRIX, RATIO, RESULT, THRESHOLD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -706,7 +707,7 @@ class KWTA(RecurrentTransferMechanism):
     #     """
     #
     #     if isinstance(matrix, str):
-    #         size = len(mech.variable[0])
+    #         size = len(mech.instance_defaults.variable[0])
     #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,
