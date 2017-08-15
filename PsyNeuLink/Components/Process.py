@@ -1188,7 +1188,7 @@ class Process_Base(Process):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanism()
+            self._check_for_target_mechanisms()
             if self._target_mechs:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
@@ -2311,54 +2311,37 @@ class Process_Base(Process):
         if target is not None:
             self.target = target
 
-        # If targets were specified as a function in call to Run() or in System,
-        #  call the function now and assign value to target_input_states
-        #    (i.e., after execution of the pathways, but before learning)
+        # If targets were specified as a function in call to Run() or in System (and assigned to self.targets),
+        #  call the function now (i.e., after execution of the pathways, but before learning)
+        #  and assign value to self.target (that will be used below to assign values to target_input_states)
         # Note:  this accommodates functions that predicate the target on the outcome of processing
         #        (e.g., for rewards in reinforcement learning)
         elif isinstance(self.targets, function_type):
             self.target = self.targets()
-            # FIX: DOES THIS NEED TO BE A LOOP?  ISN'T THERE ONLY EVER ONE targetInputState FOR A PROCESS?
 
-        # Assign target to targetInputState (ProcessInputState that projects to target_mechanism for the process)
+        # If target itself is callable, call that now
+        if callable(self.target):
+            self.target = self.target()
+
+        # Assign items of self.target to target_input_states
+        #   (ProcessInputStates that project to corresponding target_mechanisms for the Process)
         for i, target_input_state in zip(range(len(self.target_input_states)), self.target_input_states):
             target_input_state.value = self.target[i]
 
-        # # Zero any input from projections to target from any other processes
-        # # Note: there is only one targetMechanism in a Process, so can assume it is first item and no need to iterate
-        for process in list(self.target_mechanisms)[0].processes:
-            process.target_input_states[0].value *= 0
-        if callable(self.target):
-            self.target_input_states[0].variable = self.target()
-        else:
-            self.target_input_states[0].value = np.array(self.target)
+        # # Zero any input from projections to target(s) from any other processes
+        for target_mech in self.target_mechanisms:
+            for process in target_mech.processes:
+                if process is self:
+                    continue
+                for target_input_state in  process.target_input_states:
+                    target_input_state.value *= 0
 
-        # # MODIFIED 3/22/17 NEW:
-        # # NEXT, implement process learning_rate param if specified:
-        # #    embed it in a param specification dict for inclusion with runtime_params
-        # process_learning_rate_spec_dict = None
-        # if self.learning_rate is not None:
-        #     process_learning_rate_spec_dict = {LEARNING_RATE: self.learning_rate}
-        # # MODIFIED 3/22/17 END
-
-        # THEN, execute Objective and LearningMechanisms
+        # THEN, execute ComparatorMechanism and LearningMechanisms
         for mechanism in self._learning_mechs:
-            # # MODIFIED 3/22/17 NEW:
-            # # If learning_rate was specified for process and this is a LearningMechanism
-            # if process_learning_rate_spec_dict is not None and isinstance(mechanism, LearningMechanism):
-            #     # Add to any existing params
-            #     if params is not None:
-            #         params.update(process_learning_rate_spec_dict)
-            #     # Or just assign if none
-            #     else:
-            #         params = process_learning_rate_spec_dict
-            # # MODIFIED 3/22/17 END
-
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
                               # runtime_params=params,
                               context=context)
-
 
         # FINALLY, execute LearningProjections to MappingProjections in the process' pathway
         for item in self._mechs:

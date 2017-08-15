@@ -703,10 +703,11 @@ p1 = process(pathway=[a,
 #     # initial_values={a: [1, 1]},
 # )
 
-inputs = {a: [2, 2]}
+# inputs = {a: [2, 2]}
 # s.run(inputs)
 # s.show_graph(show_learning=True)
 
+inputs = {a: [2, 2]}
 p1.run(inputs)
 TEST=True
 
