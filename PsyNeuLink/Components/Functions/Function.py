@@ -4830,17 +4830,6 @@ class AccumulatorIntegrator(
             self.previous_value = value
         return value
 
-    # In an AccumulatorIntegrator, `previous_value` mirrors `variable` because the EVC control mechanism
-    # manipulates `variable`: for the AccumulatorIntegrator, the appropriate attribute for
-    # EVC to manipulate is instead `previous_value`.
-    @property
-    def previous_value(self):
-        return self.variable
-
-    @previous_value.setter
-    def previous_value(self, setting):
-        self.variable = setting
-
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
