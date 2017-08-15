@@ -876,7 +876,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.predicted_input = {}
         for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
             # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
-            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].variable
+            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     # FIX: MOVE THIS TO ControlMechanism??
@@ -1442,6 +1442,7 @@ class EVCMechanism(ControlMechanism_Base):
         for i in range(len(self.control_signals)):
             self.control_signal_costs[i] = self.control_signals[i].cost
 
+        return monitored_states
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.

@@ -599,7 +599,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     #                      ADDS an input_state FOR EACH ITEM IN monitored_values
     #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
-        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
+        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.instance_defaults.variable
 
         Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states.
         Re-specify corresponding items of variable to match the values of the InputStates in input_states.
@@ -622,8 +622,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 monitored_value_dict = monitored_value
             elif isinstance(monitored_value, State):
                 monitored_value_dict[NAME] = monitored_value.name
-                monitored_value_dict[VARIABLE] = monitored_value.variable
-                monitored_value_dict[VALUE] = monitored_value.variable
+                monitored_value_dict[VARIABLE] = monitored_value.instance_defaults.variable
+                monitored_value_dict[VALUE] = monitored_value.instance_defaults.variable
                 # monitored_value_dict[PARAMS] = monitored_value.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
@@ -658,7 +658,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         constraint_value = []
         for input_state in self.input_states:
             constraint_value.append(input_state[VARIABLE])
-        self.variable = constraint_value
+        self.instance_defaults.variable = constraint_value
 
         super()._instantiate_input_states(context=context)
 
