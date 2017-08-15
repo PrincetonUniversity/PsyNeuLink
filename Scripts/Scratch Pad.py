@@ -697,16 +697,17 @@ p1 = process(pathway=[a,
              # learning=LEARNING,
              name='p1')
 
-s = system(
-    processes=[p1],
-    name='Double Learning System',
-    # initial_values={a: [1, 1]},
-)
+# s = system(
+#     processes=[p1],
+#     name='Double Learning System',
+#     # initial_values={a: [1, 1]},
+# )
 
-# inputs = {a: [2, 2]}
+inputs = {a: [2, 2]}
 # s.run(inputs)
 # s.show_graph(show_learning=True)
 
+p1.run(inputs)
 TEST=True
 
 #endregion

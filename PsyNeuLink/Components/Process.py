@@ -1054,7 +1054,7 @@ class Process_Base(Process):
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate initial_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
-                 if it doesn't have a TARGET Mechanism (see _check_for_target_mechanism),
+                 if it doesn't have a TARGET Mechanism (see _check_for_target_mechanisms),
                  it will not need a target.
         """
 
@@ -1187,7 +1187,7 @@ class Process_Base(Process):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanism()
+            self._check_for_target_mechanisms()
             if self.target_mechanisms:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
@@ -2048,7 +2048,7 @@ class Process_Base(Process):
                         format(param_projection.name, projection.name, e.args[0])
                     raise ProcessError(error_msg)
 
-    def _check_for_target_mechanism(self):
+    def _check_for_target_mechanisms(self):
         """Check for and assign TARGET ObjectiveMechanism to use for reporting error during learning.
 
          This should only be called if self.learning is specified
@@ -2082,7 +2082,7 @@ class Process_Base(Process):
                         continue
 
         if not self.learning:
-            raise ProcessError("PROGRAM ERROR: _check_for_target_mechanism should only be called"
+            raise ProcessError("PROGRAM ERROR: _check_for_target_mechanisms should only be called"
                                " for a process if it has a learning specification")
 
         target_mechs = list(object_item
@@ -2115,63 +2115,13 @@ class Process_Base(Process):
                 raise ProcessError("PROGRAM ERROR: {} has a learning specification ({}) "
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
 
-        # # MODIFIED 8/14/17 OLD:
-        # elif len(target_mechs) > 1:
-        #     target_mech_names = list(target_mechanism.name for target_mechanism in target_mechs)
-        #     raise ProcessError("PROGRAM ERROR: {} has more than one target_mechanism: {}".
-        #                        format(self.name, target_mech_names))
-        #
-        # else:
-        #     self.target_mechanism = target_mechs[0]
-        #     self._target_mechs.append(target_mechs[0])
-        #     if self.prefs.verbosePref:
-        #         print("\'{}\' assigned as TARGET ObjectiveMechanism for output of \'{}\'".
-        #               format(self.target_mechanism.name, self.name))
-        # MODIFIED 8/14/17 NEW:
         else:
             # self._target_mechs.append(target_mechs[0])
             self.target_mechanisms = target_mechs
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
                       format([mech.name for mech in self.target_mechanisms], self.name))
-        # MODIFIED 8/14/17 END
 
-
-    # # MODIFIED 8/14/17 OLD:
-    # def _instantiate_target_input(self, context=None):
-    #
-    #     if self.target is None:
-    #         # target arg was not specified in Process' constructor,
-    #         #    so use the value of the TARGET InputState for the TARGET Mechanism as the default
-    #         self.target = self.target_mechanism.input_states[TARGET].value
-    #         if self.verbosePref:
-    #             warnings.warn("Learning has been specified for {} and it has a TARGET Mechanism, but its "
-    #                           "\'target\' argument was not specified; default value will be used ({})".
-    #                           format(self.name, self.target))
-    #
-    #     target = np.atleast_1d(self.target)
-    #
-    #     # Create ProcessInputState for target and assign to target_mechanism's target inputState
-    #     target_mech_target = self.target_mechanism.input_states[TARGET]
-    #
-    #     # Check that length of process' target input matches length of target_mechanism's target input
-    #     if len(target) != len(target_mech_target.variable):
-    #         raise ProcessError("Length of target ({}) does not match length of input for target_mechanism in {}".
-    #                            format(len(target), len(target_mech_target.variable)))
-    #
-    #     target_input_state = ProcessInputState(owner=self,
-    #                                             variable=target,
-    #                                             prefs=self.prefs,
-    #                                             name=TARGET)
-    #     self.target_input_states.append(target_input_state)
-    #
-    #     # Add MappingProjection from target_input_state to ComparatorMechanism's TARGET InputState
-    #     from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-    #     MappingProjection(sender=target_input_state,
-    #             receiver=target_mech_target,
-    #             name=self.name+'_Input Projection to '+target_mech_target.name)
-
-    # MODIFIED 8/14/17 NEW:
     def _instantiate_target_input(self, context=None):
 
         if self.target is None:
