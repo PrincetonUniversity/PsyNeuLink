@@ -2819,7 +2819,7 @@ class System_Base(System):
             # rcvr_name = rcvr[0].name
             # rcvr_shape = rcvr[0].variable.shape[1]
             rcvr_name = rcvr.name
-            rcvr_shape = rcvr.variable.shape[1]
+            rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
 
 
@@ -2827,7 +2827,7 @@ class System_Base(System):
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
                 sndr_name = sndr.name
-                sndr_shape = sndr.variable.shape[1]
+                sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
