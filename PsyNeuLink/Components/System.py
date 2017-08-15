@@ -938,6 +938,8 @@ class System_Base(System):
         self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
 
+        return convert_to_np_array(variable, 2)
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate controller, processes and initial_values
         """
