@@ -133,6 +133,21 @@ def _convert_llvm_ir_to_ctype(t):
         return ctypes.c_double
     elif type(t) is ir.FloatType:
         return ctypes.c_float
+    elif type(t) is ir.LiteralStructType:
+        field_list = []
+        for e in t.elements:
+            uniq_name = _module.get_unique_name("field")
+            field_list.append((uniq_name, _convert_llvm_ir_to_ctype(e)))
+        uniq_name = _module.get_unique_name("struct")
+        def __init__(self, **kwargs):
+            for key, value in kwargs.items():
+                setattr(self, key, value)
+            ctypes.Structure.__init__(self, name[:-len("Class")])
+
+        new_type = type(uniq_name, (ctypes.Structure,), {"__init__":__init__})
+        new_type.__name__ = uniq_name
+        new_type._fields_ = field_list
+        return new_type
     assert(False)
 
 _binaries = {}
