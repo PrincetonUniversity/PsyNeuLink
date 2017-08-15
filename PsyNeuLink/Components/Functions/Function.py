@@ -6258,7 +6258,7 @@ class Distance(ObjectiveFunction):
         if self.normalize:
             # if np.sum(denom):
             # result /= np.sum(x,y)
-            result /= len(self.variable)
+            result /= len(self.variable[0])
 
         return result
 
