@@ -2920,7 +2920,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     def param_function(owner, function):
         sender_len = len(owner.sender.value)
-        receiver_len = len(owner.receiver.variable)
+        receiver_len = len(owner.receiver.instance_defaults.variable)
         return function(sender_len, receiver_len)
 
 
