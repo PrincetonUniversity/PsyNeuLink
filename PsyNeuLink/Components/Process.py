@@ -1060,7 +1060,8 @@ class Process_Base(Process):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        # Note: don't confuse target_set (argument of validate_params) with self.target (process attribute for learning)
+        # Note: target_set (argument of validate_params) should not be confused with
+        #       self.target (process attribute for learning)
         if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES]:
             for mech, value in target_set[INITIAL_VALUES].items():
                 if not isinstance(mech, Mechanism):
@@ -1187,8 +1188,8 @@ class Process_Base(Process):
         self._instantiate__deferred_inits(context=context)
 
         if self.learning:
-            self._check_for_target_mechanisms()
-            if self.target_mechanisms:
+            self._check_for_target_mechanism()
+            if self._target_mechs:
                 self._instantiate_target_input(context=context)
             self._learning_enabled = True
         else:
@@ -2116,29 +2117,31 @@ class Process_Base(Process):
                                    "but no TARGET ObjectiveMechanism".format(self.name, self.learning))
 
         else:
-            # self._target_mechs.append(target_mechs[0])
-            self.target_mechanisms = target_mechs
+            # self.target_mechanisms = target_mechs
+            self._target_mechs = target_mechs
             if self.prefs.verbosePref:
                 print("\'{}\' assigned as TARGET Mechanism(s) for \'{}\'".
-                      format([mech.name for mech in self.target_mechanisms], self.name))
+                      format([mech.name for mech in self._target_mechs], self.name))
 
     def _instantiate_target_input(self, context=None):
 
         if self.target is None:
             # target arg was not specified in Process' constructor,
             #    so use the value of the TARGET InputState for each TARGET Mechanism as the default
-            self.target = [mech.input_states[TARGET].value for mech in self.target_mechanisms]
+            self.target = [mech.input_states[TARGET].value for mech in self._target_mechs]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} and it has TARGET Mechanism(s), but its "
                               "\'target\' argument was not specified; default value(s) will be used ({})".
                               format(self.name, self.target))
-
-        target = np.atleast_1d(self.target)
+        else:
+            self.target = np.atleast_2d(self.target)
 
         # Create ProcessInputState for each item of target and
-        #   assign to TARGET inputState of each item of target_mechanisms
-        for target_mech, target in zip(self.target_mechanisms, self.target):
+        #   assign to TARGET inputState of each item of _target_mechs
+        for target_mech, target in zip(self._target_mechs, self.target):
             target_mech_target = target_mech.input_states[TARGET]
+
+            target = np.atleast_1d(target)
 
             # Check that length of process' target input matches length of target_mechanism's target input
             if len(target) != len(target_mech_target.variable):
