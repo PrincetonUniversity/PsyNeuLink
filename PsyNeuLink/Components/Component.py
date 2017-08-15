@@ -2762,7 +2762,6 @@ def make_property(name, default_value):
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
         if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
             param_state = param_state_owner._parameter_states[name]
-            param_state.variable = val
 
             # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
             # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting
