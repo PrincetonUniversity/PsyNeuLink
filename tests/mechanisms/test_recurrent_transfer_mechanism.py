@@ -18,7 +18,7 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_empty_spec(self):
         R = RecurrentTransferMechanism()
         assert R.value is None
-        assert R.variable.tolist() == [[0]]
+        assert R.instance_defaults.variable.tolist() == [[0]]
         assert R.matrix.tolist() == [[1]]
 
     def test_recurrent_mech_check_attrs(self):
