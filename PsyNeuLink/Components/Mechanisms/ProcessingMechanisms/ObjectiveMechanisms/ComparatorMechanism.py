@@ -13,8 +13,8 @@ Overview
 --------
 
 A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
-them using its `function <ComparatorMechanism.function>`, and generates as its output an
-`error_signal <Comparator.error_signal>` that is the discrepancy between them.
+them using its `function <ComparatorMechanism.function>`, and places the calculted discrepancy between the two in its
+*ERROR_SIGNAL* `output_state <ComparatorMechanism.output_state>`.
 
 .. _ComparatorMechanism_Creation:
 
@@ -76,7 +76,7 @@ When an ComparatorMechanism is executed, it updates its input_states with the va
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
 compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *ERROR_SIGNAL*
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
-`output_value <ComparatorMechanism.output_value>` attribute.
+`output_values <ComparatorMechanism.output_values>` attribute.
 
 .. _ComparatorMechanism_Example:
 
