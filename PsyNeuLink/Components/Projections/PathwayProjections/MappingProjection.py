@@ -27,7 +27,8 @@ Creating a MappingProjection
 
 A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
 (see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <MappingProjection.sender>` and
-`receiver <MappingProjection.receiver>` attributes, respectively).
+`receiver <MappingProjection.receiver>` attributes, respectively), or by `specifying it by its matrix parameter
+<Mapping_Matrix_Specification>`.
 
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
@@ -83,9 +84,7 @@ following ways:
 
   * **Tuple** -- used to specify the `matrix <MappingProjection.matrix>` along with a specification for learning;
     The tuple must have two items: the first can be any of the specifications described above; the second must be
-    a specification for `LearningProjection`, using either the keywords *LEARNING_PROJECTION*, *LEARNING*, or a
-    reference to the class (in which case a default LearningProjection is created), or an existing LearningProjection.
-
+    a `learning specification <LearningMechanism_Inline_Specification>`.
 
 .. _MappingProjection_Learning_Specification:
 
@@ -93,21 +92,24 @@ Specifying Learning
 ~~~~~~~~~~~~~~~~~~~
 
 The `matrix <MappingProjection.matrix>` parameter of a MappingProjection can be specified for learning by assigning it
-a `LearningProjection` (see LearningMechanism documentation for an overview of `learning components
+a `LearningProjection` or `LearningSignal` (see LearningMechanism documentation for an overview of `learning components
 <LearningMechanism_Overview>` and a detailed description of `LearningMechanism_Learning_Configurations`;  see
 `MappingProjection_Learning` below for a description of how learning modifies a MappingProjection).  A
-LearningProjection can be assigned to a MappingProjection in any of the following ways:
+LearningProjection or LearningSignal can be assigned to a MappingProjection in any of the following ways:
 
     * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
       <MappingProjection_Tuple_Specification>` described above;
     ..
-    * by specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
       <LearningProjection.receiver>` of a `LearningProjection`;
     ..
-    * specifying the the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
-      the constructor for a `LearningMechanism <LearningSignal_Specification>`.
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **projections** argument of
+      the constructor for a `LearningSignal <LearningSignal_Specification>`
     ..
-    * by `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
+      the constructor for a `LearningMechanism <LearningSignal_Specification>`
+    ..
+    * `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
       <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process_Base.pathway>`;
 
 

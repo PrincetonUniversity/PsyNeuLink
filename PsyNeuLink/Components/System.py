@@ -706,21 +706,21 @@ class System_Base(System):
 
     origin_mechanisms : MechanismList
         all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any other
-        `Mechanisms <Mechanism>`, listed in `origin_mechanisms.data`.
+        `Mechanisms <Mechanism>`; listed in `origin_mechanisms.data`.
 
         .. based on _origin_mechs
            System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
         all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
-        <ProcessingMechanism>`), listed in terminalMechanisms.data.
+        <ProcessingMechanism>`); listed in terminalMechanisms.data.
 
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
         `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for `initialization
-        <System_Execution_Input_And_Initialization>`, listed in recurrent_init_mechanisms.data.
+        <System_Execution_Input_And_Initialization>` listed in recurrent_init_mechanisms.data.
 
     learning_mechanisms : MechanismList
         all `LearningMechanisms <LearningMechanism>` in the System, listed in `learning_mechanisms.data`.

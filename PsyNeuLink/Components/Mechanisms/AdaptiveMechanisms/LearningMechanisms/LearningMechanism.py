@@ -40,18 +40,29 @@ Creating a LearningMechanism
 A LearningMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
 More commonly, however, LearningMechanisms are created automatically when:
 
-* the learning attribute is specified for a `System <System_Execution_Learning>` or `Process
-  <Process_Learning_Sequence>`;
-..
-* a `LearningProjection` (or the keyword *LEARNING*) is specified as the second item of a
-  `tuple specification` for the matrix parameter <Mapping_Matrix_Specification>` of a `MappingProjection` in
-  the `pathway <Process_Base.pathway>` of a `Process`.
-..
-* a `LearningProjection` is created without specifying its `sender <LearningProjection.sender>` attribute.
+    * the learning attribute is specified for a `System <System_Execution_Learning>` or `Process
+      <Process_Learning_Sequence>`;
+    ..
+    * a `tuple specification <LearningMechanism_Inline_Specification>` is used to specify learning for a
+      MappingProjection;
+    ..
+    * a `LearningProjection` is created without specifying its `sender <LearningProjection.sender>` attribute.
 
-In these instances, a `ComparatorMechanism`, `LearningProjection <LearningProjection>`, and any additional Projections
+In these instances, a `ComparatorMechanism`, `LearningSignal`, `LearningProjection`, and any additional Projections
 required to implement learning that do not already exist are also instantiated.  This is described below, under
 `Learning Configurations <LearningMechanism_Learning_Configurations>`.
+
+.. _LearningMechanism_Inline_Specification:
+
+A tuple can be used to specify learning for a MappingProjection in the the **matrix** `argument of its constructor
+<Mapping_Matrix_Specification>` or in the `pathway of a Process <Process_Projections>`.  In both cases,
+the second item of the tuple must be a learning specification, which can be any of the following:
+
+  * an existing `LearningProjection`, `LearningSignal`, or a constructor for one -- the specified Component is used,
+    and default learning Components are automatically created for the others, including a LearningMechanism;
+  ..
+  * a reference to the LearningProjection or LearningSignal class, or the keyword *LEARNING* or *LEARNING_PROJECTION* --
+    a default set of learning Components is automatically created, including a LearningMechanism.
 
 If a LearningMechanism is created directly (using its constructor), then it **variable** and **error_source** arguments
 must be specified.  The **variable** must have three items that are compatible (in number and type) with the `value
