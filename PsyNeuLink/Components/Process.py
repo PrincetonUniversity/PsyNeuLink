@@ -584,7 +584,7 @@ class Process_Base(Process):
         registry : dict : default ProcessRegistry
         classPreference : PreferenceSet : default ProcessPreferenceSet instantiated in __init__()
         classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
+        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PATHWAY: [Mechanism_Base.default_mechanism],
                                 TIME_SCALE: TimeScale.TRIAL}
 
@@ -890,7 +890,7 @@ class Process_Base(Process):
 
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault, instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
+        """Convert ClassDefaults.variable, instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
 
         :param variable:
         :param context:

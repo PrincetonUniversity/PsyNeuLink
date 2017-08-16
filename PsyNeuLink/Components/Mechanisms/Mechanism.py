@@ -793,7 +793,7 @@ class Mechanism_Base(Mechanism):
             + registry (dict): MechanismRegistry
             + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (list)
+            + ClassDefaults.variable (list)
             + paramClassDefaults (dict):
                 + MECHANISM_TIME_SCALE (TimeScale): TimeScale.TRIAL (timeScale at which Mechanism executes)
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
@@ -901,7 +901,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
         <Mechanism_Base.output_state>` attribute).
 
-    output_values : List[value] : default Mechanism_Base.function(variableInstanceDefault)
+    output_values : List[value] : default Mechanism_Base.function(instance_defaults.variable)
         each item in the list corresponds to the `value <OutputState.value>` of one of the Mechanism's `OutputStates
         <Mechanism_OutputStates>` listed in its `output_states <Mechanism_Base.output_states>` attribute.
 
@@ -1174,7 +1174,7 @@ class Mechanism_Base(Mechanism):
 
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault and variable to 2D np.array: one 1D value for each InputState
+        """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]

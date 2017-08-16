@@ -595,9 +595,9 @@ class Component(object):
     Instance attributes:
         + name
         + componentName - name of particular Function (linear, exponential, integral, etc.)
-        + variableClassDefault (value)
+        + ClassDefaults.variable (value)
         + variableClassDefault_np_info (ndArrayInfo)
-        + variableInstanceDefault (value)
+        + instance_defaults.variable (value)
         + _variable_not_specified
         + variable (value)
         + variable_np_info (ndArrayInfo)
@@ -679,7 +679,7 @@ class Component(object):
     #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
+    # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
 
 

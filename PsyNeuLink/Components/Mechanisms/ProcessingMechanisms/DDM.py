@@ -435,7 +435,7 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  STARTING_POINT
+            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>

@@ -370,7 +370,7 @@ class Projection_Base(Projection):
             + registry (dict): ProjectionRegistry
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (value): [0]
+            + ClassDefaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + FUNCTION (Function class or object, or method)

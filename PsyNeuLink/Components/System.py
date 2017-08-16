@@ -575,7 +575,7 @@ class System_Base(System):
         + registry (dict): ProcessRegistry
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-        + variableClassDefault = inputValueSystemDefault                     # Used as default input value to Process)
+        + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
                                 CONTROLLER: SystemDefaultControlMechanism,
                                 TIME_SCALE: TimeScale.TRIAL}
@@ -588,7 +588,7 @@ class System_Base(System):
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by execution_list
-        - variableInstanceDefaults(value):  setter for variableInstanceDefaults;  does some kind of error checking??
+        - instance_defaults.variable(value):  setter for instance_defaults.variable;  does some kind of error checking??
 
        SystemRegistry
        --------------

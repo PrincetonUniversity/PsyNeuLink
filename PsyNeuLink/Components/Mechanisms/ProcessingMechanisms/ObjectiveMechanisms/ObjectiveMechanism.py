@@ -313,7 +313,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + componentType (str): ObjectiveMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
@@ -442,7 +442,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
+    # ClassDefaults.variable = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
     class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
         variable = None
 
@@ -496,12 +496,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         # NOTE 6/29/17: (CW)
         # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
-        # None) expects variable to be initialized to variableClassDefault ([[0]]) while ObjectiveMechanism expects
-        # variable to be initialized to variableClassDefault ([[0]]) AFTER this check has occurred. The problem is,
+        # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
+        # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
         # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
         # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
         # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
-        # to always set variable to variableClassDefault if variable and size are both None.
+        # to always set variable to ClassDefaults.variable if variable and size are both None.
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):

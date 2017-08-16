@@ -697,7 +697,7 @@ class ArgumentTherapy(Function_Base):
     }
 
     # Variable class default
-    # This is used both to type-cast the variable, and to initialize variableInstanceDefault
+    # This is used both to type-cast the variable, and to initialize instance_defaults.variable
     variableClassDefault_locked = False
 
     # Mode indicators

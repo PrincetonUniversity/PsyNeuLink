@@ -432,7 +432,7 @@ class State_Base(State):
             + suffix
             + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (value): [0]
+            + ClassDefaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
             + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States

@@ -103,7 +103,7 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
-from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING,  MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
@@ -201,7 +201,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Transfer_DEFAULT_BIAS
+            + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
@@ -671,7 +671,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                                       NOISE: self.noise,
                                                                       RATE: self.time_constant},
                                                               context=context
-                                                             
+
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
