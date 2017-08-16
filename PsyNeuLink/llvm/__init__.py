@@ -119,6 +119,8 @@ def _llvm_build():
         print("ISA assembly:")
         print(__target_machine.emit_assembly(__mod))
 
+_field_count = 0
+
 def _convert_llvm_ir_to_ctype(t):
     if type(t) is ir.VoidType:
         return None
@@ -136,18 +138,24 @@ def _convert_llvm_ir_to_ctype(t):
     elif type(t) is ir.LiteralStructType:
         field_list = []
         for e in t.elements:
-            uniq_name = _module.get_unique_name("field")
+            # llvmlite modules get _unique string only works for symbol names
+            global _field_count
+            uniq_name = "field_" + str(_field_count)
+            _field_count += 1
+
             field_list.append((uniq_name, _convert_llvm_ir_to_ctype(e)))
+
         uniq_name = _module.get_unique_name("struct")
-        def __init__(self, **kwargs):
-            for key, value in kwargs.items():
-                setattr(self, key, value)
-            ctypes.Structure.__init__(self, name[:-len("Class")])
+        def __init__(self, *args, **kwargs):
+            ctypes.Structure.__init__(self, *args, **kwargs)
 
         new_type = type(uniq_name, (ctypes.Structure,), {"__init__":__init__})
         new_type.__name__ = uniq_name
         new_type._fields_ = field_list
+        assert len(new_type._fields_) == len(t.elements)
         return new_type
+
+    print(t)
     assert(False)
 
 _binaries = {}
