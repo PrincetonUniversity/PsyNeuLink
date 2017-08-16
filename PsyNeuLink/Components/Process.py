@@ -159,7 +159,7 @@ specified in any of four ways:
     a `learning specification <LearningMechanism_Inline_Specification>`.
   ..
   * **Stand-alone MappingProjection** -- when a Projection is `created <Projection_Creation>` on its own,
-    it can be assigned a `sender <MappingProjection_Sender>` and/or a `receiver <MappingProjection_Receiver>`
+    it can be assigned a `sender <Projection_Sender>` and/or a `receiver <Projection_Receiver>`
     Mechanism. If both are in the Process, then that Projection will be used when creating the Process.  Stand-alone
     specification of a MappingProjection between two Mechanisms in a Process takes precedence over any other
     form of specification; that is, the stand-alone Projection will be used in place of any that is specified between
@@ -183,9 +183,9 @@ Process input and output
 
 The `input <Process_Base.input>` of a Process is a list or 2d np.array provided as the **input** argument in its
 `execute <Process_Base.execute>` method, or the **inputs** argument of its `run <Process_Base.run>` method. When a
-Process is created, a set of `ProcessInputStates <process_input_states>` and `MappingProjections <MappingProjection>`
-are automatically created to transmit the Process' `input <Process_Base.input>` to its `ORIGIN` Mechanism
-(`origin_mechanism <Process_Base.origin_mechanism>`), as follows:
+Process is created, a set of ProcessInputStates (listed in its `process_input_states` attribute) and
+`MappingProjections <MappingProjection>` are automatically created to transmit the Process' `input
+<Process_Base.input>` to its `ORIGIN` Mechanism (`origin_mechanism <Process_Base.origin_mechanism>`), as follows:
 
     * if the number of items in the **input** is the same as the number of `InputStates <InputState>` for the
       `origin_mechanism <Process_Base.origin_mechanism>`, a MappingProjection is created for each item of the input to a
@@ -234,7 +234,7 @@ assigning one of the following to the **learning** argument of the Process' cons
     * the keyword *ENABLED*
 
 Specifying learning for a Process implements it for all MappingProjections in the Process (except those that project
-from the `ProcessInputStates <process_input_states>` to the `origin_mechanism <Process_Base.origin_mechanism>`), which
+from the `process_input_states` to the `origin_mechanism <Process_Base.origin_mechanism>`), which
 are treated as a single learning sequence.  Mechanisms that receive MappingProjections for which learning has been
 specified must be compatible with learning (that is, their `function <Mechanism_Base.function>` must be compatible with
 the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
