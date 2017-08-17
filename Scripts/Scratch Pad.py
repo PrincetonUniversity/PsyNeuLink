@@ -687,7 +687,7 @@ c = TransferMechanism(name='c')
 d = TransferMechanism(name='d')
 
 p1 = process(pathway=[a,
-                      MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
+                      MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
                                         name="MP-1"),
                       b,
                       c,

@@ -308,7 +308,16 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination, Modulati
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
+    VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
+    STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
+    PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, \
+    MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
+    MODULATION, MODULATORY_SIGNAL, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
+    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -1470,6 +1479,9 @@ class State_Base(State):
 
         Arguments:
         - projection_spec (Projection subclass or str):  str must be a keyword constant for a Projection subclass
+                                                         or an alias for one:  LEARNING = LEARNING_PROJECTION
+                                                                               CONTROL = CONTROL_PROJECTION
+                                                                               GATING = GATING_PROJECTION
         - context (str):
 
         Returns tuple: (Projection subclass or None, error string)
@@ -1485,6 +1497,14 @@ class State_Base(State):
         except TypeError:
             # Try projection spec as keyword string constant
             if isinstance(projection_spec, str):
+                # de-alias convenience keywords:
+                if projection_spec is LEARNING:
+                    projection_spec = LEARNING_PROJECTION
+                if projection_spec is CONTROL:
+                    projection_spec = CONTROL_PROJECTION
+                if projection_spec is GATING:
+                    projection_spec = GATING_PROJECTION
+
                 try:
                     from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
                     projection_spec = ProjectionRegistry[projection_spec].subclass

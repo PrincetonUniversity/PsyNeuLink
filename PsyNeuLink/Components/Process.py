@@ -275,54 +275,58 @@ COMMENT
 
 .. _Process_Learning_Figure:
 
-**Figure: Learning in PsyNeuLink**
+**Figure: Learning Components in a Process**
 
 .. figure:: _static/Process_Learning_fig.svg
    :alt: Schematic of LearningMechanisms and LearningProjections in a Process
 
    Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
-   each layer.
+   each layer (capitalized labels in Mechanism components are their `designated roles
+   <Mechanism_Role_In_Processes_And_Systems>` in the Process -- see also `Process_Mechanisms` and `Keywords`).
 
 .. _Process_Execution:
 
 Execution
 ---------
 
-A Process can be executed as part of a `System <System>` or on its own.  On its own, it is executed by calling
-either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>`
-executes the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of
-`TRIAL` \s to be executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism
-<Process_Base.origin_mechanism>` (first Mechanism in the pathway).  By default, the the input is presented only
-once.  If the `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of execution
-(e.g., if it appears again in the pathway, or receives recurrent projections), the input is not presented again.
-However, the input can be "clamped" on using the **clamp_input** argument of `execute <Process_Base.execute>` or
-`run <Process_Base.run>`.  After the `origin_mechanism <Process_Base.origin_mechanism>` is executed, each subsequent
-Mechanism in the `pathway` is executed in sequence.  If a Mechanism is specified in the pathway in a `MechanismTuple
-<Process_Mechanism_Specification>`, then the runtime parameters are applied and the Mechanism is executed using them
-(see `Mechanism` for parameter specification).  Finally the output of the `TERMINAL` Mechanism (last one in the
-pathway) is assigned as the output of the Process.
+A Process can be executed as part of a `System <System_Execution>` or on its own.  On its own, it is executed by calling
+either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>` executes
+the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`\\s to be
+executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process_Base.origin_mechanism>`
+(the first Mechanism in the `pathway <Process_Base.pathway>`).  By default, the the input is presented only once.  If
+the `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of execution (e.g., if it
+appears again in the pathway, or receives recurrent projections), the input is not presented again. However, the input
+can be "clamped" on using the **clamp_input** argument of `execute <Process_Base.execute>` or `run <Process_Base.run>`.
+After the `origin_mechanism <Process_Base.origin_mechanism>` is executed, each subsequent Mechanism in the `pathway` is
+executed in sequence.  If a Mechanism is specified in the pathway using a `MechanismTuple
+<Process_Mechanism_Specification>`, then the `runtime parameters <Mechanism_Runtime_Parameters>` are applied and the
+Mechanism is executed using them (see `Mechanism <Mechanism_ParameterStates>` for parameter specification).  Finally the
+output of the `terminal_mechanism <Process_Base.terminal_mechanism>` (the last one in the pathway) is assigned as the
+`output <Process_Output>` of the Process.
 
 .. note::
-   Processes do not use a `Scheduler`; each Mechanism is executed once, in the order listed in the `pathway`.
-   To more precisely control the order of and/or any dependencies in the sequence of executions, the Process
-   should be used to construct as `System`, together with `Conditions <Conditions>` to implement a custom schedule.
+   Processes do not use a `Scheduler`; each Mechanism is executed once, in the order listed in its `pathway` attribute.
+   To more precisely control the order of, and/or any dependencies in, the sequence of executions, the Process
+   should be used to construct a `System`, together with `Conditions <Condition>` to implement a custom schedule.
 
 
 .. _Process_Execution_Initialization
 
-The input to a Process is specified in the **input** argument of either its `execute <Process_Base.execute>` or
-`run <Process_Base.run>` method. In both cases, the input for a single `TRIAL` must be a number, list or ndarray of
-values that is compatible with the `variable <Mechanism_Base.variable>` of the `origin_mechanism
-<Process_Base.origin_mechanism>`. If the `execute <Process_Base.execute>` method is used,
-input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method
-can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
-both cases, two other types of input can be provided in corresponding arguments of the `execute <Process_Base.execute>`
+The `input <Process_Input_And_Output>` to a Process is specified in the **input** argument of either its `execute
+<Process_Base.execute>` or `run <Process_Base.run>` method. In both cases, the input for a single `TRIAL` must be a
+number, list or ndarray of values that is compatible with the `variable <Mechanism_Base.variable>` of the
+`origin_mechanism <Process_Base.origin_mechanism>`. If the `execute <Process_Base.execute>` method is used, input for
+only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System_Base.run>` method can be
+used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
+cases, two other types of input can be provided in corresponding arguments of the `execute <Process_Base.execute>`
 and `run <Process_Base.run>` methods: a  list or ndarray of **initial_values**, and a list or ndarray of **target**
-values. The **initial_values** are assigned as input to Mechanisms that close recurrent
-loops (designated as `INITIALIZE_CYCLE`) at the start of a `TRIAL` (if **initialize** is set to `True`), and/or
-whenever the Process` `initialize <Process_Base.initialize>` method is called; **target** values are assigned as the
-*TARGET* input of the `target_mechanisms <Process_Base.target_mechanisms>` in each `TRIAL` of execution (see
-`Process_Execution_Learning` below;  also, see `Run` for additional details of formatting input specifications).
+values. The **initial_values** are assigned as input to Mechanisms that close recurrent loops (designated as
+`INITIALIZE_CYCLE`) at the start of a `TRIAL` (if **initialize** is set to `True`), and/or whenever the Process`
+`initialize <Process_Base.initialize>` method is called; **target** values are assigned as the *TARGET* input of the
+`target_mechanisms <Process_Base.target_mechanisms>` in each `TRIAL` of execution, if `learning
+<Process_Learning_Sequence>` has been specified (see the next setion for how Learning is executed; also,
+see `Run` documentation for additional details of formatting `Run_Input` and `Run_Target` specifications of the
+`run <Process.run>` method).
 
 .. _Process_Execution_Learning:
 
@@ -330,12 +334,12 @@ Learning
 ~~~~~~~~
 
 If `learning <Process_Learning_Sequence>` has been specified for the Process or any of the projections in its `pathway
-<Process_Base.pathway>`, then the learning components described `above <Process_Learning_Sequence>` are executed after
+<Process_Base.pathway>`, then the learning Components described above are executed after
 all of the ProcessingMechanisms in the `pathway <Process_Base.pathway>` have executed.  The learning Components
 calculate changes that will be  made to `matrix <MappingProjection.matrix>` of the MappingProjections involved.  This
-requires that a set of `target values <Run_Targets>` must be provided (along with the **inputs**) in the **targets**
-argument to the Process' `execute <Process_Base.execute>` or `run <Process_Base.run>` method, one for each `learning
-sequence <Process_Learning_Sequence>. These are used to calculate a `learning_signal
+requires that a set of `target values <Run_Targets>` be provided (along with the **inputs**) in the **targets**
+argument of the Process' `execute <Process_Base.execute>` or `run <Process_Base.run>` method, one for each `learning
+sequence <Process_Learning_Sequence>`. These are used to calculate a `learning_signal
 <LearningMechanism.learning_signal>` for each MappingProjection in a learning sequence. This is conveyed by a
 `LearningProjection` as a `weight_change_matrix <LearningProjection.weight_change_matrix>` to the MappingProjection's
 *MATRIX* `ParameterState <Mapping_Matrix_ParameterState>`, that  is used to modify the MappingProjection's `matrix
@@ -345,9 +349,9 @@ sequence <Process_Learning_Sequence>. These are used to calculate a `learning_si
    The changes to a Projection induced by learning are not applied until the Mechanisms that receive those
    projections are next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
 
-The `learning_signal <LearningMechanism>`\\s for a learning sequence are calculated so as to reduce the difference
-between the value received by the *TARGET* Mechanism for the sequence in its *SAMPLE* `InputState
-<ComparatorMechanism_Structure>` (see `above <Process_Learning_Sequence>`) and target value for the sequence
+The `learning_signal <LearningMechanism>`\\s for a learning sequence are calculated, for each sequence, so as to reduce
+the difference between the value received by the *TARGET* Mechanism in its *SAMPLE* `InputState
+<ComparatorMechanism_Structure>` (see `above <Process_Learning_Sequence>`) and the target value for the sequence
 specified in the corresponding item of the **target** argument of the Process' `execute <Process_Base.execute>` or
 `run <Process_Base.run>` method.
 
@@ -357,14 +361,14 @@ specified in the corresponding item of the **target** argument of the Process' `
 Examples
 --------
 
-*Specification of Mechanisms in a pathway:*  The first Mechanism is specified as a reference to an instance,
-the second as a default instance of a Mechanism type, and the third in MechanismTuple format (specifying a reference
-to a Mechanism that should receive some_params at runtime::
+*Specification of Mechanisms in a pathway:*  The first Mechanism in the example below is specified as a reference to an
+instance, the second as a default instance of a Mechanism type, and the third in `MechanismTuple format
+<Process_Mechanism_Specification>`, specifying a reference to a Mechanism that should receive my_params at runtime::
 
     mechanism_1 = TransferMechanism()
     mechanism_2 = DDM()
     some_params = {PARAMETER_STATE_PARAMS:{THRESHOLD:2,NOISE:0.1}}
-    my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
+    my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, my_params)])
 
 *Default Projection specification:*  The `pathway` for this Process uses default Projection specifications; as a
 result, a `MappingProjection` is automatically instantiated between each of the Mechanisms listed::
@@ -372,58 +376,52 @@ result, a `MappingProjection` is automatically instantiated between each of the 
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
 
-*Inline Projection specification using an existing Projection:*  In this `pathway`, ``projection_A`` is specified as
-the Projection between the first and second Mechanisms; a default Projection will be created between ``mechanism_2``
-and ``mechanism_3``::
+*Inline Projection specification using an existing Projection:*  In this `pathway <Process_Base.pathway>`,
+``projection_A`` is specified as the Projection between the first and second Mechanisms; a default Projection is
+created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection()
     my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
 
-*Inline Projection specification using a keyword:*  In this `pathway`, a `RANDOM_CONNECTIVITY_MATRIX`
-is assigned as the Projection between the first and second Mechanisms::
+*Inline Projection specification using a keyword:*  In this `pathway <Process_Base.pathway>`, a
+`RANDOM_CONNECTIVITY_MATRIX` is used to specify the Projection between the first and second Mechanisms::
 
     my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
 
-*Stand-alone Projection specification:*  In this `pathway`, ``projection_A`` is explicilty specified as a Projection
-between ``mechanism_1`` and ``mechanism_2``, and so will be used as the Projection between them in ``my_process``;
-a default Projection will be created between ``mechanism_2`` and ``mechanism_3``::
+*Stand-alone Projection specification:*  In this `pathway <Process_Base.pathway>`, ``projection_A`` is explicitly
+specified as a Projection between ``mechanism_1`` and ``mechanism_2``, and so is used as the Projection between them
+in ``my_process``; a default Projection is created between ``mechanism_2`` and ``mechanism_3``::
 
     projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
 
-*Process that implements learning:*  This `pathway` implements a series of Mechanisms with Projections between them,
-all of which will be learned using `BackPropagation` (the default learning algorithm).  Note that it uses the `Logistic`
-function, which is compatible with BackPropagation::
+*Process that implements learning:*  This `pathway <Process_Base.pathway>` implements a series of Mechanisms with
+Projections between them, all of which will be learned using `BackPropagation` (the default learning algorithm).
+Note that it uses the `Logistic` function, which is compatible with BackPropagation::
 
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
-
-.. XXX USE EXAMPLE BELOW THAT CORRESPONDS TO CURRENT FUNCTIONALITY (WHETHER TARGET MUST BE SPECIFIED)
-    # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=ENABLED)
     my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
                          learning=ENABLED,
                          target=[0])
 
-.. ADD EXAMPLE HERE WHEN FUNCTIONALITY IS AVAILABLE
-   *Process with individual Projections that implement learning:*
+*Process with individual Projections that implement learning:* This `pathway <Process_Base.pathway>` implements learning
+for two MappingProjections (between ``mechanism_1`` and ``mechanism_2``, and ``mechanism_3`` and ``mechanism_4``).
+Since they are not contiguous, two `learning sequences <Process_Learning_Sequence>` are created, with `TARGET`
+Mechanisms assigned to ``mechanism_2`` and ``mechanism_4`` (that will be listed in ``my_process.target_mechanisms``)::
 
     mechanism_1 = TransferMechanism(function=Logistic)
     mechanism_2 = TransferMechanism(function=Logistic)
     mechanism_3 = TransferMechanism(function=Logistic)
-    # my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3],
-    #                      learning=ENABLED)
+    mechanism_4 = TransferMechanism(function=Logistic)
+    my_process = process(pathway=[mechanism_1,
+                                  MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
+                                  mechanism_2,
+                                  mechanism_3,
+                                  MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING)),
+                                  mechanism_4])
 
-
-
-COMMENT:
-    Module Contents
-        process() factory method:  instantiate Process
-        Process_Base: class definition
-        ProcessInputState: class definition
-        ProcessList: class definition
-COMMENT
 
 .. _Process_Footnotes:
 
@@ -1364,8 +1362,8 @@ class Process_Base(Process):
 
             # if spec is LEARNING or ENABLED (convenience spec),
             #    change to Projection version of keyword for consistency below
-            if self.learning in {LEARNING, ENABLED}:
-                self.learning = LEARNING_PROJECTION
+            if self.learning in {LEARNING, LEARNING_PROJECTION, ENABLED}:
+                self.learning = LEARNING
 
             # FIX: IF self.learning IS AN ACTUAL LearningProjection OBJECT, NEED TO RESPECIFY AS CLASS + PARAMS
             # FIX:     OR CAN THE SAME LearningProjection OBJECT BE SHARED BY MULTIPLE PROJECTIONS?
@@ -1998,7 +1996,7 @@ class Process_Base(Process):
 
         # For each Projection in the list
         for projection in projection_list:
-            projection._deferred_init() # XXX
+            projection._deferred_init()
 
             # FIX:  WHY DOESN'T THE PROJECTION HANDLE THIS? (I.E., IN ITS deferred_init() METHOD?)
             # For each parameter_state of the Projection
