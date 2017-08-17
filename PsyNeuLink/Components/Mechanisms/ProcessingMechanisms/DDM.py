@@ -61,22 +61,81 @@ Structure
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
 `value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for its `function <DDM.function>` (see
-`DDM_Functions_and_Parameters` below). The decision process can be configured to execute in different modes, as
-described below.
+<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for the process.  That parameter, along with
+all of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
+`DDM_Modes` below, and individual `Functions <Function>` for additional details).
 
-The `function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
-decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies the
-analytic solution to use when `time_scale <DDM.time_scale>` is  set to `TimeScale.TRIAL` (see
-`DDM_Functions_and_Parameters` below); when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the DDM
-Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>` below).  To do
+The decision process can be configured to operate in two different `modes <DDM_modes>`, as determined by the
+assignment made to its `function <DDM.function>`.  The resulting `value <DDM.value>` of the DDM Mechanism
+has six  items. The first two of these are always assigned, and represented by two `OutputStates
+<OutputState>` in the DDM's output_states <DDM.output_states>` attribute: `DECISION_VARIABLE <DDM_DECISION_VARIABLE>`
+and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. Other items of its `value <DDM.value>`, and corresponding OutputStates in
+its `output_states <DDM.output_states>` attribute, may also be assigned, depending on the `function <DDM.function>`
+(and corresponding mode of operation) that has been specified, as described below. Unassigned items of the DDM's `value
+<DDM.value>` attribute are given the value `None`. The set of `output_states <DDM_output_states>` assigned can be
+customized by selecting ones from the DDM's set of `Standard OutputStates <DDM_Standard_OutputStates>`), and specifying
+these in the **output_states** argument of its constructor.
+
+.. _DDM_Modes:
+
+DDM Modes of Operation
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. _DDM_Analytic_Solution_Example:
+
+Analytic Solution
+^^^^^^^^^^^^^^^^^
+
+This is used when one of the two `Functions <Function>` that calculate an analytic solution -- `BogaczEtAl <BogaczEtAl>`
+or `NavarroAndFuss <NavarroAndFuss>` -- is specified as the Mechanism's `function <DDM.function>`.  In addition to
+`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, these both return an accuracy
+value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
+rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  `NavarroAndFuss
+<NavarroAndFuss>` also returns expected values for mean correct response time (in `RT_CORRECT_MEAN
+<DDM_RT_CORRECT_MEAN>` and variance of correct response times (in `RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+Examples for each, that illustrate all of their parameters, are shown below:
+
+`BogaczEtAl <BogaczEtAl>` ::
+
+    my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
+                                                starting_point=1.0,
+                                                threshold=30.0,
+                                                noise=1.5,
+                                                t0 = 2.0),
+                            time_scale= TimeScale.TRIAL,
+                            name='MY_DDM_BogaczEtAl')
+
+`NavarroAndFuss <NavarroAndFuss>` ::
+
+    my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
+                                                        starting_point=1.0,
+                                                        threshold=30.0,
+                                                        noise=1.5,
+                                                        t0 = 2.0),
+                                time_scale= TimeScale.TRIAL,
+                                name='MY_DDM_NavarroAndFuss')
+
+
+Path Integration
+~~~~~~~~~~~~~~~~
+
+To do
 so, its **function** argument must be assigned an `Integrator` Function with an `integration_type
 <Integrator.integration_type>` of *DIFFUSION*; the default is the `BogaczEtAl` Function.
 
-The DDM Mechanism has a variety of `output_states <DDM.output_states>` that can be used to report the
-state of its decision variable and/or the outcome of the decision process.  Which of these are used by
-default is determined by the `function <DDM.function>` in use (see `DDM_Execution` and `Standard OutputStates
-<DDM_Standard_OutputStates>`).
+ when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the DDM
+Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>` below).
+
+When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` parameter must be set
+to 'Integrator' with an `integration_type <Integrator.integration_type>` of *DIFFUSION*.
+
+.. _DDM_Path_Integration_Examples:
+
+`Integrator <Integrator>` ::
+
+    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
+                          time_scale=TimeScale.TIME_STEP,
+                          name='My_DDM_TimeStep')
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -104,14 +163,15 @@ then the value of each ouputState is a 1d array, each element of which is the ou
 corresponding decision process.
 COMMENT
 
+COMMENT:
 .. _DDM_Functions_and_Parameters:
 
 DDM Functions and Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `function <DDM.function>` parameter can be used to select one of two analytic solutions (`BogaczEtAl` and
-`NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.  These both return
-the `decision variable <DECISION_VARIABLE>` for a given trial, as well as an expected
+The **function** argument of the constructor for the DDM can be used to specify one of two analytic solutions
+(`BogaczEtAl` or `NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.
+These both return the `decision variable <DECISION_VARIABLE>` for a given trial, as well as an expected
 `mean response time <RESPONSE_TIME>`, `accuracy <PROBABILITY_UPPER_THRESHOLD>` and
  `error rate <PROBABILITY_LOWER_THRESHOLD>`, while `NavarroAndFuss` also returns expected values for
 `mean correct response time <RT_CORRECT_MEAN>` and `variance of correct response times <RT_CORRECT_VARIANCE>`.
@@ -146,7 +206,7 @@ demonstrate all of the possible parameters (see individual `Functions <Function>
     my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
                           time_scale=TimeScale.TIME_STEP,
                           name='My_DDM_TimeStep')
-
+COMMENT
 
 COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
 
@@ -161,13 +221,13 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
     .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
        `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
        override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
-       (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
-       set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
-       as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
-       and `TIME_STEP` mode.
+       (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>`
+       parameter is set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters
+       NOT specified as entries in the `params` dictionary, the value specified for those in the function will be
+       used in both `TRIAL` and `TIME_STEP` mode.
 
-    The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and `function <DDM.function>`
-    is set to `BogaczEtAl` or `NavarroAndFuss` are:
+    The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and
+    `function <DDM.function>` is set to `BogaczEtAl` or `NavarroAndFuss` are:
 
     .. _DDM_Drift_Rate:
 
@@ -271,11 +331,13 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import method_type
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, NavarroAndFuss, STARTING_POINT, THRESHOLD
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, \
+    NavarroAndFuss, STARTING_POINT, THRESHOLD
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.States.OutputState import SEQUENTIAL
-from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, \
+    kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale

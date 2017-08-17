@@ -6,7 +6,7 @@
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="PATH" value="~/anaconda/bin/:/users/jdc/bin:/Users/jdc/bin:/Users/jdc/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
     </envs>
-    <option name="SDK_HOME" value="3.5 Interpreter for PsyNeuLink" />
+    <option name="SDK_HOME" value="Python" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts/TEST SCRIPTS" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
