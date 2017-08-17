@@ -897,7 +897,7 @@ class Process_Base(Process):
         :return:
         """
 
-        variable = super(Process_Base, self)._validate_variable(variable, context)
+        variable = self._update_variable(super(Process_Base, self)._validate_variable(variable, context))
 
         # Force Process variable specification to be a 2D array (to accommodate multiple input states of 1st mech):
         if self.ClassDefaults.variable is not None:
@@ -905,7 +905,7 @@ class Process_Base(Process):
         if self.instance_defaults.variable is not None:
             self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
         if variable is not None:
-            variable = convert_to_np_array(variable, 2)
+            variable = self._update_variable(convert_to_np_array(variable, 2))
 
         return variable
 
@@ -2089,7 +2089,7 @@ class Process_Base(Process):
         self.timeScale = time_scale or TimeScale.TRIAL
 
         # Use Process self.input as input to first Mechanism in Pathway
-        variable = self.input
+        variable = self._update_variable(self.input)
 
         # Generate header and report input
         if report_output:
@@ -2114,7 +2114,7 @@ class Process_Base(Process):
             if mechanism is self.firstMechanism and not self.clamp_input:
                 # Zero self.input to first mechanism after first run
                 #     in case it is repeated in the pathway or receives a recurrent Projection
-                variable = variable * 0
+                variable = self._update_variable(variable * 0)
 
         # Execute LearningMechanisms
         if self._learning_enabled:

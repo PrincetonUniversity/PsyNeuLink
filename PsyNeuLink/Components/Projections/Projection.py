@@ -553,13 +553,13 @@ class Projection_Base(Projection):
         # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
-            variable = sender.value
+            variable = self._update_variable(sender.value)
         except:
             try:
                 if self.receiver.prefs.verbosePref:
                     warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
                                   format(sender, self.name, self.ClassDefaults.variable))
-                variable = None
+                variable = self._update_variable(None)
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 

@@ -833,7 +833,7 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        variable = self._check_args(variable, params, context)
+        variable = self._update_variable(self._update_variable(self._check_args(variable, params, context)))
 
         # Compute the function
         statement = variable
@@ -1150,7 +1150,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             variable:
             context:
         """
-        variable = super()._validate_variable(variable=variable, context=context)
+        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
         if not is_numeric(variable):
             raise FunctionError("All elements of {} must be scalar values".
                                 format(self.__class__.__name__))
@@ -1189,7 +1189,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         operation = self.paramsCurrent[OPERATION]
         scale = self.paramsCurrent[SCALE]
@@ -1442,7 +1442,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             variable:
             context:
         """
-        variable = super()._validate_variable(variable=variable, context=context)
+        variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
         # FIX: CONVERT TO AT LEAST 1D NP ARRAY IN INIT AND EXECUTE, SO ALWAYS NP ARRAY
         # FIX: THEN TEST THAT SHAPES OF EVERY ELEMENT ALONG AXIS 0 ARE THE SAME
         # FIX; PUT THIS IN DOCUMENTATION
@@ -1579,7 +1579,7 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         """
 
         # Validate variable and assign to variable, and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         exponents = self.exponents
         weights = self.weights
@@ -1609,13 +1609,13 @@ class LinearCombination(CombinationFunction):  # -------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
-                variable = np.ones_like(variable)
+                variable = self._update_variable(np.ones_like(variable))
             else:
-                variable = variable ** exponents
+                variable = self._update_variable(variable ** exponents)
 
         # Apply weights if they were specified
         if weights is not None:
-            variable = variable * weights
+            variable = self._update_variable(variable * weights)
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
@@ -1887,7 +1887,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         slope = self.paramsCurrent[SLOPE]
         intercept = self.paramsCurrent[INTERCEPT]
         outputType = self.functionOutputType
@@ -2084,7 +2084,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # Assign the params and return the result
         rate = self.paramsCurrent[RATE]
@@ -2237,7 +2237,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
@@ -2404,7 +2404,7 @@ class SoftMax(TransferFunction):
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         # Assign the params and return the result
         output_type = self.params[OUTPUT_TYPE]
@@ -2646,7 +2646,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         :param context:
         :return:
         """
-        variable = super()._validate_variable(variable, context)
+        variable = self._update_variable(super()._validate_variable(variable, context))
 
         # Check that variable <= 2D
         try:
@@ -2897,7 +2897,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         """
 
         # Note: this calls _validate_variable and _validate_params which are overridden above;
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         return np.dot(variable, self.matrix)
 
@@ -3526,7 +3526,7 @@ class SimpleIntegrator(
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
 
@@ -3755,7 +3755,7 @@ class ConstantIntegrator(
         updated value of integral : 2d np.array
 
         """
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         rate = np.array(self.rate).astype(float)
         offset = self.offset
@@ -4035,7 +4035,7 @@ class AdaptiveIntegrator(
         updated value of integral : 2d np.array
 
         """
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -4254,7 +4254,7 @@ class DriftDiffusionIntegrator(
         updated value of integral : 2d np.array
 
         """
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -4478,7 +4478,7 @@ class OrnsteinUhlenbeckIntegrator(
         updated value of integral : 2d np.array
 
         """
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         rate = np.array(self.paramsCurrent[RATE]).astype(float)
         offset = self.paramsCurrent[OFFSET]
@@ -5011,7 +5011,7 @@ class BogaczEtAl(
 
         """
 
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         drift_rate = float(self.drift_rate) * float(variable)
         threshold = float(self.threshold)
@@ -5433,7 +5433,7 @@ class NormalDist(DistributionFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         mean = self.paramsCurrent[DIST_MEAN]
         standard_dev = self.paramsCurrent[STANDARD_DEVIATION]
@@ -5528,7 +5528,7 @@ class ExponentialDist(DistributionFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         beta = self.paramsCurrent[BETA]
 
@@ -5631,7 +5631,7 @@ class UniformDist(DistributionFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         low = self.paramsCurrent[LOW]
         high = self.paramsCurrent[HIGH]
@@ -5736,7 +5736,7 @@ class GammaDist(DistributionFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         scale = self.paramsCurrent[SCALE]
         dist_shape = self.paramsCurrent[DIST_SHAPE]
@@ -5841,7 +5841,7 @@ class WaldDist(DistributionFunction):
                  time_scale=TimeScale.TRIAL,
                  context=None):
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         scale = self.paramsCurrent[SCALE]
         mean = self.paramsCurrent[DIST_MEAN]
@@ -6099,7 +6099,7 @@ class Stability(ObjectiveFunction):
 
         """
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         from PsyNeuLink.Components.States.ParameterState import ParameterState
         if isinstance(self.matrix, ParameterState):
@@ -6246,7 +6246,7 @@ class Distance(ObjectiveFunction):
 
         """
         # Validate variable and validate params
-        variable = self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         v1 = variable[0]
         v2 = variable[1]
@@ -6476,7 +6476,7 @@ class Reinforcement(
         self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
-        variable = super()._validate_variable(variable, context)
+        variable = self._update_variable(super()._validate_variable(variable, context))
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items (input, output and error arrays)".
@@ -6745,7 +6745,7 @@ class BackPropagation(LearningFunction):
         self.functionOutputType = None
 
     def _validate_variable(self, variable, context=None):
-        variable = super()._validate_variable(variable, context)
+        variable = self._update_variable(super()._validate_variable(variable, context))
 
         if len(variable) != 3:
             raise ComponentError("Variable for {} ({}) must have three items: "

@@ -604,7 +604,7 @@ class State_Base(State):
         """
         if kargs:
             try:
-                variable = kargs[VARIABLE]
+                variable = self._update_variable(kargs[VARIABLE])
             except (KeyError, NameError):
                 pass
             try:
@@ -709,7 +709,7 @@ class State_Base(State):
                 size = checkAndCastInt(size)
             try:
                 if variable is not None:
-                    variable = np.atleast_1d(variable)
+                    variable = self._update_variable(np.atleast_1d(variable))
             except:
                 raise StateError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
             # endregion
@@ -717,7 +717,7 @@ class State_Base(State):
             # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
             if variable is None and size is not None:
                 try:
-                    variable = np.zeros(size)
+                    variable = self._update_variable(np.zeros(size))
                 except:
                     raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -744,7 +744,7 @@ class State_Base(State):
         Note:  this method (or the class version) is called only if the parameter_validation attribute is True
         """
 
-        variable = super(State, self)._validate_variable(variable, context)
+        variable = self._update_variable(super(State, self)._validate_variable(variable, context))
 
         if not context:
             context = kwAssign + ' Base Value'
@@ -2393,7 +2393,7 @@ def _parse_state_spec(owner,
     if params:
         # If variable is specified in state_params, use that
         if VARIABLE in params and params[VARIABLE] is not None:
-            variable = params[VARIABLE]
+            variable = self._update_variable(params[VARIABLE])
 
     # Create default dict for return
     state_dict = {NAME: name,

@@ -633,7 +633,7 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-        variable = super(OutputState, self)._validate_variable(variable, context)
+        variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
 
         self.instance_defaults.variable = self.reference_value
 

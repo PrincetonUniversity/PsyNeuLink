@@ -563,7 +563,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
 
         if variable is None or variable[0] is None:
-            variable = self.ClassDefaults.variable
+            variable = self._update_variable(self.ClassDefaults.variable)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

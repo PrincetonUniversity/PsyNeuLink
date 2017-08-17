@@ -554,7 +554,7 @@ class KWTA(RecurrentTransferMechanism):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        variable = self._kwta_scale(variable, context=context)
+        variable = self._update_variable(self._kwta_scale(variable, context=context))
 
         return super()._execute(variable=variable,
                        runtime_params=runtime_params,

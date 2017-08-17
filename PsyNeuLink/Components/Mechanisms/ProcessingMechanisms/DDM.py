@@ -653,7 +653,7 @@ class DDM(ProcessingMechanism_Base):
         # set initial values and threshold
         time_step = [0]
         position = [float(self.instance_defaults.variable)]
-        variable = stimulus
+        variable = self._update_variable(stimulus)
 
         # execute the mechanism once to begin the loop
         result_check = self.plot_function(variable, context="plot")[0][0]
@@ -849,7 +849,7 @@ class DDM(ProcessingMechanism_Base):
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self.instance_defaults.variable
+            variable = self._update_variable(self.instance_defaults.variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:

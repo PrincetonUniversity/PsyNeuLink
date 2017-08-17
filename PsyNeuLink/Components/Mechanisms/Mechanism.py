@@ -1186,14 +1186,14 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        variable = super(Mechanism_Base, self)._validate_variable(variable, context)
+        variable = self._update_variable(super(Mechanism_Base, self)._validate_variable(variable, context))
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
         # TODO: stateful - should this be here?? seems not
         self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
         self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
-        variable = convert_to_np_array(variable, 2)
+        variable = self._update_variable(convert_to_np_array(variable, 2))
 
         return variable
 
@@ -1738,7 +1738,7 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
-            variable = self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+            variable = self._update_variable(self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -1747,7 +1747,7 @@ class Mechanism_Base(Mechanism):
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
                 input = self.instance_defaults.variable
-            variable = self._get_variable_from_input(input)
+            variable = self._update_variable(self._get_variable_from_input(input))
 
         #endregion
 

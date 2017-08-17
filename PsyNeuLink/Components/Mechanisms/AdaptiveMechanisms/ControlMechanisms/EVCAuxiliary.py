@@ -283,9 +283,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         except KeyError:
             raise EVCAuxiliaryError("Call to ControlSignalGridSearch() missing controller argument")
         try:
-            variable = kwargs[VARIABLE]
+            variable = self._update_variable(kwargs[VARIABLE])
         except KeyError:
-            variable = None
+            variable = self._update_variable(None)
         try:
             runtime_params = kwargs[PARAMS]
         except KeyError:

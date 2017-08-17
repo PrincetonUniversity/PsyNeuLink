@@ -906,7 +906,7 @@ class Component(object):
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
             try:
                 if variable is not None:
-                    variable = np.atleast_2d(variable)
+                    variable = self._update_variable(np.atleast_2d(variable))
                     # 6/30/17 (CW): Previously, using variable or default_variable to create
                     # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
                     # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
@@ -919,7 +919,7 @@ class Component(object):
                                 allLists = False
                                 break
                         if allLists:
-                            variable = variable[0]
+                            variable = self._update_variable(variable[0])
             except:
                 raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
 
@@ -945,10 +945,10 @@ class Component(object):
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
                 try:
-                    variable = []
+                    variable = self._update_variable([])
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = np.array(variable)
+                    variable = self._update_variable(np.array(variable))
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -1406,13 +1406,13 @@ class Component(object):
         if variable is None:
             try:
                 # assigned by the Function class init when initializing
-                variable = self.instance_defaults.variable
+                variable = self._update_variable(self.instance_defaults.variable)
             except AttributeError:
-                variable = self.ClassDefaults.variable
+                variable = self._update_variable(self.ClassDefaults.variable)
 
         # If the variable is a function, call it
         if callable(variable):
-            variable = variable()
+            variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is None:
@@ -1420,7 +1420,7 @@ class Component(object):
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
                 context = FUNCTION_CHECK_ARGS
-            variable = self._validate_variable(variable, context=context)
+            variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
 
@@ -1571,13 +1571,13 @@ class Component(object):
                         format(self.name, self.shape, np.array(variable).shape))
             # Variable is not specified, so set to array of zeros with specified shape
             else:
-                variable = np.zeros(self.shape)
+                variable = self._update_variable(np.zeros(self.shape))
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
             # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
-            variable = self._validate_variable(variable, context=context)
+            variable = self._update_variable(self._validate_variable(variable, context=context))
             # if self.instance_defaults.variable is None:
             if variable is None:
                 self.instance_defaults.variable = self.ClassDefaults.variable
@@ -1935,13 +1935,13 @@ class Component(object):
         # Note: check for list is necessary since function references must be passed wrapped in a list so that they are
         #       not called before being passed
         if isinstance(variable, list) and callable(variable[0]):
-            variable = variable[0]()
+            variable = self._update_variable(variable[0]())
         # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
         # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
         # Note: this insures that variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
-        variable = convert_to_np_array(variable, 1)
+        variable = self._update_variable(convert_to_np_array(variable, 1))
 
         # If self.ClassDefaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
@@ -2528,6 +2528,14 @@ class Component(object):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)
+
+    def _update_variable(self, value):
+        '''
+            Used to mirror assignments to local variable in an attribute
+            Knowingly not threadsafe
+        '''
+        self.variable = value
+        return value
 
     # @property
     # def variable(self):
