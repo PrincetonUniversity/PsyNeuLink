@@ -558,12 +558,12 @@ def process(process_spec=None,
 
     initial_values : Optional[Dict[ProcessingMechanism, param value]] : default None
         specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
-        `INITIALIZE_CYCLE` whenever the Process' `initialize <Process_Base.initialize>` method is called. The key each
-        entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and
-        the value must be a number, list or np.array that is compatible with the format of the ProcessingMechanism's
+        `INITIALIZE_CYCLE` whenever the Process' `initialize <Process_Base.initialize>` method is called. The key for
+        each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`,
+        and the value must be a number, list or np.array that is compatible with the format of the ProcessingMechanism's
         `value <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not
-        specified in **initial_values** are initialized with the value of their `default_variable
-        <Mechanism_Base.default_variable>` attribute.
+        specified in **initial_values** are initialized with the value of their `default <Mechanism_Base.variable>`
+        attribute (the default input for that Mechanism).
 
     clamp_input : Optional[keyword] : default None
         specifies whether the Process' `input <Process_Base.input>` continues to be applied to the `origin_mechanism
@@ -797,10 +797,10 @@ class Process_Base(Process):
           executed.
 
     initial_values : Dict[ProcessingMechanism, param value]
-        values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE` whenever its `initialize
-        <Process_Base.initialize>` method is called. The key for each entry is a ProcessingMechanism, and the value
-        is a number, list or np.array that is assigned to that Mechanism's `value <Mechanism_Base.value>` attribute
-        whenever it is initialized. `ProcessingMechanisms <ProcessingMechanism>` that are designated as
+        values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE` whenever the Process'
+        `initialize <Process_Base.initialize>` method is called. The key for each entry is a ProcessingMechanism, and
+        the value is a number, list or np.array that is assigned to that Mechanism's `value <Mechanism_Base.value>`
+        attribute whenever it is initialized. `ProcessingMechanisms <ProcessingMechanism>` that are designated as
         `INITIALIZE_CYCLE` but not included in the **initial_values** specification are initialized with the value of
         their `variable <Mechanism_Base.variable>` attribute (i.e., the default input for that Mechanism).
 
@@ -812,8 +812,8 @@ class Process_Base(Process):
         the `primary OutputState <OutputState_Primary>` of `terminal_mechanism <Process_Base.terminal_mechanism>`.
 
     output : list
-        same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanisms
-        <Process_Base.terminal_mechanisms>`.
+        same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanism
+        <Process_Base.terminal_mechanism>`.
 
     COMMENT
     .. _mechs : List[MechanismTuple]
@@ -946,7 +946,7 @@ class Process_Base(Process):
         <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
         <LearningSignal_Learning_Rate>` or `LearningProjection <LearningProjection_Function_and_Learning_Rate>`
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the
-        relevant LearningMechanism (see `LearningSignal_Learning_Rate`).
+        relevant LearningMechanism.
 
     results : List[OutputState.value]
         the return values from a sequence of executions of the Process;  its value is `None` if the Process has not
@@ -2206,15 +2206,19 @@ class Process_Base(Process):
         ---------
 
         input : List[value] or ndarray: default zeroes
-            assigned as the value of the Process` `input <Process_Base.input>` and provided as the input to the
-            `origin_mechanism <Process_Base.origin_mechanism>` when the Process is `executed <Process_Execution>`;
-            must be compatible (in number and type of items) with the `variable <Mechanism_Base.variable>` of the
-            `origin_mechanism <Process_Base.origin_mechanism>`.
+            specifies the value(s) of the Process' `input <Process_Base.input>` for the `execution <Process_Execution>`;
+            it is provided as the input to the `origin_mechanism <Process_Base.origin_mechanism>` and must be compatible
+            (in number and type of items) with its `variable <Mechanism_Base.variable>` attribute (see
+            `Process_Input_And_Output` for details).
 
         target : List[value] or ndarray: default None
-            each item is assigned as the input to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
-            corresponding `ComparatorMechanism` in `target_mechanisms <Process_Base.target_mechanisms>`;  the number
-            of items must equal the length of `target_mechanisms <Process_Base.target_mechanisms>`.
+            specifies the target value assigned to each of the `target_mechanisms <Process_Base.target_mechanisms>` for
+            the `execution <Process_Execution>`.  Each item is assigned to the *TARGET* `InputState
+            <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_mechanisms
+            <Process_Base.target_mechanisms>`; the number of items must equal the number of items in
+            `target_mechanisms <Process_Base.target_mechanisms>`, and each item of **target** be compatible with the
+            `variable <InputState.variable>` attribute of the *TARGET* `InputState <ComparatorMechanism_Structure>`
+            for the corresponding `ComparatorMechanism` in `target_mechanisms <Process_Base.target_mechanisms>`.
 
         time_scale : TimeScale :  default TimeScale.TRIAL
             specifies whether Mechanisms are executed for a single time step or a trial.
@@ -2232,8 +2236,15 @@ class Process_Base(Process):
         Returns
         -------
 
-        output of process : ndarray
-            output of `terminal_mechanism <Process_Base.terminal_mechanism>`.
+        output of Process : ndarray
+            the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of the
+            `terminal_mechanism <Process_Base.terminal_mechanism>` of the Process.
+
+        COMMENT:
+        output of Process : list
+            value of the Process' `output <Process_Base.output>` attribute (same as the `output_values
+            <Mechanism_Base.output_values>` attribute of the `terminal_mechanism <Process_Base.terminal_mechanism>`.
+        COMMENT
 
         COMMENT:
            IMPLEMENTATION NOTE:
@@ -2303,8 +2314,9 @@ class Process_Base(Process):
         if report_output:
             self._report_process_completion(separator=True)
 
-        # FIX:  SHOULD THIS BE JUST THE VALUE OF THE PRIMARY OUTPUTSTATE, OR OF ALL OF THEM?
+        # FIX:  WHICH SHOULD THIS BE?
         return self.output_state.value
+        # return self.output
 
     def _execute_learning(self, target=None, clock=CentralClock, context=None):
     # def _execute_learning(self, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
@@ -2415,12 +2427,12 @@ class Process_Base(Process):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_variable for a single execution
-            specifies the input for each `TRIAL` in a sequence (see `Run` for a detailed description of formatting
-            requirements and options).  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
-            corresponds to a single `TRIAL`, and is assigned as the input to the `origin_mechanism
-            <Process_Base.origin_mechanism>` for that `TRIAL` and so must be compatible (in number and type of items)
-            with the `variable <Mechanism_Base.variable>` of the `origin_mechanism <Process_Base.origin_mechanism>`.
-            If the number of items is less than **num_trials**, the values are cycled until the number of `TRIALS`\\s
+            specifies the input used to `execute <Process_Execution>` the Process for each `TRIAL` in a sequence of
+            executions  (see `Run` for formatting requirements and options). Each item of the outermost level (if a
+            nested list) or axis 0 (if an ndarray) is assigned as the `input <Process.input>` to the Process for the
+            corresponding `TRIAL`, and therefore must be compatible (in number and type of items) with the `variable
+            <Mechanism_Base.variable>` of the `origin_mechanism <Process_Base.origin_mechanism>` for the Process. If the
+            number of items is less than **num_trials**, the **inputs** are cycled until the number of `TRIALS`\\s
             specified in **num_trials** has been executed.
 
         num_trials : int : default None
@@ -2431,33 +2443,33 @@ class Process_Base(Process):
             reset `CentralClock <TimeScale.CentralClock>` to 0 before a sequence of executions.
 
         initialize : bool default False
-            if set to `True`, the Process calls its `initialize <Process_Base.initialize>` method before executing
-            the sequence of `TRIAL`\\s, which assigns initial values to ProcessingMechanisms specified in the
-            **initial_values** argument.
+            specifies whether to call the Process` `initialize <Process_Base.initialize>` method before executing
+            each `TRIAL`;  if it is `False`, then `initialize <Process_Base.initialize>` is called only *once*,
+            before the first `TRIAL` executed.
 
         initial_values : Optional[Dict[ProcessingMechanism, List[input] or np.ndarray(input)]] : default None
-            specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`
-            whenever its `initialize <Process_Base.initialize>` method is called. The key for each entry must be a
-            ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and the value
-            must be a list or np.array of items, each of which is a value used to initialize the ProcessingMechanism
-            for the corresponding `TRIAL` of execution, and thus must be compatible with the format of the
-            ProcessingMechanism's `value <Mechanism_Base.value>` attribute.  If the number of items is less than
-            **num_trials**, the values are cycled until the number of `TRIALS`\\s specified in **num_trials** has been
-            executed.  ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in **initial_values**
-            are initialized with the value of their `default_variable <Mechanism_Base.default_variable>` attribute.
+            specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
+            `INITIALIZE_CYCLE` whenever the Process' `initialize <Process_Base.initialize>` method is called. The key
+            for each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
+            `INITIALIZE_CYCLE`, and the value must be a number, list or np.array that is compatible with the format
+            of the ProcessingMechanism's `value <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as
+            `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized with the value of their
+            `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
         targets : Optional[List[input] or np.ndarray(input)] : default None
-            specifies the target value(s) assigned to the `target_mechanisms <Process_Base.target_mechanisms>` in
+            specifies the target value assigned to each of the `target_mechanisms <Process_Base.target_mechanisms>` in
             each `TRIAL` of execution.  Each item of the outermost level (if a nested list) or axis 0 (if an ndarray)
-            corresponds to a single `TRIAL`;  the number of items must equal the number specified in the **inputs**
-            argument.  Each item is assigned as the target(s) the input to the *TARGET* `InputState
-            <ComparatorMechanism_Structure>` of the corresponding `ComparatorMechanism` in `target_mechanisms
-            <Process_Base.target_mechanisms>` for that `TRIAL`;  the number of items must equal the length of
-            `target_mechanisms <Process_Base.target_mechanisms>`.
+            corresponds to a single `TRIAL`;  the number of items must equal the number of items in the **inputs**
+            argument.  Each item is assigned to the *TARGET* `InputState <ComparatorMechanism_Structure>` of the
+            corresponding `ComparatorMechanism` in `target_mechanisms <Process_Base.target_mechanisms>`; the number of
+            items must equal the number of items in `target_mechanisms <Process_Base.target_mechanisms>`, and each item
+            of **target** be compatible with the `variable <InputState.variable>` attribute of the *TARGET* `InputState
+            <ComparatorMechanism_Structure>` for the corresponding `ComparatorMechanism` in `target_mechanisms
+            <Process_Base.target_mechanisms>`.
 
         learning : bool :  default None
             enables or disables `learning <Process_Execution_Learning>` during execution.
-            If it is not specified, its current value is left intact.
+            If it is not specified, its current value (from possible prior assignment) is left intact.
             If `True`, learning is forced on; if `False`, learning is forced off.
 
         call_before_trial : Function : default None
@@ -2478,9 +2490,9 @@ class Process_Base(Process):
         Returns
         -------
 
-        <process>.results : List[OutputState.value]
-            list of the `value <OutputState.value>`\\s of the `OutputState` for the `terminal_mechanism
-            <Process_Base.terminal_mechanism>` of the Process returned for each execution.
+        <Process>.results : List[OutputState.value]
+            list of the `value <OutputState.value>`\\s of the `primary OutputState <OutputState_Primary>` for the
+            `terminal_mechanism <Process_Base.terminal_mechanism>` of the Process returned for each execution.
 
         """
 
@@ -2653,21 +2665,32 @@ class Process_Base(Process):
         return self._phaseSpecMax + 1
 
 class ProcessInputState(OutputState):
-    """Encodes either an input to or target for the process and transmits it to the corresponding Mechanism
+    """Represents inputs and targets specified in a call to the Process' `execute <Process_Base.execute>` and `run
+    <Process_Base.run>` methods.
 
-    Each instance encodes one of the following:
-    - an input to the Process and provides it to a `MappingProjection` that projects to one or more
-        `input_states <Mechanism_Base.input_states>` of the `ORIGIN` Mechanism in the process.
-    - a target to the Process (also a 1d array) and provides it to a `MappingProjection` that
-         projects to the `TARGET` Mechanism of the process.
+    COMMENT:
+        Each instance encodes one of the following:
+        - an input to the Process and provides it to a `MappingProjection` that projects to one or more
+            `input_states <Mechanism_Base.input_states>` of the `ORIGIN` Mechanism in the process.
+        - a target to the Process (also a 1d array) and provides it to a `MappingProjection` that
+             projects to the `TARGET` Mechanism of the process.
+    COMMENT
 
-    (See `Process_Input_And_OutputProcess` for an explanation of the mapping from process_input_states to
-    `ORIGIN` Mechanism input_states when there is more than one Process input value and/or Mechanism InputState)
+    A ProcessInputState is created for each `InputState` of the `origin_mechanism`, and for the *TARGET* `InputState
+    <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed in `target_mechanisms
+    <Process_Base.target_mechanisms>`.  A `MappingProjection` is created that projects to each of these InputStates
+    from the corresponding ProcessingInputState.  When the Process' `execute <Process_Base.execute>` or
+    `run <Process_Base.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
+    the `value <ProcessInputState.value>` of a ProcessInputState, which is then conveyed to the
+    corresponding InputState of the `origin_mechanism <Process_Base.origin_mechanism>` and `terminal_mechanisms
+    <Process_Base.terminal_mechanisms>`.  See `Process_Input_And_Output` for additional details.
 
+    COMMENT:
     .. Declared as a sublcass of OutputState so that it is recognized as a legitimate sender to a Projection
        in Projection._instantiate_sender()
 
        self.value is used to represent the corresponding item of the input arg to process.execute or process.run
+    COMMENT
 
     """
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
