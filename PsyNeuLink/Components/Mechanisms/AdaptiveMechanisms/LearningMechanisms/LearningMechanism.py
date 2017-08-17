@@ -561,7 +561,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         Description:
             LearningMechanism is a subtype of the AdaptiveMechanism Type of the Mechanism Category of Component
             It implements a Mechanism that calculates changes to a Projection's parameters.
-            It's function takes the output of an ObjectiveMechanism (self.variable) and generates a
+            Its function takes the output of an ObjectiveMechanism and generates a
             learning_signal (ndarray of parameter changes) to be used by the recipient of a LearningProjection
             that projects from the LearningMechanism to a MappingProjection.
 
@@ -778,7 +778,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # variableClassDefault = None
+    # ClassDefaults.variable = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -834,25 +834,26 @@ class LearningMechanism(AdaptiveMechanism_Base):
         """Validate that variable has exactly three items: activation_input, activation_output and error_signal
         """
 
-        super()._validate_variable(variable, context)
+        variable = self._update_variable(super()._validate_variable(variable, context))
 
-        if len(self.variable) != 3:
+        if len(variable) != 3:
             raise LearningMechanismError("Variable for {} ({}) must have three items ({}, {}, and {})".
-                                format(self.name, self.variable,
+                                format(self.name, variable,
                                        ACTIVATION_INPUT,
                                        ACTIVATION_OUTPUT,
                                        ERROR_SIGNAL))
 
         # Validate that activation_input, activation_output, and error_signal are numeric and lists or 1d np.ndarrays
-        for i in range(len(self.variable)):
+        for i in range(len(variable)):
             item_num_string = ['first', 'second', 'third'][i]
             item_name = input_state_names[i]
-            if not np.array(self.variable[i]).ndim == 1:
+            if not np.array(variable[i]).ndim == 1:
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not a list or 1d np.array".
-                                              format(item_num_string, self.name, item_name, self.variable[i]))
-            if not (is_numeric(self.variable[i])):
+                                              format(item_num_string, self.name, item_name, variable[i]))
+            if not (is_numeric(variable[i])):
                 raise LearningMechanismError("The {} item of variable for {} ({}:{}) is not numeric".
-                                              format(item_num_string, self.name, item_name, self.variable[i]))
+                                              format(item_num_string, self.name, item_name, variable[i]))
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate error_source as an Objective Mechanism or another LearningMechanism

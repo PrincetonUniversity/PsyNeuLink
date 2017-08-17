@@ -214,7 +214,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     decision_process = process(pathway=[output_layer, decision_mech])
     my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
 
-As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
+As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:
 
 .. _Index_Simple_Stroop_Example_Figure:

@@ -54,7 +54,9 @@ class EVCAuxiliaryFunction(Function_Base):
     """
     componentType = kwEVCAuxFunctionType
 
-    variableClassDefault = None
+    class ClassDefaults(Function_Base.ClassDefaults):
+        variable = None
+
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
                                FUNCTION_OUTPUT_TYPE_CONVERSION: False,
@@ -281,9 +283,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         except KeyError:
             raise EVCAuxiliaryError("Call to ControlSignalGridSearch() missing controller argument")
         try:
-            variable = kwargs[VARIABLE]
+            variable = self._update_variable(kwargs[VARIABLE])
         except KeyError:
-            variable = None
+            variable = self._update_variable(None)
         try:
             runtime_params = kwargs[PARAMS]
         except KeyError:
@@ -322,7 +324,7 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
 
         # Evaluate all combinations of control_signals (policies)
         sample = 0
-        controller.EVC_max_state_values = controller.variable.copy()
+        controller.EVC_max_state_values = variable.copy()
         controller.EVC_max_policy = controller.control_signal_search_space[0] * 0.0
 
         # Parallelize using multiprocessing.Pool
@@ -519,7 +521,7 @@ def _compute_EVC(args):
     #       format(allocation_vector, [mech.outputState.value for mech in ctlr.predicted_input]),
     #       flush=True)
 
-    ctlr.run_simulation(inputs=ctlr.predicted_input,
+    outcome = ctlr.run_simulation(inputs=ctlr.predicted_input,
                         allocation_vector=allocation_vector,
                         runtime_params=runtime_params,
                         time_scale=time_scale,
@@ -529,7 +531,7 @@ def _compute_EVC(args):
                                                               # MODIFIED 5/7/17 OLD:
                                                               # outcome=ctlr.input_values,
                                                               # MODIFIED 5/7/17 NEW:
-                                                              outcome=ctlr.variable,
+                                                              outcome=outcome,
                                                               # MODIFIED 5/7/17 END
                                                               costs=ctlr.control_signal_costs,
                                                               context=context)

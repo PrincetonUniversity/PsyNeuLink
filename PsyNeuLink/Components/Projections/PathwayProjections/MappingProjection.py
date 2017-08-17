@@ -235,9 +235,7 @@ from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, Line
 from PsyNeuLink.Components.Projections.PathwayProjections.PathwayProjection import PathwayProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Projection
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, \
-    DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, \
-    LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CHANGED, CONTROL_PROJECTION, DEFAULT_MATRIX, DEFERRED_INITIALIZATION, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, OUTPUT_STATE, PROJECTION_SENDER, PROJECTION_SENDER_VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
@@ -469,11 +467,11 @@ class MappingProjection(PathwayProjection_Base):
         # Get sender and receiver lengths
         # Note: if either is a scalar, manually set length to 1 to avoid TypeError in call to len()
         try:
-            mapping_input_len = len(self.variable)
+            mapping_input_len = len(self.instance_defaults.variable)
         except TypeError:
             mapping_input_len = 1
         try:
-            receiver_len = len(self.receiver.variable)
+            receiver_len = len(self.receiver.instance_defaults.variable)
         except TypeError:
             receiver_len = 1
 
@@ -602,16 +600,6 @@ class MappingProjection(PathwayProjection_Base):
         self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
 
         self.function_object.matrix = matrix
-
-        # (7/19/17 CW) patch! without this patch, setting myMappingProjection.matrix was not really working because
-        # the Accumulator Integrator function of the "matrix" ParameterState of myMappingProjection was just ignoring
-        # the variable. So this patch directly sets the 'variable' attribute of the integrator in order to
-        # fix this bug and make setting myMappingProjection.matrix effective.
-        # REMOVED 7/26/17 CW: feel free to remove all this commented block
-        # if MATRIX in self._parameter_states.key_values:
-        #     if ACCUMULATOR_INTEGRATOR in str(type(self._parameter_states[MATRIX].function_object)):
-        #         self._parameter_states[MATRIX].function_object.variable = matrix
-        #         self._parameter_states[MATRIX].value = self._parameter_states[MATRIX]._execute({}, context=INITIALIZING)
 
     @property
     def _matrix_spec(self):

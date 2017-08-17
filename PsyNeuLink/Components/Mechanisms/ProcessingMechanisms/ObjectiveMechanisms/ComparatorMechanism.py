@@ -198,7 +198,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             + componentType (str): ComparatorMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
@@ -314,8 +314,9 @@ class ComparatorMechanism(ObjectiveMechanism):
         kwPreferenceSetName: 'ComparatorCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # variableClassDefault = [[0],[0]]  # By default, ComparatorMechanism compares two 1D np.array input_states
-    variableClassDefault = None
+    # ClassDefaults.variable = [[0],[0]]  # By default, ComparatorMechanism compares two 1D np.array input_states
+    class ClassDefaults(ObjectiveMechanism.ClassDefaults):
+        variable = None
 
     # ComparatorMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

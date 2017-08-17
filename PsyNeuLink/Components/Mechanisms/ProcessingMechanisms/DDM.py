@@ -435,7 +435,7 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  STARTING_POINT
+            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -562,8 +562,9 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # Assigned in __init__ to match default staring_point
-    variableClassDefault = None
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Assigned in __init__ to match default staring_point
+        variable = None
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -595,8 +596,6 @@ class DDM(ProcessingMechanism_Base):
                                                   output_states=output_states,
                                                   time_scale=time_scale,
                                                   params=params)
-
-        self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
 
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
@@ -653,17 +652,17 @@ class DDM(ProcessingMechanism_Base):
 
         # set initial values and threshold
         time_step = [0]
-        position = [float(self.variable)]
-        self.variable = stimulus
+        position = [float(self.instance_defaults.variable)]
+        variable = self._update_variable(stimulus)
 
         # execute the mechanism once to begin the loop
-        result_check = self.plot_function(self.variable, context="plot")[0][0]
+        result_check = self.plot_function(variable, context="plot")[0][0]
 
         # continue executing the ddm until its value exceeds the threshold
         while abs(result_check) < threshold:
             time_step.append(time_step[-1] + 1)
             position.append(result_check)
-            result_check = self.plot_function(self.variable, context="plot")[0][0]
+            result_check = self.plot_function(variable, context="plot")[0][0]
 
         # add the ddm's final position to the list of positions
         time_step.append(time_step[-1] + 1)
@@ -695,14 +694,14 @@ class DDM(ProcessingMechanism_Base):
         # # # Select a random seed to ensure that the test run will be the same as the real run
         # seed_value = np.random.randint(0, 100)
         # np.random.seed(seed_value)
-        # self.variable = stimulus
+        # variable = stimulus
         #
         # result_check = 0
         # time_check = 0
         #
         # while abs(result_check) < threshold:
         #     time_check += 1
-        #     result_check = self.get_axes_function(self.variable, context='plot')
+        #     result_check = self.get_axes_function(variable, context='plot')
         #
         # # Re-set random seed for the real run
         # np.random.seed(seed_value)
@@ -719,7 +718,7 @@ class DDM(ProcessingMechanism_Base):
         # time = 0
         # while abs(result) < threshold:
         #     time += 1
-        #     result = self.plot_function(self.variable, context='plot')
+        #     result = self.plot_function(variable, context='plot')
         #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
         #     plt.pause(0.01)
         #
@@ -739,7 +738,7 @@ class DDM(ProcessingMechanism_Base):
         # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
         if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
-        super()._validate_variable(variable=variable, context=context)
+        return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
 
@@ -850,12 +849,12 @@ class DDM(ProcessingMechanism_Base):
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self.variableInstanceDefault
+            variable = self._update_variable(self.instance_defaults.variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
 
-            result = self.function(self.variable, context=context)
+            result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
             if abs(result) >= self.threshold:
@@ -868,7 +867,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            result = self.function(variable=self.variable,
+            result = self.function(variable=variable,
                                    params=runtime_params,
                                    context=context)
 

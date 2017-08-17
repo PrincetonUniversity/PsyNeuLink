@@ -371,7 +371,7 @@ class Projection_Base(Projection):
             + registry (dict): ProjectionRegistry
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (value): [0]
+            + ClassDefaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + FUNCTION (Function class or object, or method)
@@ -400,7 +400,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output.
 
     value : value
-        Output of Projection, transmitted to InputState.variable of receiver.
+        Output of Projection, transmitted as variable to InputState of receiver.
 
     COMMENT:
         projectionSender : Mechanism, State, or Object
@@ -433,11 +433,12 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
+    class ClassDefaults(Projection.ClassDefaults):
+        variable = [0]
+
     registry = ProjectionRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
@@ -482,7 +483,7 @@ class Projection_Base(Projection):
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
-            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_sender may alter self.instance_defaults.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
@@ -553,13 +554,13 @@ class Projection_Base(Projection):
         # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
-            variable = sender.value
+            variable = self._update_variable(sender.value)
         except:
             try:
                 if self.receiver.prefs.verbosePref:
                     warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                                  format(sender, self.name, self.variableClassDefault))
-                variable = None
+                                  format(sender, self.name, self.ClassDefaults.variable))
+                variable = self._update_variable(None)
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
@@ -701,15 +702,15 @@ class Projection_Base(Projection):
 
 
     def _instantiate_sender(self, context=None):
-        """Assign self.sender to OutputState of sender and insure compatibility with self.variable
+        """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.variable, and assign projection to sender's efferents attribute
+        Validate, set self.instance_defaults.variable, and assign projection to sender's efferents attribute
 
         If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
-        If self.value / self.variable is None, set to sender.value
+        If self.value / self.instance_defaults.variable is None, set to sender.value
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
@@ -749,24 +750,27 @@ class Projection_Base(Projection):
         if not self in self.sender.efferents:
             self.sender.efferents.append(self)
 
-        # Validate projection's variable (self.variable) against sender.outputState.value
-        if iscompatible(self.variable, self.sender.value):
-            # Is compatible, so assign sender.outputState.value to self.variable
-            self.variable = self.sender.value
+        # Validate projection's variable (self.instance_defaults.variable) against sender.outputState.value
+        if iscompatible(self.instance_defaults.variable, self.sender.value):
+            # Is compatible, so assign sender.outputState.value to self.instance_defaults.variable
+            self.instance_defaults.variable = self.sender.value
 
         else:
             # Not compatible, so:
             # - issue warning
             if self.prefs.verbosePref:
-                warnings.warn("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                              " of function {4} for sender ({5}); it has been reassigned".
-                      format(self.variable,
-                             self.name,
-                             self.receiver.owner.name,
-                             self.sender.value,
-                             self.sender.function.__class__.__name__,
-                             self.sender.owner.name))
-            # - reassign self.variable to sender.value
+                warnings.warn(
+                    "The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
+                    " of function {4} for sender ({5}); it has been reassigned".format(
+                        self.instance_defaults.variable,
+                        self.name,
+                        self.receiver.owner.name,
+                        self.sender.value,
+                        self.sender.function.__class__.__name__,
+                        self.sender.owner.name
+                    )
+                )
+            # - reassign self.instance_defaults.variable to sender.value
             self._instantiate_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):

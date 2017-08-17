@@ -390,7 +390,7 @@ def run(object,
         Return ``object.results``.
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-            * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
+            * the inner-most dimension must equal the length of object.instance_defaults.variable (i.e., the input to the object);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
                 Note: num_input_sets need not equal num_trials (the number of executions to actually run)
@@ -465,9 +465,9 @@ def run(object,
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
         inputs = np.array(inputs)
         if object_type is MECHANISM:
-            mech_len = np.size(object.variable)
+            mech_len = np.size(object.instance_defaults.variable)
         else:
-            mech_len = np.size(object.first_mechanism.variable)
+            mech_len = np.size(object.first_mechanism.instance_defaults.variable)
         # If input dimension is 1 and size is same as input for first mechanism,
         # there is only one input for one execution, so promote dimensionality to 3
         if inputs.ndim == 1 and np.size(inputs) == mech_len:
@@ -753,7 +753,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
                 mech = list(object.origin_mechanisms.mechs)[mech_num]
-                mech_len = np.size(mechs[mech_num].variable)
+                mech_len = np.size(mechs[mech_num].instance_defaults.variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
                 # Assign input elements to stimulus if phase is correct one for mech
@@ -848,7 +848,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         stimuli = ordered_targets
 
     # Convert all items to 2D arrays:
-    # - to match standard format of mech.variable
+    # - to match standard format of mech.instance_defaults.variable
     # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
     #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
 
@@ -857,13 +857,13 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
         if not isinstance(stim_list[0], Iterable):
-            # If mech.variable is also of length 1
-            if np.size(mech.variable) == 1:
+            # If mech.instance_defaults.variable is also of length 1
+            if np.size(mech.instance_defaults.variable) == 1:
                 # Wrap each entry in a list
                 for i in range(len(stim_list)):
                     stimuli[mech][i] = [stim_list[i]]
-            # Length of mech.variable is > 1, so check if length of list matches it
-            elif len(stim_list) == np.size(mech.variable):
+            # Length of mech.instance_defaults.variable is > 1, so check if length of list matches it
+            elif len(stim_list) == np.size(mech.instance_defaults.variable):
                 # Assume that the list consists of a single stimulus, so wrap it in list
                 stimuli[mech] = [stim_list]
             else:
@@ -872,9 +872,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                   format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
-            if not iscompatible(np.atleast_2d(stim), mech.variable):
+            if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                    format(stim, mech.name, mech.variable)
+                    format(stim, mech.name, mech.instance_defaults.variable)
                 # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                 # for "functionality" but rather a hack for user clarity
                 if "KWTA" in str(type(mech)):
@@ -977,7 +977,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             # Get a sample length (use first, since it is convenient and all are the same)
-            mech_len = len(object.first_mechanism.variable)
+            mech_len = len(object.first_mechanism.instance_defaults.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise RunError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))
@@ -1105,7 +1105,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that each target generated is compatible with the targetMechanism for which it is intended
         for target, targetMechanism in zip(generated_targets, object.target_mechanisms):
             target_len = np.size(target)
-            if target_len != np.size(targetMechanism.input_states[TARGET].variable):
+            if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1124,7 +1124,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.target_mechanism.input_states[TARGET].variable):
+            if target_len != np.size(object.target_mechanism.input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1194,7 +1194,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.input_states[TARGET].variable):
+                if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
@@ -1202,7 +1202,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(targetMechanism.input_states[TARGET].variable)))
+                                              np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".
