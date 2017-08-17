@@ -170,7 +170,7 @@ ways to generate any pattern of execution of the Components in a Composition tha
 <p class="first admonition-title">Note</p>
 <p class="last">In general, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are the Components of a Composition that are most commonly associated with
 Conditions, and assigned to a Scheduler for execution.  However, in some circumstances, <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>
-can also be assigned for execution (e.g., during <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">learning</span></a> to insure that
+can also be assigned for execution (e.g., during <a class="reference internal" href="Process.html#process-execution-learning"><span class="std std-ref">learning</span></a> to insure that
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> are updated in the proper order).</p>
 </div>
 </div>
@@ -193,8 +193,8 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
-ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition_set" title="Scheduling.Condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
+<a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition_set" title="Scheduling.Scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>

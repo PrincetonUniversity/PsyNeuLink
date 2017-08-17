@@ -180,7 +180,7 @@ MappingProjection&#8217;s <a class="reference internal" href="#PathwayProjection
 <span id="mapping-creation"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mappingprojection" title="Permalink to this headline">¶</a></h2>
 <p>A MappingProjection can be created in any of the ways that can be used to create a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">Projection</span></a>
 (see <a class="reference internal" href="Projection.html#projection-sender"><span class="std std-ref">Sender</span></a> and <a class="reference internal" href="Projection.html#projection-receiver"><span class="std std-ref">Receiver</span></a> for specifying its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and
-<a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> attributes, respectively).</p>
+<a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> attributes, respectively), or by <a class="reference internal" href="#mapping-matrix-specification"><span class="std std-ref">specifying it by its matrix parameter</span></a>.</p>
 <p>MappingProjections are also generated automatically in the following circumstances, using a value for its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter appropriate to the circumstance:</p>
 <blockquote>
 <div><ul class="simple">
@@ -234,32 +234,54 @@ with a specified <strong>offset</strong>.</li>
 <ul class="simple" id="mappingprojection-tuple-specification">
 <li><strong>Tuple</strong> &#8211; used to specify the <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> along with a specification for learning;
 The tuple must have two items: the first can be any of the specifications described above; the second must be
-a specification for <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, using either the keywords <em>LEARNING_PROJECTION</em>, <em>LEARNING</em>, or a
-reference to the class (in which case a default LearningProjection is created), or an existing LearningProjection.</li>
+a <a class="reference internal" href="#mappingprojection-learning-tuple-specification"><span class="std std-ref">learning specification</span></a>.</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="specifying-learning">
 <span id="mappingprojection-learning-specification"></span><h3>Specifying Learning<a class="headerlink" href="#specifying-learning" title="Permalink to this headline">¶</a></h3>
-<p>The <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a MappingProjection can be specified for learning by assigning it
-a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> (see LearningMechanism documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a detailed description of <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a>;  see
-<a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">Learning</span></a> below for a description of how learning modifies a MappingProjection).  A
-LearningProjection can be assigned to a MappingProjection in any of the following ways:</p>
+<p>A MappingProjection is specified for learning in any of the following ways:</p>
 <blockquote>
 <div><ul class="simple">
 <li>in the <strong>matrix</strong> argument of the MappingProjection&#8217;s constructor, using the <a class="reference internal" href="#mappingprojection-tuple-specification"><span class="std std-ref">tuple format</span></a> described above;</li>
 </ul>
 <ul class="simple">
-<li>by specifying the MappingProjection (or its <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>) as the <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.receiver" title="ModulatoryProjections.LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>;</li>
+<li>specifying the MappingProjection (or its <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>) as the <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.receiver" title="ModulatoryProjections.LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>;</li>
 </ul>
 <ul class="simple">
-<li>specifying the the MappingProjection (or its <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>) in the <strong>learning_signals</strong> argument of
-the constructor for a <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">LearningMechanism</span></a>.</li>
+<li>specifying the MappingProjection (or its <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>) in the <strong>projections</strong> argument of
+the constructor for a <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">LearningSignal</span></a></li>
 </ul>
 <ul class="simple">
-<li>by <a class="reference internal" href="Process.html#process-learning"><span class="std std-ref">specifying learning</span></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>;</li>
+<li>specifying the MappingProjection (or its <em>MATRIX</em> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>) in the <strong>learning_signals</strong> argument of
+the constructor for a <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">LearningMechanism</span></a></li>
+</ul>
+<ul class="simple">
+<li>specifying a MappingProjection in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>  for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
+using the <a class="reference internal" href="#mappingprojection-learning-tuple-specification"><span class="std std-ref">tuple format</span></a> to include a learning specification;</li>
+</ul>
+<ul class="simple">
+<li><a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">specifying learning</span></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>;</li>
 </ul>
 </div></blockquote>
+<p>See <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a
+detailed description of <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a>;  see <a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">Learning</span></a> below for a
+description of how learning modifies a MappingProjection.</p>
+<div class="section" id="specifying-learning-in-a-tuple">
+<span id="mappingprojection-learning-tuple-specification"></span><h4>Specifying Learning in a Tuple<a class="headerlink" href="#specifying-learning-in-a-tuple" title="Permalink to this headline">¶</a></h4>
+<p>A tuple can be used to specify learning for a MappingProjection in the the <strong>matrix</strong> <a class="reference internal" href="#mapping-matrix-specification"><span class="std std-ref">argument of its constructor</span></a> or in the <a class="reference internal" href="Process.html#process-projections"><span class="std std-ref">pathway of a Process</span></a>.  In both cases,
+the second item of the tuple must be a learning specification, which can be any of the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li>an existing <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>, or a constructor for one &#8211; the specified Component is used, and
+defaults are automatically created for the other <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">learning Components</span></a>;</li>
+</ul>
+<ul class="simple">
+<li>a reference to the LearningProjection or LearningSignal class, or the keyword <em>LEARNING</em> or <em>LEARNING_PROJECTION</em> &#8211;
+a default set of <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">learning Components</span></a> is automatically created.</li>
+</ul>
+</div></blockquote>
+</div>
 </div>
 <div class="section" id="deferred-initialization">
 <span id="mappingprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
