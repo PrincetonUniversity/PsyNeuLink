@@ -27,7 +27,8 @@ Creating a MappingProjection
 
 A MappingProjection can be created in any of the ways that can be used to create a `Projection <Projection_Creation>`
 (see `Projection_Sender` and `Projection_Receiver` for specifying its `sender <MappingProjection.sender>` and
-`receiver <MappingProjection.receiver>` attributes, respectively).
+`receiver <MappingProjection.receiver>` attributes, respectively), or by `specifying it by its matrix parameter
+<Mapping_Matrix_Specification>`.
 
 MappingProjections are also generated automatically in the following circumstances, using a value for its `matrix
 <MappingProjection.matrix>` parameter appropriate to the circumstance:
@@ -83,33 +84,52 @@ following ways:
 
   * **Tuple** -- used to specify the `matrix <MappingProjection.matrix>` along with a specification for learning;
     The tuple must have two items: the first can be any of the specifications described above; the second must be
-    a specification for `LearningProjection`, using either the keywords *LEARNING_PROJECTION*, *LEARNING*, or a
-    reference to the class (in which case a default LearningProjection is created), or an existing LearningProjection.
-
+    a `learning specification <MappingProjection_Learning_Tuple_Specification>`.
 
 .. _MappingProjection_Learning_Specification:
 
 Specifying Learning
 ~~~~~~~~~~~~~~~~~~~
 
-The `matrix <MappingProjection.matrix>` parameter of a MappingProjection can be specified for learning by assigning it
-a `LearningProjection` (see LearningMechanism documentation for an overview of `learning components
-<LearningMechanism_Overview>` and a detailed description of `LearningMechanism_Learning_Configurations`;  see
-`MappingProjection_Learning` below for a description of how learning modifies a MappingProjection).  A
-LearningProjection can be assigned to a MappingProjection in any of the following ways:
+A MappingProjection is specified for learning in any of the following ways:
 
     * in the **matrix** argument of the MappingProjection's constructor, using the `tuple format
       <MappingProjection_Tuple_Specification>` described above;
     ..
-    * by specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) as the `receiver
       <LearningProjection.receiver>` of a `LearningProjection`;
     ..
-    * specifying the the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
-      the constructor for a `LearningMechanism <LearningSignal_Specification>`.
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **projections** argument of
+      the constructor for a `LearningSignal <LearningSignal_Specification>`
     ..
-    * by `specifying learning <Process_Learning>` for a `Process`, which assigns `LearningProjections
+    * specifying the MappingProjection (or its *MATRIX* `ParameterState`) in the **learning_signals** argument of
+      the constructor for a `LearningMechanism <LearningSignal_Specification>`
+    ..
+    * specifying a MappingProjection in the `pathway <Process_Base.pathway>`  for a `Process`,
+      using the `tuple format <MappingProjection_Learning_Tuple_Specification>` to include a learning specification;
+    ..
+    * `specifying learning <Process_Learning_Sequence>` for a `Process`, which assigns `LearningProjections
       <LearningProjection>` to all of the  MappingProjections in the Process' `pathway <Process_Base.pathway>`;
 
+See `LearningMechanism` documentation for an overview of `learning components <LearningMechanism_Overview>` and a
+detailed description of `LearningMechanism_Learning_Configurations`;  see `MappingProjection_Learning` below for a
+description of how learning modifies a MappingProjection.
+
+
+.. _MappingProjection_Learning_Tuple_Specification:
+
+Specifying Learning in a Tuple
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A tuple can be used to specify learning for a MappingProjection in the the **matrix** `argument of its constructor
+<Mapping_Matrix_Specification>` or in the `pathway of a Process <Process_Projections>`.  In both cases,
+the second item of the tuple must be a learning specification, which can be any of the following:
+
+  * an existing `LearningProjection`, `LearningSignal`, or a constructor for one -- the specified Component is used, and
+    defaults are automatically created for the other `learning Components <LearningMechanism_Learning_Configurations>`;
+  ..
+  * a reference to the LearningProjection or LearningSignal class, or the keyword *LEARNING* or *LEARNING_PROJECTION* --
+    a default set of `learning Components <LearningMechanism_Learning_Configurations>` is automatically created.
 
 .. _MappingProjection_Deferred_Initialization:
 

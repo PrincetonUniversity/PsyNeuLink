@@ -221,8 +221,8 @@ elements) that of the `variable <InputState.InputState.variable>` for the corres
 Targets
 ~~~~~~~
 
-If learning is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`, then target values
-for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
+If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
+target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
 are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
 any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
 `Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
@@ -239,7 +239,7 @@ completed.  If a function is used for the **targets**, then it will be used to g
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanism <Process.Process_Base.target_mechanism>` or
+`target_mechanisms <Process.Process_Base.target_mechanisms>` or
 System `targetMechanism <System.System_Base.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
@@ -426,7 +426,7 @@ def run(object,
         The length must be equal to **inputs**.
 
     learning : bool :  default None
-        enables or disables learning during execution for a `Process <Process_Learning>` or
+        enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
@@ -467,7 +467,7 @@ def run(object,
         if object_type is MECHANISM:
             mech_len = np.size(object.variable)
         else:
-            mech_len = np.size(object.firstMechanism.variable)
+            mech_len = np.size(object.first_mechanism.variable)
         # If input dimension is 1 and size is same as input for first mechanism,
         # there is only one input for one execution, so promote dimensionality to 3
         if inputs.ndim == 1 and np.size(inputs) == mech_len:
@@ -836,10 +836,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
-                               "supposed to be in target_mechanism for {}".
+                               "supposed to be in target_mechanisms for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
-            terminal_mech = process.terminalMechanisms[0]
+            terminal_mech = process.terminal_mechanisms[0]
             try:
                 ordered_targets[terminal_mech] = stimuli[terminal_mech]
             except KeyError:
@@ -977,7 +977,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             # Get a sample length (use first, since it is convenient and all are the same)
-            mech_len = len(object.firstMechanism.variable)
+            mech_len = len(object.first_mechanism.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise RunError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))

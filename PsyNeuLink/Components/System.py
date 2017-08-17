@@ -180,8 +180,10 @@ Learning
 
 A System cannot itself be specified for learning.  However, if learning has been specified for any of its `processes
 <System_Base.processes>`, then it will be `implemented <LearningMechanism_Learning_Configurations>` and `executed
-<System_Execution_Learning>` as part of the System. The learning Components of a System can be displayed using the
-System's `System_Base.show_graph` method with its **show_learning** argument assigned as `True`.
+<System_Execution_Learning>` as part of the System.  Note, however, that for the learning Components of a Process to
+be implemented by a System, learning must be `specified for the entire Process <Process_Learning_Specification>`. The
+learning Components of a System can be displayed using the System's `System_Base.show_graph` method with its
+**show_learning** argument assigned as `True`.
 
 
 .. _System_Execution:
@@ -243,15 +245,15 @@ settle before another one execute -- see `example <Condition_Recurrent_Example>`
 Learning
 ~~~~~~~~
 
-A System executes learning if it is specified for any `Process <Process_Learning>` in the System.  The System's
-`learning <System_Base.learning>` attribute indicates whether learning is enabled for the System. `Learning
-<Process_Learning>` is executed for any Components (individual Projections or Processes) for which it is specified
-after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but before the `controller
-<System_Base.controller> is executed <System_Execution_Control>`.  The learning Components of a System can be displayed
-using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
-The stimuli used for learning (both inputs and targets) can be specified in either of two formats, Sequence or
-Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both formats require that an
-input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
+A System executes learning if it is specified for one or more `Processes <Process_Learning_Sequence>` in the System.
+The System's `learning <System_Base.learning>` attribute indicates whether learning is enabled for the System. Learning
+is executed for any Components (individual Projections or Processes) for which it is `specified
+<Process_Learning_Sequence>` after the  `processing <System_Execution_Processing>` of each `TRIAL` has completed, but
+before the `controller <System_Base.controller> is executed <System_Execution_Control>`.  The learning Components of a
+System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its **show_learning**
+argument assigned `True`. The stimuli used for learning (both inputs and targets) can be specified in either of two
+formats, Sequence or Mechanism, that are described in the `Run` module; see `Run_Inputs` and `Run_Targets`).  Both
+formats require that an input be provided for each `ORIGIN` Mechanism of the System (listed in its `origin_mechanisms
 <System_Base.origin_mechanisms>` attribute).  If the targets are specified in `Sequence <Run_Targets_Sequence_Format>`
 or `Mechanism <Run_Targets_Mechanism_Format>` format, one target must be provided for each `TARGET` Mechanism (listed
 in its `target_mechanisms <System_Base.target_mechanisms>` attribute).  Targets can also be specified in a `function
@@ -703,28 +705,29 @@ class System_Base(System):
             Tuple for the controller in the System.
 
     origin_mechanisms : MechanismList
-        contains all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any
-        other `Mechanisms <Mechanism>`.
+        all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any other
+        `Mechanisms <Mechanism>`; listed in `origin_mechanisms.data`.
 
         .. based on _origin_mechs
            System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
-        contains all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
-        <ProcessingMechanism>`).
+        all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
+        <ProcessingMechanism>`); listed in terminalMechanisms.data.
 
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
-        contains `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for
-        `initialization <System_Execution_Input_And_Initialization>`.
+        `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for `initialization
+        <System_Execution_Input_And_Initialization>` listed in recurrent_init_mechanisms.data.
 
     learning_mechanisms : MechanismList
-        contains all `LearningMechanisms <LearningMechanism>` in the System.
+        all `LearningMechanisms <LearningMechanism>` in the System, listed in `learning_mechanisms.data`.
 
     target_mechanisms : MechanismList
-        contains all `TARGET` Mechanisms in the System (used for `learning <_System_Execution_Learning>`).
+        all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
+        `target_mechanisms.data`.
         COMMENT:
             based on _target_mechs)
         COMMENT
@@ -1200,7 +1203,7 @@ class System_Base(System):
 
         They are constructed as follows:
             sequence through self.processes;  for each Process:
-                begin with process.firstMechanism (assign as `ORIGIN` if it doesn't receive any Projections)
+                begin with process.first_mechanism (assign as `ORIGIN` if it doesn't receive any Projections)
                 traverse all Projections
                 for each Mechanism encountered (receiver), assign to its dependency set the previous (sender) Mechanism
                 for each assignment, use toposort to test whether the dependency introduced a cycle; if so:
@@ -1370,7 +1373,7 @@ class System_Base(System):
         sorted_processes = sorted(self.processes, key=lambda process : process.name)
 
         for process in sorted_processes:
-            first_mech = process.firstMechanism
+            first_mech = process.first_mechanism
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
             #    - the process itself (ProcessInputState)
@@ -1483,7 +1486,7 @@ class System_Base(System):
                     self._control_object_item.append(object_item)
 
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
-        self.terminalMechanisms = MechanismList(self, self._terminal_mechs)
+        self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
         self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
         self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
@@ -1917,7 +1920,7 @@ class System_Base(System):
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
-        for mech in self.terminalMechanisms.mechanisms:
+        for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
     def initialize(self):
@@ -2108,7 +2111,7 @@ class System_Base(System):
         if self._report_system_output:
             self._report_system_completion(clock=clock)
 
-        return self.terminalMechanisms.outputStateValues
+        return self.terminal_mechanisms.outputStateValues
 
     # def _execute_processing(self, clock=CentralClock, time_scale=TimeScale.Trial, context=None):
     def _execute_processing(self, clock=CentralClock, context=None):
@@ -2604,7 +2607,7 @@ class System_Base(System):
 
         output_state_names = []
         output_value_array = []
-        for mech in list(self.terminalMechanisms.mechanisms):
+        for mech in list(self.terminal_mechanisms.mechanisms):
             output_value_array.append(mech.output_values)
             for name in mech.output_states:
                 output_state_names.append(name)
@@ -2639,7 +2642,7 @@ class System_Base(System):
             INPUT_ARRAY: input_array,
             RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
-            TERMINAL_MECHANISMS: self.terminalMechanisms.mechanisms,
+            TERMINAL_MECHANISMS: self.terminal_mechanisms.mechanisms,
             OUTPUT_STATE_NAMES: output_state_names,
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,

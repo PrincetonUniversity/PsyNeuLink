@@ -85,7 +85,7 @@ def show_trial_header():
 
 def show_results():
 
-    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    results = sorted(zip(mySystem.terminal_mechanisms.outputStateNames, mySystem.terminal_mechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.format(Decision._parameter_states[DRIFT_RATE].value))
     print ('\tThreshold control signal (from EVC): {}'.format(Decision._parameter_states[THRESHOLD].value))

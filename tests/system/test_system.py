@@ -126,7 +126,7 @@ class TestGraphAndInput:
         s.run(inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
-        assert set([c, d]) == set(s.terminalMechanisms.mechanisms)
+        assert set([c, d]) == set(s.terminal_mechanisms.mechanisms)
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -152,7 +152,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
-        assert [d] == s.terminalMechanisms.mechanisms
+        assert [d] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -179,7 +179,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
-        assert [e] == s.terminalMechanisms.mechanisms
+        assert [e] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -208,7 +208,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
-        assert [e] == s.terminalMechanisms.mechanisms
+        assert [e] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -232,7 +232,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
-        assert [] == s.terminalMechanisms.mechanisms
+        assert [] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INITIALIZE_CYCLE
@@ -255,7 +255,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert [a] == s.origin_mechanisms.mechanisms
-        assert [] == s.terminalMechanisms.mechanisms
+        assert [] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INITIALIZE_CYCLE
@@ -282,7 +282,7 @@ class TestGraphAndInput:
         s.run(inputs=inputs)
 
         assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
-        assert [d] == s.terminalMechanisms.mechanisms
+        assert [d] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == CYCLE

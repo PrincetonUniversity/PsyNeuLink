@@ -85,9 +85,9 @@ Projections
 
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
-**params** argument with the key *PROJECTIONS*.  These will be assigned to its
-`efferents  <LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional
-details concerning the specification of Projections when creating a State.
+**params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents
+<LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional details
+concerning the specification of Projections when creating a State.
 
 .. note::
    Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
@@ -132,10 +132,10 @@ as well the `learning_rate <Process_Base.learning_rate>` for any Process(es) and
 `learning_rate <System_Base.learning_rate>` for any System(s) to which the LearningSignal's owner belongs
 (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
-The `function <LearningSignal.function>` of a LearningSignal converts the
-`learning_signal <LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its
-`value <LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By
-default this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
+The `function <LearningSignal.function>` of a LearningSignal converts the `learning_signal
+<LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its `value
+<LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By default
+this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its own.  However, the LearningSignal's
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.

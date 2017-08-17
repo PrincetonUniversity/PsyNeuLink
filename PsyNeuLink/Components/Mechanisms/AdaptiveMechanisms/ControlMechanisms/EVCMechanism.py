@@ -1156,10 +1156,10 @@ class EVCMechanism(ControlMechanism_Base):
                 #   or it is a terminal mechanism
                 elif (mech.name in local_specs or mech in local_specs or
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              mech in self.system.terminalMechanisms.mechanisms):
+                              mech in self.system.terminal_mechanisms.mechanisms):
                     #
                     if (not (mech.name in local_specs or mech in local_specs) and
-                            not mech in self.system.terminalMechanisms.mechanisms):
+                            not mech in self.system.terminal_mechanisms.mechanisms):
                         continue
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
@@ -1231,7 +1231,7 @@ class EVCMechanism(ControlMechanism_Base):
                                               format(self.system.name, state_spec.name, self.system.name))
 
         # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
+        if not state_spec in self.system.terminal_mechanisms.mechanisms:
             if self.prefs.verbosePref:
                 print("Request for controller in {0} to monitor the OutputState(s) of a Mechanism ({1}) that is not"
                       " a TERMINAL Mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))

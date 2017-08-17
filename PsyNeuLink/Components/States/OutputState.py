@@ -15,7 +15,7 @@ Overview
 
 OutputState(s) represent the result(s) of executing a Mechanism.  This may be the result(s) of its
 `function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
-Mechanism's `output_value <Mechanism_Base.output_value>` attribute.  OutputStates are used to represent
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputStates are used to represent
 individual items of the Mechanism's `value <Mechanism_Base.value>`, and/or useful quantities derived from
 them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
 a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputStates
@@ -56,7 +56,7 @@ Every Mechanism has at least one OutputState, referred to as its *primary Output
 and assigned to its `output_state <Mechanism_Base.output_state>` attribute (note the singular),
 and also to the first entry of the Mechanism's `output_states <Mechanism_Base.output_states>` attribute
 (note the plural).  The `value <OutputState.value>` of the primary OutputState is assigned as the first (and often
-only) item of the Mechanism's `output_value <Mechanism_Base.output_value>` attribute, which is the result
+only) item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute, which is the result
 of the Mechanism's `function <Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
@@ -192,7 +192,7 @@ the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, an
 reference the third item of the DDM's `value <DDM.value>` attribute (items are indexed starting with 0), which contains
 the probability of crossing the upper threshold.  The three OutputStates will be assigned to the `output_states
 <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values will be assigned as items in its
-`output_value <Mechanism_Base.output_value>` attribute, in the order in which they are listed in the **output_states**
+`output_values <Mechanism_Base.output_values>` attribute, in the order in which they are listed in the **output_states**
 argument of the constructor for ``my_mech``.
 
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,

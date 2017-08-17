@@ -44,7 +44,7 @@ types of Mechanisms in PsyNeuLink:
 
       * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
-        <MappingProjection>` (see `learning <Process_Learning>`).
+        <MappingProjection>` (see `learning <Process_Execution_Learning>`).
       |
       * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
@@ -109,9 +109,9 @@ mentioned above, or using one of the following:
           specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances.
-    For example, an `ObjectiveMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when
-    `learning <Process_Learning>` is specified for a Process; and an `ObjectiveMechanism` and `ControlMechanism`
-    are created when the `controller <System_Base.controller>` is specified for a `System`.
+    For example, a `ComparatorMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when
+    `learning is specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and
+    `ControlMechanism` are created when the `controller <System_Base.controller>` is specified for a `System`.
 
 .. _Mechanism_State_Specification:
 
@@ -956,7 +956,7 @@ class Mechanism_Base(Mechanism):
 
     default_mechanism : Mechanism : default DDM
         type of Mechanism instantiated when the `mechanism` command is called without a specification for its
-        **mech_spec** argument.
+        **mech_spec** argument, or the `process` command is called without a specification for its **pathway** argument.
 
     name : str : default <Mechanism subclass>-<index>
         the name of the Mechanism.
@@ -2252,6 +2252,7 @@ class MechanismList(UserList):
     def __init__(self, owner, components_list:list):
         super().__init__()
         self.mechs = components_list
+        self.data = self.mechs
         self.owner = owner
         # for item in components_list:
         #     if not isinstance(item, MechanismTuple):

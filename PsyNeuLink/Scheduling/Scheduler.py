@@ -26,7 +26,7 @@ ways to generate any pattern of execution of the Components in a Composition tha
 .. note::
    In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
    Conditions, and assigned to a Scheduler for execution.  However, in some circumstances, `Projections <Projection>`
-   can also be assigned for execution (e.g., during `learning <Process_Learning>` to insure that
+   can also be assigned for execution (e.g., during `learning <Process_Execution_Learning>` to insure that
    `MappingProjections <MappingProjection>` are updated in the proper order).
 
 .. _Scheduler_Creation:
