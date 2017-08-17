@@ -60,19 +60,23 @@ Structure
 ---------
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
-`value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or
-`run <Mechanism_Base.run>` methods, and that is used as the `drift rate` parameter for its `function <DDM.function>`
-(see `DDM_Parameters` below). The decision process can be configured to execute in different modes, as described below.
+`value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
+<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for its `function <DDM.function>` (see
+`DDM_Functions_and_Parameters` below). The decision process can be configured to execute in different modes, as
+described below.
 
 The `function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies the
-analytic solution to use when `time_scale <DDM.time_scale>` is  set to `TimeScale.TRIAL`
-(see `DDM_Functions` below); when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the
-**function** argument must be assigned an `Integrator` Function with an
-`integration_type <Integrator.integration_type>` of *DIFFUSION*, so that executing the DDM Mechanism numerically
-integrates the path of the decision variable (see `Execution <DDM_Execution>` below). The number of `output_states
-<DDM.output_states>` is determined by the `function <DDM.function>` in use (see `DDM_Execution` and
-`Standard OutputStates <DDM_Standard_OutputStates>`).
+analytic solution to use when `time_scale <DDM.time_scale>` is  set to `TimeScale.TRIAL` (see
+`DDM_Functions_and_Parameters` below); when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the DDM
+Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>` below).  To do
+so, its **function** argument must be assigned an `Integrator` Function with an `integration_type
+<Integrator.integration_type>` of *DIFFUSION*; the default is the `BogaczEtAl` Function.
+
+The DDM Mechanism has a variety of `output_states <DDM.output_states>` that can be used to report the
+state of its decision variable and/or the outcome of the decision process.  Which of these are used by
+default is determined by the `function <DDM.function>` in use (see `DDM_Execution` and `Standard OutputStates
+<DDM_Standard_OutputStates>`).
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -100,10 +104,10 @@ then the value of each ouputState is a 1d array, each element of which is the ou
 corresponding decision process.
 COMMENT
 
-.. _DDM_Functions:
+.. _DDM_Functions_and_Parameters:
 
-DDM Functions
-~~~~~~~~~~~~~
+DDM Functions and Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `function <DDM.function>` parameter can be used to select one of two analytic solutions (`BogaczEtAl` and
 `NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.  These both return
@@ -114,63 +118,8 @@ the `decision variable <DECISION_VARIABLE>` for a given trial, as well as an exp
 When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` parameter must be set
 to 'Integrator' with an `integration_type <Integrator.integration_type>` of *DIFFUSION*.
 
-.. _DDM_Parameters:
-
-DDM Parameters
-~~~~~~~~~~~~~~
-COMMENT:
-The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
-for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
-using the keywords in the list below, as in the following example::
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
-                 params={DRIFT_RATE:(0.2, ControlProjection),
-                         STARTING_POINT:-0.5},
-                 time_scale=TimeScale.TRIAL)
-
-.. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
-   `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
-   override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
-   (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
-   set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
-   as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
-   and `TIME_STEP` mode.
-
-The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and `function <DDM.function>`
-is set to `BogaczEtAl` or `NavarroAndFuss` are:
-
-.. _DDM_Drift_Rate:
-
-* `DRIFT_RATE <drift_rate>` (default 0.0)
-  - multiplies the input to the Mechanism before assigning it to the `variable <DDM.variable>` on each call of
-  `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to the
-  `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component (baseline
-  strength) of the decision process, the value received from a ControlProjection as the "attentional" component,
-  and the input its "stimulus" component.  The product of all three determines the drift rate in effect for each
-  time_step of the decision process.
-..
-* `STARTING_POINT <starting_point>` (default 0.0)
-  - specifies the starting value of the decision variable.  If `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`,
-  the `starting_point` is added to the decision variable on the first call to `function <DDM.function>` but not
-  subsequently.
-..
-* `THRESHOLD` (default 1.0)
-  - specifies the stopping value for the decision process.  When `time_scale <DDM.time_scale>` is `TIME_STEP`, the
-  integration process is terminated when the absolute value of the decision variable equals the absolute value
-  of threshold.  The `threshold` parameter must be greater than or equal to zero.
-..
-* `NOISE` (default 0.5)
-  - specifies the variance of the stochastic ("diffusion") component of the decision process.  If
-  `time_scale <DDM.time_scale>` is `TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean
-  normal (Gaussian) distribution on every call of function <DDM.function>`, and added to the decision variable.
-..
-* `NON_DECISION_TIME` (default 0.2)
-  specifies the `t0` parameter of the decision process (in units of seconds).
-  when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
-  taken to complete the decision process when reporting the response time.
-COMMENT
-
-All DDM parameter should be specified within the `function <DDM.function>` of the Mechanism. The examples below
-demonstrate all of the possible parameters (see individual `Functions <Funtion>` for additional details).
+The parameters of a DDM are specified within the specified `function <DDM.function>`. The examples below
+demonstrate all of the possible parameters (see individual `Functions <Function>` for additional details).
 
 `BogaczEtAl <BogaczEtAl>` ::
 
@@ -197,6 +146,60 @@ demonstrate all of the possible parameters (see individual `Functions <Funtion>`
     my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
                           time_scale=TimeScale.TIME_STEP,
                           name='My_DDM_TimeStep')
+
+
+COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
+
+    The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
+    for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
+    using the keywords in the list below, as in the following example::
+        my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
+                     params={DRIFT_RATE:(0.2, ControlProjection),
+                             STARTING_POINT:-0.5},
+                     time_scale=TimeScale.TRIAL)
+
+    .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
+       `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
+       override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
+       (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
+       set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
+       as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
+       and `TIME_STEP` mode.
+
+    The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and `function <DDM.function>`
+    is set to `BogaczEtAl` or `NavarroAndFuss` are:
+
+    .. _DDM_Drift_Rate:
+
+    * `DRIFT_RATE <drift_rate>` (default 0.0)
+      - multiplies the input to the Mechanism before assigning it to the `variable <DDM.variable>` on each call of
+      `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to
+      the `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component
+      (baseline strength) of the decision process, the value received from a ControlProjection as the "attentional"
+      component, and the input its "stimulus" component.  The product of all three determines the drift rate in
+      effect for each time_step of the decision process.
+    ..
+    * `STARTING_POINT <starting_point>` (default 0.0)
+      - specifies the starting value of the decision variable.  If `time_scale <DDM.time_scale>` is
+      `TimeScale.TIME_STEP`, the `starting_point` is added to the decision variable on the first call to `function
+      <DDM.function>` but not subsequently.
+    ..
+    * `THRESHOLD` (default 1.0)
+      - specifies the stopping value for the decision process.  When `time_scale <DDM.time_scale>` is `TIME_STEP`, the
+      integration process is terminated when the absolute value of the decision variable equals the absolute value
+      of threshold.  The `threshold` parameter must be greater than or equal to zero.
+    ..
+    * `NOISE` (default 0.5)
+      - specifies the variance of the stochastic ("diffusion") component of the decision process.  If
+      `time_scale <DDM.time_scale>` is `TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean
+      normal (Gaussian) distribution on every call of function <DDM.function>`, and added to the decision variable.
+    ..
+    * `NON_DECISION_TIME` (default 0.2)
+      specifies the `t0` parameter of the decision process (in units of seconds).
+      when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
+      taken to complete the decision process when reporting the response time.
+COMMENT
+
 
 .. _DDM_Results:
 
