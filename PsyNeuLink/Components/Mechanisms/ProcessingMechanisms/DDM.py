@@ -81,7 +81,7 @@ these in the **output_states** argument of its constructor.
 DDM Modes of Operation
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. _DDM_Analytic_Solution_Example:
+.. _DDM_Analytic_Solution:
 
 Analytic Solution
 ^^^^^^^^^^^^^^^^^
@@ -95,7 +95,7 @@ rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD
 <DDM_RT_CORRECT_MEAN>` and variance of correct response times (in `RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
 Examples for each, that illustrate all of their parameters, are shown below:
 
-`BogaczEtAl <BogaczEtAl>` ::
+`BogaczEtAl <BogaczEtAl>` Function::
 
     my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
                                                 starting_point=1.0,
@@ -105,7 +105,7 @@ Examples for each, that illustrate all of their parameters, are shown below:
                             time_scale= TimeScale.TRIAL,
                             name='MY_DDM_BogaczEtAl')
 
-`NavarroAndFuss <NavarroAndFuss>` ::
+`NavarroAndFuss <NavarroAndFuss>` Function::
 
     my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
                                                         starting_point=1.0,
@@ -115,31 +115,18 @@ Examples for each, that illustrate all of their parameters, are shown below:
                                 time_scale= TimeScale.TRIAL,
                                 name='MY_DDM_NavarroAndFuss')
 
+.. _DDM_Path_Integration:
 
 Path Integration
 ~~~~~~~~~~~~~~~~
 
-This is used when an `Integrator` `Function` is specified as the Mechanism's `function <DDM.function>` with an
-`integration_type <Integrator.integration_type>` of *DIFFUSION*;  in this case, the DDM Mechanism numerically
-integrates the path of the decision variable (see `Execution <DDM_Execution>` below).
+This is used when an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION* is
+specified as the Mechanism's `function <DDM.function>` attribute.  In this case, the DDM Mechanism using the
+`Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to numerically integrate the path of the decision variable
+(see `Execution <DDM_Execution>` below).  In the mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
+`RESPONSE_TIME <DDM_RESPONSE_TIME>` are used by default.
 
-
-In addition to
-`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, these both return an accuracy
-value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
-rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  `NavarroAndFuss
-<NavarroAndFuss>` also returns expected values for mean correct response time (in `RT_CORRECT_MEAN
-<DDM_RT_CORRECT_MEAN>` and variance of correct response times (in `RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
-Examples for each, that illustrate all of their parameters, are shown below:
-
-
-
-When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` parameter must be set
-to 'Integrator' with an `integration_type <Integrator.integration_type>` of *DIFFUSION*.
-
-.. _DDM_Path_Integration_Examples:
-
-`Integrator <Integrator>` ::
+`Integrator <Integrator>` Function::
 
     my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
                           time_scale=TimeScale.TIME_STEP,
@@ -157,9 +144,7 @@ the analytical solution to use when `time_scale <DDM.time_scale>` is  set to :ke
 executing the DDM Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
 below).  The number of `outputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
-COMMENT
 
-COMMENT:
 [TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
 If only a single decision process was run, then the value of each outputState is the corresponding output of
@@ -171,50 +156,6 @@ then the value of each ouputState is a 1d array, each element of which is the ou
 corresponding decision process.
 COMMENT
 
-COMMENT:
-.. _DDM_Functions_and_Parameters:
-
-DDM Functions and Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The **function** argument of the constructor for the DDM can be used to specify one of two analytic solutions
-(`BogaczEtAl` or `NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.
-These both return the `decision variable <DECISION_VARIABLE>` for a given trial, as well as an expected
-`mean response time <RESPONSE_TIME>`, `accuracy <PROBABILITY_UPPER_THRESHOLD>` and
- `error rate <PROBABILITY_LOWER_THRESHOLD>`, while `NavarroAndFuss` also returns expected values for
-`mean correct response time <RT_CORRECT_MEAN>` and `variance of correct response times <RT_CORRECT_VARIANCE>`.
-When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` parameter must be set
-to 'Integrator' with an `integration_type <Integrator.integration_type>` of *DIFFUSION*.
-
-The parameters of a DDM are specified within the specified `function <DDM.function>`. The examples below
-demonstrate all of the possible parameters (see individual `Functions <Function>` for additional details).
-
-`BogaczEtAl <BogaczEtAl>` ::
-
-    my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
-                                                starting_point=1.0,
-                                                threshold=30.0,
-                                                noise=1.5,
-                                                t0 = 2.0),
-                            time_scale= TimeScale.TRIAL,
-                            name='MY_DDM_BogaczEtAl')
-
-`NavarroAndFuss <NavarroAndFuss>` ::
-
-    my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
-                                                        starting_point=1.0,
-                                                        threshold=30.0,
-                                                        noise=1.5,
-                                                        t0 = 2.0),
-                                time_scale= TimeScale.TRIAL,
-                                name='MY_DDM_NavarroAndFuss')
-
-`Integrator <Integrator>` ::
-
-    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
-                          time_scale=TimeScale.TIME_STEP,
-                          name='My_DDM_TimeStep')
-COMMENT
 
 COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
 
@@ -266,15 +207,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       specifies the `t0` parameter of the decision process (in units of seconds).
       when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
       taken to complete the decision process when reporting the response time.
-COMMENT
 
-
-.. _DDM_Results:
-
-DDM Results
-~~~~~~~~~~~
-
-COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
 or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
@@ -299,32 +232,17 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
   ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
 
-****
-MOVE MOST OF THIS TO STANDARD OUTPUT STATES, AND THEN SAY THAT ITS FUNCTION RETURENS THE VALUES DESCTIBED THERE,
-UNDER THE FOLLOWING CONDITIONS, AND WITH THE FOLLOWING ASSIGNMENTS:
-****
-
-The `value <DDM.value>` of a DDM Mechanism has six items. The first two of these are always assigned, corresponding
-to two `output_states <DDM.output_states>` that are assigned by default;  these represent the two results always
-returned by the DDM's `function <DDM.function>`: `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
-`RESPONSE_TIME <DDM_RESPONSE_TIME>`. Other items of its `value <DDM.value>`, and entries in its
-`output_states <DDM.output_states>` attribute, may also be assigned,  depending on whether it is executed in
-`TRIAL` or `TIME_STEP` mode, and its `function <DDM.function>`, as described under `DDM_Execution` and
-`standard OutputStates <DDM_Standard_OutputStates>`.  Unassigned items of `value <DDM.value>` have the value `None`.
-
 .. _DDM_Execution:
 
 Execution
 ---------
 
-When a DDM Mechanism is executed, it computes the decision process either analytically (in `TRIAL` mode) or by
-step-wise integration using the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ (in `TIME_STEP` mode).
-It `function <DDM>function>` always returns its *DECISION_VARIABLE* and *RESPONSE_TIME* results
-(see `DDM_Standard_OutputStates`), and assigns these as the first two items of its `value <DDM.value>` attribute.
-If it is executed in `TRIAL` mode, it also returns its *PROBABILITY_UPPER_THRESHOLD* and *PROBABILITY_LOWER_THRESHOLD*
-results and assigns these as the third and fourth items of its `value <DDM.value>` attribute.  If it is executed
-in `TRIAL` mode using `NavarroAndFuss` as its `function <DDM.function>`, it also returns its *RT_CORRECT_MEAN* and
-*RT_CORRECT_VARIANCE* results and assigns these as the fifth and sixth items of its `value <DDM.value>` attribute.
+When a DDM Mechanism is executed, it computes the decision process either `analytically <DDM_Analytic_Solution>`  or by
+step-wise integration of its path <DDM_Path_Integration>` using the `Euler method
+<https://en.wikipedia.org/wiki/Euler_method>`_. Its `function <DDM>function>` always returns values for the
+`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <RESPONSE_TIME>`, and assigns these as the first two
+items of its `value <DDM.value>` attribute.  See a description of the `DDM_Modes` above and
+`Standard OutputStates <DDM_Standard_OutputStates>` for other values it can return.
 
 .. _DDM_Class_Reference:
 
