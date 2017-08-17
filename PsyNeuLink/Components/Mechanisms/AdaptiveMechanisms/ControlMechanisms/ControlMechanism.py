@@ -249,7 +249,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` of a `Mechanism` specified in the **monitor_for_control** argument of the
-        ControlMechanism's constructor, the `value <OutputState.value>` \s of which serve as the items of the
+        ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
         ControlMechanism's `variable <Mechanism_Base.variable>`.
 
     control_signals : List[ControlSignal]
@@ -261,7 +261,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
-        determines how the `value <OuputState.value>` \s of the `OutputStates <OutputState>` specified in the
+        determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
         `allocation_policy <ControlMechanism_Base.allocation_policy>`.
 

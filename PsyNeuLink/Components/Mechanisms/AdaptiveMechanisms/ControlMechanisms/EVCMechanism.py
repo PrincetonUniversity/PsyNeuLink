@@ -40,7 +40,7 @@ The EVCMechanism uses it `function <EVCMechanism.function>` to select an `alloca
 exhaustive evaluation of allocation policies, simulating its `system <EVCMechanism.system>` under each, and using an
 `ObjectiveMechanism` and several `auxiliary functions <EVCMechanism_Auxiliary_Functions>` to calculate the **expected
 value of control (EVC)** for each `allocation_policy`: a cost-benefit analysis that weighs the `cost
-<ControlSignal.cost> of the ControlSignals against the outcome of the `system <EVCMechanism.system>` \s performance for
+<ControlSignal.cost> of the ControlSignals against the outcome of the `system <EVCMechanism.system>` \\s performance for
 a given `allocation_policy`. The EVCMechanism selects the `allocation_policy` that generates the maximum EVC, and
 implements that for the next `TRIAL`. Each step of this procedure can be modified, or replaced entirely, by assigning
 custom functions to corresponding parameters of the EVCMechanism, as described `below <EVCMechanism_Functions>`.
@@ -178,7 +178,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     selected `allocation_policy` specifies for each ControlSignal, and then simulate these System using the
     corresponding parameter values.
 
-  * **Calculate outcome** - combine the `value <OutputState.value>` \s of the OutputStates listed in the
+  * **Calculate outcome** - combine the `value <OutputState.value>` \\s of the OutputStates listed in the
     EVCMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute using the function
     specified by its `outcome_function <EVCMechanism.outcome_function>` attribute (this is done by the EVCMechanism's
     `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`, and passed to the EVCMechanism's `primary InputState
@@ -187,7 +187,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     <EVCMechanism.outcome_function>`).
   ..
   * **Calculate EVC** - by calling the EVCMechanism's `value_function <EVCMechanism.value_function>` with the
-    outcome (received from the `monitoring_mechanism`) and a list of the `costs <ControlSignal.cost>` \s of its
+    outcome (received from the `monitoring_mechanism`) and a list of the `costs <ControlSignal.cost>` \\s of its
     `ControlSignals <EVCMechanism_ControlSignals>`; default `value_function <EVCMechanism.value_function>` calls
     to additional auxiliary functions:  first it calls the `cost_function <EVCMechanism.cost_function>` which sums
     the costs, though this can be configured to weight and/or exponentiate individual costs (see `cost_function
@@ -248,10 +248,10 @@ An EVCMechanism, like any `ControlMechanism`, is always the last `Mechanism` to 
 `system <EVCMechanism.system>` (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).
 When an EVCMechanism is executed, it updates the value of its `prediction_mechanisms` and `monitoring_mechanism`,
 and then calls its `function <EVCMechanism.function>`, which determines and implements the `allocation_policy` for
-the next `TRIAL` of its `system <EVCMechanism.system>` \s execution.  The default `function <EVCMechanism.function>`
+the next `TRIAL` of its `system <EVCMechanism.system>` \\s execution.  The default `function <EVCMechanism.function>`
 executes the following steps (described in greater detailed `above <EVC_Default_Configuration>`):
 
-* samples every allocation_policy (i.e., every combination of the `allocation` \s specified for the EVCMechanism's
+* samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the EVCMechanism's
   ControlSignals specified by their `allocation_samples` attributes);  for each `allocation_policy`, it:
 
   * Executes the EVCMechanism's `system <EVCMechanism.system>` with the parameter values specified by that
