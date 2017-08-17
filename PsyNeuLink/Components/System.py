@@ -706,35 +706,35 @@ class System_Base(System):
 
     origin_mechanisms : MechanismList
         all `ORIGIN` Mechanisms in the System (i.e., that don't receive `Projections <Projection>` from any other
-        `Mechanisms <Mechanism>`; listed in `origin_mechanisms.data`.
+        `Mechanisms <Mechanism>`, listed in ``origin_mechanisms.data``.
 
         .. based on _origin_mechs
            System.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
         all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
-        <ProcessingMechanism>`); listed in terminalMechanisms.data.
+        <ProcessingMechanism>`), listed in ``terminalMechanisms.data``.
 
         .. based on _terminal_mechs
            System.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
-        `Mechanisms <Mechanism> with recurrent `Projections <Projection>` that are candidates for `initialization
-        <System_Execution_Input_And_Initialization>` listed in recurrent_init_mechanisms.data.
+        `Mechanisms <Mechanism>` with recurrent `Projections <Projection>` that are candidates for `initialization
+        <System_Execution_Input_And_Initialization>`, listed in ``recurrent_init_mechanisms.data``.
 
     learning_mechanisms : MechanismList
-        all `LearningMechanisms <LearningMechanism>` in the System, listed in `learning_mechanisms.data`.
+        all `LearningMechanisms <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
-        `target_mechanisms.data`.
+        ``target_mechanisms.data``.
         COMMENT:
             based on _target_mechs)
         COMMENT
 
     target_input_states : List[SystemInputState]
         one item for each `TARGET` Mechanism in the System (listed in its `target_mechanisms
-        <System_Base.tareget_mechansims>` attribute).  Used to represent the values specified in the **targets**
+        <System_Base.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
         thoese values to the the TARGET `InputState` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
@@ -2942,18 +2942,31 @@ SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
 
 from PsyNeuLink.Components.States.OutputState import OutputState
 class SystemInputState(OutputState):
-    """Encodes target for the system and transmits it to a `TARGET` Mechanism in the System
+    """Represents inputs and targets specified in a call to the System's `execute <Process_Base.execute>` and `run
+    <Process_Base.run>` methods.
 
-    Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
-    `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
-    Mechanism of the System.
+    COMMENT:
+        Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
+        `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+        Mechanism of the System.
 
-    .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
-       in Projection._instantiate_sender()
+        .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
+           in Projection._instantiate_sender()
 
-       self.value is used to represent the item of the targets arg to system.execute or system.run
+           self.value is used to represent the item of the targets arg to system.execute or system.run
+    COMMENT
+
+    A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
+    *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
+    in `target_mechanisms <System_Base.target_mechanisms>`.  A `MappingProjection` is created that projects to each
+    of these InputStates from the corresponding SystemInputState.  When the System's `execute <System_Base.execute>` or
+    `run <System_Base.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
+    the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the
+    corresponding InputState of the `origin_mechanisms <System_Base.origin_mechanisms>` and `terminal_mechanisms
+    <System_Base.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
+
     def __init__(self, owner=None, variable=None, name=None, prefs=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
 
