@@ -1497,6 +1497,7 @@ class State_Base(State):
         except TypeError:
             # Try projection spec as keyword string constant
             if isinstance(projection_spec, str):
+
                 # de-alias convenience keywords:
                 if projection_spec is LEARNING:
                     projection_spec = LEARNING_PROJECTION

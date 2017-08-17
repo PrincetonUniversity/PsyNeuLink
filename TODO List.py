@@ -2218,7 +2218,7 @@
 #                                   FLAG SOURCES OF FEEDBACK PROJECTIONS AS NEEDING THIS SPECIFIED
 #                                   INCLUDE KEYWORD "IGNORE" THAT MEANS DON'T USE THAT PROJECTION ON INITIALIZATION PASS
 #
-# FIX: System.mechanismList.mechanismNames
+# FIX: System.mechanismList.mechanism_names
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)

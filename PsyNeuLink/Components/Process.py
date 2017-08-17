@@ -234,6 +234,8 @@ specified must be compatible with learning (that is, their `function <Mechanism_
 the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections they receive (see
 `LearningMechanism_Function`).
 
+.. _Process_Learning_Components:
+
 The following Components are created for each learning sequence specified for a Process (see figure below):
 
     * a `TARGET` `ComparatorMechanism` (assigned to the Process' `target_mechanisms <Process_Base.target_mechanisms>`
@@ -334,7 +336,7 @@ Learning
 ~~~~~~~~
 
 If `learning <Process_Learning_Sequence>` has been specified for the Process or any of the projections in its `pathway
-<Process_Base.pathway>`, then the learning Components described above are executed after
+<Process_Base.pathway>`, then the learning Components described `above <Process_Learning_Components>` are executed after
 all of the ProcessingMechanisms in the `pathway <Process_Base.pathway>` have executed.  The learning Components
 calculate changes that will be  made to `matrix <MappingProjection.matrix>` of the MappingProjections involved.  This
 requires that a set of `target values <Run_Targets>` be provided (along with the **inputs**) in the **targets**
@@ -535,17 +537,17 @@ def process(process_spec=None,
         if it is a string, uses it as the name for the Process;
         if it is a dictionary, the key for each entry must be an argument name, and its value the value to assign to
         the corresponding parameter (these will be used to instantiate the Process, and will override any values
-        assigned to the arguments in the call to `process` command. If a name is not specified, the nth instance
+        assigned directly to the arguments of the `process` command. If a name is not specified, the nth instance
         created will be named by using the Process' `componentType <Process_Base.componentType>` attribute as the
-        base and adding an indexed suffix: componentType-n.
+        base and adding an indexed suffix: ``componentType-n``.
 
-    default_variable : Optional[List[values] or ndarray] :  default default input value of origin_mechanism
-        specifies the input to the Process used if none is provided in a call to its `execute <Process_Base.execute>`
-        or `run <Process_Base.run>` methods. This must be the same length as the `variable <Mechanism_Base.variable>`
-        of the `origin_mechanism <Process_Base.origin_mechanism>`.
+    default_variable : Optional[List[values] or ndarray] :  default value of default_variable for origin_mechanism
+        specifies the `input <Process_Input_And_Output>` to the Process if none is provided in a call to its `execute
+        <Process_Base.execute>` or `run <Process_Base.run>` methods. This must be the same length as the `variable
+        <Mechanism_Base.variable>` of the `origin_mechanism <Process_Base.origin_mechanism>`.
 
-    pathway : Optional[List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...]] : default
-    List[default_mechanism]
+    pathway : Optional[List[ProcessingMechanism spec[, MappingProjection spec], ProcessingMechanism spec...]] : \
+    default List[default_mechanism]
         specifies the set of `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
         between them to execute when the Process is executed.  ProcessingMechanisms can be specified using any
         of the ways used to `specify a Mechanism <Mechanism_Creation>`, or a using a `MechanismTuple
@@ -555,12 +557,12 @@ def process(process_spec=None,
         <Process_Learning_Sequence>`.
 
     initial_values : Optional[Dict[ProcessingMechanism, param value]] : default None
-        specifies the values used to initialize the specified `ProcessingMechanisms <ProcessingMechanism>`
-        whenever its `initialize <Process_Base.initialize>` method is called. The key each entry must be a
-        ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and the value must
-        be a number, list or np.array that is compatible with the format of the ProcessingMechanism's `value
-        <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not specified in
-        **initial_values** are initialized with the value of their `default_variable
+        specifies the values used to initialize `ProcessingMechanisms <ProcessingMechanism>` designated as
+        `INITIALIZE_CYCLE` whenever the Process' `initialize <Process_Base.initialize>` method is called. The key each
+        entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>` `INITIALIZE_CYCLE`, and
+        the value must be a number, list or np.array that is compatible with the format of the ProcessingMechanism's
+        `value <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as `INITIALIZE_CYCLE` but not
+        specified in **initial_values** are initialized with the value of their `default_variable
         <Mechanism_Base.default_variable>` attribute.
 
     clamp_input : Optional[keyword] : default None
@@ -580,25 +582,26 @@ def process(process_spec=None,
         specifies the type of matrix used for default projections (see `matrix <MappingProjection.matrix>` parameter for
         `MappingProjection`).
 
-    learning : Optional[LearningProjection spec] : default None
+    learning : Optional[learning specification] : default None
         `specifies learning <Process_Learning_Sequence>` for all eligible Projections in the Process.
 
-        .. note::  If an existing `LearningProjection` or a call to the constructor is used for the specification,
-                   the object itself will **not** be used as the LearningProjection for the Process. Rather it
-                   will be used as a template (including any parameters that are specified) for creating
-                   LearningProjections for all of the `MappingProjections <MappingProjection>` in the Process.
+        .. note::  If an existing `LearningProjection` or `LearningSignal` or a call to their constructor is used for
+                   the specification, the object itself is **not** be used. Rather it is used as a template (including
+                   any parameters that are specified) to create the corresponding Component and any other `learning
+                   Components <Process_Learning_Components>` needed to implement learning for all of the
+                   `MappingProjections <MappingProjection>` in the Process.
 
     learning_rate : Optional[float] : default None
-        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms associated with the
-        Process <Process_Learning_Sequence>` (see Process' `learning_rate <Process_Base.learning_rate>` attribute for
+        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms <LearningMechanism>`
+        associated with the Process (see Process' `learning_rate <Process_Base.learning_rate>` attribute for
         additional information).
 
     target : Optional[List or ndarray] : default ndarray of zeroes
         each item specifies the value of the *TARGET* `InputState <ComparatorMechanism_Structure>` for the
-        `TARGET` `ComparatorMechanism` a corresponding `learning sequence <Process_Learning_Sequence>`
+        `TARGET` `ComparatorMechanism` corresponding to a `learning sequence <Process_Learning_Sequence>`
         specified for the Process.  Each item must be the same length as the `value <OutputState.value>` of the
-        `OutputState` specified for learning <LearningMechanism_Activation_Output>` of the last ProcessingMechanism
-        in the corresponding learning sequence (see `Processing_Learning_Sequence` for additional detais).
+        `OutputState specified for learning <LearningMechanism_Activation_Output>` of the last ProcessingMechanism
+        in the corresponding learning sequence (see `Process_Learning_Sequence` for additional detais).
 
     params : Optional[Dict[param keyword, param value]
         a `parameter dictionary <ParameterState_Specification>` that can include any of the parameters above;
@@ -745,27 +748,28 @@ class Process_Base(Process):
     componentType : "Process"
 
     pathway : List[ProcessingMechanism, MappingProjection, ProcessingMechanism...]
-        lists the ProcessingMechanisms, and the MappingProjections betwen them, that are executed (in the order
-        specified) when the Process executes.
+        the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>` between them that
+        are executed in the order listed when the Process `executes <Process_Execution>`.
 
     process_input_states : List[ProcessInputState]
-        used to represent the input to the Process, and transmit this to the InputState(s) of its `origin_mechanism
-        <Process_Base.origin_mechanism>`.  Each ProcessInputState sends a MappingProjection to one or more InputStates
-        of the `origin_mechanism <Process_Base.origin_mechanism>` (see `Process_Input_And_Output` for details).
+        represent the input to the Process when it is executed.  Each `ProcessInputState` represents an item of the
+        `input <Process.base>` to a corresponding `InputState` of the Process' `origin_mechanism
+        <Process_Base.origin_mechanism>` (see `Process_Input_And_Output` for details).
 
     input :  List[value] or ndarray
         input to the Process for each `TRIAL` of execution;  it is assigned the value of the **input** argument
-        in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Its items are
-        assigned the `value <InputState.value>` of the corresponding ProcessInputStates in `process_input_states`,
-        and must match the format of the corresponding items of the `variable <Mechanism_Base.variable>` for the
-        Process' `origin_mechanism <Process_Base.origin_mechanism>`.
+        in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Each of its
+        items is assigned as the `value <InputState.value>` of the corresponding `ProcessInputState` in
+        `process_input_states`, and each must match the format of the corresponding item of the `variable
+        <Mechanism_Base.variable>` for the Process' `origin_mechanism <Process_Base.origin_mechanism>`
+        (see `Process_Input_And_Output` for details).
 
         .. note::
             The `input <Process_Base.input>` attribute of a Process preserves its value throughout the execution of the
             Process. It's value is assigned to the `variable <Mechanism_Base.variable>` attribute of the
             `origin_mechanism <Process_Base.origin_mechanism>` at the start of execution.  After that, by default, that
             Mechanism's `variable <Mechanism_Base.variable>` attribute is zeroed. This is so that if the
-            `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of executions
+            `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `TRIAL` of execution
             (e.g., if it is part of a recurrent loop) it does not continue to receive the initial input to the
             Process.  However, this behavior can be modified with the Process' `clamp_input <Process_Base.clamp_input>`
             attribute.
@@ -789,15 +793,16 @@ class Process_Base(Process):
           execution.
 
         * `HARD_CLAMP`: applies the Process' `input <Process_Base.input>` to the `origin_mechanism
-          <Process_Base.origin_mechanism>` in place of any other sources of input every time it is executed.
+          <Process_Base.origin_mechanism>` to the exclusion of any other source(s) of input every time the Process is
+          executed.
 
     initial_values : Dict[ProcessingMechanism, param value]
         values used to initialize ProcessingMechanisms designated as `INITIALIZE_CYCLE` whenever its `initialize
         <Process_Base.initialize>` method is called. The key for each entry is a ProcessingMechanism, and the value
-        is a number, list or np.array that is assigned to the Mechanism's `value <Mechanism_Base.value>` attribute
-        whenever it is `initialized <Process_Execution_Initialization>`. ProcessingMechanisms designated as
-        `INITIALIZE_CYCLE` but not included in the dictionary are initialized with the value of their `default_variable
-        <Mechanism_Base.default_variable>` attribute.
+        is a number, list or np.array that is assigned to that Mechanism's `value <Mechanism_Base.value>` attribute
+        whenever it is initialized. `ProcessingMechanisms <ProcessingMechanism>` that are designated as
+        `INITIALIZE_CYCLE` but not included in the **initial_values** specification are initialized with the value of
+        their `variable <Mechanism_Base.variable>` attribute (i.e., the default input for that Mechanism).
 
     value: 2d np.array
         same as the `value <OutputState.value>` of the `primary OutputState <OutputState_Primary>` of
@@ -807,40 +812,42 @@ class Process_Base(Process):
         the `primary OutputState <OutputState_Primary>` of `terminal_mechanism <Process_Base.terminal_mechanism>`.
 
     output : list
-        same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanism
-        <Process_Base.termina_mechanisms>`.
+        same as the `output_values <Mechanism_Base.output_values>` attribute of `terminal_mechanisms
+        <Process_Base.terminal_mechanisms>`.
 
-      .. _mechs : List[MechanismTuple]
-             :class:`MechanismTuple` for all Mechanisms in the Process, listed in the order specified in pathway.
-             MechanismTuples are of the form: (Mechanism, runtime_params, phase) where runtime_params is dictionary
-             of {argument keyword: argument values} entries and phase is an int.
-             Note:  the list includes ComparatorMechanisms and LearningMechanisms.
+    COMMENT
+    .. _mechs : List[MechanismTuple]
+         :class:`MechanismTuple` for all Mechanisms in the Process, listed in the order specified in pathway.
+         MechanismTuples are of the form: (Mechanism, runtime_params, phase) where runtime_params is dictionary
+         of {argument keyword: argument values} entries and phase is an int.
+         Note:  the list includes ComparatorMechanisms and LearningMechanisms.
 
-      .. _allMechanisms : MechanismList
-             Contains all Mechanisms in the System (based on _mechs).
+    .. _allMechanisms : MechanismList
+         Contains all Mechanisms in the System (based on _mechs).
 
-      .. _origin_mechs : List[MechanismTuple]
-             Contains a tuple for the `ORIGIN` Mechanism of the Process.
-             (Note:  the use of a list is for compatibility with the MechanismList object)
+    .. _origin_mechs : List[MechanismTuple]
+         Contains a tuple for the `ORIGIN` Mechanism of the Process.
+         (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _terminal_mechs : List[MechanismTuple]
-             Contains a tuple for the `TERMINAL` Mechanism of the Process.
-             (Note:  the use of a list is for compatibility with the MechanismList object)
+    .. _terminal_mechs : List[MechanismTuple]
+         Contains a tuple for the `TERMINAL` Mechanism of the Process.
+         (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _target_mechs : List[MechanismTuple]
-             Contains a tuple for the `TARGET` Mechanism of the Process.
-             (Note:  the use of a list is for compatibility with the MechanismList object)
+    .. _target_mechs : List[MechanismTuple]
+         Contains a tuple for the `TARGET` Mechanism of the Process.
+         (Note:  the use of a list is for compatibility with the MechanismList object)
 
-      .. _learning_mechs : List[MechanismTuple]
-             `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanisms>` in the
-             Process (used for learning).
+    .. _learning_mechs : List[MechanismTuple]
+         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanisms>` in the
+         Process (used for learning).
 
-      .. mechanisms : List[Mechanism]
-             List of all Mechanisms in the Process.
-             property that points to _allMechanisms.mechanisms (see below).
+    .. mechanisms : List[Mechanism]
+         List of all Mechanisms in the Process.
+         property that points to _allMechanisms.mechanisms (see below).
+    COMMENT
 
-    mechanismNames : List[str]
-        the names of the mechanisms listed in `mechanisms <Process_Base.mechanisms>`.
+    mechanism_names : List[str]
+        the names of the Mechanisms listed in the `Mechanisms <Process_Base.mechanisms>` attribute.
 
         .. property that points to _allMechanisms.names (see below).
 
@@ -851,28 +858,33 @@ class Process_Base(Process):
     origin_mechanism : Mechanism
         the `ORIGIN` Mechanism of the Process (see `Process Mechanisms <Process_Mechanisms>` for a description).
 
+    COMMENT
     ..  origin_mechanisms : MechanismList
             a list with the `ORIGIN` Mechanism of the Process.
 
             .. note:: A Process can have only one `ORIGIN` Mechanism; the use of a list is for compatibility with
                       methods that are also used for Systems.
+    COMMENT
 
     terminal_mechanism : Mechanism
         the `TERMINAL` Mechanism of the Process (see `Process Mechanisms <Process_Mechanisms>` for a description).
 
+    COMMENT
     ..  terminalMechanisms : MechanismList
             a list with the `TERMINAL` Mechanism of the Process.
 
             .. note:: A Process can have only one `TERMINAL` Mechanism; the use of a list is for compatibility with
                       methods that are also used for Systems.
+    COMMENT
 
     learning_mechanisms : MechanismList
-        all of the `LearningMechanisms in the Process <Process_Learning_Sequence>`, listed in `learning_mechanism.data`.
+        all of the `LearningMechanisms in the Process <Process_Learning_Sequence>`, listed in
+        ``learning_mechanisms.data``.
 
         .. based on _learning_mechs
 
     target_mechanisms : MechanismList
-        the `TARGET` Mechanisms for the Process, listed in `target_mechanisms.data`;  each is a `ComparatorMechanism`
+        the `TARGET` Mechanisms for the Process, listed in ``target_mechanisms.data``;  each is a `ComparatorMechanism`
         associated with the last ProcessingMechanism of a `learning sequence <Process_Learning_Sequence>` in the
         Process;
 
@@ -903,9 +915,15 @@ class Process_Base(Process):
              identifies whether the Process is an internal one created by a ControlMechanism.
 
     learning : Optional[LearningProjection]
-        determines whether the Process is configured for learning.  The value can be a `LearningProjection`,
-        the keyword `LEARNING_PROJECTION`, or the name of the class;  if it is `None`, the Process is not configured
-        for learning (though one or MappingProjections within it may be).
+        indicates whether the Process is configured for learning.  If it has a value other than `None`, then `learning
+        has been configured <Process_Learning_Specification>` for one or more `MappingProjections <MappingProjection>`
+        in the Process;  if it is `None`, none of MappingProjections in the Process has been configured for learning.
+
+        .. note::
+           The `learning <Process_Base.learning>` attribute of a Process may have a value other than `None` even
+           if no assignment is made to the **learning** argument of the `process` command;  this occurs if one or more
+           MappingProjections in the Process are `specified individually for learning
+           <Process_Learning_Specification>`.
 
         COMMENT:
         .. note::  If an existing `LearningProjection` or a call to the constructor is used for the specification,
@@ -919,19 +937,20 @@ class Process_Base(Process):
         COMMENT
 
     learning_rate : float : default None
-        determines the `learning_rate <LearningMechanisms.learning_rate>` used for all the `MappingProjections`
-        `specified for learning <Process_Learning_Sequence>` in the Process that do not have it otherwise specified
-        (i.e., by their associated `LearningMechanism <LearningMechanism_Learning_Rate>`.   If is `None`, and the
-        Process is executed as part of a `System`, then the  `learning_rate <System.learning_rate>` for the `System` is
-        used if that is specified.  Otherwise, for each MappingProjection being learned, the default value of the
-        `learning_rate` parameter for the `function <LearningMechanism.function>` of the `LearningMechanism associated
-        with that MappingProjection <Process_Learning_Squence>` is used.  If a :keyword:`learning_rate` is specified
-        for the `LearningSignal <LearningSignal_Learning_Rate>` or `LearningProjection
-        <LearningProjection_Function_and_Learning_Rate>` associated with a MappingProjection, that is applied in
-        addition to any specified for the Process or any of its LearningMechanisms (see `LearningSignal_Learning_Rate`).
+        determines the `learning_rate <LearningMechanism.learning_rate>` used for `MappingProjections
+        <MappingProjection>` `specified for learning <Process_Learning_Sequence>` in the Process that do not have their
+        `learning_rate <LearningProjection.learning_rate>` otherwise specified.   If is `None`, and the Process is
+        executed as part of a `System`, and the System has a `learning_rate <System.learning_rate>` specified, then that
+        is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the `function
+        <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
+        <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
+        <LearningSignal_Learning_Rate>` or `LearningProjection <LearningProjection_Function_and_Learning_Rate>`
+        associated with a MappingProjection, that is applied in addition to any specified for the Process or the
+        relevant LearningMechanism (see `LearningSignal_Learning_Rate`).
 
     results : List[OutputState.value]
-        return values from a sequence of executions of the Process;  `None` if the Process has not been executed.
+        the return values from a sequence of executions of the Process;  its value is `None` if the Process has not
+        been executed.
 
     timeScale : TimeScale : default TimeScale.TRIAL
         determines the default `TimeScale` value used by Mechanisms in the pathway.
@@ -1316,13 +1335,13 @@ class Process_Base(Process):
 
 
             # Entry IS already a Mechanism object
-            # Add entry to _mechs and name to mechanismNames list
+            # Add entry to _mechs and name to mechanism_names list
             # mech.phaseSpec = phase_spec
             # Add Process to the mechanism's list of processes to which it belongs
             if not self in mech.processes:
                 mech.processes[self] = INTERNAL
                 self._mechs.append(pathway[i])
-            # self.mechanismNames.append(mech.name)
+            # self.mechanism_names.append(mech.name)
 
             # FIX: ADD RECURRENT PROJECTION AND MECHANISM
             # IMPLEMENTATION NOTE:  THIS IS A TOTAL HACK TO ALLOW SELF-RECURRENT MECHANISMS IN THE CURRENT SYSTEM
@@ -2155,7 +2174,9 @@ class Process_Base(Process):
 
 
     def initialize(self):
-        """Assign the values specified for each Mechanism in the process' `initial_values` attribute.
+        """Assign the values specified for each Mechanism in the process' `initial_values` attribute.  This usually
+        occurs at the beginning of one or a series of executions invoked by a call to the Process` `execute
+        <Process_Base.execute>` or `run <Process_Base.run>` methods.
         """
         # FIX:  INITIALIZE PROCESS INPUTS??
         for mech, value in self.initial_values.items():
@@ -2502,7 +2523,7 @@ class Process_Base(Process):
         print("\n\'{}\' executing with:\n- pathway: [{}]".
               format(append_type_to_name(self),
               # format(self.name,
-                     re.sub(r'[\[,\],\n]','',str(self.mechanismNames))))
+                     re.sub(r'[\[,\],\n]','',str(self.mechanism_names))))
         # # MODIFIED 2/17/17 OLD:
         # variable = [list(i) for i in self.variable]
         # print("- variable: {1}".format(self, re.sub('[\[,\],\n]','',
@@ -2564,7 +2585,7 @@ class Process_Base(Process):
         print ("\tLearning enabled: {}".format(self._learning_enabled))
 
         # print ("\n\tMechanisms:")
-        # for mech_name in self.mechanismNames:
+        # for mech_name in self.mechanism_names:
         #     print ("\t\t{}".format(mech_name))
 
         print ("\n\tMechanisms:")
@@ -2589,7 +2610,7 @@ class Process_Base(Process):
         return self._allMechanisms.mechanisms
 
     @property
-    def mechanismNames(self):
+    def mechanism_names(self):
         return self._allMechanisms.names
 
     @property
