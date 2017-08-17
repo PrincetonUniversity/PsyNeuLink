@@ -310,7 +310,7 @@ of the State&#8217;s <a class="reference internal" href="State.html#State.State_
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
+<li><strong>variable</strong> (<em>value : default ClassDefaults.variable</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -326,7 +326,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dt id="Function.Function_Base.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.Function_Base.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value</em> &#8211; format and default value can be specified by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
-they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variableClassDefault</span></code>.</p>
+they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">ClassDefaults.variable</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -360,7 +360,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>boolean or statement that resolves to one : default variableClassDefault</em>) &#8211; assertion for which a therapeutic response will be offered.</li>
+<li><strong>variable</strong> (<em>boolean or statement that resolves to one : default ClassDefaults.variable</em>) &#8211; assertion for which a therapeutic response will be offered.</li>
 <li><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) &#8211; specifies preferred therapeutic manner</li>
 <li><strong>pertinacity</strong> (<em>float : default 10.0</em>) &#8211; specifies therapeutic consistency</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -421,7 +421,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>boolean : default variableClassDefault</em>) &#8211; an assertion to which a therapeutic response is made.</li>
+<li><strong>variable</strong> (<em>boolean : default ClassDefaults.variable</em>) &#8211; an assertion to which a therapeutic response is made.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -460,10 +460,10 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="#Function.NavarroAndFuss.function" title="Function.NavarroAndFuss.function"><em>function</em></a>) &#8211; specifies function to &#8220;wrap.&#8221; It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
-<li><strong>variable</strong> (<em>value : default variableClassDefault</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
+<li><strong>variable</strong> (<em>value : default ClassDefaults.variable</em>) &#8211; specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -479,7 +479,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <dt id="Function.UserDefinedFunction.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.UserDefinedFunction.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>value</em> &#8211; format and default value can be specified by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
-they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">variableClassDefault</span></code>.</p>
+they are specified by the Function&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">ClassDefaults.variable</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -506,7 +506,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 <dl class="class">
 <dt id="Function.Reduce">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>default_variable=variableClassDefault</em>, <em>operation=SUM</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reduce" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>operation=SUM</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reduce" title="Permalink to this definition">¶</a></dt>
 <dd><p id="reduce">Combine values in each of one or more arrays into a single value for each array.
 Use optional SCALE and OFFSET parameters to linearly transform the resulting value for each array.
 Returns a scalar value for each array of the input.</p>
@@ -515,7 +515,7 @@ Returns a scalar value for each array of the input.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed and its default value;  all entries must be numeric.</li>
+<li><strong>default_variable</strong> (<em>list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed and its default value;  all entries must be numeric.</li>
 <li><strong>operation</strong> (<em>SUM or PRODUCT : default SUM</em>) &#8211; specifies whether to sum or multiply the elements in <code class="xref any docutils literal"><span class="pre">variable</span></code> of
 <a class="reference internal" href="#Function.Reduce.function" title="Function.Reduce.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>.</li>
 <li><strong>scale</strong> (<em>float</em>) &#8211; specifies a value by which to multiply each element of the output of <a class="reference internal" href="#Function.Reduce.function" title="Function.Reduce.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
@@ -585,7 +585,7 @@ apply <a class="reference internal" href="#Function.Reduce.scale" title="Functio
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>list or np.array : default variableClassDefault</em>) &#8211; a list or np.array of numeric values.</li>
+<li><strong>variable</strong> (<em>list or np.array : default ClassDefaults.variable</em>) &#8211; a list or np.array of numeric values.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -617,7 +617,7 @@ array can be multiplicatively transformed and/or additively offset.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>1d or 2d np.array : default variableClassDefault</em>) &#8211; specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.</li>
+<li><strong>variable</strong> (<em>1d or 2d np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the arrays to be combined.  If it is 2d, all items must have the same length.</li>
 <li><strong>weights</strong> (<em>1d or 2d np.array : default None</em>) &#8211; specifies values used to multiply the elements of each array in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.
 If it is 1d, its length must equal the number of items in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;
 if it is 2d, the length of each item must be the same as those in <a class="reference internal" href="#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
@@ -721,7 +721,7 @@ arrays in <a class="reference internal" href="#Function.LinearCombination.variab
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>1d or 2d np.array : default variableClassDefault</em>) &#8211; a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.</li>
+<li><strong>variable</strong> (<em>1d or 2d np.array : default ClassDefaults.variable</em>) &#8211; a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -746,7 +746,7 @@ arguments of the constructor.</li>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <dl class="docutils">
-<dt>All TransferFunctions must have the attribute <a class="reference internal" href="#Function.SoftMax.bounds" title="Function.SoftMax.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> that specifies the lower and upper limits of the result;</dt>
+<dt>All TransferFunctions must have the attribute <a class="reference internal" href="#Function.Logistic.bounds" title="Function.Logistic.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> that specifies the lower and upper limits of the result;</dt>
 <dd>if there are none, the attribute is set to <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a
 tuple specifying the lower and upper bounds, respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</dd>
 <dt>All TransferFunctions must also have two attributes - multiplicative_param and additive_param -</dt>
@@ -766,7 +766,7 @@ when the TransferFunction is used as the function of an InputState or OutputStat
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed.</li>
 <li><strong>slope</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>intercept</strong> (<em>float : default 0.0</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -829,7 +829,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -874,7 +874,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed.</li>
 <li><strong>rate</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Exponential.variable" title="Function.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before exponentiation.</li>
 <li><strong>scale</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply the exponentiated value of <a class="reference internal" href="#Function.Exponential.variable" title="Function.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -935,7 +935,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; a single value or array to be exponentiated.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array to be exponentiated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -980,7 +980,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before logistic transformation</li>
 <li><strong>bias</strong> (<em>float : default 0.0</em>) &#8211; specifies a value to add to each element of <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> after applying <code class="xref any docutils literal"><span class="pre">gain</span></code>
 but before logistic transformation.</li>
@@ -1044,7 +1044,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number or np.array : default variableClassDefault</em>) &#8211; a single value or array to be transformed.</li>
+<li><strong>variable</strong> (<em>number or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array to be transformed.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1089,7 +1089,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>1d np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed.</li>
+<li><strong>default_variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed.</li>
 <li><strong>gain</strong> (<em>float : default 1.0</em>) &#8211; specifies a value by which to multiply <a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> before SoftMax transformation.</li>
 <li><strong>output</strong> (<em>ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL</em>) &#8211; specifies the format of array returned by <a class="reference internal" href="#Function.SoftMax.function" title="Function.SoftMax.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>
 (see <a class="reference internal" href="#Function.SoftMax.output" title="Function.SoftMax.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> for details).</li>
@@ -1164,7 +1164,7 @@ filtered by <a class="reference internal" href="#Function.SoftMax.output" title=
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>1d np.array : default variableClassDefault</em>) &#8211; an array to be transformed.</li>
+<li><strong>variable</strong> (<em>1d np.array : default ClassDefaults.variable</em>) &#8211; an array to be transformed.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1219,7 +1219,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>list or 1d np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>variable</strong> (<em>list or 1d np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>matrix</strong> (<em>number, list, 1d or 2d np.ndarray, np.matrix, function, or matrix keyword : default IDENTITY_MATRIX</em>) &#8211; specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
 <li><strong>bounds</strong> (<em>None</em>) &#8211; </li>
@@ -1327,7 +1327,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x109961ea0&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x10bd7ab38&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x10997cae8&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x109264e18&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x10bec7cf8&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1094d5a60&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -1338,7 +1338,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.Integrator.rate" title="Function.Integrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
@@ -1405,7 +1405,7 @@ that the function will be executed separately for each variable element.</p>
 <dl class="attribute">
 <dt id="Function.Integrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.Integrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.Integrator.variable" title="Function.Integrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1434,7 +1434,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.SimpleIntegrator.rate" title="Function.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
@@ -1499,7 +1499,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.SimpleIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.SimpleIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.SimpleIntegrator.variable" title="Function.SimpleIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1526,7 +1526,7 @@ according to <a class="reference internal" href="#Function.SimpleIntegrator.prev
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1557,7 +1557,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
@@ -1627,7 +1627,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.ConstantIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.ConstantIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value to which <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.ConstantIntegrator.noise" title="Function.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> will be
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value to which <a class="reference internal" href="#Function.ConstantIntegrator.rate" title="Function.ConstantIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.ConstantIntegrator.noise" title="Function.ConstantIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> will be
 added.</p>
 </dd></dl>
 
@@ -1683,7 +1683,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
@@ -1752,7 +1752,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.AdaptiveIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.AdaptiveIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1778,7 +1778,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1807,7 +1807,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.DriftDiffusionIntegrator.rate" title="Function.DriftDiffusionIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
@@ -1873,7 +1873,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.DriftDiffusionIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.DriftDiffusionIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.DriftDiffusionIntegrator.variable" title="Function.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.DriftDiffusionIntegrator.variable" title="Function.DriftDiffusionIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1900,7 +1900,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -1929,7 +1929,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the rate of integration.  If it is a list or array, it must be the same length as
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.rate" title="Function.OrnsteinUhlenbeckIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for
@@ -1996,7 +1996,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.OrnsteinUhlenbeckIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.OrnsteinUhlenbeckIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value with which <a class="reference internal" href="#Function.OrnsteinUhlenbeckIntegrator.variable" title="Function.OrnsteinUhlenbeckIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is integrated.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2023,7 +2023,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; a single value or array of values to be integrated.</li>
+<li><strong>variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; a single value or array of values to be integrated.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2052,7 +2052,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for the value to be integrated;  if it is a list or array, each element is independently
 integrated.</li>
 <li><strong>rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the multiplicative decrement of <a class="reference internal" href="#Function.AccumulatorIntegrator.previous_value" title="Function.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e.,
 the rate of exponential decay).  If it is a list or array, it must be the same length as
@@ -2138,7 +2138,7 @@ this means that the function will be executed separately for each variable eleme
 <dl class="attribute">
 <dt id="Function.AccumulatorIntegrator.previous_value">
 <code class="descname">previous_value</code><a class="headerlink" href="#Function.AccumulatorIntegrator.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array : default variableClassDefault</em> &#8211; stores previous value to which <a class="reference internal" href="#Function.AccumulatorIntegrator.rate" title="Function.AccumulatorIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.AccumulatorIntegrator.noise" title="Function.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
+<dd><p><em>1d np.array : default ClassDefaults.variable</em> &#8211; stores previous value to which <a class="reference internal" href="#Function.AccumulatorIntegrator.rate" title="Function.AccumulatorIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and <a class="reference internal" href="#Function.AccumulatorIntegrator.noise" title="Function.AccumulatorIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a>
 will be added.</p>
 </dd></dl>
 
@@ -2187,7 +2187,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.BogaczEtAl">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>default_variable=variableCLassDefault</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BogaczEtAl</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BogaczEtAl" title="Permalink to this definition">¶</a></dt>
 <dd><p id="bogaczetal">Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
 drift diffusion process as described in <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2195,7 +2195,7 @@ drift diffusion process as described in <a class="reference external" href="http
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</li>
 <li><strong>drift_rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the drift_rate of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
@@ -2347,7 +2347,7 @@ and drift_rate (<strong>input</strong> arg).  Reward rate (RR) is assumed to be:
 
 <dl class="class">
 <dt id="Function.NavarroAndFuss">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>default_variable=variableCLassDefault</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">NavarroAndFuss</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>drift_rate=1.0</em>, <em>threshold=1.0</em>, <em>starting_point=0.0</em>, <em>t0=0.2                                          noise=0.5</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.NavarroAndFuss" title="Permalink to this definition">¶</a></dt>
 <dd><p id="navarroandfuss">Return terminal value of decision variable, mean accuracy, mean response time (RT), correct RT mean, correct RT
 variance and correct RT skew computed analytically for the drift diffusion process (Wiener diffusion model)
 as described in <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249609000200">Navarro and Fuss (2009)</a>.</p>
@@ -2360,7 +2360,7 @@ as described in <a class="reference external" href="http://www.sciencedirect.com
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number, list or np.array : default variableClassDefault</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
+<li><strong>default_variable</strong> (<em>number, list or np.array : default ClassDefaults.variable</em>) &#8211; specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</li>
 <li><strong>drift_rate</strong> (<em>float, list or 1d np.array : default 1.0</em>) &#8211; specifies the drift_rate of the drift diffusion process.  If it is a list or array,
 it must be the same length as <code class="xref any docutils literal"><span class="pre">default_variable</span></code>.</li>
@@ -2756,7 +2756,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 
 <dl class="class">
 <dt id="Function.Stability">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=variableCLassDefault</em>, <em>matrix=HOLLOW_MATRIX</em>, <em>metric=ENERGY                                   transfer_fct=None                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Stability</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>matrix=HOLLOW_MATRIX</em>, <em>metric=ENERGY                                   transfer_fct=None                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><p id="stability">Return the stability of a vector based an a weight matrix from each element to every other element in the vector.
 The value of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is passed through the <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, transformed
 using the <a class="reference internal" href="#Function.Stability.transfer_fct" title="Function.Stability.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a> (if specified), and then compared with its initial value
@@ -2767,7 +2767,7 @@ is normalized by the number of elements in the <a class="reference internal" hre
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>list of numbers or 1d np.array : Default variableClassDefault</em>) &#8211; the array for which stabilty is calculated.</li>
+<li><strong>variable</strong> (<em>list of numbers or 1d np.array : Default ClassDefaults.variable</em>) &#8211; the array for which stabilty is calculated.</li>
 <li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function keyword, or MappingProjection : default HOLLOW_MATRIX</em>) &#8211; specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>metric</strong> (<em>ENERGY, ENTROPY or keyword in DISTANCE_METRICS : Default ENERGY</em>) &#8211; specifies the metric used to compute stability.</li>
@@ -2863,14 +2863,14 @@ by the length of <a class="reference internal" href="#Function.Stability.variabl
 
 <dl class="class">
 <dt id="Function.Distance">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>default_variable=variableCLassDefault</em>, <em>metric=EUCLIDEAN                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Distance" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Distance</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>metric=EUCLIDEAN                               normalize=False</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Distance" title="Permalink to this definition">¶</a></dt>
 <dd><p id="distance">Return the distance between two vectors based on a specified metric.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>2d np.array with two items : Default variableClassDefault</em>) &#8211; the arrays between which the distance is calculated.</li>
+<li><strong>variable</strong> (<em>2d np.array with two items : Default ClassDefaults.variable</em>) &#8211; the arrays between which the distance is calculated.</li>
 <li><strong>metric</strong> (<em>keyword in DISTANCE_METRICS : Default EUCLIDEAN</em>) &#8211; specifies the metric used to compute the distance between the two items in <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>normalize</strong> (<em>bool : Default False</em>) &#8211; specifies whether to normalize the distance by the length of <a class="reference internal" href="#Function.Distance.variable" title="Function.Distance.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -2946,7 +2946,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.variable" title="ModulatorySignals.ControlSignal.ControlSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.AccumulatorIntegrator.variable" title="Function.AccumulatorIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -2966,7 +2966,7 @@ defined in __init__.py (see <span class="xref doc">PreferenceSet</span> for deta
 
 <dl class="class">
 <dt id="Function.Reinforcement">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>default_variable=variableClassDefault</em>, <em>activation_function=SoftMax</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reinforcement" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Reinforcement</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>activation_function=SoftMax</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Reinforcement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a function that calculates a diagonal matrix of weight changes using the reinforcement (delta)
 learning rule.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2974,7 +2974,7 @@ learning rule.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; template for the three items provided as the variable in the call to the <a class="reference internal" href="#Function.Reinforcement.function" title="Function.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default ClassDefaults.variable</em>) &#8211; template for the three items provided as the variable in the call to the <a class="reference internal" href="#Function.Reinforcement.function" title="Function.Reinforcement.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 (in order):
 <a class="reference internal" href="#Function.Reinforcement.activation_input" title="Function.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.Reinforcement.activation_output" title="Function.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
@@ -3078,7 +3078,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; must have three items that are the values for (in order):
+<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default ClassDefaults.variable</em>) &#8211; must have three items that are the values for (in order):
 <a class="reference internal" href="#Function.Reinforcement.activation_input" title="Function.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (not used),
 <a class="reference internal" href="#Function.Reinforcement.activation_output" title="Function.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array with a single non-zero value),
 <a class="reference internal" href="#Function.Reinforcement.error_signal" title="Function.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
@@ -3105,7 +3105,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.BackPropagation">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>default_variable=variableClassDefault</em>, <em>activation_derivative_fct=Logistic().derivative</em>, <em>error_derivative_fct=Logistic().derivative</em>, <em>error_matrix=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">BackPropagation</code><span class="sig-paren">(</span><em>default_variable=ClassDefaults.variable</em>, <em>activation_derivative_fct=Logistic().derivative</em>, <em>error_derivative_fct=Logistic().derivative</em>, <em>error_matrix=None</em>, <em>learning_rate=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.BackPropagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a function that calculate a matrix of weight changes using the backpropagation
 (<a class="reference external" href="http://www.nature.com/nature/journal/v323/n6088/abs/323533a0.html">Generalized Delta Rule</a>) learning algorithm.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -3113,7 +3113,7 @@ arguments of the constructor.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; specifies a template for the three items provided as the variable in the call to the
+<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default ClassDefaults.variable</em>) &#8211; specifies a template for the three items provided as the variable in the call to the
 <a class="reference internal" href="#Function.BackPropagation.function" title="Function.BackPropagation.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (in order):
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
@@ -3224,7 +3224,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default variableClassDefault</em>) &#8211; must have three items that are the values for (in order):
+<li><strong>variable</strong> (<em>List or 2d np.array [length 3] : default ClassDefaults.variable</em>) &#8211; must have three items that are the values for (in order):
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>

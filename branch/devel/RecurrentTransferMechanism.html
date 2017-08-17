@@ -212,7 +212,7 @@ OutputState, that each report the respective values of the vector in it its
 <div class="section" id="execution">
 <span id="recurrent-transfer-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a RecurrentTransferMechanism executes, it includes in its input the value of its
-<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (after multiplication by the <a class="reference internal" href="KWTA.html#ProcessingMechanisms.KWTA.KWTA.matrix" title="ProcessingMechanisms.KWTA.KWTA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the recurrent projection) from its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (after multiplication by the <a class="reference internal" href="LCA.html#ProcessingMechanisms.LCA.LCA.matrix" title="ProcessingMechanisms.LCA.LCA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the recurrent projection) from its
 last execution.</p>
 <p>Like a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, the function used to update each element can be assigned using its
 <a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> parameter.  When a RecurrentTransferMechanism is executed,
@@ -248,7 +248,7 @@ of the Mechanism</dd>
 <dt><em>ENTROPY</em></dt>
  <span class="classifier-delimiter">:</span> <span class="classifier">float</span><dd>The entropy of the result, which is calculated using the <a class="reference internal" href="Function.html#Function.Stability.function" title="Function.Stability.function"><code class="xref any py py-meth docutils literal"><span class="pre">Stability</span>
 <span class="pre">Function</span></code></a> with the ENTROPY metric
-(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is bounded
+(Note: this is only present if the Mechanism&#8217;s <a class="reference internal" href="Function.html#Function.NavarroAndFuss.function" title="Function.NavarroAndFuss.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded
 between 0 and 1 (e.g. the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
 </dl>
 </dd></dl>
@@ -464,7 +464,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of RecurrentTransferMechanism</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-ProcessingMechanisms.RecurrentTransferMechanism" title="ProcessingMechanisms.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
 </tr>
 </tbody>
 </table>
