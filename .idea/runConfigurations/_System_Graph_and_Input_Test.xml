@@ -6,13 +6,13 @@
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="PATH" value="~/anaconda/bin/:/users/jdc/bin:/Users/jdc/bin:/Users/jdc/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
     </envs>
-    <option name="SDK_HOME" value="$USER_HOME$/anaconda/envs/python35/bin/python" />
+    <option name="SDK_HOME" value="3.5 Interpreter for PsyNeuLink" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="PsyNeuLink" />
-    <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/TEST SCRIPTS/System Graph and Input Test Script.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
