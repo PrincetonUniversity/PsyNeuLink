@@ -708,7 +708,7 @@ p1 = process(pathway=[a,
 # s.show_graph(show_learning=True)
 
 inputs = {a: [2, 2]}
-TEST = p1.execute()
+TEST = p1.execute(input=[2,2])
 # p1.run(inputs)
 TEST=True
 

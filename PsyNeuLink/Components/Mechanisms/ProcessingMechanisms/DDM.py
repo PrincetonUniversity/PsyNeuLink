@@ -119,12 +119,20 @@ Examples for each, that illustrate all of their parameters, are shown below:
 Path Integration
 ~~~~~~~~~~~~~~~~
 
-To do
-so, its **function** argument must be assigned an `Integrator` Function with an `integration_type
-<Integrator.integration_type>` of *DIFFUSION*; the default is the `BogaczEtAl` Function.
+This is used when an `Integrator` `Function` is specified as the Mechanism's `function <DDM.function>` with an
+`integration_type <Integrator.integration_type>` of *DIFFUSION*;  in this case, the DDM Mechanism numerically
+integrates the path of the decision variable (see `Execution <DDM_Execution>` below).
 
- when `time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the DDM
-Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>` below).
+
+In addition to
+`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, these both return an accuracy
+value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
+rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  `NavarroAndFuss
+<NavarroAndFuss>` also returns expected values for mean correct response time (in `RT_CORRECT_MEAN
+<DDM_RT_CORRECT_MEAN>` and variance of correct response times (in `RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+Examples for each, that illustrate all of their parameters, are shown below:
+
+
 
 When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` parameter must be set
 to 'Integrator' with an `integration_type <Integrator.integration_type>` of *DIFFUSION*.
