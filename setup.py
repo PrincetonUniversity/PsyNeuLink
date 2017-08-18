@@ -1,5 +1,5 @@
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 # To use a consistent encoding
 from codecs import open
 from os import path
@@ -63,10 +63,27 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['toposort==1.4', 'numpy', 'typecheck-decorator==1.2'], #mpi4py only if MPI_IMPLEMENTATION becomes True
-    tests_require=[
-        'pytest',
-        'pytest-profiling',
-        'pytest-helpers-namespace',
-    ]
+    install_requires=[
+        'toposort',
+        'numpy',
+        'typecheck-decorator==1.2',
+        # mpi4py only if MPI_IMPLEMENTATION becomes True
+    ],
+
+    extras_require={
+        'dev': [
+            'pytest',
+            'pytest-profiling',
+            'pytest-helpers-namespace',
+            'jupyter',
+            'sphinx',
+            'sphinx_rtd_theme',
+            'matplotlib',
+            'ipykernel>=4.6.1',
+        ],
+        'tutorial': [
+            'jupyter',
+            'matplotlib',
+        ]
+    }
 )
