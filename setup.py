@@ -43,7 +43,7 @@ setup(
         'Topic :: Software Development :: Build Tools',
 
         # This project is liscensed as follows
-        'License :: OSI Approved :: Apache License, Version 2.0',
+        'License :: OSI Approved :: Apache Software License',
 
         # Supported Python Versions
         'Programming Language :: Python :: 3',
