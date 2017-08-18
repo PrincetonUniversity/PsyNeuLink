@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
@@ -187,7 +188,7 @@ k-winners-take-all (kWTA) behavior.</p>
 using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function and specifying KWTA as its <strong>mech_spec</strong> argument. The
 <strong>k_value</strong>, <strong>threshold</strong>, and <strong>ratio</strong> arguments are KWTA&#8217;s characteristic attributes. The <strong>k_value</strong> argument
 specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the <a class="reference internal" href="Function.html#Function.BogaczEtAl.threshold" title="Function.BogaczEtAl.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> attribute (which is specified by the <strong>threshold</strong> argument). For any input, there is a
+should be above the <a class="reference internal" href="Function.html#Function.NavarroAndFuss.threshold" title="Function.NavarroAndFuss.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> attribute (which is specified by the <strong>threshold</strong> argument). For any input, there is a
 range of possible adjusted inputs that would satisfy the requirement for k elements to be above the threshold; the
 <strong>ratio</strong> argument specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> attribute, which determines where within this range the final adjusted input
 falls: a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 1 gives the highest value, and a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 0 gives the lowest value in the accepted range. The

@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Composition.html">Composition</a><ul class="current">
@@ -384,7 +385,7 @@ Mechanisms specified in <strong>monitor_for_control</strong> and that controls t
 <li><strong>learning_rate</strong> (<em>float : default None</em>) &#8211; sets the <a class="reference internal" href="LearningMechanism.html#AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate" title="AdaptiveMechanisms.LearningMechanisms.LearningMechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for all <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in
 the System (see <a class="reference internal" href="#System.System_Base.learning_rate" title="System.System_Base.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> attribute for additional information).</li>
 <li><strong>targets</strong> (<em>Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes</em>) &#8211; the values assigned to the TARGET input of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the System (listed in its
-<a class="reference internal" href="#System.System_Base.target_mechanisms" title="System.System_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="#System.System_Base.target_mechanisms" title="System.System_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a>,
+<a class="reference internal" href="Process.html#Process.Process_Base.target_mechanisms" title="Process.Process_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a> attribute).  There must be the same number of items as there are <a class="reference internal" href="Process.html#Process.Process_Base.target_mechanisms" title="Process.Process_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a>,
 and each item of <strong>targets</strong> must have the same format (length and number of elements) as the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that projects to the <em>SAMPLE</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of the
 <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that serves as the <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism for (i.e., receives) that target item.</li>
 <li><strong>params</strong> (<em>dict : default None</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can include any of the parameters above;
@@ -514,32 +515,32 @@ The key of each entry is a <a class="reference internal" href="Mechanism.html"><
 <dt id="System.System_Base.origin_mechanisms">
 <code class="descname">origin_mechanisms</code><a class="headerlink" href="#System.System_Base.origin_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms in the System (i.e., that don&#8217;t receive <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from any other
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>; listed in <code class="xref any docutils literal"><span class="pre">origin_mechanisms.data</span></code>.</p>
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, listed in <code class="docutils literal"><span class="pre">origin_mechanisms.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.terminalMechanisms">
 <code class="descname">terminalMechanisms</code><a class="headerlink" href="#System.System_Base.terminalMechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms in the System (i.e., that don&#8217;t project to any other <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>); listed in terminalMechanisms.data.</p>
+<dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms in the System (i.e., that don&#8217;t project to any other <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>), listed in <code class="docutils literal"><span class="pre">terminalMechanisms.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.recurrent_init_mechanisms">
 <code class="descname">recurrent_init_mechanisms</code><a class="headerlink" href="#System.System_Base.recurrent_init_mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; <code class="xref any docutils literal"><span class="pre">Mechanisms</span></code> that are candidates for <a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a> listed in recurrent_init_mechanisms.data.</p>
+<dd><p><em>MechanismList</em> &#8211; <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> with recurrent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that are candidates for <a class="reference internal" href="#system-execution-input-and-initialization"><span class="std std-ref">initialization</span></a>, listed in <code class="docutils literal"><span class="pre">recurrent_init_mechanisms.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.learning_mechanisms">
 <code class="descname">learning_mechanisms</code><a class="headerlink" href="#System.System_Base.learning_mechanisms" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in the System, listed in <code class="xref any docutils literal"><span class="pre">learning_mechanisms.data</span></code>.</p>
+<dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> in the System, listed in <code class="docutils literal"><span class="pre">learning_mechanisms.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="System.System_Base.target_mechanisms">
 <code class="descname">target_mechanisms</code><a class="headerlink" href="#System.System_Base.target_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MechanismList</em> &#8211; all <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms in the System (used for <a class="reference internal" href="#system-execution-learning"><span class="std std-ref">learning</span></a>), listed in
-<code class="xref any docutils literal"><span class="pre">target_mechanisms.data</span></code>.</p>
+<code class="docutils literal"><span class="pre">target_mechanisms.data</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -781,10 +782,14 @@ Graphviz graph object if <code class="xref std std-keyword docutils literal"><sp
 <dl class="class">
 <dt id="System.SystemInputState">
 <em class="property">class </em><code class="descclassname">System.</code><code class="descname">SystemInputState</code><span class="sig-paren">(</span><em>owner=None</em>, <em>variable=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#System.SystemInputState" title="Permalink to this definition">¶</a></dt>
-<dd><p>Encodes target for the system and transmits it to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the System</p>
-<p>Each instance encodes a <code class="xref any docutils literal"><span class="pre">target</span></code> to the system (also a 1d array in 2d array of
-<code class="xref any docutils literal"><span class="pre">targets</span></code>) and provides it to a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that projects to a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TARGET" title="Keywords.Keywords.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>
-Mechanism of the System.</p>
+<dd><p>Represents inputs and targets specified in a call to the System&#8217;s <a class="reference internal" href="Process.html#Process.Process_Base.execute" title="Process.Process_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> and <a class="reference internal" href="Process.html#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.</p>
+<p>A SystemInputState is created for each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of each <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism in <a class="reference internal" href="#System.System_Base.origin_mechanisms" title="System.System_Base.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanisms</span></code></a>, and for the
+<em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputState</span></a> of each <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> listed
+in <a class="reference internal" href="#System.System_Base.target_mechanisms" title="System.System_Base.target_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">target_mechanisms</span></code></a>.  A <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects to each
+of these InputStates from the corresponding SystemInputState.  When the System&#8217;s <a class="reference internal" href="#System.System_Base.execute" title="System.System_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<a class="reference internal" href="#System.System_Base.run" title="System.System_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is called, each item of its <strong>inputs</strong> and <strong>targets</strong> arguments is assigned as
+the <code class="xref any docutils literal"><span class="pre">value</span></code> of a SystemInputState, which is then conveyed to the
+corresponding InputState of the <a class="reference internal" href="#System.System_Base.origin_mechanisms" title="System.System_Base.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanisms</span></code></a> and <code class="xref any docutils literal"><span class="pre">terminal_mechanisms</span></code>.  See <a class="reference internal" href="#system-mechanisms"><span class="std std-ref">Mechanisms</span></a> and <a class="reference internal" href="#system-execution"><span class="std std-ref">Execution</span></a> for additional details.</p>
 </dd></dl>
 
 </div>
