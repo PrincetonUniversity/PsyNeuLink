@@ -339,14 +339,14 @@ class DDM_OUTPUT():
       • `integration mode <DDM_Integration_Mode>`: `None`.
       Corresponds to the 3rd item of the DDM's `value <DDM.value>`.
 
-        COMMENT:
-          [TBI:]
-              `integration mode <DDM_Integration_Mode>`, if execution has completed, this is a binary value
-              indicating whether the decision process reached the upper (positive) threshold. If execution was
-              interrupted (using :py:meth:`terminate_function  <DDM.terminate_function>`, sometimes referred to as the
-              :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
-              threshold would have been reached.
-        COMMENT
+    COMMENT:
+      [TBI:]
+          `integration mode <DDM_Integration_Mode>`, if execution has completed, this is a binary value
+          indicating whether the decision process reached the upper (positive) threshold. If execution was
+          interrupted (using :py:meth:`terminate_function  <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
+          threshold would have been reached.
+    COMMENT
 
     .. _DDM_PROBABILITY_LOWER_THRESHOLD:
 
