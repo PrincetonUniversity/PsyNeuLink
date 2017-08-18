@@ -184,8 +184,8 @@ affords modelers the flexibility to commit each Component of their model to a fo
 analysis that is appropriate for that Component, while providing the opportunity to test and explore how they
 interact with one another in a single System.</p>
 <div class="figure" id="id5">
-<span id="basicssampler-grandview-figure"></span><img alt="_images/Grandview_fig.svg" src="_images/Grandview_fig.svg" /><p class="caption"><span class="caption-text"><strong>Scope of a PsyNeuLink Model</strong>.  Bright elements are examples of currently implemented Components; dimmed
-elements are examples of Components planned for future implementation.</span></p>
+<span id="basicssampler-grandview-figure"></span><img alt="_static/Grandview_With_System_fig.svg" src="_static/Grandview_With_System_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environnment</strong>.  Full-colored items are examples of currently implemented Components; dimmed
+items are examples of Components planned for future implementation.</span></p>
 </div>
 </div>
 <div class="section" id="sampler">
@@ -272,7 +272,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
 <span class="n">my_simple_Stroop</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">colors_process</span><span class="p">,</span> <span class="n">words_process</span><span class="p">,</span> <span class="n">decision_process</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
+<p>As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_graph()</span></code> produces the following display:</p>
 <p id="simple-stroop-example-figure"><strong>Composition Graph</strong></p>
 <div class="figure" id="id6">
@@ -323,7 +323,7 @@ as follows:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The two Conditions added to the controller specify that:</p>
+<p>The two Conditions added to the Scheduler specify that:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><code class="docutils literal"><span class="pre">my_hidden_layer</span></code> should execute whenever either <code class="docutils literal"><span class="pre">input_hidden_layer</span></code> has executed once (to encode the stimulus and make available to the <code class="docutils literal"><span class="pre">recurrent_layer</span></code>), or when the <code class="docutils literal"><span class="pre">recurrent_layer</span></code> has executed 10 times (to allow it to settle on a context representation and provide that back to the <code class="docutils literal"><span class="pre">hidden_layer</span></code>)</li>
