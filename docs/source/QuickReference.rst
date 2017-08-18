@@ -48,17 +48,15 @@ System).  The sections below provide a description of these and the other basic 
 
 .. figure:: _static/Overview_fig.svg
 
-    **Figure**: Example of some of the Components and Compositions that comprise a PsyNeuLink model.
+    **Figure**: Example of some of the Components (Mechanisms and Projections) and Compositions (Processes and
+    System) that comprise a PsyNeuLink model.
 
 .. _Quick_Reference_Components:
 
 Components
 ~~~~~~~~~~
 
-Components are objects that perform a specific function.
-
-
-Every Component has a:
+Components are objects that perform a specific function. Every Component has a:
 
 * `function <Component.function>` - performs the core computation of the Component;
 
