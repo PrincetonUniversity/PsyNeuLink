@@ -2354,14 +2354,22 @@ class Logistic(TransferFunction):  # -------------------------------------------
             self.__llvm_func_name = self.__get_llvm_function(default_variable)
         self.__bin_function = None
 
-    def __gen_llvm_logistic(self, builder, index, ctx, vi, vo):
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            param_type = ir.LiteralStructType((ctx.float_ty, ctx.float_ty))
+        return param_type
+
+
+    def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
         ptri = builder.gep(vi, [index])
         ptro = builder.gep(vo, [index])
+        gain = builder.extract_value(params, 0)
+        bias = builder.extract_value(params, 1)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
-        val = builder.fmul(val, ctx.float_ty(self.gain))
-        val = builder.fsub(ctx.float_ty(self.bias), val)
+        val = builder.fmul(val, gain)
+        val = builder.fsub(bias, val)
         val = builder.call(exp_f, [val])
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
@@ -2374,10 +2382,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("logistic")
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty))
+            struct_param_ty = self.get_param_struct_type()
+            func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
             vector_length = ctx.int32_ty(len(default_variable))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            vi, vo = llvm_func.args
+            params, vi, vo = llvm_func.args
             for a in vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -2386,7 +2395,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            kwargs = {"ctx":ctx, "vi":vi, "vo":vo}
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
 
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
@@ -2407,10 +2416,16 @@ class Logistic(TransferFunction):  # -------------------------------------------
         if self.__bin_function is None:
             self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
         ret = np.zeros(len(self.variable))
+        gain = self.paramsCurrent[GAIN]
+        bias = self.paramsCurrent[BIAS]
 
-        ct_vi = self.variable.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        self.__bin_function(ct_vi, ct_vo)
+        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
+
+        ct_param = par_struct_ty(gain, bias)
+
+        ct_vi = self.variable.ctypes.data_as(vi_ty)
+        ct_vo = ret.ctypes.data_as(vo_ty)
+        self.__bin_function(ct_param, ct_vi, ct_vo)
 
         return ret
 
