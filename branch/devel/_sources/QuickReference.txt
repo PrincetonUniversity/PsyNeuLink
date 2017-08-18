@@ -18,20 +18,20 @@ Conventions
 
 The following conventions are used for the names of PsyNeuLink objects and their documentation:
 
-  + `Component` (class): names use CamelCase (with initial capitalization);
-    the initial mention in a section of documentation is formatted as a link (in colored text)
-    to the documentation for that Component;
+  + Class (type of object): names use CamelCase (with initial capitalization); the initial mention in a section of
+    documentation is formatted as a link (in colored text) to the documentation for that class;
   ..
-  + `attribute` or `method` of a Component:  names use lower_case_and_underscore;
-    appear in a `small box` in documentation;
+  + `attribute` or `method` of a `Component` or `Composition`:  names use lower_case_and_underscore; appear in a
+    `small box` in documentation;
   ..
-  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface**.
+  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface** in
+    documentation.
   ..
   + KEYWORD: uses *UPPER_CASE_AND_UNDERSCORE*;  italicized in documentation.
   ..
-  + Example::
+  + Examples::
 
-          Appears in boxed inset.
+          Appear in boxed insets.
 
 
 .. _PsyNeuLink_Objects:
@@ -48,17 +48,15 @@ System).  The sections below provide a description of these and the other basic 
 
 .. figure:: _static/Overview_fig.svg
 
-    **Figure**: Example of some of the Components and Compositions that comprise a PsyNeuLink model.
+    **Constituents of a PsyNeuLink Model**. Includes examples of some Components (Mechanisms and Projections) and
+    Compositions (Processes and a System).
 
 .. _Quick_Reference_Components:
 
 Components
 ~~~~~~~~~~
 
-Components are objects that perform a specific function.
-
-
-Every Component has a:
+Components are objects that perform a specific function. Every Component has a:
 
 * `function <Component.function>` - performs the core computation of the Component;
 

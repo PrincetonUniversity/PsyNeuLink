@@ -412,18 +412,18 @@ other values that can be reported and their interpretation.</p>
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.output_states">
 <code class="descname">output_states</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputState]</em> &#8211; list of the DDM&#8217;s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  By default it contains <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>; additional OutputStates may be included
-based on the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and any specifications made in the <strong>output_states</strong> argument of the
+<dd><p><em>ContentAddressableList[OutputState]</em> &#8211; list of the DDM&#8217;s <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.  There are always two OutputStates, <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>; additional ones may be included
+based on the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and/or any specifications made in the <strong>output_states</strong> argument of the
 DDM&#8217;s constructor (see <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">DDM Standard OutputStates</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.DDM.DDM.output_values">
 <code class="descname">output_values</code><a class="headerlink" href="#ProcessingMechanisms.DDM.DDM.output_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> &#8211; each item is the value of the corresponding OutputState in <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.output_states" title="ProcessingMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>;  the first two
-items are always the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and
-<a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> OutputStates;  additional ones may be included, based on the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and any specifications made in the <strong>output_states</strong> argument of the DDM&#8217;s constructor (see
-<a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">DDM Standard OutputStates</span></a>).</p>
+<dd><p><em>List[array(float64),array(float64),array(float64),array(float64)]</em> &#8211; each item is the <code class="xref any docutils literal"><span class="pre">value</span></code>.  The first two items are always the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s of the
+<a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> OutputStates;  additional
+ones may be included, based on the <a class="reference internal" href="#ProcessingMechanisms.DDM.DDM.function" title="ProcessingMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and any specifications made in the
+<strong>output_states</strong> argument of the DDM&#8217;s constructor (see <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">DDM Standard OutputStates</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
