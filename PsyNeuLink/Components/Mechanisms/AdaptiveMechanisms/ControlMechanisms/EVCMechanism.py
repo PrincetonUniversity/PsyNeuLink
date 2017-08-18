@@ -707,8 +707,9 @@ class EVCMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # This must be a list, as there may be more than one (e.g., one per control_signal)
-    variableClassDefault = defaultControlAllocation
+    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
@@ -768,6 +769,7 @@ class EVCMechanism(ControlMechanism_Base):
                                            prefs=prefs,
                                            context=self)
 
+    # TODO: delete this? seems pointless override
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -827,16 +829,17 @@ class EVCMechanism(ControlMechanism_Base):
             # variables = []
             # for state_name in origin_mech.input_states.keys():
             #     state_names.append(state_name)
-            #     variables.append(origin_mech_intputStates[state_name].variable)
+            #     variables.append(origin_mech_intputStates[state_name].instance_defaults.variable)
 
             # Instantiate predictionMechanism
             prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                                                            name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                                                            default_variable = origin_mech.input_state.variable,
-                                                            # default_variable=variables,
-                                                            # INPUT_STATES=state_names,
-                                                            params = prediction_mechanism_params,
-                                                            context=context)
+                name=origin_mech.name + " " + PREDICTION_MECHANISM,
+                default_variable = origin_mech.input_state.instance_defaults.variable,
+                # default_variable=variables,
+                # INPUT_STATES=state_names,
+                params = prediction_mechanism_params,
+                context=context,
+            )
             prediction_mechanism._role = CONTROL
             prediction_mechanism.origin_mech = origin_mech
 
@@ -873,7 +876,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.predicted_input = {}
         for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
             # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
-            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].variable
+            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     # FIX: MOVE THIS TO ControlMechanism??
@@ -1156,10 +1159,10 @@ class EVCMechanism(ControlMechanism_Base):
                 #   or it is a terminal mechanism
                 elif (mech.name in local_specs or mech in local_specs or
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              mech in self.system.terminalMechanisms.mechanisms):
+                              mech in self.system.terminal_mechanisms.mechanisms):
                     #
                     if (not (mech.name in local_specs or mech in local_specs) and
-                            not mech in self.system.terminalMechanisms.mechanisms):
+                            not mech in self.system.terminal_mechanisms.mechanisms):
                         continue
 
                     # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
@@ -1231,7 +1234,7 @@ class EVCMechanism(ControlMechanism_Base):
                                               format(self.system.name, state_spec.name, self.system.name))
 
         # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminalMechanisms.mechanisms:
+        if not state_spec in self.system.terminal_mechanisms.mechanisms:
             if self.prefs.verbosePref:
                 print("Request for controller in {0} to monitor the OutputState(s) of a Mechanism ({1}) that is not"
                       " a TERMINAL Mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
@@ -1433,13 +1436,13 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get outcomes for current allocation_policy
         #    = the values of the monitored output states (self.input_states)
-        #    stored in self.input_value = list(self.variable)
         # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
-        self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
+        monitored_states = self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
 
         for i in range(len(self.control_signals)):
             self.control_signal_costs[i] = self.control_signals[i].cost
 
+        return monitored_states
 
     # The following implementation of function attributes as properties insures that even if user sets the value of a
     #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.

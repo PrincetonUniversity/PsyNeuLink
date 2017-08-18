@@ -107,7 +107,7 @@ class IntegratorMechanism(ProcessingMechanism_Base):
             + componentType (str): SigmoidLayer
             + classPreference (PreferenceSet): SigmoidLayer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  SigmoidLayer_DEFAULT_BIAS
+            + ClassDefaults.variable (value):  SigmoidLayer_DEFAULT_BIAS
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{kwSigmoidLayer_Unitst: kwSigmoidLayer_NetInput
                                                                      kwSigmoidLayer_Gain: SigmoidLayer_DEFAULT_GAIN
@@ -189,8 +189,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'IntegratorMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    # Sets template for variable (input)
-    variableClassDefault = [[0]]
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Sets template for variable (input)
+        variable = [[0]]
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -215,10 +216,10 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         """
 
         if default_variable is None and size is None:
-            default_variable = self.variableClassDefault
+            default_variable = self.ClassDefaults.variable
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        # self.variableClassDefault = default_variable or [[0]]
+        # self.ClassDefaults.variable = default_variable or [[0]]
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)
 

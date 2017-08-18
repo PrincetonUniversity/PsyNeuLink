@@ -15,7 +15,7 @@ Overview
 
 OutputState(s) represent the result(s) of executing a Mechanism.  This may be the result(s) of its
 `function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
-Mechanism's `output_value <Mechanism_Base.output_value>` attribute.  OutputStates are used to represent
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputStates are used to represent
 individual items of the Mechanism's `value <Mechanism_Base.value>`, and/or useful quantities derived from
 them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
 a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputStates
@@ -56,7 +56,7 @@ Every Mechanism has at least one OutputState, referred to as its *primary Output
 and assigned to its `output_state <Mechanism_Base.output_state>` attribute (note the singular),
 and also to the first entry of the Mechanism's `output_states <Mechanism_Base.output_states>` attribute
 (note the plural).  The `value <OutputState.value>` of the primary OutputState is assigned as the first (and often
-only) item of the Mechanism's `output_value <Mechanism_Base.output_value>` attribute, which is the result
+only) item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute, which is the result
 of the Mechanism's `function <Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
@@ -192,7 +192,7 @@ the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, an
 reference the third item of the DDM's `value <DDM.value>` attribute (items are indexed starting with 0), which contains
 the probability of crossing the upper threshold.  The three OutputStates will be assigned to the `output_states
 <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values will be assigned as items in its
-`output_value <Mechanism_Base.output_value>` attribute, in the order in which they are listed in the **output_states**
+`output_values <Mechanism_Base.output_values>` attribute, in the order in which they are listed in the **output_states**
 argument of the constructor for ``my_mech``.
 
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
@@ -555,6 +555,9 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
+    class ClassDefaults(State_Base.ClassDefaults):
+        variable = None
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -619,7 +622,7 @@ class OutputState(State_Base):
     def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this State
 
-        Validate self.variable against component of owner's value (output of owner's function)
+        Validate variable against component of owner's value (output of owner's function)
              that corresponds to this OutputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -630,17 +633,18 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-        super(OutputState,self)._validate_variable(variable, context)
+        variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
 
-        self.variableClassDefault = self.reference_value
+        self.instance_defaults.variable = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(self.variable, self.reference_value):
+        # Insure that variable is compatible with (relevant item of) output value of owner's function
+        if not iscompatible(variable, self.reference_value):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".
-                                           format(self.variable,
+                                           format(variable,
                                                   self.owner.name,
                                                   self.reference_value))
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate index and calculate parameters

@@ -30,15 +30,15 @@ A LearningProjection can be created using any of the standard ways to `create a 
 or by including it in a `tuple <MappingProjection_Tuple_Specification>` that specifies the `matrix
 <MappingProjection.matrix>` parameter of a `MappingProjection`.  LearningProjections are also created automatically,
 along with the other `Components required for learning <LearningMechanism_Learning_Configurations>`, when learning is
-specified for a `Process <Process_Learning>` or a `System <System_Execution_Learning>`.
+specified for a `Process <Process_Learning_Sequence>` or a `System <System_Execution_Learning>`.
 
 If a LearningProjection is created explicitly (using its constructor), and its **receiver** argument is not specified,
 its initialization is `deferred <LearningProjection_Deferred_Initialization>`.  If it is included in the `matrix
 specification <MappingProjection_Tuple_Specification>` for a `MappingProjection`, the *MATRIX* `ParameterState` for
 the MappingProjection will be assigned as the LearningProjection's `receiver <LearningProjection.receiver>`.  If its
 **sender** argument is not specified, its assignment depends on the **receiver**.  If the **receiver** belongs to a
-MappingProjection that projects between two Mechanisms that are both in the same `Process <Process_Learning>` or
-`System <System_Execution_Learning>`, then the LearningProjection's `sender <LearningProjection.sender>` is assigned
+MappingProjection that projects between two Mechanisms that are both in the same `Process <Process_Learning_Sequence>`
+or `System <System_Execution_Learning>`, then the LearningProjection's `sender <LearningProjection.sender>` is assigned
 to a `LearningSignal` of the `LearningMechanism` for the MappingProjection. If there is none, it is `created
 <LearningMechanism_Creation>` along with any other components needed to implement learning for the MappingProjection
 (see `LearningMechanism_Learning_Configurations`). Otherwise, the LearningProjection's initialization is `deferred
@@ -92,9 +92,9 @@ the LearningProjection's `learning_rate <LearningProjection.learning_rate>` para
 `learning_rate <LearningMechanism.learning_rate>` for the `LearningMechanism` from which it receives the
 `learning_signal <LearningProjection.learning_signal>`. Specification of the `learning_rate
 <LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-:keyword:`learning_rate` for any `Process <Process_Learning` and/or `System <System_Learning>` to which the
-LearningMechanism from which it projects belongs (see `learning_rate <LearningMechanism_Learning_Rate>` for additional
-details).  However, its `learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
+:keyword:`learning_rate` for any `Process <Process_Learning_Sequence` and/or `System <System_Learning>` to which the
+Projection belongs (see `learning_rate <LearningMechanism_Learning_Rate>` for additional details).  However, its
+`learning_rate <LearningProjection.learning_rate>` can be specified by the `LearningSignal
 <LearningSignal_Learning_Rate>` that is its `sender <LearningProjection.sender>`;  that specification takes precedence
 over the direct specification of the `learning_rate <LearningProjection.learning_rate>` for the LearningProjection
 (i.e., in the **learning_rate** argument of its constructor, or by direct assignment of a value to the attribute).  If a
@@ -264,8 +264,8 @@ class LearningProjection(ModulatoryProjection_Base):
         if specified, it is applied multiplicatively to the `learning_signal <LearningProjection.learning_signal>`
         received from the `sender <LearningProjection.sender>`; specification of the `learning_rate
         <LearningProjection.learning_rate>` for a LearningProjection supersedes any specification(s) of the
-        :keyword:`learning_rate` for any `Process <Process_Learning>` and/or `System <System_Learning>` to which the
-        LearningProjection belongs, and is applied in addition to any effects of the `learning_rate
+        :keyword:`learning_rate` for any `Process <Process_Learning_Sequence>` and/or `System <System_Learning>` to
+        which the LearningProjection belongs, and is applied in addition to any effects of the `learning_rate
         <LearningMechanism.learning_rate>` for the `LearningMechanism` from which the LearningProjection receives its
         `learning_signal <LearningProjection.learning_signal>` (see `LearningProjection_Function_and_Learning_Rate` for
         additional details).
@@ -357,7 +357,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = None
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -469,7 +470,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                           format(self.name, self.sender.owner.name))
 
         # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
-        #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
+        #    and formats self.instance_defaults.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
         if self.sender.learning_rate is not None:
@@ -487,7 +488,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.value, self.receiver.value):
+        if not iscompatible(self.value, self.receiver.instance_defaults.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,

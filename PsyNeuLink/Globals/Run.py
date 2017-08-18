@@ -97,10 +97,10 @@ description of the two formats.
 .. _Run_Nesting_Factors:
 
 * **Number of TRIALS**.  If the **inputs** argument contains the input for more than one `TRIAL`, then the outermost
-  level of the list, or axis 0 of the ndarray, is used for the `TRIAL`` \\s, each item of which contains the
+  level of the list, or axis 0 of the ndarray, is used for the `TRIAL` \\s, each item of which contains the
   set inputs for a given `TRIAL`.  Otherwise, it is used for the next relevant factor in the list below.  If the
-  number of inputs specified is less than the number of `TRIAL`` \\s, then the input list is cycled until the full
-  number of `TRIAL`` \\s is completed.
+  number of inputs specified is less than the number of `TRIAL` \\s, then the input list is cycled until the full
+  number of `TRIAL` \\s is completed.
 ..
 * **Number of Mechanisms.** If :keyword:`run` is used for a System, and it has more than one `ORIGIN` Mechanism, then
   the next level of nesting of a list, or next higher axis of an ndarray, is used for the `ORIGIN` Mechanisms, with
@@ -192,7 +192,7 @@ Process or System being run.  The key for each entry is the `ORIGIN` Mechanism, 
 or ndarray specifying the sequence of inputs for that Mechanism, one for each `TRIAL` to be run.  If a list is used,
 and the Mechanism has more than one InputState, then a sublist is used in each item of the list to specify the inputs
 for each of the Mechanism's InputStates for that `TRIAL`.  If an ndarray is used, axis 0 is used for the sequence of
-`TRIAL`` \\s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
+`TRIAL` \\s. If the Mechanism has a single InputState, then axis 1 is used for the input for each `TRIAL.  If the
 Mechanism has multiple InputStates, then axis 1 is used for the InputStates, and axis 2 is used for the input to each
 InputState for each `TRIAL`.
 
@@ -221,8 +221,8 @@ elements) that of the `variable <InputState.InputState.variable>` for the corres
 Targets
 ~~~~~~~
 
-If learning is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`, then target values
-for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
+If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
+target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
 are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method, which can be in
 any of three formats.  The two formats used for **inputs** (`Sequence <Run_Inputs_Sequence_Format>` and
 `Mechanism <Run_Inputs_Mechanism_Format>` format) can also be used for targets.  However, the format of the lists or
@@ -233,13 +233,13 @@ Details concerning the use of the `Sequence <Run_Targets_Sequence_Format>`  and
 as a `function <Run_Targets_Function_Format>` (for example, to allow the target to depend on the outcome of processing).
 
 If either the Sequence or Mechanism format is used, then the number of targets specified for each Mechanism must equal
-the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL`` \\s specified is greater
-than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL`` \\s specified is
+the number specified for the **inputs** argument;  as with **inputs**, if the number of `TRIAL` \\s specified is greater
+than the number of inputs (and targets), then the list will be cycled until the number of `TRIAL` \\s specified is
 completed.  If a function is used for the **targets**, then it will be used to generate a target for each `TRIAL`.
 
 The number of targets specified in the Sequence or Mechanism formats for each `TRIAL`, or generated using
 the function format, must equal the number of `TARGET` Mechanisms for the Process or System being run (see Process
-`target_mechanism <Process.Process_Base.target_mechanism>` or
+`target_mechanisms <Process.Process_Base.target_mechanisms>` or
 System `targetMechanism <System.System_Base.target_mechanisms>` respectively), and the value of each target must
 match (in number and type of elements) that  of the `target <ComparatorMechanism.ComparatorMechanism.target>`
 attribute of the `TARGET` Mechanism for which it is intended.  Furthermore, if a range is specified for the output of
@@ -255,7 +255,7 @@ Sequence Format
 ^^^^^^^^^^^^^^^
 
 *(List[values] or ndarray):* -- there are at most three levels of nesting (or dimensions) required for
-targets:  one for `TRIAL`` \\s, one for Mechanisms, and one for the elements of each input.  For a System
+targets:  one for `TRIAL` \\s, one for Mechanisms, and one for the elements of each input.  For a System
 with more than one `TARGET` Mechanism, the targets must be specified in the same order as they appear in the System's
 `target_mechanisms <System.System_Base.target_mechanisms>` attribute.  This should be the same order in which
 they are declared, and can be displayed using the System's `show <System.System_Base.show>` method). All
@@ -390,7 +390,7 @@ def run(object,
         Return ``object.results``.
 
         The inputs argument must be a list or an np.ndarray array of the appropriate dimensionality:
-            * the inner-most dimension must equal the length of object.variable (i.e., the input to the object);
+            * the inner-most dimension must equal the length of object.instance_defaults.variable (i.e., the input to the object);
             * for Mechanism format, the length of the value of all entries must be equal (== number of executions);
             * the outer-most dimension is the number of input sets (num_input_sets) specified (one per execution)
                 Note: num_input_sets need not equal num_trials (the number of executions to actually run)
@@ -408,12 +408,12 @@ def run(object,
         requirements and options).
 
     num_trials : int : default None
-        the number of `TRIAL`` \\s to run.  If it is `None` (the default), then a number of `TRIAL`` \\s run will be equal
+        the number of `TRIAL` \\s to run.  If it is `None` (the default), then a number of `TRIAL` \\s run will be equal
         equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
-        inputs, then the inputs will be cycled until the number of `TRIAL`` \\s specified have been run.
+        inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
 
     reset_clock : bool : default True
-        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL`` \\s.
+        if `True`, resets `CentralClock` to 0 before a sequence of `TRIAL` \\s.
 
     initialize : bool default False
         calls the `initialize <System.System_Base.initialize>` method of the System prior to the first `TRIAL`.
@@ -426,7 +426,7 @@ def run(object,
         The length must be equal to **inputs**.
 
     learning : bool :  default None
-        enables or disables learning during execution for a `Process <Process_Learning>` or
+        enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
         `System <System_Execution_Learning>`.  If it is not specified, the current state of learning is left intact.
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
@@ -465,9 +465,9 @@ def run(object,
         # Insure inputs is 3D to accommodate TIME_STEP dimension assumed by Function.run()
         inputs = np.array(inputs)
         if object_type is MECHANISM:
-            mech_len = np.size(object.variable)
+            mech_len = np.size(object.instance_defaults.variable)
         else:
-            mech_len = np.size(object.firstMechanism.variable)
+            mech_len = np.size(object.first_mechanism.instance_defaults.variable)
         # If input dimension is 1 and size is same as input for first mechanism,
         # there is only one input for one execution, so promote dimensionality to 3
         if inputs.ndim == 1 and np.size(inputs) == mech_len:
@@ -753,7 +753,7 @@ def _construct_from_stimulus_list(object, stimuli, is_target, context=None):
             stimuli_in_phase = []
             for mech_num in range(num_mechs):
                 mech = list(object.origin_mechanisms.mechs)[mech_num]
-                mech_len = np.size(mechs[mech_num].variable)
+                mech_len = np.size(mechs[mech_num].instance_defaults.variable)
                 # Assign stimulus of appropriate size for mech and fill with 0's
                 stimulus = np.zeros(mech_len)
                 # Assign input elements to stimulus if phase is correct one for mech
@@ -836,10 +836,10 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                isinstance(projection.sender, ProcessInputState))
             except StopIteration:
                 raise RunError("PROGRAM ERROR: No process found for TARGET Mechanism ({}) "
-                               "supposed to be in target_mechanism for {}".
+                               "supposed to be in target_mechanisms for {}".
                                format(target.name, object.name))
             # Get stimuli specified for TERMINAL mechanism of process associated with TARGET mechanism
-            terminal_mech = process.terminalMechanisms[0]
+            terminal_mech = process.terminal_mechanisms[0]
             try:
                 ordered_targets[terminal_mech] = stimuli[terminal_mech]
             except KeyError:
@@ -848,7 +848,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         stimuli = ordered_targets
 
     # Convert all items to 2D arrays:
-    # - to match standard format of mech.variable
+    # - to match standard format of mech.instance_defaults.variable
     # - to deal with case in which the lists have only one stimulus, one more more has length > 1,
     #     and those are specified as lists or 1D arrays (which would be misinterpreted as > 1 stimulus)
 
@@ -857,13 +857,13 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
         # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
         if not isinstance(stim_list[0], Iterable):
-            # If mech.variable is also of length 1
-            if np.size(mech.variable) == 1:
+            # If mech.instance_defaults.variable is also of length 1
+            if np.size(mech.instance_defaults.variable) == 1:
                 # Wrap each entry in a list
                 for i in range(len(stim_list)):
                     stimuli[mech][i] = [stim_list[i]]
-            # Length of mech.variable is > 1, so check if length of list matches it
-            elif len(stim_list) == np.size(mech.variable):
+            # Length of mech.instance_defaults.variable is > 1, so check if length of list matches it
+            elif len(stim_list) == np.size(mech.instance_defaults.variable):
                 # Assume that the list consists of a single stimulus, so wrap it in list
                 stimuli[mech] = [stim_list]
             else:
@@ -872,9 +872,9 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                                   format(mech.name, object.name, stimuli[mech]))
 
         for stim in stimuli[mech]:
-            if not iscompatible(np.atleast_2d(stim), mech.variable):
+            if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
                 err_msg = "Input stimulus ({}) for {} is incompatible with its variable ({}).".\
-                    format(stim, mech.name, mech.variable)
+                    format(stim, mech.name, mech.instance_defaults.variable)
                 # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
                 # for "functionality" but rather a hack for user clarity
                 if "KWTA" in str(type(mech)):
@@ -977,7 +977,7 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
         # If inputs to process are homogeneous, inputs.ndim should be 2 if length of input == 1, else 3:
         if inputs.dtype in {np.dtype('int64'),np.dtype('float64')}:
             # Get a sample length (use first, since it is convenient and all are the same)
-            mech_len = len(object.firstMechanism.variable)
+            mech_len = len(object.first_mechanism.instance_defaults.variable)
             if not ((mech_len == 1 and inputs.ndim == 2) or inputs.ndim == 3):
                 raise RunError("inputs arg in call to {}.run() must be a 3d np.array or comparable list".
                                   format(object.name))
@@ -1105,7 +1105,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
         # Check that each target generated is compatible with the targetMechanism for which it is intended
         for target, targetMechanism in zip(generated_targets, object.target_mechanisms):
             target_len = np.size(target)
-            if target_len != np.size(targetMechanism.input_states[TARGET].variable):
+            if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1124,7 +1124,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
             target_len = np.size(target_array[0])
             num_target_sets = np.size(target_array, 0)
 
-            if target_len != np.size(object.target_mechanism.input_states[TARGET].variable):
+            if target_len != np.size(object.target_mechanism.input_states[TARGET].instance_defaults.variable):
                 if num_target_sets > 1:
                     plural = 's'
                 else:
@@ -1194,7 +1194,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
 
             for target, targetMechanism in zip(targets, object.target_mechanisms):
                 target_len = np.size(target)
-                if target_len != np.size(targetMechanism.input_states[TARGET].variable):
+                if target_len != np.size(targetMechanism.input_states[TARGET].instance_defaults.variable):
                     if num_targets_per_set > 1:
                         plural = 's'
                     else:
@@ -1202,7 +1202,7 @@ def _validate_targets(object, targets, num_input_sets, context=None):
                     raise RunError("Length ({}) of target{} specified for run of {}"
                                        " does not match expected target length of {}".
                                        format(target_len, plural, append_type_to_name(object),
-                                              np.size(targetMechanism.input_states[TARGET].variable)))
+                                              np.size(targetMechanism.input_states[TARGET].instance_defaults.variable)))
 
                 if any(np.size(target) != target_len for target in target_array):
                     raise RunError("Not all of the targets specified for {} are of the same length".

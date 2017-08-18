@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, get_matrix, Linear, Logistic, Reduce, Reinforcement, FunctionError, ExponentialDist, NormalDist
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
-from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
@@ -18,7 +18,7 @@ class TestRecurrentTransferMechanismInputs:
     def test_recurrent_mech_empty_spec(self):
         R = RecurrentTransferMechanism()
         assert R.value is None
-        assert R.variable.tolist() == [[0]]
+        assert R.instance_defaults.variable.tolist() == [[0]]
         assert R.matrix.tolist() == [[1]]
 
     def test_recurrent_mech_check_attrs(self):
@@ -27,7 +27,7 @@ class TestRecurrentTransferMechanismInputs:
             size=3
         )
         assert R.value is None
-        assert R.variable.tolist() == [[0., 0., 0.]]
+        assert R.instance_defaults.variable.tolist() == [[0., 0., 0.]]
         assert R.matrix.tolist() == [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]]
 
     def test_recurrent_mech_check_proj_attrs(self):
@@ -70,7 +70,7 @@ class TestRecurrentTransferMechanismInputs:
         R = RecurrentTransferMechanism(
             name='R'
         )
-        assert R.variable.tolist() == [[0]]
+        assert R.instance_defaults.variable.tolist() == [[0]]
         val = R.execute([10]).tolist()
         assert val == [[10.]]
 
@@ -464,20 +464,20 @@ class TestRecurrentTransferMechanismTimeConstant:
         assert val == [[1.16, 1.16, 1.16, 1.16]]
         val = R.execute([2, 2, 2, 2]).tolist()
         assert val == [[1.832, 1.832, 1.832, 1.832]]
-        val = R.execute([-4, -3, 0, 1]).tolist()
+        val = R.execute([-4, -3,0, 1]).tolist()
         assert val == [[-2.8336, -2.0336000000000003, .36639999999999995, 1.1663999999999999]]
 
     def test_recurrent_mech_time_constant_0_8_initial_1_2(self):
         R = RecurrentTransferMechanism(
             name='R',
-            default_variable=[0, 0, 0, 0],
+            default_variable=[ 0, 0, 0, 0],
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
-            time_scale=TimeScale.TIME_STEP
+         time_scale=TimeScale.TIME_STEP
         )
-        val = R.execute([3, 2, 1, 0]).tolist()
-        assert val == [[2.2, 1.8, .40000000000000013, .3999999999999999]]
+        val = R.execute([3, 2,1, 0]).tolist()
+        assert val == [[2.2,1.8, .40000000000000013, .3999999999999999]]
 
 # (7/28/17 CW): the below are used because it's good to test System and Process anyways, and because the recurrent
 # projection won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
@@ -491,7 +491,7 @@ def run_twice_in_system(mech, input1, input2=None):
 
     first_output = simple_system.run(inputs = {mech: input1})
     second_output = simple_system.run(inputs = {mech: input2})
-    return second_output[1][0].tolist()
+    return second_output[ 1][0].tolist()
 
 class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
@@ -502,16 +502,18 @@ class TestRecurrentTransferMechanismInProcess:
         R = RecurrentTransferMechanism(
             size=4,
             auto=0,
-            hetero=-1)
+            hetero=-1
+        )
         T = TransferMechanism(
             size=3,
-            function=Linear)
+            function=Linear
+        )
         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
         p.run(inputs=[[[1, 2, 3, 4]]])
-        assert (R.value.tolist() == [[1., 2., 3., 4.]])
+        assert (R.value.tolist()== [[1., 2., 3., 4.]])
         assert (T.value.tolist() == [[10., 10., 10.]])
         p.run(inputs=[[[5, 6, 7, 8]]])
-        assert (R.value.tolist() == [[-4, -2, 0, 2]])
+        assert (R.value.tolist() == [[-4, -2,0, 2]])
         assert (T.value.tolist() == [[-4, -4, -4]])
         p.run(inputs=[[[-1, 2, -2, 5.5]]])
         assert (R.value.tolist() == [[-1.0, 4.0, 2.0, 11.5]])
@@ -599,7 +601,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert (R.value.tolist() == [[-4, -2, 0, 2]])
         assert (T.value.tolist() == [[-4, -4, -4]])
         R.recurrent_projection.auto = [1, 1, 2, 4]
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [12, 11, 10,9]})
         assert (R.value.tolist() == [[8, 11, 14, 23]])
         assert (T.value.tolist() == [[56, 56, 56]])
 
@@ -621,7 +623,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert (R.value.tolist() == [[-.5, 4, 10, 0]])
         assert (T.value.tolist() == [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.hetero = [[-1, 2, 3, 1.5]] * 4
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [12, 11, 10,9]})
         assert (R.value.tolist() == [[-2.5, 38, 50.5, 29.25]])
         assert (T.value.tolist() == [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
@@ -643,7 +645,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert (R.value.tolist() == [[-.5, 4, 10, 0]])
         assert (T.value.tolist() == [[13.5, 13.5, 13.5, 13.5, 13.5]])
         R.auto = [0, 0, 0, 0]
-        s.run(inputs={R: [12, 11, 10, 9]})
+        s.run(inputs={R: [12, 11, 10,9]})
         assert (R.value.tolist() == [[12, 11, 10, 9]])
         assert (T.value.tolist() == [[42, 42, 42, 42, 42]])
 

@@ -259,8 +259,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
     #     kwPreferenceSetName: 'GatingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
-    variableClassDefault = defaultGatingPolicy
+    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
+        # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
+        variable = defaultGatingPolicy
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -562,7 +563,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         """
 
         if variable is None or variable[0] is None:
-            variable = self.variableClassDefault
+            variable = self._update_variable(self.ClassDefaults.variable)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

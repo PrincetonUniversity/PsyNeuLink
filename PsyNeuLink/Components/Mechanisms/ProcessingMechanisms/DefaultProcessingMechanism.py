@@ -52,7 +52,8 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    variableClassDefault = SystemDefaultInputValue
+    class ClassDefaults(Mechanism_Base.ClassDefaults):
+        variable = SystemDefaultInputValue
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()

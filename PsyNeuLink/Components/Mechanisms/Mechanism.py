@@ -44,7 +44,7 @@ types of Mechanisms in PsyNeuLink:
 
       * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
-        <MappingProjection>` (see `learning <Process_Learning>`).
+        <MappingProjection>` (see `learning <Process_Execution_Learning>`).
       |
       * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
@@ -109,9 +109,9 @@ mentioned above, or using one of the following:
           specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances.
-    For example, an `ObjectiveMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when
-    `learning <Process_Learning>` is specified for a Process; and an `ObjectiveMechanism` and `ControlMechanism`
-    are created when the `controller <System_Base.controller>` is specified for a `System`.
+    For example, a `ComparatorMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when
+    `learning is specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and
+    `ControlMechanism` are created when the `controller <System_Base.controller>` is specified for a `System`.
 
 .. _Mechanism_State_Specification:
 
@@ -793,7 +793,7 @@ class Mechanism_Base(Mechanism):
             + registry (dict): MechanismRegistry
             + classPreference (PreferenceSet): Mechanism_BasePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (list)
+            + ClassDefaults.variable (list)
             + paramClassDefaults (dict):
                 + MECHANISM_TIME_SCALE (TimeScale): TimeScale.TRIAL (timeScale at which Mechanism executes)
                 + [TBI: kwMechanismExecutionSequenceTemplate (list of States):
@@ -821,7 +821,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : ndarray : default variableInstanceDefault
+    variable : ndarray : default self.instance_defaults.variable
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputState.value>` of one of the Mechanism's `InputStates
         <InputState>` (in the order they are listed in its `input_states <Mechanism_Base.input_states>` attribute), and
@@ -842,7 +842,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputState <InputState_Primary>` (i.e., the one in the its `input_state
         <Mechanism_Base.input_state>` attribute).
 
-    input_values : List[List or 1d np.array] : default variableInstanceDefault
+    input_values : List[List or 1d np.array] : default self.instance_defaults.variable
         each item in the list corresponds to the `value <InputState.value>` of one of the Mechanism's `InputStates
         <Mechanism_InputStates>` listed in its `input_states <Mechanism_Base.input_states>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -892,7 +892,7 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Base.output_states>` attribute.
 
     output_states : ContentAddressableList[str, OutputState]
-        a list of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
+        list of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
 
         There is always
         at least one entry, which identifies the Mechanism's `primary OutputState <OutputState_Primary>`.
@@ -901,7 +901,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary OutputState <OutputState_Primary>` (i.e., the one in the its `output_state
         <Mechanism_Base.output_state>` attribute).
 
-    output_values : List[value] : default Mechanism_Base.function(variableInstanceDefault)
+    output_values : List[value] : default Mechanism_Base.function(instance_defaults.variable)
         each item in the list corresponds to the `value <OutputState.value>` of one of the Mechanism's `OutputStates
         <Mechanism_OutputStates>` listed in its `output_states <Mechanism_Base.output_states>` attribute.
 
@@ -956,7 +956,7 @@ class Mechanism_Base(Mechanism):
 
     default_mechanism : Mechanism : default DDM
         type of Mechanism instantiated when the `mechanism` command is called without a specification for its
-        **mech_spec** argument.
+        **mech_spec** argument, or the `process` command is called without a specification for its **pathway** argument.
 
     name : str : default <Mechanism subclass>-<index>
         the name of the Mechanism.
@@ -985,6 +985,9 @@ class Mechanism_Base(Mechanism):
     className = componentCategory
     suffix = " " + className
 
+    class ClassDefaults(Mechanism.ClassDefaults):
+        variable = [0.0]
+
     registry = MechanismRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -1004,8 +1007,6 @@ class Mechanism_Base(Mechanism):
     # IMPLEMENTATION NOTE: move this to a preference
     default_mechanism = DDM_MECHANISM
 
-
-    variableClassDefault = [0.0]
     # Note:  the following enforce encoding as 2D np.ndarrays,
     #        to accomodate multiple States:  one 1D np.ndarray per state
     variableEncodingDim = 2
@@ -1173,7 +1174,7 @@ class Mechanism_Base(Mechanism):
 
 
     def _validate_variable(self, variable, context=None):
-        """Convert variableClassDefault and self.variable to 2D np.array: one 1D value for each InputState
+        """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState
 
         # VARIABLE SPECIFICATION:                                        ENCODING:
         # Simple value variable:                                         0 -> [array([0])]
@@ -1185,12 +1186,16 @@ class Mechanism_Base(Mechanism):
         :return:
         """
 
-        super(Mechanism_Base, self)._validate_variable(variable, context)
+        variable = self._update_variable(super(Mechanism_Base, self)._validate_variable(variable, context))
 
         # Force Mechanism variable specification to be a 2D array (to accomodate multiple InputStates - see above):
         # Note: _instantiate_input_states (below) will parse into 1D arrays, one for each InputState
-        self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 2)
-        self.variable = convert_to_np_array(self.variable, 2)
+        # TODO: stateful - should this be here?? seems not
+        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 2)
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
+        variable = self._update_variable(convert_to_np_array(variable, 2))
+
+        return variable
 
     def _filter_params(self, params):
         """Add rather than override INPUT_STATES and/or OUTPUT_STATES
@@ -1293,7 +1298,7 @@ class Mechanism_Base(Mechanism):
             + INPUT_STATES:
                 <MechanismsInputState or Projection object or class,
                 specification dict for one, 2-item tuple, or numeric value(s)>;
-                if it is missing or not one of the above types, it is set to self.variable
+                if it is missing or not one of the above types, it is set to self.instance_defaults.variable
             + FUNCTION_PARAMS:  <dict>, every entry of which must be one of the following:
                 ParameterState or Projection object or class, specification dict for one, 2-item tuple, or numeric
                 value(s);
@@ -1361,19 +1366,22 @@ class Mechanism_Base(Mechanism):
                             isinstance(item, dict) or            # InputState specification dict
                             isinstance(item, str) or             # Name (to be used as key in input_states dict)
                             iscompatible(item, **{kwCompatibilityNumeric: True})):   # value
-                    # set to None, so it is set to default (self.variable) in instantiate_inputState
+                    # set to None, so it is set to default (self.instance_defaults.variable) in instantiate_inputState
                     param_value[key] = None
                     if self.prefs.verbosePref:
-                        print("Item {0} of {1} param ({2}) in {3} is not a"
-                              " InputState, specification dict or value, nor a list of dict of them; "
-                              "variable ({4}) of execute method for {5} will be used"
-                              " to create a default OutputState for {3}".
-                              format(i,
-                                     INPUT_STATES,
-                                     param_value,
-                                     self.__class__.__name__,
-                                     self.variable,
-                                     self.execute.__self__.name))
+                        print(
+                            "Item {0} of {1} param ({2}) in {3} is not a"
+                            " InputState, specification dict or value, nor a list of dict of them; "
+                            "variable ({4}) of execute method for {5} will be used"
+                            " to create a default OutputState for {3}".format(
+                                i,
+                                INPUT_STATES,
+                                param_value,
+                                self.__class__.__name__,
+                                self.instance_defaults.variable,
+                                self.execute.__self__.name,
+                            )
+                        )
                 i += 1
             params[INPUT_STATES] = param_value
 
@@ -1384,7 +1392,7 @@ class Mechanism_Base(Mechanism):
                 pass
             else:
                 # INPUT_STATES not specified:
-                # - set to None, so that it is set to default (self.variable) in instantiate_inputState
+                # - set to None, so that it is set to default (self.instance_defaults.variable) in instantiate_inputState
                 # - if in VERBOSE mode, warn in instantiate_inputState, where default value is known
                 params[INPUT_STATES] = None
 
@@ -1603,7 +1611,7 @@ class Mechanism_Base(Mechanism):
         Arguments
         ---------
 
-        input : List[value] or ndarray : default variableInstanceDefault
+        input : List[value] or ndarray : default self.instance_defaults.variable
             input to use for execution of the Mechanism.
             This must be consistent with the format of the Mechanism's `InputState(s) <Mechanism_InputStates>`:
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
@@ -1645,11 +1653,13 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod is INIT__EXECUTE__METHOD_ONLY:
-                return_value =  self._execute(variable=self.variable,
-                                                 runtime_params=runtime_params,
-                                                 clock=clock,
-                                                 time_scale=time_scale,
-                                                 context=context)
+                return_value =  self._execute(
+                    variable=self.instance_defaults.variable,
+                    runtime_params=runtime_params,
+                    clock=clock,
+                    time_scale=time_scale,
+                    context=context,
+                )
 
                 # # # MODIFIED 3/3/17 OLD:
                 # # return np.atleast_2d(return_value)
@@ -1680,10 +1690,12 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
-                return_value = self.function(variable=self.variable,
-                                             params=runtime_params,
-                                             time_scale=time_scale,
-                                             context=context)
+                return_value = self.function(
+                    variable=self.instance_defaults.variable,
+                    params=runtime_params,
+                    time_scale=time_scale,
+                    context=context,
+                )
                 return np.atleast_2d(return_value)
 
 
@@ -1715,9 +1727,10 @@ class Mechanism_Base(Mechanism):
 
         # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
         #region VALIDATE INPUT STATE(S) AND RUNTIME PARAMS
-        self._check_args(variable=self.variable,
-                        params=runtime_params,
-                        target_set=runtime_params)
+        self._check_args(
+            params=runtime_params,
+            target_set=runtime_params,
+        )
         #endregion
 
         #region UPDATE INPUT STATE(S)
@@ -1725,7 +1738,7 @@ class Mechanism_Base(Mechanism):
         # Executing or simulating Process or System, get input by updating input_states
 
         if input is None and (EXECUTING in context or EVC_SIMULATION in context) and (self.input_state.path_afferents != []):
-            self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context)
+            variable = self._update_variable(self._update_input_states(runtime_params=runtime_params, time_scale=time_scale, context=context))
 
         # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_states
         else:
@@ -1733,8 +1746,8 @@ class Mechanism_Base(Mechanism):
                 context = EXECUTING + ' ' + append_type_to_name(self)
                 self.execution_status = ExecutionStatus.EXECUTING
             if input is None:
-                input = self.variableInstanceDefault
-            self._assign_input(input)
+                input = self.instance_defaults.variable
+            variable = self._update_variable(self._get_variable_from_input(input))
 
         #endregion
 
@@ -1744,11 +1757,13 @@ class Mechanism_Base(Mechanism):
 
         #region CALL SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
-        self.value = self._execute(variable=self.variable,
-                                   runtime_params=runtime_params,
-                                   clock=clock,
-                                   time_scale=time_scale,
-                                   context=context)
+        self.value = self._execute(
+            variable=variable,
+            runtime_params=runtime_params,
+            clock=clock,
+            time_scale=time_scale,
+            context=context,
+        )
 
         # # MODIFIED 3/3/17 OLD:
         # self.value = np.atleast_2d(self.value)
@@ -1802,7 +1817,7 @@ class Mechanism_Base(Mechanism):
         # If this is (the end of) an initialization run, restore state values to initial condition
         if '_init_' in context:
             for state in self.input_states:
-                self.input_states[state].value = self.input_states[state].variable
+                self.input_states[state].value = self.input_states[state].instance_defaults.variable
             for state in self._parameter_states:
                 self._parameter_states[state].value =  getattr(self, '_'+state)
             for state in self.output_states:
@@ -1863,7 +1878,7 @@ class Mechanism_Base(Mechanism):
                    call_after_trial=call_after_execution,
                    time_scale=time_scale)
 
-    def _assign_input(self, input):
+    def _get_variable_from_input(self, input):
 
         input = np.atleast_2d(input)
         num_inputs = np.size(input,0)
@@ -1884,17 +1899,21 @@ class Mechanism_Base(Mechanism):
             # input_item = np.ndarray(input[i])
             input_item = input[i]
 
-            if len(input_state.variable) == len(input_item):
+            if len(input_state.instance_defaults.variable) == len(input_item):
                 input_state.value = input_item
             else:
-                raise MechanismError("Length ({}) of input ({}) does not match "
-                                     "required length ({}) for input to {} of {}".
-                                     format(len(input_item),
-                                            input[i],
-                                            len(input_state.variable),
-                                            input_state.name,
-                                            append_type_to_name(self)))
-        self.variable = np.array(self.input_values)
+                raise MechanismError(
+                    "Length ({}) of input ({}) does not match "
+                    "required length ({}) for input to {} of {}".format(
+                        len(input_item),
+                        input[i],
+                        len(input_state.instance_defaults.variable),
+                        input_state.name,
+                        append_type_to_name(self),
+                    )
+                )
+
+        return np.array(self.input_values)
 
     def _update_input_states(self, runtime_params=None, time_scale=None, context=None):
         """ Update value for each InputState in self.input_states:
@@ -1906,7 +1925,7 @@ class Mechanism_Base(Mechanism):
         for i in range(len(self.input_states)):
             state = self.input_states[i]
             state.update(params=runtime_params, time_scale=time_scale, context=context)
-        self.variable = np.array(self.input_values)
+        return np.array(self.input_values)
 
     def _update_parameter_states(self, runtime_params=None, time_scale=None, context=None):
 
@@ -2252,6 +2271,7 @@ class MechanismList(UserList):
     def __init__(self, owner, components_list:list):
         super().__init__()
         self.mechs = components_list
+        self.data = self.mechs
         self.owner = owner
         # for item in components_list:
         #     if not isinstance(item, MechanismTuple):

@@ -236,7 +236,8 @@ class GatingProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = 0.0
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = 0.0
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -326,8 +327,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        self.variable = self.sender.value
-        self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
+        self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 
     @property

@@ -63,16 +63,16 @@ class MechanismRole(Enum):
     """
 
     - ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`,
-        and that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may
-        have only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN`
-        Mechanism of a Process is not necessarily an `ORIGIN` of the System to which it belongs, as it may receiver
-        `Projections <Projection>` from other Processes in the System. The `ORIGIN` Mechanisms of a Process or
-        System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about `ORIGIN` Mechanisms in Processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
-        and for Systems see `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`, and
+        that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may have
+        only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN` Mechanism of a Process is not
+        necessarily an `ORIGIN` of the System to which it belongs, as it may receive `Projections <Projection>` from
+        other Processes in the System (see `example <LearningProjection_Target_vs_Terminal_Figure>`). The `ORIGIN`
+        Mechanisms of a Process or System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed
+        using its :keyword:`show` method.  For additional details about `ORIGIN` Mechanisms in Processes, see `Process
+        Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`; and for Systems see
+        `System Mechanisms <System_Mechanisms>` and `System Input and Initialization
+        <System_Execution_Input_And_Initialization>`.
 
     - INTERNAL
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
@@ -95,10 +95,11 @@ class MechanismRole(Enum):
         that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
         have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
         Mechanism of a Process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-        as it may send Projections to other Processes in the System.  The `TERMINAL` Mechanisms of a Process
-        or System are listed in its :keyword:`terminalMechanisms` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details about `TERMINAL` Mechanisms in Processes, see
-        `Process_Mechanisms` and `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+        as it may send Projections to other Processes in the System (see `example
+        <LearningProjection_Target_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
+        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
+        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
+        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
 
     - SINGLETON
         A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
@@ -694,7 +695,7 @@ class Composition(object):
                 # Then, check that each input_state is receiving the right size of input
                 for i, value in enumerate(timestep):
                     val_length = len(value)
-                    state_length = len(mech.input_state.variable)
+                    state_length = len(mech.input_state.instance_defaults.variable)
                     if val_length != state_length:
                         raise ValueError("The value provided for InputState {!s} of the Mechanism \"{}\" has length "
                                          "{!s} where the InputState takes values of length {!s}".
@@ -730,7 +731,7 @@ class Composition(object):
             if mech in input_dict.keys():
                 self.input_mechanisms[mech]._output_states[0].value = np.array(input_dict[mech])
             else:
-                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.variable)
+                self.input_mechanisms[mech]._output_states[0].value = np.array(mech.instance_defaults.variable)
 
     def _assign_execution_ids(self, execution_id):
         '''
