@@ -60,10 +60,16 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
 .. _Component_Variable:
 
-* **variable** - used as the input to its `function <Component_Function>`.  Specification of the **variable**
+* **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
   dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
   is executed and no input is provided), and takes precedence over the specification of `size <Component_Size>`.
+
+  .. note::
+    Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
+    The attribute is maintained as a way for the user to monitor variable along the execution chain.
+    During parallelization however, the attribute may not accurately represent the most current value of variable
+    being used, due to asynchrony inherent to parallelization.
 
 .. _Component_Size:
 
