@@ -2611,6 +2611,11 @@ class SoftMax(TransferFunction):
         self.__llvm_func_name = self.__get_llvm_function(default_variable)
         self.__bin_function = None
 
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            param_type = ir.LiteralStructType([ctx.float_ty])
+        return param_type
+
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [index])
         ptro = builder.gep(vo, [index])
@@ -2654,11 +2659,12 @@ class SoftMax(TransferFunction):
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("softmax")
+            struct_param_ty = self.get_param_struct_type()
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty))
+            func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
             vector_length = ctx.int32_ty(len(default_variable))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
-            vi, vo = llvm_func.args
+            params, vi, vo = llvm_func.args
             for a in vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
@@ -2672,7 +2678,7 @@ class SoftMax(TransferFunction):
             max_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(float('-inf')), max_ptr)
             max_ind_ptr = builder.alloca(ctx.int32_ty)
-            gain = ctx.float_ty(self.gain)
+            gain = builder.extract_value(params, 0)
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
@@ -2716,10 +2722,14 @@ class SoftMax(TransferFunction):
         if self.__bin_function is None:
             self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
         ret = np.zeros(len(self.variable))
+        gain = self.params[GAIN]
+        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
 
-        ct_vi = self.variable.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ct_vo = ret.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        self.__bin_function(ct_vi, ct_vo)
+        ct_param = par_struct_ty(gain)
+
+        ct_vi = self.variable.ctypes.data_as(vi_ty)
+        ct_vo = ret.ctypes.data_as(vo_ty)
+        self.__bin_function(ct_param, ct_vi, ct_vo)
 
         return ret
 
