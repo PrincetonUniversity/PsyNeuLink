@@ -538,17 +538,18 @@ class DDM(ProcessingMechanism_Base):
         other values that can be reported and their interpretation.
 
     output_states : ContentAddressableList[OutputState]
-        list of the DDM's `OutputStates <OutputState>`.  By default it contains `DECISION_VARIABLE
-        <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`; additional OutputStates may be included
-        based on the `function <DDM.function>` and any specifications made in the **output_states** argument of the
+        list of the DDM's `OutputStates <OutputState>`.  There are always two OutputStates, `DECISION_VARIABLE
+        <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`; additional ones may be included
+        based on the `function <DDM.function>` and/or any specifications made in the **output_states** argument of the
         DDM's constructor (see `DDM Standard OutputStates <DDM_Standard_OutputStates>`).
 
     output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the value of the corresponding OutputState in `output_states <DDM.output_states>`;  the first two
-        items are always the `value <OutputState.value>`\\s of the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
-        `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputStates;  additional ones may be included, based on the `function
-        <DDM.function>` and any specifications made in the **output_states** argument of the DDM's constructor (see
-        `DDM Standard OutputStates <DDM_Standard_OutputStates>`).
+        each item is the `value <OutputState.value> of the corresponding OutputState in `output_states
+        <DDM.output_states>`.  The first two items are always the `value <OutputState.value>`\\s of the
+        `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputStates;  additional
+        ones may be included, based on the `function <DDM.function>` and any specifications made in the
+        **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
+        <DDM_Standard_OutputStates>`).
 
     COMMENT:
         time_scale : TimeScale : default TimeScale.TRIAL
