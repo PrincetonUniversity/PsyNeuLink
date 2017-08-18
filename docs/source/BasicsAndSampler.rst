@@ -40,10 +40,10 @@ interact with one another in a single System.
 
 .. _BasicsSampler_GrandView_Figure:
 
-.. figure:: _static/Grandview_fig.svg
+.. figure:: _static/Grandview_With_System_fig.svg
 
-    **Scope of a PsyNeuLink Model**.  Bright elements are examples of currently implemented Components; dimmed
-    elements are examples of Components planned for future implementation.
+    **PsyNeuLink Environnment**.  Full-colored items are examples of currently implemented Components; dimmed
+    items are examples of Components planned for future implementation.
 
 
 .. _Sampler:
@@ -139,7 +139,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
     decision_process = process(pathway=[output_layer, decision_mech])
     my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
 
-As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
+As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:
 
 .. _Simple_Stroop_Example_Figure:
@@ -200,7 +200,7 @@ as follows::
         EveryNCalls(my_hidden_layer, 2)
     )
 
-The two Conditions added to the controller specify that:
+The two Conditions added to the Scheduler specify that:
 
    1. ``my_hidden_layer`` should execute whenever either ``input_hidden_layer`` has executed once (to encode the stimulus and make available to the ``recurrent_layer``), or when the ``recurrent_layer`` has executed 10 times (to allow it to settle on a context representation and provide that back to the ``hidden_layer``)
 
