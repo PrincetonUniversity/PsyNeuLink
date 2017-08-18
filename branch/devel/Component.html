@@ -194,11 +194,19 @@ of a <a class="reference internal" href="Process.html"><span class="doc">Process
 <span id="component-configurable-attributes"></span><h3>Core Configurable Attributes<a class="headerlink" href="#core-configurable-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Component has the following set of core attributes that govern its operation, and that can be specified in
 corresponding arguments of its constructor, or by assigning them directly (see <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a>):</p>
-<ul class="simple" id="component-variable">
-<li><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>variable</strong>
+<ul id="component-variable">
+<li><p class="first"><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>default_variable</strong>
 argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
 dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
-is executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</li>
+is executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Internally, the attribute <strong>variable</strong> is not directly used as input to functions, to allow for parallelization.
+The attribute is maintained as a way for the user to monitor variable along the execution chain.
+During parallelization however, the attribute may not accurately represent the most current value of variable
+being used, due to asynchrony inherent to parallelization.</p>
+</div>
+</li>
 </ul>
 <ul class="simple" id="component-size">
 <li><strong>size</strong> - the dimension of the <a class="reference internal" href="#Component.Component.variable" title="Component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.  The <strong>size</strong> argument of the
