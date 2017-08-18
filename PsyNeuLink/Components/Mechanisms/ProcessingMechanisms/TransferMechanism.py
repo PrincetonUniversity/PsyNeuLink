@@ -30,7 +30,7 @@ A TransferMechanism transforms its input using a simple mathematical function.  
 or an an array of scalars (list or 1d np.array).  The function used to carry out the transformation can be selected
 from a standard set of `Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a
 user-defined custom function.  The transformation can be carried out instantaneously or in a time-averaged manner,
-as described in `TransferMechanism_Execution`.
+as described in `Transfer_Execution`.
 
 .. _Transfer_Creation:
 
@@ -46,7 +46,7 @@ constructor which can include arguments specifying the function's parameters (se
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
 In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
-<TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `TransferMechanism_Execution`).
+<TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
 
 
 .. _Transfer_Structure:
@@ -72,7 +72,7 @@ Execution
 COMMENT:
 DESCRIBE AS TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
 INSTANTANEOUS:
-input transformed in a single `execution <TransferMechanism_Execution>` of the Mechanism)
+input transformed in a single `execution <Transfer_Execution>` of the Mechanism)
 TIME-AVERAGED:
 input transformed using `step-wise` integration, in which each execution returns the result of a subsequent step of the
 integration process).
@@ -347,13 +347,19 @@ class TransferMechanism(ProcessingMechanism_Base):
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
     output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's OutputStates.  By default there is a single OutputState
-        (`RESULT <TRANSFER_MECHANISM_RESULT>` that contains the result of a call to the Mechanism's
+        list of Mechanism's `OutputStates <OutputStates>`.  By default there is a single OutputState,
+        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
         `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
-        and/or custom OutputStates may be listed, if they have been :ref:`specified <LINK>`.
+        and/or custom OutputStates may be included, based on the specifications made in the **output_states** argument
+        of the Mechanism's constructor.
 
-    output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the value of the corresponding OutputState in `output_states <TransferMechanism.output_states>`.
+    output_values : List[array(float64)]
+        each item is the `value <OutputState.value>` of the corresponding OutputState in `output_states
+        <TransferMechanism.output_states>`.  The default is a single item containing the result of the
+        TransferMechanism's `function <TransferMechanism.function>`;  additional
+        ones may be included, based on the specifications made in the
+        **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
+        <TransferMechanism_Standard_OutputStates>`).
 
     time_scale :  TimeScale : default TimeScale.TRIAL
         specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
