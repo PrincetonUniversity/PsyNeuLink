@@ -199,11 +199,17 @@ appear in a <code class="xref any docutils literal"><span class="pre">small</spa
 </div>
 <div class="section" id="psyneulink-objects">
 <span id="id2"></span><h2>PsyNeuLink Objects<a class="headerlink" href="#psyneulink-objects" title="Permalink to this headline">¶</a></h2>
-<p>The two primary types of objects in PsyNeuLink are Components (basic building blocks)
-and Compositions (combinations of Components that implement a model).</p>
+<p>The two primary types of objects in PsyNeuLink are Components (basic building blocks) and Compositions (combinations
+of Components that implement a model).  The <a class="reference internal" href="#quickreference-overview-figure"><span class="std std-ref">figure</span></a> below shows examples of some
+Components (various kinds of Mechanisms and Projections, combined to form two kinds of Composition (Processes and a
+System).  The sections below provide a description of these and the other basic objects in PsyNeuLink.</p>
+<div class="figure" id="id3">
+<span id="quickreference-overview-figure"></span><img alt="_images/Overview_fig.svg" src="_images/Overview_fig.svg" /><p class="caption"><span class="caption-text"><strong>Figure</strong>: Example of some of the Components and Compositions that comprise a PsyNeuLink model.</span></p>
+</div>
 <div class="section" id="components">
 <span id="quick-reference-components"></span><h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
-<p>Components are objects that perform a specific function. Every Component has a:</p>
+<p>Components are objects that perform a specific function.</p>
+<p>Every Component has a:</p>
 <ul class="simple">
 <li><a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> - performs the core computation of the Component;</li>
 <li><a class="reference internal" href="Component.html#Component.Component.variable" title="Component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> - the input to the Component&#8217;s <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
@@ -401,7 +407,7 @@ can also be constructed directly from Mechanisms and Projections.</p>
 </ul>
 </div></blockquote>
 <p id="quick-reference-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
-<div class="figure" id="id3">
+<div class="figure" id="id4">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
 <p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,

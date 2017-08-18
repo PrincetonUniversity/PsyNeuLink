@@ -167,9 +167,13 @@ executable model.  There are two primary kinds of Components:  <a class="referen
 For those familiar with block modeling systems, Mechanisms are the &#8220;blocks&#8221; in PsyNeuLink, and Projections are the
 &#8220;links&#8221;.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
 other Mechanisms. Projections are used to send information from one Mechanism to another.  A <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> uses
-Projections to link Mechanisms together into pathways that can execute a Process, and Processes can be combined to
-form networks or circuits that make up a systems-level model.  A <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> coordinates the execution of Mechanisms
-in a Composition, each of which can be assigned one or more pre-specified or customized <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
+Projections to link Mechanisms together into pathways that can execute a Process, and Processes can be combined into
+Systems to form networks or circuits that make up a systems-level model (see <a class="reference internal" href="#basicssampler-overview-figure"><span class="std std-ref">figure</span></a>
+below).  A <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> coordinates the execution of Mechanisms in a Composition, each of which can be assigned one
+or more pre-specified or customized <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
+<div class="figure" id="id5">
+<span id="basicssampler-overview-figure"></span><img alt="_images/Overview_fig.svg" src="_images/Overview_fig.svg" /><p class="caption"><span class="caption-text"><strong>Figure</strong>: Overview of the constituents of a PsyNeuLink model</span></p>
+</div>
 <p>Mechanisms and Projections fall into two broad categories:  ones that <em>directly transmit and transform</em> information,
 taking the inputs to a model and generating its outputs;  and ones that <em>modulate</em> the transmission and transformation
 of information.  PsyNeuLink provides a library of Components of each type.  For example, there is a variety of
@@ -270,7 +274,7 @@ output layer, which combines the inputs and projects to a drift diffusion mechan
 <p>As a Composition get more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_graph()</span></code> produces the following display:</p>
 <p id="simple-stroop-example-figure"><strong>Composition Graph</strong></p>
-<div class="figure" id="id5">
+<div class="figure" id="id6">
 <img alt="_images/Simple_Stroop_Example_fig.svg" src="_images/Simple_Stroop_Example_fig.svg" /><p class="caption"><span class="caption-text">Graph representation of the Composition in the example above.</span></p>
 </div>
 <p>As the name of the <code class="docutils literal"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a

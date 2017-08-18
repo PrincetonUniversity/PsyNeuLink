@@ -39,15 +39,26 @@ The following conventions are used for the names of PsyNeuLink objects and their
 PsyNeuLink Objects
 ------------------
 
-The two primary types of objects in PsyNeuLink are Components (basic building blocks)
-and Compositions (combinations of Components that implement a model).
+The two primary types of objects in PsyNeuLink are Components (basic building blocks) and Compositions (combinations
+of Components that implement a model).  The `figure <QuickReference_Overview_Figure>` below shows examples of some
+Components (various kinds of Mechanisms and Projections, combined to form two kinds of Composition (Processes and a
+System).  The sections below provide a description of these and the other basic objects in PsyNeuLink.
+
+.. _QuickReference_Overview_Figure:
+
+.. figure:: _static/Overview_fig.svg
+
+    **Figure**: Example of some of the Components and Compositions that comprise a PsyNeuLink model.
 
 .. _Quick_Reference_Components:
 
 Components
 ~~~~~~~~~~
 
-Components are objects that perform a specific function. Every Component has a:
+Components are objects that perform a specific function.
+
+
+Every Component has a:
 
 * `function <Component.function>` - performs the core computation of the Component;
 
