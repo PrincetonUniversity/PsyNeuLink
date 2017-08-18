@@ -18,9 +18,16 @@ executable model.  There are two primary kinds of Components:  `Mechanisms <Mech
 For those familiar with block modeling systems, Mechanisms are the "blocks" in PsyNeuLink, and Projections are the
 "links".  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
 other Mechanisms. Projections are used to send information from one Mechanism to another.  A `Composition` uses
-Projections to link Mechanisms together into pathways that can execute a Process, and Processes can be combined to
-form networks or circuits that make up a systems-level model.  A `Scheduler` coordinates the execution of Mechanisms
-in a Composition, each of which can be assigned one or more pre-specified or customized `Conditions <Condition>`.
+Projections to link Mechanisms together into pathways that can execute a Process, and Processes can be combined into
+Systems to form networks or circuits that make up a systems-level model (see `figure <BasicsSampler_Overview_Figure>`
+below).  A `Scheduler` coordinates the execution of Mechanisms in a Composition, each of which can be assigned one
+or more pre-specified or customized `Conditions <Condition>`.
+
+.. _BasicsSampler_Overview_Figure:
+
+.. figure:: _static/Overview_fig.svg
+
+    **Figure**: Overview of the constituents of a PsyNeuLink model
 
 Mechanisms and Projections fall into two broad categories:  ones that *directly transmit and transform* information,
 taking the inputs to a model and generating its outputs;  and ones that *modulate* the transmission and transformation

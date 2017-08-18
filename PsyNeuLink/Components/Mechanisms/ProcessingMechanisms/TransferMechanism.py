@@ -27,9 +27,10 @@ Overview
 --------
 
 A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
-or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set of PsyNeuLink
-`Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a user-defined custom function.
-
+or an an array of scalars (list or 1d np.array).  The function used to carry out the transformation can be selected
+from a standard set of `Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a
+user-defined custom function.  The transformation can be carried out instantaneously or in a time-averaged manner,
+as described in `TransferMechanism_Execution`.
 
 .. _Transfer_Creation:
 
@@ -37,15 +38,15 @@ Creating a TransferMechanism
 -----------------------------
 
 A TransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
-*TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.funtion>` is specified in the
-**function** argument, which can be simply the name of the class (first example below), or a call to its constructor
-which can include arguments specifying the function's parameters (second example)::
+*TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.function>` is specified in the
+**function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to its
+constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
-In addition to function-specific parameters, `noise <TransferMechanism.noise>` and
-`time_constant <TransferMechanism.time_constant>` parameters can be specified (see `Execution` below).
+In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
+<TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `TransferMechanism_Execution`).
 
 
 .. _Transfer_Structure:
@@ -58,7 +59,7 @@ used as the `variable <TransferMechanism.variable>` for its `function <TransferM
 `function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
 `Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
 list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
-only item of the TransferMecbanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
+only item of the TransferMechanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
 `primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
 assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
 (see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
@@ -68,17 +69,29 @@ assigned using the TransferMechanism's `standard OutputStates <TransferMechanism
 Execution
 ---------
 
+COMMENT:
+DESCRIBE AS TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
+INSTANTANEOUS:
+input transformed in a single `execution <TransferMechanism_Execution>` of the Mechanism)
+TIME-AVERAGED:
+input transformed using `step-wise` integration, in which each execution returns the result of a subsequent step of the
+integration process).
+COMMENT
+
 When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
 the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`,
-      the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
-      if `time_scale` is :keyword:`TimeScale.TRIAL`, `time_constant <TransferMechanism.time_constant>` is ignored.
+    * `time_constant <TransferMechanism.time_constant>`: if the `time_scale <TransferMechanism.time_scale>` attribute
+      is `TimeScale.TIME_STEP`, the input is exponentially time-averaged before transforming it, using the value
+      of the `time_constant <TransferMechanism.time_constant>` attribute as the rate of integration (a higher value
+      specifies a faster rate); if `time_scale <TransferMechanism.time_scale>` is `TimeScale.TRIAL`,
+      `time_constant <TransferMechanism.time_constant>` is ignored.
     ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
+
 
 .. _Transfer_OutputState:
 
