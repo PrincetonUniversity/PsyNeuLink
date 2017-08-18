@@ -334,7 +334,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
     output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        contains list of Mechanism's OutputStates.  By default there is a single OutputState
+        list of Mechanism's OutputStates.  By default there is a single OutputState
         (`RESULT <TRANSFER_MECHANISM_RESULT>` that contains the result of a call to the Mechanism's
         `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
         and/or custom OutputStates may be listed, if they have been :ref:`specified <LINK>`.

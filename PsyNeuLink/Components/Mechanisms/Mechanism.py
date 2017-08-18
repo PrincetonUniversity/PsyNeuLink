@@ -892,7 +892,7 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Base.output_states>` attribute.
 
     output_states : ContentAddressableList[str, OutputState]
-        a list of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
+        list of the Mechanism's `OutputStates <Mechanism_OutputStates>`.
 
         There is always
         at least one entry, which identifies the Mechanism's `primary OutputState <OutputState_Primary>`.

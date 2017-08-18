@@ -3081,6 +3081,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
+    integration_type : [**NEEDS TO BE SPECIFIED**] : default [**NEEDS TO BE SPECIFIED**]
+        [**NEEDS TO BE SPECIFIED**]
+
     rate : float or 1d np.array
         determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
         all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it

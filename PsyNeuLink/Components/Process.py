@@ -192,12 +192,12 @@ and `MappingProjections <MappingProjection>` are automatically created to transm
       distinct InputState of the `origin_mechanism <Process_Base.origin_mechanism>`;
     ..
     * if the **input** has only one item but the `origin_mechanism <Process_Base.origin_mechanism>` has more than one
-      InputState, a single ProcessInputState is created with Projections to each of the `origin_mechanism
-      <Process_Base.origin_mechanism>`'s InputStates;
+      InputState, a single `ProcessInputState <ProcessInputState>` is created with Projections to each of the
+      `origin_mechanism <Process_Base.origin_mechanism>`'s InputStates;
     ..
     * if the **input** has more than one item but the `origin_mechanism <Process_Base.origin_mechanism>` has only one
-      InputState, a ProcessInputState is created for each item of the input, and all project to the `origin_mechanism
-      <Process_Base.origin_mechanism>`'s InputState;
+      InputState, a `ProcessInputState <ProcessInputState>` is created for each item of the input, and all project to
+      the `origin_mechanism <Process_Base.origin_mechanism>`'s InputState;
     ..
     * otherwise, if the **input** has more than one item and the `origin_mechanism <Process_Base.origin_mechanism>` has
       more than one InputState, but the numbers are not equal, an error message is generated indicating that there is an
@@ -252,8 +252,8 @@ The following Components are created for each learning sequence specified for a 
     * a ProcessingInputState to represent the corresponding item of the **target** argument of the Process' `execute
       <Process_Base.execute>` and `run <Process_Base.run>` methods;
     ..
-    * a MappingProjection that projects from the ProcessInputState for the **target** item to the *TARGET* `InputState
-      <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
+    * a MappingProjection that projects from the `ProcessInputState <ProcessInputState>` for the **target** item to the
+      *TARGET* `InputState <ComparatorMechanism_Structure>` of the `TARGET` Mechanism;
     ..
     * a `LearningMechanism` for each MappingProjection in the sequence that calculates the `learning_signal
       <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for that
@@ -752,15 +752,15 @@ class Process_Base(Process):
         are executed in the order listed when the Process `executes <Process_Execution>`.
 
     process_input_states : List[ProcessInputState]
-        represent the input to the Process when it is executed.  Each `ProcessInputState` represents an item of the
-        `input <Process.base>` to a corresponding `InputState` of the Process' `origin_mechanism
+        represent the input to the Process when it is executed.  Each `ProcessInputState <ProcessInputState>` represents
+        an item of the `input <Process.base>` to a corresponding `InputState` of the Process' `origin_mechanism
         <Process_Base.origin_mechanism>` (see `Process_Input_And_Output` for details).
 
     input :  List[value] or ndarray
         input to the Process for each `TRIAL` of execution;  it is assigned the value of the **input** argument
         in a call to the Process' `execute <Process_Base.execute>`  or `run <Process_Base.run>` method. Each of its
-        items is assigned as the `value <InputState.value>` of the corresponding `ProcessInputState` in
-        `process_input_states`, and each must match the format of the corresponding item of the `variable
+        items is assigned as the `value <InputState.value>` of the corresponding `ProcessInputState <ProcessInputState>`
+        in `process_input_states`, and each must match the format of the corresponding item of the `variable
         <Mechanism_Base.variable>` for the Process' `origin_mechanism <Process_Base.origin_mechanism>`
         (see `Process_Input_And_Output` for details).
 
@@ -2524,8 +2524,9 @@ class Process_Base(Process):
         ----------
         input : ndarray
             input to ORIGIN Mechanism for current execution.  By default, it is the value specified by the
-            ProcessInputState that projects to the ORIGIN Mechanism.  Used by system to specify the input
-            from the SystemInputState when the ORIGIN Mechanism is executed as part of that sysetm.
+            `ProcessInputState <ProcessInputState>` that projects to the ORIGIN Mechanism.  Used by system to specify
+            the input from the `SystemInputState <SystemInputState>` when the ORIGIN Mechanism is executed as part of
+            that System.
 
         separator : boolean
             determines whether separator is printed above output
@@ -2656,6 +2657,8 @@ class ProcessInputState(OutputState):
         - a target to the Process (also a 1d array) and provides it to a `MappingProjection` that
              projects to the `TARGET` Mechanism of the process.
     COMMENT
+
+    .. _ProcessInputState:
 
     A ProcessInputState is created for each `InputState` of the `origin_mechanism`, and for the *TARGET* `InputState
     <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed in `target_mechanisms
