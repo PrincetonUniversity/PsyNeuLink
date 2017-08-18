@@ -10,6 +10,7 @@ PsyNeuLink Documentation
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
 * `Overview`
 * `Installation`
+* `Tutorial`
 * `Contributors`
 * `Indices_and_Tables`
 
@@ -121,17 +122,22 @@ switch to your preferred python3 environment, then run the command __"pip instal
 (make sure to include the period and to use the appropriate pip/pip3 command for python 3.5).
 All prerequisite packages will be automatically added to your environment.
 
+If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
+
+
 .. _Tutorial:
 
 Tutorial
-~~~~~~~~
+--------
 
-Once downloaded, a tutorial can be run using the terminal command ``jupyter notebook`` within the root directory
-of the PsyNeuLink package.  Once the jupyter notebook opens, within the list of files click on
-"PsyNeuLink Tutorial.ipynb".  This will open the tutorial, that will provide any additional information needed to get
-started.
+The downloaded package includes a tutorial, that provides examples of how to create basic Components
+in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
+decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
+backpropagation network for learning the XOR problem.
 
-If you have trouble installing the package, or run into other problems, please contact psyneulinkhelp@princeton.edu.
+The tutorial can be run using the terminal command ``jupyter notebook`` within the root directory of the PsyNeuLink
+package. Once the jupyter notebook opens, within the list of files click on "PsyNeuLink Tutorial .ipynb".  This will
+open the tutorial, that will provide any additional information needed to get started.
 
 
 .. _Contributors:
@@ -139,16 +145,16 @@ If you have trouble installing the package, or run into other problems, please c
 Contributors
 ------------
 
-* **Allie Burton**, Princeton University
+* **Allie Burton**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Kevin Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
-* **Changyan Wang**, Princeton University
+* **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
 * **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
 
-with substantial and greatly appreciated assistance from:
+With substantial and greatly appreciated assistance from:
 
 * **Abhishek Bhattacharjee**, Department of Computer Science, Rutgers University
 * **Mihai Capota**, Intel Labs, Intel Corporation
