@@ -6050,7 +6050,7 @@ class Stability(ObjectiveFunction):
                     param_type_string = "MappingProjection's ParameterState"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "paramaterState that has been assigned a 2d array or matrix".
+                                        "ParameterState that has been assigned a 2d array or matrix".
                                         format(MATRIX, self.name, matrix.shape, MATRIX))
 
             elif isinstance(matrix, ParameterState):
@@ -7098,7 +7098,7 @@ class Sarsa(LearningFunction):
                  learning_rate: float = default_learning_rate,
                  discount_factor: float = default_discount_factor,
                  reward: float = default_reward,
-                 params: Dict = None,
+                 params: Dict = param_class_defaults,
                  owner: Component = None,
                  prefs: Union[PreferenceSet, Dict] = None,
                  context: str = 'Component Init'):
@@ -7314,7 +7314,7 @@ class QLearning(LearningFunction):
                  learning_rate: float = default_learning_rate,
                  discount_factor: float = default_discount_factor,
                  reward: float = default_reward,
-                 params: Dict = None,
+                 params: Dict = param_class_defaults,
                  owner: Component = None,
                  prefs: Union[PreferenceSet, Dict] = None,
                  context: str = 'Component Init'):
@@ -7330,6 +7330,9 @@ class QLearning(LearningFunction):
                          prefs=prefs,
                          context=context)
         self.functionOutputType = None
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.reward = reward
 
     def _validate_variable(self, variable, context=None):
         super()._validate_variable(variable, context)
@@ -7384,21 +7387,9 @@ class QLearning(LearningFunction):
         input = self.activation_input
         output = self.activation_output
         error = self.error_signal
-
-        if params['learning_rate'] is None:
-            learning_rate = self.default_learning_rate
-        else:
-            learning_rate = params['learning_rate']
-
-        if params['reward'] is None:
-            reward = self.default_reward
-        else:
-            reward = params['reward']
-
-        if params['discount_factor'] is None:
-            discount_factor = self.default_discount_factor
-        else:
-            discount_factor = params['discount_factor']
+        learning_rate = self.learning_rate
+        reward = self.reward
+        discount_factor = self.discount_factor
 
         optimal_future_q_value = np.max(output)
 
@@ -7406,11 +7397,200 @@ class QLearning(LearningFunction):
                                            optimal_future_q_value - input)
 
         return [q_value, error]
-# region *****************************************   OBJECTIVE FUNCTIONS ***********************************************
+
+
+class TDLearning(LearningFunction):
+    componentName = TDLEARNING_FUNCTION
+    variableClassDefault = [[[0, 0], [0, 0]]]
+    default_learning_rate = 0.05
+    default_discount_factor = 0.5
+    default_initial_weights = [[1, 1]]
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        WEIGHTS: None,
+        CURRENT_STATE: None,
+        Q_MATRIX: None
+    })
+
+    def __init__(self,
+                 default_variable=None,
+                 reward: Union[List, np.ndarray] = None,
+                 learning_rate=default_learning_rate,
+                 discount_factor=default_discount_factor,
+                 initial_weights=None,
+                 goal_state=0,
+                 initial_state=None,
+                 initial_iterations=10,
+                 params=None,
+                 owner=None,
+                 prefs: Union[PreferenceSet, Dict] = None,
+                 context: str = componentName + INITIALIZING):
+        """
+
+        Parameters
+        ----------
+        default_variable
+
+        learning_rate: float: default 0.05
+
+        reward: 2d np.ndarray or List: default None
+            2-dimensional Numpy array or List representing the reward at
+            each
+            state for taking an action. States are represented by rows and
+            actions are represented by columns. Invalid actions in a
+            state are
+            represented with `None`. All valid actions should have a
+            numerical
+            value.
+        discount_factor: float: default 0.5
+            the discount factor or gamma value in the Q-learning
+            algorithm. Must
+            be between 0 and 1 inclusive. Values closer to 1 will prioritize
+            future states. Values closer to 0 will prioritize more immediate
+            states.
+        initial_weights: 2d np.ndarray or List: default None
+            initial weights given to each action
+        goal_state: int: default None
+            the goal state to reach represented as an integer. Must be
+            within the
+            range 0 - `len(reward)`
+        initial_state: int: default None
+            the state to start in represented as an integer. Must be
+            within the
+            range 0 - `len(reward)`
+        initial_action: int: default None
+            first action to take from the `initial_state`. Must be within
+            the
+            range 0 - `len(reward[initial_state])` and must correspond to
+            a valid
+            action in `initial_state`
+        params
+        owner
+        prefs
+        context
+        """
+        # TODO: is it helpful to have a states argument that specifies which
+        # states to go to
+        print("Calling function init...")
+        self.name = "TDLearning Function"
+        try:
+            print(self.paramsCurrent)
+        except AttributeError:
+            pass
+        print("reward shape = {}".format(reward.shape))
+        q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
+
+        params = self._assign_args_to_param_dicts(
+            learning_rate=learning_rate,
+            reward=reward,
+            discount_factor=discount_factor,
+            initial_weights=initial_weights,
+            initial_state=initial_state,
+            goal_state=goal_state,
+            initial_iterations=initial_iterations,
+            params=params)
+
+        params[WEIGHTS] = initial_weights
+        params[CURRENT_STATE] = initial_state
+        params[Q_MATRIX] = q_matrix
+
+        super().__init__(default_variable, params, context=context, owner=owner,
+                         prefs=prefs)
+
+        # populate Q-matrix
+        self._initialize_q_matrix(context)
+
+    def _validate_variable(self, variable, context=None):
+        super()._validate_variable(variable, context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        self._check_args(variable=variable, params=params, context=context)
+        print("context = {}".format(context))
+        if "INITIALIZING" in context:
+            return self.default_initial_weights
+
+        weights = self.paramsCurrent[WEIGHTS]
+        current_state = self.paramsCurrent[CURRENT_STATE]
+        goal_state = self.paramsCurrent[GOAL_STATE]
+        initial_weights = self.paramsCurrent[INITIAL_WEIGHTS]
+        learning_rate = self.paramsCurrent[LEARNING_RATE]
+        discount_factor = self.paramsCurrent[DISCOUNT_FACTOR]
+        reward = self.paramsCurrent[REWARD]
+        q_matrix = self.paramsCurrent[Q_MATRIX]
+
+        if current_state == goal_state:
+            return weights
+
+        # TODO: change this to highest q-value of next state
+        next_action = np.argmax(q_matrix[current_state])
+        weights = weights + learning_rate * (
+            discount_factor * np.max(q_matrix[next_action]) +
+            reward[current_state][next_action] -
+            q_matrix[current_state][next_action]) * np.gradient(q_matrix)
+
+        self.paramsCurrent[CURRENT_STATE] = next_action
+        self.paramsCurrent[WEIGHTS] = weights
+        return [weights - initial_weights, params['error_source']]
+
+    def _initialize_q_matrix(self, context):
+
+        q_matrix = self.paramsCurrent[Q_MATRIX]
+        goal_state = self.paramsCurrent[GOAL_STATE]
+        reward = self.paramsCurrent[REWARD]
+        num_iterations = self.paramsCurrent[INITIAL_ITERATIONS]
+        discount_factor = self.paramsCurrent[DISCOUNT_FACTOR]
+
+        print("q_matrix = {}".format(self.q_matrix))
+        if np.any(q_matrix):
+            return
+
+        for iteration in range(num_iterations):
+            for initial_state in range(len(reward)):
+                if goal_state == initial_state:
+                    continue
+                current_state = initial_state
+                while current_state != goal_state:
+                    possible_next_states = np.concatenate(
+                        np.argwhere(~np.isnan(reward[current_state]))).ravel()
+                    next_action = possible_next_states[
+                        np.random.randint(len(possible_next_states))]
+                    if np.isnan(reward[current_state][next_action]):
+                        continue
+                    max_q = np.nanmax(q_matrix[next_action])
+                    q_matrix[current_state][next_action] = \
+                        reward[current_state][next_action] + discount_factor * max_q
+                    current_state = next_action
+
+                for _ in range(len(reward)):
+                    possible_next_states = np.concatenate(
+                        np.argwhere(~np.isnan(reward[current_state]))).ravel()
+                    next_action = possible_next_states[
+                        np.random.randint(len(possible_next_states))]
+                    if np.isnan(reward[current_state][next_action]):
+                        continue
+                    max_q = np.nanmax(q_matrix[next_action])
+                    q_matrix[current_state][next_action] = \
+                        reward[current_state][next_action] + discount_factor * max_q
+                    current_state = next_action
+
+        print("post initialization = {}".format(q_matrix))
+        self.paramsCurrent[Q_MATRIX] = q_matrix
+        self.q_matrix = q_matrix
+
+
+
+
+
+# region *****************************************   OBJECTIVE FUNCTIONS
+# ***********************************************
 # endregion
 # TBI
 
-# region  *****************************************   REGISTER FUNCTIONS ***********************************************
+# region  *****************************************   REGISTER FUNCTIONS
+# ***********************************************
 
 # region
 

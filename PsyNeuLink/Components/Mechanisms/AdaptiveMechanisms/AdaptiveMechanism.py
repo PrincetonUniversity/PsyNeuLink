@@ -99,7 +99,7 @@ from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 
-class AdpativeMechanismError(Exception):
+class AdaptiveMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
