@@ -357,7 +357,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = None
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = None
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
@@ -469,7 +470,7 @@ class LearningProjection(ModulatoryProjection_Base):
                                           format(self.name, self.sender.owner.name))
 
         # This assigns self as an outgoing projection from the sender (LearningMechanism) outputState
-        #    and formats self.variable to be compatible with that outputState's value (i.e., its learning_signal)
+        #    and formats self.instance_defaults.variable to be compatible with that outputState's value (i.e., its learning_signal)
         super()._instantiate_sender(context=context)
 
         if self.sender.learning_rate is not None:
@@ -487,7 +488,7 @@ class LearningProjection(ModulatoryProjection_Base):
         super()._instantiate_receiver(context=context)
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
-        if not iscompatible(self.value, self.receiver.value):
+        if not iscompatible(self.value, self.receiver.instance_defaults.variable):
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,

@@ -313,7 +313,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + componentType (str): ObjectiveMechanism
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
+            + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
@@ -442,8 +442,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'ObjectiveCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # variableClassDefault = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
-    variableClassDefault = None
+    # ClassDefaults.variable = [[0],[0]]  # By default, ObjectiveMechanism compares two 1D np.array input_states
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        variable = None
 
     # ObjectiveMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
@@ -495,12 +496,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         # NOTE 6/29/17: (CW)
         # This is a very questionable check. The problem is that TransferMechanism (if default_variable is passed as
-        # None) expects variable to be initialized to variableClassDefault ([[0]]) while ObjectiveMechanism expects
-        # variable to be initialized to variableClassDefault ([[0]]) AFTER this check has occurred. The problem is,
+        # None) expects variable to be initialized to ClassDefaults.variable ([[0]]) while ObjectiveMechanism expects
+        # variable to be initialized to ClassDefaults.variable ([[0]]) AFTER this check has occurred. The problem is,
         # my solution to this has been to write (in each subclass of ProcessingMechanism) specific behavior on how to
         # react if both variable and size are None. This is fine but potentially cumbersome for future developers.
         # We should consider deleting this check entirely, and allowing ProcessingMechanism (or a further parent class)
-        # to always set variable to variableClassDefault if variable and size are both None.
+        # to always set variable to ClassDefaults.variable if variable and size are both None.
         # IMPLEMENTATION NOTE:  use self.user_params (i.e., values specified in constructor)
         #                       since params have not yet been validated and so self.params is not yet available
         if variable is not None and len(variable) != len(self.user_params[MONITORED_VALUES]):
@@ -509,7 +510,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                           format(len(variable), self.name, len(self.user_params[MONITORED_VALUES])))
         # MODIFIED 6/29/17 END
 
-        super()._validate_variable(variable=variable, context=context)
+        return super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate `role`, `monitored_values`, amd `input_states <ObjectiveMechanism.input_states>` arguments
@@ -598,7 +599,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     #                      ADDS an input_state FOR EACH ITEM IN monitored_values
     #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
-        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.variable
+        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.instance_defaults.variable
 
         Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states.
         Re-specify corresponding items of variable to match the values of the InputStates in input_states.
@@ -621,8 +622,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 monitored_value_dict = monitored_value
             elif isinstance(monitored_value, State):
                 monitored_value_dict[NAME] = monitored_value.name
-                monitored_value_dict[VARIABLE] = monitored_value.variable
-                monitored_value_dict[VALUE] = monitored_value.variable
+                monitored_value_dict[VARIABLE] = monitored_value.instance_defaults.variable
+                monitored_value_dict[VALUE] = monitored_value.instance_defaults.variable
                 # monitored_value_dict[PARAMS] = monitored_value.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
@@ -653,14 +654,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                       name=monitored_values[i][NAME],
                                                       value=monitored_values[i][VALUE])
 
+        # TODO: stateful - what is this doing?
         constraint_value = []
         for input_state in self.input_states:
             constraint_value.append(input_state[VARIABLE])
-        self.variable = constraint_value
+        self.instance_defaults.variable = constraint_value
 
         super()._instantiate_input_states(context=context)
-
-        # self.variableClassDefault = self.variable.copy()
 
         # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []

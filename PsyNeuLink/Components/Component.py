@@ -500,7 +500,7 @@ class Component(object):
         Every Component is associated with:
          - child class componentName
          - type
-         - input (self.variable)
+         - input
          - execute (method): called to execute it;  it in turn calls self.function
          - function (method): carries out object's core computation
              it can be referenced either as self.function, self.params[FUNCTION] or self.paramsCurrent[FUNCTION]
@@ -514,7 +514,7 @@ class Component(object):
             the following attributes for or associated with the method are defined for every Component object:
                 + execute (method) - the execute method itself
                 + value (value) - the output of the execute method
-            the latter is used for typing and/or templating other variables (e.g., self.variable):
+            the latter is used for typing and/or templating other variables (e.g., self.instance_defaults.variable):
                 type checking is generally done using Utilities.iscompatible(); for iterables (lists, tuples, dicts):
                     if the template (the "reference" arg) has entries (e.g., [1, 2, 3]), comparisons will include length
                     if the template is empty (e.g., [], {}, or ()), length will not be checked
@@ -553,9 +553,9 @@ class Component(object):
                     if FUNCTION is found on initialization:
                         if it is a reference to an instantiated function, self.function is pointed to it
                         if it is a class reference to a function:
-                            it is instantiated using self.variable and FUNCTION_PARAMS (if they are there too)
+                            it is instantiated using self.instance_defaults.variable and FUNCTION_PARAMS (if they are there too)
                             this works, since _validate_params is always called after _validate_variable
-                            so self.variable can be used to initialize function
+                            so self.instance_defaults.variable can be used to initialize function
                             to the method referenced by paramInstanceDefaults[FUNCTION] (see below)
                     if paramClassDefaults[FUNCTION] is not found, it's value is assigned to self.function
                     if neither paramClassDefaults[FUNCTION] nor self.function is found, an exception is raised
@@ -595,9 +595,9 @@ class Component(object):
     Instance attributes:
         + name
         + componentName - name of particular Function (linear, exponential, integral, etc.)
-        + variableClassDefault (value)
+        + ClassDefaults.variable (value)
         + variableClassDefault_np_info (ndArrayInfo)
-        + variableInstanceDefault (value)
+        + instance_defaults.variable (value)
         + _variable_not_specified
         + variable (value)
         + variable_np_info (ndArrayInfo)
@@ -656,6 +656,20 @@ class Component(object):
     componentCategory = None
     componentType = None
 
+    class Defaults(object):
+        @classmethod
+        def values(cls):
+            vardict = {k: getattr(cls, k) for k in dir(cls) if k[:2]+k[-2:] != '____' and not callable(getattr(cls, k))}
+            return vardict
+
+    class ClassDefaults(Defaults):
+        variable = NotImplemented
+
+    class InstanceDefaults(Defaults):
+        def __init__(self, **kwargs):
+            for param in kwargs:
+                setattr(self, param, kwargs[param])
+
     initMethod = INIT_FULL_EXECUTE_METHOD
 
     classPreferenceLevel = PreferenceLevel.SYSTEM
@@ -665,7 +679,7 @@ class Component(object):
     #     kwPreferenceSetName: 'ComponentCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # Determines whether variableClassDefault can be changed (to match an variable in __init__ method)
+    # Determines whether ClassDefaults.variable can be changed (to match an variable in __init__ method)
     variableClassDefault_locked = False
 
 
@@ -721,8 +735,9 @@ class Component(object):
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
 
+        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **param_defaults)
+
         # These ensure that subclass values are preserved, while allowing them to be referred to below
-        self.variableInstanceDefault = None
         self.paramInstanceDefaults = {}
 
         self._auto_dependent = False
@@ -762,14 +777,14 @@ class Component(object):
 
         # ENFORCE REQUIRED CLASS DEFAULTS
 
-        # All subclasses must implement variableClassDefault
+        # All subclasses must implement self.ClassDefaults.variable
         # Do this here, as _validate_variable might be overridden by subclass
         try:
-            if self.variableClassDefault is NotImplemented:
-                raise ComponentError("variableClassDefault for {} must be assigned a value or \'None\'".
+            if self.ClassDefaults.variable is NotImplemented:
+                raise ComponentError("self.ClassDefaults.variable for {} must be assigned a value or \'None\'".
                                      format(self.componentName))
         except AttributeError:
-            raise ComponentError("variableClassDefault must be defined for {} or its base class".
+            raise ComponentError("self.ClassDefaults.variable must be defined for {} or its base class".
                                 format(self.componentName))
 
         # CHECK FOR REQUIRED PARAMS
@@ -822,10 +837,6 @@ class Component(object):
                context=context)
 
         # SET CURRENT VALUES OF VARIABLE AND PARAMS
-
-        self.variable = self.variableInstanceDefault
-        # self.variable = self.variableInstanceDefault.copy()
-
         # self.paramsCurrent = self.paramInstanceDefaults
         self.paramsCurrent = self.paramInstanceDefaults.copy()
 
@@ -870,7 +881,7 @@ class Component(object):
 
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
-            #     variable = self.variableClassDefault
+            #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
             # expected behavior when variable is None and size is None.
 
@@ -895,7 +906,7 @@ class Component(object):
             #region Convert variable (if given) to a 2D array, and size (if given) to a 1D integer array
             try:
                 if variable is not None:
-                    variable = np.atleast_2d(variable)
+                    variable = self._update_variable(np.atleast_2d(variable))
                     # 6/30/17 (CW): Previously, using variable or default_variable to create
                     # input states of differing lengths (e.g. default_variable = [[1, 2], [1, 2, 3]])
                     # caused a bug. The if statement below fixes this bug. This solution is ugly, though.
@@ -908,7 +919,7 @@ class Component(object):
                                 allLists = False
                                 break
                         if allLists:
-                            variable = variable[0]
+                            variable = self._update_variable(variable[0])
             except:
                 raise ComponentError("Failed to convert variable (of type {}) to a 2D array.".format(type(variable)))
 
@@ -934,10 +945,10 @@ class Component(object):
             # value of variable (though it's an unlikely use case), which is an array of zeros at the moment
             if variable is None and size is not None:
                 try:
-                    variable = []
+                    variable = self._update_variable([])
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = np.array(variable)
+                    variable = self._update_variable(np.array(variable))
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -1370,7 +1381,7 @@ class Component(object):
                 setattr(self, arg_name, arg_value)
 
 
-    def _check_args(self, variable, params=None, target_set=None, context=None):
+    def _check_args(self, variable=None, params=None, target_set=None, context=None):
         """validate variable and params, instantiate variable (if necessary) and assign any runtime params.
 
         Called by functions to validate variable and params
@@ -1393,11 +1404,15 @@ class Component(object):
 
         # If function is called without any arguments, get default for variable
         if variable is None:
-            variable = self.variableInstanceDefault # assigned by the Function class init when initializing
+            try:
+                # assigned by the Function class init when initializing
+                variable = self._update_variable(self.instance_defaults.variable)
+            except AttributeError:
+                variable = self._update_variable(self.ClassDefaults.variable)
 
         # If the variable is a function, call it
         if callable(variable):
-            variable = variable()
+            variable = self._update_variable(variable())
 
         # Validate variable if parameter_validation is set and the function was called with a variable
         if self.prefs.paramValidationPref and not variable is None:
@@ -1405,9 +1420,7 @@ class Component(object):
                 context = context + SEPARATOR_BAR + FUNCTION_CHECK_ARGS
             else:
                 context = FUNCTION_CHECK_ARGS
-            self._validate_variable(variable, context=context)
-        else:
-            self.variable = variable
+            variable = self._update_variable(self._validate_variable(variable, context=context))
 
         # PARAMS ------------------------------------------------------------
 
@@ -1472,8 +1485,12 @@ class Component(object):
 
         # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
         if self.prefs.paramValidationPref and params and not params is target_set:
-            self._validate_params(request_set=params, target_set=target_set, context=context)
+            try:
+                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=params, target_set=target_set, context=context)
 
+        return variable
 
     def _instantiate_defaults(self,
                         variable=None,
@@ -1510,7 +1527,7 @@ class Component(object):
           If not context:  instantiates function and any states specified in request set
                            (if they have changed from the previous value(s))
 
-        :param variable: (anything but a dict (variable) - value to assign as variableInstanceDefault
+        :param variable: (anything but a dict (variable) - value to assign as instance_defaults.variable
         :param request_set: (dict) - params to be assigned
         :param assign_missing: (bool) - controls whether missing params are set to default_set values (default: False)
         :param target_set: (dict) - param set to which assignments should be made
@@ -1554,17 +1571,18 @@ class Component(object):
                         format(self.name, self.shape, np.array(variable).shape))
             # Variable is not specified, so set to array of zeros with specified shape
             else:
-                variable = np.zeros(self.shape)
+                variable = self._update_variable(np.zeros(self.shape))
 
         # VALIDATE VARIABLE (if not called from assign_params)
 
         if not any(context_string in context for context_string in {COMMAND_LINE, SET_ATTRIBUTE}):
-            # if variable has been passed then validate and, if OK, assign as variableInstanceDefault
-            self._validate_variable(variable, context=context)
+            # if variable has been passed then validate and, if OK, assign as self.instance_defaults.variable
+            variable = self._update_variable(self._validate_variable(variable, context=context))
+            # if self.instance_defaults.variable is None:
             if variable is None:
-                self.variableInstanceDefault = self.variableClassDefault
+                self.instance_defaults.variable = self.ClassDefaults.variable
             else:
-                self.variableInstanceDefault = self.variable
+                self.instance_defaults.variable = variable
 
         # If no params were passed, then done
         if request_set is None and target_set is None and default_set is None:
@@ -1716,7 +1734,10 @@ class Component(object):
                     param_value = self._get_param_value_from_tuple(param_value)
                     request_set[param_name] = param_value
             # MODIFIED 4/18/17 END NEW
-            self._validate_params(request_set, target_set, context=context)
+            try:
+                self._validate_params(variable=variable, request_set=request_set, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def assign_params(self, request_set=None, context=None):
         """Validates specified params, adds them TO paramInstanceDefaults, and instantiates any if necessary
@@ -1861,17 +1882,17 @@ class Component(object):
             self.paramInstanceDefaults = self.paramClassDefaults.copy()
 
     def _validate_variable(self, variable, context=None):
-        """Validate variable and assign validated values to self.variable
+        """Validate variable and return validated variable
 
-        Convert variableClassDefault specification and variable (if specified) to list of 1D np.ndarrays:
+        Convert self.ClassDefaults.variable specification and variable (if specified) to list of 1D np.ndarrays:
 
         VARIABLE SPECIFICATION:                                        ENCODING:
         Simple value variable:                                         0 -> [array([0])]
         Single state array (vector) variable:                         [0, 1] -> [array([0, 1])]
         Multiple state variables, each with a single value variable:  [[0], [0]] -> [array[0], array[0]]
 
-        Perform top-level type validation of variable against the variableClassDefault;
-            if the type is OK, the value is assigned to self.variable (which should be used by the function)
+        Perform top-level type validation of variable against the self.ClassDefaults.variable;
+            if the type is OK, the value is returned (which should be used by the function)
         This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
         It is called only if the parameter_validation attribute is `True` (which it is by default)
 
@@ -1881,29 +1902,32 @@ class Component(object):
 
         :param variable: (anything other than a dictionary) - variable to be validated:
         :param context: (str)
-        :return none:
+        :return variable: validated variable
         """
 
         if inspect.isclass(variable):
             raise ComponentError("Assignment of class ({}) as a variable (for {}) is not allowed".
                                  format(variable.__name__, self.name))
 
-        pre_converted_variable_class_default = self.variableClassDefault
+        pre_converted_variable_class_default = self.ClassDefaults.variable
 
         # FIX: SAYS "list of np.ndarrays" BELOW, WHICH WOULD BE A 2D ARRAY, BUT CONVERSION BELOW ONLY INDUCES 1D ARRAY
         # FIX: NOTE:  VARIABLE (BELOW) IS CONVERTED TO ONLY 1D ARRAY
-        # Convert variableClassDefault to list of np.ndarrays
-        # self.variableClassDefault = convert_to_np_array(self.variableClassDefault, 1)
+        # Convert self.ClassDefaults.variable to list of np.ndarrays
+        self.ClassDefaults.variable = convert_to_np_array(self.ClassDefaults.variable, 1)
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 1)
 
         # If variable is not specified, then:
-        #    - assign to (??now np-converted version of) variableClassDefault
+        #    - assign to (??now np-converted version of) self.ClassDefaults.variable
         #    - mark as not having been specified
         #    - return
         self._variable_not_specified = False
         if variable is None:
-            self.variable = self.variableClassDefault
             self._variable_not_specified = True
-            return
+            try:
+                return self.instance_defaults.variable
+            except AttributeError:
+                return self.ClassDefaults.variable
 
         # Otherwise, do some checking on variable before converting to np.ndarray
 
@@ -1911,27 +1935,22 @@ class Component(object):
         # Note: check for list is necessary since function references must be passed wrapped in a list so that they are
         #       not called before being passed
         if isinstance(variable, list) and callable(variable[0]):
-            variable = variable[0]()
+            variable = self._update_variable(variable[0]())
         # NOTE (7/24/17 CW): the above two lines of code can be commented out without causing any current tests to fail
         # So we should either write tests for this piece of code, or remove it.
         # Convert variable to np.ndarray
-        # Note: this insures that self.variable will be AT LEAST 1D;  however, can also be higher:
+        # Note: this insures that variable will be AT LEAST 1D;  however, can also be higher:
         #       e.g., given a list specification of [[0],[0]], it will return a 2D np.array
-        variable = convert_to_np_array(variable, 1)
+        variable = self._update_variable(convert_to_np_array(variable, 1))
 
-        # If variableClassDefault is locked, then check that variable matches it
+        # If self.ClassDefaults.variable is locked, then check that variable matches it
         if self.variableClassDefault_locked:
-            # If variable type matches variableClassDefault
-            #    then assign variable to self.variable
-            # if (type(variable) == type(self.variableClassDefault) or
-            #         (isinstance(variable, numbers.Number) and
-            #              isinstance(self.variableClassDefault, numbers.Number))):
-            if not variable.dtype is self.variableClassDefault.dtype:
+            if not variable.dtype is self.ClassDefaults.variable.dtype:
                 message = "Variable for {0} (in {1}) must be a {2}".\
                     format(self.componentName, context, pre_converted_variable_class_default.__class__.__name__)
                 raise ComponentError(message)
 
-        self.variable = variable
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate params and assign validated values to targets,
@@ -2304,7 +2323,7 @@ class Component(object):
         If FUNCTION IS in params:
             - if it is a Function object, it is simply assigned to self.function;
             - if it is a Function class reference:
-                it is instantiated using self.variable and, if present, params[FUNCTION_PARAMS]
+                it is instantiated using self.instance_defaults.variable and, if present, params[FUNCTION_PARAMS]
         If FUNCTION IS NOT in params:
             - if self.function IS implemented, it is assigned to params[FUNCTION]
             - if self.function IS NOT implemented: program error (should have been caught in _validate_function)
@@ -2346,7 +2365,7 @@ class Component(object):
 
             # If FUNCTION is a Function class:
             # - instantiate method using:
-            #    - self.variable
+            #    - self.instance_defaults.variable
             #    - params[FUNCTION_PARAMS] (if specified)
             # - issue warning if in VERBOSE mode
             # - assign to self.function and params[FUNCTION]
@@ -2384,7 +2403,7 @@ class Component(object):
                                 function_param_specs[param_name] =  param_spec[VALUE]
 
                 # Instantiate function from class specification
-                function_instance = function(default_variable=self.variable,
+                function_instance = function(default_variable=self.instance_defaults.variable,
                                              params=function_param_specs,
                                              # IMPLEMENTATION NOTE:
                                              #    Don't bother with this, since it has to be assigned explicitly below
@@ -2483,7 +2502,10 @@ class Component(object):
         #    execute method, not its function
         if not context:
             context = "DIRECT CALL"
-        self.value = self.execute(context=context)
+        try:
+            self.value = self.execute(variable=self.instance_defaults.variable, context=context)
+        except TypeError:
+            self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         try:
@@ -2506,6 +2528,14 @@ class Component(object):
         """Evaluate execute method
         """
         self.value = self.execute(context=context)
+
+    def _update_variable(self, value):
+        '''
+            Used to mirror assignments to local variable in an attribute
+            Knowingly not threadsafe
+        '''
+        self.variable = value
+        return value
 
     # @property
     # def variable(self):
@@ -2532,10 +2562,13 @@ class Component(object):
 
     @property
     def size(self):
-        if not hasattr(self, 'variable'):
-            return None
         s = []
-        v = np.atleast_2d(self.variable)
+
+        try:
+            v = np.atleast_2d(self.instance_defaults.variable)
+        except AttributeError:
+            return None
+
         for i in range(len(v)):
             s.append(len(v[i]))
         return np.array(s)
@@ -2732,7 +2765,6 @@ def make_property(name, default_value):
         # If the parameter is associated with a ParameterState, assign the value to the ParameterState's variable
         if hasattr(param_state_owner, '_parameter_states') and name in param_state_owner._parameter_states:
             param_state = param_state_owner._parameter_states[name]
-            param_state.variable = val
 
             # MODIFIED 7/24/17 CW: If the ParameterState's function has an initializer attribute (i.e. it's an
             # integrator function), then also reset the 'previous_value' and 'initializer' attributes by setting

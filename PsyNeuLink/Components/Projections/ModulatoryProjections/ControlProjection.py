@@ -250,7 +250,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = 0.0
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = 0.0
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -294,7 +295,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.value = self.variable
+        Insure that sender.value = self.instance_defaults.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:
@@ -355,8 +356,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        self.variable = self.sender.value
-        self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
+        self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 
     @property
