@@ -120,10 +120,10 @@ trained using backpropagation simply by adding the **learning** argument to the 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
 and then specifying the target for each trial when it is executed (here, the Process' `run <Process_Base.run>` command
-is used to execute a series of five training trials, one that trains it on each element of the inputu)::
+is used to execute a series of five training trials, one that trains it on each element of the input)::
 
-    my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
-                   target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
+    my_encoder.run(input=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]],
+                   target=[[0,0,0,0,0], [1,0,0,0,0], [0,0,1,0,0], [0,0,0,1,0], [0,0,0,0,1]])
 
 `Backpropagation <BackPropagation>` is the default learning method, but PsyNeuLink also currently supports
 `Reinforcement Learning <Reinforcement>`, and others are currently being implemented (including Hebbian, Temporal

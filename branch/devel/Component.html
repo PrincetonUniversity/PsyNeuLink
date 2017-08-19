@@ -213,11 +213,10 @@ being used, due to asynchrony inherent to parallelization.</p>
 constructor for a Component can be used as a convenient method for specifying the <a class="reference internal" href="#component-variable"><span class="std std-ref">variable</span></a>,
 attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
 setting  <strong>size</strong> = 3 is equivalent to setting <strong>variable</strong> = [0, 0, 0] and setting <strong>size</strong> = [4, 3] is equivalent
-to setting <a href="#id2"><span class="problematic" id="id3">**</span></a>variable* = [[0, 0, 0, 0], [0, 0, 0]].</li>
+to setting <strong>variable</strong> = [[0, 0, 0, 0], [0, 0, 0]].</li>
 </ul>
 <ul id="component-function">
-<li><p class="first"><strong>function</strong> - determines the computation that a Component carries out. It is always a PsyNeuLink
-<a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (itself a PsyNeuLink Component).</p>
+<li><p class="first"><strong>function</strong> - determines the computation that a Component carries out. It is always the <a class="reference internal" href="Function.html#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> method of a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> object (itself a PsyNeuLink Component).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component can be assigned either a <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> object or any other
@@ -225,7 +224,7 @@ callable object in python.  If the latter is assigned, it is &#8220;wrapped&#822
 </div>
 <p>All Components have a default <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (with a default set of parameters), that is used if it
 is not otherwise specified.  The <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in the
-function argument of the constructor for the Component, using one of the following:</p>
+<strong>function</strong> argument of the constructor for the Component, using one of the following:</p>
 <blockquote>
 <div><ul>
 <li><p class="first"><strong>class</strong> - this must be a subclass of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, as in the following example:</p>
@@ -250,7 +249,7 @@ following examples:</p>
 </pre></div>
 </div>
 <p>The specified Function will be used as a template to create a new Function object that is assigned to the
-<a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute of the Component, the <code class="xref any docutils literal"><span class="pre">function</span></code> of which will be assigned as
+<a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute of the Component, the <a class="reference internal" href="Function.html#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of which will be assigned as
 the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of the Component.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -301,26 +300,26 @@ changes to the value of an attribute must be made by assigning a value to the at
 <code class="docutils literal"><span class="pre">my_component.my_parameter</span></code>), or using the Component&#8217;s <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.</li>
 </ul>
 <ul class="simple" id="component-function-object">
-<li><strong>function_object</strong> - the <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the Component;
-The Function&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code> is assigned to the <a class="reference internal" href="#"><span class="doc">function</span></a> attribute of the
-Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-those parameters (see <a class="reference internal" href="#component-function-params"><span class="std std-ref">function_params</span></a> below).</li>
+<li><strong>function_object</strong> - the <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute refers to the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> assigned to the
+Component; The Function&#8217;s <a class="reference internal" href="Function.html#Function.Function_Base.function" title="Function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> &#8211; its callable method &#8211; is assigned to the <a class="reference internal" href="#"><span class="doc">function</span></a> attribute of the Component. The parameters of the Function can be modified by assigning values to the
+attributes corresponding to those parameters (see <a class="reference internal" href="#component-function-params"><span class="std std-ref">function_params</span></a> below).</li>
 </ul>
 <ul id="component-function-params">
 <li><p class="first"><strong>function_params</strong> - the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function_params</span></code></a> attribute contains a dictionary of the parameters
 for the Component&#8217;s <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values.  Each entry is the name of a parameter, and its
-value the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
 class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict">UserList</a>). The
 value of an entry can be accessed in the standard manner (e.g., <code class="docutils literal"><span class="pre">my_component.function_params[`PARAMETER</span> <span class="pre">NAME`]</span></code>);
-however, to access a full list of entries it&#8217;s data attribute must be used (e.g.,
+however, to access a full list of its entries its data attribute must be used (e.g.,
 <code class="docutils literal"><span class="pre">my_component.function_params.data</span></code>).  Also, because it is read-only, it cannot be used to make assignments.
-Rather, changes to the value of the function&#8217;s parameters must be made by assigning a value to the corresponding
+Rather, changes to the value of a function&#8217;s parameters must be made by assigning a value to the corresponding
 attribute of the Component&#8217;s <a class="reference internal" href="#Component.Component.function_object" title="Component.Component.function_object"><code class="xref any py py-attr docutils literal"><span class="pre">function_object</span></code></a> attribute (e.g.,
 <code class="docutils literal"><span class="pre">my_component.function_object.my_parameter</span></code>), or in a FUNCTION_PARAMS dict using its <a class="reference internal" href="#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method.  The
-parameters for the function can be specified when the Component is created in one of the following ways:</p>
-<ul>
-<li><p class="first">in the <strong>constructor</strong> for a Function &#8211; if that is used to specify the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument,
-as in the following example:</p>
+parameters for a function can be specified when the Component is created in one of the following ways:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">in the <strong>constructor</strong> for a Function &#8211; if that is used to specify the <a class="reference internal" href="#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+argument, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_component</span> <span class="o">=</span> <span class="n">SomeComponent</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">SomeFunction</span><span class="p">(</span><span class="n">some_param</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">some_param</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -340,6 +339,7 @@ parameter&#8217;s value, as in the example below:</p>
 </div>
 </li>
 </ul>
+</div></blockquote>
 <p>The parameters of functions for some Components may allow other forms of specification (see
 <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">Specifying Parameters</span></a> for details concerning different ways in which the value of a
 parameter can be specified).</p>
@@ -347,7 +347,7 @@ parameter can be specified).</p>
 </ul>
 </div>
 <div class="section" id="component-methods">
-<span id="id4"></span><h3>Component Methods<a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
+<span id="id2"></span><h3>Component Methods<a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-assign-params">
 <li><strong>assign_params</strong> - assign the value of one or more parameters of a Component.  Each parameter is specified
 as an entry in a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter specification dictionary</span></a> in the <strong>request_set</strong>
@@ -429,7 +429,7 @@ It should be instantiated using the constructor for a subclass.</p>
 <dl class="attribute">
 <dt id="Component.Component.function">
 <code class="descname">function</code><a class="headerlink" href="#Component.Component.function" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Function, function or method</em> &#8211; see <a class="reference internal" href="#component-function"><span class="std std-ref">variable</span></a></p>
+<dd><p><em>Function, function or method</em> &#8211; see <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
