@@ -47,7 +47,7 @@ models in PsyNeuLink.
 
 .. figure:: _static/Grandview_With_System_fig.svg
 
-    **PsyNeuLink Environnment**.  Full-colored items are examples of currently implemented elements; dimmed
+    **PsyNeuLink Environment**.  Full-colored items are examples of currently implemented elements; dimmed
     items are examples of elements planned for future implementation.
 
 

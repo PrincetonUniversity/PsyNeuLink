@@ -218,10 +218,11 @@ Compositions:
    :alt: Overview of major PsyNeuLink Components
    :scale: 50 %
 
-   Two `Processes <Process>` are shown, both belonging to the same `System <System>`.  Each Process has a
-   series of `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism (see `figure in System <System_Full_Fig>` for a more
-   complete example, that includes Components responsible for learning, control and gating).
+   Two `Processes <Process>` are shown, both belonging to the same `System`.  Each Process has a series of
+   `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`, that converge on
+   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` and in `ModulatorySignals
+   <ModulatorySignal_Anatomy_Figure>` for more complete examples, that include Components responsible for `learning
+   <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
 
 
 .. _Quick_Reference_Execution:
