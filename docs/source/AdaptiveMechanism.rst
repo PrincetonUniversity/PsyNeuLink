@@ -8,6 +8,7 @@ Adaptive Mechanism
 
    LearningMechanism
    ControlMechanism
+      EVCMechanism
    GatingMechanism
 
 .. automodule:: AdaptiveMechanisms.AdaptiveMechanism

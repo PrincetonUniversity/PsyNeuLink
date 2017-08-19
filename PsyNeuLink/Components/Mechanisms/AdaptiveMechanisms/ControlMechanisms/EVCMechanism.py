@@ -20,14 +20,14 @@ designed to implement a form of the Expected Value of Control (EVC) Theory descr
 `Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning
 the purpose and structure of the EVCMechanism.
 
-An EVCMechanism belongs to a `System` specified in its `system <EVCMechanism.system>` attribute, and a `ControlSignal`
-for each parameter of the Components in the `system <EVCMechanism.system>` that it controls.  Each ControlSignal is
-associated with a `ControlProjection` that regulates the value of the parameter it controls, with the magnitude of
-that regulation determined by the ControlSignal's `intensity`.  A particular combination of ControlSignal `intensity`
-values is called an `allocation_policy`. When a `System` is executed that uses an EVCMechanism as its `controller
-<System_Base.controller>`, it concludes by executing the EVCMechanism which determines its `allocation_policy` for the
-next `TRIAL`.  That, in turn, determines the `intensity` for each of the ControlSignals, and therefore the values of
-the parameters being controlled on the next `TRIAL`.
+An EVCMechanism belongs to a `System` specified in its `system <EVCMechanism.system>` attribute,
+and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
+controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
+controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
+combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
+uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
+determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
+ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`.
 
 
 .. _EVCMechanism_EVC:
