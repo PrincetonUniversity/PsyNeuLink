@@ -66,6 +66,8 @@ Structure
 
 The Components of a System are shown in the figure below and summarized in the sections that follow.
 
+.. _System_Full_Fig:
+
 .. figure:: _static/System_full_fig.svg
    :alt: Overview of major PsyNeuLink components
    :scale: 75 %

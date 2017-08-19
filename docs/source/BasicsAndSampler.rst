@@ -38,12 +38,17 @@ affords modelers the flexibility to commit each Component of their model to a fo
 analysis that is appropriate for that Component, while providing the opportunity to test and explore how they
 interact with one another in a single System.
 
+The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are planned for
+future inclusion.  The `QuickReference` provides a more detailed overview of PsyNeuLink objects and its other
+facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
+models in PsyNeuLink.
+
 .. _BasicsSampler_GrandView_Figure:
 
 .. figure:: _static/Grandview_With_System_fig.svg
 
-    **PsyNeuLink Environnment**.  Full-colored items are examples of currently implemented Components; dimmed
-    items are examples of Components planned for future implementation.
+    **PsyNeuLink Environment**.  Full-colored items are examples of currently implemented elements; dimmed
+    items are examples of elements planned for future implementation.
 
 
 .. _Sampler:
