@@ -220,9 +220,9 @@ Compositions:
 
    Two `Processes <Process>` are shown, both belonging to the same `System`.  Each Process has a series of
    `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`, that converge on
-   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` and in `ModulatorySignals
-   <ModulatorySignal_Anatomy_Figure>` for more complete examples, that include Components responsible for `learning
-   <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
+   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` for a more complete
+   example, and in `ModulatorySignals <ModulatorySignal_Anatomy_Figure>` that shows the details of Components
+   responsible for `learning <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
 
 
 .. _Quick_Reference_Execution:
