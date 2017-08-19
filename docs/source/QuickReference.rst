@@ -3,6 +3,7 @@ Quick Reference
 
 * `Conventions`
 * `PsyNeuLink_Objects`
+    * `Quick_Reference_Overview`
     * `Quick_Reference_Components`
     * `Quick_Reference_Compositions`
 * `Quick_Reference_Execution`
@@ -39,41 +40,67 @@ The following conventions are used for the names of PsyNeuLink objects and their
 PsyNeuLink Objects
 ------------------
 
-The two primary types of objects in PsyNeuLink are Components (basic building blocks) and Compositions (combinations
-of Components that implement a model).  The `figure <QuickReference_Overview_Figure>` below shows examples of some
-Components (various kinds of Mechanisms and Projections, combined to form two kinds of Composition (Processes and a
-System).  The sections below provide a description of these and the other basic objects in PsyNeuLink.
+.. _Quick_Reference_Overview:
+
+Overview
+~~~~~~~~
+
+The two primary types of objects in PsyNeuLink are `Components <Component>` (basic building blocks) and `Compositions
+<Composition>` (combinations of Components that implement a model).  There are four primary types of Components:
+Functions, Mechanisms, States and Projections.
+
+`Functions <Function>` are the basic units of computation in PsyNeuLink -- every other type of Component in PsyNeuLink
+has at least one Function, and sometimes more.  They "package" an executable method that is assigned to a Component's
+`function <Component.function>` attribute, and used to carry out the computation for which the Component is
+responsible.
+
+`Mechanisms <Mechanism>` are the basic units of processing in a PsyNeuLink model. They have one or more Functions that
+perform their characteristic operations.
+
+`States <State>` represent the input(s) and output(s) of a Mechanism, and the parameters of its Function(s).  States
+have Functions themselves, that determine the value of the State, and that can be used to modulate that value for
+learning, control and/or gating.
+
+`Projections <Projection>` are used to connect Mechanisms, transmit information between them, and to modulate the value
+of their States.
+
+Mechanisms and Projections are used to construct `Processes <Process>` -- simple Compositions that comprise a linear
+sequence of Mechanisms and Projections. Processes, in turn, can be combined to construct a `System` -- a more complex
+Composition used to implement a full PsyNeuLink model. The `figure <QuickReference_Overview_Figure>` below shows
+examples of some of the Components (various kinds of Mechanisms and Projections) in PsyNeuLink, combined to form two
+Processes and a System.  The sections that follow provide a description of these and the other basic objects in
+PsyNeuLink.
 
 .. _QuickReference_Overview_Figure:
 
 .. figure:: _static/Overview_fig.svg
 
-    **Constituents of a PsyNeuLink Model**. Includes examples of some Components (Mechanisms and Projections) and
-    Compositions (Processes and a System).
+    **Constituents of a PsyNeuLink Model**. Includes examples of some types of Components (Mechanisms and Projections)
+    and Compositions (Processes and a System).
 
 .. _Quick_Reference_Components:
 
 Components
 ~~~~~~~~~~
 
-Components are objects that perform a specific function. Every Component has a:
+Components are objects that perform a specific function. Every Component has the following core attributes:
 
-* `function <Component.function>` - performs the core computation of the Component;
+* `function <Component.function>` - performs the core computation of the Component (belongs to a PsyNeuLink Function
+  assigned to the Component's `function_object <Component.function_object>` attribute);
 
-* `variable <Component.variable>` - the input to the Component's `function <Component.function>`;
+* `variable <Component.variable>` - the input used for the Component's `function <Component.function>`;
 
-* *parameter(s)* - determine how a Component's `function <Component.function>` operates
-  (listed in its `user_params <Component.user_params>` dictionary);
+* *parameter(s)* - determine how a Component's `function <Component.function>` operates;
 
 * `value <Component.value>` - represents the result of the Component's `function <Component.function>`;
 
 * `name <Component.name>` - string label that uniquely identifies the Component.
 
-There are four types of Components in PsyNeuLink:  Mechanisms, Projections, States and Functions, as described below:
+The four types of Components in PsyNeuLink, Mechanisms, Projections, States and Functions, are described below:
 
 * `Mechanisms <Mechanism>`
      A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
-     uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
+     uses its `function <Mechanism_Base.function>` to combine and/or transform these in some way, and makes the output
      available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
      ProcessingMechanisms and AdaptiveMechanisms:
 
@@ -134,36 +161,36 @@ There are four types of Components in PsyNeuLink:  Mechanisms, Projections, Stat
 
    + `InputState`
        Represents a set of inputs to the Mechanism.
-       Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
-       `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's
-       `variable <Mechanism.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`, that
-        modify the parameter(s) of the State's function, and thereby the State's `value <State.value>`.
+       Receives one or more afferent PathwayProjections to a Mechanism, combines them using its `function
+       <State_Base.function>`, and assigns the result (its `value <State_Base.value>`)as an item of the Mechanism's
+       `variable <Mechanism_Base.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`,
+       that modify the parameter(s) of the State's function, and thereby the State's `value <State_Base.value>`.
 
    + `ParameterState`
-       Represents a parameter of the Mechanism's `function <Mechanism.function>`.  Takes the assigned value of the
-       parameter as the `variable <State.variable>` for the State's `function <State.function>`, and assigns the result
-       as the value of the parameter used by the Mechanism's `function <Mechanism.function>` when the Mechanism
-       executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify parameter(s)
-       of the State's function, and thereby the value of the parameters used by the Mechanism's
-       `function <Mechanism.function>`.
+       Represents a parameter of the Mechanism's `function <Mechanism_Base.function>`.  Takes the assigned value of the
+       parameter as the `variable <State_Base.variable>` for the State's `function <State_Base.function>`, and assigns
+       the result as the value of the parameter used by the Mechanism's `function <Mechanism_Base.function>` when the
+       Mechanism executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify
+       parameter(s) of the State's `function <State_Base.function>, and thereby the value of the parameters used by the
+       Mechanism's `function <Mechanism_Base.function>`.
 
    + `OutputState`
        Represents an output of the Mechanism.
-       Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
-       `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
-       to one or more efferent PathwayProjections.  It can also receive one or more
+       Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <State_Base.variable>` for the
+       State's `function <State_Base.function>`, assigns the result as the State's `value <OutputState.value>`, and
+       provides that to one or more efferent PathwayProjections.  It can also receive one or more
        `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       State's `value <State_Base.value>`.
 
 * `Functions <Function>`
    A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
    object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
    This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
-   to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
-   or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
-   non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
-   Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
-   called from Python.
+   to modulation by `ModulatoryProjections <ModulatoryProjection>` (see below), and for Functions to be swapped out
+   for one another or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for
+   linear, non-linear, and matrix transformations, integration, and comparison), as well as a standard Application
+   Programmers Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be
+   written in or called from Python.
 
 .. _Quick_Reference_Compositions:
 
