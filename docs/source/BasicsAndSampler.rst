@@ -175,7 +175,7 @@ For example, the following script implements a Composition that integrates a 3-l
 performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
 to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
 following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
-be used to execute the recurrent layer multiple times but the feedforward network only once in each round execution,
+be used to execute the recurrent layer multiple times but the feedforward network only once in each `TRIAL`,
 as follows::
 
     input_layer = TransferMechanism(size = 10)
