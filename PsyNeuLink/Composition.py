@@ -760,8 +760,8 @@ class Composition(object):
         execution_id=None
     ):
         '''
-            Passes inputs to any mechanisms receiving inputs directly from the user, then coordinates with the scheduler
-            to receive and execute sets of mechanisms that are eligible to run until termination conditions are met.
+            Passes inputs to any Mechanisms receiving inputs directly from the user, then coordinates with the Scheduler
+            to receive and execute sets of Mechanisms that are eligible to run until termination conditions are met.
 
             Arguments
             ---------
