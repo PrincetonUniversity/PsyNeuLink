@@ -1,11 +1,12 @@
-Projection
-==========
+Projections
+===========
 
 .. toctree::
    :maxdepth: 1
+   :titlesonly:
 
-   PathwayProjection
-   ModulatoryProjection
+   PathwayProjections <PathwayProjection>
+   ModulatoryProjections <ModulatoryProjection>
 
 .. toctree::
    :maxdepth: 3

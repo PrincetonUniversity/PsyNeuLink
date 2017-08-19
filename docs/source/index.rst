@@ -168,18 +168,19 @@ With substantial and greatly appreciated assistance from:
 
 
 .. toctree::
-   :hidden:
+   :titlesonly:
+   :maxdepth: 1
 
    BasicsAndSampler
    QuickReference
-   Component
-   Composition
+   Components <Component>
+   Compositions <Composition>
    Scheduling
 
 .. _Indices_and_Tables:
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

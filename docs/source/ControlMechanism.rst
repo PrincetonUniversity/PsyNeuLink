@@ -1,8 +1,7 @@
-Control Mechanism
-=================
+Control Mechanisms
+==================
 
 .. _ControlMechanism_Subtypes:
-
 
 .. toctree::
    :maxdepth: 1
@@ -10,6 +9,6 @@ Control Mechanism
    DefaultControlMechanism
    EVCMechanism
 
-.. automodule:: AdaptiveMechanisms.ControlMechanisms.ControlMechanism
+.. automodule:: ControlMechanisms.ControlMechanism
    :members:
    :exclude-members: Linear, random

@@ -7,8 +7,7 @@ Adaptive Mechanism
    :maxdepth: 1
 
    LearningMechanism
-   ControlMechanism
-      EVCMechanism
+   ControlMechanisms <ControlMechanism>
    GatingMechanism
 
 .. automodule:: AdaptiveMechanisms.AdaptiveMechanism

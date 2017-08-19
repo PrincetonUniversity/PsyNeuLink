@@ -6,6 +6,6 @@ EVCMechanism
 
    EVCAuxiliary
 
-.. automodule:: AdaptiveMechanisms.ControlMechanisms.EVCMechanism
+.. automodule:: EVCMechanism
    :members:
    :exclude-members: random, LinearCombination
