@@ -77,12 +77,12 @@ corresponding arguments of its constructor, or by assigning them directly (see `
   constructor for a Component can be used as a convenient method for specifying the `variable <Component_Variable>`,
   attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
   setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
-  to setting **variable* = [[0, 0, 0, 0], [0, 0, 0]].
+  to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
 
 .. _Component_Function:
 
-* **function** - determines the computation that a Component carries out. It is always a PsyNeuLink
-  `Function <Function>` object (itself a PsyNeuLink Component).
+* **function** - determines the computation that a Component carries out. It is always the `function
+  <Function_Base.function>` method of a PsyNeuLink `Function <Function>` object (itself a PsyNeuLink Component).
 
   .. note::
      The `function <Component.function>` of a Component can be assigned either a `Function` object or any other
@@ -90,7 +90,7 @@ corresponding arguments of its constructor, or by assigning them directly (see `
 
   All Components have a default `function <Component.function>` (with a default set of parameters), that is used if it
   is not otherwise specified.  The `function <Component.function>` can be specified in the
-  function argument of the constructor for the Component, using one of the following:
+  **function** argument of the constructor for the Component, using one of the following:
 
     * **class** - this must be a subclass of `Function <Function>`, as in the following example::
 
@@ -109,7 +109,7 @@ corresponding arguments of its constructor, or by assigning them directly (see `
         my_component = SomeComponent(some_function)
 
       The specified Function will be used as a template to create a new Function object that is assigned to the
-      `function_object` attribute of the Component, the `function <Function.function>` of which will be assigned as
+      `function_object` attribute of the Component, the `function <Function_Base.function>` of which will be assigned as
       the `function <Component.function>` attribute of the Component.
 
       .. note::
@@ -172,42 +172,42 @@ COMMENT
 
 .. _Component_Function_Object:
 
-* **function_object** - the `function_object` attribute refers to the `Function <Function>` assigned to the Component;
-  The Function's `function <Function.function>` is assigned to the `function <Component>` attribute of the
-  Component. The  parameters of the Function can be modified by assigning values to the attributes corresponding to
-  those parameters (see `function_params <Component_Function_Params>` below).
+* **function_object** - the `function_object` attribute refers to the PsyNeuLink `Function <Function>` assigned to the
+  Component; The Function's `function <Function_Base.function>` -- its callable method -- is assigned to the `function
+  <Component>` attribute of the Component. The parameters of the Function can be modified by assigning values to the
+  attributes corresponding to those parameters (see `function_params <Component_Function_Params>` below).
 
 .. _Component_Function_Params:
 
 * **function_params** - the `function_params <Component.function>` attribute contains a dictionary of the parameters
   for the Component's `function <Component.function>` and their values.  Each entry is the name of a parameter, and its
-  value the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
+  value is the value of that parameter.  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
   class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.function_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g.,
+  however, to access a full list of its entries its data attribute must be used (e.g.,
   ``my_component.function_params.data``).  Also, because it is read-only, it cannot be used to make assignments.
-  Rather, changes to the value of the function's parameters must be made by assigning a value to the corresponding
+  Rather, changes to the value of a function's parameters must be made by assigning a value to the corresponding
   attribute of the Component's `function_object <Component.function_object>` attribute (e.g.,
   ``my_component.function_object.my_parameter``), or in a FUNCTION_PARAMS dict using its `assign_params` method.  The
-  parameters for the function can be specified when the Component is created in one of the following ways:
+  parameters for a function can be specified when the Component is created in one of the following ways:
 
-  * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>` argument,
-    as in the following example::
+      * in the **constructor** for a Function -- if that is used to specify the `function <Component.function>`
+        argument, as in the following example::
 
-        my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
+            my_component = SomeComponent(function=SomeFunction(some_param=1, some_param=2)
 
-  * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
-    `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
-    as arguments in the constructor of the Component itself, which can be used to set their values.
+      * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
+        `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
+        as arguments in the constructor of the Component itself, which can be used to set their values.
 
-  * in an entry of a `parameter specification dictionary <ParameterState_Specification>` assigned to the
-    **params** argument of the constructor for the Component.  The entry must use the keyword
-    FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
-    The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
-    parameter's value, as in the example below::
+      * in an entry of a `parameter specification dictionary <ParameterState_Specification>` assigned to the
+        **params** argument of the constructor for the Component.  The entry must use the keyword
+        FUNCTION_PARAMS as its key, and its value must be a dictionary containing the parameters and their values.
+        The key for each entry in the FUNCTION_PARAMS dictionary must be the name of a parameter, and its value the
+        parameter's value, as in the example below::
 
-        my_component = SomeComponent(function=SomeFunction
-                                     params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
+            my_component = SomeComponent(function=SomeFunction
+                                         params={FUNCTION_PARAMS:{SOME_PARAM=1, SOME_OTHER_PARAM=2}})
 
   The parameters of functions for some Components may allow other forms of specification (see
   `ParameterState_Specification` for details concerning different ways in which the value of a
@@ -633,7 +633,7 @@ class Component(object):
         see `size <Component_Size>`
 
     function : Function, function or method
-        see `variable <Component_Function>`
+        see `function <Component_Function>`
 
     function_params : Dict[param_name: param_value]
         see `function_params <Component_Function_Params>`
