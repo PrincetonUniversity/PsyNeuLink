@@ -6,12 +6,12 @@
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="PATH" value="~/anaconda/bin/:/users/jdc/bin:/Users/jdc/bin:/Users/jdc/anaconda/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin&#10;" />
     </envs>
-    <option name="SDK_HOME" value="Python" />
+    <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts/DEMO SCRIPTS" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <module name="PsyNeuLink" />
+    <module name="PsyNeuLink (Dropbox)" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/DEMO SCRIPTS/• Multilayer Learning Test Script DEMO.py" />
     <option name="PARAMETERS" value="" />
