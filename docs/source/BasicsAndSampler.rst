@@ -60,16 +60,12 @@ Mechanisms can be executed on their own (to gain familiarity with their function
 (for testing isolated interactions), or in Compositions to implement a full model.
 Linking Mechanisms for execution can be as simple as placing them in a list -- PsyNeuLink provides the necessary
 Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
-Composition -- a `Process` -- to create a 3-layered 5-2-5 encoder network, the first layer of which
-uses a Linear
+Composition -- a `Process` -- to create a 3-layered 5-2-5 encoder network, the first layer of which uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction::
 
-    # Construct Mechanisms:
     input_layer = TransferMechanism(size=5)
     hidden_layer = TransferMechanism(size=2, function=Logistic)
     output_layer = TransferMechanism(size=5, function=Logistic)
-
-    # Construct the Process:
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
@@ -115,12 +111,12 @@ More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
-trained using backpropagation simply by adding the **learning** argument to the constructor for the Process::
+trained using backpropagation simply by adding an argument to the constructor for the Process::
 
     my_encoder = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
 
 and then specifying the target for each trial when it is executed (here, the Process' `run <Process_Base.run>` command
-is used to execute a series of five training trials, one that trains it on each element of the inputu)::
+is used to execute a series of trials, and five trials of inputs and targets are specified)::
 
     my_encoder.run(input=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]],
                    target=[[0, 0, 0, 0, 0],[1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]])
@@ -133,26 +129,15 @@ PsyNeuLink can also be used to construct models with different kinds of Mechanis
 uses a `System` -- a more powerful form of Composition -- to create two feedforward networks that converge on a single
 output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response::
 
-    # Construct the Mechanisms:
     colors_input_layer = TransferMechanism(size=2, function=Logistic, name='COLORS INPUT')
     words_input_layer = TransferMechanism(size=2, function=Logistic, name='WORDS INPUT')
+    differencing_weights = np.array([[1], [-1]])
     output_layer = TransferMechanism(size=1, name='OUTPUT')
     decision_mech = DDM(name='DECISION')
-
-    # Define a weight matrix used to specify the MappingProjection
-    # from each of the input layers to the output_layer
-    differencing_weights = np.array([[1], [-1]])
-
-    # Construct the Processes:
     colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer])
     words_process = process(pathway=[words_input_layer, differencing_weights, output_layer])
     decision_process = process(pathway=[output_layer, decision_mech])
-
-    # Construct the System:
     my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
-
-In this example, ``differencing_weights`` is used to specify a `MappingProjection` between the input layer of the
-`pathway <Process_Base.pathway>` for each Process and the Mechanism (``output_layer``) on which they converge.
 
 As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling ``my_simple_Stroop.show_graph()`` produces the following display:
@@ -163,7 +148,7 @@ For example, calling ``my_simple_Stroop.show_graph()`` produces the following di
 
 .. figure:: _static/Simple_Stroop_Example_fig.svg
 
-   Graph representation of the System Composition in the example above.
+   Graph representation of the Composition in the example above.
 
 As the name of the ``show_graph()`` method suggests, Compositions are represented in PsyNeuLink as graphs, using a
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
@@ -175,15 +160,16 @@ display and/or analysis (such as `NetworkX <https://networkx.github.io>`_ and `i
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
 
+
 Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
 that execute at arbitrary and disparate "time scales". For example, a Composition can include some Mechanisms
 that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
 "single shot" computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
 is run, each Component in it is executed at least once.  However, PsyNeuLink has a `Scheduler` that can be used to
 design more complex dynamics of execution by assigning one or more `Conditions <Condition>` to any Mechanism. Conditions
-can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
-`round of execution <LINK>`), or its behavior relative to that of one or more other Components (e.g., how many times
-it should execute or when it should stop executing relative to other Mechanisms).
+can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each `TRIAL`), or its
+behavior relative to that of one or more other Components (e.g., how many times it should execute or when it should
+stop executing relative to other Mechanisms).
 
 For example, the following script implements a Composition that integrates a 3-layered feedforward network for
 performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
@@ -192,28 +178,28 @@ following the presentation of each stimulus (which is not required for the feedf
 be used to execute the recurrent layer multiple times but the feedforward network only once in each round execution,
 as follows::
 
-    # Construct the Mechanisms:
     input_layer = TransferMechanism(size = 10)
     hidden_layer = TransferMechanism(size = 100)
     output_layer = TransferMechanism(size = 10)
     recurrent_layer = RecurrentTransferMechanism(size = 10)
 
-    # Construct the Processes:
     feed_forward_network = process(pathway=[input_layer, hidden_layer, output_layer])
     recurrent_network = process(pathway=[hidden_layer, recurrent_layer, hidden_layer])
-
-    # Construct the System:
     full_model = system(processes=[feed_forward_network, recurrent_network])
 
-    # Construct the Scheduler:
     my_scheduler = Scheduler(system=full_model)
 
-    # Add Conditions to the Scheduler:
-    my_scheduler.add_condition(my_hidden_layer,
-                               Any(EveryNCalls(my_input_layer, 1),
-                               EveryNCalls(my_recurrent_layer, 10)))
-    my_scheduler.add_condition(my_output_layer,
-                               EveryNCalls(my_hidden_layer, 2))
+    my_scheduler.add_condition(
+        my_hidden_layer,
+        Any(
+            EveryNCalls(my_input_layer, 1),
+            EveryNCalls(my_recurrent_layer, 10)
+        )
+    )
+    my_scheduler.add_condition(
+        my_output_layer,
+        EveryNCalls(my_hidden_layer, 2)
+    )
 
 The two Conditions added to the Scheduler specify that:
 
@@ -224,8 +210,6 @@ The two Conditions added to the Scheduler specify that:
 More sophisticated Conditions can also be created.  For example, the ``recurrent_layer`` can be scheduled to
 execute until the change in its value falls below a specified threshold as follows::
 
-    # Define a function ``converge`` that detects when a Mechanism has converged such that
-    # none of elements has changed more than ``epsilon`` since the last execution
     def converge(mech, thresh):
         for val in mech.delta:
             if abs(val) >= thresh:
@@ -233,14 +217,20 @@ execute until the change in its value falls below a specified threshold as follo
         return True
     epsilon = 0.01
 
-    # Add a Condition to the Scheduler that uses the ``converge`` function to continue
-    # executing the ``recurrent_layer`` while it has not (i.e., until it has) converged
-    my_scheduler.add_condition(my_hidden_layer,
-                               Any(EveryNCalls(my_input_layer, 1),
-                               EveryNCalls(my_recurrent_layer, 1)))
-    my_scheduler.add_condition(my_recurrent_layer,
-                               All(EveryNCalls(my_hidden_layer, 1),
-                                   WhileNot(converge, my_recurrent_mech, epsilon)))
+    my_scheduler.add_condition(
+        my_hidden_layer,
+        Any(
+            EveryNCalls(my_input_layer, 1),
+            EveryNCalls(my_recurrent_layer, 1)
+        )
+    )
+    my_scheduler.add_condition(
+        my_recurrent_layer,
+        All(
+            EveryNCalls(my_hidden_layer, 1),
+            WhileNot(converge, my_recurrent_mech, epsilon)
+        )
+    )
 
 Here, the criterion for stopping execution is defined as a function (``converge``), that is used in a `WhileNot`
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
