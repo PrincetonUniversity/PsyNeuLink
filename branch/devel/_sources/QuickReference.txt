@@ -218,10 +218,11 @@ Compositions:
    :alt: Overview of major PsyNeuLink Components
    :scale: 50 %
 
-   Two `Processes <Process>` are shown, both belonging to the same `System <System>`.  Each Process has a
-   series of `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism (see `figure in System <System_Full_Fig>` for a more
-   complete example, that includes Components responsible for learning, control and gating).
+   Two `Processes <Process>` are shown, both belonging to the same `System`.  Each Process has a series of
+   `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`, that converge on
+   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` for a more complete
+   example, and in `ModulatorySignals <ModulatorySignal_Anatomy_Figure>` that shows the details of Components
+   responsible for `learning <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
 
 
 .. _Quick_Reference_Execution:
@@ -230,15 +231,19 @@ Execution
 ---------
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is run.  Compositions are run iteratively in rounds of execution referred to as `PASS` \es, in which each
-Mechanism in the composition is given an opportunity to execute.  By default, each Mechanism in a Composition
+they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as `PASS`\\es, in
+which each Mechanism in the Composition is given an opportunity to execute;  By default, each Mechanism in a Composition
 executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify one or more `Conditions <Condition>`
-for each Mechanism that determine whether it runs in a given `PASS`.  This can be used to determine when
+for each Mechanism that determine whether it executes in a given `PASS`.  This can be used to determine when
 a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
 to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
-in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and
-`custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
+in PsyNeuLink. Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and `custom
+<Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
 
+The Scheduler continues to execute `PASS`\es until its `termination Conditions <Scheduler_Termination_Conditions>`
+are met, which constitutes a `TRIAL` of executions.  Typically this is associated with a single input to the System.
+Multiple `TRIAL`\s (corresponding to a sequences of inputs) can be executed using a Composition's `run <Composition
+.run>` method.
 
 .. _Quick_Reference_Logging:
 
@@ -246,7 +251,7 @@ Logging
 -------
 
 PsyNeuLink supports logging of any attribute of any Component or Composition at any `TimeScale` of execution.
-Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
+Logs are dictionaries, with an entry for each attribute being logged.  The key for each entry is the name of
 the attribute, and its value is a record of the attribute's value recorded at the frequency specified by the
 `TimeScale` parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
 `TIME_STEP` of the `RUN`), and the second is the value of the attribute at that `TIME_STEP`.
@@ -257,8 +262,8 @@ Graphic Displays
 ----------------
 
 At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
-using its `show_graph` method.  This can be used to display just the processing components (i.e.,
-`ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`, or to include
+using its `show_graph <System_Base.show_graph>` method.  This can be used to display just the processing components
+(i.e., `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`), or to include
 `learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release may include
 a more complete graphical user interface.
 
@@ -270,8 +275,8 @@ Preferences
 
 PsyNeuLink supports a hierarchical system of `Preferences` for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
-to default to the value of any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
-its own preference for reporting, or use the default value for all `ProcessingMechanisms <ProcessingMechanism>`,
-all `Mechanisms <Mechanism>`, or all `Components <Component>`.  There are preferences for reporting to the
-console during execution, logging, warnings, and validation (useful for debugging, but suppressible for efficiency of
-execution).
+the default value for any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
+its own preference for reporting, or use the default value for `ProcessingMechanisms <ProcessingMechanism>`,
+`Mechanisms <Mechanism>`, or `Components <Component>`.  There are preferences for reporting (i.e., which results of
+processing are printed to the console during execution), logging, levels of warnings, and validation (useful for
+debugging, but suppressible for efficiency of execution).

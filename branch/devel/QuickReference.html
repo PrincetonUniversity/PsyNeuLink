@@ -425,29 +425,32 @@ can also be constructed directly from Mechanisms and Projections.</p>
 <p id="quick-reference-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
 <div class="figure" id="id4">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
-<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a
-series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
-that converge on a common final ProcessingMechanism (see <code class="xref any docutils literal"><span class="pre">figure</span> <span class="pre">in</span> <span class="pre">System</span></code> for a more
-complete example, that includes Components responsible for learning, control and gating).</span></p>
+<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a series of
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, that converge on
+a common final ProcessingMechanism (see figure <a class="reference internal" href="#quickreference-overview-figure"><span class="std std-ref">above</span></a> for a more complete
+example, and in <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">ModulatorySignals</span></a> that shows the details of Components
+responsible for <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a>, <a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> and <a class="reference internal" href="GatingMechanism.html"><span class="doc">gating</span></a>).</span></p>
 </div>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="quick-reference-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is run.  Compositions are run iteratively in rounds of execution referred to as <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> es, in which each
-Mechanism in the composition is given an opportunity to execute.  By default, each Mechanism in a Composition
+they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>\es, in
+which each Mechanism in the Composition is given an opportunity to execute;  By default, each Mechanism in a Composition
 executes exactly once per <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  However, a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to specify one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>
-for each Mechanism that determine whether it runs in a given <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  This can be used to determine when
+for each Mechanism that determine whether it executes in a given <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.  This can be used to determine when
 a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
 to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
-in PsyNeuLink.  Using a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> and a combination of <a class="reference internal" href="Condition.html#condition-pre-specified"><span class="std std-ref">pre-specified</span></a> and
-<a class="reference internal" href="Condition.html#condition-custom"><span class="std std-ref">custom</span></a> Conditions, any pattern of execution can be configured that is logically possible.</p>
+in PsyNeuLink. Using a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> and a combination of <a class="reference internal" href="Condition.html#condition-pre-specified"><span class="std std-ref">pre-specified</span></a> and <a class="reference internal" href="Condition.html#condition-custom"><span class="std std-ref">custom</span></a> Conditions, any pattern of execution can be configured that is logically possible.</p>
+<p>The Scheduler continues to execute <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es until its <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Conditions</span></a>
+are met, which constitutes a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of executions.  Typically this is associated with a single input to the System.
+Multiple <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (corresponding to a sequences of inputs) can be executed using a Composition&#8217;s <code class="xref any docutils literal"><span class="pre">run</span></code> method.</p>
 </div>
 <div class="section" id="logging">
 <span id="quick-reference-logging"></span><h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink supports logging of any attribute of any Component or Composition at any <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> of execution.
-Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
+Logs are dictionaries, with an entry for each attribute being logged.  The key for each entry is the name of
 the attribute, and its value is a record of the attribute&#8217;s value recorded at the frequency specified by the
 <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
 <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.RUN" title="Scheduling.TimeScale.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>), and the second is the value of the attribute at that <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</p>
@@ -455,8 +458,8 @@ the attribute, and its value is a record of the attribute&#8217;s value recorded
 <div class="section" id="graphic-displays">
 <span id="quick-reference-graphic-displays"></span><h2>Graphic Displays<a class="headerlink" href="#graphic-displays" title="Permalink to this headline">¶</a></h2>
 <p>At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a <a class="reference internal" href="System.html"><span class="doc">System</span></a> can be displayed
-using its <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  This can be used to display just the processing components (i.e.,
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, or to include
+using its <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  This can be used to display just the processing components
+(i.e., <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), or to include
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and/or <a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> components.  A future release may include
 a more complete graphical user interface.</p>
 </div>
@@ -464,11 +467,11 @@ a more complete graphical user interface.</p>
 <span id="quick-reference-preferences"></span><h2>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink supports a hierarchical system of <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
-to default to the value of any of its parent classes for that preference (e.g., an instance of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> can be assigned
-its own preference for reporting, or use the default value for all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
-all <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, or all <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  There are preferences for reporting to the
-console during execution, logging, warnings, and validation (useful for debugging, but suppressible for efficiency of
-execution).</p>
+the default value for any of its parent classes for that preference (e.g., an instance of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> can be assigned
+its own preference for reporting, or use the default value for <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, or <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  There are preferences for reporting (i.e., which results of
+processing are printed to the console during execution), logging, levels of warnings, and validation (useful for
+debugging, but suppressible for efficiency of execution).</p>
 </div>
 </div>
 
