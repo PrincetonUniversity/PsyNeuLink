@@ -184,7 +184,7 @@ affords modelers the flexibility to commit each Component of their model to a fo
 analysis that is appropriate for that Component, while providing the opportunity to test and explore how they
 interact with one another in a single System.</p>
 <div class="figure" id="id5">
-<span id="basicssampler-grandview-figure"></span><img alt="_static/Grandview_With_System_fig.svg" src="_static/Grandview_With_System_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environnment</strong>.  Full-colored items are examples of currently implemented Components; dimmed
+<span id="basicssampler-grandview-figure"></span><img alt="_images/Grandview_With_System_fig.svg" src="_images/Grandview_With_System_fig.svg" /><p class="caption"><span class="caption-text"><strong>PsyNeuLink Environnment</strong>.  Full-colored items are examples of currently implemented Components; dimmed
 items are examples of Components planned for future implementation.</span></p>
 </div>
 </div>
@@ -196,15 +196,11 @@ items are examples of Components planned for future implementation.</span></p>
 (for testing isolated interactions), or in Compositions to implement a full model.
 Linking Mechanisms for execution can be as simple as placing them in a list &#8211; PsyNeuLink provides the necessary
 Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
-Composition &#8211; a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> &#8211; to create a 3-layered 5-2-5 encoder network, the first layer of which
-uses a Linear
+Composition &#8211; a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> &#8211; to create a 3-layered 5-2-5 encoder network, the first layer of which uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct Mechanisms:</span>
-<span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-
-<span class="c1"># Construct the Process:</span>
 <span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -249,12 +245,12 @@ been accomplished by explicitly creating the recurrent connection:</p>
 <div class="section" id="more-elaborate-configurations">
 <span id="elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Configuring more complex features is just as simple and flexible.  For example, the feedforward network above can be
-trained using backpropagation simply by adding the <strong>learning</strong> argument to the constructor for the Process:</p>
+trained using backpropagation simply by adding an argument to the constructor for the Process:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">],</span> <span class="n">learning</span><span class="o">=</span><span class="n">ENABLED</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>and then specifying the target for each trial when it is executed (here, the Process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> command
-is used to execute a series of five training trials, one that trains it on each element of the inputu):</p>
+is used to execute a series of trials, and five trials of inputs and targets are specified):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
                <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
 </pre></div>
@@ -265,32 +261,22 @@ Differences, and supervised learning for recurrent networks).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
 uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> &#8211; a more powerful form of Composition &#8211; to create two feedforward networks that converge on a single
 output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
-<span class="n">colors_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLORS INPUT&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">colors_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLORS INPUT&#39;</span><span class="p">)</span>
 <span class="n">words_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORDS INPUT&#39;</span><span class="p">)</span>
+<span class="n">differencing_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">)</span>
 <span class="n">decision_mech</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION&#39;</span><span class="p">)</span>
-
-<span class="c1"># Define a weight matrix used to specify the MappingProjection</span>
-<span class="c1"># from each of the input layers to the output_layer</span>
-<span class="n">differencing_weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
-
-<span class="c1"># Construct the Processes:</span>
 <span class="n">colors_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">colors_input_layer</span><span class="p">,</span> <span class="n">differencing_weights</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 <span class="n">words_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">words_input_layer</span><span class="p">,</span> <span class="n">differencing_weights</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 <span class="n">decision_process</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">output_layer</span><span class="p">,</span> <span class="n">decision_mech</span><span class="p">])</span>
-
-<span class="c1"># Construct the System:</span>
 <span class="n">my_simple_Stroop</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">colors_process</span><span class="p">,</span> <span class="n">words_process</span><span class="p">,</span> <span class="n">decision_process</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>In this example, <code class="docutils literal"><span class="pre">differencing_weights</span></code> is used to specify a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between the input layer of the
-<a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for each Process and the Mechanism (<code class="docutils literal"><span class="pre">output_layer</span></code>) on which they converge.</p>
 <p>As a Composition gets more complex, it helps to visualize it.  PsyNeuLink has built-in methods for doing so.
 For example, calling <code class="docutils literal"><span class="pre">my_simple_Stroop.show_graph()</span></code> produces the following display:</p>
 <p id="simple-stroop-example-figure"><strong>Composition Graph</strong></p>
 <div class="figure" id="id6">
-<img alt="_images/Simple_Stroop_Example_fig.svg" src="_images/Simple_Stroop_Example_fig.svg" /><p class="caption"><span class="caption-text">Graph representation of the System Composition in the example above.</span></p>
+<img alt="_images/Simple_Stroop_Example_fig.svg" src="_images/Simple_Stroop_Example_fig.svg" /><p class="caption"><span class="caption-text">Graph representation of the Composition in the example above.</span></p>
 </div>
 <p>As the name of the <code class="docutils literal"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
@@ -304,37 +290,37 @@ that require fine-grained updates (e.g., Euler integration of a drift diffusion 
 &#8220;single shot&#8221; computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
 is run, each Component in it is executed at least once.  However, PsyNeuLink has a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> that can be used to
 design more complex dynamics of execution by assigning one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> to any Mechanism. Conditions
-can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each
-<code class="xref any docutils literal"><span class="pre">round</span> <span class="pre">of</span> <span class="pre">execution</span></code>), or its behavior relative to that of one or more other Components (e.g., how many times
-it should execute or when it should stop executing relative to other Mechanisms).</p>
+can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>), or its
+behavior relative to that of one or more other Components (e.g., how many times it should execute or when it should
+stop executing relative to other Mechanisms).</p>
 <p>For example, the following script implements a Composition that integrates a 3-layered feedforward network for
 performing a simple stimulus-response mapping task, with a recurrent network that receives input from and feeds back
 to the feed-forward network, to provide a simple form of maintained context.  To allow the recurrent layer to settle
 following the presentation of each stimulus (which is not required for the feedforward network), the Scheduler can
 be used to execute the recurrent layer multiple times but the feedforward network only once in each round execution,
 as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
-<span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 <span class="n">recurrent_layer</span> <span class="o">=</span> <span class="n">RecurrentTransferMechanism</span><span class="p">(</span><span class="n">size</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
 
-<span class="c1"># Construct the Processes:</span>
 <span class="n">feed_forward_network</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 <span class="n">recurrent_network</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">hidden_layer</span><span class="p">,</span> <span class="n">recurrent_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
-
-<span class="c1"># Construct the System:</span>
 <span class="n">full_model</span> <span class="o">=</span> <span class="n">system</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="p">[</span><span class="n">feed_forward_network</span><span class="p">,</span> <span class="n">recurrent_network</span><span class="p">])</span>
 
-<span class="c1"># Construct the Scheduler:</span>
 <span class="n">my_scheduler</span> <span class="o">=</span> <span class="n">Scheduler</span><span class="p">(</span><span class="n">system</span><span class="o">=</span><span class="n">full_model</span><span class="p">)</span>
 
-<span class="c1"># Add Conditions to the Scheduler:</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span>
-                           <span class="n">Any</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                           <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_output_layer</span><span class="p">,</span>
-                           <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_hidden_layer</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_output_layer</span><span class="p">,</span>
+    <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>The two Conditions added to the Scheduler specify that:</p>
@@ -346,23 +332,27 @@ as follows:</p>
 </div></blockquote>
 <p>More sophisticated Conditions can also be created.  For example, the <code class="docutils literal"><span class="pre">recurrent_layer</span></code> can be scheduled to
 execute until the change in its value falls below a specified threshold as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Define a function ``converge`` that detects when a Mechanism has converged such that</span>
-<span class="c1"># none of elements has changed more than ``epsilon`` since the last execution</span>
-<span class="k">def</span> <span class="nf">converge</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">converge</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mech</span><span class="o">.</span><span class="n">delta</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">thresh</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="kc">True</span>
 <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">0.01</span>
 
-<span class="c1"># Add a Condition to the Scheduler that uses the ``converge`` function to continue</span>
-<span class="c1"># executing the ``recurrent_layer`` while it has not (i.e., until it has) converged</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span>
-                           <span class="n">Any</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                           <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
-<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span>
-                           <span class="n">All</span><span class="p">(</span><span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                               <span class="n">WhileNot</span><span class="p">(</span><span class="n">converge</span><span class="p">,</span> <span class="n">my_recurrent_mech</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)))</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_hidden_layer</span><span class="p">,</span>
+    <span class="n">Any</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_input_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_recurrent_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span>
+    <span class="n">my_recurrent_layer</span><span class="p">,</span>
+    <span class="n">All</span><span class="p">(</span>
+        <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">my_hidden_layer</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">WhileNot</span><span class="p">(</span><span class="n">converge</span><span class="p">,</span> <span class="n">my_recurrent_mech</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>Here, the criterion for stopping execution is defined as a function (<code class="docutils literal"><span class="pre">converge</span></code>), that is used in a <a class="reference internal" href="Condition.html#Scheduling.Condition.WhileNot" title="Scheduling.Condition.WhileNot"><code class="xref any py py-class docutils literal"><span class="pre">WhileNot</span></code></a>
