@@ -46,12 +46,12 @@ each of which has subtypes that differ in the type of information they transmit,
 
 * `ModulatoryProjection <ModulatoryProjection>`
     takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
-    <ProcessingMechanism>`, uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or
-    `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to
-    specify how to modify the `value <State.value>` of the `State <State>` to which a ModulatoryProjection projects.
-    There are three types of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and
-    corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`), that project to different types of
-    `States <State>`:
+    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState,
+    `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
+    that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
+    ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
+    of AdaptiveMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
+    that project to different types of `States <State>`:
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits

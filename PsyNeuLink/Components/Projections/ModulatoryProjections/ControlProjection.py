@@ -18,8 +18,8 @@ A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` t
 <ParameterState>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
 `ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
 with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other `control
-components <ControlMechanism>`, can be displayed using the System's `show_graph` method with its **show_control**
-argument assigned as `True`.
+components <ControlMechanism>`, can be displayed using the System's `show_graph <System_Base.show_graph>` method with
+its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
 
@@ -190,7 +190,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
+        the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
@@ -232,13 +232,13 @@ class ControlProjection(ModulatoryProjection_Base):
 
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
-        Specified in the **name** argument of the constructor for the Projection;
+        Specified in the **name** argument of the constructor for the ControlProjection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
+        the `PreferenceSet` for ControlProjection.
+        Specified in the **prefs** argument of the constructor for the ControlProjection;
         if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
