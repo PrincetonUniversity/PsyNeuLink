@@ -23,11 +23,11 @@
 Overview
 --------
 
-An ObjectiveMechanism is a `ProcessingMechanism` that monitors the `OutputStates <OutputState>` of one or more other
-ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute, and evaluates them using its
-`function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the ObjectiveMechanism's
-`primary OutputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely with (and often created
-automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
+An ObjectiveMechanism is a `ProcessingMechanism <ProcessingMechanism>` that monitors the `OutputStates <OutputState>`
+of one or more other ProcessingMechanisms specified in its `monitor <ObjectiveMechanism.monitor>` attribute,
+and evaluates them using its `function <ObjectiveMechanism.function>`. The result of the evaluation is placed in the
+ObjectiveMechanism's `primary OutputState <OutputState_Primary>`.  ObjectiveMechanisms are typically used closely
+with (and often created automatically by) `AdaptiveMechanisms <AdaptiveMechanism>`.
 
 .. _ObjectiveMechanism_Creation:
 
@@ -298,7 +298,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         name=None,                    \
         prefs=None)
 
-    Subclass of `ProcessingMechanism` that evaluates the value(s) of one or more `OutputStates <OutputState>`.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that evaluates the value(s)
+    of one or more `OutputStates <OutputState>`.
 
     COMMENT:
         Description:
@@ -402,8 +403,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_states), and returns a 1d array.
 
     role : None, LEARNING or CONTROL
-        specifies whether the ObjectiveMechanism is being used for learning in a Process or System (in conjunction
-        with a `LearningMechanism`), or for control in a System (in conjunction with a `ControlMechanism`).
+        specifies whether the ObjectiveMechanism is used for learning in a Process or System (in conjunction with a
+        `LearningMechanism`), or for control in a System (in conjunction with a `ControlMechanism <ControlMechanism>`).
 
     value : 1d np.array
         the output of the evaluation carried out by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.

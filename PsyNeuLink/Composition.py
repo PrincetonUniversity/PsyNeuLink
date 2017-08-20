@@ -78,16 +78,16 @@ class MechanismRole(Enum):
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     - CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection`
-        that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then it is simply
-        designated as such (since it will be assigned input and therefore be initialized in any event).
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
+        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
+        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     - INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
-        `Projection` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism (since in
-        that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
-        Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
-        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
+        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
+        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
+        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     - TERMINAL
@@ -102,8 +102,8 @@ class MechanismRole(Enum):
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
 
     - SINGLETON
-        A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
-        functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
     - MONITORED
         .
@@ -153,7 +153,7 @@ class Vertex(object):
         ---------
 
         component : Component
-            the `Component` represented by this Vertex
+            the `Component <Component>` represented by this Vertex
 
         parents : list[Vertex]
             the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
@@ -165,7 +165,7 @@ class Vertex(object):
         ----------
 
         component : Component
-            the `Component` represented by this Vertex
+            the `Component <Component>` represented by this Vertex
 
         parents : list[Vertex]
             the `Vertices <Vertex>` corresponding to the incoming edges of this `Vertex`
@@ -191,16 +191,16 @@ class Vertex(object):
 
 class Graph(object):
     '''
-        A Graph of vertices and edges
+        A Graph of vertices and edges/
 
         Attributes
         ----------
 
-        comp_to_vertex : dict{`Component` : `Vertex`}
-            maps `Component`\\ s in the graph to the `Vertices <Vertex>` that represent them
+        comp_to_vertex : dict{`Component <Component>` : `Vertex`}
+            maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
         vertices : list[Vertex]
-            the `Vertices <Vertex>` contained in this Graph
+            the `Vertices <Vertex>` contained in this Graph.
 
     '''
 
@@ -213,7 +213,8 @@ class Graph(object):
             Returns
             -------
 
-            A copy of the Graph. `Vertices <Vertex>` are distinct from their originals, and point to the same `Component` object : `Graph`
+            A copy of the Graph. `Vertices <Vertex>` are distinct from their originals, and point to the same
+            `Component <Component>` object : `Graph`
         '''
         g = Graph()
 
@@ -307,11 +308,11 @@ class Composition(object):
         ----------
 
         graph : `Graph`
-            The full `Graph` associated with this Composition. Contains both `Mechanism`\\ s and `Projection`\\ s used in processing \
-            or learning.
+            The full `Graph` associated with this Composition. Contains both `Mechanisms <Mechanism>` and `Projections
+            <Projection>` used in processing or learning.
 
         mechanisms : `list[Mechanism]`
-            A list of all `Mechanism`\\ s contained in this Composition
+            A list of all `Mechanisms <Mechanism>` contained in this Composition
     '''
 
     def __init__(self):
@@ -640,7 +641,7 @@ class Composition(object):
             Returns
             -------
 
-            set of Mechanisms with `MechanismRole` `role` : set(`Mechanism`)
+            set of Mechanisms with `MechanismRole` `role` : set(`Mechanism <Mechanism>`)
         '''
         if role not in MechanismRole:
             raise CompositionError('Invalid MechanismRole: {0}'.format(role))
@@ -766,7 +767,7 @@ class Composition(object):
             Arguments
             ---------
 
-            inputs: { `Mechanism` : list }
+            inputs: { `Mechanism <Mechanism>` : list }
                 a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
                 the user. For each pair, the key is the Mechanism and the value is a list of inputs.
 
@@ -872,7 +873,7 @@ class Composition(object):
             Arguments
             ---------
 
-            inputs: { `Mechanism` : list }
+            inputs: { `Mechanism <Mechanism>` : list }
                 a dictionary containing a key-value pair for each Mechanism in the composition that receives inputs from
                 the user. For each pair, the key is the Mechanism and the value is a list of inputs. Each input in the
                 list corresponds to a certain `TRIAL`.

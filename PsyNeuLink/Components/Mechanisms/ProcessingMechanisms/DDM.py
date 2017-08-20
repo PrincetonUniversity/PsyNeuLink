@@ -492,8 +492,8 @@ class DDM(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
-        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism` for specification of a params
-        dict).
+        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
+        a params dict).
 
     name : str : default DDM-<index>
         a string used for the name of the Mechanism.

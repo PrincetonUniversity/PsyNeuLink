@@ -12,12 +12,13 @@
 Overview
 --------
 
-A GatingSignal is a type of `ModulatorySignal` that is specialized for use with a `GatingMechanism` and one or more
-`GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>` \\(s) of the InputState(s) and/or
-OutputState(s) to which they project. A GatingSignal receives the value from the
-`gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs, and assigns that as
-the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s) <GatingProjection>`, each
-of which projects to an InputState or OutputState and is used to modulate the `value <State_Base.value>` of that State.
+A GatingSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a `GatingMechanism`
+and one or more `GatingProjections <GatingProjection>`, to modify the `value <State_Base.value>`\\(s) of the
+`InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` to which they project. A GatingSignal receives the
+value from the `gating_policy <GatingMechanism.gating_policy>` of the GatingMechanism to which it belongs,
+and assigns that as the value of its `gating_signal <GatingSignal.gating_signal>` to its `GatingProjection(s)
+<GatingProjection>`, each of which projects to an InputState or OutputState and is used to modulate the `value
+<State_Base.value>` of that State.
 
 
 .. _GatingSignal_Creation:
@@ -25,8 +26,8 @@ of which projects to an InputState or OutputState and is used to modulate the `v
 Creating a GatingSignal
 -----------------------
 
-A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism` is specified for
-gating.  This can be done either in the **gating_signals** argument of the constructor for a
+A GatingSignal is created automatically whenever an `InputState` or `OutputState` of a `Mechanism <Mechanism>` is
+specified for gating.  This can be done either in the **gating_signals** argument of the constructor for a
 `GatingMechanism <GatingMechanism_GatingSignals>`, or in the `specification of projections <State_Projections>` to
 the InputState or OutputState.  Although a GatingSignal can be created directly using its constructor (or any of the
 other ways for `creating an OutputState <OutputStates_Creation>`), this is usually not necessary nor is it advisable,
@@ -260,7 +261,7 @@ class GatingSignal(ModulatorySignal):
         name=None,                                  \
         prefs=None)
 
-    A subclass of `ModulatorySignal` used by a `GatingMechanism` to modulate the value(s)
+    A subclass of `ModulatorySignal <ModulatorySignal>` used by a `GatingMechanism` to modulate the value(s)
     of one more `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>`.
 
     COMMENT:

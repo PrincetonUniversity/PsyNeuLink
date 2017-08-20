@@ -55,12 +55,12 @@ Learning Functions:
 Overview
 --------
 
-A Function is a `Component` that "packages" a function (in its `function <Function_Base.function>` method)
-for use by other Components.  Every `Component` in PsyNeuLink is assigned a Function; when that
-Component is executed, its Function's `function <Function_Base.function>` is executed.  The
-`function <Function_Base.function>` can be any callable operation, although most commonly it is a mathematical operation
-(and, for those, almost always uses a call to one or more numpy functions).  There are two reasons PsyNeuLink
-packages functions in a Function Component: to *manage parameters*, and for *modularity*.
+A Function is a `Component <Component>` that "packages" a function (in its `function <Function_Base.function>` method)
+for use by other Components.  Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
+Function's `function <Function_Base.function>` is executed.  The `function <Function_Base.function>` can be any callable
+operation, although most commonly it is a mathematical operation (and, for those, almost always uses a call to one or
+more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component: to *manage
+parameters*, and for *modularity*.
 
 **Manage parameters**. Parameters are attributes of a Function that either remain stable over multiple calls to the
 function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
@@ -252,15 +252,15 @@ class ModulationParam():
     """Specify parameter of a `Function <Function>` for `modulation <ModulatorySignal_Modulation>` by a ModulatorySignal
 
     COMMENT:
-        Each term specifies a different type of modulation used by a `ModulatorySignal`.  The first two refer to classes
-        that define the following terms:
+        Each term specifies a different type of modulation used by a `ModulatorySignal <ModulatorySignal>`.  The first
+        two refer to classes that define the following terms:
             * attrib_name (*ADDITIVE_PARAM* or *MULTIPLICATIVE_PARAM*):  specifies which meta-parameter of the function
               to use for modulation;
             * name (str): name of the meta-parameter
             * init_val (int or float): value with which to initialize the parameter being modulated if it is not otherwise
               specified
             * reduce (function): the manner by which to aggregate multiple ModulatorySignals of that type, if the
-              `ParameterState` receives more than one `ModulatoryProjection` of that type.
+              `ParameterState` receives more than one `ModulatoryProjection <ModulatoryProjection>` of that type.
     COMMENT
 
     Attributes

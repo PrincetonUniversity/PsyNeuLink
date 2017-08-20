@@ -12,14 +12,15 @@
 Overview
 --------
 
-A LearningSignal is a type of `ModulatorySignal` that is specialized for use with a `LearningMechanism` and one or more
-`LearningProjections <LearningProjection>`, to modify the `matrix <MappingProjection.matrix>` parameter of the
-`MappingProjections <MappingProjection>` to which they project.  A LearningSignal receives the value of a
-`learning_signal <LearningMechanism>` calculated by the `LearningMechanism` to which it belongs, which in general is a
-matrix of weight changes to be made to the `matrix <MappingProjection>` parameter of the MappingProjection(s) being
-learned.  The LearningSignal assigns its `learning_signal <LearningSignal.learning_signal>` as the value of its
-LearningProjection(s), which convey it to the MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`,
-which in turn modify the matrix parameter(s) of the MappingProjection(s) being learned.
+A LearningSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a
+`LearningMechanism` and one or more `LearningProjections <LearningProjection>`, to modify the `matrix
+<MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` to which they project.  A
+LearningSignal receives the value of a `learning_signal <LearningMechanism>` calculated by the `LearningMechanism` to
+which it belongs, which in general is a matrix of weight changes to be made to the `matrix <MappingProjection>`
+parameter of the MappingProjection(s) being learned.  The LearningSignal assigns its `learning_signal
+<LearningSignal.learning_signal>` as the value of its LearningProjection(s), which convey it to the
+MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`, which in turn modify the matrix parameter(s) of
+the MappingProjection(s) being learned.
 
 .. _LearningSignal_Creation:
 
@@ -27,11 +28,11 @@ Creating a LearningSignal
 ------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is `specified for learning
-<LearningMechanism_Creation>` and the Projection belongs to the same `Composition` as the `LearningMechanism`.
-LearningSignals can also be specified in the **learning_signals** argument of the constructor for a `LearningMechanism`.
-Although a LearningSignal can be created directly using its constructor (or any of the other ways for `creating an
-OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a LearningSignal has dedicated
-Components and requirements for configuration that must be met for it to function properly.
+<LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the
+`LearningMechanism`. LearningSignals can also be specified in the **learning_signals** argument of the constructor
+for a `LearningMechanism`. Although a LearningSignal can be created directly using its constructor (or any of the
+other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
+LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.
 
 .. _LearningSignal_Specification:
 
@@ -200,8 +201,8 @@ class LearningSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of `ModulatorySignal` used by a `LearningMechanism` to modify the `matrix <MappingProjection.matrix>`
-    parameter of one more more `MappingProjection(s) <MappingProjection>`.
+    A subclass of `ModulatorySignal <ModulatorySignal>` used by a `LearningMechanism` to modify the `matrix
+    <MappingProjection.matrix>` parameter of one more more `MappingProjection(s) <MappingProjection>`.
 
     COMMENT:
 

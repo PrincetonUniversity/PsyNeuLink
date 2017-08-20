@@ -45,7 +45,7 @@ Pre-specified Conditions
 `Pre-specified Conditions <Condition_Pre-Specified_List>` can be instantiated and added to a `Scheduler` at any time,
 and take effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more
 arguments that must be specified to achieve the desired behavior. Many Conditions are also associated with an
-`owner <Condition.owner>` attribute (a `Component` to which the Condition belongs), and a
+`owner <Condition.owner>` attribute (a `Component <Component>` to which the Condition belongs), and a
 `scheduler <Condition.scheduler>` attribute (that maintains data used to test for satisfaction of the Condition).
 When pre-specified Conditions are instantiated within a call to the `add` method of a `Scheduler` or `ConditionSet`,
 the Condition's `owner <Condition.owner>` and `scheduler <Condition.scheduler>` attributes are determined through
@@ -333,7 +333,8 @@ class ConditionError(Exception):
 
 
 class ConditionSet(object):
-    """Used in conjunction with a `Scheduler` to store the `Conditions <Condition>` associated with a `Component`.
+    """Used in conjunction with a `Scheduler` to store the `Conditions <Condition>` associated with a `Component
+    <Component>`.
 
     Arguments
     ---------
@@ -342,7 +343,7 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component`: `Condition`}
+    conditions : dict{`Component <Component>`: `Condition`}
         specifies an iterable collection of `Components <Component>` and the `Conditions <Condition>` associated
         with each.
 
@@ -353,8 +354,8 @@ class ConditionSet(object):
         specifies the `Scheduler` used to evaluate and maintain a record of the information required to
         evaluate the `Conditions <Condition>`
 
-    conditions : dict{`Component`: `Condition`}
-        the key of each entry is a `Component`, and its value is the `Condition <Condition>` associated
+    conditions : dict{`Component <Component>`: `Condition`}
+        the key of each entry is a `Component <Component>`, and its value is the `Condition <Condition>` associated
         with that Component.  Conditions can be added to the
         ConditionSet using the ConditionSet's `add_condition` method.
 
@@ -404,9 +405,9 @@ class ConditionSet(object):
         Arguments
         ---------
 
-        conditions : dict{`Component`: `Condition`}
+        conditions : dict{`Component <Component>`: `Condition`}
             specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
-            each entry of which maps a `Component` (the key) to a `Condition <Condition>` (the value).
+            each entry of which maps a `Component <Component>` (the key) to a `Condition <Condition>` (the value).
 
         """
         for owner in conditions:
@@ -417,7 +418,7 @@ class ConditionSet(object):
 
 class Condition(object):
     """
-    Used in conjunction with a `Scheduler` to specify the condition under which a `Component` should be
+    Used in conjunction with a `Scheduler` to specify the condition under which a `Component <Component>` should be
     allowed to execute.
 
     Arguments
@@ -440,7 +441,7 @@ class Condition(object):
         the Condition`s specifications are satisfied.
 
     owner (Component):
-        the `Component` with which the Condition is associated, and the execution of which it determines.
+        the `Component <Component>` with which the Condition is associated, and the execution of which it determines.
 
     """
     def __init__(self, func, *args, **kwargs):

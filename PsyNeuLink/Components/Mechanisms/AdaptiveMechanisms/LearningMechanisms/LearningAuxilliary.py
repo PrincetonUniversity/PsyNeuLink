@@ -583,7 +583,8 @@ class LearningComponents(object):
 
     * `activation_mech_projection` (`MappingProjection`):  one being learned)
     * `activation_mech_input` (`OutputState`):  input to Mechanism to which Projection being learned Projections
-    * `activation_mech` (`ProcessingMechanism`):  Mechanism to which projection being learned projects
+    * `activation_mech` (`ProcessingMechanism <ProcessingMechanism>`):  Mechanism to which projection being learned
+                                                                        projects
     * `activation_mech_output` (`OutputState`):  output of activation_mech
     * `activation_mech_fct` (function):  function of Mechanism to which projection being learned projects
     * `activation_derivative` (function):  derivative of function for activation_mech

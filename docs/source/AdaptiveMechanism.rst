@@ -1,5 +1,5 @@
-Adaptive Mechanism
-==================
+Adaptive Mechanisms
+===================
 
 .. _AdaptiveMechanism_Subtypes:
 

@@ -14,11 +14,12 @@
 Overview
 --------
 
-A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism` (its
-`sender <MappingProjection.sender>`) to the `InputState` of another (its `receiver <MappingProjection.receiver>`).
-The default `function <MappingProjection.function>` for a MappingProjection is  `LinearMatrix`, which uses the
-MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the value received from its `sender
-<MappingProjection.sender>` and provide the result to its `receiver <MappingProjection.receiver>`.
+A MappingProjection transmits the `value <OutputState.value>` of an `OutputState` of one `ProcessingMechanism
+<ProcessingMechanism>` (its `sender <MappingProjection.sender>`) to the `InputState` of another (its `receiver
+<MappingProjection.receiver>`). The default `function <MappingProjection.function>` for a MappingProjection is
+`LinearMatrix`, which uses the MappingProjection's `matrix <MappingProjection.matrix>` attribute to transform the
+value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
+<MappingProjection.receiver>`.
 
 .. _Mapping_Creation:
 
@@ -45,10 +46,10 @@ MappingProjections are also generated automatically in the following circumstanc
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism`, from the `ObjectiveMechanism` that `it creates <_ControlMechanism_Monitored_OutputStates>`
-    to its *ERROR_SIGNAL* ``, and from the `OutputStates <OutputState>` listed in the ControlMechanism's
-    `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute) to the ObjectiveMechanism (as
-     described above; an `IDENTITY_MATRIX` is used for all of these).
+  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
+    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* ``, and from the `OutputStates <OutputState>`
+    listed in the ControlMechanism's `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
+    attribute) to the ObjectiveMechanism (as described above; an `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
 
@@ -179,7 +180,7 @@ A MappingProjection uses its `function <MappingProjection.function>` and `matrix
 parameter to transform its `sender <MappingProjection.sender>` into a form suitable for the `variable
 <InputState.variable>` of its `receiver <MappingProjection.receiver>`.  A MappingProjection cannot be executed
 directly. It is executed when the `InputState` to which it projects (i.e., its `receiver
-<MappingProjection.receiver>`) is updated;  that occurs when the InputState's owner `Mechanism` is executed.
+<MappingProjection.receiver>`) is updated;  that occurs when the InputState's owner `Mechanism <Mechanism>` is executed.
 When executed, the MappingProjection's *MATRIX* `ParameterState` updates its `matrix <MappingProjection.matrix>`
 parameter based on any `LearningProjection(s)` it receives (listed in the ParameterState's `mod_afferents
 <ParameterState.mod_afferents>` attribute). This brings into effect any changes that occurred due to `learning
@@ -215,8 +216,8 @@ is, its unmodulated value, conforming to the general protocol for `modulation <M
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
 <ParameterState.value>` of its *MATRIX* ParameterState. As noted `above <Mapping_Execution>`, however, this does not
 reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterState's
-`value <ParameterState.value>` when it executes, which does not occur until the `Mechanism` that receives the
-MappingProjection is executed in the next `TRIAL` of execution.
+`value <ParameterState.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
+the MappingProjection is executed in the next `TRIAL` of execution.
 
 .. _Mapping_Class_Reference:
 
@@ -302,13 +303,13 @@ class MappingProjection(PathwayProjection_Base):
     ---------
 
     sender : Optional[OutputState or Mechanism]
-        specifies the source of the Projection's input. If a `Mechanism` is specified, its
+        specifies the source of the Projection's input. If a `Mechanism <Mechanism>` is specified, its
         `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
 
     receiver: Optional[InputState or Mechanism]
-        specifies the destination of the Projection's output.  If a `Mechanism` is specified, its
+        specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
         `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
         the context in which the Projection is used, or its initialization will be `deferred
         <MappingProjection_Deferred_Initialization>`.
@@ -340,10 +341,10 @@ class MappingProjection(PathwayProjection_Base):
     componentType : MAPPING_PROJECTION
 
     sender : OutputState
-        the `OutputState` of the `Mechanism` that is the source of the Projection's input
+        the `OutputState` of the `Mechanism <Mechanism>` that is the source of the Projection's input
 
     receiver: InputState
-        the `InputState` of the `Mechanism` that is the destination of the Projection's output.
+        the `InputState` of the `Mechanism <Mechanism>` that is the destination of the Projection's output.
 
     matrix : 2d np.array
         the matrix used by `function <MappingProjection.function>` to transform the input from the MappingProjection's
