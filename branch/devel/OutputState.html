@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputState &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>OutputState &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,9 +33,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="State" href="State.html"/>
-        <link rel="next" title="ModulatorySignal" href="ModulatorySignal.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="States" href="State.html"/>
+        <link rel="next" title="ModulatorySignals" href="ModulatorySignal.html"/>
         <link rel="prev" title="ParameterState" href="ParameterState.html"/> 
 
   
@@ -88,37 +88,20 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">States</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">OutputState</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-an-outputstate">Creating an OutputState</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">OutputState</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -150,9 +133,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="State.html">State</a> &raquo;</li>
+          <li><a href="State.html">States</a> &raquo;</li>
       
     <li>OutputState</li>
       <li class="wy-breadcrumbs-aside">
@@ -195,11 +178,11 @@ automatically creates a default OutputState if none is explicitly specified, tha
 or to the Process&#8217; <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">output</span></a> if the Mechanism is a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process.
 Other configurations can also easily be specified using a Mechanism&#8217;s <strong>output_states</strong> argument (see
 <a class="reference internal" href="#outputstate-specification"><span class="std std-ref">OutputState Specification</span></a> below).</p>
-<p>An OutputState must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When OutputState is specified in the constructor for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
-(see <code class="xref any docutils literal"><span class="pre">below</span></code>), it is automatically assigned to that Mechanism as its owner. If the
-OutputState is created directly, its <a class="reference internal" href="#OutputState.OutputState.owner" title="OutputState.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong> argument of its
-constructor; otherwise, its initialization will be <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until it is assigned to
-an owner using the owner&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.</p>
+<p>An OutputState must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When OutputState is specified in the constructor for a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> (see <code class="xref any docutils literal"><span class="pre">below</span></code>), it is automatically assigned to that Mechanism as
+its owner. If the OutputState is created directly, its <a class="reference internal" href="#OutputState.OutputState.owner" title="OutputState.OutputState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> can specified in the <strong>owner</strong>
+argument of its constructor; otherwise, its initialization will be <a class="reference internal" href="State.html#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until
+it is assigned to an owner using the owner&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.</p>
 <div class="section" id="primary-outputstate">
 <span id="outputstate-primary"></span><h3>Primary OutputState<a class="headerlink" href="#primary-outputstate" title="Permalink to this headline">¶</a></h3>
 <p>Every Mechanism has at least one OutputState, referred to as its <em>primary OutputState</em>.  If OutputStates are not
@@ -266,10 +249,9 @@ are either of those.  This can be used to specify one or more efferent <a class=
 from the OutpuState, and/or <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> for it to receive.</li>
 </ul>
 <ul class="simple">
-<li>A <strong>2-item tuple</strong>.  The first item must be a value, and the second a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> specification.
-This creates a default OutputState using the first item as the OutputState&#8217;s <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
-and assigns the OutputState as the <code class="xref any docutils literal"><span class="pre">receiver</span> <span class="pre">`ModualtoryProjection.receiver</span></code> of the type of ModulatoryProjection
-specified in the second item.</li>
+<li>A <strong>2-item tuple</strong>.  The first item must be a value, and the second a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> specification. This creates a default OutputState using the first item as the
+OutputState&#8217;s <a class="reference internal" href="#OutputState.OutputState.variable" title="OutputState.OutputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and assigns the OutputState as the <code class="xref any docutils literal"><span class="pre">receiver</span>
+<span class="pre">`ModualtoryProjection.receiver</span></code> of the type of ModulatoryProjection specified in the second item.</li>
 </ul>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -573,7 +555,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10bad1908&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10cfa4b38&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard
 OutputStates</span></a> of a class</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -583,7 +565,7 @@ OutputStates</span></a> of a class</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component to which this OutputState belongs</li>
 <li><strong>output_state_dicts</strong> (<em>list of dicts</em>) &#8211; list of dictionaries specifying OutputStates for the Component specified
-by <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.owner" title="ParameterState.ParameterState.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+by <a class="reference internal" href="Function.html#Function.ConstantIntegrator.owner" title="Function.ConstantIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
 <li><strong>indices</strong> (<em>PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints</em>) &#8211; <p>specifies how to assign the INDEX entry for each dict listed in
 <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></p>
 <p>The effects of each value of indices are as follows:</p>
@@ -643,7 +625,7 @@ by <a class="reference internal" href="ParameterState.html#ParameterState.Parame
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ModulatorySignal.html" class="btn btn-neutral float-right" title="ModulatorySignal" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatorySignal.html" class="btn btn-neutral float-right" title="ModulatorySignals" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ParameterState.html" class="btn btn-neutral" title="ParameterState" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -677,7 +659,7 @@ by <a class="reference internal" href="ParameterState.html#ParameterState.Parame
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

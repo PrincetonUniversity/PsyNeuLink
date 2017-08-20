@@ -1,5 +1,5 @@
-Processing Mechanism
-====================
+Processing Mechanisms
+=====================
 
 .. _ProcessingMechanism_Subtypes:
 
@@ -7,11 +7,11 @@ Processing Mechanism
    :maxdepth: 1
 
    TransferMechanism
-   IntegratorMechanism
-   DDM
    RecurrentTransferMechanism
    LCA
    KWTA
+   IntegratorMechanism
+   DDM
    ObjectiveMechanism
    ComparatorMechanism
 

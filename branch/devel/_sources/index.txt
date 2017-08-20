@@ -167,40 +167,20 @@ With substantial and greatly appreciated assistance from:
 * **Jan Vesely**, Department of Computer Science, Rutgers University
 
 
-..
-   .. toctree::
-      :maxdepth: 1
-
-      System
-      Process
-
-   .. toctree::
-      :maxdepth: 3
-
-      Mechanism
-
-   .. toctree::
-      :maxdepth: 2
-
-      State
-      Projection
-      Functions
-      Run
-
 .. toctree::
-   :hidden:
+   :titlesonly:
+   :maxdepth: 1
 
-   Index
    BasicsAndSampler
    QuickReference
-   Component
-   Composition
+   Components <Component>
+   Compositions <Composition>
    Scheduling
 
 .. _Indices_and_Tables:
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

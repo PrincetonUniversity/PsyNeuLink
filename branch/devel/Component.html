@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Components &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="next" title="Mechanism" href="Mechanism.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="next" title="Mechanisms" href="Mechanism.html"/>
         <link rel="prev" title="Quick Reference" href="QuickReference.html"/> 
 
   
@@ -87,27 +87,14 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Component</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Components</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-a-component">Creating a Component</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#deferred-initialization">Deferred Initialization</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#component-structure">Component Structure</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#core-configurable-attributes">Core Configurable Attributes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#core-informational-attributes">Core Informational Attributes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#component-methods">Component Methods</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -139,7 +126,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Component</li>
+    <li>Components</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -153,13 +140,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="component">
-<h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="components">
+<h1>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </div>
@@ -178,13 +165,13 @@ that provide information about its contents and/or state (see <code class="xref 
 <div class="section" id="deferred-initialization">
 <span id="component-deferred-init"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a
-<a class="reference internal" href="State.html#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">State</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its full
-initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="State.html"><span class="doc">State</span></a> is assigned to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or
-a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  This allows
-Components to be created before all of the information they require is available (e.g., at the beginning of a script).
-However, for the Component to be operational, initialization must be completed its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method must be
-called.  This is usually done automatically when the Component is assigned to another Component to which it belongs
-(e.g., assigning a State to a Mechanism) or to a Composition (e.g., a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>)
+<a class="reference internal" href="State.html#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">State</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its
+full initialization is deferred until its the information is available (e.g., the <a class="reference internal" href="State.html"><span class="doc">State</span></a> is assigned to a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is assigned its <code class="xref any docutils literal"><span class="pre">sender</span></code> and <code class="xref any docutils literal"><span class="pre">receiver</span></code>).  This allows Components to be created before all of the information they require is
+available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
+completed its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method must be called.  This is usually done automatically when the Component is
+assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
+a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>)
 of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
 </div>
 </div>
@@ -514,7 +501,7 @@ Instantiate any items in request set that require it (i.e., function or states).
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="QuickReference.html" class="btn btn-neutral" title="Quick Reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -548,7 +535,7 @@ Instantiate any items in request set that require it (i.e., function or states).
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

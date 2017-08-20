@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="Processing Mechanism" href="ProcessingMechanism.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Processing Mechanisms" href="ProcessingMechanism.html"/>
         <link rel="next" title="DDM" href="DDM.html"/>
-        <link rel="prev" title="TransferMechanism" href="TransferMechanism.html"/> 
+        <link rel="prev" title="KWTA" href="KWTA.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,42 +88,28 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">IntegratorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="LCA.html">LCA</a></li>
 <li class="toctree-l4"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">IntegratorMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ProcessingMechanism.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -155,11 +141,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
       
-          <li><a href="ProcessingMechanism.html">Processing Mechanism</a> &raquo;</li>
+          <li><a href="ProcessingMechanism.html">Processing Mechanisms</a> &raquo;</li>
       
     <li>IntegratorMechanism</li>
       <li class="wy-breadcrumbs-aside">
@@ -175,11 +161,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="integratormechanism">
-<h1>IntegratorMechanism<a class="headerlink" href="#integratormechanism" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
-<span class="target" id="module-ProcessingMechanisms.IntegratorMechanism"></span><div class="section" id="overview">
+  <div class="section" id="module-ProcessingMechanisms.IntegratorMechanism">
+<span id="integratormechanism"></span><h1>IntegratorMechanism<a class="headerlink" href="#module-ProcessingMechanisms.IntegratorMechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
@@ -224,7 +208,7 @@ list or array, then each element will be used as the rate for the corresponding 
 <dl class="class">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism">
 <em class="property">class </em><code class="descclassname">ProcessingMechanisms.IntegratorMechanism.</code><code class="descname">IntegratorMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=AdaptiveIntegrator(rate=0.5)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> that integrates its input.</p>
+<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that integrates its input.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -301,8 +285,8 @@ integrated.</li>
 <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.rate" title="Function.AdaptiveIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for details).</li>
 <li><strong>noise</strong> (<em>float, PsyNeuLink Function, list or 1d np.array : default 0.0</em>) &#8211; specifies random value to be added in each call to <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a>. (see
 <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.noise" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="Function.html#Function.Integrator.initializer" title="Function.Integrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
-<code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
+<li><strong>float, list or 1d np.array</strong> (<a class="reference internal" href="Function.html#Function.OrnsteinUhlenbeckIntegrator.initializer" title="Function.OrnsteinUhlenbeckIntegrator.initializer"><em>initializer</em></a>) &#8211; specifies starting value for integration.  If it is a list or array, it must be the same length as
+<code class="xref any docutils literal"><span class="pre">default_variable</span></code> (see <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.initializer" title="Function.AdaptiveIntegrator.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -352,7 +336,7 @@ the noise will simply be an offset that remains the same across all executions.<
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer">
 <code class="descname">initializer</code><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float, 1d np.array or list</em> &#8211; determines the starting value for integration (i.e., the value to which
-<a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
+<a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is set.</p>
 <p>If initializer is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
 <p>TBI:</p>
 <p>Initializer may be a function or list/array of functions.</p>
@@ -384,7 +368,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="method">
 <dt id="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function">
 <code class="descname">function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return: some fraction of <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.previous_value" title="Function.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
+<dd><p>Return: some fraction of <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.variable" title="Function.AdaptiveIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> combined with some fraction of <a class="reference internal" href="#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -425,7 +409,7 @@ arguments of the constructor.</li>
         <a href="DDM.html" class="btn btn-neutral float-right" title="DDM" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="TransferMechanism.html" class="btn btn-neutral" title="TransferMechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="KWTA.html" class="btn btn-neutral" title="KWTA" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -456,7 +440,7 @@ arguments of the constructor.</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="prev" title="TimeScale" href="TimeScale.html"/> 
 
@@ -87,8 +87,8 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -136,25 +136,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="run">
-<h1>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Run</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#scope-of-execution">Scope of Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#timing">Timing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#inputs">Inputs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#initial-values">Initial Values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#targets">Targets</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#class-reference">Class Reference</a></li>
-</ul>
-</li>
-</ul>
-</div>
-<span class="target" id="module-Run"></span><div class="section" id="overview">
+  <div class="section" id="module-Run">
+<span id="run"></span><h1>Run<a class="headerlink" href="#module-Run" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p id="run-overview">The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function is used for executing a Mechanism, Process or System.  It can be called directly, however
 it is typically invoked by calling the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of the Component to be run.  It  executes a Component by
@@ -177,7 +161,8 @@ runs only a single execution of the object;</li>
 <div class="section" id="scope-of-execution">
 <span id="run-scope-of-execution"></span><h3>Scope of Execution<a class="headerlink" href="#scope-of-execution" title="Permalink to this headline">¶</a></h3>
 <p>When the <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method of a Component is called, it executes that Component and all others within its scope of
-execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, the scope of
+execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
+the scope of
 execution is all of the Mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the scope of execution is
 all of the Mechanisms in the Processes specified in the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">Processes</span></code></a> attribute.</p>
 </div>
@@ -478,7 +463,7 @@ or of the OutputStates of the <a class="reference internal" href="Keywords.html#
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

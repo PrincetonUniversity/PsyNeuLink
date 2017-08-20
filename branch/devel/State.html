@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>State &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>States &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="Component" href="Component.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Components" href="Component.html"/>
         <link rel="next" title="InputState" href="InputState.html"/>
         <link rel="prev" title="GatingProjection" href="GatingProjection.html"/> 
 
@@ -88,39 +88,20 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">State</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">States</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-state">Creating a State</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#specifying-a-state">Specifying a State</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#projections">Projections</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#structure">Structure</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#owner">Owner</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#variable-function-and-value">Variable, Function and Value</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#modulation">Modulation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -152,9 +133,9 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-    <li>State</li>
+    <li>States</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -168,39 +149,97 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="state">
-<h1>State<a class="headerlink" href="#state" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="states">
+<h1>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound" id="state-subtypes">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
 </ul>
-</div>
-<div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-State"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A State provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
-provide by them.  The value of a State can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are three primary types of
-States, all of which are used by <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, one of which is used by
+provide by them.  The value of a State can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are
+three primary types of States, all of which are used by <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, one of which is used by
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>, and that are subject to modulation by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>,
 as summarized in the table below:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="18%" />
+<col width="21%" />
+<col width="18%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><em>State Type</em></th>
+<th class="head"><em>Owner</em></th>
+<th class="head"><em>Description</em></th>
+<th class="head"><em>Modulated by</em></th>
+<th class="head"><em>Specification</em></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a></td>
+<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></td>
+<td>receives input from
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></td>
+<td><a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a></td>
+<td><a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> constructor;
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
+constructor or its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
+<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or
+<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a></td>
+<td>represents parameter
+value for a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>
+or its function</td>
+<td><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>
+and/or
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a></td>
+<td>Implicitly whenever a
+parameter value is
+<a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">specified</span></a></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></td>
+<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></td>
+<td>provides output to
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></td>
+<td><a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a></td>
+<td><a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> constructor;
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
+constructor or its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></td>
+<td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a></td>
+<td>provides value for
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a></td>
+<td>&nbsp;</td>
+<td><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>
+constructor; tuple in State
+or parameter specification</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="creating-a-state">
 <span id="state-creation"></span><h2>Creating a State<a class="headerlink" href="#creating-a-state" title="Permalink to this headline">¶</a></h2>
 <p>In general, States are created automatically by the objects to which they belong (their <a class="reference internal" href="#state-owner"><span class="std std-ref">owner</span></a>),
-or by specifying the State in the constructor for its owner.  For example, unless otherwise specified,
-when a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is created it creates a default <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> for itself, and whenever any
-Component is created, it automatically creates a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for each of its
-<a class="reference internal" href="Component.html#component-configurable-attributes"><span class="std std-ref">configurable parameters</span></a> and those of its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>.
-States are also created in response to explicit specifications.  For example, InputStates and OutputStates can be
-specified in the constructor for a Mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-state-specification"><span class="std std-ref">Specifying States</span></a>) or in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method;
-and a ParameterState is specified in effect when the value of a parameter for any Component or its
-<a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is specified in its constructor.  InputStates and OutputStates (but not
-ParameterStates) can also be created directly using their constructors;  however, Parameter States cannot be created
-in this way; they are always and only created when the Component to which a parameter belongs is created.</p>
+or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is created it creates a default <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> for itself, and whenever
+any Component is created, it automatically creates a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for each of its <a class="reference internal" href="Component.html#component-configurable-attributes"><span class="std std-ref">configurable parameters</span></a> and those of its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>. States are also created in
+response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
+for a Mechanism (see <a class="reference internal" href="Mechanism.html#mechanism-state-specification"><span class="std std-ref">Specifying States</span></a>) or in its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method; and a ParameterState is
+specified in effect when the value of a parameter for any Component or its <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is
+specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
+using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
+when the Component to which a parameter belongs is created.</p>
 <div class="section" id="specifying-a-state">
 <span id="state-specification"></span><h3>Specifying a State<a class="headerlink" href="#specifying-a-state" title="Permalink to this headline">¶</a></h3>
 <p>Wherever a State is specified, it can be done using any of the following:</p>
@@ -330,9 +369,9 @@ attribute.</li>
 </li>
 </ul>
 </div></blockquote>
-<p>Projections must be specified in a list.  Each entry must be either a specification for a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection</span></a>, or for a <code class="xref any docutils literal"><span class="pre">sender</span></code> or <code class="xref any docutils literal"><span class="pre">receiver</span></code>,
-in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a <a class="reference internal" href="#"><span class="doc">State</span></a> or a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. If a Mechanism is specified, its primary <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">OutputState</span></a>  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
+<p>Projections must be specified in a list.  Each entry must be either a specification for a <a class="reference internal" href="Projection.html#projection-in-context-specification"><span class="std std-ref">projection</span></a>, or for a <code class="xref any docutils literal"><span class="pre">sender</span></code> or <code class="xref any docutils literal"><span class="pre">receiver</span></code>, in
+which case the appropriate type of Projection is created.  A sender or receiver can be specified as a <a class="reference internal" href="#"><span class="doc">State</span></a>
+or a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. If a Mechanism is specified, its primary <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">OutputState</span></a>  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
 examples below.  Note that the State must be <a class="reference internal" href="#state-creation"><span class="std std-ref">assigned to an owner</span></a> in order to be functional,
 irrespective of whether any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> have been assigned to it.</p>
@@ -356,12 +395,11 @@ and assigns it to a <code class="docutils literal"><span class="pre">my_gating_m
 <div class="section" id="owner">
 <span id="state-owner"></span><h3>Owner<a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
 <p>Every State has an <a class="reference internal" href="#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  For <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, the
-owner must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  For <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> it can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>.
-For <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>, it must be an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a>.  When a State is created as part of
-another Component, its <a class="reference internal" href="#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is assigned automatically to that Component.  It is also assigned
-automatically when the State is assigned to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> using that Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  Otherwise, it
-must be specified explicitly in the <strong>owner</strong> argument of the constructor for the State.  If it is not, the State&#8217;s
-initialization will be <a class="reference internal" href="#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until it has been assigned to an owner.</p>
+owner must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  For <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterStates</span></a> it can be a Mechanism or a
+<a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a>. For <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a>, it must be an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>. When a State is created as part of another Component, its <a class="reference internal" href="#State.State_Base.owner" title="State.State_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is
+assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> using that Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.add_states" title="Mechanism.Mechanism_Base.add_states"><code class="xref any py py-meth docutils literal"><span class="pre">add_states</span></code></a> method.  Otherwise, it must be specified explicitly in
+the <strong>owner</strong> argument of the constructor for the State.  If it is not, the State&#8217;s initialization will be <a class="reference internal" href="#state-deferred-initialization"><span class="std std-ref">deferred</span></a> until it has been assigned to an owner.</p>
 </div>
 <div class="section" id="variable-function-and-value">
 <h3>Variable, Function and Value<a class="headerlink" href="#variable-function-and-value" title="Permalink to this headline">¶</a></h3>
@@ -378,8 +416,8 @@ Mechanism&#8217;s <a class="reference internal" href="Mechanism.html#Mechanism.M
 <li><a class="reference internal" href="#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:  for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> this aggregates the values of the Projections that the
 State receives (the default is <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> that sums the values), under the potential influence of a
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>;  for a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a>, it determines the value of the associated parameter, under the
-potential influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>);
-for an OutputState, it conveys the result  of the Mechanism&#8217;s function to its
+potential influence of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> (for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (for a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>); for an OutputState, it conveys the result  of the Mechanism&#8217;s function to its
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_values" title="Mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute, under the potential influence of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>.  See
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-structure"><span class="std std-ref">ModulatorySignals</span></a> and the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> associated with
 each type for a description of how they can be used to modulate the <a class="reference internal" href="#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a State.</li>
@@ -396,8 +434,7 @@ Mechanism&#8217;s <code class="xref any docutils literal"><span class="pre">valu
 </div>
 <div class="section" id="modulation">
 <span id="state-modulation"></span><h3>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
-<p>Every type of State has a <a class="reference internal" href="#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute, that lists the
-<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> it receives.  Each ModulatoryProjection comes from a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>
+<p>Every type of State has a <a class="reference internal" href="#State.State_Base.mod_afferents" title="State.State_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute, that lists the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> it receives.  Each ModulatoryProjection comes from a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>
 that specifies how it should modulate the State&#8217;s <a class="reference internal" href="#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when the State is updated (see
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Anatomy_Figure</span></code>).  In most cases, a ModulatorySignal uses the
 State&#8217;s <a class="reference internal" href="#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to modulate its <a class="reference internal" href="#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The function of every State
@@ -415,7 +452,7 @@ or to disable modulation, using one of the values of <a class="reference interna
 ParameterStates belonging to a Mechanism are updated before the Mechanism&#8217;s function is called.  OutputStates are
 updated after the Mechanism&#8217;s function is called.  When a State is updated, it executes any Projections that project
 to it (listed in its <a class="reference internal" href="#State.State_Base.all_afferents" title="State.State_Base.all_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">all_afferents</span></code></a> attribute.  It uses the values it receives from any
-<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="InputState.html#InputState.InputState.path_afferents" title="InputState.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
+<code class="xref any docutils literal"><span class="pre">PathWayProjections</span></code> (listed in its <a class="reference internal" href="#State.State_Base.path_afferents" title="State.State_Base.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute) as the variable for its
 <a class="reference internal" href="#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. It then executes all of the ModulatoryProjections it receives.  Different
 ModulatorySignals may call for different forms of modulation (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>).  Accordingly,
 it separately sums the values specified by any ModulatorySignals for the <em>MULTIPLICATIVE_PARAM</em> of its
@@ -565,7 +602,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

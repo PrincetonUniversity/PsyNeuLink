@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/> 
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -85,8 +85,8 @@
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -155,7 +155,7 @@
 <p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (class): names use CamelCase (with initial capitalization);
+<li><a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (class): names use CamelCase (with initial capitalization);
 the initial mention in a section of documentation is formatted as a link (in colored text)
 to the documentation for that Component;</li>
 </ul>
@@ -201,14 +201,14 @@ available to other Components.  There are two primary types of Mechanisms in Psy
 ProcessingMechanisms and AdaptiveMechanisms:</p>
 <ul>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a></dt>
+<dt><a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a></dt>
 <dd><p class="first last">Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
 and provides the result as output to its efferent Projections.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a></dt>
+<dt><a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanisms</span></a></dt>
 <dd><p class="first">Uses the input it receives from other Mechanisms to modify the parameters of one or more other
 PsyNeuLink Components.  There are three primary types:</p>
 <ul class="last">
@@ -219,7 +219,7 @@ PsyNeuLink Components.  There are three primary types:</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a></dt>
 <dd><p class="first last">Modifies one or more parameters of other Mechanisms.</p>
 </dd>
 </dl>
@@ -244,7 +244,7 @@ as the input to another Component. There are two types of Projections, that corr
 Mechanisms:</p>
 <ul class="last">
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a></dt>
+<dt><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a></dt>
 <dd><p class="first last">Used in conjunction with ProcessingMechanisms to convey information along processing pathway.
 The primary type of PathwayProjection is a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, that provides the output of one
 ProcessingMechanism as the input to another.</p>
@@ -252,9 +252,9 @@ ProcessingMechanism as the input to another.</p>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a></dt>
+<dt><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a></dt>
 <dd><p class="first">Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
-Takes the output of an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> and uses it to modify the input, output or parameter of
+Takes the output of an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanisms</span></a> and uses it to modify the input, output or parameter of
 another Component.  There are three types of ModulatoryProjections, corresponding to the three
 types of AdaptiveMechanisms:</p>
 <ul class="last">
@@ -267,7 +267,7 @@ MappingProjection.</p>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> and uses it to modify the parameter of a
+<dd><p class="first last">Takes a ControlSignal from a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> and uses it to modify the parameter of a
 ProcessingMechanism.</p>
 </dd>
 </dl>
@@ -331,7 +331,7 @@ State&#8217;s <code class="xref any docutils literal"><span class="pre">value</s
 </dd>
 </dl>
 </li>
-<li><p class="first"><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> - the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> has a Function
+<li><p class="first"><a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> - the most fundamental unit of computation in PsyNeuLink.  Every <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> has a Function
 object, that wraps an executable function together with a definition of its parameters, and modularizes it so that
 it can be swapped out for another (compatible) one, or replaced with a customized one.  PsyNeuLink provides a
 library of standard Functions (e.g. for linear, non-linear, and matrix transformation; integration, and evaluation and
@@ -347,7 +347,7 @@ Processes and Systems.</p>
 <p><a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.  A Process is the simplest type of Composition: a linear chain of Mechanisms connected by
 Projections.  A Process may have recurrent Projections, but it does not have any branches.</p>
 <p><a class="reference internal" href="System.html"><span class="doc">System</span></a>.  A system is a collection of Processes that can have any configuration, and is represented by a graph in
-which each node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.  Systems are generally constructed from Processes,
+which each node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.  Systems are generally constructed from Processes,
 but they can also be constructed directly from Mechanisms and Projections.</p>
 <p id="definitions-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
 <div class="figure" id="id3">
@@ -410,7 +410,7 @@ another in a single system.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

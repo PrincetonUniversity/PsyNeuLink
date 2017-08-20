@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="ModulatorySignal" href="ModulatorySignal.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="ModulatorySignals" href="ModulatorySignal.html"/>
         <link rel="next" title="GatingSignal" href="GatingSignal.html"/>
         <link rel="prev" title="LearningSignal" href="LearningSignal.html"/> 
 
@@ -88,40 +88,25 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">States</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">ControlSignal</a></li>
 <li class="toctree-l4"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#creating-a-modulatorysignal">Creating a ModulatorySignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatorySignal.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -153,11 +138,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="State.html">State</a> &raquo;</li>
+          <li><a href="State.html">States</a> &raquo;</li>
       
-          <li><a href="ModulatorySignal.html">ModulatorySignal</a> &raquo;</li>
+          <li><a href="ModulatorySignal.html">ModulatorySignals</a> &raquo;</li>
       
     <li>ControlSignal</li>
       <li class="wy-breadcrumbs-aside">
@@ -177,28 +162,26 @@
 <span id="controlsignal"></span><h1>ControlSignal<a class="headerlink" href="#module-ModulatorySignals.ControlSignal" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> and one or more
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, to modify the parameter(s) of one or more <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. A
-ControlSignal receives an <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the ControlMechanism to which it
-belongs, and uses that to compute an <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.control_signal" title="ModulatorySignals.ControlSignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>) that is assigned as the
-<a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ControlProjections. Each ControlProjection conveys its value
-to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls, which uses that value to <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a>
-the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also calculates a <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>, based on its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
-and/or its time course, that may be used by the ControlMechanism to adapt the ControlSignal&#8217;s
-<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
+<p>A ControlSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, to modify the parameter(s) of one or more
+<a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. A ControlSignal receives an <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> value from the
+ControlMechanism to which it belongs, and uses that to compute an <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> (also referred to as a <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>)
+that is assigned as the <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ControlProjections. Each
+ControlProjection conveys its value to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls, which uses that value to
+<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a> the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the parameter.  A ControlSignal also
+calculates a <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>, based on its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> and/or its time course, that may be used by the ControlMechanism to
+adapt the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> in the future.</p>
 </div>
 <div class="section" id="creating-a-controlsignal">
 <span id="controlsignal-creation"></span><h2>Creating a ControlSignal<a class="headerlink" href="#creating-a-controlsignal" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function
-is <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified for control</span></a>.  ControlSignals can also be specified in the
-<strong>control_signals</strong> argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>.  Although a ControlSignal can be created
-directly using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an outputState</span></a>),
-this is usually not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for
-configuration that must be met for it to function properly.</p>
+<p>A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">specified for
+control</span></a>.  ControlSignals can also be specified in the <strong>control_signals</strong> argument
+of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.  Although a ControlSignal can be created directly
+using its constructor (or any of the other ways for <a class="reference internal" href="OutputState.html#outputstates-creation"><span class="std std-ref">creating an outputState</span></a>), this is usually
+not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
+that must be met for it to function properly.</p>
 <div class="section" id="specifying-controlsignals">
 <span id="controlsignal-specification"></span><h3>Specifying ControlSignals<a class="headerlink" href="#specifying-controlsignals" title="Permalink to this headline">¶</a></h3>
-<p>When a ControlSignal is specified in the <strong>control_signals</strong> argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>,
-the parameter to be controlled must be specified.  This can take any of the following forms:</p>
+<p>When a ControlSignal is specified in the <strong>control_signals</strong> argument of the constructor for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, the parameter to be controlled must be specified.  This can take any of the following forms:</p>
 <blockquote>
 <div><ul class="simple">
 <li>a <strong>ParameterState</strong> of the Mechanism to which the parameter belongs;</li>
@@ -235,9 +218,10 @@ description of ControlSignal attributes.</p>
 </div>
 <div class="section" id="structure">
 <span id="controlsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal is owned by an <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, and controls the parameters of one or more Components by modulating
-the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that determines the value of each of the parameters
-that it control.  Its operation is governed by several attributes of the ControlSignal, that are described below.</p>
+<p>A ControlSignal is owned by an <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and controls the parameters of one or more
+Components by modulating the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.function" title="ParameterState.ParameterState.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> that determines the value
+of each of the parameters that it control.  Its operation is governed by several attributes of the ControlSignal,
+that are described below.</p>
 <div class="section" id="projections">
 <span id="controlsignal-projections"></span><h3>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>When a ControlSignal is created, it can be assigned one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>, using either
@@ -284,7 +268,7 @@ and is used by its <a class="reference internal" href="#ModulatorySignals.Contro
 ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>. However, another <a class="reference internal" href="Function.html#Function.TransferFunction" title="Function.TransferFunction"><code class="xref any py py-class docutils literal"><span class="pre">TransferFunction</span></code></a> can be assigned
 (e.g., <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>), or any other function that takes and returns a scalar value or 1d array.</p>
 <p><em>Intensity (value)</em>. The result of the function is assigned as the value of the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>
-attribute, which serves as the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.control_signal" title="ModulatorySignals.ControlSignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
+attribute, which serves as the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (also referred to as <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>).
 The <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the parameter(s) for which the
 ControlSignal is responsible. The ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> attribute  reflects its value for the current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;
 its value from the previous <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is assigned to the <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.last_intensity" title="ModulatorySignals.ControlSignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal"><span class="pre">last_intensity</span></code></a> attribute.</p>
@@ -327,17 +311,15 @@ attributes of a ControlSignal are automatically assigned and should not be modif
 </div>
 <div class="section" id="execution">
 <span id="controlsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A ControlSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which it belongs is
-executed.  When this occurs, the ControlMechanism provides the ControlSignal with an
-<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>, that is used by its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute its
-<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> for that <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  The <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used by the ControlSignal&#8217;s <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>
-to set the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (s) of the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState(s)</span></a> to which the ControlSignal
-projects. Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal
-controls. See <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed description of how modulation operates).  The
-ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is also used  by its <a class="reference internal" href="#controlsignal-costs"><span class="std std-ref">cost functions</span></a> to compute its
-<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute. That is used by some ControlMechanisms, along with the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation_samples" title="ModulatorySignals.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a>
-attribute, to evaluate an <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, and adjust the ControlSignal&#8217;s
-<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+<p>A ControlSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to
+which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>, that is used by its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.function" title="ModulatorySignals.ControlSignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to compute its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> for
+that <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  The <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is used by the ControlSignal&#8217;s <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to set the
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (s) of the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState(s)</span></a> to which the ControlSignal projects.
+Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
+<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed description of how modulation operates).  The ControlSignal&#8217;s
+<a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> is also used  by its <a class="reference internal" href="#controlsignal-costs"><span class="std std-ref">cost functions</span></a> to compute its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a> attribute. That is used
+by some ControlMechanisms, along with the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation_samples" title="ModulatorySignals.ControlSignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_samples</span></code></a> attribute, to evaluate an
+<a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, and adjust the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> for the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
@@ -439,14 +421,14 @@ ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.Con
 <dl class="class">
 <dt id="ModulatorySignals.ControlSignal.ControlSignal">
 <em class="property">class </em><code class="descclassname">ModulatorySignals.ControlSignal.</code><code class="descname">ControlSignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>costs_options=ControlSignalCosts.DEFAULTS</em>, <em>intensity_cost_function=Exponential</em>, <em>adjustment_cost_function=Linear</em>, <em>duration_cost_function=Integrator</em>, <em>cost_combination_function=Reduce(operation=SUM)</em>, <em>allocation_samples=DEFAULT_ALLOCATION_SAMPLES</em>, <em>modulation=ModulationParam.MULTIPLICATIVE                projections=None                                         params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to modulate the parameter(s)
-of one or more other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
+<dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to
+modulate the parameter(s) of one or more other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="ControlMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.ControlMechanism" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism"><em>ControlMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which to assign the ControlSignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="ControlMechanism.html#module-AdaptiveMechanisms.ControlMechanisms.ControlMechanism" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism"><em>ControlMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to which to assign the ControlSignal.</li>
 <li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> of the ControlSignal from its <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.allocation" title="ModulatorySignals.ControlSignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a>.</li>
 <li><strong>cost_options</strong> (<em>ControlSignalCosts or List[ControlSignalCosts] : ControlSignalsCosts.DEFAULTS</em>) &#8211; specifies the cost components to include in the computation of the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.cost" title="ModulatorySignals.ControlSignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal"><span class="pre">cost</span></code></a>.</li>
 <li><strong>intensity_cost_function</strong> (<em>Optional[TransferFunction] : default Exponential</em>) &#8211; specifies the function used to calculate the contribution of the ControlSignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ControlSignal.ControlSignal.intensity" title="ModulatorySignals.ControlSignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a> to its
@@ -481,7 +463,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ModulatorySignals.ControlSignal.ControlSignal.owner">
 <code class="descname">owner</code><a class="headerlink" href="#ModulatorySignals.ControlSignal.ControlSignal.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ControlMechanism</em> &#8211; the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which the ControlSignal belongs.</p>
+<dd><p><em>ControlMechanism</em> &#8211; the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to which the ControlSignal belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -789,7 +771,7 @@ Assign intensity to value of ControlSignal (done in setter property for value)</
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

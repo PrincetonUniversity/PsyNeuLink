@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="PathwayProjection" href="PathwayProjection.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="PathwayProjections" href="PathwayProjection.html"/>
         <link rel="next" title="AutoAssociativeProjection" href="AutoAssociativeProjection.html"/>
-        <link rel="prev" title="PathwayProjection" href="PathwayProjection.html"/> 
+        <link rel="prev" title="PathwayProjections" href="PathwayProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,35 +88,22 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">MappingProjection</a></li>
 <li class="toctree-l4"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#creating-a-pathwayprojection">Creating a PathwayProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -148,11 +135,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Projection.html">Projection</a> &raquo;</li>
+          <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-          <li><a href="PathwayProjection.html">PathwayProjection</a> &raquo;</li>
+          <li><a href="PathwayProjection.html">PathwayProjections</a> &raquo;</li>
       
     <li>MappingProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -172,10 +159,9 @@
 <span id="mappingprojection"></span><h1>MappingProjection<a class="headerlink" href="#module-PathwayProjections.MappingProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="mapping-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A MappingProjection transmits the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a> (its
-<a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>) to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another (its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>).
-The default <code class="xref any docutils literal"><span class="pre">function</span></code> for a MappingProjection is  <a class="reference internal" href="Function.html#Function.LinearMatrix" title="Function.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a>, which uses the
-MappingProjection&#8217;s <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> attribute to transform the value received from its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and provide the result to its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<p>A MappingProjection transmits the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> (its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>) to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another (its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>). The default <code class="xref any docutils literal"><span class="pre">function</span></code> for a MappingProjection is
+<a class="reference internal" href="Function.html#Function.LinearMatrix" title="Function.LinearMatrix"><code class="xref any py py-class docutils literal"><span class="pre">LinearMatrix</span></code></a>, which uses the MappingProjection&#8217;s <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> attribute to transform the
+value received from its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and provide the result to its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-mappingprojection">
 <span id="mapping-creation"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mappingprojection" title="Permalink to this headline">¶</a></h2>
@@ -198,14 +184,10 @@ appropriate matrix by context);</li>
 <li>by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, between it and the other components required to implement learning
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a> for details);</li>
 </ul>
-<ul>
-<li><p class="first">by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, from the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that <code class="xref any docutils literal"><span class="pre">it</span> <span class="pre">creates</span></code>
-to its <em>ERROR_SIGNAL</em> <a href="#id1"><span class="problematic" id="id2">``</span></a>, and from the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> listed in the ControlMechanism&#8217;s
-<a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute) to the ObjectiveMechanism (as</p>
-<blockquote>
-<div><p>described above; an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for all of these).</p>
-</div></blockquote>
-</li>
+<ul class="simple">
+<li>by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, from the <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that <a class="reference internal" href="ControlMechanism.html#controlmechanism-monitored-outputstates"><span class="std std-ref">it creates</span></a> to its <em>ERROR_SIGNAL</em> <a href="#id1"><span class="problematic" id="id2">``</span></a>, and from the <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>
+listed in the ControlMechanism&#8217;s <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>
+attribute) to the ObjectiveMechanism (as described above; an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is used for all of these).</li>
 </ul>
 </div></blockquote>
 <div class="section" id="specifying-the-matrix-parameter">
@@ -341,8 +323,8 @@ LearningProjection(s) are stored by the <em>MATRIX</em> ParameterState&#8217;s f
 is, its unmodulated value, conforming to the general protocol for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>MATRIX</em> ParameterState. As noted <a class="reference internal" href="#mapping-execution"><span class="std std-ref">above</span></a>, however, this does not
 reflect any changes due to learning on the current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution; those are assigned to the ParameterState&#8217;s
-<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when it executes, which does not occur until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives the
-MappingProjection is executed in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+<a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.value" title="ParameterState.ParameterState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when it executes, which does not occur until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives
+the MappingProjection is executed in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -457,7 +439,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
         <a href="AutoAssociativeProjection.html" class="btn btn-neutral float-right" title="AutoAssociativeProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="PathwayProjection.html" class="btn btn-neutral" title="PathwayProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="PathwayProjection.html" class="btn btn-neutral" title="PathwayProjections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -488,7 +470,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

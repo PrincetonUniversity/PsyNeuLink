@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatorySignal &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>ModulatorySignals &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="State" href="State.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="States" href="State.html"/>
         <link rel="next" title="LearningSignal" href="LearningSignal.html"/>
         <link rel="prev" title="OutputState" href="OutputState.html"/> 
 
@@ -88,40 +88,25 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="State.html">State</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="State.html">States</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="InputState.html">InputState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="ParameterState.html">ParameterState</a></li>
 <li class="toctree-l3"><a class="reference internal" href="OutputState.html">OutputState</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ModulatorySignal</a><ul>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ModulatorySignals</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ControlSignal.html">ControlSignal</a></li>
 <li class="toctree-l4"><a class="reference internal" href="GatingSignal.html">GatingSignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-modulatorysignal">Creating a ModulatorySignal</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#creating-a-state">Creating a State</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="State.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -153,11 +138,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="State.html">State</a> &raquo;</li>
+          <li><a href="State.html">States</a> &raquo;</li>
       
-    <li>ModulatorySignal</li>
+    <li>ModulatorySignals</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -171,8 +156,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="modulatorysignal">
-<h1>ModulatorySignal<a class="headerlink" href="#modulatorysignal" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="modulatorysignals">
+<h1>ModulatorySignals<a class="headerlink" href="#modulatorysignals" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound" id="modulatorysignal-subtypes">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="LearningSignal.html">LearningSignal</a></li>
@@ -184,19 +169,19 @@
 </div>
 <span class="target" id="module-ModulatorySignals.ModulatorySignal"></span><div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ModulatorySignal is a subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that belongs to an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a>, and is used to
-<a class="reference internal" href="#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a> the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one or more <a class="reference internal" href="State.html"><span class="doc">States</span></a> by way of one
-or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (see <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Naming</span></code> for conventions on how
-modulatory components are named). A ModulatorySignal modulates the value of a State by modifying
-a parameter of the State&#8217;s <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  There are three types of ModulatorySignals, each of
-which is associated with a particular type of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> and <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>, and modifies the value of
-a different type of State, as described below (and shown in the <a class="reference internal" href="#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>):</p>
+<p>A ModulatorySignal is a subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> that belongs to an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>, and is
+used to <a class="reference internal" href="#modulatorysignal-modulation"><span class="std std-ref">modulate</span></a> the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of one or more <a class="reference internal" href="State.html"><span class="doc">States</span></a> by way
+of one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> (see <code class="xref any docutils literal"><span class="pre">ModulatorySignal_Naming</span></code> for conventions on how
+modulatory components are named). A ModulatorySignal modulates the value of a State by modifying a parameter of the
+State&#8217;s <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  There are three types of ModulatorySignals, each of which is  associated with
+a particular type of <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> and <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>, and
+modifies the value of a different type of State, as described below (and shown in the
+<a class="reference internal" href="#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>):</p>
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a></dt>
 <dd><p class="first last">takes the <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.value" title="ModulatorySignals.LearningSignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> assigned to it by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which it belongs,
-and uses it to modulate the parameter of a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a> &#8211; usually the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
-parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
+and uses it to modulate the parameter of a <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a> &#8211; usually the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </dd>
 </dl>
 </li>
@@ -204,8 +189,8 @@ parameter of a <a class="reference internal" href="MappingProjection.html"><span
 <ul>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> assigned to it by the <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to which it belongs,
-and uses it to modulate the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<dd><p class="first last">takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> assigned to it by the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to which it
+belongs, and uses it to modulate the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </dd>
 </dl>
 </li>
@@ -235,15 +220,15 @@ and uses it to modulate the value of the <a class="reference internal" href="Inp
 <span id="modulatorysignal-creation"></span><h2>Creating a ModulatorySignal<a class="headerlink" href="#creating-a-modulatorysignal" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatorySignal is a base class, and cannot be instantiated directly.  However, the three types of ModulatorySignals
 listed above can be created directly, by calling the constructor for the desired type.  More commonly, however,
-ModulatorySignals are created automatically by the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to which they belong, or by specifying them
-in the constructor for an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> (the details of which are described in the documentation for each type
-of ModulatorySignal).</p>
+ModulatorySignals are created automatically by the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which they belong, or by
+specifying them in the constructor for an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> (the details of which are described in
+the documentation for each type of ModulatorySignal).</p>
 </div>
 <div class="section" id="structure">
 <span id="modulatorysignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatorySignal is associated with one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> of the
 corresponding type, that project to the State(s), the value(s) of which it modulates.  The ModulatoryProjections
-received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="OutputState.html#OutputState.OutputState.mod_afferents" title="OutputState.OutputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
+received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
 modulates a State&#8217;s <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is determined by the ModulatorySignal&#8217;s
 <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, as described below.</p>
 <div class="section" id="projections">
@@ -255,13 +240,11 @@ attribute.  See <a class="reference internal" href="State.html#state-projections
 Projections when creating a State.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Although a ModulatorySignal can be assigned more than one <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>, all of those Projections will
-receive and convey the same modulatory value (received from the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to which the ModulatorySignal
-belongs), and use the same form of <a class="reference internal" href="#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>.  This is a common use for some
-ModulatorySignals (e.g., the use of a single <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> to gate multiple <a class="reference internal" href="InputState.html"><span class="doc">InputState(s)</span></a> or
-<a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a>), but requires more specialized circumstances for others (e.g., the use of a single
-<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for more than one <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, or a single <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for the parameters of more than
-one Mechanism).</p>
+<p class="last">Although a ModulatorySignal can be assigned more than one <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>, all of those
+Projections will receive and convey the same modulatory value (received from the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which the ModulatorySignal belongs), and use the same form of <a class="reference internal" href="#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a>.  This is a common use for some ModulatorySignals (e.g., the use of a single
+<a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> to gate multiple <a class="reference internal" href="InputState.html"><span class="doc">InputState(s)</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState(s)</span></a>), but requires more
+specialized circumstances for others (e.g., the use of a single <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> for more than one
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, or a single <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for the parameters of more than one Mechanism).</p>
 </div>
 </div>
 <div class="section" id="modulation">
@@ -275,12 +258,10 @@ It is specified using a value of <a class="reference internal" href="Function.ht
 modifies the State&#8217;s <code class="xref any docutils literal"><span class="pre">variable</span></code> by the <a class="reference internal" href="#"><span class="doc">value</span></a> of the ModulatorySignal before
 passing it to the State&#8217;s <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The default for <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> is
 <a class="reference internal" href="Function.html#Function.ModulationParam.ADDITIVE" title="Function.ModulationParam.ADDITIVE"><code class="xref any py py-attr docutils literal"><span class="pre">ModulationParam.ADDITIVE</span></code></a>, which additively modifies the <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.value" title="ModulatorySignals.LearningSignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LearningSignal (i.e.,
-the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>) to the State&#8217;s <code class="xref any docutils literal"><span class="pre">variable</span></code>
-(i.e., the current weight <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned).
-The <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute can be specified in the <strong>modulation</strong> argument of the
-ModulatorySignal&#8217;s constructor, or in a <em>MODULATION</em> entry of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a>
-used to create the ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the
-value of the <a class="reference internal" href="AdaptiveMechanism.html#AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation" title="AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute for the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to which it belongs.</p>
+the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>) to the State&#8217;s <code class="xref any docutils literal"><span class="pre">variable</span></code> (i.e., the
+current weight <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned). The <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute can be specified in the <strong>modulation</strong> argument of the ModulatorySignal&#8217;s
+constructor, or in a <em>MODULATION</em> entry of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a> used to create the
+ModulatorySignal. If it is not specified when a ModulatorySignal is created, it is assigned the value of the <a class="reference internal" href="AdaptiveMechanism.html#AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation" title="AdaptiveMechanisms.AdaptiveMechanism.AdaptiveMechanism_Base.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute for the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which it belongs.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last"><a class="reference internal" href="#modulatorysignal-modulation"><span class="std std-ref">OVERRIDE</span></a> can be specified for <strong>only one</strong> ModulatoryProjection to a State;
@@ -298,40 +279,35 @@ modulate the parameters of a State&#8217;s <a class="reference internal" href="S
 <colgroup>
 <col width="18%" />
 <col width="21%" />
-<col width="34%" />
-<col width="27%" />
+<col width="35%" />
+<col width="26%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Modulatory
 Component</th>
-<th class="head"><dl class="first last docutils">
-<dt>Default ModulationParam</dt>
-<dd>for ModulatorySignal</dd>
-</dl>
-</th>
+<th class="head">Default ModulationParam
+for ModulatorySignal</th>
 <th class="head">Recipient State</th>
-<th class="head"><dl class="first last docutils">
-<dt>Default Function (mod param)</dt>
-<dd>for Recipient State</dd>
-</dl>
-</th>
+<th class="head">Default Function (mod param)
+for Recipient State</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td><strong>Control</strong> (blue)</td>
 <td><em>MULTIPLICATIVE</em></td>
-<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
+<td>Mechanism <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
 <td><a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> (<a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>)</td>
 </tr>
 <tr class="row-odd"><td><strong>Gating</strong> (brown)</td>
 <td><em>MULTIPLICATIVE</em></td>
-<td><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>/<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></td>
+<td>Mechanism <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>/<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a></td>
 <td><a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> (<a class="reference internal" href="Function.html#Function.Linear.slope" title="Function.Linear.slope"><code class="xref any py py-attr docutils literal"><span class="pre">slope</span></code></a>)</td>
 </tr>
 <tr class="row-even"><td><strong>Learning</strong> (green)</td>
 <td><em>ADDITIVE</em></td>
-<td><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
-<td><code class="xref any docutils literal"><span class="pre">Accumulator</span></code> (<a class="reference internal" href="Function.html#Function.AccumulatorIntegrator.increment" title="Function.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a>)</td>
+<td>MappingProjection <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a></td>
+<td><a class="reference internal" href="Function.html#Function.AccumulatorIntegrator" title="Function.AccumulatorIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">AccumulatorIntegrator</span></code></a>
+(<a class="reference internal" href="Function.html#Function.AccumulatorIntegrator.increment" title="Function.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal"><span class="pre">increment</span></code></a>)</td>
 </tr>
 </tbody>
 </table>
@@ -352,13 +328,11 @@ that the ModulatorySignal&#8217;s <a class="reference internal" href="#Modulator
 </div>
 <div class="section" id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>ModulatorySignals cannot be executed.  They are updated when the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to which they belong is executed.
-When a ModulatorySignal is updated, it calculates its value, which is then made available to the
+<p>ModulatorySignals cannot be executed.  They are updated when the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which they
+belong is executed. When a ModulatorySignal is updated, it calculates its value, which is then made available to the
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> listed in its <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.efferents" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.
 When those Projections execute, they convey the ModulatorySignal&#8217;s <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.value" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> to the
-<a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to which they project.  The State&#8217;s <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-then uses that value for the parameter designated by the <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of the
-ModulatorySignal when the State is updated.</p>
+<a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to which they project.  The State&#8217;s <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> then uses that value for the parameter designated by the <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute of the ModulatorySignal when the State is updated.</p>
 <p>For example, consider a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> that modulates the <a class="reference internal" href="Function.html#Function.Logistic.bias" title="Function.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span> <span class="pre">f</span></code></a> parameter of a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function
 used by a <code class="xref any docutils literal"><span class="pre">TransferMechanism,</span> <span class="pre">and</span> <span class="pre">assume</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">`ParameterState</span></code> for the bias parameter (to which the ControlSignal
 projects) uses a <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function to update its value (which is the default for a ParameterState).  If the
@@ -378,7 +352,8 @@ which the state belongs is next executed; see <span class="xref std std-ref">Laz
 <dl class="class">
 <dt id="ModulatorySignals.ModulatorySignal.ModulatorySignal">
 <em class="property">class </em><code class="descclassname">ModulatorySignals.ModulatorySignal.</code><code class="descname">ModulatorySignal</code><span class="sig-paren">(</span><em>owner</em>, <em>function=LinearCombination(operation=SUM)</em>, <em>modulation=ModulationParam.MULTIPLICATIVE           projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modulate the value of one more <a class="reference internal" href="State.html"><span class="doc">States</span></a>.</p>
+<dd><p>Subclass of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to modulate the value
+of one more <a class="reference internal" href="State.html"><span class="doc">States</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">ModulatorySignal is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -389,7 +364,7 @@ It should be instantiated using the constructor for a <a class="reference intern
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
 <li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the value of the ModulatorySignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>
@@ -410,7 +385,7 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ModulatorySignals.ModulatorySignal.ModulatorySignal.owner">
 <code class="descname">owner</code><a class="headerlink" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>AdaptiveMechanism</em> &#8211; the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to which the ModulatorySignal belongs.</p>
+<dd><p><em>AdaptiveMechanism</em> &#8211; the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> to which the ModulatorySignal belongs.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -517,7 +492,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

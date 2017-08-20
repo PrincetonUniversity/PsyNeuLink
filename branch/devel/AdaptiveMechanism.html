@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Adaptive Mechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Adaptive Mechanisms &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,8 +33,8 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="Mechanism" href="Mechanism.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Mechanisms" href="Mechanism.html"/>
         <link rel="next" title="Learning Mechanism" href="LearningMechanism.html"/>
         <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html"/> 
 
@@ -88,38 +88,23 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">Processing Mechanism</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Adaptive Mechanism</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ProcessingMechanism.html">ProcessingMechanisms</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">AdaptiveMechanisms</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ControlMechanism.html">ControlMechanisms</a></li>
 <li class="toctree-l4"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-an-adaptivemechanism">Creating an AdaptiveMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -151,11 +136,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
       
-    <li>Adaptive Mechanism</li>
+    <li>Adaptive Mechanisms</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -169,12 +154,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="adaptive-mechanism">
-<h1>Adaptive Mechanism<a class="headerlink" href="#adaptive-mechanism" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="adaptive-mechanisms">
+<h1>Adaptive Mechanisms<a class="headerlink" href="#adaptive-mechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound" id="adaptivemechanism-subtypes">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="LearningMechanism.html">Learning Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">Control Mechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ControlMechanism.html">ControlMechanisms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GatingMechanism.html">Gating Mechanism</a></li>
 </ul>
 </div>
@@ -194,7 +179,7 @@ of a <a class="reference internal" href="MappingProjection.html"><span class="do
 </ul>
 <ul>
 <li><dl class="first docutils">
-<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a></dt>
+<dt><a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a></dt>
 <dd><p class="first last">takes an evaluative signal (generally received from an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>) and generates an
 <a class="reference internal" href="ControlMechanism.html#AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy" title="AdaptiveMechanisms.ControlMechanisms.ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>, each item of which is assigned to one of its
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>;  each of those generates a <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.control_signal" title="ModulatorySignals.ControlSignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>
@@ -221,10 +206,11 @@ that is used by its <a class="reference internal" href="ControlProjection.html">
 <span id="adaptivemechanism-creation"></span><h2>Creating an AdaptiveMechanism<a class="headerlink" href="#creating-an-adaptivemechanism" title="Permalink to this headline">¶</a></h2>
 <p>An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
 AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
-require them, or a form of modulation is specified for them. For example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> is automatically created
-as part of a <code class="xref any docutils literal"><span class="pre">System</span></code> (for use as its <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>), or when
-<a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">control is specified</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and one or more
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are created when learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or a <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> (see the documentation for <a class="reference internal" href="#adaptivemechanism-subtypes"><span class="std std-ref">subtypes</span></a> of AdaptiveMechanisms for more specific information about how to create them).</p>
+require them, or a form of modulation is specified for them. For example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> is
+automatically created as part of a <code class="xref any docutils literal"><span class="pre">System</span></code> (for use as its <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>), or when <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">control is specified</span></a> for the parameter of a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and one or more <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> are created when learning is
+specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or a <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> (see the documentation for
+<a class="reference internal" href="#adaptivemechanism-subtypes"><span class="std std-ref">subtypes</span></a> of AdaptiveMechanisms for more specific information about how to create them).</p>
 </div>
 <div class="section" id="structure">
 <span id="adaptivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -304,7 +290,7 @@ modulate the value of the State(s) to which their <a class="reference internal" 
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

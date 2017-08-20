@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Processing Mechanism &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Processing Mechanisms &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="Mechanism" href="Mechanism.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="Mechanisms" href="Mechanism.html"/>
         <link rel="next" title="TransferMechanism" href="TransferMechanism.html"/>
-        <link rel="prev" title="Mechanism" href="Mechanism.html"/> 
+        <link rel="prev" title="Mechanisms" href="Mechanism.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -88,42 +88,28 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanism</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Processing Mechanism</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ProcessingMechanisms</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="LCA.html">LCA</a></li>
 <li class="toctree-l4"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
+<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-processingmechanism">Creating a ProcessingMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">Adaptive Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#creating-a-mechanism">Creating a Mechanism</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Mechanism.html#class-reference">Class Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Projection.html">Projections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -155,11 +141,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+          <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
       
-    <li>Processing Mechanism</li>
+    <li>Processing Mechanisms</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -173,29 +159,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="processing-mechanism">
-<h1>Processing Mechanism<a class="headerlink" href="#processing-mechanism" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="processing-mechanisms">
+<h1>Processing Mechanisms<a class="headerlink" href="#processing-mechanisms" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound" id="processingmechanism-subtypes">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LCA.html">LCA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
 </ul>
 </div>
 <span class="target" id="module-ProcessingMechanisms.ProcessingMechanism"></span><div class="section" id="overview">
 <span id="processingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism is a type of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that transforms its input in some way.  A ProcessingMechanism always
+<p>A ProcessingMechanism is a type of <code class="xref any docutils literal"><span class="pre">Mechanism</span></code> that transforms its input in some way.  A ProcessingMechanism always
 receives its input either from another ProcessingMechanism, or from the input to a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> when it is
 executed.  Similarly, its output is generally conveyed to another ProcessingMechanism or used as the ouput for a Process
-or System.  However, the output of a ProcessingMechanism may also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">Adaptive Mechanism</span></a> to modify the
-parameters of other components (or its own). ProcessingMechanisms are always executed before all AdaptiveMechanisms in
-the Process and/or System to which they belong, so that any modificatons made by the AdpativeMechanism are available to
-all ProcessingMechanisms in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
+or System.  However, the output of a ProcessingMechanism may also be used by an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>
+to modify the parameters of other components (or its own). ProcessingMechanisms are always executed before all
+AdaptiveMechanisms in the Process and/or System to which they belong, so that any modificatons made by the
+AdpativeMechanism are available to all ProcessingMechanisms in the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
@@ -224,7 +210,7 @@ individual subtypes of ProcessingMechanism for more specific information about t
         <a href="TransferMechanism.html" class="btn btn-neutral float-right" title="TransferMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Mechanism.html" class="btn btn-neutral" title="Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Mechanism.html" class="btn btn-neutral" title="Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -255,7 +241,7 @@ individual subtypes of ProcessingMechanism for more specific information about t
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

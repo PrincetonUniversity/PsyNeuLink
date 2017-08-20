@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,9 +33,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="PathwayProjection" href="PathwayProjection.html"/>
-        <link rel="next" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="PathwayProjections" href="PathwayProjection.html"/>
+        <link rel="next" title="ModulatoryProjections" href="ModulatoryProjection.html"/>
         <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
 
   
@@ -88,35 +88,22 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">AutoAssociativeProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#creating-a-pathwayprojection">Creating a PathwayProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="PathwayProjection.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -148,11 +135,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Projection.html">Projection</a> &raquo;</li>
+          <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-          <li><a href="PathwayProjection.html">PathwayProjection</a> &raquo;</li>
+          <li><a href="PathwayProjection.html">PathwayProjections</a> &raquo;</li>
       
     <li>AutoAssociativeProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -176,7 +163,7 @@
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>. The primary difference between an AutoAssociativeProjection and a basic MappingProjection
 is that an AutoAssociativeProjection uses the <code class="xref any docutils literal"><span class="pre">auto</span></code> and
 <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters <em>on the RecurrentTransferMechanism</em> to help update its matrix:
-this allows for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a> to control the <code class="xref any docutils literal"><span class="pre">auto</span></code> and
+this allows for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to control the <code class="xref any docutils literal"><span class="pre">auto</span></code> and
 <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters and thereby control the matrix.</p>
 </div>
 <div class="section" id="creating-an-autoassociativeprojection">
@@ -193,8 +180,8 @@ execution an AutoAssociativeProjection references parameters owned by its Recurr
 are <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
 <div class="section" id="configurable-attributes">
 <span id="auto-associative-configurable-attributes"></span><h3>Configurable Attributes<a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="IntegratorMechanism.html#ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="ProcessingMechanisms.IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="Function.html#Function.LinearCombination.variable" title="Function.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="State.html#State.State_Base.function" title="State.State_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="auto-associative-matrix">
@@ -211,13 +198,11 @@ the off-diagonal entries (representing connections between nodes).</li>
 <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, the primary input state of the RecurrentTransferMechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Under the hood, during execution the AutoAssociativeProjection updates its
-<code class="xref any docutils literal"><span class="pre">matrix</span></code> and
-<code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters <em>on the `RecurrentTransferMechanism`</em>. (The
-<a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a> parameters of the
-AutoAssociativeProjection simply refer to their counterparts on the RecurrentTransferMechanism as well.) The reason
-for putting the <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code>
-parameters on the RecurrentTransferMechanism is that this allows them to be modified by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>.</p>
+<p class="last">During execution the AutoAssociativeProjection updates its <code class="xref any docutils literal"><span class="pre">matrix</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters
+<em>on the `RecurrentTransferMechanism`</em>. (The <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and
+<a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a> parameters of the AutoAssociativeProjection simply refer to their
+counterparts on the RecurrentTransferMechanism as well.) The reason for putting the <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters on the
+RecurrentTransferMechanism is that this allows them to be modified by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -351,7 +336,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ModulatoryProjection.html" class="btn btn-neutral float-right" title="ModulatoryProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatoryProjection.html" class="btn btn-neutral float-right" title="ModulatoryProjections" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -385,7 +370,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingProjection &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>GatingProjection &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,9 +33,9 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
-        <link rel="up" title="ModulatoryProjection" href="ModulatoryProjection.html"/>
-        <link rel="next" title="State" href="State.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="ModulatoryProjections" href="ModulatoryProjection.html"/>
+        <link rel="next" title="States" href="State.html"/>
         <link rel="prev" title="ControlProjection" href="ControlProjection.html"/> 
 
   
@@ -88,37 +88,23 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Component</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">GatingProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html#creating-a-modulatoryprojection">Creating a ModulatoryProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ModulatoryProjection.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">State</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#creating-a-component">Creating a Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#component-structure">Component Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#execution">Execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Component.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
@@ -150,11 +136,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Component.html">Component</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="Projection.html">Projection</a> &raquo;</li>
+          <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-          <li><a href="ModulatoryProjection.html">ModulatoryProjection</a> &raquo;</li>
+          <li><a href="ModulatoryProjection.html">ModulatoryProjections</a> &raquo;</li>
       
     <li>GatingProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -174,24 +160,24 @@
 <span id="gatingprojection"></span><h1>GatingProjection<a class="headerlink" href="#module-ModulatoryProjections.GatingProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="gatingprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A GatingProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It takes the value of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and uses it to modulate the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State to which it projects.</p>
+<p>A GatingProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It takes the value of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>,
+and uses it to modulate the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State to which it projects.</p>
 </div>
 <div class="section" id="creating-a-gatingprojection">
 <span id="gatingprojection-creation"></span><h2>Creating a GatingProjection<a class="headerlink" href="#creating-a-gatingprojection" title="Permalink to this headline">¶</a></h2>
 <p>A GatingProjection can be created using any of the standard ways to <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a projection</span></a>,
-or by including it in the specification of an <a class="reference internal" href="InputState.html#inputstate-projections"><span class="std std-ref">InputState</span></a> or
-<a class="reference internal" href="OutputState.html#outputstate-projections"><span class="std std-ref">OutputState</span></a> .  If a GatingProjection is created explicitly (using its constructor),
-its <strong>receiver</strong> argument can be specified as a particular InputState or OutputState of a designated <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
-or simply as the Mechanism.  In the latter case, the Mechanism&#8217;s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be
-used. If the GatingProjection is included in an InputState or OutputState specification, that State will be assigned
-as the GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>. If the <strong>sender</strong> and/or <strong>receiver</strong> arguments are
-not specified, its initialization is <a class="reference internal" href="#gatingprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p>
+or by including it in the specification of an <a class="reference internal" href="InputState.html#inputstate-projections"><span class="std std-ref">InputState</span></a> or <a class="reference internal" href="OutputState.html#outputstate-projections"><span class="std std-ref">OutputState</span></a> .  If a GatingProjection is created explicitly (using its constructor), its <strong>receiver</strong>
+argument can be specified as a particular InputState or OutputState of a designated <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, or simply
+as the Mechanism.  In the latter case, the Mechanism&#8217;s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If the
+GatingProjection is included in an InputState or OutputState specification, that State will be assigned as the
+GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>. If the <strong>sender</strong> and/or <strong>receiver</strong> arguments are not
+specified, its initialization is <a class="reference internal" href="#gatingprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p>
 <div class="section" id="deferred-initialization">
 <span id="gatingprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
 <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a GatingProjection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="AutoAssociativeProjection.html#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
+a GatingProjection to be created before its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
 script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
 not necessary if the State(s) to be gated are specified in the <strong>gating_signals</strong> argument of a <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">GatingMechanism</span></a>, in which case deferred initialization is completed automatically by the
@@ -209,13 +195,13 @@ it simply conveys the value of its <a class="reference internal" href="#Modulato
 <div class="section" id="execution">
 <span id="gatingprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A GatingProjection cannot be executed directly.  It is executed when the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> to which it
-projects is updated.  Note that this only occurs when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <a class="reference internal" href="State.html"><span class="doc">State</span></a> belongs is executed (see
-<span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating). When a GatingProjection is executed,
-its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.function" title="ModulatoryProjections.GatingProjection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> gets the <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.gating_signal" title="ModulatoryProjections.GatingProjection.GatingProjection.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> from its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and conveys that to its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  This is used by the
-<a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> to modify the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State gated by the
-GatingProjection (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>, <a class="reference internal" href="InputState.html#inputstate-execution"><span class="std std-ref">InputState Execution</span></a> and
-<a class="reference internal" href="OutputState.html#outputstate-execution"><span class="std std-ref">OutputState Execution</span></a> for how modulation operates and how this applies to a InputStates and
-OutputStates).</p>
+projects is updated.  Note that this only occurs when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <a class="reference internal" href="State.html"><span class="doc">State</span></a>
+belongs is executed (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating). When a GatingProjection
+is executed, its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.function" title="ModulatoryProjections.GatingProjection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> gets the <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.gating_signal" title="ModulatoryProjections.GatingProjection.GatingProjection.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> from
+its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and conveys that to its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  This is used by
+the <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.receiver" title="ModulatoryProjections.GatingProjection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> to modify the <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the State gated by the
+GatingProjection (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>, <a class="reference internal" href="InputState.html#inputstate-execution"><span class="std std-ref">InputState Execution</span></a> and <a class="reference internal" href="OutputState.html#outputstate-execution"><span class="std std-ref">OutputState
+Execution</span></a> for how modulation operates and how this applies to a InputStates and OutputStates).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in an InputState or OutputState&#8217;s <code class="xref any docutils literal"><span class="pre">value</span></code> in response to the execution of a
@@ -228,7 +214,8 @@ see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of 
 <dl class="class">
 <dt id="ModulatoryProjections.GatingProjection.GatingProjection">
 <em class="property">class </em><code class="descclassname">ModulatoryProjections.GatingProjection.</code><code class="descname">GatingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear        params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatoryProjections.GatingProjection.GatingProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that modulates the value of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>.</p>
+<dd><p>Subclass of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that modulates the value of an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or
+<a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -332,7 +319,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="State.html" class="btn btn-neutral float-right" title="State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="State.html" class="btn btn-neutral float-right" title="States" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ControlProjection.html" class="btn btn-neutral" title="ControlProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -366,7 +353,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

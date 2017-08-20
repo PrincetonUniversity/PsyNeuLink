@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.3.1 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.3.1 documentation" href="index.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
         <link rel="up" title="Scheduling" href="Scheduling.html"/>
         <link rel="next" title="Condition" href="Condition.html"/>
         <link rel="prev" title="Scheduling" href="Scheduling.html"/> 
@@ -88,19 +88,10 @@
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Composition</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Scheduling.html">Scheduling</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Scheduler</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#creating-a-scheduler">Creating a Scheduler</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#algorithm">Algorithm</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#execution">Execution</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#termination-conditions">Termination Conditions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Scheduler</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Condition.html">Condition</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TimeScale.html">TimeScale</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
@@ -152,21 +143,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="scheduler">
-<h1>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-</div>
-<span class="target" id="module-Scheduling.Scheduler"></span><div class="section" id="overview">
+  <div class="section" id="module-Scheduling.Scheduler">
+<span id="scheduler"></span><h1>Scheduler<a class="headerlink" href="#module-Scheduling.Scheduler" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A Scheduler is used to generate the order in which the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> are executed.
-By default, a Scheduler executes Components in an order determined by the pattern of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>
-among the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, with each Mechanism executed once per <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the
-Composition. For example, in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
-A will execute first followed by B, and then C in each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the System.  However, a Scheduler can be
-used to implement more complex patterns of execution, by specifying <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that determine when and
-how many times individual Components execute, and whether and how this depends on the execution of other Components.
-Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined in arbitrary
-ways to generate any pattern of execution of the Components in a Composition that is logically possible.</p>
+<p>A Scheduler is used to generate the order in which the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> are
+executed. By default, a Scheduler executes Components in an order determined by the pattern of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> among the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, with each Mechanism executed once
+per <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the Composition. For example, in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in which a Mechanism A projects to a Mechanism B that
+projects to a Mechanism C, A will execute first followed by B, and then C in each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the System.  However,
+a Scheduler can be used to implement more complex patterns of execution, by specifying <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that
+determine when and how many times individual Components execute, and whether and how this depends on the execution of
+other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined
+in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically possible.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In general, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are the Components of a Composition that are most commonly associated with
@@ -178,8 +166,7 @@ can also be assigned for execution (e.g., during <a class="reference internal" h
 <div class="section" id="creating-a-scheduler">
 <span id="scheduler-creation"></span><h2>Creating a Scheduler<a class="headerlink" href="#creating-a-scheduler" title="Permalink to this headline">¶</a></h2>
 <p>A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
-for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>
-to be executed and their order must be specified in the Scheduler&#8217;s constructor using one the following:</p>
+for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler&#8217;s constructor using one the following:</p>
 <ul class="simple">
 <li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
 the Scheduler is created using the Components in the System&#8217;s <code class="xref any docutils literal"><span class="pre">execution_list</span></code> and an order
@@ -195,7 +182,7 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition_set" title="Scheduling.Scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition_set" title="Scheduling.Condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
@@ -288,9 +275,9 @@ same <code class="xref any docutils literal"><span class="pre">consideration_set
 the Scheduler terminates a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> when every Component has been specified for execution at least once (corresponding
 to the <a class="reference internal" href="Condition.html#Scheduling.Condition.AllHaveRun" title="Scheduling.Condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a> Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
 to terminate a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> earlier  or later (e.g., when the  Condition for a particular Component or set of Components
-is met).  When the Scheduler terminates a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input specified in
-the call to its <a class="reference internal" href="Composition.html#Composition.Composition.run" title="Composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  Thus, a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing associated
-with a given input to the Composition.</p>
+is met).  When the Scheduler terminates a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input
+specified in the call to its <a class="reference internal" href="Composition.html#Composition.Composition.run" title="Composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  Thus, a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing
+associated with a given input to the Composition.</p>
 <div class="section" id="termination-conditions">
 <span id="scheduler-termination-conditions"></span><h3>Termination Conditions<a class="headerlink" href="#termination-conditions" title="Permalink to this headline">¶</a></h3>
 <p>Termination conditions are <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when the open-ended units of time - <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
@@ -397,8 +384,8 @@ or its <strong>termination_learning</strong> argument to terminate the execution
 <dl class="class">
 <dt id="Scheduling.Scheduler.Scheduler">
 <em class="property">class </em><code class="descclassname">Scheduling.Scheduler.</code><code class="descname">Scheduler</code><span class="sig-paren">(</span><em>system=None</em>, <em>composition=None</em>, <em>graph=None</em>, <em>condition_set=None</em>, <em>termination_conds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Scheduling.Scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates an order of execution for <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or graph specification
-dictionary, possibly determined by a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
+<dd><p>Generates an order of execution for <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or graph
+specification dictionary, possibly determined by a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -472,7 +459,7 @@ current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>s to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s,
 which can be added later with <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a></td>
 </tr>
 </tbody>
@@ -543,7 +530,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
