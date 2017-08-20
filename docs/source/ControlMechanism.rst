@@ -1,8 +1,7 @@
-Control Mechanism
-=================
+Control Mechanisms
+==================
 
 .. _ControlMechanism_Subtypes:
-
 
 .. toctree::
    :maxdepth: 1

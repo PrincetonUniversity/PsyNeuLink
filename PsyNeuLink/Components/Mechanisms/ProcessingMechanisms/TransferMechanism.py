@@ -200,7 +200,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     name=None,                   \
     prefs=None)
 
-    Subclass of `ProcessingMechanism` that performs a simple transform of its input.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
 
     COMMENT:
         Description

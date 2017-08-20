@@ -1,13 +1,13 @@
-Component
-=========
+Components
+==========
 
 .. toctree::
    :maxdepth: 1
 
-   Mechanism
-   Projection
-   State
-   Function
+   Mechanisms <Mechanism>
+   Projections <Projection>
+   States <State>
+   Functions <Function>
 
 .. automodule:: Component
    :members:

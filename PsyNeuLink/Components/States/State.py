@@ -14,31 +14,34 @@ Overview
 --------
 
 A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
-provide by them.  The value of a State can be modulated by a `ModulatoryProjection`. There are three primary types of
-States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
+provide by them.  The value of a State can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
+three primary types of States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
 `MappingProjections <MappingProjection>`, and that are subject to modulation by `ModulatorySignals <ModulatorySignal>`,
 as summarized in the table below:
 
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-| *State Type*     | *Owner*           |      *Description*     |    *Modulated by*    |      *Specification*          |
-+==================+===================+========================+======================+===============================+
-| `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`       |`InputState` constructor;      |
-|                  |                   |`MappingProjection` \\  |                      |`Mechanism` constructor or     |
-|                  |                   |(s)                     |                      |its `add_states` method        |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-|`ParameterState`  |  `Mechanism` or   |represents parameter    |`LearningSignal`      |Implicitly whenever a          |
-|                  |  `Projection`     |value for a `Component` |and/or `ControlSignal`|parameter value is             |
-|                  |                   |or its function         |                      |`specified                     |
-|                  |                   |                        |                      |<ParameterState_Specification>`|
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-| `OutputState`    |  `Mechanism`      |provides output to      | `GatingSignal`       |`OutputState` constructor;     |
-|                  |                   |`MappingProjection` \\  |                      |`Mechanism` constructor or     |
-|                  |                   |(s)                     |                      |its `add_states` method        |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-|`ModulatorySignal`|`AdaptiveMechanism`|provides value for      |                      |`AdaptiveMechanism`            |
-|                  |                   |`ModulatoryProjection` \\|                      |constructor; tuple in State    |
-|                  |                   |(s)                     |                      |or parameter specification     |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+| *State Type*      | *Owner*            |      *Description*     |    *Modulated by*  |       *Specification*         |
++===================+====================+========================+====================+===============================+
+| `InputState`      |  `Mechanism        |receives input from     | `GatingSignal`     |`InputState` constructor;      |
+|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
+|                   |                    |                        |                    |constructor or its             |
+|                   |                    |                        |                    |`add_states` method            |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+|`ParameterState`   |  `Mechanism        |represents parameter    |`LearningSignal`    |Implicitly whenever a          |
+|                   |  <Mechanism>` or   |value for a `Component  |and/or              |parameter value is             |
+|                   |  `Projection       |<Component>`            |`ControlSignal`     |`specified                     |
+|                   |  <Projection>`     |or its function         |                    |<ParameterState_Specification>`|
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+| `OutputState`     |  `Mechanism        |provides output to      | `GatingSignal`     |`OutputState` constructor;     |
+|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
+|                   |                    |                        |                    |constructor or its             |
+|                   |                    |                        |                    |`add_states` method            |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+|`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                    |`AdaptiveMechanism             |
+|<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                    |<AdaptiveMechanism>`           |
+|                   |                    |<ModulatoryProjection>` |                    |constructor; tuple in State    |
+|                   |                    |                        |                    |or parameter specification     |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
 
 COMMENT:
 
@@ -59,13 +62,15 @@ COMMENT:
     `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
     OutputState can be modulated by a `GatingSignal`.
 
-* `ModulatorySignal`:
+* `ModulatorySignal <ModulatorySignal>`:
     a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
     types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
-    * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
-    * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism`.
+    * `ControlSignal`, used by a `ControlMechanism <ControlMechanism>` to modulate the `ParameterState` of a `Mechanism
+      <Mechanism>`;
+    * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism
+       <Mechanism>`.
     Modulation is discussed further `below <State_Modulation>`, and described in detail under
     `ModulatorySignals <ModulatorySignal_Modulation>`.
 
@@ -77,16 +82,16 @@ Creating a State
 ----------------
 
 In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
-or by specifying the State in the constructor for its owner.  For example, unless otherwise specified,
-when a `Mechanism` is created it creates a default `InputState` and `OutputState` for itself, and whenever any
-Component is created, it automatically creates a `ParameterState` for each of its
-`configurable parameters <Component_Configurable_Attributes>` and those of its `function <Component_Function>`.
-States are also created in response to explicit specifications.  For example, InputStates and OutputStates can be
-specified in the constructor for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method;
-and a ParameterState is specified in effect when the value of a parameter for any Component or its
-`function <Component.function>` is specified in its constructor.  InputStates and OutputStates (but not
-ParameterStates) can also be created directly using their constructors;  however, Parameter States cannot be created
-in this way; they are always and only created when the Component to which a parameter belongs is created.
+or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
+`Mechanism <Mechanism>` is created it creates a default `InputState` and `OutputState` for itself, and whenever
+any Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
+<Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
+response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
+for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method; and a ParameterState is
+specified in effect when the value of a parameter for any Component or its `function <Component.function>` is
+specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
+using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
+when the Component to which a parameter belongs is created.
 
 .. _State_Specification:
 
@@ -171,14 +176,14 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
         • `GatingProjection(s) <GatingProjection>`
           - assigned to its `mod_afferents <OutputState.mod_afferents>` attribute.
 
-    * `ModulatorySignal`
+    * `ModulatorySignal <ModulatorySignal>`
         • `ModulatoryProjection(s) <ModulatoryProjection>`
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
-<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
-in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State` or a
-`Mechanism`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
+<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`, in
+which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State <State>`
+or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
 <OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
 examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
@@ -215,12 +220,13 @@ Owner
 ~~~~~
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
-owner must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.
-For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism`.  When a State is created as part of
-another Component, its `owner <State_Base.owner>` is assigned automatically to that Component.  It is also assigned
-automatically when the State is assigned to a `Mechanism` using that Mechanism's `add_states` method.  Otherwise, it
-must be specified explicitly in the **owner** argument of the constructor for the State.  If it is not, the State's
-initialization will be `deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
+owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
+`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
+<AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
+assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
+`Mechanism <Mechanism>` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly in
+the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be `deferred
+<State_Deferred_Initialization>` until it has been assigned to an owner.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,8 +242,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
     * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
       State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
-      potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
-      for an OutputState, it conveys the result  of the Mechanism's function to its
+      potential influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a
+      `MappingProjection`); for an OutputState, it conveys the result  of the Mechanism's function to its
       `output_values <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
@@ -254,8 +260,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 Modulation
 ~~~~~~~~~~
 
-Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the
-`ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
+Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
+<ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal <ModulatorySignal>`
 that specifies how it should modulate the State's `value <State_Base.value>` when the State is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
 State's `function <State_Base.function>` to modulate its `value <State_Base.value>`.  The function of every State
@@ -285,7 +291,7 @@ to the corresponding parameter of its `function <State_Base.function>`.  If any 
 the State calls its `function <State_Base.function>` to determine its `value <State_Base.value>`.
 
 .. note::
-   The change in the value of a `State` does not occur until the Mechanism to which the State belongs is next
+   The change in the value of a `State <State>` does not occur until the Mechanism to which the State belongs is next
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
@@ -2258,7 +2264,8 @@ def _check_projection_sender_compatability(owner, projection_type, sender_type):
 def _parse_state_type(owner, state_spec):
     """Determine State type for state_spec and return type
 
-    Determine type from context and/or type of state_spec if the latter is not a `State` or `Mechanism`.
+    Determine type from context and/or type of state_spec if the latter is not a `State <State>` or `Mechanism
+    <Mechanism>`.
     """
 
     # State class reference

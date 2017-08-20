@@ -36,13 +36,14 @@ Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If information necessary to complete initialization is not specified in the constructor (e.g, the **owner** for a
-`State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its full
-initialization is deferred until its the information is available (e.g., the `State` is assigned to a `Mechanism`, or
-a `Projection` is assigned its `sender <Projection.sender>` and `receiver <Projection.receiver>`).  This allows
-Components to be created before all of the information they require is available (e.g., at the beginning of a script).
-However, for the Component to be operational, initialization must be completed its `deferred_init` method must be
-called.  This is usually done automatically when the Component is assigned to another Component to which it belongs
-(e.g., assigning a State to a Mechanism) or to a Composition (e.g., a Projection to the `pathway <Process.pahtway>`)
+`State <State_Base.owner>`, or the **sender** or **receiver** for a `Projection <Projection_Structure>`), then its
+full initialization is deferred until its the information is available (e.g., the `State <State>` is assigned to a
+`Mechanism <Mechanism>`, or a `Projection <Projection>` is assigned its `sender <Projection.sender>` and `receiver
+<Projection.receiver>`).  This allows Components to be created before all of the information they require is
+available (e.g., at the beginning of a script). However, for the Component to be operational, initialization must be
+completed its `deferred_init` method must be called.  This is usually done automatically when the Component is
+assigned to another Component to which it belongs (e.g., assigning a State to a Mechanism) or to a Composition (e.g.,
+a Projection to the `pathway <Process.pahtway>`)
 of a `Process`), as appropriate.
 
 .. _Component_Structure:
@@ -270,11 +271,10 @@ COMMENT:
       _instantiate_function method checks that the input of the Component's `function <Comonent.function>` is compatible
       with its `variable <Component.variable>`).
 
-      * `_handle_size <Component._handle_size>` converts the keyword:`variable` and keyword:`size` arguments
-        to the correct dimensions (for keyword:`Mechanism`, this is a 2D array and 1D array, respectively).
-        If keyword:`variable` was not passed as an argument, this method attempts to infer keyword:`variable`
-        from the keyword:`size` argument, and vice versa if the keyword:`size` argument is missing.
-        The _handle_size method then checks that the keyword:`size` and keyword:`variable` arguments are compatible.
+      * `_handle_size <Component._handle_size>` converts the `variable <Component.variable>` and `size <Component.size>` arguments to the correct dimensions (for `Mechanism <Mechanism>`, this is a 2D array and 1D
+        array, respectively). If **variable** is not passed as an argument, this method attempts to infer `variable
+        <Component.variable>` from the **size** argument, and vice versa if the **size** argument is missing.
+        The _handle_size method then checks that the **size** and **variable** arguments are compatible.
 
       * `_instantiate_defaults <Component._instantiate_defaults>` first calls the validation methods, and then
         assigns the default values for all of the attributes of the instance of the Component being created.

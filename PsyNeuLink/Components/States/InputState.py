@@ -32,16 +32,16 @@ Creating an InputState
 An InputState can be created by calling its constructor, but in general this is not necessary as a Mechanism can
 usually automatically create the InputState(s) it needs when it is created.  For example, if the Mechanism is
 being created within the `pathway <Process_Base.pathway` of a `Process`, its InputState will be created and  assigned
-as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism` in the
-`pathway <Process_Base.pathway>`.
+as the `receiver <MappingProjection.receiver>` of a `MappingProjection` from the  preceding `Mechanism <Mechanism>` in
+the `pathway <Process_Base.pathway>`.
 
 .. _InputState_Deferred_Initialization:
 
-An InputState must be owned by a `Mechanism`.  When InputState is specified in the constructor for a `Mechanism`
-(see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
-InputState is created directly, its `owner <InputState.owner>` can specified in the **owner** argument of its
-constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned to
-an owner using the owner's `add_states` method.
+An InputState must be owned by a `Mechanism <Mechanism>`.  When InputState is specified in the constructor for a
+Mechanism (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as  its owner. If
+the InputState is created directly, its `owner <InputState.owner>` can specified in the **owner**  argument of its
+constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned
+to an owner using the owner's `add_states` method.
 
 .. _InputState_Primary:
 
@@ -61,10 +61,10 @@ Mechanism's `variable <Mechanism_Base.variable>` attribute.
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-If one or more custom InputStates need to be specified for a `Mechanism` when it is created, this can be done in the
-**input_states** argument of the Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter dictionary
-assigned to the constructor's **params** argument.  The latter takes precedence over the former (that is, if
-InputStates are specified in the parameter dictionary, any specified in the **input_states** argument are ignored).
+If one or more custom InputStates need to be specified for a `Mechanism <Mechanism>` when it is created, this can be
+done in the **input_states** argument of the Mechanism's constructor, or in an *INPUT_STATES* entry of a parameter
+dictionary assigned to the constructor's **params** argument.  The latter takes precedence over the former (that is,
+if InputStates are specified in the parameter dictionary, any specified in the **input_states** argument are ignored).
 
 .. note::
     Assigning InputStates to a Mechanism in its constructor **replaces** any that are automatically generated for that
@@ -99,9 +99,9 @@ can be used to specify an InputState:
       `variable <Mechanism_Base.variable>`.
     ..
     * A **Projection subclass**. This creates a default InputState using the first item of the owner Mechanism's
-      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection`
-      of the specified type to the InputState using its `variable <InputState.variable>` as the template for the
-      Projection's `value <Projection.value>`.
+      `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`, and a `Projection
+      <Projection>` of the specified type to the InputState using its `variable <InputState.variable>` as the
+      template for the Projection's `value <Projection.value>`.
     ..
 
     COMMENT:
@@ -116,16 +116,16 @@ can be used to specify an InputState:
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
       standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have a
-      *PROJECTIONS* entry, the value of which can be a `Projection`, a
+      *PROJECTIONS* entry, the value of which can be a `Projection <Projection>`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
       are either of those.  This can be used to specify one or more afferent `PathwayProjections <PathwayProjection>`
       to the InpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
 
     ..
-    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection` specification.
-      This creates a default InputState using the first item as the InputState's `variable <InputState.variable>`,
-      and assigns the InputState as a `receiver <ModulatoryProjection.receiver>` of the type of ModulatoryProjection
-      specified in the second item.
+    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
+      <ModulatoryProjection>` specification. This creates a default InputState using the first item as the InputState's
+      `variable <InputState.variable>`, and assigns the InputState as a `receiver <ModulatoryProjection.receiver>` of
+      the type of ModulatoryProjection specified in the second item.
 
     .. note::
        In all cases, the resulting `value <InputState.value>` of the InputState must be compatible with (that is, have
@@ -304,7 +304,7 @@ class InputState(State_Base):
     name=None,                                 \
     prefs=None)
 
-    Subclass of `State` that calculates and represents the input to a `Mechanism` from one or more
+    Subclass of `State <State>` that calculates and represents the input to a `Mechanism <Mechanism>` from one or more
     `PathwayProjection <PathwayProjection>`.
 
     COMMENT:

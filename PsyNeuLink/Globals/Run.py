@@ -37,7 +37,8 @@ Scope of Execution
 ~~~~~~~~~~~~~~~~~~
 
 When the :keyword:`run` method of a Component is called, it executes that Component and all others within its scope of
-execution.  For a `Mechanism`, the scope of execution is simply the Mechanism itself.  For a `Process`, the scope of
+execution.  For a `Mechanism <Mechanism>`, the scope of execution is simply the Mechanism itself.  For a `Process`,
+the scope of
 execution is all of the Mechanisms specified in its `pathway` attribute.  For a `System`, the scope of execution is
 all of the Mechanisms in the Processes specified in the System's `Processes <System.System_Base.processes>` attribute.
 

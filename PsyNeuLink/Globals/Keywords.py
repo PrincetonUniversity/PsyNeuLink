@@ -38,16 +38,16 @@ class Keywords:
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection`
-        that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then it is simply
-        designated as such (since it will be assigned input and therefore be initialized in any event).
+        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
+        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
+        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection.Projection.sender>` of a
-        `Projection` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism (since in
-        that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be assigned to such
-        Mechanisms, that will be used to initialize the Process or System when it is first run.  For additional
-        information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
+        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
+        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
+        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
 
     TERMINAL
@@ -62,8 +62,8 @@ class Keywords:
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
 
     SINGLETON
-        A `ProcessingMechanism` that is the only Mechanism in a `Process` and/or `System`.  It can serve the
-        functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
     LEARNING
         A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.

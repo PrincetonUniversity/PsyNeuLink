@@ -1,14 +1,11 @@
-Mechanism
-=========
+Mechanisms
+==========
 
 .. toctree::
    :maxdepth: 1
 
-   ProcessingMechanism
-   AdaptiveMechanism
-
-.. toctree::
-   :maxdepth: 3
+   ProcessingMechanisms <ProcessingMechanism>
+   AdaptiveMechanisms <AdaptiveMechanism>
 
 .. automodule:: Mechanism
    :members:

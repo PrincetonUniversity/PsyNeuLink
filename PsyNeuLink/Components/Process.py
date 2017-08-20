@@ -32,12 +32,12 @@
 Overview
 --------
 
-A Process is the simplest form of `Composition`, made up of a `lineal <Process_Footnotes>` sequence of `Mechanisms
-<Mechanism>` linked by `Projections <Projection>`.  Processes can be executed on their own, but most commonly they are
-used to compose a `System`, which is the most powerful form of Composition in PsyNeuLink.  Processes are nevertheless
-useful, as they define a simpler unit of processing than a System (e.g., for debugging, or for use in multiple Systems),
-and are used as the unit of `learning <System_Learning>` within a System.  The general
-features of Processes are summarized below, followed by a more detailed description in the sections that follow.
+A Process is the simplest form of `Composition <Composition>`, made up of a `lineal <Process_Footnotes>` sequence of
+`Mechanisms <Mechanism>` linked by `Projections <Projection>`.  Processes can be executed on their own, but most
+commonly they are used to compose a `System`, which is the most powerful form of Composition in PsyNeuLink.  Processes
+are nevertheless useful, as they define a simpler unit of processing than a System (e.g., for debugging, or for use in
+multiple Systems), and are used as the unit of `learning <System_Learning>` within a System.  The general features of
+Processes are summarized below, followed by a more detailed description in the sections that follow.
 
 Mechanisms and Projections are composed into a Process by assigning them to the Process' `pathway
 <Process_Base.pathway>` attribute. Executing a Process executes all of its Mechanisms in the order in which they are

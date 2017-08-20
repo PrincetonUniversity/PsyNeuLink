@@ -9,15 +9,17 @@
 # **************************************  GatingMechanism ************************************************
 
 """
+
 Overview
 --------
 
-A GatingMechanism is an `AdaptiveMechanism` that modulates the value of the InputState(s) and/or OutputState(s) of
-one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the GatingMechanism's
-`variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values, one for each of its
-`GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal <GatingSignal.gating_signal>`
-used by its `GatingProjections <GatingProjection>` to modulate the value of the State(s) to which they project.   A
-GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which it belongs.
+A GatingMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modulates the value of the InputState(s) and/or
+OutputState(s) of one or more `Mechanisms <Mechanism>`.   Its `function <GatingMechanism.function>` takes the
+GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a `gating_policy`:  a list of values,
+one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
+<GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the State(
+s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which
+it belongs.
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
@@ -32,8 +34,8 @@ Creating A GatingMechanism
 
 GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
 A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an
-`InputState`, `OutputState` or `Mechanism`, in which case a `GatingProjection` is automatically created that
-projects from the GatingMechanism to the specified target
+`InputState`, `OutputState` or `Mechanism <Mechanism>`, in which case a `GatingProjection` is automatically created
+that projects from the GatingMechanism to the specified target
 
 .. _GatingMechanism_Specifying_Gating:
 
@@ -42,12 +44,12 @@ Specifying gating
 
 GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
-or its ModulatorySignals `can be specified <State_Creation>`.  A `Mechanism` can also be specified for gating, in which
-case the `primary InputState <InputState_Primary>` of the specified Mechanism is used.  States (and/or Mechanisms) can
-also be specified in the  **gating_signals** argument of the constructor for a GatingMechanism. The **gating_signals**
-argument must be a list, each item of which must refer to one or more States (or the Mechanism(s) to which they
-belong) to be gated by that GatingSignal.  The specification for each item in the list can use any of the forms used to
-`specify a GatingSignal <GatingSignal_Specification>`.
+or its ModulatorySignals `can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
+gating, in which case the `primary InputState <InputState_Primary>` of the specified Mechanism is used.  States
+(and/or Mechanisms) can also be specified in the  **gating_signals** argument of the constructor for a
+GatingMechanism. The **gating_signals** argument must be a list, each item of which must refer to one or more States
+(or the Mechanism(s) to which they belong) to be gated by that GatingSignal.  The specification for each item in the
+list can use any of the forms used to `specify a GatingSignal <GatingSignal_Specification>`.
 
 
 .. _GatingMechanism_GatingSignals:
@@ -77,9 +79,9 @@ modulate the value of a State).  Each GatingSignal uses this value, unless its v
 Execution
 ---------
 
-A GatingMechanism executes in the same way as a `ProcessingMechanism`, based on its place in the System's
-`graph <System_Base.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles (
-recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
+A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
+System's `graph <System_Base.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce cycles
+(recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally not be
 applied in the first `TRIAL` (see `initialization <System_Execution_Input_And_Initialization>` for a description of
 how to configure the initialization of feedback loops in a System; also see `Scheduler` for a description of detailed
 ways in which a GatingMechanism and its dependents can be scheduled to execute).
@@ -144,7 +146,8 @@ class GatingMechanism(AdaptiveMechanism_Base):
         name=None,                                  \
         prefs=None)
 
-    Subclass of `AdaptiveMechanism` that gates (modulates) the value(s) of one or more `States <State>`.
+    Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that gates (modulates) the value(s)
+    of one or more `States <State>`.
 
     COMMENT:
         Description:
@@ -184,7 +187,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>`
         to be gated by the GatingMechanism; the number of items must equal the length of the **default_gating_policy**
-        argument; if a `Mechanism` is specified, its `primary InputState <InputState_Primary>` is used
+        argument; if a `Mechanism <Mechanism>` is specified, its `primary InputState <InputState_Primary>` is used
         (see `GatingMechanism_GatingSignals for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE

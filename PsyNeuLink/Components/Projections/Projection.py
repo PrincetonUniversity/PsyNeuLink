@@ -27,30 +27,31 @@ Overview
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
 its `sender <Projection.sender>` and transmits that information to its `receiver <Projection.receiver>`.  The
 `sender <Projection.sender>` and `receiver <Projection.receiver>` of a Projection are always `States <State>`:
-the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism`; the `receiver <Projection.receiver>`
-depends upon the type of Projection.  There are two broad categories of Projections, each of which has subtypes that
-differ in the type of information they transmit, how they do this, and the type of `State` to which they project
-(i.e., of their `receiver <Projection.receiver>`):
+the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+<Projection.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
+each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
+`State <State>` to which they project (i.e., of their `receiver <Projection.receiver>`):
 
-* `PathwayProjection`
+* `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
     `pathway <Process_Base.pathway`>.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
-      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism` converts it by convolving it
-      with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmits the
-      result to the `InputState` of another ProcessingMechanism.  Typically, MappingProjections are used to connect
-      Mechanisms in the `pathway` of a `Process`, though they can be use for other purposes as well (for example, to
-      convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism`).
+      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
+      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
+      parameter, and transmits the result to the `InputState` of another ProcessingMechanism.  Typically,
+      MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
+      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism
+      <AdaptiveMechanism>`).
 
-* `ModulatoryProjection`
-    takes the `value <OutputState.value>` of a `ModulatorySignal` of an `AdaptiveMechanism <ProcessingMechanism>`,
-    uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or `OutputState` of
-    another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to specify how to
-    modify the `value <State.value>` of the `State` to which a ModulatoryProjection projects.  There are three types
-    of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and corresponding
-    ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`), that project to different types of `States
-    <State>`:
+* `ModulatoryProjection <ModulatoryProjection>`
+    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
+    <ProcessingMechanism>`, uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or
+    `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to
+    specify how to modify the `value <State.value>` of the `State <State>` to which a ModulatoryProjection projects.
+    There are three types of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and
+    corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`), that project to different types of
+    `States <State>`:
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
@@ -59,15 +60,15 @@ differ in the type of information they transmit, how they do this, and the type 
       been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
-      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
-      to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
-      `function <Mechanism_Base.function>`) for which it is responsible.  ControlProjections are used when control
-      has been used specified for a `System`.
+      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism <ControlMechanism>`, and
+      transmit this to the `ParameterState of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify
+      the parameter of the (or its `function <Mechanism_Base.function>`) for which it is responsible.
+      ControlProjections are used when control has been used specified for a `System`.
   ..
   * `GatingProjection`
       takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
-      the `InputState` or `OutputState` of a `ProcessingMechanism` that uses this to modify the State's `value
-      <State.value>`
+      the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify the
+      State's `value <State_Base.value>`
 
 .. _Projection_Creation:
 
@@ -111,17 +112,17 @@ Projection in context:
       |
       * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
-        parameter.  If the `Component` to which the parameter belongs is part of a `System`, then a `ControlSignal` is
-        added to the System's `controller <System_Base.controller>` and assigned as the ControlProjection's `sender
-        <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization is deferred
-        <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System, at which time the
-        ControlSignal is added to the System's `controller <System_Base.controller>` and assigned as its the
-        ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
+        parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
+        `ControlSignal` is added to the System's `controller <System_Base.controller>` and assigned as the
+        ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
+        is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
+        at which time the ControlSignal is added to the System's `controller <System_Base.controller>` and assigned
+        as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
       * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
-        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State`.  If the
-        GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
+        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State <State>`.
+        If the GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
         specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
   ..
@@ -221,11 +222,11 @@ summarized in the following table, and described in greater detail in the subsec
 Sender
 ~~~~~~
 
-This must be an `OutputState` or a `ModulatorySignal` (a subclass of OutputState specialized for `ModulatoryProjections
-<ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
-<State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to the
-`AdaptiveMechanism` from which it projects.  The OutputState or ModulatorySignal's `value <OutputState.value>` is
-used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
+This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
+`ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
+`efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
+the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
+<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
 
 A sender can be specified as:
 
@@ -233,8 +234,8 @@ A sender can be specified as:
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
-    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection`, a `ModulatorySignal` of the appropriate
-    type is created and assigned to the Mechanism.
+    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
+    `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
 If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then the initialization of the
@@ -252,9 +253,9 @@ The `receiver <Projection.receiver>` required by a Projection depends on its typ
     * ControlProjection: `ParameterState`
     * GatingProjection: `InputState` or OutputState`
 
-A `MappingProjection` (as a `PathwayProjection`) is assigned to the `path_afferents <State.path_afferents>` attribute
-of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to the `mod_afferents
-<State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
+A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
+<State.path_afferents>` attribute of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to
+the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
 
 A `receiver <Projection.receiver>` can be specified as:
 
@@ -271,9 +272,9 @@ A `receiver <Projection.receiver>` can be specified as:
 Execution
 ---------
 
-A Projection cannot be executed directly.  It is executed when the `State` to which it projects (i.e., its `receiver
-<Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism` is executed.  When a
-Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
+A Projection cannot be executed directly.  It is executed when the `State <State>` to which it projects (i.e., its
+`receiver <Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is executed.
+When a Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
 <Projection.variable>` of its `function <Projection.function>`, calls the `function <Projection.function>`, and
 provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
 converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver

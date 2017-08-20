@@ -28,16 +28,16 @@ class TimeScale(Enum):
 
     PASS
         a full iteration through all of the `consideration_sets <consideration_set>` in a `Scheduler's <Scheduler>`
-        `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`, over which every `Component`
-        `specified to a Scheduler <Scheduler_Creation>` is considered for execution at least once.
+        `consideration_queue`, consisting of one or more `TIME_STEPs <TIME_STEP>`, over which every `Component
+        <Component>` `specified to a Scheduler <Scheduler_Creation>` is considered for execution at least once.
 
     TRIAL
         an open-ended unit of time consisting of all action that occurs within the scope of a single input to a
-        `Composition`.
+        `Composition <Composition>`.
 
     RUN
-        the scope of a call to the `run <Composition.run>` method of a `Composition`, consisting of one or more
-        `TRIALs <TRIAL>`.
+        the scope of a call to the `run <Composition.run>` method of a `Composition <Composition>`,
+        consisting of one or more `TRIALs <TRIAL>`.
 
     LIFE
         the scope of time since the creation of an object.
