@@ -6776,11 +6776,11 @@ class Distance(ObjectiveFunction):
                  context=None):
 
         # TODO: Port this to llvm
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        # Validate variable and validate params
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        v1 = self.variable[0]
-        v2 = self.variable[1]
+        v1 = variable[0]
+        v2 = variable[1]
 
         if self.__bin_function is None:
             self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
