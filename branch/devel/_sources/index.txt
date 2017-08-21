@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-PsyNeuLink Documentation
-========================
+Intro
+=====
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -171,6 +171,7 @@ With substantial and greatly appreciated assistance from:
    :titlesonly:
    :maxdepth: 1
 
+   self
    BasicsAndSampler
    QuickReference
    Components <Component>

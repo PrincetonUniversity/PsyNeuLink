@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -163,8 +164,8 @@
 <p>A ControlProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>. It takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and uses it to  modify the value of the parameter associated
 with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other <a class="reference internal" href="ControlMechanism.html"><span class="doc">control
-components</span></a>, can be displayed using the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its <strong>show_control</strong>
-argument assigned as <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
+components</span></a>, can be displayed using the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with
+its <strong>show_control</strong> argument assigned as <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
 </div>
 <div class="section" id="creating-a-controlprojection">
 <span id="controlprojection-creation"></span><h2>Creating a ControlProjection<a class="headerlink" href="#creating-a-controlprojection" title="Permalink to this headline">¶</a></h2>
@@ -232,7 +233,7 @@ ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProject
 ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (see <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">Structure</span></a> for a description
 of ControlSignal parameters).</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the Projection, its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
+the ControlProjection, its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
 <li><strong>name</strong> (<em>str : default ControlProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the ControlProjection.
@@ -295,7 +296,7 @@ to a ParameterState).</p>
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default ControlProjection-&lt;index&gt;</em> &#8211; the name of the ControlProjection.
-Specified in the <strong>name</strong> argument of the constructor for the Projection;
+Specified in the <strong>name</strong> argument of the constructor for the ControlProjection;
 if not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -303,8 +304,8 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Projection.
-Specified in the <strong>prefs</strong> argument of the constructor for the Projection;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for ControlProjection.
+Specified in the <strong>prefs</strong> argument of the constructor for the ControlProjection;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>

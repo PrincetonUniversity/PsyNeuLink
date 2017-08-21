@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -156,7 +157,7 @@
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An InputState receives the input to a Mechanism provided by the Projections to that Mechanism from others in a Process
-or System.  If the InputState belongs to an <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (see
+or System.  If the InputState belongs to an <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism (see
 <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role of Mechanisms in Processes and Systems</span></a>), then it receives the input
 specified when that Process or System is <a class="reference internal" href="Run.html"><span class="doc">run</span></a>.  The Projections received by an InputState are
 listed in its <a class="reference internal" href="#InputState.InputState.path_afferents" title="InputState.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute. Its
@@ -298,7 +299,7 @@ details concerning the specification of Projections when creating a State.</p>
 <span id="inputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every InputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It can receive one or more
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> from other Mechanisms, as well as from the Process or System to which its
-owner belongs (if it is the <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism for that Process or System).  The MappingProjections received by an
+owner belongs (if it is the <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism for that Process or System).  The MappingProjections received by an
 InputState are listed in its <a class="reference internal" href="#InputState.InputState.path_afferents" title="InputState.InputState.path_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">path_afferents</span></code></a> attribute.  An InputState can also receive
 one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> and that regulate its value (see the descriptions of Modulation
 under <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">ModulatorySignals</span></a> and <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a> for additional

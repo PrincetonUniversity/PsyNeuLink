@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -177,7 +178,7 @@ specified, its initialization is <a class="reference internal" href="#gatingproj
 <span id="gatingprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
 <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a GatingProjection to be created before its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
+a GatingProjection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
 script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
 not necessary if the State(s) to be gated are specified in the <strong>gating_signals</strong> argument of a <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">GatingMechanism</span></a>, in which case deferred initialization is completed automatically by the
@@ -229,7 +230,7 @@ and cannot be <a class="reference internal" href="#gatingprojection-creation"><s
 <li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies the function used to convert the <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.gating_signal" title="ModulatoryProjections.GatingProjection.GatingProjection.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> to the
 GatingProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.value" title="ModulatoryProjections.GatingProjection.GatingProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the projection, its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.function" title="ModulatoryProjections.GatingProjection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
+the GatingProjection, its <a class="reference internal" href="#ModulatoryProjections.GatingProjection.GatingProjection.function" title="ModulatoryProjections.GatingProjection.GatingProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
 <li><strong>name</strong> (<em>str : default GatingProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the GatingProjection.
@@ -293,7 +294,7 @@ and OutputStates).</p>
 <dt id="ModulatoryProjections.GatingProjection.GatingProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#ModulatoryProjections.GatingProjection.GatingProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default GatingProjection-&lt;index&gt;</em> &#8211; the name of the GatingProjection.
-Specified in the <strong>name</strong> argument of the constructor for the projection;
+Specified in the <strong>name</strong> argument of the constructor for the GatingProjection;
 if not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -301,8 +302,8 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dl class="attribute">
 <dt id="ModulatoryProjections.GatingProjection.GatingProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ModulatoryProjections.GatingProjection.GatingProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for projection.
-Specified in the <strong>prefs</strong> argument of the constructor for the projection;
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the GatingProjection.
+Specified in the <strong>prefs</strong> argument of the constructor for the GatingProjection;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>

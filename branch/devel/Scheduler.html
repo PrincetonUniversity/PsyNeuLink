@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
@@ -181,7 +182,7 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
-ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
+ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
 <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition_set" title="Scheduling.Condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
@@ -191,7 +192,7 @@ that defines the order in which Components are eligible to be executed.  This is
 among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
 was provided in the Scheduler&#8217;s constructor.  Each <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> is a set of Components that are eligible to
 execute at the same time/<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> (i.e., that appear at the same &#8220;depth&#8221; in a sequence of dependencies, and
-among which there are no dependencies).  The first <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> consists of only <a class="reference internal" href="Keywords.html#Keywords.Keywords.ORIGIN" title="Keywords.Keywords.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms.
+among which there are no dependencies).  The first <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> consists of only <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms.
 The second consists of all Components that receive <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from the Mechanisms in the first
 <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>. The third consists of Components that receive Projections from Components in the first two
 <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code>, and so forth.  When the Scheduler is run, it uses the

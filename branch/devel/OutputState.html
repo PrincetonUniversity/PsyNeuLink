@@ -86,6 +86,7 @@
             
             
                 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -175,7 +176,7 @@ automatically creates a default OutputState if none is explicitly specified, tha
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the Mechanism is created within the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a
 <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, an OutputState will be created and assigned as the
 <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to the next Mechanism in the pathway,
-or to the Process&#8217; <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">output</span></a> if the Mechanism is a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process.
+or to the Process&#8217; <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">output</span></a> if the Mechanism is a <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TERMINAL" title="Keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process.
 Other configurations can also easily be specified using a Mechanism&#8217;s <strong>output_states</strong> argument (see
 <a class="reference internal" href="#outputstate-specification"><span class="std std-ref">OutputState Specification</span></a> below).</p>
 <p>An OutputState must be owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  When OutputState is specified in the constructor for a
@@ -353,7 +354,7 @@ creating a State.</p>
 <div class="section" id="structure">
 <span id="outputstate-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every OutputState is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It can send one or more
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to other Mechanisms.  If its owner is a <a class="reference internal" href="Keywords.html#Keywords.Keywords.TERMINAL" title="Keywords.Keywords.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to other Mechanisms.  If its owner is a <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TERMINAL" title="Keywords.MechanismRoles.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process
 and/or System, then the OutputState will also be treated as the output of that <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">Process</span></a>
 and/or of a System.  The <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> sent by an OutputState are listed in its
 <a class="reference internal" href="#OutputState.OutputState.efferents" title="OutputState.OutputState.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> attribute.  An OutputState can also receive one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> and that regulate its value (see the descriptions of Modulation under
@@ -555,7 +556,7 @@ assigned using <code class="xref any docutils literal"><span class="pre">classPr
 
 <dl class="class">
 <dt id="OutputState.StandardOutputStates">
-<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10cfa4b38&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">OutputState.</code><code class="descname">StandardOutputStates</code><span class="sig-paren">(</span><em>owner: PsyNeuLink.Components.Component.Component</em>, <em>output_state_dicts: list</em>, <em>indices: &lt;typecheck.framework.optional object at 0x10b5b57b8&gt; = None</em><span class="sig-paren">)</span><a class="headerlink" href="#OutputState.StandardOutputStates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputState specification dictionaries for <a class="reference internal" href="#outputstate-standard"><span class="std std-ref">standard
 OutputStates</span></a> of a class</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -565,7 +566,7 @@ OutputStates</span></a> of a class</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component to which this OutputState belongs</li>
 <li><strong>output_state_dicts</strong> (<em>list of dicts</em>) &#8211; list of dictionaries specifying OutputStates for the Component specified
-by <a class="reference internal" href="Function.html#Function.ConstantIntegrator.owner" title="Function.ConstantIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
+by <a class="reference internal" href="Function.html#Function.ExponentialDist.owner" title="Function.ExponentialDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a></li>
 <li><strong>indices</strong> (<em>PRIMARY_OUTPUT_STATES, SEQUENTIAL, list of ints</em>) &#8211; <p>specifies how to assign the INDEX entry for each dict listed in
 <code class="xref any docutils literal"><span class="pre">output_state_dicts</span></code></p>
 <p>The effects of each value of indices are as follows:</p>
