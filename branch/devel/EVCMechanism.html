@@ -365,12 +365,12 @@ to the EVCMechanism.</li>
 </pre></div>
 </div>
 <p>It uses the System&#8217;s <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> argument to assign three outputStates to be monitored.  The first one
-references the Reward Mechanism (not shown);  its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a> will be used by default.
+references the Reward Mechanism (not shown);  its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> will be used by default.
 The second and third use keywords that are the names of outputStates of a  <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
-computation will multiply the value of the primary outputState of the Reward Mechanism by the value of the
-DDM_DECISION_VARIABLE outputState of the DDM Mechanism, and then divide that by the value of the RESPONSE_TIME
-outputState of the DDM Mechanism.</p>
+computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
+<em>DDM_DECISION_VARIABLE</em> OutputState of the DDM Mechanism, and then divide that by the value of the <em>RESPONSE_TIME</em>
+OutputState of the DDM Mechanism.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="evcmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>

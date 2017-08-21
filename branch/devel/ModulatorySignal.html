@@ -229,7 +229,7 @@ the documentation for each type of ModulatorySignal).</p>
 <span id="modulatorysignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatorySignal is associated with one or more <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> of the
 corresponding type, that project to the State(s), the value(s) of which it modulates.  The ModulatoryProjections
-received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="ParameterState.html#ParameterState.ParameterState.mod_afferents" title="ParameterState.ParameterState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
+received by a <a class="reference internal" href="State.html"><span class="doc">State</span></a> are listed in its <a class="reference internal" href="InputState.html#InputState.InputState.mod_afferents" title="InputState.InputState.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute. The method by which a ModulatorySignal
 modulates a State&#8217;s <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is determined by the ModulatorySignal&#8217;s
 <a class="reference internal" href="#ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a> attribute, as described below.</p>
 <div class="section" id="projections">
@@ -365,7 +365,7 @@ It should be instantiated using the constructor for a <a class="reference intern
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#module-AdaptiveMechanisms.GatingMechanisms.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="GatingMechanism.html#AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism" title="AdaptiveMechanisms.GatingMechanisms.GatingMechanism.GatingMechanism"><em>GatingMechanism</em></a>) &#8211; specifies the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which to assign the ModulatorySignal.</li>
 <li><strong>function</strong> (<em>Function or method : default Linear</em>) &#8211; specifies the function used to determine the value of the ModulatorySignal from the value of its
 <code class="xref any docutils literal"><span class="pre">owner</span></code>.</li>
 <li><strong>modulation</strong> (<em>ModulationParam : default ModulationParam.MULTIPLICATIVE</em>) &#8211; specifies the type of modulation the ModulatorySignal uses to determine the value of the State(s) it modulates.</li>
