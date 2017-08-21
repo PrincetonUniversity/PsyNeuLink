@@ -476,10 +476,10 @@ class Projection_Base(Projection):
         * Receiver is required, since can't instantiate a Projection without a receiving State
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
             MappingProjection:
-                sender = <Mechanism>.outputState
+                sender = <Mechanism>.output_state
                 receiver = <Mechanism>.input_state
             ControlProjection:
-                sender = <Mechanism>.outputState
+                sender = <Mechanism>.output_state
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
@@ -572,7 +572,7 @@ class Projection_Base(Projection):
         if isinstance(self.receiver, Mechanism):
             # if (len(self.receiver.input_states) > 1 and
             #         (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-            #     print("{0} has more than one inputState; {1} was assigned to the first one".
+            #     print("{0} has more than one InputState; {1} was assigned to the first one".
             #           format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
@@ -708,7 +708,7 @@ class Projection_Base(Projection):
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
         Validate, set self.instance_defaults.variable, and assign projection to sender's efferents attribute
 
-        If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
+        If self.sender is a Mechanism, re-assign it to <Mechanism>.output_state
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
         If self.value / self.instance_defaults.variable is None, set to sender.value
@@ -751,9 +751,9 @@ class Projection_Base(Projection):
         if not self in self.sender.efferents:
             self.sender.efferents.append(self)
 
-        # Validate projection's variable (self.instance_defaults.variable) against sender.outputState.value
+        # Validate projection's variable (self.instance_defaults.variable) against sender.output_state.value
         if iscompatible(self.instance_defaults.variable, self.sender.value):
-            # Is compatible, so assign sender.outputState.value to self.instance_defaults.variable
+            # Is compatible, so assign sender.output_state.value to self.instance_defaults.variable
             self.instance_defaults.variable = self.sender.value
 
         else:
@@ -1097,7 +1097,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value_name='Projection_spec value for new InputState',
                                     context=context)
 
-    #  Update inputState and input_states
+    #  Update InputState and input_states
     if receiver.input_states:
         receiver.input_states[input_state.name] = input_state
 
@@ -1119,7 +1119,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     Specification of OutputState can be any of the following:
             - OUTPUT_STATE - assigns projection_spec to (primary) OutputState
             - OutputState object
-            - index for Mechanism.outputStates OrderedDict
+            - index for Mechanism OutputStates OrderedDict
             - name of OutputState (i.e., key for Mechanism.OutputStates OrderedDict))
             - the keyword kwAddOutputState or the name for an OutputState to be added
 
@@ -1201,8 +1201,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      state_spec=projection_spec.value,
                                      constraint_value=projection_spec.value,
                                      constraint_value_name='Projection_spec value for new InputState',
-                                     context=context)
-    #  Update outputState and outputStates
+context=context)
+    #  Update output_state and output_states
     try:
         sender.output_states[output_state.name] = output_state
     # No OutputState(s) yet, so create them
