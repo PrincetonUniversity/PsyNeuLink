@@ -106,7 +106,12 @@ construction of models using PsyNeuLink.
 Installation
 ------------
 
-Currently, PsyNeuLink is in an alpha state and is not available through pypi/pip.
+.. note::
+   PsyNeuLink is beta software, that is still being actively developed.  Although it is useable, and most of the
+   documented functionality is available, some features may not yet be fully implemented and/or subject to
+   modification.  Please report any bugs and/or suggestions for develppment to psyneulinkhelp@princeton.edu.
+
+Because core elements of PsyNeuLink are still under development, it is not yet available through pypi/pip.
 Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink).
 Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
@@ -166,6 +171,9 @@ With substantial and greatly appreciated assistance from:
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Jan Vesely**, Department of Computer Science, Rutgers University
 
+
+Table of Contents
+-----------------
 
 .. toctree::
    :titlesonly:

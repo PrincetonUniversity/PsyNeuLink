@@ -282,12 +282,12 @@ The following example implements a System with an EVCMechanism (and two processe
                       monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
 
 It uses the System's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
-references the Reward Mechanism (not shown);  its `primary outputState <OutputState_Primary>` will be used by default.
+references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
 The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
 The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
-computation will multiply the value of the primary outputState of the Reward Mechanism by the value of the
-DDM_DECISION_VARIABLE outputState of the DDM Mechanism, and then divide that by the value of the RESPONSE_TIME
-outputState of the DDM Mechanism.
+computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
+*DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
+OutputState of the DDM Mechanism.
 
 COMMENT:
 ADD: This example specifies the EVCMechanism on its own, and then uses it for a System.
@@ -555,7 +555,7 @@ class EVCMechanism(ControlMechanism_Base):
     COMMENT
 
     monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
-        a list of tuples, each of which contains the weight and exponent (in that order) for an outputState in
+        a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
         `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
 
     function : function : default ControlSignalGridSearch
@@ -777,7 +777,7 @@ class EVCMechanism(ControlMechanism_Base):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate inputState and MappingProjections for list of Mechanisms and/or States to be monitored
+        """Instantiate InputState and MappingProjections for list of Mechanisms and/or States to be monitored
 
         """
         super()._instantiate_input_states(context=context)
@@ -808,12 +808,12 @@ class EVCMechanism(ControlMechanism_Base):
             context:
         """
 
-        # Dictionary of prediction_mechanisms, keyed by the ORIGIN mechanism to which they correspond
+        # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
         self.origin_prediction_mechanisms = {}
 
         # self.predictionProcesses = []
 
-        # List of prediction mechanism tuples (used by system to execute them)
+        # List of prediction Mechanism tuples (used by system to execute them)
         self.prediction_mechs = []
 
         # Get any params specified for predictionMechanism(s) by EVCMechanism
@@ -874,7 +874,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
 
         # Assign list of destinations for predicted_inputs:
-        #    the variable of the ORIGIN mechanism for each process in the system
+        #    the variable of the ORIGIN Mechanism for each process in the system
         self.predicted_input = {}
         for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
             # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
@@ -890,14 +890,14 @@ class EVCMechanism(ControlMechanism_Base):
             - if it is a OutputState, call _instantiate_monitoring_input_state()
             - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
                 (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
-            - each inputState is assigned a name with the following format:
+            - each InputState is assigned a name with the following format:
                 '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
 
         Notes:
-        * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
-            will be instantiated to a corresponding inputState of the ControlMechanism
+        * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
+          Projection will be instantiated to a corresponding InputState of the ControlMechanism
         * self.input_states is the usual ordered dict of states,
-            each of which receives a projection from a corresponding outputState in self.monitored_output_states
+            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
 
         self._get_monitored_states(context=context)
@@ -935,7 +935,7 @@ class EVCMechanism(ControlMechanism_Base):
     def _get_monitored_states(self, context=None):
         """
         Parse paramsCurent[MONITOR_FOR_CONTROL] for System, controller, Mechanisms and/or their OutputStates:
-            - if specification in outputState is None:
+            - if specification in output_state is None:
                  do NOT monitor this state (this overrides any other specifications)
             - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
             - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
@@ -947,14 +947,14 @@ class EVCMechanism(ControlMechanism_Base):
         * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
             - it specifies options for assigning outputStates of terminal Mechanisms in the System
                 to self.monitored_output_states;  the options are:
-                + PRIMARY_OUTPUT_STATES: assign only the `primary outputState <OutputState_Primary>` for each
+                + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
                   TERMINAL Mechanism
                 + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
             - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
-        * self.monitored_output_states is a list, each item of which is a Mechanism.outputState from which a projection
-            will be instantiated to a corresponding inputState of the ControlMechanism
+        * self.monitored_output_states is a list, each item of which is a Mechanism OutputState from which a Projection
+            will be instantiated to a corresponding InputState of the ControlMechanism
         * self.input_states is the usual ordered dict of states,
-            each of which receives a projection from a corresponding outputState in self.monitored_output_states
+            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
 
         """
 
@@ -1028,24 +1028,24 @@ class EVCMechanism(ControlMechanism_Base):
             raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
                            format(self.name, option_specs))
 
-        # Get MONITOR_FOR_CONTROL specifications for each mechanism and outputState in the System
+        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
         # Assign outputStates to self.monitored_output_states
         self.monitored_output_states = []
 
         # Notes:
         # * Use all_specs to accumulate specs from all mechanisms and their outputStates
         #     (for use in generating exponents and weights below)
-        # * Use local_specs to combine *only current* mechanism's specs with those from controller and system specs;
-        #     this allows the specs for each mechanism and its outputStates to be evaluated independently of any others
+        # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
+        #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
         for mech in self.system.mechanisms:
 
-            # For each mechanism:
+            # For each Mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
             # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
             # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
-            # - use local_specs (which now has this mechanism's specs with those from controller and system specs)
+            # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
             #     to assign outputStates to self.monitored_output_states
 
             mech_specs = []
@@ -1055,18 +1055,18 @@ class EVCMechanism(ControlMechanism_Base):
 
             # PARSE MECHANISM'S SPECS
 
-            # Get MONITOR_FOR_CONTROL specification from mechanism
+            # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
                 mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
 
-                # Setting MONITOR_FOR_CONTROL to None specifies mechanism's outputState(s) should NOT be monitored
+                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
                 if mech_specs is None:
                     raise ValueError
 
-            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse outputState(s) specs
+            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
             except (KeyError, AttributeError):
                 pass
 
@@ -1074,7 +1074,7 @@ class EVCMechanism(ControlMechanism_Base):
             except ValueError:
                 continue
 
-            # Parse specs in mechanism's MONITOR_FOR_CONTROL
+            # Parse specs in Mechanism's MONITOR_FOR_CONTROL
             else:
 
                 # Add mech_specs to all_specs
@@ -1087,7 +1087,7 @@ class EVCMechanism(ControlMechanism_Base):
                         continue
                     local_specs.append(item)
 
-                # Get MonitoredOutputStatesOptions if specified for mechanism, and make sure there is only one:
+                # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
                 #    if there is one, use it in place of any specified for controller or system
                 option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
                 if not option_specs:
@@ -1103,31 +1103,31 @@ class EVCMechanism(ControlMechanism_Base):
             # for output_state_name, output_state in list(mech.outputStates.items()):
             for output_state in mech.output_states:
 
-                # Get MONITOR_FOR_CONTROL specification from outputState
+                # Get MONITOR_FOR_CONTROL specification from OutputState
                 try:
                     output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
                     if output_state_specs is NotImplemented:
                         raise AttributeError
 
-                    # Setting MONITOR_FOR_CONTROL to None specifies outputState should NOT be monitored
+                    # Setting MONITOR_FOR_CONTROL to None specifies OutputState should NOT be monitored
                     if output_state_specs is None:
                         raise ValueError
 
-                # outputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
+                # OutputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
                 except (KeyError, AttributeError):
                     pass
 
-                # outputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
+                # OutputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
                 except ValueError:
                     continue
 
-                # Parse specs in outputState's MONITOR_FOR_CONTROL
+                # Parse specs in OutputState's MONITOR_FOR_CONTROL
                 else:
 
                     # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
-                    #       as a specification for an outputState
+                    #       as a specification for an OutputState
 
-                    # Add outputState specs to all_specs and local_specs
+                    # Add OutputState specs to all_specs and local_specs
                     all_specs.extend(output_state_specs)
 
                     # Extract refs from tuples and add to local_specs
@@ -1137,7 +1137,7 @@ class EVCMechanism(ControlMechanism_Base):
                             continue
                         local_specs.append(item)
 
-            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the mechanism
+            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
             for output_state in mech.output_states:
                 if (output_state in local_specs or output_state.name in local_specs):
                     option_spec = None
@@ -1147,7 +1147,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             for output_state in mech.output_states:
 
-                # If outputState is named or referenced anywhere, include it
+                # If OutputState is named or referenced anywhere, include it
                 if (output_state in local_specs or output_state.name in local_specs):
                     self.monitored_output_states.append(output_state)
                     continue
@@ -1156,9 +1156,9 @@ class EVCMechanism(ControlMechanism_Base):
 # THE LIST NOR IS IT A TERMINAL MECHANISM
 
                 # If:
-                #   mechanism is named or referenced in any specification
-                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a mechanism)
-                #   or it is a terminal mechanism
+                #   Mechanism is named or referenced in any specification
+                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
+                #   or it is a terminal Mechanism
                 elif (mech.name in local_specs or mech in local_specs or
                               any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
                               mech in self.system.terminal_mechanisms.mechanisms):
@@ -1167,7 +1167,7 @@ class EVCMechanism(ControlMechanism_Base):
                             not mech in self.system.terminal_mechanisms.mechanisms):
                         continue
 
-                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and outputState is primary, include it
+                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
                     if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
                         if output_state is mech.output_state:
                             self.monitored_output_states.append(output_state)
@@ -1190,7 +1190,7 @@ class EVCMechanism(ControlMechanism_Base):
         # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
 
         # Note: these values will be superseded by any assigned as arguments to the outcome_function
-        #       if it is specified in the constructor for the mechanism
+        #       if it is specified in the constructor for the Mechanism
 
         num_monitored_output_states = len(self.monitored_output_states)
         weights = np.ones((num_monitored_output_states,1))
@@ -1200,11 +1200,11 @@ class EVCMechanism(ControlMechanism_Base):
         for spec in all_specs:
             if isinstance(spec, tuple):
                 object_spec = spec[OBJECT_INDEX]
-                # For each outputState in monitored_output_states
+                # For each OutputState in monitored_output_states
                 for item in self.monitored_output_states:
-                    # If either that outputState or its owner is the object specified in the tuple
+                    # If either that OutputState or its owner is the object specified in the tuple
                     if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        # Assign the weight and exponent specified in the tuple to that outputState
+                        # Assign the weight and exponent specified in the tuple to that OutputState
                         i = self.monitored_output_states.index(item)
                         weights[i] = spec[WEIGHT_INDEX]
                         exponents[i] = spec[EXPONENT_INDEX]
@@ -1224,12 +1224,12 @@ class EVCMechanism(ControlMechanism_Base):
         Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_value() (in ControlMechanism)
         """
 
-        # Get outputState's owner
+        # Get OutputState's owner
         from PsyNeuLink.Components.States.OutputState import OutputState
         if isinstance(state_spec, OutputState):
             state_spec = state_spec.owner
 
-        # Confirm it is a mechanism in the system
+        # Confirm it is a Mechanism in the system
         if not state_spec in self.system.mechanisms:
             raise EVCError("Request for controller in {0} to monitor the OutputState(s) of "
                                               "a Mechanism ({1}) that is not in {2}".
@@ -1368,10 +1368,10 @@ class EVCMechanism(ControlMechanism_Base):
                            "the number of prediction_predictions mechanisms ({}) for {}".
                            format(num_origin_mechs, num_prediction_mechs, self.system.name))
         for origin_mech in self.system.origin_mechanisms:
-            # Get origin mechanism for each process
-            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN mechanism
+            # Get origin Mechanism for each process
+            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
             self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].outputState.value
+            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
 
     def add_monitored_values(self, states_spec, context=None):
         """Validate and then instantiate outputStates to be monitored by EVC
@@ -1412,7 +1412,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
             a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-            their functions, or projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
+            their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
             description.
 
         time_scale :  TimeScale : default TimeScale.TRIAL
