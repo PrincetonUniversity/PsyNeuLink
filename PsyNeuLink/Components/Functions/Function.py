@@ -2425,12 +2425,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  context=None):
 
         # TODO: Port this to llvm
-        # Validate variable and assign to self.variable, and validate params
-        self._check_args(variable=variable, params=params, context=context)
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
         if self.__bin_function is None:
             self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
-        ret = np.zeros(len(self.variable))
+        ret = np.zeros(len(variable))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
@@ -2438,7 +2437,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         ct_param = par_struct_ty(gain, bias)
 
-        ct_vi = self.variable.ctypes.data_as(vi_ty)
+        ct_vi = variable.ctypes.data_as(vi_ty)
         ct_vo = ret.ctypes.data_as(vo_ty)
         self.__bin_function(ct_param, ct_vi, ct_vo)
 
