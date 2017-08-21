@@ -8,11 +8,11 @@ from PsyNeuLink.Components.System import system
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Linear,
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
-                        default_input_value = [0])
+                        default_variable = [0])
 
 # Weights_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 # Weights_matrix = (np.arange(1*2).reshape((1, 2)) + 1)/(2*5)
@@ -25,7 +25,7 @@ Weights = MappingProjection(name='Weights',
                         matrix=Weights_matrix
                         )
 
-my_process = process(default_input_value=[0, 0],
+my_process = process(default_variable=[0, 0],
                      # pathway=[Input_Layer, Weights, Output_Layer],
                      pathway=[Input_Layer, Output_Layer],
                      # clamp_input=SOFT_CLAMP,
@@ -55,7 +55,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
 
 
@@ -65,7 +65,7 @@ if COMPOSITION is PROCESS:
     composition = my_process
 
     # PROCESS VERSION:
-    my_process.run(num_executions=10,
+    my_process.run(num_trials=10,
                    # inputs=[[-1, 30],[2, 10]],
                    # targets=[[0, 0, 1],[0, 0, 1]],
                    inputs=stim_list,
@@ -83,7 +83,7 @@ elif COMPOSITION is SYSTEM:
     composition = x
 
     # x.show_graph_with_learning()
-    run_output = x.run(num_executions=10,
+    run_output = x.run(num_trials=10,
                        inputs=stim_list,
                        targets=target_list,
                        call_before_trial=print_header,

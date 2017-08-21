@@ -78,44 +78,44 @@ Reward = TransferMechanism(name='Reward')
 
 # Processes:
 TargetControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
 Flanker1ControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker1_Stim, Flanker1_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 2 Control Process')
 
 Flanker2ControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker2_Stim, Flanker2_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker 1 Control Process')
 
 TargetAutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Target Automatic Process')
 
 Flanker1AutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker1_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Flanker1 Automatic Process')
 
 Flanker2AutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker2_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Flanker2 Automatic Process')
 
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')
@@ -159,7 +159,7 @@ def show_trial_header():
 
 def show_results():
     import re
-    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    results = sorted(zip(mySystem.terminal_mechanisms.outputStateNames, mySystem.terminal_mechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
@@ -177,7 +177,7 @@ def show_results():
 # Run system:
 
 mySystem.controller.reportOutputPref = False
-mySystem.run(num_executions=nTrials,
+mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
              call_before_trial=show_trial_header,
              call_after_time_step=show_results

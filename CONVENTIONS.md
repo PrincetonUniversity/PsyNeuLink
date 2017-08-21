@@ -4,8 +4,11 @@
 ### NAMING:
 
 #### Content:
+- All class (and corresponding module) names should be singular  
 - Component names always end in their type (e.g., TransferMechanism, LearningProjection)
   (the only exception is the DDM)
+- Components and Compositions should *always* be referred to in caps
+  (e.g., All Mechanisms have Projections; the receiver for a Projection is an InputState; etc.).
 
 #### Format:
 - class names:
@@ -129,7 +132,7 @@ Terminology used here:
     - wherever possible, simply enclose in backticks (e.g., `section`)
     - to assign a link to some other description, add angle brackets (e.g., :ref:`my text <section>`) 
     - for classes that have subclasses, the titles in the rst file (that will appear in the text of the reference) 
-      are plural even though the name of the file itself (to which the reference must be made) is singular;
+      are plural even though the name of the module/file itself (to which the reference must be made) is singular;
         therefore, to have the singular form appear in the text (e.g., ControlMechanism),
         the module must be explicitly referenced (e.g., `ControlMechanism <ControlMechanism>`);
         [this appears to be redundant, but it is necessary]

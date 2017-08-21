@@ -14,15 +14,15 @@ from PsyNeuLink.Components.System import system
 
 input_layer = TransferMechanism(name='Input Layer',
                        function=Linear,
-                       default_input_value = np.zeros((3,)))
+                       default_variable = np.zeros((3,)))
 
 hidden_layer = TransferMechanism(name='Hidden Layer', 
                                  function = Logistic,
-                                 default_input_value =[0, 0, 0])
+                                 default_variable =[0, 0, 0])
 
 output_layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value =[0])
+                        default_variable =[0])
 
 input_hidden_weights = MappingProjection(name='Input-Hidden Weights',
                                          matrix = np.random.uniform(-3, 3,(3,3)))
@@ -32,7 +32,7 @@ hidden_output_weights = MappingProjection(name='Hidden-Output Weights',
 
 LearningRate = 0.3
 
-xor_process = process(default_input_value=[0, 0, 1],
+xor_process = process(default_variable=[0, 0, 1],
                                    pathway=[input_layer,
                                             input_hidden_weights,
                                             hidden_layer,
@@ -63,7 +63,7 @@ def print_header():
     
 def show_target():
     i = xor_system.input
-    t = xor_system.targetInputStates[0].value
+    t = xor_system.target_input_states[0].value
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}'.format(i, t))
     print('- Output: {}'.format(output_layer.value))
     # # print('INPUT-OUTPUT WEIGHTS:')
@@ -72,7 +72,7 @@ def show_target():
     # print(hidden_output_weights.matrix)
     
 
-xor_system.run(num_executions=3000,
+xor_system.run(num_trials=3000,
                   inputs=input_list,
                   targets=target_list,
                   # call_before_trial=print_header,

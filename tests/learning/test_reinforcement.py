@@ -1,23 +1,23 @@
 import numpy as np
 import pytest
 
+from PsyNeuLink.Components.Functions.Function import PROB
+from PsyNeuLink.Components.Functions.Function import Reinforcement, SoftMax
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Functions.Function import PROB
-from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.TimeScale import CentralClock
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 
 def test_reinforcement():
     input_layer = TransferMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         name='Input Layer',
     )
 
     action_selection = TransferMechanism(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
         function=SoftMax(
             output=PROB,
             gain=1.0,
@@ -26,7 +26,8 @@ def test_reinforcement():
     )
 
     p = process(
-        default_input_value=[0, 0, 0],
+        default_variable=[0, 0, 0],
+        size=3,
         pathway=[input_layer, action_selection],
         learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)),
         target=0,
@@ -61,7 +62,7 @@ def test_reinforcement():
     )
 
     results = s.run(
-        num_executions=10,
+        num_trials=10,
         inputs=input_list,
         targets=reward,
         call_before_trial=print_header,

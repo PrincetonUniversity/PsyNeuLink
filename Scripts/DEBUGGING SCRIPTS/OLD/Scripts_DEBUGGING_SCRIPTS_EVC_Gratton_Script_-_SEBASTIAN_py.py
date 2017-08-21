@@ -79,32 +79,32 @@ Reward = TransferMechanism(name='Reward')
 
 # Processes:
 TargetControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
 FlankerControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker_Stim, Flanker_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker Control Process')
 
 TargetAutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Target Automatic Process')
 
 FlankerAutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Flanker1 Automatic Process')
 
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Reward],
     prefs = process_prefs,
     name = 'RewardProcess')
@@ -158,7 +158,7 @@ for mech in mySystem.controller.prediction_mechs:
 
 
 
-print('new rate of integration mechanisms before system execution:')
+print('new rate of integration mechanisms before System execution:')
 for mech in mySystem.controller.prediction_mechs:
     print( mech.name)
     print( mech.function_object.rate)
@@ -182,7 +182,7 @@ stim_list_dict = {Target_Stim:targetInputList,
 
 mySystem.controller.reportOutputPref = True
 
-mySystem.run(num_executions=nTrials,
+mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
              )
 

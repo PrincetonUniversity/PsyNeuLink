@@ -10,13 +10,13 @@
 
 """
 
-The DefaultControlMechanism is created for a `System` if no other controller type is specified. The 
-DefaultControlMechanism createsan inputState for each ControlProjection it is assigned, and uses 
-`defaultControlAllocation` as the value for the control signal.  By default,  :py:data:`defaultControlAllocation` =  1, 
-so that ControlProjections from the DefaultControlMechanism have no effect on their parameters.  However, it can be 
-used to uniformly control the parameters that receive ControlProjections from it, by manually changing the value of
-`defaultControlAllocation`.  See :doc:`ControlMechanism` for additional details of how ControlMechanisms are
-created, executed and their attributes.
+The DefaultControlMechanism is created for a `System` if no other controller type is specified. The
+DefaultControlMechanism creates an `ControlSignal` for each `ControlProjection` it is assigned, and uses
+`defaultControlAllocation` as the `value <ControlSignal.value>` for the ControlSignal.  By default,
+`defaultControlAllocation` =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
+parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
+by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism <ControlMechanism>` for additional
+details of how ControlMechanisms are created, executed and their attributes.
 
 COMMENT:
    ADD LINK FOR defaultControlAllocation
@@ -33,21 +33,37 @@ COMMENT
 
 """
 
-from collections import OrderedDict
+import numpy as np
+import typecheck as tc
+import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.States.InputState import InputState
+
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, MONITOR_FOR_CONTROL, NAME, SLOPE
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Globals.Utilities import ContentAddressableList
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+
+
+class DefaultControlMechanismError(Exception):
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
-    """Implements the DefaultControlMechanism
+    """Subclass of `ControlMechanism <ControlMechanism>` that implements a DefaultControlMechanism.
 
     COMMENT:
         Description:
             Implements default source of control signals, with one inputState and outputState for each.
-            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and ControlProjection(s)
+            Uses defaultControlAllocation as input(s) and pass value(s) unchanged to outputState(s) and
+            ControlProjection(s)
 
-            Every ControlProjection is assigned this mechanism as its sender by default (i.e., unless a sender is
+            Every ControlProjection is assigned this Mechanism as its sender by default (i.e., unless a sender is
                 explicitly specified in its constructor).
 
             An inputState and outputState is created for each ControlProjection assigned:
@@ -73,10 +89,9 @@ class DefaultControlMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-
-    # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per control_signal)
-    variableClassDefault = defaultControlAllocation
+    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
@@ -87,10 +102,10 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                MODULATION:None,
                                })
 
-    from PsyNeuLink.Components.Functions.Function import Linear
     @tc.typecheck
     def __init__(self,
-                 # default_input_value=None,
+                 # default_variable=None,
+                 # size=None,
                  system=None,
                  monitor_for_control:tc.optional(list)=None,
                  control_signals:tc.optional(list)=None,
@@ -98,7 +113,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None):
 
-        super(DefaultControlMechanism, self).__init__(#default_input_value =default_input_value,
+        super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
+                                                    # size=size,
                                                     monitor_for_control=monitor_for_control,
                                                     control_signals=control_signals,
                                                     params=params,
@@ -118,19 +134,26 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_value, inputState and input_states attributes (in case they are referenced).
-        Otherwise, no need to do anything, as DefaultControllerMechanism only adds input_states
-        when a ControlProjection is instantiated, and uses _instantiate_control_mechanism_input_state to do so.
+        Instantiate input_states attribute (in case they are referenced) and
+            assign any OutputStates that project to them to monitored_output_states
 
+        IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
+                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              method should be implemented that also implements an _instantiate_monitored_output_states
+                              method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
+
+        self.monitored_output_states = []
 
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
-        # if self.input_states is None:
-        #     self.input_value = None
+        elif self.input_states:
+            for input_state in self.input_states:
+                for projection in input_state.path_afferents:
+                    self.monitored_output_states.append(projection.sender)
 
     def _instantiate_control_signal(self, control_signal, context=None):
-        """Instantiate requested controlProjection and associated inputState
+        """Instantiate requested ControlSignal, ControlProjection and associated InputState
         """
 
         if isinstance(control_signal, dict):
@@ -143,6 +166,13 @@ class DefaultControlMechanism(ControlMechanism_Base):
         elif isinstance(control_signal, tuple):
             input_name = 'DefaultControlAllocation for ' + control_signal[0] + '_ControlSignal'
 
+        elif isinstance(control_signal, ParameterState):
+            input_name = 'DefaultControlAllocation for ' + control_signal.name + '_ControlSignal'
+
+        else:
+            raise DefaultControlMechanismError("control signal ({}) was not a dict, tuple, or ParameterState".
+                                               format(control_signal))
+
         # Instantiate input_states and allocation_policy attribute for control_signal allocations
         self._instantiate_default_input_state(input_name, defaultControlAllocation, context=context)
         self.allocation_policy = self.input_values
@@ -150,7 +180,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # Call super to instantiate ControlSignal
         # Note: any params specified with ControlProjection for the control_signal
         #           should be in PARAMS entry of dict passed in control_signal arg
-        super()._instantiate_control_signal(control_signal=control_signal, context=context)
+        control_signal = super()._instantiate_control_signal(control_signal=control_signal, context=context)
 
     def _instantiate_default_input_state(self, input_state_name, input_state_value, context=None):
         """Instantiate inputState for ControlMechanism
@@ -160,7 +190,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
               for the sole purpose of creating input_states for each value of defaultControlAllocation to assign
               to the ControlProjections.
 
-        Extend self.variable by one item to accommodate new inputState
+        Extend self.instance_defaults.variable by one item to accommodate new inputState
         Instantiate the inputState using input_state_name and input_state_value
         Update self.input_state and self.input_states
 
@@ -177,35 +207,39 @@ class DefaultControlMechanism(ControlMechanism_Base):
         # First, test for initialization conditions:
 
         # This is for generality (in case, for any subclass in the future, variable is assigned to None on init)
-        if self.variable is None:
-            self.variable = np.atleast_2d(input_state_value)
+        if self.instance_defaults.variable is None:
+            self.instance_defaults.variable = np.atleast_2d(input_state_value)
 
-        # If there is a single item in self.variable, it could be the one assigned on initialization
+        # If there is a single item in self.instance_defaults.variable, it could be the one assigned on initialization
         #     (in order to validate ``function`` and get its return value as a template for self.value);
         #     in that case, there should be no input_states yet, so pass
-        #     (i.e., don't bother to extend self.variable): it will be used for the new inputState
-        elif len(self.variable) == 1:
+        #     (i.e., don't bother to extend self.instance_defaults.variable): it will be used for the new inputState
+        elif len(self.instance_defaults.variable) == 1:
             if self.input_states:
-                self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+                self.instance_defaults.variable = np.append(self.instance_defaults.variable, np.atleast_2d(input_state_value), 0)
             else:
                 # If there are no input_states, this is the usual initialization condition;
-                # Pass to create a new inputState that will be assigned to existing the first item of self.variable
+                # Pass to create a new inputState that will be assigned to existing the first item of self.instance_defaults.variable
                 pass
         # Other than on initialization (handled above), it is a PROGRAM ERROR if
-        #    the number of input_states is not equal to the number of items in self.variable
-        elif len(self.variable) != len(self.input_states):
-            raise ControlMechanismError("PROGRAM ERROR:  The number of input_states ({}) does not match "
-                                        "the number of items found for the variable attribute ({}) of {}"
-                                        "when creating {}".
-                                        format(len(self.input_states),
-                                               len(self.variable),
-                                               self.name,input_state_name))
+        #    the number of input_states is not equal to the number of items in self.instance_defaults.variable
+        elif len(self.instance_defaults.variable) != len(self.input_states):
+            raise DefaultControlMechanismError(
+                "PROGRAM ERROR:  The number of input_states ({}) does not match "
+                "the number of items found for the variable attribute ({}) of {}"
+                "when creating {}".format(
+                    len(self.input_states),
+                    len(self.instance_defaults.variable),
+                    self.name,
+                    input_state_name,
+                )
+            )
 
-        # Extend self.variable to accommodate new inputState
+        # Extend self.instance_defaults.variable to accommodate new inputState
         else:
-            self.variable = np.append(self.variable, np.atleast_2d(input_state_value), 0)
+            self.instance_defaults.variable = np.append(self.instance_defaults.variable, np.atleast_2d(input_state_value), 0)
 
-        variable_item_index = self.variable.size-1
+        variable_item_index = self.instance_defaults.variable.size-1
 
         # Instantiate inputState
         from PsyNeuLink.Components.States.State import _instantiate_state
@@ -215,7 +249,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                                          state_name=input_state_name,
                                          state_spec=defaultControlAllocation,
                                          state_params=None,
-                                         constraint_value=np.array(self.variable[variable_item_index]),
+                                         constraint_value=np.array(self.instance_defaults.variable[variable_item_index]),
                                          constraint_value_name='Default control allocation',
                                          context=context)
 

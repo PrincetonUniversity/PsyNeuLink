@@ -1,31 +1,33 @@
+from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.TimeScale import TimeScale
-from PsyNeuLink.scheduling.condition import AfterNCalls
-from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.States.OutputState import *
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Scheduling.Condition import AfterNCalls
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
-                                default_input_value = np.zeros((2,)))
+                                default_variable = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = np.zeros((5,)))
+                          default_variable = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0])
+                          default_variable = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value = [0,0,0])
+                        default_variable = [0,0,0])
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
@@ -78,7 +80,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_input_value=[0, 0],
+z = process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -95,7 +97,7 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             clamp_input=SOFT_CLAMP,
             learning=LEARNING,
-            learning_rate=1.0,
+            # learning_rate=1.0,
             target=[0,0,1],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
@@ -129,7 +131,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nOLD WEIGHTS: \n')
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)
@@ -150,7 +152,7 @@ if COMPOSITION is PROCESS:
     composition = z
 
     # PROCESS VERSION:
-    z.run(num_executions=10,
+    z.run(num_trials=10,
           # inputs=[[-1, 30],[2, 10]],
           # targets=[[0, 0, 1],[0, 0, 1]],
           inputs=stim_list,
@@ -162,7 +164,7 @@ elif COMPOSITION is SYSTEM:
     # SYSTEM VERSION:
     x = system(processes=[z],
                targets=[0, 0, 1],
-               learning_rate=1.0)
+               learning_rate=2.0)
 
     x.reportOutputPref = True
     composition = x
@@ -170,7 +172,7 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph(show_learning=True)
     # x.show_graph()
     results = x.run(
-        num_executions=10,
+        num_trials=10,
         # inputs=stim_list,
         # inputs=[[-1, 30],[2, 10]],
         # targets=[[0, 0, 1],[0, 0, 1]],

@@ -36,8 +36,8 @@ An attribute is logged if:
 
 * it is one `automatically included <LINK>` in logging;
 ..
-* it is included in the LOG_ENTRIES entry of a 
-  `parameter specification dictionary <ParameterState_Specifying_Parameters>` (``params[LOG_ENTRIES]``) assigned to 
+* it is included in the LOG_ENTRIES entry of a
+  `parameter specification dictionary <ParameterState_Specification>` (``params[LOG_ENTRIES]``) assigned to
   the **params** argument of the constructor for the component;
 ..
 * the context of the assignment is above the LogLevel specified in the logPref setting of the owner object
@@ -105,14 +105,12 @@ Class Reference
 ---------------
 
 """
-
-
-
 import warnings
+
 from collections import namedtuple
 from enum import IntEnum
 
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Keywords import kwContext, kwTime, kwValue
 
 
 class LogLevel(IntEnum):
@@ -139,9 +137,9 @@ SystemLogEntries = [kpCentralClock]
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
 from collections import MutableMapping
 class EntriesDict(MutableMapping,dict):
-    """Add setter method for entries that checks owner mechanism's prefs to see whether entry is currently recording
+    """Add setter method for entries that checks owner Mechanism's prefs to see whether entry is currently recording
 
-    If entry is in owner mechanism's prefs.logPref.setting list, then append attribute value to entry's list
+    If entry is in owner Mechanism's prefs.logPref.setting list, then append attribute value to entry's list
     Otherwise, either initialize or just update entry with value
     """
     def __init__(self, owner):
@@ -271,6 +269,8 @@ class Log:
 
     """
 
+    ALL_LOG_ENTRIES = 'all_log_entries'
+
     def __init__(self, owner, entries=None):
         """Initialize log with list of entries
 
@@ -332,29 +332,29 @@ class Log:
 
         If verify is True, user will be asked to confirm deletion;  otherwise it will simply be done
         Note: deleting the entry will delete all the data recorded within it
-        Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
         Notes:
-        * only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
         * deleting entries removes them from log dict, owner.prefs.logPref, and deletes ALL data recorded in them
 
-        :param entries: (str, list, or ALL_LOG_ENTRIES)
+        :param entries: (str, list, or Log.ALL_LOG_ENTRIES)
         :param confirm: (bool)
         :return:
         """
 
         msg = ""
 
-        # If ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is ALL_LOG_ENTRIES:
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is Log.ALL_LOG_ENTRIES:
             entries = self.entries.keys()
-            msg = ALL_LOG_ENTRIES
+            msg = Log.ALL_LOG_ENTRIES
 
         # If entries is a single entry, put in list for processing below
         elif isinstance(entries, str):
             entries = [entries]
 
         # Validate each entry and delete bad ones from entries
-        if not msg is ALL_LOG_ENTRIES:
+        if not msg is Log.ALL_LOG_ENTRIES:
             for entry in entries:
                 try:
                     self.entries[entry]
@@ -386,18 +386,18 @@ class Log:
         """Reset one or more entries by removing all data, but leaving entries in log dict
 
         If verify is True, user will be asked to confirm the reset;  otherwise it will simply be done
-        Entries can be a single entry, a list of entries, or the keyword ALL_LOG_ENTRIES;
+        Entries can be a single entry, a list of entries, or the keyword Log.ALL_LOG_ENTRIES;
         Notes:
-        * only a single confirmation will occur for a list or ALL_LOG_ENTRIES
+        * only a single confirmation will occur for a list or Log.ALL_LOG_ENTRIES
         * resetting an entry deletes ALL the data recorded within it
 
-        :param entries: (list, str or ALL_LOG_ENTRIES)
+        :param entries: (list, str or Log.ALL_LOG_ENTRIES)
         :param confirm: (bool)
         :return:
         """
 
-        # If ALL_LOG_ENTRIES, set entries to all entries in self.entries
-        if entries is ALL_LOG_ENTRIES:
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        if entries is Log.ALL_LOG_ENTRIES:
             entries = self.entries.keys()
 
         # If entries is a single entry, put in list for processing below
@@ -461,14 +461,14 @@ class Log:
     #
     #     Issue a warning if the entry is not in the log dict or owner's logPrefs list
     #
-    #     :param entries: (str, list or ALL_LOG_ENTRIES)
+    #     :param entries: (str, list or Log.ALL_LOG_ENTRIES)
     #     :return:
     #     """
     #
-    #     # If ALL_LOG_ENTRIES, set entries to all entries in self.entries
-    #     if entries is ALL_LOG_ENTRIES:
+    #     # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
+    #     if entries is Log.ALL_LOG_ENTRIES:
     #         entries = self.entries.keys()
-    #         msg = ALL_LOG_ENTRIES
+    #         msg = Log.ALL_LOG_ENTRIES
     #
     #     # If entries is a single entry, put in list for processing below
     #     elif isinstance(entries, str):
@@ -524,7 +524,7 @@ class Log:
         :return:
         """
 
-        # If ALL_LOG_ENTRIES, set entries to all entries in self.entries
+        # If Log.ALL_LOG_ENTRIES, set entries to all entries in self.entries
         if entries is ALL_ENTRIES or entries is None:
             entries = self.entries.keys()
 

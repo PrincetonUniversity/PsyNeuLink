@@ -34,17 +34,17 @@ Reward = TransferMechanism(name='Reward')
 
 # Processes:
 ColorNamingProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Color_Input, Color_Hidden, Output, Decision],
     name = 'Color Naming Process')
 
 WordReadingProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Word_Input, Word_Hidden, Output, Decision],
     name = 'Word Reading Process')
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[(Reward, 1)],
     name = 'RewardProcess')
 
@@ -68,5 +68,5 @@ stim_list_dict = {Color_Input:[1, 1],
 Color_Hidden.reportOutputPref = True
 mySystem.reportOutputPref = True
 mySystem.controller.reportOutputPref = True
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
              inputs=stim_list_dict)

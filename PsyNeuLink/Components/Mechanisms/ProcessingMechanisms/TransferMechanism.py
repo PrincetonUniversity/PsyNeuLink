@@ -26,26 +26,27 @@
 Overview
 --------
 
-A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar
-value or an an array of scalars (list or 1d np.array).  The function used can be selected from a standard set
-of PsyNeuLink Functions (`Linear`, `Exponential` or `Logistic`), or specified using a user-defined custom function.
-
+A TransferMechanism transforms its input using a simple mathematical function.  The input can be a single scalar value
+or an an array of scalars (list or 1d np.array).  The function used to carry out the transformation can be selected
+from a standard set of `Functions <Function>` (`Linear`, `Exponential` or `Logistic`) or specified using a
+user-defined custom function.  The transformation can be carried out instantaneously or in a time-averaged manner,
+as described in `Transfer_Execution`.
 
 .. _Transfer_Creation:
 
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism can be created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>`
-function and specifying TRANSFER_MECHANISM as its **mech_spec** argument.  Its function is specified in the
-**function** argument, which can be simply the name of the class (first example below), or a call to its
+A TransferMechanism can be created directly by calling its constructor, or using the `mechanism` command and specifying
+*TRANSFER_MECHANISM* as its **mech_spec** argument.  Its `function <TransferMechanism.function>` is specified in the
+**function** argument, which can be the name of a `Function <Function>` class (first example below), or a call to its
 constructor which can include arguments specifying the function's parameters (second example)::
 
     my_linear_transfer_mechanism = TransferMechanism(function=Linear)
     my_logistic_transfer_mechanism = TransferMechanism(function=Logistic(gain=1.0, bias=-4)
 
-In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant <TransferMechanism.time_constant>`
-parameters can be specified (see `Execution` below).
+In addition to function-specific parameters, `noise <TransferMechanism.noise>` and `time_constant
+<TransferMechanism.time_constant>` parameters can be specified for the Mechanism (see `Transfer_Execution`).
 
 
 .. _Transfer_Structure:
@@ -53,46 +54,51 @@ parameters can be specified (see `Execution` below).
 Structure
 ---------
 
-A TransferMechanism has a single `inputState <InputState>`, the `value <InputState.InputState.value>` of which is
+A TransferMechanism has a single `InputState`, the `value <InputState.InputState.value>` of which is
 used as the `variable <TransferMechanism.variable>` for its `function <TransferMechanism.function>`. The
-:keyword:`function` can be selected from one of three standard PsyNeuLink `Function <Functions>`: `Linear`,
-`Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
-list or np.ndarray of numeric values.  A TransferMechanism has three `outputStates <OutputStates>, described under
-`Execution` below.
-
+`function <TransferMechanism.function>` can be selected from one of three standard PsyNeuLink `Functions <Function>`:
+`Linear`, `Logistic` or `Exponential`; or a custom function can be specified, so long as it returns a numeric value or
+list or np.ndarray of numeric values.  The result of the `function <TransferMechanism.function>` is assigned as the
+only item of the TransferMechanism's `value <TransferMechanism.value>` and as the `value <OutputState.value>` of its
+`primary OutputState <OutputState_Primary>` (see `below <Transfer_OutputState>`).  Additional OutputStates can be
+assigned using the TransferMechanism's `standard OutputStates <TransferMechanism_Standard_OutputStates>`
+(see `OutputState_Standard`) or by creating `custom OutputStates <OutputState_Customization>`.
 
 .. _Transfer_Execution:
 
 Execution
 ---------
 
-When a TransferMechanism is executed, it transforms its input using the specified function and the following
-parameters (in addition to those specified for the function):
+COMMENT:
+DESCRIBE AS TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
+INSTANTANEOUS:
+input transformed in a single `execution <Transfer_Execution>` of the Mechanism)
+TIME-AVERAGED:
+input transformed using `step-wise` integration, in which each execution returns the result of a subsequent step of the
+integration process).
+COMMENT
+
+When a TransferMechanism is executed, it transforms its input using its `function <TransferMechanism.function>` and
+the following parameters (in addition to any specified for the `function <TransferMechanism.function>`):
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if `time_scale` is :keyword:`TimeScale.TIME_STEP`,
-      the input is exponentially time-averaged before transforming it (higher value specifies faster rate);
-      if `time_scale` is :keyword:`TimeScale.TRIAL`, `time_constant <TransferMechanism.time_constant>` is ignored.
+    * `time_constant <TransferMechanism.time_constant>`: if the `time_scale <TransferMechanism.time_scale>` attribute
+      is `TimeScale.TIME_STEP`, the input is exponentially time-averaged before transforming it, using the value
+      of the `time_constant <TransferMechanism.time_constant>` attribute as the rate of integration (a higher value
+      specifies a faster rate); if `time_scale <TransferMechanism.time_scale>` is `TimeScale.TRIAL`,
+      `time_constant <TransferMechanism.time_constant>` is ignored.
     ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
 
-After each execution of the mechanism:
 
-.. _Transfer_Results:
+.. _Transfer_OutputState:
 
-    * **result** of `function <TransferMechanism.function>` is assigned to the mechanism's
-      `value <TransferMechanism.value>` attribute, the :keyword:`value` of its TRANSFER_RESULT outputState,
-      and to the 1st item of the mechanism's `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **mean** of the result is assigned to the the :keyword:`value` of the mechanism's TRANSFER_MEAN outputState,
-      and to the 2nd item of its `output_values <TransferMechanism.output_values>` attribute;
-    ..
-    * **variance** of the result is assigned to the :keyword:`value` of the mechanism's TRANSFER_VARIANCE outputState,
-      and to the 3rd item of its `output_values <TransferMechanism.output_values>` attribute.
-
-COMMENT
+After each execution of the Mechanism the result of `function <TransferMechanism.function>` is assigned as the
+only item of the Mechanism's `value <TransferMechanism.value>`, the `value <OutputState.value>` of its
+`primary OutputState <OutputState_Primary>`, (same as the output_states[RESULT] OutputState if it has been assigned),
+and to the 1st item of the Mechanism's `output_values <TransferMechanism.output_values>` attribute;
 
 .. _Transfer_Class_Reference:
 
@@ -100,13 +106,21 @@ Class Reference
 ---------------
 
 """
+import inspect
+import numbers
+import numpy as np
+import typecheck as tc
 
-# from numpy import sqrt, random, abs, tanh, exp
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import Linear, TransferFunction, AdaptiveIntegrator, NormalDist
-# from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.States.OutputState \
-    import StandardOutputStates, standard_output_states, PRIMARY_OUTPUT_STATE
+from PsyNeuLink.Components.Component import Component, function_type, method_type
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, Linear
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates, standard_output_states
+from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZER, INITIALIZING, MEAN, MEDIAN, NOISE, RATE, RESULT, STANDARD_DEVIATION, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIANCE, kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Globals.Utilities import append_type_to_name, iscompatible
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # TransferMechanism parameter keywords:
 RANGE = "range"
@@ -114,7 +128,7 @@ TIME_CONSTANT = "time_constant"
 INITIAL_VALUE = 'initial_value'
 
 # TransferMechanism default parameter values:
-Transfer_DEFAULT_LENGTH= 1
+Transfer_DEFAULT_LENGTH = 1
 Transfer_DEFAULT_GAIN = 1
 Transfer_DEFAULT_BIAS = 0
 Transfer_DEFAULT_OFFSET = 0
@@ -122,12 +136,43 @@ Transfer_DEFAULT_OFFSET = 0
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class TRANSFER_OUTPUT():
-        RESULT=RESULT
-        MEAN=MEAN
-        MEDIAN=MEDIAN
-        STANDARD_DEV=STANDARD_DEV
-        VARIANCE=VARIANCE
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+    """
+    .. _TransferMechanism_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `TransferMechanism`: \n
+
+    .. _TRANSFER_MECHANISM_RESULT:
+
+    *RESULT* : 1d np.array
+      result of `function <TransferMechanism.function>` (same as `value <TransferMechanism.value>`).
+
+    .. _TRANSFER_MECHANISM_MEAN:
+
+    *MEAN* : float
+      mean of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_MEDIAN:
+
+    *MEDIAN* : float
+      median of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_STD_DEV:
+
+    *STANDARD_DEVIATION* : float
+      standard deviation of `value <TransferMechanism.value>`.
+
+    .. _TRANSFER_MECHANISM_VARIANCE:
+
+    *VARIANCE* : float
+      variance of `output_state.value`.
+
+    """
+    RESULT=RESULT
+    MEAN=MEAN
+    MEDIAN=MEDIAN
+    STANDARD_DEVIATION=STANDARD_DEVIATION
+    VARIANCE=VARIANCE
+# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
@@ -142,19 +187,20 @@ class TransferError(Exception):
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class TransferMechanism(ProcessingMechanism_Base):
     """
-    TransferMechanism(                    \
-    default_input_value=None,    \
+    TransferMechanism(           \
+    default_variable=None,    \
+    size=None,                   \
     function=Linear,             \
     initial_value=None,          \
     noise=0.0,                   \
-    time_constant=1.0,                    \
+    time_constant=1.0,           \
     range=(float:min, float:max),\
     time_scale=TimeScale.TRIAL,  \
     params=None,                 \
     name=None,                   \
     prefs=None)
 
-    Implements TransferMechanism subclass of `Mechanism`.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that performs a simple transform of its input.
 
     COMMENT:
         Description
@@ -168,9 +214,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             + componentType (str): TransferMechanism
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
-            + variableClassDefault (value):  Transfer_DEFAULT_BIAS
+            + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
-            + paramNames (dict): names as above
 
         Class methods
         -------------
@@ -185,12 +230,16 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    default_input_value : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the mechanism to use if none is provided in a call to its
-        `execute <Mechanism.Mechanism_Base.execute>` or `run <Mechanism.Mechanism_Base.run>` method;
+    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
+        specifies the input to the Mechanism to use if none is provided in a call to its
+        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
         also serves as a template to specify the length of `variable <TransferMechanism.variable>` for
         `function <TransferMechanism.function>`, and the `primary outputState <OutputState_Primary>`
-        of the mechanism.
+        of the Mechanism.
+
+    size : int, list or np.ndarray of ints
+        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
+        if **default_variable** is specified, it takes precedence over the specification of **size**.
 
     function : TransferFunction : default Linear
         specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
@@ -207,10 +256,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the mechanism is executed with `time_scale`
+        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
         set to `TimeScale.TIME_STEP`::
 
-         result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) +
+         (1-time_constant * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -219,28 +269,27 @@ class TransferMechanism(ProcessingMechanism_Base):
         `range <TransferMechanism.range>` that it exceeds.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
+        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
 
     time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
         This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
         parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
+        the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
-    .. context=componentType+INITIALIZING):
-            context : str : default ''None''
-                   string used for contextualization of instantiation, hierarchical calls, executions, etc.
+    context : str : default componentType+INITIALIZING
+        string used for contextualization of instantiation, hierarchical calls, executions, etc.
 
     Returns
     -------
@@ -251,17 +300,13 @@ class TransferMechanism(ProcessingMechanism_Base):
     ----------
 
     variable : value: default Transfer_DEFAULT_BIAS
-        the input to mechanism's `function <TransferMechanism.function>`.
+        the input to Mechanism's `function <TransferMechanism.function>`.
         COMMENT:
             :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
         COMMENT
 
-    size : int
-        length of the first (and only) item in `variable <TransferMechanism.variable>`
-        (i.e., the vector transformed by `function <TransferMechanism.function>`.
-
     function : Function :  default Linear
-        the function used to transform the input.
+        the Function used to transform the input.
 
     COMMENT:
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
@@ -272,13 +317,13 @@ class TransferMechanism(ProcessingMechanism_Base):
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the output of the `function <TransferMechahnism.function>`:
+        a stochastically-sampled value added to the output of the `function <TransferMechanism.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
         the time constant for exponential time averaging of input
-        when the mechanism is executed using the `TIME_STEP` `TimeScale`::
+        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -289,44 +334,46 @@ class TransferMechanism(ProcessingMechanism_Base):
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
 
     previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the `previous round of execution <LINK>`.
+        the value of the `variable <TransferMechanism.variable>` on the previous execution of the Mechanism.
 
     value : 2d np.array [array(float64)]
-        result of executing `function <TransferMechanism.function>`; same value as fist item of
-        `output_values <TransferMechanism.output_values>`.
+        result of executing `function <TransferMechanism.function>`.
 
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT outputState
-            and the first item of ``output_values``.
-    COMMENT
+    previous_value : float
+        the `value <TransferMechanism.value>` on the previous execution of the Mechanism.
 
-    outputStates : Dict[str, OutputState]
-        an OrderedDict with three `outputStates <OutputState>`:
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <TransferMechanism.function>`;
-        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
+    delta : float
+        the change in `value <TransferMechanism.value>` from the previous execution of the Mechanism
+        (i.e., `value <TransferMechanism.value>` - `previous_value <TransferMechanism.previous_value>`).
 
-    output_values : List[array(float64), float, float]
-        a list with the following items:
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT outputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN outputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE outputState)
+    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
+        list of Mechanism's `OutputStates <OutputStates>`.  By default there is a single OutputState,
+        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
+        `function <TransferMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
+        and/or custom OutputStates may be included, based on the specifications made in the **output_states** argument
+        of the Mechanism's constructor.
 
-    time_scale :  TimeScale : defaul tTimeScale.TRIAL
-        specifies whether the mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
+    output_values : List[array(float64)]
+        each item is the `value <OutputState.value>` of the corresponding OutputState in `output_states
+        <TransferMechanism.output_states>`.  The default is a single item containing the result of the
+        TransferMechanism's `function <TransferMechanism.function>`;  additional
+        ones may be included, based on the specifications made in the
+        **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
+        <TransferMechanism_Standard_OutputStates>`).
+
+    time_scale :  TimeScale : default TimeScale.TRIAL
+        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
-        the name of the mechanism.
-        Specified in the **name** argument of the constructor for the projection;
-        if not is specified, a default is assigned by `MechanismRegistry`
+        the name of the Mechanism.
+        Specified in the **name** argument of the constructor for the Projection;
+        if not specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for mechanism.
-        Specified in the **prefs** argument of the constructor for the mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        the `PreferenceSet` for Mechanism.
+        Specified in the **prefs** argument of the constructor for the Mechanism;
+        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
@@ -341,21 +388,19 @@ class TransferMechanism(ProcessingMechanism_Base):
         kpRuntimeParamStickyAssignmentPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
-    variableClassDefault = Transfer_DEFAULT_BIAS # Sets template for variable (input)
-                                                 #  to be compatible with Transfer_DEFAULT_BIAS
-
     # TransferMechanism parameter and control signal assignments):
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({NOISE: None})
 
     standard_output_states = standard_output_states.copy()
 
-    paramNames = paramClassDefaults.keys()
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        variable = [[0]]
 
     @tc.typecheck
     def __init__(self,
-                 default_input_value=Transfer_DEFAULT_BIAS,
-                 size:tc.optional(int)=None,
+                 default_variable=None,
+                 size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
                  function=Linear,
                  initial_value=None,
@@ -368,10 +413,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
-        """Assign type-level preferences, default input value (Transfer_DEFAULT_BIAS) and call super.__init__
+        """Assign type-level preferences and call super.__init__
         """
+        # MODIFIED 7/21/17 CW: Removed output_states = [RESULT] from initialization, due to potential bugs with
+        # mutable default arguments (see: bit.ly/2uID3s3)
+        if output_states is None:
+            output_states = [RESULT]
 
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        if default_variable is None and size is None:
+            default_variable = [[0]]
+
         params = self._assign_args_to_param_dicts(function=function,
                                                   initial_value=initial_value,
                                                   input_states=input_states,
@@ -381,25 +432,23 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
-        # if default_input_value is None:
-        #     default_input_value = Transfer_DEFAULT_BIAS
-        self.size = size
 
-        self.integrator_function=None
+        self.integrator_function = None
 
         if not isinstance(self.standard_output_states, StandardOutputStates):
             self.standard_output_states = StandardOutputStates(self,
                                                                self.standard_output_states,
                                                                indices=PRIMARY_OUTPUT_STATE)
 
-        super(TransferMechanism, self).__init__(variable=default_input_value,
+        super(TransferMechanism, self).__init__(variable=default_variable,
+                                                size=size,
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,
                                                 context=self)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate FUNCTION and mechanism params
+        """Validate FUNCTION and Mechanism params
 
         """
 
@@ -417,7 +466,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 transfer_function_class = transfer_function.__self__.__class__
                 transfer_function_name = transfer_function.__self__.__class__.__name__
             # FUNCTION is a class
-            elif isclass(transfer_function):
+            elif inspect.isclass(transfer_function):
                 transfer_function_class = transfer_function
                 transfer_function_name = transfer_function.__name__
 
@@ -429,20 +478,32 @@ class TransferMechanism(ProcessingMechanism_Base):
         if INITIAL_VALUE in target_set:
             initial_value = target_set[INITIAL_VALUE]
             if initial_value is not None:
-                if not iscompatible(initial_value, self.variable):
-                    raise TransferError("The format of the initial_value parameter for {} ({}) "
-                                        "must match its input ({})".
-                                        format(append_type_to_name(self), initial_value, self.variable[0]))
+                if not iscompatible(initial_value, self.instance_defaults.variable):
+                    raise Exception(
+                        "initial_value is {}, type {}\nself.instance_defaults.variable is {}, type {}".format(
+                            initial_value,
+                            type(initial_value),
+                            self.instance_defaults.variable,
+                            type(self.instance_defaults.variable),
+                        )
+                    )
+                    raise TransferError(
+                        "The format of the initial_value parameter for {} ({}) must match its input ({})".format(
+                            append_type_to_name(self),
+                            initial_value,
+                            self.instance_defaults.variable[0],
+                        )
+                    )
 
         # FIX: SHOULD THIS (AND TIME_CONSTANT) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
         # Validate NOISE:
         if NOISE in target_set:
-            self._validate_noise(target_set[NOISE])
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
 
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
             time_constant = target_set[TIME_CONSTANT]
-            if not (isinstance(time_constant, float) and time_constant>=0 and time_constant<=1):
+            if not (isinstance(time_constant, float) and 0 <= time_constant <= 1):
                 raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
                                     format(time_constant, self.name))
 
@@ -458,56 +519,76 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         format(range, self.name))
 
         # self.integrator_function = Integrator(
-        #     # variable_default=self.default_input_value,
-        #                                       initializer = self.variable,
+        #     # default_variable=self.default_variable,
+        #                                       initializer = self.instance_defaults.variable,
         #                                       noise = self.noise,
         #                                       rate = self.time_constant,
         #                                       integration_type= ADAPTIVE)
 
-
-    def _validate_noise(self, noise):
+    def _validate_noise(self, noise, var):
         # Noise is a list or array
         if isinstance(noise, (np.ndarray, list)):
             # Variable is a list/array
-            if isinstance(self.variable, (np.ndarray, list)):
-                if len(noise) != np.array(self.variable).size:
+            if isinstance(var, (np.ndarray, list)):
+                if len(noise) != np.array(var).size:
+                    # Formatting noise for proper display in error message
                     try:
                         formatted_noise = list(map(lambda x: x.__qualname__, noise))
                     except AttributeError:
                         formatted_noise = noise
-                    raise MechanismError("The length ({}) of the array specified for the noise parameter ({}) of {} "
-                                        "must match the length ({}) of the default input ({}). If noise is specified as"
-                                        " an array or list, it must be of the same size as the input."
-                                        .format(len(noise), formatted_noise, self.name, np.array(self.variable).size,
-                                                self.variable))
+                    raise MechanismError(
+                        "The length ({}) of the array specified for the noise parameter ({}) of {} "
+                        "must match the length ({}) of the default input ({}). If noise is specified as"
+                        " an array or list, it must be of the same size as the input."
+                        .format(len(noise), formatted_noise, self.name, np.array(var).size,
+                                var))
                 else:
-                    # Noise is a list or array of functions
-                    if callable(noise[0]):
-                        self.noise_function = True
-                    # Noise is a list or array of floats
-                    elif isinstance(noise[0], float):
-                        self.noise_function = False
-                    # Noise is a list or array of invalid elements
-                    else:
-                        raise MechanismError("The elements of a noise list or array must be floats or functions.")
+                    for noise_item in noise:
+                        if not isinstance(noise_item, (float, int)) and not callable(noise_item):
+                            raise MechanismError(
+                                "The elements of a noise list or array must be floats or functions.")
+
+
             # Variable is not a list/array
             else:
                 raise MechanismError("The noise parameter ({}) for {} may only be a list or array if the "
                                     "default input value is also a list or array.".format(noise, self.name))
 
-        elif callable(noise):
-            self.noise_function = True
-            if isinstance(self.variable, (np.ndarray, list)):
-                new_noise = []
-                for i in self.variable:
-                    new_noise.append(self.noise)
-                noise = new_noise
+            # # Elements of list/array have different types
+            # if not all(isinstance(x, type(noise[0])) for x in noise):
+            #     raise MechanismError("All elements of noise list/array ({}) for {} must be of the same type. "
+            #                         .format(noise, self.name))
 
-        elif isinstance(noise, float):
-            self.noise_function = False
-        else:
-            raise MechanismError("noise parameter ({}) for {} must be a float, function, array or list of floats, or "
-                                "array or list of functions.".format(noise, self.name))
+        elif not isinstance(noise, (float, int)) and not callable(noise):
+            raise MechanismError(
+                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
+                    .format(noise, self.name))
+
+    def _try_execute_param(self, param, var):
+
+        # param is a list; if any element is callable, execute it
+        if isinstance(param, (np.ndarray, list)):
+            for i in range(len(param)):
+                if callable(param[i]):
+                    param[i] = param[i]()
+        # param is one function
+        elif callable(param):
+            # if the variable is a list/array, execute the param function separately for each element
+            if isinstance(var, (np.ndarray, list)):
+                if isinstance(var[0], (np.ndarray, list)):
+                    new_param = []
+                    for i in var[0]:
+                        new_param.append(param())
+                    param = new_param
+                else:
+                    new_param = []
+                    for i in var:
+                        new_param.append(param())
+                    param = new_param
+            # if the variable is not a list/array, execute the param function
+            else:
+                param = param()
+        return param
 
     def _instantiate_parameter_states(self, context=None):
 
@@ -524,15 +605,15 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
-        self.initial_value = self.initial_value or self.variableInstanceDefault
-        self.size = len(self.variable[0])
+        if self.initial_value is None:
+            self.initial_value = self.instance_defaults.variable
 
     def _execute(self,
-                variable=None,
-                runtime_params=None,
-                clock=CentralClock,
-                time_scale = TimeScale.TRIAL,
-                context=None):
+                 variable=None,
+                 runtime_params=None,
+                 clock=CentralClock,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
         """Execute TransferMechanism function and return transform of input
 
         Execute TransferMechanism function on input, and assign to output_values:
@@ -552,7 +633,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             + NOISE (float)
             + TIME_CONSTANT (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -573,11 +654,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # Use self.variable to initialize state of input
-
-
-        if INITIALIZING in context:
-            self.previous_input = self.variable
+        # Use self.instance_defaults.variable to initialize state of input
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         time_scale = self.time_scale
@@ -601,40 +678,32 @@ class TransferMechanism(ProcessingMechanism_Base):
             if not self.integrator_function:
 
                 self.integrator_function = AdaptiveIntegrator(
-                                            self.variable,
-                                            initializer = self.previous_input,
+                                            variable,
+                                            initializer = self.initial_value,
                                             noise = self.noise,
-                                            rate = self.time_constant
-                                            )
+                                            rate = self.time_constant,
+                                            owner = self)
 
-            current_input = self.integrator_function.execute(self.variable,
+            current_input = self.integrator_function.execute(variable,
                                                         # Should we handle runtime params?
-                                                             # params={INITIALIZER: self.previous_input,
-                                                             #         INTEGRATION_TYPE: ADAPTIVE,
-                                                             #         NOISE: self.noise,
-                                                             #         RATE: self.time_constant}
-                                                             # context=context
-                                                             # name=Integrator.componentName + '_for_' + self.name
+                                                              params={INITIALIZER: self.initial_value,
+                                                                      NOISE: self.noise,
+                                                                      RATE: self.time_constant},
+                                                              context=context
+
                                                              )
 
         elif time_scale is TimeScale.TRIAL:
-            if self.noise_function:
-                if isinstance(noise, (list, np.ndarray)):
-                    new_noise = []
-                    for n in noise:
-                        new_noise.append(n())
-                    noise = new_noise
-                elif isinstance(variable, (list, np.ndarray)):
-                    new_noise = []
-                    for v in variable[0]:
-                        new_noise.append(noise())
-                    noise = new_noise
-                else:
-                    noise = noise()
-
-            current_input = self.input_state.value + noise
+            noise = self._try_execute_param(self.noise, variable)
+            # formerly: current_input = self.input_state.value + noise
+            # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
+            # when the input is given as a string.
+            if (np.array(noise) != 0).any():
+                current_input = variable[0] + noise
+            else:
+                current_input = variable[0]
         else:
-            raise MechanismError("time_scale not specified for TransferMechanism")
+            raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
         self.previous_input = current_input
 
@@ -704,3 +773,15 @@ class TransferMechanism(ProcessingMechanism_Base):
     def time_constant(self, value):
         self._time_constant = value
     # # MODIFIED 4/17/17 END
+
+    @property
+    def previous_value(self):
+        if self.integrator_function:
+            return self.integrator_function.previous_value
+        return None
+
+    @property
+    def delta(self):
+        if self.integrator_function:
+            return self.value - self.integrator_function.previous_value
+        return None

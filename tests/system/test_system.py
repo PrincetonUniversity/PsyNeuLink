@@ -1,15 +1,13 @@
 import numpy as np
 
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import Linear, Logistic, BogaczEtAl
-from PsyNeuLink.Components.Functions.Function import THRESHOLD
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, LEARNING_PROJECTION, NOISE, PARAMETER_STATE_PARAMS, RANDOM_CONNECTIVITY_MATRIX
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES
 from PsyNeuLink.Globals.Keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
 
 
@@ -50,19 +48,19 @@ def test_danglingControlledMech():
 
     # Processes:
     ColorNamingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Color_Input, Color_Hidden, Output, Decision],
         name='Color Naming Process',
     )
 
     WordReadingProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Word_Input, Word_Hidden, Output, Decision],
         name='Word Reading Process',
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         name='RewardProcess',
     )
@@ -107,73 +105,10 @@ def test_danglingControlledMech():
     # no assert, should only complete without error
 
 
-class TestDocumentationExamples:
-
-    def test_mechs_in_pathway(seed0):
-        mechanism_1 = TransferMechanism()
-        mechanism_2 = DDM()
-        some_params = {PARAMETER_STATE_PARAMS: {THRESHOLD: 2, NOISE: 0.1}}
-        my_process = process(pathway=[mechanism_1, TransferMechanism, (mechanism_2, some_params)])
-        result = my_process.execute()
-        # changed result from 2 to 1
-        assert(result == np.array([1]))
-
-    def test_default_projection(seed0):
-        mechanism_1 = TransferMechanism()
-        mechanism_2 = TransferMechanism()
-        mechanism_3 = DDM()
-        my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
-        result = my_process.execute()
-
-        assert(result == np.array([1.]))
-
-    def test_inline_projection_using_existing_projection(seed0):
-        mechanism_1 = TransferMechanism()
-        mechanism_2 = TransferMechanism()
-        mechanism_3 = DDM()
-        projection_A = MappingProjection()
-        my_process = process(pathway=[mechanism_1, projection_A, mechanism_2, mechanism_3])
-        result = my_process.execute()
-
-        assert(result == np.array([1.]))
-
-    def test_inline_projection_using_keyword(seed0):
-        mechanism_1 = TransferMechanism()
-        mechanism_2 = TransferMechanism()
-        mechanism_3 = DDM()
-        my_process = process(pathway=[mechanism_1, RANDOM_CONNECTIVITY_MATRIX, mechanism_2, mechanism_3])
-        result = my_process.execute()
-
-        assert(result == np.array([1.]))
-
-    def test_standalone_projection(seed0):
-        mechanism_1 = TransferMechanism()
-        mechanism_2 = TransferMechanism()
-        mechanism_3 = DDM()
-        projection_A = MappingProjection(sender=mechanism_1, receiver=mechanism_2)
-        my_process = process(pathway=[mechanism_1, mechanism_2, mechanism_3])
-        result = my_process.execute()
-
-        assert(result == np.array([1.]))
-
-    def test_process_learning(seed0):
-        mechanism_1 = TransferMechanism(function=Logistic)
-        mechanism_2 = TransferMechanism(function=Logistic)
-        mechanism_3 = TransferMechanism(function=Logistic)
-        my_process = process(
-            pathway=[mechanism_1, mechanism_2, mechanism_3],
-            learning=LEARNING_PROJECTION,
-            target=[0],
-        )
-        result = my_process.execute()
-
-        np.testing.assert_allclose(result, np.array([0.65077768]))
-
-
 class TestGraphAndInput:
 
     def test_branch(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
@@ -190,8 +125,8 @@ class TestGraphAndInput:
         inputs = {a: [2, 2]}
         s.run(inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
-        assert set([c, d]) == set(s.terminalMechanisms.mechanisms)
+        assert [a] == s.origin_mechanisms.mechanisms
+        assert set([c, d]) == set(s.terminal_mechanisms.mechanisms)
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -199,8 +134,8 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
 
     def test_bypass(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
 
@@ -216,8 +151,8 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2], [0, 0]]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
-        assert [d] == s.terminalMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
+        assert [d] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -225,7 +160,7 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
 
     def test_chain(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
@@ -243,8 +178,8 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2, 2], [0, 0, 0]]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
-        assert [e] == s.terminalMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
+        assert [e] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -253,10 +188,10 @@ class TestGraphAndInput:
         assert e.systems[s] == TERMINAL
 
     def test_convergent(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
-        c = TransferMechanism(name='c', default_input_value=[0])
+        c = TransferMechanism(name='c', default_variable=[0])
         d = TransferMechanism(name='d')
         e = TransferMechanism(name='e')
 
@@ -272,8 +207,8 @@ class TestGraphAndInput:
         inputs = {a: [[2, 2]], c: [[0]]}
         s.run(inputs=inputs)
 
-        assert set([a, c]) == set(s.originMechanisms.mechanisms)
-        assert [e] == s.terminalMechanisms.mechanisms
+        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
+        assert [e] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INTERNAL
@@ -282,8 +217,8 @@ class TestGraphAndInput:
         assert e.systems[s] == TERMINAL
 
     def cyclic_one_process(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
 
         p1 = process(pathway=[a, b, a], name='p1')
 
@@ -296,16 +231,16 @@ class TestGraphAndInput:
         inputs = {a: [1, 1]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
-        assert [] == s.terminalMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
+        assert [] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INITIALIZE_CYCLE
 
     def cyclic_two_processes(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
-        b = TransferMechanism(name='b', default_input_value=[0, 0])
-        c = TransferMechanism(name='c', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
+        b = TransferMechanism(name='b', default_variable=[0, 0])
+        c = TransferMechanism(name='c', default_variable=[0, 0])
 
         p1 = process(pathway=[a, b, a], name='p1')
         p2 = process(pathway=[a, c, a], name='p2')
@@ -319,19 +254,19 @@ class TestGraphAndInput:
         inputs = {a: [1, 1]}
         s.run(inputs=inputs)
 
-        assert [a] == s.originMechanisms.mechanisms
-        assert [] == s.terminalMechanisms.mechanisms
+        assert [a] == s.origin_mechanisms.mechanisms
+        assert [] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == INITIALIZE_CYCLE
         assert c.systems[s] == INITIALIZE_CYCLE
 
     def cyclic_extended_loop(self):
-        a = TransferMechanism(name='a', default_input_value=[0, 0])
+        a = TransferMechanism(name='a', default_variable=[0, 0])
         b = TransferMechanism(name='b')
         c = TransferMechanism(name='c')
         d = TransferMechanism(name='d')
-        e = TransferMechanism(name='e', default_input_value=[0])
+        e = TransferMechanism(name='e', default_variable=[0])
         f = TransferMechanism(name='f')
 
         p1 = process(pathway=[a, b, c, d], name='p1')
@@ -346,8 +281,8 @@ class TestGraphAndInput:
         inputs = {a: [2, 2], e: [0]}
         s.run(inputs=inputs)
 
-        assert set([a, c]) == set(s.originMechanisms.mechanisms)
-        assert [d] == s.terminalMechanisms.mechanisms
+        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
+        assert [d] == s.terminal_mechanisms.mechanisms
 
         assert a.systems[s] == ORIGIN
         assert b.systems[s] == CYCLE

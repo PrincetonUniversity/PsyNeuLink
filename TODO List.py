@@ -70,6 +70,7 @@
 #  2) IMPLEMENT CLASSES FOR ALL KEYWORDS (SIMILAR TO MatrixKeywords)
 #  4) IMPLEMENT ABC
 # 4a) IMPLEMENT Swap execute (on Mechanism) and _execute (on its subclasses)
+# 4b) IMPROVE API FOR MECHANISMS
 #  5) IMPLEMENT Compilation / paralleliztion of execution
 #  6) IMPLEMENT Recurrent layer / KWTA??
 # 13) IMPLEMENT MSPRT / KWTA
@@ -80,6 +81,30 @@
 # 11) IMPLEMENT Production System model (using scheduler??)
 # 12) IMPLEMENT LEABRA
 # 14) IMPLEMENT Model fitting
+# 15) IMPLEMENT Statefulness:  Integrators, ControlSignal.intensity, ?Gating, Learning?
+
+
+# PNL TEAM:
+# =========
+# PRINCIPLE:  Constructors should allow specification/assignment of other Components to which they are related/connected
+#                   which should be able to be interpreted in context (e.g., assignment of projections to States)
+# DOCUMENTATION: is_finished ON MECHANISM?  OR COMPONENT?  RELATIONSHIP TO stateful ATTRIBUTE
+# DOCUMENTATION: Revise docstrings for Integrator mechanisms and RecurrentTransferMechanisms
+#                    using formatting template from TransferMechanism and DDM
+#                    (RESULTS, EXECUTION and STANDARD OUTPUT SECTIONS)
+# DOCUMENTATION: What to call ConventionsAndDefinitions:  Structural Overivew?  Outline?
+#
+# IMPLEMENT: tests for GatingSignal (per Multilayer Learning Test Script [WITH GATING]:
+#            TEST all forms of GatingSignal specification
+# IMPLEMENT: Mechanism.previous_value FOR INTEGRATOR MECHANISMS:
+#            (??multimple inheritance, as RTM as also a TM?)
+#            Integrate <mechanism>.previous_value with stateful and is_finished
+#            `delta` property that returns value - previous_value (done on TransferMechanism as example)
+# QUESTION: SHOULDN'T DDM BE A SUBCLASS OF IntegratorMechanism?
+#           Refactor so that DDM and RecurrentTransferMechanism are both subclasses of IntegratorMechanism
+# FIX: show_graph()
+# FIX: DDM: In `TIME_STEP` mode it should return DECISION_TIME (# of steps that have elapsed)
+# FIX: CentralClock (IMPLEMENT IT IN SCHEDULER, ADD pass, AND GET RID OF block AND task
 
 # VALIDATE: (then add to META TEST)
 #  RecurrentTransferMechanism
@@ -180,6 +205,8 @@
 #                       no properties are created for them
 #                       they are not validated when assigned
 
+# FIX: origin_mechanisms -> origin_mechanisms
+
 # IMPLEMENT:  BogcazEtAl:
 #                 add D_iti, D_penalty, RR calculation, and add RR to return value
 #                 modify variable to accept drift_rate??
@@ -247,19 +274,18 @@
 
 #  DOCUMENTATION: State Specification Dictionaries:
 #                            - general notion, schema and keys common to all states (in State)
-#                                  STATE_PROJECTIONS
-#                                  MODULATORY_PROJECTIONS
+#                                  PROJECTIONS
 #                                  MODULATION_FUNCTION
 #                            - specific ones for each subclass (in subclass pages)
 #                                  InputState:
-#                                      ??SOURCES [=STATE PROJECTIONS] can be string, mech, or outputState
-#                                      GATING [=MODULATORY PROJECTIONS]
+#                                      ??SOURCES [=PROJECTIONS] can be string, mech, or outputState
+#                                      GATING
 #                                  ParameterState:
-#                                      CONTROL [=MODULATORY_PROJECTIONS] can be(string, mech) or ParameterState
-#                                      LEARNING [=MODULATORY PROJECTIONS]
+#                                      CONTROL can be(string, mech) or ParameterState
+#                                      LEARNING
 #                                  OutputState:
-#                                      DESTINATIONS [=STATE_PROJECTIONS] can be string, mech, or inputStae
-#                                      GATING [=MODULATORY PROJECTIONS]
+#                                      DESTINATIONS [=PROJECTIONS] can be string, mech, or inputStae
+#                                      GATING
 #  DOCUMENTATION: weights and exponents args/attributes
 #  DOCUMENTATION: Add mention of `standard_input_states` and `standard_output_states` to Mechanism
 #  DOCUMENTATION: Add mention of specification dictionary format for **control_signals** arg for ControlMechanism
@@ -422,9 +448,9 @@
 
 # FIX: WHEN ControlMechanism IS ASSIGNED TO SYSTEM,
 #      VALIDATE THAT ALL ITEMS LISTED IN monitor_for_control ATTTRIB ARE IN THE SAME SYSTEM AS THE ControlMechanism.
-#               (SEE ControlMechanism._validate_params LINE 316)
+#               (SEE ControlMechanism_Base._validate_params LINE 316)
 #               AND THAT ITEMS LISTED IN control_signals ATTRIB ARE THE SAME SYSTEM AS THE ControlMechanism
-#               (SEE ControlMechanism._validate_params LINE 419)
+#               (SEE ControlMechanism_Base._validate_params LINE 419)
 #      (SINCE COULDN'T DO IT IN _validate_params AS EVC WAS NOT YET IN SYSTEM)
 
 # FIX: UPDATE WITH MODULATION_MODS
@@ -571,7 +597,10 @@
 # FIX: REWRITE AS IF FOR EFFICIENCY (SINCE MOST COMMONLY PARAMETER_MODULATION_OPERATION *WON'T* BE SPECIFIED
 # IMPLEMENT: IAC TransferFunction
 # IMPLEMENT: Simple Hebbian learning
-# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels
+# TEST: learning_rate is assignable and "sticks" at function, mech, process and system levels;
+#       does assigning it to a LearningMechanism result in "double-dipping" (since its LearningSignals inherits
+#       their owner's value, and assign that to the LearningProjection, which uses it on top of the LearningMechanism's
+#       use.
 
 # FIX: FUNCTION DOCUMENTATION: variable VS. variable_default
 # FIX: OUTPUT TEMPLATE SPECIFICATION FOR LinearMatrix FUNCTION
@@ -931,12 +960,12 @@
 
 # DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
-#                   (see :doc:`Mechanism` for specification of a parms dict)
+#                   (see :doc:`Mechanism <Mechanism>` for specification of a parms dict)
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
 #                    ARE DISCUSSED.
-# DOCUMENTATION: ControlMechanism -> controlMechanism or control mechanism (in appropriate places)
+# DOCUMENTATION: ControlMechanism -> control_mechanism or control mechanism (in appropriate places)
 # DOCUMENTATION: Call subclass -> "Constructor"
 
 #  DOCUMENTATION: Learning -> LearningProjection (name of doc)
@@ -1195,7 +1224,7 @@
 #
 # NEED FOR EVC MODEL:
 # - Sequential adjust effects:
-#   "Reactive":  simple controlMechanism that maps input values into ControlProjection intensities
+#   "Reactive":  simple ControlMechanism that maps input values into ControlProjection intensities
 #   "Simple Exhaustive Search": find optimal policy for stimulus/reward values
 #   "Feature-based model learning" (Falk & Tom)
 #   "Exhaustive Search + learning":
@@ -1330,6 +1359,7 @@
 # - Fully implement logging
 #    For both of the above:
 #       use @property to determine whether current value should be set to local value, type, category or class default
+#       integrate ControlSignal.intensity with logging
 # - Implement timing
 # - implement **args (per State init)
 # - MAKE SURE _check_args IS CALLED IN execute
@@ -1545,7 +1575,7 @@
 #           INTERNAL: mechanism both receives projections from and sends projections to other mechanisms in the system
 #           INITIALIZE_CYCLE: mechanism that has an outgoing projection that closes a cycle (feedback loop),
 #                       so it should be properly initialized
-#                       NOTE: self.executionGraph elides the projection that closes the loop so that an acyclic graph can be
+#                       NOTE: self.execution_graph elides the projection that closes the loop so that an acyclic graph can be
 #                             constructed to generate an execution list / sequence;  however, the projection is
 #                             still operational in the system and will support recurrent (feedback) processing)
 #           TERMINAL: terminal mechanism of a process that does not project to any other processing mechanisms
@@ -1633,7 +1663,7 @@
 #                - but can be anything that adheres to the Function API
 
 # DOCUMENT: Construction/Initialization Implementation:
-# 1) Function implements _deferred_init(), which checks whether self.value is DEFERRED_INITIALIZATION;
+# 1) Function implements _deferred_init(), which checks whether self.init_status is InitStatus.DEFERRED_INITIALIZATION;
 #     if so, calls super(<subclass>,self).__init__(**self.init_args)
 #     <subclass> is the class implementing deferred initialization
 #     <**self.init_args> is the set of args passed to the __init__() method of the subclass
@@ -1643,7 +1673,7 @@
 #         self.init_args['context'] = self
 #         self.init_args['name'] = name
 #         del self.init_args['self']
-#     - set self.value = DEFERRED_INITIALIZATION
+#     - set self.init_status = InitStatus.DEFERRED_INITIALIZATION
 # 3) Where projections are ordinarily instantiated, assign instantiated stub" to efferents,
 # 4) When a process is instantiated, the last thing it does is call _deferred_init
 #    for all of the projections associated with the mechanism in its pathway,
@@ -1837,7 +1867,7 @@
 #                         CUSTOM SETS DEFINED AS ClassPreferences IN CLASS DECLARATION?
 #
 #
-# IMPLEMENT: move defaults (e.g., defaultMechanism) to preferences
+# IMPLEMENT: move defaults (e.g., default_mechanism) to preferences
 #
 # IMPLEMENT: change pref names from name_pref to namePref
 #              (rectifying whatever conflict that will produce with other names)
@@ -1865,6 +1895,8 @@
 #                 ADAPT THEM TO LogEntry tuple FORMAT
 #     WHEN DONE, SEARCH FOR FIX LOG:
 #
+# FIX: Integrate with ControlSignal.intensity
+
 # DOCUMENTATION: ADD DESCRIPTION OF HOW LOGGING IS TURNED ON AND OFF ONCE THAT IS IMPLEMENTED
 #
 # IMPLEMENT: ORDER OUTPUT ALPHABETICALLY (OR IN SOME OTHER CONSISTENT MANNER)
@@ -1939,7 +1971,7 @@
 
 #     def run(self,
 #             inputs,
-#             num_executions=None,
+#             num_trials=None,
 #             reset_clock=True,
 #             initialize=False,
 #             targets=None,
@@ -2013,7 +2045,7 @@
 #     FIX: GET STRAIGHT process.value vs. system.output vs. system.oputputValue
 #     FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
 #                         # FIX: THESE NEED TO BE PROPERLY MAPPED
-#                         return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
+#                         return np.array(list(item.value for item in self.last_mechanism.outputStates.values()))
 #     FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
 #     IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
 #                                                                             - REPRESENT OUTPUT FORMAT OF function
@@ -2175,7 +2207,7 @@
 #
 # IMPLEMENT!! Ted's toposort
 # IMPLEMENT OrderedSet for toposort execution sets
-# IMPLEMENT Replace executionList with sorted_execution_list (i.e., sort once formed, so there is only one version)
+# IMPLEMENT Replace execution_list with sorted_execution_list (i.e., sort once formed, so there is only one version)
 # IMPLEMENT:  OUTPUT EDGE LIST FROM GRAPH
 # IMPLEMENT: Add PREDICTION to list of mechanism specifications in System (and document in System, and EVCMechanism)
 # **IMPLEMENT: System.monitored_output_states:
@@ -2186,11 +2218,11 @@
 #                                   FLAG SOURCES OF FEEDBACK PROJECTIONS AS NEEDING THIS SPECIFIED
 #                                   INCLUDE KEYWORD "IGNORE" THAT MEANS DON'T USE THAT PROJECTION ON INITIALIZATION PASS
 #
-# FIX: System.mechanismList.mechanismNames
+# FIX: System.mechanismList.mechanism_names
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
-# FIX:  Order target assignments for system according to order in targetMechanisms rather than process
+# FIX:  Order target assignments for system according to order in target_mechanisms rather than process
 # TEST SPECIFYING word_reading_process BEFORE color_naming_process
 #
 # ** FIX: FIGURE OUT HOW TO GET DILL WORKING TO CACHE SYSTEM IN System._cache_state, OR STORE AS BINARY OBJECT
@@ -2320,9 +2352,9 @@
 # FIX: Replace toposort with NetworkX: http://networkx.readthedocs.io/en/stable/reference/introduction.html
 # IMPLEMENT: Change current System class to ControlledSystem subclass of System_Base,
 #                   and purge System_Base class of any references to or dependencies on controller-related stuff
-# IMPLEMENT: *** ADD System.controller to executionList and
+# IMPLEMENT: *** ADD System.controller to execution_list and
 #                execute based on that, rather than dedicated line in System.execute
-# IMPLEMENT: *** sort System.executionList (per System.show() and exeucte based on that, rather than checking modulos
+# IMPLEMENT: *** sort System.execution_list (per System.show() and exeucte based on that, rather than checking modulos
 # IMPLEMENT: *** EXAMINE MECHANISMS (OR OUTPUT STATES) IN SYSTEM FOR monitor ATTRIBUTE,
 #                AND ASSIGN THOSE AS MONITORED STATES IN EVC (input_states)
 # IMPLEMENT: System.execute() should call EVC.update or EVC.execute_system METHOD??? (with input passed to System on command line)
@@ -2345,9 +2377,9 @@
 #
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 #
-# FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
-# FIX: *** CHANGE process.firstMechanism -> process.origin
-# FIX: *** CHANGE process.lastMechanism -> process.terminal
+# FIX: REPLACE Process.first_mechanism and Process.last_mechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
+# FIX: *** CHANGE process.first_mechanism -> process.origin
+# FIX: *** CHANGE process.last_mechanism -> process.terminal
 #
 # FIX: add learning_mech_tuples and learningMechanisms
 #
@@ -2360,7 +2392,7 @@
 #                                or wherever matching referenced in Process actually gets done
 # FIX: Deploy _is_mechanism_spec in validation contexts generally
 #
-# CONFIRM: Assignment of processInputStates when mechanism belongs to more than one process
+# CONFIRM: Assignment of process_input_states when mechanism belongs to more than one process
 # TEST (line 1442):
     # if params:
     #     projection.matrix = params
@@ -2509,7 +2541,7 @@
 # - Implement: allow dict entry values to be types (that should be checked against self.value)
 #
 # - NEED TO INITIALIZE:            STATE_VALUE: NotImplemented,
-# - IMPLEMENTATION NOTE: move defaultMechanism to a preference (in Mechanism.__init__() or Process.__init())
+# - IMPLEMENTATION NOTE: move default_mechanism to a preference (in Mechanism.__init__() or Process.__init())
 # - IMPLEMENTATION NOTE: *** SHOULD THIS UPDATE AFFECTED PARAM(S) BY CALLING RELEVANT PROJECTIONS?
 # -    ASSGIGN  *** HANDLE SAME AS MECHANISM STATE AND PROJECTION STATE DEFAULTS:
 #                   create class level property:  inputStateDefault, and assign it at subclass level??
@@ -2538,9 +2570,9 @@
     #    - should create list of valid projection keywords and limit validation below to that (instead of just str)
 #
 # - implement:
-#     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.defaultMechanism)
+#     Regarding ProcessDefaultMechanism (currently defined as Mechanism_Base.default_mechanism)
 #        # IMPLEMENTATION NOTE: move this to a preference (in Process??)
-#        defaultMechanism = DDM_MECHANISM
+#        default_mechanism = DDM_MECHANISM
 #
 #endregion
 
@@ -2740,7 +2772,7 @@
 #            -> useful for debugging;  confusing to have updates not appear until next trial
 # *** NEED TO IMPLEMENT THIS (in State, below):
 # IMPLEMENTATION NOTE:  This is where a default projection would be implemented
-#                       if params = NotImplemented or there is no param[STATE_PROJECTIONS]
+#                       if params = NotImplemented or there is no param[PROJECTIONS]
 #
 # **** IMPLEMENTATION NOTE: ***
 #                 FOR MechainismInputState SET self.value = self.variable of owner
@@ -2751,7 +2783,7 @@
 # - clean up documentation
 #
          # - %%% MOVE TO State
-         #  - MOVE STATE_PROJECTIONS out of STATE_PARAMS:
+         #  - MOVE PROJECTIONS out of STATE_PARAMS:
          #        # IMPLEMENTATION NOTE:  MOVE THIS OUT OF STATE_PARAMS IF CHANGE IS MADE IN State
          #        #                       MODIFY KEYWORDS IF NEEDED
          #    and process in __init__ (_instantiate_projections_to_state()) rather than in _validate_params
@@ -2932,7 +2964,7 @@
 #            implement by adding a learning_spec type-check function (wherever parameter_spec) if defined
 # IMPLEMENT:  add notice to error if learning is not enabled for a process for which a target mechanism is not found
 # IMPLEMENT: add target (or targets) as arg in system.execute()
-# IMPLEMENT:  add attribute to targetMechanisms that lists terminal mechanisms with which they are associated
+# IMPLEMENT:  add attribute to target_mechanisms that lists terminal mechanisms with which they are associated
 # IMPLEMENT:  LEARNING_PROJECTION for ProcessingMechanism;  if specified:
 #             - implement self.errorSignal attribute
 # IMPLEMENT: LEARNING_PROJECTION for Process:
@@ -2950,9 +2982,6 @@
 #
 # FIX: change errorSignal -> error_signal (but must be sure not to interfere / get confused with existing error_signal)
 # FIX: MAKE SURE LEARNING PROJECTIONS ON PROCESS ARE ALWAYS ADDED AS COPIES
-# FIX: [LearningProjection]:
-                # FIX: ?? SHOULD THIS USE _instantiate_defaults:
-                # self.receiver.parameterStates[MATRIX].paramsCurrent.update(weight_change_params)
 # FIX: DEAL WITH "GAP" OF LearningSignals IN A PROCESS (I.E., MAPPING_PROJECTION W/O ONE INTERPOSED BETWEEN ONES WITH)
 # FIX: DEAL WITH FLOATS AS INPUT, OUTPUT OR ERROR OF LearningProjection:
 # FIX:       EITHER USE TYPE CONVERSION IN BP FUNCTION,
@@ -2967,7 +2996,7 @@
 #
 # SYSTEM LEARNING ***************************************************************************************************
 #       - TEST ASYMETRIC SYSTEM WITH LEARNING, IN WHICH ONE PROCESS TERMINATES ON AN INTERNAL MECHANISM OF ANOTHER
-#       - VALIDATE THAT targetMechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
+#       - VALIDATE THAT target_mechanisms IN BOTH PROCESS AND SYSTEM ARE PROPERLY CONSTRUCTED
 #       - IMPLEMENT: REAMINING CHECKS OF TARGETES (E.G., NUMBER OF TARGET SETS == NUMBER OF INPUT SETS
 #       FIX: PROCESS_DIM IS NOT THE RIGHT VALUE HERE, AGAIN BECAUSE IT IS A 3D NOT A 4D ARRAY (NO PHASES)
 #       FIX: WHY DOES MSE REPORT ARRAY IN Stroop Model Learning Test Script?

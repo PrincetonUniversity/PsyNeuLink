@@ -8,16 +8,16 @@
 #
 # ***********************************************  Registry ************************************************************
 #
-import PsyNeuLink.Components.Component
+
 from collections import namedtuple
-from inspect import isclass
+
+from PsyNeuLink.Globals.Keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
 
 # IMPLEMENTATION NOTE:
 # - Implement Registry as class, and each Registry as subclass
 # - Implement RegistryPreferenceSet as PreferenceSet subclass, and assign prefs attribute to each Registry object
 
 DEFAULT_REGISTRY_VERBOSITY = False
-from PsyNeuLink.Globals.Keywords import *
 RegistryVerbosePrefs = {
     kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
     kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
@@ -87,10 +87,10 @@ def register_category(entry,
         # #
         # # Dictionary of registered Mechanism subclasses; each entry has:
         # #     - key: Mechanism component type name (componentType)
-        # #     - value: MechanismEntry tuple (mechanism, instanceCount, default)
+        # #     - value: MechanismEntry tuple (Mechanism, instanceCount, default)
         # #              Notes:
         # #              * instanceCount is incremented each time a new default instance is created
-        # #              * only one default is allowed;  if a mechanism registers itself as default,
+        # #              * only one default is allowed;  if a Mechanism registers itself as default,
         # #                  that displaces whatever was the default previously;  initially it is DDM
         #
         # # MechanismRegistry = {DefaultReceiver.name:(DefaultReceiverMechanism, 1)}

@@ -12,11 +12,11 @@ matplotlib.use('TkAgg')
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = np.zeros((5,)))
+                          default_variable = np.zeros((5,)))
 
 # #region
 # Hidden_Layer_1.plot()
@@ -24,11 +24,11 @@ Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0])
+                          default_variable = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value = [0,0,0])
+                        default_variable = [0,0,0])
 
 
 Input_Weights = MappingProjection(name='Input Weights',
@@ -50,7 +50,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                                    matrix=(np.arange(4*3).reshape((4, 3)) + 1)/(4*3)
                          )
 
-my_process = process(default_input_value=[0, 0],
+my_process = process(default_variable=[0, 0],
                      pathway=[Input_Layer,
                                 Input_Weights,
                               Hidden_Layer_1,
@@ -77,7 +77,7 @@ my_process = process(default_input_value=[0, 0],
 #     print ('- Middle Weights: \n', Middle_Weights.matrix)
 #     print ('- Output Weights: \n', Output_Weights.matrix)
 #     print ('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(my_system.input,
-#                                                               my_system.targetInputStates[0].value))
+#                                                               my_system.target_input_states[0].value))
 #     print ('ACTIVITY FROM OLD WEIGHTS: \n')
 #     print ('- Middle 1: \n', Hidden_Layer_1.value)
 #     print ('- Middle 2: \n', Hidden_Layer_2.value)
@@ -99,7 +99,7 @@ my_system.reportOutputPref = True
 # my_system.show_graph(direction='LR')
 my_system.show_graph_with_learning(direction='LR')
 
-results = my_system.run(num_executions=10,
+results = my_system.run(num_trials=10,
                         inputs=stim_list,
                         targets=target_list,
                         # call_before_trial=print_header,

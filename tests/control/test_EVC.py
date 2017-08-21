@@ -54,15 +54,30 @@ def test_EVC():
         name='Decision',
     )
 
+    Input.prefs.paramValidationPref = False
+    Reward.prefs.paramValidationPref = False
+    Decision.prefs.paramValidationPref = False
+    Decision.input_state.prefs.paramValidationPref = False
+    for mech in [Input, Reward, Decision]:
+        mech.function_object.prefs.paramValidationPref = False
+        for os in mech.output_states:
+            os.prefs.paramValidationPref = False
+        for instate in mech.input_states:
+            instate.prefs.paramValidationPref = False
+        for pstate in mech._parameter_states:
+            pstate.prefs.paramValidationPref = False
+
     # Processes:
     TaskExecutionProcess = process(
-        default_input_value=[0],
+        # default_variable=[0],
+        size=1,
         pathway=[(Input), IDENTITY_MATRIX, (Decision)],
         name='TaskExecutionProcess',
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        # default_variable=[0],
+        size=1,
         pathway=[(Reward)],
         name='RewardProcess',
     )
@@ -80,6 +95,10 @@ def test_EVC():
         name='EVC Test System',
     )
 
+    TaskExecutionProcess.prefs.paramValidationPref = False
+    RewardProcess.prefs.paramValidationPref = False
+    mySystem.prefs.paramValidationPref = False
+
     # Stimuli
     stim_list_dict = {
         Input: [0.5, 0.123],
@@ -90,8 +109,8 @@ def test_EVC():
         inputs=stim_list_dict,
     )
 
-    RewardPrediction = mySystem.executionList[3]
-    InputPrediction = mySystem.executionList[4]
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []
@@ -267,35 +286,35 @@ def test_EVC_gratton():
 
     # Processes:
     TargetControlProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Target_Stim, Target_Rep, Decision],
         prefs=process_prefs,
         name='Target Control Process'
     )
 
     FlankerControlProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Flanker_Stim, Flanker_Rep, Decision],
         prefs=process_prefs,
         name='Flanker Control Process'
     )
 
     TargetAutomaticProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Target_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Target Automatic Process'
     )
 
     FlankerAutomaticProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Flanker_Stim, Automatic_Component, Decision],
         prefs=process_prefs,
         name='Flanker1 Automatic Process'
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         prefs=process_prefs,
         name='RewardProcess'
@@ -328,7 +347,7 @@ def test_EVC_gratton():
     mySystem.controller.control_signals[0].intensity_cost_function = Exponential(rate=0.8046).function
     mySystem.controller.control_signals[1].intensity_cost_function = Exponential(rate=0.8046).function
 
-    for mech in mySystem.controller.predictionMechanisms.mechanisms:
+    for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         if mech.name == 'Flanker Stimulus Prediction Mechanism' or mech.name == 'Target Stimulus Prediction Mechanism':
             # when you find a key mechanism (transfer mechanism) with the correct name, print its name
             print(mech.name)
@@ -339,9 +358,9 @@ def test_EVC_gratton():
             mech.function_object.rate = 1.0
             # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
 
-    print('new rate of integration mechanisms before system execution:')
+    print('new rate of integration mechanisms before System execution:')
     # for mech in mySystem.controller.prediction_mechanisms.keys():
-    for mech in mySystem.controller.predictionMechanisms.mechanisms:
+    for mech in mySystem.controller.prediction_mechanisms.mechanisms:
         print(mech.name)
         print(mech.function_object.rate)
         print('----')
@@ -449,7 +468,7 @@ def test_EVC_gratton():
     ]
 
     mySystem.run(
-        num_executions=nTrials,
+        num_trials=nTrials,
         inputs=stim_list_dict,
     )
 
@@ -488,13 +507,13 @@ def test_laming_validation_specify_control_signals():
 
     # Processes:
     TaskExecutionProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Input, IDENTITY_MATRIX, Decision],
         name='TaskExecutionProcess'
     )
 
     RewardProcess = process(
-        default_input_value=[0],
+        default_variable=[0],
         pathway=[Reward],
         name='RewardProcess'
     )
@@ -526,8 +545,8 @@ def test_laming_validation_specify_control_signals():
         inputs=stim_list_dict
     )
 
-    RewardPrediction = mySystem.executionList[3]
-    InputPrediction = mySystem.executionList[4]
+    RewardPrediction = mySystem.execution_list[3]
+    InputPrediction = mySystem.execution_list[4]
 
     # rearranging mySystem.results into a format that we can compare with pytest
     results_array = []

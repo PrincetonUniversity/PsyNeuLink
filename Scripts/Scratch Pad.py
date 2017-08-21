@@ -5,7 +5,7 @@ from PsyNeuLink.Globals.Keywords import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -33,6 +33,83 @@ class ScratchPadError(Exception):
         self.error_value = error_value
 
 # ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
+
+
+#region USER GUIDE
+# from PsyNeuLink.Components.Process import process, Process_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+import numpy as np
+
+
+#region SIMPLE NN EXAMPLE:
+
+# print("SIMPLE NN EXAMPLE")
+# # input_layer = TransferMechanism(size=5)
+# # hidden_layer = TransferMechanism(size=2, function=Logistic)
+# # output_layer = TransferMechanism(size=5, function=Logistic)
+# input_layer = TransferMechanism(default_variable=[0,0,0,0,0])
+# hidden_layer = TransferMechanism(default_variable=[0,0], function=Logistic)
+# output_layer = TransferMechanism(default_variable=[0,0,0,0,0], function=Logistic)
+# # my_process = process(pathway=[input_layer, hidden_layer, output_layer], target=[0,0,0,0,0], learning=LEARNING)
+# my_process = process(pathway=[input_layer, hidden_layer, output_layer], learning=ENABLED)
+#
+# # my_system = system(processes=[my_process], targets=[0,0,0,0,0])
+# my_system = system(processes=[my_process])
+# # my_system.show_graph(show_learning=True, direction='TB')
+# my_system.show_graph(show_control=True, direction='TB')
+# # MappingProjection(sender=output_layer,
+# #                   receiver=hidden_layer,
+# #                   matrix=((.2 * np.random.rand(5, 2)) + -.1))
+# # print(output_layer.execute([2,2,2,2,2]))
+#
+# # print(process.execute([2,2,2,2,2]))
+
+#endregion
+
+#region SIMPLE STROOP EXAMPLE:
+
+# print("SIMPLE NN EXAMPLE")
+# VERSION 1
+# colors_input_layer = TransferMechanism(default_variable=[0,0],
+#                                        function=Logistic,
+#                                        name='COLORS INPUT')
+# words_input_layer = TransferMechanism(default_variable=[0,0],
+#                                        function=Logistic,
+#                                        name='WORDS INPUT')
+# output_layer = TransferMechanism(default_variable=[0,0],
+#                                        function=Logistic,
+#                                        name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+# colors_process = process(pathway=[colors_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='COLOR PROCESS')
+# words_process = process(pathway=[words_input_layer, FULL_CONNECTIVITY_MATRIX, output_layer], name='WORD PROCESS')
+# decision_process = process(pathway=[output_layer, FULL_CONNECTIVITY_MATRIX, decision_mech], name='DECISION_PROCESS')
+# my_simple_Stroop = system(processes=[colors_process, words_process, decision_process])
+#
+
+# VERSION 2:
+# differencing_weights = np.array([[1], [-1]])
+# colors_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='COLORS INPUT')
+# words_input_layer = TransferMechanism(default_variable=[0,0], function=Logistic, name='WORDS INPUT')
+# output_layer = TransferMechanism(default_variable=[0], name='OUTPUT')
+# decision_mech = DDM(name='DECISION')
+# colors_process = process(pathway=[colors_input_layer, differencing_weights, output_layer],
+#                          target=[0],
+#                          name='COLOR PROCESS')
+# words_process = process(pathway=[words_input_layer, differencing_weights, output_layer],
+#                         target=[0],
+#                         name='WORD PROCESS')
+# decision_process = process(pathway=[output_layer, decision_mech],
+#                            name='DECISION PROCESS')
+# my_simple_Stroop = system(processes=[colors_process, words_process],
+#                           targets=[0])
+#
+# my_simple_Stroop.show_graph(direction='LR')
+# print(my_simple_Stroop.run(inputs=[-1, 1], targets=[-1, 1]))
+
+#endregion
 
 #region TEST whether function attribute assignment is used and "sticks"
 
@@ -287,7 +364,6 @@ class ScratchPadError(Exception):
 # print = Linear(variable=[[1,1],[2,2]])
 #endregion
 
-
 #region TEST 2 Mechanisms and a Projection @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
@@ -301,7 +377,6 @@ class ScratchPadError(Exception):
 # my_mech_B.execute(context=EXECUTING)
 #
 #endregion
-
 
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -349,6 +424,49 @@ class ScratchPadError(Exception):
 #                                                   MECHANISM: My_Mech_B,
 #                                                   MODULATION:ModulationParam.ADDITIVE}],
 #                    name='My Test System')
+
+#endregion
+
+#region TEST Learning @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+# from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+#     import ComparatorMechanism
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+#     import LearningMechanism
+# from PsyNeuLink.Components.Functions.Function import *
+# from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
+#
+# my_Mech_A = TransferMechanism(size=10)
+# my_Mech_B = TransferMechanism(size=10)
+# my_Mech_C = TransferMechanism(size=10)
+# my_mapping_AB = MappingProjection(sender=my_Mech_A, receiver=my_Mech_B)
+# my_mapping_AC = MappingProjection(sender=my_Mech_A, receiver=my_Mech_C)
+#
+# my_comparator = ComparatorMechanism(sample=my_Mech_B, target=TARGET,
+#                                     # FIX: DOESN'T WORK WITHOUT EXPLICITY SPECIFIYING input_states, BUT SHOULD
+#                                     input_states=[{NAME:SAMPLE,
+#                                                    VARIABLE:my_Mech_B.output_state.value,
+#                                                    WEIGHT:-1
+#                                                    },
+#                                                   {NAME:TARGET,
+#                                                    VARIABLE:my_Mech_B.output_state.value,
+#                                                    # WEIGHT:1
+#                                                    }]
+#                                     )
+# my_learning = LearningMechanism(variable=[my_Mech_A.output_state.value,
+#                                           my_Mech_B.output_state.value,
+#                                           my_comparator.output_state.value],
+#                                 error_source=my_comparator,
+#                                 function=BackPropagation(default_variable=[my_Mech_A.output_state.value,
+#                                                                            my_Mech_B.output_state.value,
+#                                                                            my_Mech_B.output_state.value],
+#                                                          activation_derivative_fct=my_Mech_A.function_object.derivative,
+#                                                          error_derivative_fct=my_Mech_A.function_object.derivative,
+#                                                          error_matrix=my_mapping_AB.matrix),
+#                                 learning_signals=[my_mapping_AB, my_mapping_AC])
+#
+# TEST = True
 
 #endregion
 
@@ -445,14 +563,14 @@ class ScratchPadError(Exception):
 #                                                                             #        Modulation.OVERRIDE
 #                                                                                       }}))
 # # print(transfer_mechanism_3.run(inputs=[1.0],
-# #                                num_executions=3))
+# #                                num_trials=3))
 #
 # my_process = process(pathway=[transfer_mechanism_1,
 #                                # {PARAMETER_STATE_PARAMS:{SLOPE:2}}),
 #                               transfer_mechanism_3])
 #
 # print("My Process: \n", my_process.run(inputs=[[1.0]],
-#                                        num_executions=3))
+#                                        num_trials=3))
 # # print("My Process: \n", my_process.execute(input=[[1.0]]))
 # # print("My Process: \n", my_process.execute(input=[1.0]))
 #
@@ -485,9 +603,9 @@ class ScratchPadError(Exception):
 # #
 # # TEST = True
 #
-# # my_adaptive_integrator = IntegratorMechanism(default_input_value=[0],
+# # my_adaptive_integrator = IntegratorMechanism(default_variable=[0],
 # #                                                      function=Integrator(
-# #                                                                          # variable_default=[0,0],
+# #                                                                          # default_variable=[0,0],
 # #                                                                          weighting=SIMPLE,
 # #                                                                          rate=[1]
 # #                                                                          )
@@ -539,6 +657,65 @@ class ScratchPadError(Exception):
 #
 #endregion
 
+# #region TEST SYSTEM (test_system) @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST SYSTEM test_system")
+#
+# a = TransferMechanism(name='a', default_variable=[0, 0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+#
+# p1 = process(pathway=[a, b, c], name='p1')
+# p2 = process(pathway=[a, b, d], name='p2')
+#
+# s = system(
+#     processes=[p1, p2],
+#     name='Branch System',
+#     initial_values={a: [1, 1]},
+# )
+#
+# inputs = {a: [2, 2]}
+# s.run(inputs)
+# #endregion
+
+#region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
+
+a = TransferMechanism(name='a', default_variable=[0, 0])
+b = TransferMechanism(name='b')
+c = TransferMechanism(name='c')
+d = TransferMechanism(name='d')
+
+p1 = process(pathway=[a,
+                      # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
+                      #                   name="MP-1"),
+                      b,
+                      c,
+                      # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
+                      #                   name="MP-2"),
+                      d],
+             # learning=LEARNING,
+             name='p1')
+
+# s = system(
+#     processes=[p1],
+#     name='Double Learning System',
+#     # initial_values={a: [1, 1]},
+# )
+
+# inputs = {a: [2, 2]}
+# s.run(inputs)
+# s.show_graph(show_learning=True)
+
+inputs = {a: [2, 2]}
+TEST = p1.execute(input=[2,2])
+# p1.run(inputs)
+TEST=True
+
+#endregion
+
+
+
 #region TEST INPUT FORMATS
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
@@ -549,7 +726,7 @@ class ScratchPadError(Exception):
 #
 # i = InputState(owner=x, reference_value=[2,2,2], value=[1,1,1])
 #
-# y = TransferMechanism(default_input_value=[0],
+# y = TransferMechanism(default_variable=[0],
 #              params={INPUT_STATES:i},
 #              name='y')
 #
@@ -573,7 +750,7 @@ class ScratchPadError(Exception):
 # # inputs=[[[2,2],[0]],[[2,2],[0]]]
 # # inputs=[[[[2,2],[0]]],[[[2,2],[0]]]]
 #
-# a = TransferMechanism(name='a',default_input_value=[0,0])
+# a = TransferMechanism(name='a',default_variable=[0,0])
 # b = TransferMechanism(name='b')
 # c = TransferMechanism(name='c')
 #
@@ -692,18 +869,19 @@ class ScratchPadError(Exception):
 
 # region TEST RecurrentTransferMechanism / LCA @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #
-# # print("TEST RecurrentTransferMechanism / LCA")
-# # my_auto = LCA(
-# #         size=3,
-# #         output_states=[LCA_OUTPUT.RESULT,
-# #                        LCA_OUTPUT.ENTROPY,
-# #                        LCA_OUTPUT.ENERGY,
-# #                        LCA_OUTPUT.MAX_VS_AVG]
-# #         # inhibition
-# # )
+# print("TEST RecurrentTransferMechanism / LCA")
+#
+# my_auto = LCA(
+#         size=3,
+#         output_states=[LCA_OUTPUT.RESULT,
+#                        LCA_OUTPUT.ENTROPY,
+#                        LCA_OUTPUT.ENERGY,
+#                        LCA_OUTPUT.MAX_VS_AVG]
+#         # inhibition
+# )
 #
 # # my_auto = RecurrentTransferMechanism(
-# #         default_input_value=[0,0,0],
+# #         default_variable=[0,0,0],
 # #         size=3,
 # #         function=Logistic,
 # #         # matrix=RANDOM_CONNECTIVITY_MATRIX,
@@ -711,7 +889,7 @@ class ScratchPadError(Exception):
 # #         # matrix=[[1,1,1],[1,1,1],[1,1,1]]
 # # )
 #
-# # my_auto = TransferMechanism(default_input_value=[0,0,0],
+# # my_auto = TransferMechanism(default_variable=[0,0,0],
 # #                             # function=Logistic
 # #                             )
 # #
@@ -741,14 +919,14 @@ class ScratchPadError(Exception):
 # input_list = {my_auto:[1,1,1]}
 # target_list = {my_auto:[0,0,0]}
 #
-# # print(my_process.run(inputs=input_list, targets=target_list, num_executions=5))
+# # print(my_process.run(inputs=input_list, targets=target_list, num_trials=5))
 #
 # my_system = system(processes=[my_process],
 #                    targets=[0,0,0])
 #
 # print(my_system.run(inputs=input_list,
 #                     targets=target_list,
-#                     num_executions=5))
+#                     num_trials=5))
 
 #endregion
 
@@ -846,12 +1024,12 @@ class ScratchPadError(Exception):
 # activity = [100,0]
 #
 #
-# eng = Stability(variable_default=activity,
+# eng = Stability(default_variable=activity,
 #              matrix=matrix,
 #              normalize=normalize
 #              )
 #
-# dist = Distance(variable_default=[activity,activity],
+# dist = Distance(default_variable=[activity,activity],
 #                 metric=CROSS_ENTROPY,
 #                 # normalize=normalize
 #                 )
@@ -868,16 +1046,16 @@ class ScratchPadError(Exception):
 # from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 # from PsyNeuLink.Components.Projections.TransmissiveProjections.MappingProjection import MappingProjection
 #
-# color_naming = TransferMechanism(default_input_value=[0,0],
+# color_naming = TransferMechanism(default_variable=[0,0],
 #                         function=Linear,
 #                         name="Color Naming"
 #                         )
 #
-# word_reading = TransferMechanism(default_input_value=[0,0],
+# word_reading = TransferMechanism(default_variable=[0,0],
 #                         function=Logistic,
 #                         name="Word Reading")
 #
-# verbal_response = TransferMechanism(default_input_value=[0,0],
+# verbal_response = TransferMechanism(default_variable=[0,0],
 #                            function=Logistic)
 #
 # color_pathway = MappingProjection(sender=color_naming,
@@ -890,7 +1068,7 @@ class ScratchPadError(Exception):
 #                         matrix=IDENTITY_MATRIX
 #                        )
 #
-# Stroop_process = process(default_input_value=[[1,2.5]],
+# Stroop_process = process(default_variable=[[1,2.5]],
 #                          pathway=[color_naming, word_reading, verbal_response])
 #
 #
@@ -2427,7 +2605,7 @@ class ScratchPadError(Exception):
 #             for k, v in spec.items():
 #                 # Key is not a spec keyword, so dict must be of the following form: STATE_NAME_ASSIGNMENT:STATE_SPEC
 #                 #
-#                 if not k in {NAME, VALUE, STATE_PROJECTIONS}:
+#                 if not k in {NAME, VALUE, PROJECTIONS}:
 #                     name = k
 #                     value = v
 #
@@ -2435,8 +2613,8 @@ class ScratchPadError(Exception):
 #                 name = spec[NAME]
 #
 #             call_for_projection = False
-#             if STATE_PROJECTIONS in spec:
-#                 call_for_projection = spec[STATE_PROJECTIONS]
+#             if PROJECTIONS in spec:
+#                 call_for_projection = spec[PROJECTIONS]
 #
 #             if isinstance(spec[VALUE], (dict, tuple)):
 #                 # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec

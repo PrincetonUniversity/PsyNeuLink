@@ -14,15 +14,15 @@ from PsyNeuLink.Components.System import system
 
 input_layer = TransferMechanism(name='Input Layer',
                        function=Logistic,
-                       default_input_value = np.zeros((2,)))
+                       default_variable = np.zeros((2,)))
 
 hidden_layer = TransferMechanism(name='Hidden Layer', 
                                  function = Linear, 
-                                 default_input_value =[0])
+                                 default_variable =[0])
 
 output_layer = TransferMechanism(name='Output Layer',
                         function=Linear,
-                        default_input_value =[0])
+                        default_variable =[0])
 
 
 
@@ -37,7 +37,7 @@ input_output_weights = MappingProjection(name = 'Input-Output Weights',
 
 
 
-input_via_hidden_process = process(default_input_value=[0, 0],
+input_via_hidden_process = process(default_variable=[0, 0],
                                    pathway=[input_layer,
                                             input_hidden_weights,
                                             hidden_layer,
@@ -50,7 +50,7 @@ input_via_hidden_process = process(default_input_value=[0, 0],
                                    prefs={VERBOSE_PREF: False,
                                           REPORT_OUTPUT_PREF: False})
 
-input_direct_to_output_process = process(default_input_value=[0, 0],
+input_direct_to_output_process = process(default_variable=[0, 0],
                                           pathway=[input_layer,
                                                    input_output_weights,
                                                    output_layer],
@@ -82,7 +82,7 @@ def print_header():
     
 def show_target():
     i = three_layer_net.input
-    t = three_layer_net.targetInputStates[0].value
+    t = three_layer_net.target_input_states[0].value
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('INPUT-OUTPUT WEIGHTS:')
     print(input_hidden_weights.matrix)
@@ -90,7 +90,7 @@ def show_target():
     print(hidden_output_weights.matrix)
     
 
-three_layer_net.run(num_executions=100,
+three_layer_net.run(num_trials=100,
                   inputs=input_list,
                   targets=target_list,
                   call_before_trial=print_header,

@@ -33,7 +33,7 @@ def test_DDM():
     )
 
     z = process(
-        default_input_value=[[30], [10]],
+        default_variable=[[30], [10]],
         pathway=[
             myMechanism,
             (IDENTITY_MATRIX),

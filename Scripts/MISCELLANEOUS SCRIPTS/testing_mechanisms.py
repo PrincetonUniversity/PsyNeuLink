@@ -1,14 +1,15 @@
 import numpy as np
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import EXECUTING
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator, ConstantIntegrator, AccumulatorIntegrator
+
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
 I = IntegratorMechanism(
@@ -76,7 +77,7 @@ print([val, val2] == [10.0, 5.0])
 def test_mechanisms_without_system_or_process_no_input():
     I = IntegratorMechanism(
             name='IntegratorMechanism',
-            default_input_value= 10,
+            default_variable= 10,
             function=SimpleIntegrator(
             ),
             time_scale=TimeScale.TIME_STEP

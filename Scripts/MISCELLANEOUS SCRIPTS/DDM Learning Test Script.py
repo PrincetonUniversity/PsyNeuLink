@@ -6,16 +6,16 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
-                       default_input_value = [0,0])
+                       default_variable = [0,0])
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0,0])
+                          default_variable = [0,0,0,0,0])
 
 Output_Layer = DDM(name='Output Layer DDM',
                    threshold=0.1,
                    params = {MONITOR_FOR_LEARNING:PROBABILITY_LOWER_THRESHOLD},
-                   default_input_value = [0])
+                   default_variable = [0])
 
 Input_Weights = MappingProjection(name='Input Weights',
                                   sender=Input_Layer,
@@ -32,7 +32,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                                   # params={FUNCTION_PARAMS:{MATRIX:(IDENTITY_MATRIX,CONTROL_PROJECTION)}}
                                   )
 
-z = process(default_input_value=[0, 0],
+z = process(default_variable=[0, 0],
             # params={PATHWAY:[Input_Layer, Learned_Weights, Output_Layer]},
             pathway=[Input_Layer,
                            Input_Weights,
@@ -41,11 +41,6 @@ z = process(default_input_value=[0, 0],
                            Output_Layer],
             prefs={kpVerbosePref: PreferenceEntry(True, PreferenceLevel.INSTANCE)})
 
-
-# Learned_Weights.monitoringMechanism.target = [1,1]
-# Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_TARGET
-# Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],
 #           runtime_params={COMPARATOR_TARGET: [1, 1]})

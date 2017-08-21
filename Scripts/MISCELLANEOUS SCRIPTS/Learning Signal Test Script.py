@@ -9,11 +9,11 @@ random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver,
 
 Input_Layer = TransferMechanism(name='Input Layer',
                        function=Logistic(),
-                       default_input_value = [0,0])
+                       default_variable = [0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
-                        default_input_value = [0,0])
+                        default_variable = [0,0])
 
 Learned_Weights = MappingProjection(name='Learned Weights',
                           sender=Input_Layer,
@@ -44,16 +44,15 @@ Learned_Weights = MappingProjection(name='Learned Weights',
                           )
 
 z = process(name="TEST LEARNER",
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             pathway=[Input_Layer, Learned_Weights, Output_Layer],
             learning=LEARNING_PROJECTION,
             prefs={VERBOSE_PREF: True,
                    REPORT_OUTPUT_PREF: True})
 
 
-# Learned_Weights.monitoringMechanism.target = [1,1]
-# Learned_Weights.monitoringMechanism.target = [0,0]
-# from PsyNeuLink.Components.Mechanisms.MonitoringMechanisms.ComparatorMechanism import COMPARATOR_TARGET
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+#                                                                                   import COMPARATOR_TARGET
 # Learned_Weights.monitoringMechanism.paramsCurrent[COMPARATOR_TARGET] = [1,1]
 
 # z.execute(input=[-1, 30],

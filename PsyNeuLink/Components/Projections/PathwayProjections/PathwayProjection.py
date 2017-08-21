@@ -14,15 +14,10 @@
 Overview
 --------
 
-ModulatoryProjections allow information to be passed between mechanisms.  A projection takes its input from the
-`outputState <OutputState>` of one mechanism (its `sender <Projection.sender>`), and does whatever conversion is
-needed to transmit that information to the `inputState <InputState>` of another mechanism (its
-`receiver <Projection.receiver>`).  There are three types of projections that serve difference purposes:
-
-* `MappingProjection`
-    XXXX.
-..
-
+PathwayProjections allow information to be passed between mechanisms.  A PathwayProjection takes its input from the
+`OutputState` of one Mechanism (its `sender <Projection.sender>`), and does whatever conversion is needed to transmit
+that information to the `InputState` of another Mechanism (its `receiver <Projection.receiver>`).  The primary
+type of PathwayProjection is a `MappingProjection`.
 
 .. _Projection_Creation:
 
@@ -50,11 +45,18 @@ Execution
 """
 
 from PsyNeuLink.Components.Projections.Projection import Projection_Base
-from PsyNeuLink.Globals.Keywords import TRANSMISSIVE_PROJECTION
+from PsyNeuLink.Globals.Keywords import PATHWAY_PROJECTION
 
 class PathwayProjection_Base(Projection_Base):
+    """Subclass of `Projection <Projection>` that projects from an `OutputState` to an `InputState`
 
-    componentCategory = TRANSMISSIVE_PROJECTION
+    .. note::
+       PathwayProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       It should be instantiated using the constructor for a `subclass <PathwayProjection_Subtypes>`.
+
+    """
+
+    componentCategory = PATHWAY_PROJECTION
 
     def __init__(self,
                  receiver,

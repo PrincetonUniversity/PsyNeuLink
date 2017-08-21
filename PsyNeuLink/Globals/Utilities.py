@@ -24,7 +24,7 @@ TYPE CHECKING VALUE COMPARISON
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   PsyNeuLink-specific typechecking functions are in the `Component` module
+   PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
 
 * `parameter_spec`
 * `optional_parameter_spec`
@@ -70,21 +70,16 @@ OTHER
 
 """
 
-import warnings
-# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
-warnings.filterwarnings("error")
-
+import inspect
 import numbers
 import numpy as np
-from enum import EnumMeta
-from enum import IntEnum
-import typecheck as tc
-import inspect
+import warnings
 
-from PsyNeuLink.Globals.Defaults import *
-from PsyNeuLink.Globals.Keywords import *
+from PsyNeuLink.Globals.Keywords import NAME, VALUE, MATRIX_KEYWORD_VALUES, DISTANCE_METRICS
+from enum import Enum, EnumMeta, IntEnum
 
-from PsyNeuLink.Globals.TimeScale import *
+# THE FOLLOWING CAUSES ALL WARNINGS TO GENERATE AN EXCEPTION:
+warnings.filterwarnings("error")
 
 
 class UtilitiesError(Exception):
@@ -231,11 +226,17 @@ def is_matrix(m):
         return True
     if isinstance(m, (list, np.ndarray, np.matrix)):
         return True
+    try:
+        m2 = np.matrix(m)
+        return is_matrix(m2)
+    except:
+        pass
     if callable(m):
         try:
             return is_matrix(m())
         except:
             return False
+    return False
 
 
 def is_distance_metric(s):
@@ -266,7 +267,7 @@ def iscompatible(candidate, reference=None, **kargs):
                 + kwCompatibilityType = enum, then candidate must be an enum if reference is one
             - if reference is absent:
                 if kwCompatibilityType is also absent:
-                    if kwCompatibilityNumeric is :keyword:`True`, all elements of candidate must be numbers
+                    if kwCompatibilityNumeric is `True`, all elements of candidate must be numbers
                     if kwCompatibilityNumeric is :keyword:`False`, candidate can contain any type
                 if kwCompatibilityType is specified, candidate's type must match or be subclass of specified type
             - for iterables, if kwNumeric is :keyword:`False`, candidate can have multiple types but
@@ -281,8 +282,8 @@ def iscompatible(candidate, reference=None, **kargs):
                 if reference is provided, candidate must be same length as reference
                 if reference is omitted, length of candidate must equal value of kwLength
             Note: kwCompatibility < 0 is illegal;  it will generate a warning and be set to 0
-        kwCompatibilityNumeric ("number": <bool> (default: :keyword:`True`)  (spec local_variable: number_only)
-            If kwCompatibilityNumeric is :keyword:`True`, candidate must be either numeric or a list or tuple of
+        kwCompatibilityNumeric ("number": <bool> (default: `True`)  (spec local_variable: number_only)
+            If kwCompatibilityNumeric is `True`, candidate must be either numeric or a list or tuple of
                 numeric types
             If kwCompatibilityNumberic is :keyword:`False`, candidate can be strings, lists or tuples of strings,
                 or dicts
@@ -297,7 +298,6 @@ def iscompatible(candidate, reference=None, **kargs):
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
 
-    import warnings
     with warnings.catch_warnings():
         warnings.filterwarnings("error")
         try:
@@ -637,7 +637,7 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import UserDict, OrderedDict
+from collections import UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__
@@ -668,7 +668,7 @@ from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
-    
+
     Implements dict-like list, that can be keyed by the names of the `compoments <Component>` in its entries.
 
     Supports:
@@ -693,7 +693,7 @@ class ContentAddressableList(UserList):
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
                 or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
                 accessing by key/name less critical;
-            - the number of states in a collection for a given mechanism is likely to be small so that, even when
+            - the number of states in a collection for a given Mechanism is likely to be small so that, even when
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
 
     Arguments

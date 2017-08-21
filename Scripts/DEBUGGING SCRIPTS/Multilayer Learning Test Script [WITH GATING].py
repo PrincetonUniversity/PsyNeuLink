@@ -1,46 +1,78 @@
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.scheduling.condition import AfterNCalls
 from PsyNeuLink.Components.States.OutputState import *
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
+from PsyNeuLink.Components.System import system
+from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 
 Input_Layer = TransferMechanism(name='Input Layer',
                                 function=Logistic,
-                                default_input_value = np.zeros((2,)))
+                                default_variable = np.zeros((2,)))
 
 Hidden_Layer_1 = TransferMechanism(name='Hidden Layer_1',
                           function=Logistic(),
-                          default_input_value = np.zeros((5,)))
+                          default_variable = np.zeros((5,)))
 
 Hidden_Layer_2 = TransferMechanism(name='Hidden Layer_2',
                           function=Logistic(),
-                          default_input_value = [0,0,0,0])
+                          default_variable = [0,0,0,0])
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic,
-                        default_input_value = [0,0,0])
+                        default_variable = [0,0,0])
+
+from PsyNeuLink.Components.States.InputState import InputState
+
+my_input_state = InputState(
+    # owner=Output_Layer,
+    projections=Input_Layer,
+    name="TEST ADD INPUT STATE"
+)
+
+Output_Layer.add_states(my_input_state)
+
+# my_test_mech = TransferMechanism(size=[1,1,1],
+#                                  input_states=['test_1', 'test_2', 'test_3'])
+
+# my_test_mech = TransferMechanism(default_variable=[[0],[0],[0]],
+#                                  input_states=['test_1', 'test_2'])
+
+my_test_mech = TransferMechanism(default_variable=[[0],[0],[0]],
+                                 input_states=['test_1', 'test_2', 'test_3'],
+                                 output_states=[RESULT],
+                                 name='my_test_mech')
+
+my_test_mech.add_states([MEAN])
+
+my_gating_signal = GatingSignal(name='DEFERRED Hidden_Layer_2',
+                                projections=Hidden_Layer_2)
+                                # params={PROJECTIONS:Hidden_Layer_2})
 
 random_weight_matrix = lambda sender, receiver : random_matrix(sender, receiver, .2, -.1)
 
 Gating_Mechanism = GatingMechanism(default_gating_policy=1.0,
                                    gating_signals=[
-                                       # THIS GENERATES ONE GatingSignal WITH THREE Projections
-                                       {
-                                       # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
-                                       # NAME: 'GATING SIGNAL EXPLICIT NAME',
-                                       # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
-                                        'GATE_ALL': [Hidden_Layer_1,
-                                                     Hidden_Layer_2,
-                                                     Output_Layer]
-                                       },
+                                       # # THIS GENERATES ONE GatingSignal WITH THREE Projections
+                                       # {
+                                       # # THIS NAMES THE GatingSignal EXPLICITLY, OVERRIDING THE KEY BELOW:
+                                       # # NAME: 'GATING SIGNAL EXPLICIT NAME',
+                                       # # THIS USES THE KEY AS THE NAME OF THE GatingSignal, UNLESS NAMED EXPLICITLY:
+                                       #  'GATE_ALL': [Hidden_Layer_1,
+                                       #               Hidden_Layer_2,
+                                       #               Output_Layer]
+                                       # },
                                        # THIS GENERATES THREE GatingSignals, EACH WITH ONE Projection:
-                                       # Hidden_Layer_1,
+                                       Hidden_Layer_1,
                                        # Hidden_Layer_2,
+                                       my_gating_signal,
                                        # Output_Layer
+                                       {NAME: 'TEST_GATING_SIGNAL',
+                                        # PROJECTIONS: Output_Layer
+                                        }
                                    ])
 
 
@@ -105,7 +137,7 @@ Output_Weights = MappingProjection(name='Output Weights',
                          matrix=Output_Weights_matrix
                          )
 
-z = process(default_input_value=[0, 0],
+z = process(default_variable=[0, 0],
             pathway=[Input_Layer,
                            # The following reference to Input_Weights is needed to use it in the pathway
                            #    since it's sender and receiver args are not specified in its declaration above
@@ -127,7 +159,7 @@ z = process(default_input_value=[0, 0],
             prefs={VERBOSE_PREF: False,
                    REPORT_OUTPUT_PREF: True})
 
-g = process(default_input_value=[1.0],
+g = process(default_variable=[1.0],
             pathway=[Gating_Mechanism])
 
 # Input_Weights.matrix = (np.arange(2*5).reshape((2, 5)) + 1)/(2*5)
@@ -160,7 +192,7 @@ def show_target():
         t = composition.target
     elif COMPOSITION is SYSTEM:
         i = composition.input
-        t = composition.targetInputStates[0].value
+        t = composition.target_input_states[0].value
     print ('\nOLD WEIGHTS: \n')
     print ('- Input Weights: \n', Input_Weights.matrix)
     print ('- Middle Weights: \n', Middle_Weights.matrix)
@@ -178,7 +210,7 @@ if COMPOSITION is PROCESS:
     composition = z
 
     # PROCESS VERSION:
-    z.run(num_executions=10,
+    z.run(num_trials=10,
           # inputs=[[-1, 30],[2, 10]],
           # targets=[[0, 0, 1],[0, 0, 1]],
           inputs=stim_list,
@@ -203,7 +235,7 @@ elif COMPOSITION is SYSTEM:
     # _add_gating_mechanism_to_system(Gating_Mechanism)
     #
     results = x.run(
-        num_executions=10,
+        num_trials=10,
         # inputs=stim_list,
         # inputs=[[-1, 30],[2, 10]],
         # targets=[[0, 0, 1],[0, 0, 1]],

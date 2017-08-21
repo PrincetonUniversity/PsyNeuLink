@@ -8,11 +8,11 @@ from PsyNeuLink.Globals.Run import run
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
-                        default_input_value = [0,0])
+                        default_variable = [0,0])
 
 myHiddenLayer = TransferMechanism(name='Hidden Layer 1',
                          function=Logistic(gain=1.0, bias=0),
-                         default_input_value = np.zeros((5,)))
+                         default_variable = np.zeros((5,)))
 
 myDDM = DDM(name='My_DDM',
             function=BogaczEtAl(drift_rate=0.5,
@@ -20,7 +20,7 @@ myDDM = DDM(name='My_DDM',
                                 starting_point=0.0,))
 
 myProcess = process(name='Neural Network DDM Process',
-                    default_input_value=[0, 0],
+                    default_variable=[0, 0],
                     pathway=[myInputLayer,
                                    # RANDOM_CONNECTIVITY_MATRIX,
                                    myHiddenLayer,
@@ -36,7 +36,7 @@ myDDM.reportOutputPref = PreferenceEntry(True, PreferenceLevel.INSTANCE)
 input_set = {myInputLayer:[[-1,2],[2,3],[5,5]]}
 
 myProcess.run(inputs=input_set,
-              num_executions=2)
+              num_trials=2)
 
 mySystem = system(processes=[myProcess])
 

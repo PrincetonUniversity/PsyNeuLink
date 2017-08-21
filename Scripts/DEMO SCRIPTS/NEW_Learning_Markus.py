@@ -1,4 +1,4 @@
-rom PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 #from PsyNeuLink.Components.Functions.Function import Logistic , random_matrix
 from PsyNeuLink.Components.Functions.Function import Logistic, Linear
@@ -25,19 +25,19 @@ NTaskUnits = NInputDimensions  #NInputDimensions * NOutputDimensions
 
 Stimulus_Layer = TransferMechanism(name='Stimulus Layer',
                        function=Linear(),
-                       default_input_value = np.zeros((NInputUnits,)))
+                       default_variable = np.zeros((NInputUnits,)))
 
 Task_Layer = TransferMechanism(name='Task Layer',
                        function=Linear(),
-                       default_input_value = np.zeros((NTaskUnits,)))
+                       default_variable = np.zeros((NTaskUnits,)))
 
 Hidden_Layer = TransferMechanism(name='Hidden Layer',
                           function=Logistic(),
-                          default_input_value = np.zeros((NHiddenUnits,)))
+                          default_variable = np.zeros((NHiddenUnits,)))
 
 Output_Layer = TransferMechanism(name='Output Layer',
                         function=Logistic(),
-                        default_input_value = np.zeros((NOutputUnits,)))
+                        default_variable = np.zeros((NOutputUnits,)))
 
 
 # WEIGHT MATRICES
@@ -101,7 +101,7 @@ stroop_mode = system(processes=[StimulusResponseProcess, TaskHiddenProcess],
                   prefs=system_prefs)
 
 # multitaskingModel.show_graph()
-stroop_mode.run(num_executions=1,
+stroop_mode.run(num_trials=1,
             inputs=stim_list_dict,
             targets=target_list_dict)
 

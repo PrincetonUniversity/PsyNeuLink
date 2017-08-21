@@ -68,32 +68,32 @@ Reward = TransferMechanism(name='Reward')
 
 # Processes:
 TargetControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Target_Rep, Decision],
     prefs = process_prefs,
     name = 'Target Control Process')
 
 FlankerControlProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker_Stim, Flanker_Rep, Decision],
     prefs = process_prefs,
     name = 'Flanker Control Process')
 
 TargetAutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Target_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Target Automatic Process')
 
 FlankerAutomaticProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[Flanker_Stim, Automatic_Component, Decision],
     prefs = process_prefs,
     name = 'Flanker1 Automatic Process')
 
 
 RewardProcess = process(
-    default_input_value=[0],
+    default_variable=[0],
     pathway=[(Reward, 1)],
     prefs = process_prefs,
     name = 'RewardProcess')
@@ -146,7 +146,7 @@ mySystem.controller.controlSignals[1].intensity_cost_function = Exponential(rate
 #         mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].baseValue = 1.0
 #
 
-for mech in mySystem.controller.predictionMechanisms.mechanisms:
+for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if 'Reward' in mech.name:
         mech.parameterStates['rate'].baseValue = 1.0
     if 'Flanker' in mech.name or 'Target' in mech.name:
@@ -183,7 +183,7 @@ mySystem.controller.reportOutputPref = True
 
 # mySystem.show_graph()
 
-mySystem.run(num_executions=nTrials,
+mySystem.run(num_trials=nTrials,
              inputs=stim_list_dict,
              )
 

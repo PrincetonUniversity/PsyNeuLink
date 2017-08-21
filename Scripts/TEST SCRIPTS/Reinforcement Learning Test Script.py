@@ -1,26 +1,26 @@
 import numpy as np
 
+from PsyNeuLink.Components.Functions.Function import PROB
+from PsyNeuLink.Components.Functions.Function import Reinforcement, SoftMax
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.Functions.Function import PROB
-from PsyNeuLink.Components.Functions.Function import SoftMax, Reinforcement
 from PsyNeuLink.Components.System import System_Base, system
-from PsyNeuLink.Globals.TimeScale import CentralClock
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 import random
 random.seed(0)
 np.random.seed(0)
 
-input_layer = TransferMechanism(default_input_value=[0,0,0],
+input_layer = TransferMechanism(default_variable=[0,0,0],
                        name='Input Layer')
 
-action_selection = TransferMechanism(default_input_value=[0,0,0],
+action_selection = TransferMechanism(default_variable=[0,0,0],
                             function=SoftMax(output=PROB,
                                              gain=1.0),
                             name='Action Selection')
 
-p = process(default_input_value=[0, 0, 0],
+p = process(default_variable=[0, 0, 0],
             pathway=[input_layer,action_selection],
             # learning=LearningProjection(learning_function=Reinforcement()),
             # learning=LearningProjection(learning_function=Reinforcement(learning_rate=None)),
@@ -29,7 +29,7 @@ p = process(default_input_value=[0, 0, 0],
             target=0)
 
 print ('reward prediction weights: \n', action_selection.input_state.path_afferents[0].matrix)
-print ('targetMechanism weights: \n', action_selection.output_state.efferents[0].matrix)
+print ('target_mechanism weights: \n', action_selection.output_state.efferents[0].matrix)
 
 actions = ['left', 'middle', 'right']
 # reward_values = [15, 7, 13]
@@ -53,7 +53,7 @@ def show_weights():
            format(np.nonzero(action_selection.output_state.value)[0][0],
            action_selection.output_state.value[np.nonzero(action_selection.output_state.value)][0]))
 
-p.run(num_executions=10,
+p.run(num_trials=10,
       inputs=[[[1, 1, 1]]],
       # inputs=[ [ [1, 1, 1] ],[ [.2, 1, .2] ]],
       # inputs={input_layer:[[1, 1, 1],[.2, 1, .2]]},
@@ -68,7 +68,7 @@ s = system(processes=[p],
            # learning_rate=0.05,
            targets=[0])
 
-s.run(num_executions=10,
+s.run(num_trials=10,
       # inputs=[[1, 1, 1]],
       # inputs=[[1, 1, 1],[.2, 1, .2 ]],
       # inputs=[ [[1, 1, 1] ],[ [.2, 1, .2] ]],

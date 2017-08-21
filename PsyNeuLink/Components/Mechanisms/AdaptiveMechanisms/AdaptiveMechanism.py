@@ -10,18 +10,43 @@
 
 """
 
+.. _AdaptiveMechanism_Overview:
+
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism <Mechanisms>` that uses its input to modify the parameters of one or more
-other PsyNeuLink components.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
-this need not be the case. There are two types of AdaptiveMechanism: `LearningMechanisms <LearningMechanism>`, that
-modify the parameters of `MappingProjections <MappingProjection>`; and `ControlMechanisms <ControlMechanism>` that
-modify the  parameters of other ProcessingMechanisms.  AdaptiveMechanisms are always executed after all
-ProcessingMechanisms in the `process <Process>` or `system <System>` to which they belong have been
-:ref:`executed <LINK>`, with all LearningMechanisms then executed before all ControlMechanisms. Both types of
-AdaptiveMechanisms are executed before the next :ref:`round of execution <LINK>`, so that the modifications they make
-are available during the next round of execution of the process or system.
+An AdaptiveMechanism is a type of `Mechanism <Mechanism>` that modifies the parameters of one or more other `Components
+<Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
+this need not be the case. There are three types of AdaptiveMechanism:
+
+* `LearningMechanism`
+    takes an error signal (generally received from an `ObjectiveMechanism`) and generates a `learning_signal
+    <LearningMechanism.learning_signal>` that is provided to its `LearningSignal(s) <LearningSignal>`, and used
+    by their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
+    of a `MappingProjection`.
+..
+* `ControlMechanism <ControlMechanism>`
+    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
+    `allocation_policy <ControlMechanism_Base.allocation_policy>`, each item of which is assigned to one of its
+    `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
+    that is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter of a Component.
+..
+* `GatingMechanism`
+    takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates a
+    `gating_policy <GatingMechanism.gating_policy>`, each item of which is assigned to one of its
+    `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
+    that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
+    `OutputState` of a `Mechanism <Mechanism>`.
+
+
+See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
+
+COMMENT:
+AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
+`System` to which they belong have been executed, with all LearningMechanisms executed first, then GatingMechanisms,
+ControlMechanisms. All three types of AdaptiveMechanisms are executed before the next `TRIAL`, so that the
+modifications they make are available during the next `TRIAL` run for the Process or System.
+COMMENT
 
 .. _AdaptiveMechanism_Creation:
 
@@ -29,10 +54,13 @@ Creating an AdaptiveMechanism
 ------------------------------
 
 An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-AdaptiveMechanisms of the appropriate subtype are also created automatically when a :ref:`system
-<System.System_Creation>` is created,  and/or learning is  specified for a :ref:`system <System.System_Learning>`,
-a `process <Process_Learning>`, or any `projection <LearningProjection_Automatic_Creation>` within one.  See the
-documentation for the individual subtypes of AdaptiveMechanisms for more specific information about how to create them.
+AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
+require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
+automatically created as part of a `System <System.System_Creation>` (for use as its `controller
+<System_Base.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
+`Mechanism <Mechanism>`; and one or more `LearningMechanisms <LearningMechanism>` are created when learning is
+specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
+`subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms for more specific information about how to create them).
 
 .. _AdaptiveMechanism_Structure:
 
@@ -41,23 +69,35 @@ Structure
 
 An AdaptiveMechanism has the same basic structure as a `Mechanism <Mechanisms>`.  In addition, every AdaptiveMechanism
 has a `modulation <AdpativeMechanism.modulation>` attribute, that determines the default method by which its
-ModulatorySignals modify the value of objects that they modulate (see the `modulation <ModulatorySignal_Modulation>`
-for a description of how modulation operates, and the documentation for individual subtypes of AdaptiveMechanism for
-more specific information about their structure and modulatory operation).
+`ModulatorySignals <ModulatorySignal>` modify the value of the Components that they modulate (see the `modulation
+<ModulatorySignal_Modulation>` for a description of how modulation operates, and the documentation for individual
+subtypes of AdaptiveMechanism for more specific information about their structure and modulatory operation).
 
-.. _Comparator_Execution:
+.. _AdaptiveMechanism_Execution:
 
 Execution
 ---------
 
-An AdaptiveMechanism always executes after execution of all of the ProcessingMechanisms in the process or system to
-which it belongs.  All of the `LearningMechanisms <LearningMechanism>` are then executed, followed by all of the
-`ControlMechanisms <ControlMechanism>`.
+LearningMechanisms and ControlMechanisms are always executed at the end of a `TRIAL`, after all `ProcessingMechanisms
+<ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed; all LearningMechanisms
+executed first, and then ControlMechanisms.  All modifications made are available during the next `TRIAL`.
+GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
+introduce recurrent connections, care must be given to their `initialization and/or scheduling
+<GatingMechanism_Execution>`).
+
+
+.. _AdaptiveMechanism_Class_Reference:
+
+Class Reference
+---------------
 
 """
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import *
-from PsyNeuLink.Components.ShellClasses import *
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Globals.Defaults import defaultControlAllocation
+from PsyNeuLink.Globals.Keywords import ADAPTIVE_MECHANISM
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+
 
 class AdpativeMechanismError(Exception):
     def __init__(self, error_value):
@@ -65,8 +105,19 @@ class AdpativeMechanismError(Exception):
 
 
 class AdaptiveMechanism_Base(Mechanism_Base):
-    # IMPLEMENT: consider moving any properties of adaptive mechanisms not used by control mechanisms to here
-    """An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+    """Subclass of `Mechanism <Mechanism>` that modulates the value(s) of one or more other `Component(s) <Component>`.
+
+    .. note::
+       AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
+       They should be instantiated using the constructor for a `subclass <AdaptiveMechanism_Subtypes>`.
+
+    COMMENT:
+
+    Description:
+        An AdaptiveMechanism is a Type of the `Mechanism <Mechanism>` Category of Component
+
+    COMMENT
+
 
     Attributes
     ----------
@@ -85,12 +136,13 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'AdaptiveMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per control_signal)
-    variableClassDefault = defaultControlAllocation
+    class ClassDefaults(Mechanism_Base.ClassDefaults):
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        variable = defaultControlAllocation
 
     def __init__(self,
                  variable,
+                 size,
                  modulation,
                  params,
                  name,
@@ -108,6 +160,7 @@ class AdaptiveMechanism_Base(Mechanism_Base):
 
 
         super().__init__(variable=variable,
+                         size=size,
                          params=params,
                          name=name,
                          prefs=prefs,

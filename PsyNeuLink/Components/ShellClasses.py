@@ -15,22 +15,19 @@ Shell Classes
 
 Used to allow classes to refer to one another without creating import loops,
 including (but not restricted to) the following dependencies:
-- `Projection` subclasses must see (particular) `State` subclasses in order to assign `kwProjectionSender`
-- `State` subclasses must see (particular) `Projection` subclasses in order to assign `PROJECTION_TYPE`
-- `Process` must see `Mechanism` subclasses to assign `PsyNeuLink.Components.DefaultMechanism`
+- `Projection <Projection>` subclasses must see (particular) `State <State>` subclasses in order to assign
+  `kwProjectionSender`
+- `State <State>` subclasses must see (particular) `Projection <Projection>` subclasses in order to assign
+  `PROJECTION_TYPE`
+- `Process` must see `Mechanism <Mechanism>` subclasses to assign `PsyNeuLink.Components.DefaultMechanism`
 
 TBI:
-  `Mechanism`, `Projection` (and possibly `State`) classes should be extensible:
+  `Mechanism <Mechanism>`, `Projection <Projection>` (and possibly `State <State>`) classes should be extensible:
   developers should be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
 """
 
-from PsyNeuLink.Components.Component import *
-
-# import Components.Process
-# import Components.Mechanisms
-# import Components.States
-# import Components.Projections
+from PsyNeuLink.Components.Component import Component
 
 
 class ShellClassError(Exception):
@@ -54,14 +51,16 @@ class ShellClass(Component):
 class System(ShellClass):
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'system()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,
@@ -76,14 +75,16 @@ class System(ShellClass):
 
 class Process(ShellClass):
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'process()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,
@@ -95,14 +96,16 @@ class Process(ShellClass):
 class Mechanism(ShellClass):
 
     def __init__(self,
-                 variable_default=None,
+                 default_variable=None,
+                 size=None,
                  param_defaults=None,
                  name=None,
                  prefs=None,
                  context=None):
         if context is None:
             _attempt_to_call_base_class(self,'mechanism()')
-        super().__init__(variable_default=variable_default,
+        super().__init__(default_variable=default_variable,
+                         size=size,
                          param_defaults=param_defaults,
                          name=name,
                          prefs=prefs,

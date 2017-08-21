@@ -20,32 +20,31 @@
 
 Overview
 --------
-The DDM mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
+The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
-the sequential probability ratio test (SPRT [REF]), which is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (in `TRIAL`
-mode), or integrated numerically (in `TIME_STEP` mode).
+the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
+forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (`TRIAL`
+mode), or integrated numerically (`integration mode <DDM_Integration_Mode>`).
 
 .. _DDM_Creation:
 
 Creating a DDM Mechanism
 -----------------------------
-A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` function
-and specifying DDM as its **mech_spec** argument.  The analytic solution used in `TRIAL` mode is selected
-using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example below),
-or a call to the function with arguments specifying its parameters (see `DDM_Execution` below for a description of
-DDM function parameters) and, optionally, a `ControlProjection` (second example)::
-    my_DDM = DDM(function=BogaczEtAl)
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlProjection))
-    COMMENT:
-    my_DDM = DDM(default_input_value=[0, 0, 0]
-                 function=BogaczEtAl(drift_rate=0.2, threshold=(1, ControlProjection))
+A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` command and
+specifying DDM as its **mech_spec** argument.  The analytic solution used `analytic mode <DDM_Analytic_Mode>` is
+selected using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example
+below), or a call to the function with arguments specifying its parameters (second example below; see `DDM_Execution`
+for a description of DDM function parameters)::
 
+    my_DDM = DDM(function=BogaczEtAl)
+    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=1.0))
+
+COMMENT:
 .. _DDM_Input:
-**Input**.  The `default_input_value` argument specifies the default value to use as the stimulus component of the
+**Input**.  The `default_variable` argument specifies the default value to use as the stimulus component of the
 :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-**Input**.  The ``default_input_value`` argument specifies the default value to use as the stimulus component of the
+**Input**.  The ``default_variable`` argument specifies the default value to use as the stimulus component of the
 :ref:`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
 and the corresponding format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
 single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
@@ -59,264 +58,207 @@ COMMENT
 
 Structure
 ---------
-The DDM mechanism implements a general form of the decision process.  A DDM mechanism has a single `inputState
-<InputState>` the `value <DDM.value>` of which is used is assigned to the `input <DDM.input>` specified by its
-:py:meth:`execute <Mechanism.Mechanism_Base.execute>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods,
-and that is used as the stimulus component of the :ref:`drift rate <DDM_Drift_Rate>` for the decision process.  The
-decision process can be configured to execute in different modes.
 
-The `function <DDM.function>` and
-`time_scale <DDM.time_scale>` parameters are the primary determinants of how the decision process is executed,
-and what information is returned. The `function <DDM.function>` parameter specifies the analytical solution to use
-when `time_scale <DDM.time_scale>` is  set to `TimeScale.TRIAL` (see :ref:`Functions <DDM_Functions>` below); when
-`time_scale <DDM.time_scale>` set to  `TimeScale.TIME_STEP`, the function must be set to Integrator with an
-integration_type of DIFFUSION, so that executing the DDM mechanism numerically integrates the path of the decision
-variable (see :ref:`Execution <DDM_Execution>` below). The number of **outputStates** is
-determined by the `function <DDM.function>` in use (see :ref:`list of output values <DDM_Results>` below).
+The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
+`value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
+<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for the process.  That parameter, along with all
+of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
+`DDM_Modes` below, and individual `Functions <Function>` for additional details).
+
+The decision process can be configured to operate in two different `modes <DDM_modes>`, as determined by the assignment
+made to its `function <DDM.function>`. In the `analytic mode` <DDM_Analytic_Mode>` it generates a single estimated for
+the process;  in the `path integration mode <DDM_Integration_Mode>`, it carries out step-wise integration of the Process
+(see `DDM_Modes` and `DDM_Execution` for additional details).
+
+The `value <DDM.value>` of the DDM Mechanism has six  items. The first two of these are always assigned, and represented
+by two `OutputStates <OutputState>` in the DDM's output_states <DDM.output_states>` attribute: `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. Other items of its `value <DDM.value>`, and
+corresponding OutputStates in its `output_states <DDM.output_states>` attribute, may also be assigned, depending on the
+`function <DDM.function>` (and corresponding mode of operation) that has been specified, as described below. Unassigned
+items of the DDM's `value <DDM.value>` attribute are given the value `None`. The set of `output_states
+<DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of `Standard OutputStates
+<DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its constructor.
+
+.. _DDM_Modes:
+
+DDM Modes of Operation
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. _DDM_Analytic_Mode:
+
+Analytic Mode
+^^^^^^^^^^^^^
+
+This is used when one of the two `Functions <Function>` that calculate an analytic solution -- `BogaczEtAl <BogaczEtAl>`
+or `NavarroAndFuss <NavarroAndFuss>` -- is specified as the Mechanism's `function <DDM.function>`.  It generates a
+single estimate of the outcome for the decision process (see `DDM_Execution` for details).  In addition to
+`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions return an accuracy
+value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
+rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  the `NavarroAndFuss
+<NavarroAndFuss>` Function also returns expected values for mean correct response time (`RT_CORRECT_MEAN
+<DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+Examples for each, that illustrate all of their parameters, are shown below:
+
+`BogaczEtAl <BogaczEtAl>` Function::
+
+    my_DDM_BogaczEtAl = DDM(function=BogaczEtAl(drift_rate=3.0,
+                                                starting_point=1.0,
+                                                threshold=30.0,
+                                                noise=1.5,
+                                                t0 = 2.0),
+                            time_scale= TimeScale.TRIAL,
+                            name='MY_DDM_BogaczEtAl')
+
+`NavarroAndFuss <NavarroAndFuss>` Function::
+
+    my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss(drift_rate=3.0,
+                                                        starting_point=1.0,
+                                                        threshold=30.0,
+                                                        noise=1.5,
+                                                        t0 = 2.0),
+                                time_scale= TimeScale.TRIAL,
+                                name='MY_DDM_NavarroAndFuss')
+
+.. _DDM_Integration_Mode:
+
+Path Integration Mode
+~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+   IS THIS MORE CORRECT FOR THE BELOW:
+        This is used when `DriftDiffusionIntegrator` is specified as the DDM's `function <DDM.function>`
+        attribute.
+COMMENT
+
+This is used when an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION* is
+specified as the DDM's `function <DDM.function>` attribute.  In this case, the DDM Mechanism uses the `Euler method
+<https://en.wikipedia.org/wiki/Euler_method>`_ to carry out numerical step-wise integration of the decision process
+(see `Execution <DDM_Execution>` below).  In this mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
+`RESPONSE_TIME <DDM_RESPONSE_TIME>` are returned by default.
+
+`Integrator <Integrator>` Function::
+
+    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
+                          time_scale=TimeScale.TIME_STEP,
+                          name='My_DDM_TimeStep')
+
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-The DDM mechanism implements a general form of the decision process.  A DDM mechanism assigns one **inputState** to
-each item in the `default_input_value` argument, corresponding to each of the decision processes implemented
+The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputState** to
+each item in the `default_variable` argument, corresponding to each of the decision processes implemented
 (see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` and `time_scale <DDM.time_scale>` parameters are the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
 the analytical solution to use when `time_scale <DDM.time_scale>` is  set to :keyword:`TimeScale.TRIAL` (see
 :ref:`Functions <DDM_Functions>` below); when `time_scale <DDM.time_scale>` set to `TimeScale.TIME_STEP`,
-executing the DDM mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
+executing the DDM Mechanism numerically integrates the path of the decision variable (see `Execution <DDM_Execution>`
 below).  The number of `outputStates <OutputState>` is determined by the `function <DDM.function>` in use (see
 :ref:`list of output values <DDM_Results>` below).
-COMMENT
 
-COMMENT:
 [TBI - average_output_states ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
 If only a single decision process was run, then the value of each outputState is the corresponding output of
 the decision process.  If there is more than one decision process (i.e., the input has more than one item), then
-the content of the outputStates is determined by the ``average_output_states`` argument.  If it is :keyword:`True`,
+the content of the outputStates is determined by the ``average_output_states`` argument.  If it is `True`,
 then each outputState (and item of ``output_values``) contains a single value, which is the average of the output
 values of that type over all of the processes run.  If ``average_output_states`` is :keyword:`False` (the default),
 then the value of each ouputState is a 1d array, each element of which is the outcome of that type for the
 corresponding decision process.
 COMMENT
 
-.. _DDM_Functions:
 
-DDM Functions
-~~~~~~~~~~~~~
+COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
 
-The `function <DDM.function>` parameter can be used to select one of two analytic solutions (`BogaczEtAl` and
-`NavarroAndFuss`) that are used when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL`.  These both return an
-expected mean response time and accuracy, while `NavarroAndFuss` also returns an expected mean correct response time
-and accuracy.
+    The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
+    for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
+    using the keywords in the list below, as in the following example::
+        my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
+                     params={DRIFT_RATE:(0.2, ControlProjection),
+                             STARTING_POINT:-0.5},
+                     time_scale=TimeScale.TRIAL)
 
-When `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, the `function <DDM.function>` paramter must be set
-to 'Integrator' with an `integration_type <Integrator.integration_type>` of DIFFUSION.
+    .. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
+       `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a Mechanism's constructor
+       override corresponding ones specified as arguments of its `function <Mechanism_Base.function>`
+       (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>`
+       parameter is set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters
+       NOT specified as entries in the `params` dictionary, the value specified for those in the function will be
+       used in both `TRIAL` and `TIME_STEP` mode.
 
-.. _DDM_Parameters:
+    The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and
+    `function <DDM.function>` is set to `BogaczEtAl` or `NavarroAndFuss` are:
 
-DDM Parameters
-~~~~~~~~~~~~~~
-COMMENT:
-The DDM process uses the same set of parameters for all modes of execution.  These can be specified as arguments
-for the functions used in TRIAL mode, or in a params dictionary assigned to the `params` argument,
-using the keywords in the list below, as in the following example::
-    my_DDM = DDM(function=BogaczEtAl(drift_rate=0.1),
-                 params={DRIFT_RATE:(0.2, ControlProjection),
-                         STARTING_POINT:-0.5},
-                 time_scale=TimeScale.TRIAL)
+    .. _DDM_Drift_Rate:
 
-.. note::  Parameters specified in the `params` argument (as in the example above) will be used for both
-   `TRIAL` and `TIME_STEP` mode, since parameters specified in the `params` argument of a mechanism's constructor
-   override corresponding ones specified as arguments of its `function <Mechanism.Mechanism_Base.function>`
-   (see :doc:`COMPONENT`).  In the example above, this means that even if the `time_scale <DDM.time_scale>` parameter is
-   set to `TimeScale.TRIAL`, the `drift_rate` of 0.2 will be used (rather than 0.1).  For parameters NOT specified
-   as entries in the `params` dictionary, the value specified for those in the function will be used in both `TRIAL`
-   and `TIME_STEP` mode.
+    * `DRIFT_RATE <drift_rate>` (default 0.0)
+      - multiplies the input to the Mechanism before assigning it to the `variable <DDM.variable>` on each call of
+      `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to
+      the `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component
+      (baseline strength) of the decision process, the value received from a ControlProjection as the "attentional"
+      component, and the input its "stimulus" component.  The product of all three determines the drift rate in
+      effect for each time_step of the decision process.
+    ..
+    * `STARTING_POINT <starting_point>` (default 0.0)
+      - specifies the starting value of the decision variable.  If `time_scale <DDM.time_scale>` is
+      `TimeScale.TIME_STEP`, the `starting_point` is added to the decision variable on the first call to `function
+      <DDM.function>` but not subsequently.
+    ..
+    * `THRESHOLD` (default 1.0)
+      - specifies the stopping value for the decision process.  When `time_scale <DDM.time_scale>` is `TIME_STEP`, the
+      integration process is terminated when the absolute value of the decision variable equals the absolute value
+      of threshold.  The `threshold` parameter must be greater than or equal to zero.
+    ..
+    * `NOISE` (default 0.5)
+      - specifies the variance of the stochastic ("diffusion") component of the decision process.  If
+      `time_scale <DDM.time_scale>` is `TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean
+      normal (Gaussian) distribution on every call of function <DDM.function>`, and added to the decision variable.
+    ..
+    * `NON_DECISION_TIME` (default 0.2)
+      specifies the `t0` parameter of the decision process (in units of seconds).
+      when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
+      taken to complete the decision process when reporting the response time.
 
-The parameters for the DDM when `time_scale <DDM.time_scale>` is set to `TimeScale.TRIAL` and the function is set to
-`BogaczEtAl` or `NavarroAndFuss` are:
+[TBI - MULTIPROCESS DDM - REPLACE BELOW]
+When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
+or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
+it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
+with each element of the input used for the corresponding process.  All use the same set of parameters,
+so the analytic solutions (used in TRIAL mode) for a given input will be the same; to implement processes in
+this mode that use different parameters, a separate DDM Mechanism should explicitly be created for each. In
+TIME_STEP mode, the noise term will resolve to different values in each time step, so the integration
+paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
+single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
 
-.. _DDM_Drift_Rate:
+.. note::
+   DDM handles "runtime" parameters (specified in a call to its
+   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
+   differently than standard Components: runtime parameters are added to the Mechanism's current value of the
+   corresponding ParameterState (rather than overriding it);  that is, they are combined additively with the value of
+   any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterState's
+   value is then restored to its original value (i.e., either its default value or the one assigned when it was
+   created) for the next execution.
 
-* `DRIFT_RATE <drift_rate>` (default 0.0)
-  - multiplies the input to the mechanism before assigning it to the `variable <DDM.variable>` on each call of
-  `function <DDM.function>`.  The resulting value is further multiplied by the value of any ControlProjections to the
-  `DRIFT_RATE` parameterState. The `drift_rate` parameter can be thought of as the "automatic" component (baseline
-  strength) of the decision process, the value received from a ControlProjection as the "attentional" component,
-  and the input its "stimulus" component.  The product of all three determines the drift rate in effect for each
-  time_step of the decision process.
-..
-* `STARTING_POINT <starting_point>` (default 0.0)
-  - specifies the starting value of the decision variable.  If `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`,
-  the `starting_point` is added to the decision variable on the first call to `function <DDM.function>` but not
-  subsequently.
-..
-* `THRESHOLD` (default 1.0)
-  - specifies the stopping value for the decision process.  When `time_scale <DDM.time_scale>` is `TIME_STEP`, the
-  integration process is terminated when the absolute value of the decision variable equals the absolute value
-  of threshold.  The `threshold` parameter must be greater than or equal to zero.
-..
-* `NOISE` (default 0.5)
-  - specifies the variance of the stochastic ("diffusion") component of the decision process.  If
-  `time_scale <DDM.time_scale>` is `TIME_STEP`, this value is multiplied by a random sample drawn from a zero-mean
-  normal (Gaussian) distribution on every call of function <DDM.function>`, and added to the decision variable.
-..
-* `NON_DECISION_TIME` (default 0.2)
-  specifies the `t0` parameter of the decision process (in units of seconds).
-  when ``time_scale <DDM.time_scale>`` is  TIME_STEP, it is added to the number of time steps
-  taken to complete the decision process when reporting the response time.
+  ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
+  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
 COMMENT
-
-All DDM parameter should be specified within the function of the mechanism. The examples below demonstrate all of the
-possible parameters. See individual functions for more details.
-
-`BogaczEtAl <BogaczEtAl>` ::
-
-    my_DDM_BogaczEtAl = DDM(function=BogaczEtAl( drift_rate=3.0,
-                                       starting_point=1.0,
-                                       threshold=30.0,
-                                       noise=1.5,
-                                       t0 = 2.0),
-                  time_scale= TimeScale.TRIAL,
-                  name='MY_DDM_BogaczEtAl'
-                  )
-
-`NavarroAndFuss <NavarroAndFuss>` ::
-
-    my_DDM_NavarroAndFuss = DDM(function=NavarroAndFuss( drift_rate=3.0,
-                                       starting_point=1.0,
-                                       threshold=30.0,
-                                       noise=1.5,
-                                       t0 = 2.0),
-                  time_scale= TimeScale.TRIAL,
-                  name='MY_DDM_NavarroAndFuss'
-                  )
-
-`Integrator <Integrator>` ::
-
-    my_DDM_TimeStep = DDM(function=Integrator( integration_type = DIFFUSION,
-                                      noise=0.5,
-                                      time_step_size = 1.0,
-                                      initializer = 0.0,
-                                      ),
-                time_scale=TimeScale.TIME_STEP,
-                name='My_DDM_TimeStep',
-                )
-
 
 .. _DDM_Execution:
 
 Execution
 ---------
 
-When a DDM mechanism is executed, it computes the decision process, either analytically (in `TRIAL` mode) or by
-step-wise integration (in `TIME_STEP` mode).
-
-In `TRIAL` mode, the DDM returns the following values in self.value (2D np.array) and in the value of the corresponding outputState in the self.outputStates dict:
-            - decision variable (float)
-            - mean error rate (float)
-            - mean RT (float)
-            - correct mean RT (float) - Navarro and Fuss only
-            - correct mean ER (float) - Navarro and Fuss only
-
-In `TIME_STEP` mode, the DDM returns only the decision variable, which in `TIME_STEP` mode represents the position after one "step," rather than the final value decision variable.
-
-
-COMMENT:
-[TBI - MULTIPROCESS DDM - REPLACE ABOVE]
-When a DDM mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
-or by step-wise integration (in TIME_STEP mode).  As noted above, if the input is a single value,
-it computes a single DDM process.  If the input is a list or array, then multiple parallel DDM processes are executed,
-with each element of the input used for the corresponding process.  All use the same set of parameters,
-so the analytic solutions (used in TRIAL mode) for a given input will be the same; to implement processes in
-this mode that use different parameters, a separate DDM mechanism should explicitly be created for each. In
-TIME_STEP mode, the noise term will resolve to different values in each time step, so the integration
-paths and outcomes for the same input value will vary. This can be used to generate distributions of the process for a
-single set of parameters that are not subject to the analytic solution (e.g., for time-varying drift rates).
-
-
-.. note::
-   DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism.Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism.Mechanism_Base.run>` methods)
-   differently than standard Components: runtime parameters are added to the mechanism's current value of the
-   corresponding parameterState (rather than overriding it);  that is, they are combined additively with the value of
-   any `ControlProjection` it receives to determine the parameter's value for that execution.  The parameterState's
-   value is then restored to its original value (i.e., either its default value or the one assigned when it was
-   created) for the next execution.
-
-  ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
-  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
-
-
-.. _DDM_Results:
-
-After each execution of the mechanism:
-
-    * the value of the **decision variable** is assigned to the mechanism's `value <DDM.value>` attribute, the value of
-      the 1st item of its `output_values <DDM.outputState>` attribute, and as the value of its `DDM_DECISION_VARIABLE`
-      outputState.
-    ..
-    * **response time** is assigned as the value of the 2nd item of the mechanism's `output_values <DDM.output_values>`
-      attribute and as the value of its `RESPONSE_TIME` outputState.  If `time_scale <DDM.time_scale>` is
-      `TimeScale.TRIAL`, the value is the mean response time (in seconds) estimated by the analytic solution used in
-      `function <DDM.function>`.
-
-        [TBI:]
-        If ``time_scale <DDM.time_scale>`` is :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`,
-        the value is the number of time_steps that have transpired since the start of the current execution in the
-        current :ref:`phase <System_Execution_Phase>`.  If execution completes, this is the number of time_steps it
-        took for the decision variable to reach the (positive or negative) value of the `threshold` parameter;  if
-        execution was interrupted (using :py:meth:`terminate_function <DDM.terminate_function>`), then it corresponds
-        to the time_step at which the interruption occurred.
-
-    ..
-    The following assignments are made only if `time_scale <DDM.time_scale>` is
-    :py:data:`TimeScale.TIME_STEP <TimeScale.TimeScale.TIME_STEP>`;  otherwise the value of the corresponding
-    attributes is `None`.
-    * **probability of reaching the upper threshold** is assigned to the 3rd item of the mechanism's
-      `output_values <DDM.output_values>` attribute, and as the value of its `PROBABILITY_UPPER_THRESHOLD` outputState.
-      If `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, the value is the probability (calculated by the analytic
-      solution used in `function <DDM.function>`) that the value of the decision variable reached the upper (
-      positive) threshold. Often, by convention, the upper threshold is associated with the ccorrect response,
-      in which case `PROBABILITY_LOWER_THRESHOLD` corresponds to the accuracy of the decision process.
-
-      [TBI:]
-          If ``time_scale <DDM.time_scale>`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
-          indicating whether the decision process reached the upper (positive) threshold. If execution was interrupted
-          (using :py:meth:`terminate_function <DDM.terminate_function>`, sometimes referred to as the
-          :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
-          threshold would have been reached.
-
-    ..
-    * **probability of reaching the lower threshold** is assigned to the 4th item of the mechanism's
-      `output_values <DDM.output_values>` attribute and as the value of its `PROBABILITY_LOWER_THRESHOLD` outputState.
-      If `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, the value is the probability (calculated by the analytic
-      solution used in `function <DDM.function>`) that the value of the decision variable reached the lower (negative)
-      threshold.  Often, by convention, the lower threshold is associated with the incorrect response, in which case
-      `PROBABILITY_LOWER_THRESHOLD` corresponds to the error rate of the decision process.
-
-          [TBI:]
-          If ``time_scale <DDM.time_scale>`` is :keyword:`TimeScale.TIME_STEP` and the execution has completed, this is a binary value
-          indicating whether the decision process reached the lower (negative) threshold. If execution was interrupted
-          (using :py:method:`terminate_method <DDM.terminate_function>`, sometimes referred to as the
-          :ref:`interrogation protocol <LINK>`), then the value corresponds to the current likelihood that the lower
-          threshold would have been reached.
-
-    ..
-    The following assignments are made only assigned if the `NavarroAndFuss` function is used, and
-    `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`.  Otherwise, neither the `output_values <DDM.output_values>`
-    nor the `outputState` attribute have a 6th item (if another function is assigned) or they are asssigned
-    `None` if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`.
-    * **mean correct response time** (in seconds) is assigned to the 5th item of the mechanism's
-    `output_values <DDM.output_values>` attribute and as  the value of its `RT_CORRECT_MEAN` outputState.
-    ..
-    * **variance of correct response time** is assigned to the 6th item of the mechanism's
-      `output_values <DDM.output_values>` attribute and as the value of its `RT_CORRECT_VARIANCE` outputState.
-
-        In time_step mode, compute and report variance of the path
-        (e.g., as confirmation of /deviation from noise param??)??
-    COMMENT
-    ..
+When a DDM Mechanism is executed, it computes the decision process either `analytically <DDM_Analytic_Mode>`  or by
+`numerical step-wise integration <DDM_Integration_Mode>` of its path.  The method used is determined by its `function
+<DDM.function>` (see `DDM_Modes`). The DDM's `function <DDM.function>` always returns values for the `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, and assigns these as the first two items of its `value
+<DDM.value>` attribute, irrespective of its `mode <DDM_Modes>` of operation. The mode of operation is determined by
+the Function assigned to its `function <DDM.function>` attribute (see `DDM_Structure`). In the `analytic mode
+<DDM_Analytic_Mode>` the same set of values is returned for every execution, that are determined entirely by the set of
+parameters passed to its `function <DDM.function>`;  generally, this corresponds to a `TRIAL` of execution.  In the
+`path intergration mode <DDM_Integration_Mode>`, a single step of integration is conducted each time the Mechanism is
+executed; generally, this corresponds to a `TIME_STEP` of execution.  In addition to `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, other values are returned by the different modes and
+functions (see `DDM_Modes` and `Standard OutputStates  <DDM_Standard_OutputStates>`).
 
 .. _DDM_Class_Reference:
 
@@ -324,38 +266,135 @@ Class Reference
 ---------------
 """
 import logging
-
-# from numpy import sqrt, random, abs, tanh, exp
+import numbers
 import random
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import *
-from PsyNeuLink.Components.Functions.Function import *
-from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, SEQUENTIAL
+
+import numpy as np
+import typecheck as tc
+
+from PsyNeuLink.Components.Component import method_type
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, Integrator, NF_Results, \
+    NavarroAndFuss, STARTING_POINT, THRESHOLD
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError, Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.States.OutputState import SEQUENTIAL
+from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZING, NAME, OUTPUT_STATES, TIME_SCALE, \
+    kwPreferenceSetName
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
 
 DECISION_VARIABLE='DECISION_VARIABLE'
 RESPONSE_TIME = 'RESPONSE_TIME'
-PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'  # Probability of hitting upper bound
-PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'  # Probability of hitting lower bound
+PROBABILITY_UPPER_THRESHOLD = 'PROBABILITY_UPPER_THRESHOLD'
+PROBABILITY_LOWER_THRESHOLD = 'PROBABILITY_LOWER_THRESHOLD'
 RT_CORRECT_MEAN = 'RT_CORRECT_MEAN'  # NavarroAnd Fuss only
 RT_CORRECT_VARIANCE = 'RT_CORRECT_VARIANCE'  # NavarroAnd Fuss only
 
-DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},
-                              {NAME: RESPONSE_TIME},
-                              {NAME: PROBABILITY_UPPER_THRESHOLD},  # Probability of hitting upper bound
-                              {NAME: PROBABILITY_LOWER_THRESHOLD},  # Probability of hitting lower bound
-                              {NAME: RT_CORRECT_MEAN},  # NavarroAnd Fuss only
-                              {NAME: RT_CORRECT_VARIANCE}]  # NavarroAnd Fuss only
+DDM_standard_output_states = [{NAME: DECISION_VARIABLE,},           # Upper or lower threshold in TRIAL mode
+                              {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL in TIME_STEP mode
+                              {NAME: PROBABILITY_UPPER_THRESHOLD},  # Accuracy (TRIAL mode only)
+                              {NAME: PROBABILITY_LOWER_THRESHOLD},  # Error rate (TRIAL mode only)
+                              {NAME: RT_CORRECT_MEAN},              # (NavarroAndFuss only)
+                              {NAME: RT_CORRECT_VARIANCE}]          # (NavarroAndFuss only)
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class DDM_OUTPUT():
+    """
+    .. _DDM_Standard_OutputStates:
+
+    `Standard OutputStates <OutputState_Standard>` for `DDM`:
+
+    .. _DDM_DECISION_VARIABLE:
+
+    *DECISION_VARIABLE* : float
+      • `analytic mode <DDM_Analytic_Mode>`: the value of the threshold crossed by the decision variable on the
+        current TRIAL (which is either the value of the DDM `function <DDM.function>`'s threshold attribute or its
+        negative); \n
+      • `integration mode <DDM_Integration_Mode>`: the value of the decision variable at the current TIME_STEP of 
+        execution. \n
+      Corresponds to the 1st item of the DDM's `value <DDM.value>`.
+
+    .. _DDM_RESPONSE_TIME:
+
+    *RESPONSE_TIME* : float
+      • `analytic mode <DDM_Analytic_Mode>`: mean time (in seconds) for the decision variable to reach the positive
+        or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
+        solution calculated by the `function <DDM.function>`); \n
+      • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began 
+        to execute in the current `TRIAL` or, if it has reached the positive or negative value of the DDM `function
+        <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+      Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
+
+    .. _DDM_PROBABILITY_UPPER_THRESHOLD:
+
+    *PROBABILITY_UPPER_THRESHOLD* : float
+      • `analytic mode <DDM_Analytic_Mode>`: the probability of the decision variable reaching the positive value of
+        the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic solution calculated by the
+        `function <DDM.function>`; often, by convention, the positive (upper) threshold is associated with the
+        correct response, in which case *PROBABILITY_UPPER_THRESHOLD* corresponds to the accuracy of the decision
+        process. \n
+      • `integration mode <DDM_Integration_Mode>`: `None`.
+      Corresponds to the 3rd item of the DDM's `value <DDM.value>`.
+
+    COMMENT:
+      [TBI:]
+          `integration mode <DDM_Integration_Mode>`, if execution has completed, this is a binary value
+          indicating whether the decision process reached the upper (positive) threshold. If execution was
+          interrupted (using :py:meth:`terminate_function  <DDM.terminate_function>`, sometimes referred to as the
+          :ref:`interrogation protocol <LINK>`, then the value corresponds to the current likelihood that the upper
+          threshold would have been reached.
+    COMMENT
+
+    .. _DDM_PROBABILITY_LOWER_THRESHOLD:
+
+    *PROBABILITY_LOWER_THRESHOLD* : float
+      • `analytic mode <DDM_Analytic_Mode>`: the probability of the decision variable reaching the negative value of
+        the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic solution calculate by the
+        `function <DDM.function>`); often, by convention, the negative (lower) threshold is associated with an error
+        response, in which case *PROBABILITY_LOWER_THRESHOLD* corresponds to the error rate of the decision process; \n
+      • `integration mode <DDM_Integration_Mode>`: `None`.
+      Corresponds to the 4th item of the DDM's `value <DDM.value>`.
+
+        COMMENT:
+          [TBI:]
+              `integration mode <DDM_Integration_Mode>`, if execution has completed, this is a binary value
+              indicating whether the decision process reached the lower (negative) threshold. If execution was
+              interrupted (using :py:method:`terminate_method <DDM.terminate_function>`, sometimes referred to as the
+              :ref:`interrogation protocol <LINK>`), then the value corresponds to the current likelihood that the lower
+              threshold would have been reached.
+        COMMENT
+
+    .. _DDM_RT_CORRECT_MEAN:
+
+    *RT_CORRECT_MEAN* : float
+      (only applicable if `function <DDM.function>` is `NavarroAndFuss`) \n
+      • `analytic mode <DDM_Analytic_Mode>`:  the mean decision time (in seconds) for responses in which the decision
+        variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
+        the `NavarroAndFuss` analytic solution; \n
+      • `integration mode <DDM_Integration_Mode>`: `None`.
+      Corresponds to the 5th item of the DDM's `value <DDM.value>`.
+
+    .. _DDM_RT_CORRECT_VARIANCE:
+
+    *RT_CORRECT_VARIANCE* : float
+      (only applicable if `function <DDM.function>` is `NavarroAndFuss`) \n
+      • `analytic mode <DDM_Analytic_Mode>`:  the variance of the decision time for responses in which the decision
+        variable reached the positive value of the DDM `function <DDM.function>`'s threshold attribute as estimated by
+        the `NavarroAndFuss` analytic solution; \n
+      • `integration mode <DDM_Integration_Mode>`: `None`.
+      Corresponds to the 6th item of the DDM's `value <DDM.value>`.
+
+    """
     DECISION_VARIABLE=DECISION_VARIABLE
     RESPONSE_TIME=RESPONSE_TIME
     PROBABILITY_UPPER_THRESHOLD=PROBABILITY_UPPER_THRESHOLD
     PROBABILITY_LOWER_THRESHOLD=PROBABILITY_LOWER_THRESHOLD
     RT_CORRECT_MEAN=RT_CORRECT_MEAN
     RT_CORRECT_VARIANCE=RT_CORRECT_VARIANCE
-# THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
+# THE FOLLOWING WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
 # for item in [item[NAME] for item in DDM_standard_output_states]:
 #     setattr(DDM_OUTPUT.__class__, item, item)
 
@@ -370,18 +409,20 @@ class DDMError(Exception):
 
 class DDM(ProcessingMechanism_Base):
     # DOCUMENT:   COMBINE WITH INITIALIZATION WITH PARAMETERS
-    #                    ADD INFO ABOUT B VS. N&F
-    #                    ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
+    #             ADD INFO ABOUT B VS. N&F
+    #             ADD _instantiate_output_states TO INSTANCE METHODS, AND EXPLAIN RE: NUM OUTPUT VALUES FOR B VS. N&F
     """
     DDM(                       \
-    default_input_value=None,  \
+    default_variable=None,  \
+    size=None,                 \
     function=BogaczEtAl,       \
     params=None,               \
     name=None,                 \
     prefs=None)
-    Implements a Drift Diffusion Process
-    Computes an analytic solution when `time_scale <DDM.time_scale>` is `TimeScale.TRIAL`, or numerically integrates it
-    when `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP`.
+
+    Implement a Drift Diffusion Process, either by calculating an `analytic solution <DDM_Analytic_Mode>` or carrying
+    out `step-wise numerical integration <DDM_Integration_Mode>`.
+
     COMMENT:
         Description
         -----------
@@ -400,7 +441,7 @@ class DDM(ProcessingMechanism_Base):
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
-            + variableClassDefault (value):  STARTING_POINT
+            + ClassDefaults.variable (value):  STARTING_POINT
             + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
@@ -414,7 +455,6 @@ class DDM(ProcessingMechanism_Base):
                                                           DDM_PROBABILITY_LOWER_THRESHOLD,
                                                           DDM_RT_CORRECT_MEAN,
                                                           DDM_RT_CORRECT_VARIANCE,
-            + paramNames (dict): names as above
         Class methods
         -------------
             - plot() : generates a dynamic plot of the DDM
@@ -423,32 +463,43 @@ class DDM(ProcessingMechanism_Base):
             All instances of DDM are registered in MechanismRegistry, which maintains an entry for the subclass,
               a count for all instances of it, and a dictionary of those instances
     COMMENT
+
     Arguments
     ---------
-    default_input_value : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
-        the input to the mechanism to use if none is provided in a call to its
-        :py:data:`execute <Mechanism.Mechanism_Base.execute>` or :py:data:`run <Mechanism.Mechanism_Base.run>` methods;
-        also serves as a template to specify the length of `variable <DDM.variable>` for `function <DDM.function>`,
-        and the primary outputState of the mechanism (see :ref:`Input` <DDM_Creation>` for how an input with a length
-        of greater than 1 is handled).
+
+    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
+        the input to the Mechanism used if none is provided in a call to its `execute <Mechanism_Base.execute>` or
+        `run <Mechanism_Base.run>` methods; also serves as a template to specify the length of the `variable
+        <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputState <OuputState_Primary>` of the
+        DDM (see `Input` <DDM_Creation>` for how an input with a length of greater than 1 is handled).
+
+    size : int, list or np.ndarray of ints
+        specifies the `default_variable <DDM.default_variable>` as array(s) of zeros if **default_variable** is not
+        passed as an argument; if **default_variable** is specified, it takes precedence over the specification of
+        **size**.
+
     function : IntegratorFunction : default BogaczEtAl
-        specifies the analytic solution to use for the decision process if `time_scale <DDM.time_scale>` is set to
-        `TimeScale.TRIAL`; can be `BogaczEtAl` or `NavarroAndFuss` (note:  the latter requires that the MatLab engine
-        is installed). If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>` must
-        be `Integrator` with an integration_type of DIFFUSION, and the mechanism
-        will return the result of one time step.
-    time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the mechanism is executed on the time_step or trial time scale.
-        This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
-        `function <DDM.function>`. This  must be set to `TimeScale.TIME_STEP` to numerically (path) integrate the
-        decision variable.
+        specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
+        execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
+
+    COMMENT:
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the Mechanism is executed on the time_step or trial time scale.
+            This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
+            `function <DDM.function>`. This  must be set to `TimeScale.TIME_STEP` to numerically (path) integrate the
+            decision variable.
+    COMMENT
+
     params : Optional[Dict[param keyword, param value]]
-        a dictionary that can be used to specify parameters of the mechanism, parameters of its function,
-        and/or  a custom function and its parameters (see `Mechanism` for specification of a params dict).
+        a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
+        <DDM.function>`, and/or  a custom function and its parameters (see `Mechanism <Mechanism>` for specification of
+        a params dict).
+
     name : str : default DDM-<index>
-        a string used for the name of the mechanism.
+        a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
     prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the PreferenceSet for the process.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
@@ -458,53 +509,65 @@ class DDM(ProcessingMechanism_Base):
         context : str : default ''None''
                string used for contextualization of instantiation, hierarchical calls, executions, etc.
     COMMENT
+
     Attributes
     ----------
     variable : value : default  FUNCTION_PARAMS[STARTING_POINT]
-        the input to mechanism's execute method.  Serves as the "stimulus" component of the drift rate.
+        the input to Mechanism's execute method.  Serves as the "stimulus" component of the `function <DDM.function>`'s
+        **drift_rate** parameter.
+
     function :  IntegratorFunction : default BogaczEtAl
-        the function used to compute the outcome of the decision process when `time_scale <DDM.time_scale>` is
-        `TimeScale.TRIAL`.  If `time_scale <DDM.time_scale>` is set to `TimeScale.TIME_STEP`, `function <DDM.function>`
-        must be `Integrator` with an 'integration_type <Integrator.integration_type>' of DIFFUSION, and the mechanism
-        will return the result of one time step.
-    function_params : Dict[str, value]
-        contains one entry for each parameter of the mechanism's function.
-        The key of each entry is the name of (keyword for) a function parameter, and its value is the parameter's value.
+        the function used to `execute <DDM_Execution>` the decision process; determines the mode of execution.
+        If it is `BogaczEtAl <BogaczEtAl>` or `NavarroAndFuss <NavarroAndFuss>`, an `analytic solution
+        <DDM_Analytic_Mode>` is calculated (note:  the latter requires that the MatLab engine is installed); if it is
+        an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION*,
+        then `numerical step-wise integration <DDM_Integration_Mode>` is carried out.  See `DDM_Modes` and
+        `DDM_Execution` for additional information.
+        COMMENT:
+           IS THIS MORE CORRECT FOR ABOVE:
+               if it is `DriftDiffusionIntegrator`, then `numerical step-wise integration <DDM_Integration_Mode>`
+               is carried out.
+        COMMENT
+
     value : 2d np.array[array(float64),array(float64),array(float64),array(float64)]
-        result of executing DDM `function <DDM.function>`; same items as `output_values <DDM.output_values>`.
+        result of executing DDM `function <DDM.function>`;  has six items, that are assigned based on the `function
+        <DDM.function>` attribute.  The first two items are always assigned the values of `DECISION_VARIABLE
+        <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` (though their interpretation depends on the
+        `function <DDM.function>` and corresponding `mode of <DDM_Modes>` of operation).  See `DDM_Modes`,
+        `DDM_Execution`, and `DDM Standard OutputStates <DDM_Standard_OutputStates>` for additional information about
+        other values that can be reported and their interpretation.
+
+    output_states : ContentAddressableList[OutputState]
+        list of the DDM's `OutputStates <OutputState>`.  There are always two OutputStates, `DECISION_VARIABLE
+        <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`; additional ones may be included
+        based on the `function <DDM.function>` and/or any specifications made in the **output_states** argument of the
+        DDM's constructor (see `DDM Standard OutputStates <DDM_Standard_OutputStates>`).
+
+    output_values : List[array(float64),array(float64),array(float64),array(float64)]
+        each item is the `value <OutputState.value> of the corresponding OutputState in `output_states
+        <DDM.output_states>`.  The first two items are always the `value <OutputState.value>`\\s of the
+        `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputStates;  additional
+        ones may be included, based on the `function <DDM.function>` and any specifications made in the
+        **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
+        <DDM_Standard_OutputStates>`).
 
     COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of `function <DDM.function>`;  also assigned to `value <DDM.value>` of the
-            `DDM_DECISION_VARIABLE` outputState and the first item of `output_values <DDM.output_values>`.
+        time_scale : TimeScale : default TimeScale.TRIAL
+            determines the `TimeScale` at which the decision process is executed.
     COMMENT
-    output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        a list with the following items:
-        * **decision variable** (value of `DDM_DECISION_VARIABLE` outputState);
-        * **response time** (value of `DDM_RESPONSE_TIME` outputState);
-        * **probability of reaching upper threshold** (value of `DDM_PROBABILITY_UPPER_THRESHOLD` outputState);
-          if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP, this is `None`;
-        * **probability of reaching lower threshold** (value of `DDM_PROBABILITY_LOWER_THRESHOLD` outputState);
-          if `time_scale <DDM.time_scale>` is `TimeScale.TIME_STEP, this is `None`;
-        * **mean of correct response times** (value of DDM_RT_CORRECT_MEAN outputState);
-          only assigned if `function <DDM.function>` is `NavarroAndFuss` and `time_scale <DDM.time_scale>` is
-          `TimeScale.TRIAL, otherwise it is `None`;
-        * **variance of correct response times** (value of `DDM_RT_CORRECT_VARIANCE` outputState);
-          only assigned if `function <DDM.function>` is `NavarroAndFuss` and `time_scale <DDM.time_scale>` is
-          `TimeScale.TRIAL, otherwise it is `None`;
-    time_scale : TimeScale : default TimeScale.TRIAL
-        determines the TimeScale at which the decision process is executed.
+
     name : str : default DDM-<index>
-        the name of the mechanism.
+        the name of the Mechanism.
         Specified in the name argument of the call to create the projection;
         if not is specified, a default is assigned by MechanismRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
+
     prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        a PreferenceSet for the mechanism.
-        Specified in the prefs argument of the call to create the mechanism;
+        a PreferenceSet for the Mechanism.
+        Specified in the prefs argument of the call to create the Mechanism;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :py:class:`PreferenceSet <LINK>` for details).
+
     COMMENT:
         MOVE TO METHOD DEFINITIONS:
         Instance methods:
@@ -539,21 +602,19 @@ class DDM(ProcessingMechanism_Base):
         kwPreferenceSetName: 'DDMCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    # Assigned in __init__ to match default staring_point
-    variableClassDefault = None
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Assigned in __init__ to match default staring_point
+        variable = None
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         TIME_SCALE: TimeScale.TRIAL,
         OUTPUT_STATES: None})
 
-    # Set default input_value to default bias for DDM
-    paramNames = paramClassDefaults.keys()
-
     @tc.typecheck
     def __init__(self,
-                 default_input_value=None,
-                 size:tc.optional(int)=None,
+                 default_variable=None,
+                 size=None,
                  # function:tc.enum(type(BogaczEtAl), type(NavarroAndFuss))=BogaczEtAl(drift_rate=1.0,
                  function=BogaczEtAl(drift_rate=1.0,
                                      starting_point=0.0,
@@ -576,13 +637,13 @@ class DDM(ProcessingMechanism_Base):
                                                   time_scale=time_scale,
                                                   params=params)
 
-        self.variableClassDefault = self.paramClassDefaults[FUNCTION_PARAMS][STARTING_POINT]
-
-        if default_input_value is None:
+        # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
+        # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
+        if default_variable is None and size is None:
             try:
-                default_input_value = params[FUNCTION_PARAMS][STARTING_POINT]
+                default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
             except:
-                default_input_value = 0.0
+                default_variable = 0.0
 
         # # Conflict with above
         # self.size = size
@@ -591,11 +652,12 @@ class DDM(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.OutputState import StandardOutputStates
         self.standard_output_states = StandardOutputStates(self, DDM_standard_output_states, SEQUENTIAL)
 
-        super(DDM, self).__init__(variable=default_input_value,
+        super(DDM, self).__init__(variable=default_variable,
                                   output_states=output_states,
                                   params=params,
                                   name=name,
                                   prefs=prefs,
+                                  size=size,
                                   # context=context)
                                   context=self)
 
@@ -609,7 +671,7 @@ class DDM(ProcessingMechanism_Base):
         """
         Generate a dynamic plot of the DDM integrating over time towards a threshold.
 
-        NOTE: plot is only available in `TIME_STEP` mode (with the Integrator function).
+        NOTE: plot is only available `integration mode <DDM_Integration_Mode>` (with the Integrator function).
 
         Arguments
         ---------
@@ -619,8 +681,8 @@ class DDM(ProcessingMechanism_Base):
 
         Returns
         -------
-        mechanism's function plot : Matplotlib window
-            Matplotlib window of the mechanism's function plotting dynamically over time with specified parameters
+        Mechanism's function plot : Matplotlib window
+            Matplotlib window of the Mechanism's function plotting dynamically over time with specified parameters
             towards a specified threshold
 
         """
@@ -630,17 +692,17 @@ class DDM(ProcessingMechanism_Base):
 
         # set initial values and threshold
         time_step = [0]
-        position = [float(self.variable)]
-        self.variable = stimulus
+        position = [float(self.instance_defaults.variable)]
+        variable = self._update_variable(stimulus)
 
         # execute the mechanism once to begin the loop
-        result_check = self.plot_function(self.variable, context="plot")[0][0]
+        result_check = self.plot_function(variable, context="plot")[0][0]
 
         # continue executing the ddm until its value exceeds the threshold
         while abs(result_check) < threshold:
             time_step.append(time_step[-1] + 1)
             position.append(result_check)
-            result_check = self.plot_function(self.variable, context="plot")[0][0]
+            result_check = self.plot_function(variable, context="plot")[0][0]
 
         # add the ddm's final position to the list of positions
         time_step.append(time_step[-1] + 1)
@@ -672,14 +734,14 @@ class DDM(ProcessingMechanism_Base):
         # # # Select a random seed to ensure that the test run will be the same as the real run
         # seed_value = np.random.randint(0, 100)
         # np.random.seed(seed_value)
-        # self.variable = stimulus
+        # variable = stimulus
         #
         # result_check = 0
         # time_check = 0
         #
         # while abs(result_check) < threshold:
         #     time_check += 1
-        #     result_check = self.get_axes_function(self.variable, context='plot')
+        #     result_check = self.get_axes_function(variable, context='plot')
         #
         # # Re-set random seed for the real run
         # np.random.seed(seed_value)
@@ -696,7 +758,7 @@ class DDM(ProcessingMechanism_Base):
         # time = 0
         # while abs(result) < threshold:
         #     time += 1
-        #     result = self.plot_function(self.variable, context='plot')
+        #     result = self.plot_function(variable, context='plot')
         #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
         #     plt.pause(0.01)
         #
@@ -704,12 +766,19 @@ class DDM(ProcessingMechanism_Base):
 
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
-        """Insures that input to DDM is a single value.
+        """Ensures that input to DDM is a single value.
         Remove when MULTIPROCESS DDM is implemented.
         """
-        if not isinstance(variable, numbers.Number) and len(variable) > 1:
+        # this test may become obsolete when size is moved to Component.py
+        if len(variable) > 1:
+            raise DDMError("Length of input to DDM ({}) is greater than 1, implying there are multiple "
+                           "input states, which is currently not supported in DDM, but may be supported"
+                           " in the future under a multi-process DDM. Please use a single numeric "
+                           "item as the default_variable, or use size = 1.".format(variable))
+        # MODIFIED 6/28/17 (CW): changed len(variable) > 1 to len(variable[0]) > 1
+        if not isinstance(variable, numbers.Number) and len(variable[0]) > 1:
             raise DDMError("Input to DDM ({}) must have only a single numeric item".format(variable))
-        super()._validate_variable(variable=variable, context=context)
+        return super()._validate_variable(variable=variable, context=context)
 
     # MODIFIED 11/21/16 END
 
@@ -798,7 +867,7 @@ class DDM(ProcessingMechanism_Base):
             + kwDDM_Bias (float)
             + NON_DECISION_TIME (float)
             + NOISE (float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which mechanism is executed
+        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
         Returns the following values in self.value (2D np.array) and in
             the value of the corresponding outputState in the self.outputStates dict:
@@ -815,17 +884,17 @@ class DDM(ProcessingMechanism_Base):
         :rtype self.outputState.value: (number)
         """
 
-        # PLACEHOLDER for a time_step_size parameter when time_step_mode/scheduling is implemented:
+        # PLACEHOLDER for a time_step_size parameter when time_step_mode/Scheduling is implemented:
         time_step_size = 1.0
 
         if variable is None or np.isnan(variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
-            variable = self.variableInstanceDefault
+            variable = self._update_variable(self.instance_defaults.variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
         if self.timeScale == TimeScale.TIME_STEP:
 
-            result = self.function(self.variable, context=context)
+            result = self.function(variable, context=context)
             if INITIALIZING not in context:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
             if abs(result) >= self.threshold:
@@ -838,7 +907,7 @@ class DDM(ProcessingMechanism_Base):
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         elif self.timeScale == TimeScale.TRIAL:
 
-            result = self.function(variable=self.variable,
+            result = self.function(variable=variable,
                                    params=runtime_params,
                                    context=context)
 
@@ -876,7 +945,8 @@ class DDM(ProcessingMechanism_Base):
 
             # def _out_update(self, particle, drift, noise, time_step_size, decay):
             #     ''' Single update for OU (special case l=0 is DDM)'''
-            #     return particle + time_step_size * (decay * particle + drift) + random.normal(0, noise) * sqrt(time_step_size)
+            #     return particle + time_step_size * (decay * particle + drift)
+            #                     + random.normal(0, noise) * sqrt(time_step_size)
 
 
             # def _ddm_update(self, particle, a, s, dt):

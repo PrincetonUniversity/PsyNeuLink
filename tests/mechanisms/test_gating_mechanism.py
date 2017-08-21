@@ -1,4 +1,5 @@
 import numpy as np
+
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Logistic
@@ -8,36 +9,37 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import FUNCTION, FUNCTION_PARAMS, INITIALIZER, LEARNING, RATE, SOFT_CLAMP, VALUE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.TimeScale import CentralClock
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 
 def test_gating():
     Input_Layer = TransferMechanism(
         name='Input Layer',
         function=Logistic,
-        default_input_value=np.zeros((2,))
+        default_variable=np.zeros((2,))
     )
 
     Hidden_Layer_1 = TransferMechanism(
         name='Hidden Layer_1',
         function=Logistic(),
-        default_input_value=np.zeros((5,))
+        default_variable=np.zeros((5,))
     )
 
     Hidden_Layer_2 = TransferMechanism(
         name='Hidden Layer_2',
         function=Logistic(),
-        default_input_value=[0, 0, 0, 0]
+        default_variable=[0, 0, 0, 0]
     )
 
     Output_Layer = TransferMechanism(
         name='Output Layer',
         function=Logistic,
-        default_input_value=[0, 0, 0]
+        default_variable=[0, 0, 0]
     )
 
     Gating_Mechanism = GatingMechanism(
-        default_gating_policy=0.0,
+        # default_gating_policy=0.0,
+        size=[1],
         gating_signals=[
             Hidden_Layer_1,
             Hidden_Layer_2,
@@ -86,7 +88,8 @@ def test_gating():
     )
 
     z = process(
-        default_input_value=[0, 0],
+        # default_variable=[0, 0],
+        size=2,
         pathway=[
             Input_Layer,
             # The following reference to Input_Weights is needed to use it in the pathway
@@ -115,7 +118,7 @@ def test_gating():
     )
 
     g = process(
-        default_input_value=[1.0],
+        default_variable=[1.0],
         pathway=[Gating_Mechanism]
     )
 
@@ -132,7 +135,7 @@ def test_gating():
 
     def show_target():
         i = s.input
-        t = s.targetInputStates[0].value
+        t = s.target_input_states[0].value
         print('\nOLD WEIGHTS: \n')
         print('- Input Weights: \n', Input_Weights.matrix)
         print('- Middle Weights: \n', Middle_Weights.matrix)
@@ -153,7 +156,7 @@ def test_gating():
     # s.show_graph(show_learning=True)
 
     results = s.run(
-        num_executions=10,
+        num_trials=10,
         inputs=stim_list,
         targets=target_list,
         call_before_trial=print_header,

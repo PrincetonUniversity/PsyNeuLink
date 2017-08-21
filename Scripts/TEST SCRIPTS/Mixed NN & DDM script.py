@@ -3,6 +3,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Run import run
+from PsyNeuLink.Components.Functions.Function import *
 
 # import random
 # random.seed(0)
@@ -12,11 +13,11 @@ random_matrix = get_matrix(RANDOM_CONNECTIVITY_MATRIX, 2, 5)
 
 myInputLayer = TransferMechanism(name='Input Layer',
                         function=Linear(),
-                        default_input_value = [0,0])
+                        default_variable = [0,0])
 
 myHiddenLayer = TransferMechanism(name='Hidden Layer 1',
                          function=Logistic(gain=1.0, bias=0),
-                         default_input_value = np.zeros((5,)))
+                         default_variable = np.zeros((5,)))
 
 myDDM = DDM(name='My_DDM',
             function=BogaczEtAl(drift_rate=0.5,
@@ -24,7 +25,7 @@ myDDM = DDM(name='My_DDM',
                                 starting_point=0.0))
 
 myProcess = process(name='Neural Network DDM Process',
-                    default_input_value=[0, 0],
+                    default_variable=[0, 0],
                     pathway=[myInputLayer,
                              random_matrix,
                              # RANDOM_CONNECTIVITY_MATRIX,

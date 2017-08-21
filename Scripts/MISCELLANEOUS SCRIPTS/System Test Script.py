@@ -42,17 +42,17 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # process_prefs.show()
 
-Layer_1 = TransferMechanism(default_input_value=[0,0], name='Layer 1')
-Layer_2 = TransferMechanism(default_input_value=[0,0], name='Layer 2')
-Layer_3 = TransferMechanism(default_input_value=[0,0], name='Layer 3')
+Layer_1 = TransferMechanism(default_variable=[0,0], name='Layer 1')
+Layer_2 = TransferMechanism(default_variable=[0,0], name='Layer 2')
+Layer_3 = TransferMechanism(default_variable=[0,0], name='Layer 3')
 
 
-myProcess_1 = Process_Base(default_input_value=[0, 0],
+myProcess_1 = Process_Base(default_variable=[0, 0],
                            params={PATHWAY:[(Layer_1, 0),
                                                     IDENTITY_MATRIX,
                                                     (Layer_3, 0)]})
 
-myProcess_2 = Process_Base(default_input_value=[0, 0],
+myProcess_2 = Process_Base(default_variable=[0, 0],
                            params={PATHWAY:[(Layer_2, 0),
                                                     FULL_CONNECTIVITY_MATRIX,
                                                     (Layer_3, 0)]})
@@ -69,7 +69,7 @@ def print_inputs():
     print('INPUTS :',mySystem.inputs)
 
 stimuli = [[[[0,0], [1,1]]], [[[2,2], [3,3]]]]
-my_results = mySystem.run(inputs=stimuli, num_executions=2, call_before=print_inputs)
+my_results = mySystem.run(inputs=stimuli, num_trials=2, call_before=print_inputs)
 
 print(my_results)
 

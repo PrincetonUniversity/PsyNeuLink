@@ -12,23 +12,23 @@ process_prefs = {REPORT_OUTPUT_PREF: True,
 system_prefs = {REPORT_OUTPUT_PREF: True,
                 VERBOSE_PREF: False}
 
-colors = TransferMechanism(default_input_value=[0,0],
+colors = TransferMechanism(default_variable=[0,0],
                         function=Linear,
                         name="Colors")
 
-words = TransferMechanism(default_input_value=[0,0],
+words = TransferMechanism(default_variable=[0,0],
                         function=Linear,
                         name="Words")
 
-hidden = TransferMechanism(default_input_value=[0,0],
+hidden = TransferMechanism(default_variable=[0,0],
                            function=Logistic,
                            name="Hidden")
 
-response = TransferMechanism(default_input_value=[0,0],
+response = TransferMechanism(default_variable=[0,0],
                            function=Logistic(),
                            name="Response")
 
-output = TransferMechanism(default_input_value=[0,0],
+output = TransferMechanism(default_variable=[0,0],
                            function=Logistic,
                            name="Output")
 
@@ -47,7 +47,7 @@ HO_Weights = MappingProjection(name='Hidden-Output Weights',
                         )
 
 color_naming_process = process(
-    default_input_value=[1, 2.5],
+    default_variable=[1, 2.5],
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
     learning=LEARNING,
     target=[2,2],
@@ -55,7 +55,7 @@ color_naming_process = process(
     prefs=process_prefs)
 
 word_reading_process = process(
-    default_input_value=[1, 2.5],
+    default_variable=[1, 2.5],
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
     learning=LEARNING,
@@ -98,14 +98,14 @@ target_list_dict = {response:[[1, 1]]}
 
 # mySystem.show_graph(show_learning=True)
 
-mySystem.run(num_executions=2,
+mySystem.run(num_trials=2,
             inputs=stim_list_dict,
             targets=target_list_dict,
             call_before_trial=print_header,
             call_after_trial=show_target)
 
 # print()
-# for m in mySystem.learningExecutionList:
+# for m in mySystem.learningexecution_list:
 #     print (m.name)
 #
 # PsyNeuLink response & weights after 1st trial:

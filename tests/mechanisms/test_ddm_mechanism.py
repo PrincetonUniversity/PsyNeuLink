@@ -1,10 +1,11 @@
 import pytest
 import typecheck
 
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError, DIFFUSION
-from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, NormalDist
-from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Globals.TimeScale import TimeScale
+from PsyNeuLink.Components.Component import ComponentError
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError
+from PsyNeuLink.Scheduling.TimeScale import TimeScale
+
 
 # ======================================= FUNCTION TESTS ============================================
 
@@ -29,7 +30,6 @@ def test_DDM_Integrator():
     T.function_object.initializer = 30.0
     val2 = float(T.execute(stim)[0])
     # assert [val, val2]  == [10, 30]
-test_DDM_Integrator()
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
@@ -246,7 +246,7 @@ def test_DDM_input_list_len_2():
         stim = [10, 10]
         T = DDM(
             name='DDM',
-            default_input_value=[0, 0],
+            default_variable=[0, 0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,
@@ -361,7 +361,7 @@ def test_DDM_input_rate_negative():
     stim = [10]
     T = DDM(
         name='DDM',
-        default_input_value=[0],
+        default_variable=[0],
         function=DriftDiffusionIntegrator(
             noise=0.0,
             rate=-5.0,
@@ -391,7 +391,7 @@ def test_DDM_rate_fn():
         stim = [10]
         T = DDM(
             name='DDM',
-            default_input_value=[0],
+            default_variable=[0],
             function=DriftDiffusionIntegrator(
 
                 noise=0.0,
@@ -404,3 +404,124 @@ def test_DDM_rate_fn():
     assert "incompatible value" in str(error_text.value)
 
 # ------------------------------------------------------------------------------------------------
+
+
+# ======================================= SIZE_INITIALIZATION TESTS ============================================
+
+# VALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# size = int, check if variable is an array of zeros
+
+
+def test_DDM_size_int_check_var():
+    T = DDM(
+        name='DDM',
+        size=1,
+        function=DriftDiffusionIntegrator(
+            noise=0.0,
+            rate=-5.0,
+            time_step_size=1.0
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+    assert len(T.instance_defaults.variable) == 1 and T.instance_defaults.variable[0][0] == 0
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# size = float, variable = [.4], check output after execution
+
+def test_DDM_size_int_inputs_():
+    T = DDM(
+        name='DDM',
+        size=1.0,
+        function=DriftDiffusionIntegrator(
+            noise=0.0,
+            rate=-5.0,
+            time_step_size=1.0
+        ),
+        time_scale=TimeScale.TIME_STEP
+    )
+    val = T.execute([.4]).tolist()
+    assert val == [[-2.0], [0.0], [0.0], [0.0]]
+
+# ------------------------------------------------------------------------------------------------
+
+# INVALID INPUTS
+
+# ------------------------------------------------------------------------------------------------
+# TEST 1
+# size = 0, check less-than-one error
+
+
+def test_DDM_mech_size_zero():
+    with pytest.raises(ComponentError) as error_text:
+        T = DDM(
+            name='DDM',
+            size=0,
+            function=DriftDiffusionIntegrator(
+                noise=0.0,
+                rate=-5.0,
+                time_step_size=1.0
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    assert "is not a positive number" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 2
+# size = -1.0, check less-than-one error
+
+
+def test_DDM_mech_size_negative_one():
+    with pytest.raises(ComponentError) as error_text:
+        T = DDM(
+            name='DDM',
+            size=-1.0,
+            function=DriftDiffusionIntegrator(
+                noise=0.0,
+                rate=-5.0,
+                time_step_size=1.0
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    assert "is not a positive number" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 3
+# size = 3.0, check size-too-large error
+
+
+def test_DDM_size_too_large():
+    with pytest.raises(DDMError) as error_text:
+        T = DDM(
+            name='DDM',
+            size=3.0,
+            function=DriftDiffusionIntegrator(
+                noise=0.0,
+                rate=-5.0,
+                time_step_size=1.0
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    assert "must have only a single numeric item" in str(error_text.value)
+
+# ------------------------------------------------------------------------------------------------
+# TEST 4
+# size = [1,1], check too-many-input-states error
+
+
+def test_DDM_size_too_long():
+    with pytest.raises(DDMError) as error_text:
+        T = DDM(
+            name='DDM',
+            size=[1, 1],
+            function=DriftDiffusionIntegrator(
+                noise=0.0,
+                rate=-5.0,
+                time_step_size=1.0
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
+    assert "is greater than 1, implying there are" in str(error_text.value)
