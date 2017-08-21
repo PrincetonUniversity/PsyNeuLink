@@ -231,7 +231,7 @@ Execution
 ---------
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as `PASS`\\es, in
+they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as `PASS`\\ es, in
 which each Mechanism in the Composition is given an opportunity to execute;  By default, each Mechanism in a Composition
 executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify one or more `Conditions <Condition>`
 for each Mechanism that determine whether it executes in a given `PASS`.  This can be used to determine when
@@ -240,9 +240,9 @@ to other Mechanisms, and any other dependency that can be expressed in terms of 
 in PsyNeuLink. Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and `custom
 <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
 
-The Scheduler continues to execute `PASS`\es until its `termination Conditions <Scheduler_Termination_Conditions>`
-are met, which constitutes a `TRIAL` of executions.  Typically this is associated with a single input to the System.
-Multiple `TRIAL`\s (corresponding to a sequences of inputs) can be executed using a Composition's `run <Composition
+Using a Scheduler, a Composition continues to execute `PASS`\\ es until its `TRIAL` `termination Condition <Scheduler_Termination_Conditions>`
+is met, which constitutes a `TRIAL` of executions.  This is associated with a single input to the System.
+Multiple `TRIAL`\\ s (corresponding to a sequences of inputs) can be executed using a Composition's `run <Composition
 .run>` method.
 
 .. _Quick_Reference_Logging:
