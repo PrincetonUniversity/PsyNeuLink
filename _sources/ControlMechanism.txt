@@ -1,8 +1,10 @@
-Control Mechanism
-=================
+Control Mechanisms
+==================
+
+.. _ControlMechanism_Subtypes:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    DefaultControlMechanism
    EVCMechanism

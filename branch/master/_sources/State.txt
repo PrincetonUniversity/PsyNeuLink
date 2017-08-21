@@ -1,5 +1,8 @@
-State
-=====
+States
+======
+
+.. _State_Subtypes:
+
 
 .. toctree::
    :maxdepth: 1
@@ -7,10 +10,7 @@ State
    InputState
    ParameterState
    OutputState
-   ModulatorySignal
-
-.. toctree::
-   :maxdepth: 3
+   ModulatorySignals <ModulatorySignal>
 
 .. automodule:: State
    :members:

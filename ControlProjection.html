@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlProjection &mdash; PsyNeuLink 0.1 documentation</title>
+  <title>ControlProjection &mdash; PsyNeuLink 0.3.2 documentation</title>
   
 
   
@@ -33,10 +33,10 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PsyNeuLink 0.1 documentation" href="index.html"/>
-        <link rel="up" title="EVCMechanism" href="EVCMechanism.html"/>
-        <link rel="next" title="State" href="State.html"/>
-        <link rel="prev" title="ControlSignal" href="ControlSignal.html"/> 
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="ModulatoryProjections" href="ModulatoryProjection.html"/>
+        <link rel="next" title="GatingProjection" href="GatingProjection.html"/>
+        <link rel="prev" title="LearningProjection" href="LearningProjection.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                0.1
+                0.3
               </div>
             
           
@@ -86,39 +86,27 @@
             
             
                 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="System.html">System</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Process.html">Process</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="State.html">State</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Projection.html">Projection</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">ControlProjection</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#overview">Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#creating-a-controlprojection">Creating a ControlProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#structure">Structure</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#execution">Execution</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#class-reference">Class Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">ControlProjection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="GatingProjection.html">GatingProjection</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="GatingProjection.html">GatingProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#overview">Overview</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#creating-a-modulatoryprojection">Creating a ModulatoryProjection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#structure">Structure</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#execution">Execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html#class-reference">Class Reference</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#overview">Overview</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#creating-a-projection">Creating a Projection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#structure">Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Projection.html#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Run.html">Run</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Component</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Function.html">Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -149,13 +137,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-          <li><a href="Mechanism.html">Mechanism</a> &raquo;</li>
+          <li><a href="Component.html">Components</a> &raquo;</li>
       
-          <li><a href="AdaptiveMechanism.html">Adaptive Mechanism</a> &raquo;</li>
+          <li><a href="Projection.html">Projections</a> &raquo;</li>
       
-          <li><a href="ControlMechanism.html">Control Mechanism</a> &raquo;</li>
-      
-          <li><a href="EVCMechanism.html">EVCMechanism</a> &raquo;</li>
+          <li><a href="ModulatoryProjection.html">ModulatoryProjections</a> &raquo;</li>
       
     <li>ControlProjection</li>
       <li class="wy-breadcrumbs-aside">
@@ -175,57 +161,53 @@
 <span id="controlprojection"></span><h1>ControlProjection<a class="headerlink" href="#module-ModulatoryProjections.ControlProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="controlprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ControlProjection is a subclass of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> of
-a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanism</span></a>. It takes the value of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>, and uses it to  modify the
-value of the parameter associated with the ParameterState to which it projects.  All of the ControlProjections in a
-system, along with its other <a class="reference internal" href="ControlMechanism.html"><span class="doc">control components</span></a>, can be displayed using the system&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>
-method with its <strong>show_control</strong> argument assigned as <code class="xref std std-keyword docutils literal"><span class="pre">True</span></code>.</p>
+<p>A ControlProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>. It takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and uses it to  modify the value of the parameter associated
+with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other <a class="reference internal" href="ControlMechanism.html"><span class="doc">control
+components</span></a>, can be displayed using the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with
+its <strong>show_control</strong> argument assigned as <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
 </div>
 <div class="section" id="creating-a-controlprojection">
 <span id="controlprojection-creation"></span><h2>Creating a ControlProjection<a class="headerlink" href="#creating-a-controlprojection" title="Permalink to this headline">¶</a></h2>
-<p>A ControlProjection can be created using any of the standard ways to <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a projection</span></a>,
-or by including it in a tuple that <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">specifies a parameter</span></a> for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, or the <code class="xref any docutils literal"><span class="pre">function</span></code> of either of these.  If a ControlProjection is created
-using its constructor on its own, the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> argument must be specified.  If it is
-included in a parameter specification, the ParameterState for the parameter being specified will be assigned as the
-ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is not
-specified, its assignment depends on the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  If the receiver belongs to a
-Mechanism that is part of a System, then the ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is assigned to a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.</p>
+<p>A ControlProjection can be created using any of the standard ways to <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a Projection</span></a>,
+or by including it in a <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple</span></a> that specifies a parameter for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, or the <a class="reference internal" href="Component.html#Component.Component.function" title="Component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of either of these.  If a ControlProjection
+is created explicitly (using its constructor), and its <strong>receiver</strong> argument is not specified, its initialization is
+<a class="reference internal" href="#controlprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.  If it is included in a parameter specification,
+the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter being specified will be assigned as the ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>. If its <strong>sender</strong> argument is not specified, its assignment depends on the
+<strong>receiver</strong>.  If the <strong>receiver</strong> belongs to a Mechanism that is part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, then the ControlProjection&#8217;s
+<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is assigned to a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>.  Otherwise,
+its initialization is <a class="reference internal" href="#controlprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p>
 <div class="section" id="deferred-initialization">
 <span id="controlprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
-<p>When a ControlProjection is created, its full initialization is <span class="xref std std-ref">deferred</span> until its
-<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a ControlProjection to be created before its <a class="reference internal" href="Function.html#Function.Stability.MappingProjection.sender" title="Function.Stability.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (and/or <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>) have been created (e.g., before them in a
-script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
-ControlProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is
-not necessary if the parameter(s) to be controlled are specified in the <strong>control_signals</strong> argument of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, or
-in a tuple specifying the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> (or its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Mechanism.function</span></code>) that is part of a System
-&#8211; in those cases, deferred initialization is completed automatically.</p>
+<p>When a ControlProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
+a ControlProjection to be created before its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a script), by calling its constructor without
+specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the ControlProjection to be operational,
+initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method. This is not necessary if the ControlProjection
+is included in a <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple specification</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, in which case the deferred initialization is completed
+automatically when the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> is created for the <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which the parameter&#8217;s owner
+belongs (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">Creating a ControlMechanism</span></a>).</p>
 </div>
 </div>
 <div class="section" id="structure">
 <span id="controlprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a ControlProjection is a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanism</span></a>.  Its
-<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> is the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, that is
-associated with a parameter of the ParameterState&#8217;s owner or its owner&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.  The
-<code class="xref any docutils literal"><span class="pre">function</span></code> of a ControlProjection is, by default, the identity function;  that is,
-it conveys the <code class="xref any docutils literal"><span class="pre">value</span></code> of its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to
-its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, for use in modifying the value of the parameter that it controls.</p>
+<p>The <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of a ControlProjection is a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>. The <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> is used by the
+ControlProjection as its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.variable" title="ModulatoryProjections.ControlProjection.ControlProjection.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  this is also assigned to its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> attribute, and serves as the input to the ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The default <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for a
+ControlProjection is an identity function (<a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> with <strong>slope</strong>=1 and <strong>intercept</strong>=0);  that is, it simply
+conveys the value of its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> to its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, for use in modifying the value of the parameter that it controls. Its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> is the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that is controlled by the ControlProjection.</p>
 </div>
 <div class="section" id="execution">
 <span id="controlprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection cannot be executed directly.  It is executed when the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects is
-updated.  Note that this only occurs when the ProcessingMechanism to which the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> belongs is executed
+updated.  Note that this only occurs when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> belongs is executed
 (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221; updating). When a ControlProjection is executed, its
-<code class="xref any docutils literal"><span class="pre">function</span></code> assigns the value of the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> from which it projects as its own
-<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>. This is used by the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which the ControlProjection projects to
-modify the parameter for which it is responsible.</p>
+<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> gets the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> from its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and conveys that to its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  This is used by the
+<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> to modify the parameter controlled by the ControlProjection (see
+<a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ParameterState.html#parameterstate-execution"><span class="std std-ref">ParameterState Execution</span></a> for how modulation operates and
+how this applies to a ParameterState).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The changes in a parameter in response to the execution of a ControlProjection are not applied until the
-Mechanism that receives the projection are next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of &#8220;lazy&#8221;
-updating).</p>
+<p class="last">The changes to a parameter in response to the execution of a ControlProjection are not applied until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives the ControlProjection are next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of
+&#8220;lazy&#8221; updating).</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -233,33 +215,32 @@ updating).</p>
 <dl class="class">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection">
 <em class="property">class </em><code class="descclassname">ModulatoryProjections.ControlProjection.</code><code class="descname">ControlProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>function=Linear            control_signal_params      params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>Implements a projection that controls the parameter of a mechanism or its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.</div></blockquote>
+<dd><p>Subclass of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that modulates the value of a <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a
+<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<em>Optional[Mechanism or OutputState]</em>) &#8211; specifies the source of the input for the ControlProjection;  usually an <a class="reference internal" href="OutputState.html"><span class="doc">outputState</span></a> of a
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and commonly the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of an <a class="reference internal" href="EVCMechanism.html"><span class="doc">EVCMechanism</span></a>.  If it is not
-specified, the ControlProjection will
-be ignored during execution.</li>
-<li><strong>receiver</strong> (<em>Optional[Mechanism or ParameterState]</em>) &#8211; specifies the parameterState associated with the parameter to be controlled.  This must be specified,
-or be able to be determined by the context in which the ControlProjection is created or assigned.</li>
-<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) &#8211; specifies the function used to convert the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the ControlProjection&#8217;s
-<a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>  to its own <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
-<li><strong>control_signal_params</strong> (<em>Dict[param keyword, param value]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> that is the sender of the projection (see <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">Structure</span></a> for a description
+<li><strong>sender</strong> (<em>Optional[ControlMechanism or ControlSignal]</em>) &#8211; specifies the source of the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> for the ControlProjection;
+if it is not specified and cannot be <a class="reference internal" href="#controlprojection-creation"><span class="std std-ref">inferred from context</span></a>, initialization is
+<a class="reference internal" href="#controlprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
+<li><strong>receiver</strong> (<em>Optional[Mechanism or ParameterState]</em>) &#8211; specifies the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> associated with the parameter to be controlled; if it is not specified,
+and cannot be <a class="reference internal" href="#controlprojection-creation"><span class="std std-ref">inferred from context</span></a>, initialization is <a class="reference internal" href="#controlprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear(slope=1, intercept=0)</em>) &#8211; specifies the function used to convert the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> to the
+ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+<li><strong>control_signal_params</strong> (<em>Dict[param keyword, param value]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> (see <a class="reference internal" href="ControlSignal.html#controlsignal-structure"><span class="std std-ref">Structure</span></a> for a description
 of ControlSignal parameters).</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specifying-parameters"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
-the projection, its <code class="xref any docutils literal"><span class="pre">function</span></code>, and/or a custom function and its parameters.
+<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the ControlProjection, its <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="ModulatoryProjections.ControlProjection.ControlProjection.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or a custom function and its parameters.
 Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
 <li><strong>name</strong> (<em>str : default ControlProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the ControlProjection.
 If not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the ControlProjection.
-If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref doc">PreferenceSet</span> for details).</li>
 </ul>
 </td>
@@ -275,34 +256,47 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.sender">
 <code class="descname">sender</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputState of ControlMechanism</em> &#8211; mechanism that provides the current input for the ControlProjection (usually a
-<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>).</p>
+<dd><p><em>ControlSignal</em> &#8211; source of the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.receiver">
 <code class="descname">receiver</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ParameterState of Mechanism</em> &#8211; <a class="reference internal" href="ParameterState.html"><span class="doc">parameterState</span></a> for the parameter to be modified by the ControlProjection.</p>
+<dd><p><em>ParameterState of Mechanism</em> &#8211; <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter to be modified by the ControlProjection.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="ModulatoryProjections.ControlProjection.ControlProjection.allocation">
-<code class="descname">allocation</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.allocation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d np.array</em> &#8211; the input to the ControlProjection; same as the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
+<dt id="ModulatoryProjections.ControlProjection.ControlProjection.variable">
+<code class="descname">variable</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> &#8211; same as <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatoryProjections.ControlProjection.ControlProjection.control_signal">
+<code class="descname">control_signal</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> &#8211; the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ModulatoryProjections.ControlProjection.ControlProjection.function">
+<code class="descname">function</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> &#8211; assigns the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.control_signal" title="ModulatoryProjections.ControlProjection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal"><span class="pre">control_signal</span></code></a> received from the <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the
+ControlProjection&#8217;s <a class="reference internal" href="#ModulatoryProjections.ControlProjection.ControlProjection.value" title="ModulatoryProjections.ControlProjection.ControlProjection.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>; the default in an identity function.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.value">
 <code class="descname">value</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; during initialization, assigned a keyword string (either <code class="xref any docutils literal"><span class="pre">INITIALIZING</span></code> or <code class="xref any docutils literal"><span class="pre">DEFERRED_INITIALIZATION</span></code>);
-during execution, is assigned the current value of the ControlProjection.</p>
+<dd><p><em>float</em> &#8211; the value used to modify the parameter controlled by the ControlProjection (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>
+and <a class="reference internal" href="ParameterState.html#parameterstate-execution"><span class="std std-ref">ParameterState Execution</span></a> for how modulation operates and how this applies
+to a ParameterState).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.name">
 <code class="descname">name</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str : default ControlProjection-&lt;index&gt;</em> &#8211; the name of the ControlProjection.
-Specified in the <strong>name</strong> argument of the constructor for the projection;
+Specified in the <strong>name</strong> argument of the constructor for the ControlProjection;
 if not is specified, a default is assigned by ProjectionRegistry
 (see <span class="xref doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
@@ -310,9 +304,9 @@ if not is specified, a default is assigned by ProjectionRegistry
 <dl class="attribute">
 <dt id="ModulatoryProjections.ControlProjection.ControlProjection.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#ModulatoryProjections.ControlProjection.ControlProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for projection.
-Specified in the <strong>prefs</strong> argument of the constructor for the projection;
-if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for ControlProjection.
+Specified in the <strong>prefs</strong> argument of the constructor for the ControlProjection;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 (see <span class="xref doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
@@ -328,10 +322,10 @@ if it is not specified, a default is assigned using <code class="xref any docuti
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="State.html" class="btn btn-neutral float-right" title="State" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="GatingProjection.html" class="btn btn-neutral float-right" title="GatingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="ControlSignal.html" class="btn btn-neutral" title="ControlSignal" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LearningProjection.html" class="btn btn-neutral" title="LearningProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -362,7 +356,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1',
+            VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

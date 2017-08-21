@@ -1,10 +1,13 @@
-PathwayProjection
-=================
+PathwayProjections
+==================
+
+.. _PathwayProjection_Subtypes:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    MappingProjection
+   AutoAssociativeProjection
 
 .. automodule:: PathwayProjections.PathwayProjection
    :members:

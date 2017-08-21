@@ -1,11 +1,6 @@
 IntegratorMechanism
 ===================
 
-.. toctree::
-   :maxdepth: 3
-
-   IntegratorMechanism
-
-.. automodule:: IntegratorMechanism
+.. automodule:: ProcessingMechanisms.IntegratorMechanism
    :members:
    :exclude-members: random

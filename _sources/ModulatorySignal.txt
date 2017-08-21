@@ -1,5 +1,7 @@
-ModulatorySignal
-================
+ModulatorySignals
+=================
+
+.. _ModulatorySignal_Subtypes:
 
 .. toctree::
    :maxdepth: 1

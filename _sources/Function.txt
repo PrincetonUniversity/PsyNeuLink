@@ -11,12 +11,19 @@ Functions
              UserDefinedFunction,
              Reduce,
              LinearCombination,
+             TransferFunction,
              Linear,
              Exponential,
              Logistic,
              SoftMax,
              LinearMatrix,
              Integrator,
+             SimpleIntegrator,
+             ConstantIntegrator,
+             AdaptiveIntegrator,
+             DriftDiffusionIntegrator,
+             OrnsteinUhlenbeckIntegrator,
+             AccumulatorIntegrator,
              BogaczEtAl,
              NavarroAndFuss,
              NormalDist,
@@ -29,5 +36,4 @@ Functions
              LearningFunction,
              Reinforcement,
              BackPropagation,
-..
-    :exclude-members: function
+   :exclude-members: MappingProjection, ParameterState
