@@ -2,5 +2,5 @@ Keywords
 ========
 
 .. automodule:: Keywords
-   :members: Keywords, MatrixKeywords
+   :members: MechanismRoles, MatrixKeywords
    :exclude-members: random, LinearCombination

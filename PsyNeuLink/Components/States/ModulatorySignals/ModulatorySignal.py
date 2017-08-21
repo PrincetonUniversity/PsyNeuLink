@@ -300,8 +300,8 @@ class ModulatorySignal(OutputState):
         assigns `variable <ModulatorySignal.variable>` as ModulatorySignal's `value <ModulatorySignal.value>`.
 
     value : number, list or np.ndarray
-        result of `function <ModulatorySignal.function>`, and is the value used to determine the
-        `value <State_Base.value>` of the State(s) being modulated.
+        result of `function <ModulatorySignal.function>`, used to determine the `value <State_Base.value>` of the
+        State(s) being modulated.
 
     modulation : ModulationParam
         determines how the output of the ModulatorySignal is used to modulate the value of the state(s) being modulated.
