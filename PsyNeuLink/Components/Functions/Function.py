@@ -574,8 +574,28 @@ class Function_Base(Function):
                          prefs=prefs,
                          context=context)
 
+        self.__llvm_function_name = None
+        self.__llvm_regenerate = True
+        self.__llvm_bin_function = None
+        self.__llvm_recompile = True
+
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
+
+    @property
+    def llvmSymbolName(self):
+        if self.__llvm_regenerate:
+            self.__llvm_function_name = self._gen_llvm_function()
+            self.__llvm_regenerate = False
+            self.__llvm_recompile = True
+        return self.__llvm_function_name
+
+    @property
+    def _llvmBinFunction(self):
+        if self.__llvm_recompile:
+            self.__llvm_bin_function = pnlvm.LLVMBinaryFunction.get(self.llvmSymbolName)
+            self.__llvm_recompile = False
+        return self.__llvm_bin_function
 
     @property
     def functionOutputType(self):
