@@ -158,7 +158,7 @@ for mech in mySystem.controller.prediction_mechs:
 
 
 
-print('new rate of integration mechanisms before system execution:')
+print('new rate of integration mechanisms before System execution:')
 for mech in mySystem.controller.prediction_mechs:
     print( mech.name)
     print( mech.function_object.rate)

@@ -195,9 +195,9 @@ def _instantiate_learning_components(learning_projection, context=None):
     * See LearningComponents class for the names of the components of learning used here.
 
     * This method supports only a single pathway for learning;  that is, the learning sequence must be a linear
-        sequence of ProcessingMechanisms.  This is consistent with its implementation at the process level;
-        convergent and divergent pathways for learning can be accomplished through compostion in a
-        system.  Accordingly:
+        sequence of ProcessingMechanisms.  This is consistent with its implementation at the Process level;
+        convergent and divergent pathways for learning can be accomplished through Composition in a
+        System.  Accordingly:
 
             - each LearningMechanism can have only one LearningProjection
             - each ProcessingMechanism can have only one MappingProjection that is subject to learning
