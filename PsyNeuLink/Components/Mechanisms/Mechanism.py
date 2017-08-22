@@ -881,8 +881,8 @@ class Mechanism_Base(Mechanism):
 
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
-           `output_values <Mechanism_Base.output_values>` attribute, which lists the `value <OutputState.value>`\\s
-           of its `OutputStates <Mechanism_Base.output_states>`.
+           `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputState.value>`
+           of its `OutputStates <Mechanism_Base.outputStates>`.
 
     default_value : ndarray : default None
         set equal to the `value <Mechanism_Base.value>` attribute when the Mechanism is first initialized; maintains
@@ -937,7 +937,7 @@ class Mechanism_Base(Mechanism):
 
     COMMENT:
         phaseSpec : int or float :  default 0
-            determines the `TIME_STEP`\ (s) at which the Mechanism is executed as part of a System
+            determines the `TIME_STEP` (s) at which the Mechanism is executed as part of a System
             (see :ref:`Process_Mechanisms` for specification, and :ref:`System Phase <System_Execution_Phase>`
             for how phases are used).
     COMMENT

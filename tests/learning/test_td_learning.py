@@ -1,19 +1,9 @@
 import pprint
 
 import numpy as np
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism \
-    import \
-    AdaptiveMechanism_Base
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms import \
-    AdaptiveMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms \
-    .LearningMechanism import \
-    LearningMechanism
-
+from PsyNeuLink import CURRENT_STATE
 from PsyNeuLink.Components.Functions.Function import TDLearning
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms \
-    .TDLearningMechanism import TDLearningMechanism
 
 
 def test_td_learning():
@@ -26,13 +16,60 @@ def test_td_learning():
 
     reward = np.array(reward, dtype=float)
 
-    t = TDLearning(reward=reward, discount_factor=0.8, goal_state=5, initial_iterations=10)
+    t = TDLearning(reward=reward, discount_factor=0.8, goal_state=5,
+                   initial_iterations=10, initial_state=2)
     print(t)
-    learning_mech = TDLearningMechanism([[0, 0], [0, 0], [0, 0]], function=t)
-    learning_mech.function = t
-    learning_mech.run([0])
+    for i in range(len(reward)):
+        t.paramsCurrent[CURRENT_STATE] = i
+        for _ in range(100):
+            weights = t.function()
+    print("weights = {}".format(weights))
 
-    print(learning_mech.value)
+
+def test_td_learning_2():
+    reward = [
+        [None, 0, None, None, 0, None, None, None, None, None, None, None, None,
+         None, None, None],
+        [0, None, None, None, None, None, None, None, None, None, None, None,
+         None, None, None, None],
+        [None, None, None, 0, None, None, 0, None, None, None, None, None, None,
+         None, None, None],
+        [None, None, 0, None, None, None, None, 0, None, None, None, None, None,
+         None, None, None],
+        [0, None, None, None, None, None, None, None, 0, None, None, None, None,
+         None, None, None],
+        [None, None, None, None, None, None, 0, None, None, 0, None, None, None,
+         None, None, None],
+        [None, None, 0, None, None, 0, None, None, None, None, None, None, None,
+         None, None, None],
+        [None, None, None, 0, None, None, None, None, None, None, None, 0, None,
+         None, None, None],
+        [None, None, None, None, 0, None, None, None, None, 0, None, None, 0,
+         None, None, None],
+        [None, None, None, None, None, 0, None, None, 0, None, 0, None, None, 0,
+         None, None],
+        [None, None, None, None, None, None, None, None, None, 0, None, None,
+         None, None, 0, None],
+        [None, None, None, None, None, None, None, 0, None, None, None, None,
+         None, None, None, 100],
+        [None, None, None, None, None, None, None, None, 0, None, None, None,
+         None, None, None, None],
+        [None, None, None, None, None, None, None, None, None, 0, None, None,
+         None, None, 0, None],
+        [None, None, None, None, None, None, None, None, None, None, 0, None,
+         None, 0, None, None],
+        [None, None, None, None, None, None, None, None, None, None, None, 0,
+         None, None, None, 100]]
+
+    reward = np.array(reward, dtype=float)
+    t = TDLearning(reward=reward, discount_factor=0.8, goal_state=15,
+                   initial_state=2)
+    print(t)
+    for i in range(len(reward)):
+        t.paramsCurrent[CURRENT_STATE] = i
+        for _ in range(100):
+            weights = t.function()
+    print("weights = {}".format(weights))
 
 
 def test_q_matrix():

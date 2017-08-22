@@ -643,7 +643,7 @@ DIFFUSION = 'diffusion'
 
 GOAL_STATE = 'goal_state'
 CURRENT_STATE = 'current_state'
-INITIAL_WEIGHTS = 'inital_weights'
+INITIAL_WEIGHTS = 'initial_weights'
 DISCOUNT_FACTOR = 'discount_factor'
 REWARD = 'reward'
 Q_MATRIX = 'q_matrix'

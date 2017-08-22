@@ -293,7 +293,7 @@ Execution
 
 A Process can be executed as part of a `System <System_Execution>` or on its own.  On its own, it is executed by calling
 either its `execute <Process_Base.execute>` or `run <Process_Base.run>` method.  `execute <Process.execute>` executes
-the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`\\s to be
+the Process once (that is, it executes a single `TRIAL`);  `run <Process.run>` allows a series of `TRIAL`s to be
 executed. When a Process is executed, its `input` is conveyed to the `origin_mechanism <Process_Base.origin_mechanism>`
 (the first Mechanism in the `pathway <Process_Base.pathway>`).  By default, the the input is presented only once.  If
 the `origin_mechanism <Process_Base.origin_mechanism>` is executed again in the same `PASS` of execution (e.g., if it

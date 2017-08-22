@@ -7471,14 +7471,16 @@ class TDLearning(LearningFunction):
         """
         # TODO: is it helpful to have a states argument that specifies which
         # states to go to
-        print("Calling function init...")
         self.name = "TDLearning Function"
         try:
             print(self.paramsCurrent)
         except AttributeError:
             pass
-        print("reward shape = {}".format(reward.shape))
+
         q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
+
+        if not initial_weights:
+            initial_weights = np.ones(len(reward))
 
         params = self._assign_args_to_param_dicts(
             learning_rate=learning_rate,
@@ -7508,8 +7510,8 @@ class TDLearning(LearningFunction):
                  params=None,
                  context=None):
         self._check_args(variable=variable, params=params, context=context)
-        print("context = {}".format(context))
-        if "INITIALIZING" in context:
+
+        if context and "INITIALIZING" in context:
             return self.default_initial_weights
 
         weights = self.paramsCurrent[WEIGHTS]
@@ -7525,15 +7527,18 @@ class TDLearning(LearningFunction):
             return weights
 
         # TODO: change this to highest q-value of next state
+        print("gradient = {}".format(np.gradient))
         next_action = np.argmax(q_matrix[current_state])
-        weights = weights + learning_rate * (
+        print("Current state: {}".format(current_state))
+        print("Next action: {}".format(next_action))
+        weights[current_state] = weights[current_state] + (learning_rate * (
             discount_factor * np.max(q_matrix[next_action]) +
             reward[current_state][next_action] -
-            q_matrix[current_state][next_action]) * np.gradient(q_matrix)
+            q_matrix[current_state][next_action])) # * np.gradient(q_matrix))
 
         self.paramsCurrent[CURRENT_STATE] = next_action
         self.paramsCurrent[WEIGHTS] = weights
-        return [weights - initial_weights, params['error_source']]
+        return [weights - initial_weights]
 
     def _initialize_q_matrix(self, context):
 
@@ -7543,7 +7548,6 @@ class TDLearning(LearningFunction):
         num_iterations = self.paramsCurrent[INITIAL_ITERATIONS]
         discount_factor = self.paramsCurrent[DISCOUNT_FACTOR]
 
-        print("q_matrix = {}".format(self.q_matrix))
         if np.any(q_matrix):
             return
 
@@ -7576,9 +7580,7 @@ class TDLearning(LearningFunction):
                         reward[current_state][next_action] + discount_factor * max_q
                     current_state = next_action
 
-        print("post initialization = {}".format(q_matrix))
         self.paramsCurrent[Q_MATRIX] = q_matrix
-        self.q_matrix = q_matrix
 
 
 
