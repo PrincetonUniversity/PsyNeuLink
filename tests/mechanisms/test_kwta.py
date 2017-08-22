@@ -386,8 +386,8 @@ class TestKWTAThreshold:
             size=4,
             threshold=-1
         )
-        p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        p = process(pathway=[K], prefs=TestKWTAThreshold.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTAThreshold.simple_prefs)
         s.run(inputs={K: [1, 2, 3, 4]})
         assert K.value.tolist() == [[0.07585818002124355, 0.18242552380635635, 0.3775406687981454, 0.6224593312018546]]
 
@@ -409,6 +409,8 @@ class TestKWTAControl:
 
 class TestKWTALongTerm:
 
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+
     def test_kwta_size_10_k_3_threshold_1(self):
         K = KWTA(
             name='K',
@@ -418,8 +420,8 @@ class TestKWTALongTerm:
             decay=0.3,
             time_scale=TimeScale.TIME_STEP
         )
-        p = process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
-        s = system(processes=[p], prefs=TestKWTARatio.simple_prefs)
+        p = process(pathway=[K], prefs=TestKWTALongTerm.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTALongTerm.simple_prefs)
         kwta_input = {K: [-1, -.5, 0, 0, 0, 1, 1, 2, 3, 3]}
         print("")
         for i in range(20):
@@ -438,3 +440,69 @@ class TestKWTALongTerm:
         assert K.value.tolist() == [[0.13127237999481228, 0.13130057846907178, 0.1313653354768465, 0.1313653354768465,
                                      0.1313653354768465, 0.5863768938723602, 0.5863768938723602, 0.8390251365605804,
                                      0.8390251603214743, 0.8390251603214743]]
+
+class TestKWTAAverageBased:
+
+    simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
+
+    def test_kwta_average_k_2(self):
+        K = KWTA(
+            name='K',
+            size=4,
+            k_value=2,
+            threshold=0,
+            function=Linear,
+            average_based=True
+        )
+        p = process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        kwta_input = {K: [1, 2, 3, 4]}
+        s.run(inputs=kwta_input)
+        assert K.value.tolist() == [[-1.5, -0.5, 0.5, 1.5]]
+
+    def test_kwta_average_k_1(self):
+        K = KWTA(
+            name='K',
+            size=4,
+            k_value=1,
+            threshold=0,
+            function=Linear,
+            average_based=True
+        )
+        p = process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        kwta_input = {K: [1, 2, 3, 4]}
+        s.run(inputs=kwta_input)
+        assert K.value.tolist() == [[-2, -1, 0, 1]]
+
+    def test_kwta_average_k_1_ratio_0_2(self):
+        K = KWTA(
+            name='K',
+            size=4,
+            k_value=1,
+            threshold=0,
+            ratio=0.2,
+            function=Linear,
+            average_based=True
+        )
+        p = process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        kwta_input = {K: [1, 2, 3, 4]}
+        s.run(inputs=kwta_input)
+        assert K.value.tolist() == [[-2.6, -1.6, -0.6000000000000001, 0.3999999999999999]]
+
+    def test_kwta_average_k_1_ratio_0_8(self):
+        K = KWTA(
+            name='K',
+            size=4,
+            k_value=1,
+            threshold=0,
+            ratio=0.8,
+            function=Linear,
+            average_based=True
+        )
+        p = process(pathway=[K], prefs=TestKWTAAverageBased.simple_prefs)
+        s = system(processes=[p], prefs=TestKWTAAverageBased.simple_prefs)
+        kwta_input = {K: [1, 2, 3, 4]}
+        s.run(inputs=kwta_input)
+        assert K.value.tolist() == [[-1.4, -0.3999999999999999, 0.6000000000000001, 1.6]]
