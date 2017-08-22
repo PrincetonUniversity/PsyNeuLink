@@ -109,11 +109,10 @@ Installation
 .. note::
    PsyNeuLink is beta software, that is still being actively developed.  Although it is useable, and most of the
    documented functionality is available, some features may not yet be fully implemented and/or subject to
-   modification.  Please report any bugs and/or suggestions for develppment to psyneulinkhelp@princeton.edu.
+   modification.  Please report any bugs and/or suggestions for development to psyneulinkhelp@princeton.edu.
 
 Because core elements of PsyNeuLink are still under development, it is not yet available through pypi/pip.
-Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink).
-Clone the master branch.
+Instead, you can clone the github repo (https://github.com/PrincetonUniversity/PsyNeuLink). Clone the master branch.
 Download the package with the green "Clone or download" button on the right side of the page and "Download ZIP."
 
 Alternatively, if you are familiar with git, the directory can be cloned as usual through the terminal. Note: The
