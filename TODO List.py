@@ -960,7 +960,7 @@
 
 # DOCUMENTATION: MOVE DESCRIPTION OF PARAMETER SPECIFICATION DICTIONARY FROM UNDER MECHANISM TO UNDER COMPONENT
 #                  AND ADJUST ALL REFERENCES OF THE FOLLOWING TYPE ACCORDINGLY:
-#                   (see :doc:`Mechanism` for specification of a parms dict)
+#                   (see :doc:`Mechanism <Mechanism>` for specification of a parms dict)
 # DOCUMENTATION:  NEED GENERAL INTRO, INCLUDING COMMENT ABOUT SPECIFYING ARGUMENTS/PARAMETERS:
 #                    FOR ARGUMENTS OF __init__ , THERE IS USUALLY AN ATTRIBUTE OF THE OBJECT THAT CAN BE ASSIGNED A
 #                    VALUE AFTER IT IS CREATED.  (PUT THIS WHEREVER PARAMS, PARAMSCURRENT, INSTANCE DEFAULTS ETC.
@@ -2045,7 +2045,7 @@
 #     FIX: GET STRAIGHT process.value vs. system.output vs. system.oputputValue
 #     FIX: IMPLEMENT .output FOR Process:  == ndarray of all outputState.variables
 #                         # FIX: THESE NEED TO BE PROPERLY MAPPED
-#                         return np.array(list(item.value for item in self.lastMechanism.outputStates.values()))
+#                         return np.array(list(item.value for item in self.last_mechanism.outputStates.values()))
 #     FIX: CHECK FOR dtype == object (I.E., MIXED LENGTH ARRAYS) FOR BOTH VARIABLE AND VALUE REPRESENTATIONS OF MECHANISM)
 #     IMPLEMENT HIERARCHICAL SETTERS AND GETTERS FOR .value AND .metavalues;  USE THEM TO:
 #                                                                             - REPRESENT OUTPUT FORMAT OF function
@@ -2218,7 +2218,7 @@
 #                                   FLAG SOURCES OF FEEDBACK PROJECTIONS AS NEEDING THIS SPECIFIED
 #                                   INCLUDE KEYWORD "IGNORE" THAT MEANS DON'T USE THAT PROJECTION ON INITIALIZATION PASS
 #
-# FIX: System.mechanismList.mechanismNames
+# FIX: System.mechanismList.mechanism_names
 # FIX: MAKE SURE THIS IS OK (IN System):
 #                                 # MODIFIED 9/15/16 NEW:
 #                                 values.append(output_state.value)
@@ -2377,9 +2377,9 @@
 #
 # FIX: SOFT CLAMP and HARD CLAMP (for clamp_input option): convert SOFT_CLAMP and HARD_CLAMP to enums and test for them
 #
-# FIX: REPLACE Process.firstMechanism and Process.lastMechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
-# FIX: *** CHANGE process.firstMechanism -> process.origin
-# FIX: *** CHANGE process.lastMechanism -> process.terminal
+# FIX: REPLACE Process.first_mechanism and Process.last_mechanism WITH ORIGIN AND TERMINAL mechanisms THROUGHOUT PROJECT
+# FIX: *** CHANGE process.first_mechanism -> process.origin
+# FIX: *** CHANGE process.last_mechanism -> process.terminal
 #
 # FIX: add learning_mech_tuples and learningMechanisms
 #

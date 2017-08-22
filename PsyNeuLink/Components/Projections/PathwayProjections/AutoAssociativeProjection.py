@@ -18,7 +18,7 @@ An AutoAssociativeProjection is a subclass of `MappingProjection` that acts as t
 `RecurrentTransferMechanism`. The primary difference between an AutoAssociativeProjection and a basic MappingProjection
 is that an AutoAssociativeProjection uses the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters *on the RecurrentTransferMechanism* to help update its matrix:
-this allows for a `ControlMechanism` to control the `auto <RecurrentTransferMechanism.auto>` and
+this allows for a `ControlMechanism <ControlMechanism>` to control the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters and thereby control the matrix.
 
 .. _Auto_Associative_Creation:
@@ -67,13 +67,13 @@ An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>
 `receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
 
 .. note::
-     Under the hood, during execution the AutoAssociativeProjection updates its
-     `matrix <AutoAssociativeProjection.matrix> parameter based on the `auto <RecurrentTransferMechanism.auto>` and
-     `hetero <RecurrentTransferMechanism.hetero>` parameters *on the* `RecurrentTransferMechanism`. (The
-     `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjection.hetero>` parameters of the
-     AutoAssociativeProjection simply refer to their counterparts on the RecurrentTransferMechanism as well.) The reason
-     for putting the `auto <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>`
-     parameters on the RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism`.
+     During execution the AutoAssociativeProjection updates its `matrix <AutoAssociativeProjection.matrix> parameter
+     based on the `auto <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters
+     *on the `RecurrentTransferMechanism`*. (The `auto <AutoAssociativeProjection.auto>` and
+     `hetero <AutoAssociativeProjection.hetero>` parameters of the AutoAssociativeProjection simply refer to their
+     counterparts on the RecurrentTransferMechanism as well.) The reason for putting the `auto
+     <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters on the
+     RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism <ControlMechanism>`.
 
 .. _Auto_Associative_Class_Reference:
 

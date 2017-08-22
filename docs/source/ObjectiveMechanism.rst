@@ -2,9 +2,9 @@ ObjectiveMechanism
 ==================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
-   ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism
+   ComparatorMechanism
 
 .. automodule:: ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism
    :members:

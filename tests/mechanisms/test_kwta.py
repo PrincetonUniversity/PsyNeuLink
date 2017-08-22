@@ -5,17 +5,17 @@ import typecheck
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.KWTA import KWTA, KWTAError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.KWTA import KWTA, KWTAError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
-from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Run import RunError
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
 
 class TestKWTAInputs:
@@ -24,7 +24,7 @@ class TestKWTAInputs:
     def test_kwta_empty_spec(self):
         K = KWTA()
         assert(K.value is None)
-        assert(K.variable.tolist() == [[0]])
+        assert(K.instance_defaults.variable.tolist() == [[0]])
         assert(K.size.tolist() == [1])
         assert(K.matrix.tolist() == [[5]])
 
@@ -34,7 +34,7 @@ class TestKWTAInputs:
             size=3
         )
         assert(K.value is None)
-        assert(K.variable.tolist() == [[0., 0., 0.]])
+        assert(K.instance_defaults.variable.tolist() == [[0., 0., 0.]])
         assert(K.size.tolist() == [3])
         assert(K.matrix.tolist() == [[5, 0, 0], [0, 5, 0], [0, 0, 5]])
         assert(K.recurrent_projection.sender is K.output_state)
@@ -54,7 +54,7 @@ class TestKWTAInputs:
         K = KWTA(
             name='K'
         )
-        assert(K.variable.tolist() == [[0]])
+        assert(K.instance_defaults.variable.tolist() == [[0]])
         val = K.execute([10]).tolist()
         assert(val == [[0.5]])
 

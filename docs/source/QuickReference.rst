@@ -3,6 +3,7 @@ Quick Reference
 
 * `Conventions`
 * `PsyNeuLink_Objects`
+    * `Quick_Reference_Overview`
     * `Quick_Reference_Components`
     * `Quick_Reference_Compositions`
 * `Quick_Reference_Execution`
@@ -18,20 +19,20 @@ Conventions
 
 The following conventions are used for the names of PsyNeuLink objects and their documentation:
 
-  + `Component` (class): names use CamelCase (with initial capitalization);
-    the initial mention in a section of documentation is formatted as a link (in colored text)
-    to the documentation for that Component;
+  + Class (type of object): names use CamelCase (with initial capitalization); the initial mention in a section of
+    documentation is formatted as a link (in colored text) to the documentation for that class;
   ..
-  + `attribute` or `method` of a Component:  names use lower_case_and_underscore;
-    appear in a `small box` in documentation;
+  + `attribute` or `method` of a `Component` or `Composition`:  names use lower_case_and_underscore; appear in a
+    `small box` in documentation;
   ..
-  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface**.
+  + **argument** of a method or function:  names use lower_case_and_underscore; formatted in **boldface** in
+    documentation.
   ..
   + KEYWORD: uses *UPPER_CASE_AND_UNDERSCORE*;  italicized in documentation.
   ..
-  + Example::
+  + Examples::
 
-          Appears in boxed inset.
+          Appear in boxed insets.
 
 
 .. _PsyNeuLink_Objects:
@@ -39,32 +40,67 @@ The following conventions are used for the names of PsyNeuLink objects and their
 PsyNeuLink Objects
 ------------------
 
-The two primary types of objects in PsyNeuLink are Components (basic building blocks)
-and Compositions (combinations of Components that implement a model).
+.. _Quick_Reference_Overview:
+
+Overview
+~~~~~~~~
+
+The two primary types of objects in PsyNeuLink are `Components <Component>` (basic building blocks) and `Compositions
+<Composition>` (combinations of Components that implement a model).  There are four primary types of Components:
+Functions, Mechanisms, States and Projections.
+
+`Functions <Function>` are the basic units of computation in PsyNeuLink -- every other type of Component in PsyNeuLink
+has at least one Function, and sometimes more.  They "package" an executable method that is assigned to a Component's
+`function <Component.function>` attribute, and used to carry out the computation for which the Component is
+responsible.
+
+`Mechanisms <Mechanism>` are the basic units of processing in a PsyNeuLink model. They have one or more Functions that
+perform their characteristic operations.
+
+`States <State>` represent the input(s) and output(s) of a Mechanism, and the parameters of its Function(s).  States
+have Functions themselves, that determine the value of the State, and that can be used to modulate that value for
+learning, control and/or gating.
+
+`Projections <Projection>` are used to connect Mechanisms, transmit information between them, and to modulate the value
+of their States.
+
+Mechanisms and Projections are used to construct `Processes <Process>` -- simple Compositions that comprise a linear
+sequence of Mechanisms and Projections. Processes, in turn, can be combined to construct a `System` -- a more complex
+Composition used to implement a full PsyNeuLink model. The `figure <QuickReference_Overview_Figure>` below shows
+examples of some of the Components (various kinds of Mechanisms and Projections) in PsyNeuLink, combined to form two
+Processes and a System.  The sections that follow provide a description of these and the other basic objects in
+PsyNeuLink.
+
+.. _QuickReference_Overview_Figure:
+
+.. figure:: _static/Overview_fig.svg
+
+    **Constituents of a PsyNeuLink Model**. Includes examples of some types of Components (Mechanisms and Projections)
+    and Compositions (Processes and a System).
 
 .. _Quick_Reference_Components:
 
 Components
 ~~~~~~~~~~
 
-Components are objects that perform a specific function. Every Component has a:
+Components are objects that perform a specific function. Every Component has the following core attributes:
 
-* `function <Component.function>` - performs the core computation of the Component;
+* `function <Component.function>` - performs the core computation of the Component (belongs to a PsyNeuLink Function
+  assigned to the Component's `function_object <Component.function_object>` attribute);
 
-* `variable <Component.variable>` - the input to the Component's `function <Component.function>`;
+* `variable <Component.variable>` - the input used for the Component's `function <Component.function>`;
 
-* *parameter(s)* - determine how a Component's `function <Component.function>` operates
-  (listed in its `user_params <Component.user_params>` dictionary);
+* *parameter(s)* - determine how a Component's `function <Component.function>` operates;
 
 * `value <Component.value>` - represents the result of the Component's `function <Component.function>`;
 
 * `name <Component.name>` - string label that uniquely identifies the Component.
 
-There are four types of Components in PsyNeuLink:  Mechanisms, Projections, States and Functions, as described below:
+The four types of Components in PsyNeuLink, Mechanisms, Projections, States and Functions, are described below:
 
 * `Mechanisms <Mechanism>`
      A Mechanism takes one or more inputs received from its afferent `Projections <Projection>`,
-     uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
+     uses its `function <Mechanism_Base.function>` to combine and/or transform these in some way, and makes the output
      available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
      ProcessingMechanisms and AdaptiveMechanisms:
 
@@ -125,36 +161,36 @@ There are four types of Components in PsyNeuLink:  Mechanisms, Projections, Stat
 
    + `InputState`
        Represents a set of inputs to the Mechanism.
-       Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
-       `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's
-       `variable <Mechanism.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`, that
-        modify the parameter(s) of the State's function, and thereby the State's `value <State.value>`.
+       Receives one or more afferent PathwayProjections to a Mechanism, combines them using its `function
+       <State_Base.function>`, and assigns the result (its `value <State_Base.value>`)as an item of the Mechanism's
+       `variable <Mechanism_Base.variable>`.  It can also receive one or more `GatingProjections <GatingProjection>`,
+       that modify the parameter(s) of the State's function, and thereby the State's `value <State_Base.value>`.
 
    + `ParameterState`
-       Represents a parameter of the Mechanism's `function <Mechanism.function>`.  Takes the assigned value of the
-       parameter as the `variable <State.variable>` for the State's `function <State.function>`, and assigns the result
-       as the value of the parameter used by the Mechanism's `function <Mechanism.function>` when the Mechanism
-       executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify parameter(s)
-       of the State's function, and thereby the value of the parameters used by the Mechanism's
-       `function <Mechanism.function>`.
+       Represents a parameter of the Mechanism's `function <Mechanism_Base.function>`.  Takes the assigned value of the
+       parameter as the `variable <State_Base.variable>` for the State's `function <State_Base.function>`, and assigns
+       the result as the value of the parameter used by the Mechanism's `function <Mechanism_Base.function>` when the
+       Mechanism executes.  It can also receive one or more `ControlProjections <ControlProjection>` that modify
+       parameter(s) of the State's `function <State_Base.function>, and thereby the value of the parameters used by the
+       Mechanism's `function <Mechanism_Base.function>`.
 
    + `OutputState`
        Represents an output of the Mechanism.
-       Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
-       `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
-       to one or more efferent PathwayProjections.  It can also receive one or more
+       Takes an item of the Mechanism's `value <Mechanism_Base.value>` as the `variable <State_Base.variable>` for the
+       State's `function <State_Base.function>`, assigns the result as the State's `value <OutputState.value>`, and
+       provides that to one or more efferent PathwayProjections.  It can also receive one or more
        `GatingProjections <GatingProjection>`, that modify parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       State's `value <State_Base.value>`.
 
 * `Functions <Function>`
    A Function is the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
    object, that wraps a callable object (usually an executable function) together with attributes for its parameters.
    This allows parameters to be maintained from one call of a function to the next, for those parameters to be subject
-   to modulation by `ControlProjections <ControlProjection>`, and for Functions to be swapped out for one another
-   or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for linear,
-   non-linear, and matrix transformations, integration, and comparison), as well as a standard Application Programmers
-   Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be written in or
-   called from Python.
+   to modulation by `ModulatoryProjections <ModulatoryProjection>` (see below), and for Functions to be swapped out
+   for one another or replaced with customized ones.  PsyNeuLink provides a library of standard Functions (e.g. for
+   linear, non-linear, and matrix transformations, integration, and comparison), as well as a standard Application
+   Programmers Interface (API) or creating new Functions that can be used to "wrap" any callable object that can be
+   written in or called from Python.
 
 .. _Quick_Reference_Compositions:
 
@@ -182,10 +218,11 @@ Compositions:
    :alt: Overview of major PsyNeuLink Components
    :scale: 50 %
 
-   Two `Processes <Process>` are shown, both belonging to the same `System <System>`.  Each Process has a
-   series of `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`,
-   that converge on a common final ProcessingMechanism (see `figure in System <System_Full_Fig>` for a more
-   complete example, that includes Components responsible for learning, control and gating).
+   Two `Processes <Process>` are shown, both belonging to the same `System`.  Each Process has a series of
+   `ProcessingMechanisms <ProcessingMechanism>` linked by `MappingProjections <MappingProjection>`, that converge on
+   a common final ProcessingMechanism (see figure `above <QuickReference_Overview_Figure>` for a more complete
+   example, and `ModulatorySignals <ModulatorySignal_Anatomy_Figure>` for details of Components responsible for
+   `learning <LearningMechanism>`, `control <ControlMechanism>` and `gating <GatingMechanism>`).
 
 
 .. _Quick_Reference_Execution:
@@ -194,15 +231,19 @@ Execution
 ---------
 
 PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
-they belong is run.  Compositions are run iteratively in rounds of execution referred to as `PASS` \es, in which each
-Mechanism in the composition is given an opportunity to execute.  By default, each Mechanism in a Composition
+they belong is executed.  Compositions are executed iteratively in rounds of execution referred to as `PASS` es, in
+which each Mechanism in the Composition is given an opportunity to execute;  By default, each Mechanism in a Composition
 executes exactly once per `PASS`.  However, a `Scheduler` can be used to specify one or more `Conditions <Condition>`
-for each Mechanism that determine whether it runs in a given `PASS`.  This can be used to determine when
+for each Mechanism that determine whether it executes in a given `PASS`.  This can be used to determine when
 a Mechanism begins and/or ends executing, how many times it executes or the frequency with which it executes relative
 to other Mechanisms, and any other dependency that can be expressed in terms of the attributes of other Components
-in PsyNeuLink.  Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and
-`custom <Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
+in PsyNeuLink. Using a `Scheduler` and a combination of `pre-specified <Condition_Pre_Specified>` and `custom
+<Condition_Custom>` Conditions, any pattern of execution can be configured that is logically possible.
 
+Using a Scheduler, a Composition continues to execute `PASS` es until its `TRIAL` `termination Condition <Scheduler_Termination_Conditions>`
+is met, which constitutes a `TRIAL` of executions.  This is associated with a single input to the System.
+Multiple `TRIAL` s (corresponding to a sequences of inputs) can be executed using a Composition's `run <Composition
+.run>` method.
 
 .. _Quick_Reference_Logging:
 
@@ -210,7 +251,7 @@ Logging
 -------
 
 PsyNeuLink supports logging of any attribute of any Component or Composition at any `TimeScale` of execution.
-Logs are dictionaries, with any entry for each attribute being logged.  The key for each entry is the name of
+Logs are dictionaries, with an entry for each attribute being logged.  The key for each entry is the name of
 the attribute, and its value is a record of the attribute's value recorded at the frequency specified by the
 `TimeScale` parameter for the entry;  each record is a tuple, the first item of which is a time stamp (the
 `TIME_STEP` of the `RUN`), and the second is the value of the attribute at that `TIME_STEP`.
@@ -221,8 +262,8 @@ Graphic Displays
 ----------------
 
 At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a `System` can be displayed
-using its `show_graph` method.  This can be used to display just the processing components (i.e.,
-`ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`, or to include
+using its `show_graph <System_Base.show_graph>` method.  This can be used to display just the processing components
+(i.e., `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`), or to include
 `learning <LearningMechanism>` and/or `control <ControlMechanism>` components.  A future release may include
 a more complete graphical user interface.
 
@@ -234,8 +275,8 @@ Preferences
 
 PsyNeuLink supports a hierarchical system of `Preferences` for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
-to default to the value of any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
-its own preference for reporting, or use the default value for all `ProcessingMechanisms <ProcessingMechanism>`,
-all `Mechanisms <Mechanism>`, or all `Components <Component>`.  There are preferences for reporting to the
-console during execution, logging, warnings, and validation (useful for debugging, but suppressible for efficiency of
-execution).
+the default value for any of its parent classes for that preference (e.g., an instance of a `DDM` can be assigned
+its own preference for reporting, or use the default value for `ProcessingMechanisms <ProcessingMechanism>`,
+`Mechanisms <Mechanism>`, or `Components <Component>`.  There are preferences for reporting (i.e., which results of
+processing are printed to the console during execution), logging, levels of warnings, and validation (useful for
+debugging, but suppressible for efficiency of execution).

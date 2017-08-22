@@ -96,19 +96,19 @@ Class Reference
 """
 
 import numbers
+
 import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
     get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, INITIALIZING, MATRIX, \
-    MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, STANDARD_DEVIATION, SET_ATTRIBUTE, VARIANCE
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _instantiate_state
+from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
@@ -472,8 +472,8 @@ class RecurrentTransferMechanism(TransferMechanism):
                 raise RecurrentTransferError("auto parameter ({}) of {} is of incompatible type: it should be a "
                                              "number, None, or a 1D numeric array".format(auto_param, self))
             if isinstance(auto_param, (np.ndarray, list)) and len(auto_param) != 1 and len(auto_param) != self.size[0]:
-                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the variable "
-                                             "({2}) of its owner, {1}.".format(auto_param, self, self.variable))
+                raise RecurrentTransferError("auto parameter ({0}) for {1} is of incompatible length with the size "
+                                             "({2}) of its owner, {1}.".format(auto_param, self, self.size[0]))
 
         if HETERO in target_set:
             hetero_param = target_set[HETERO]
@@ -483,8 +483,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             hetero_shape = np.array(hetero_param).shape
             if hetero_shape != (1,) and hetero_shape != (1, 1):
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != self.size[0]:
-                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the variable "
-                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.variable))
+                    raise RecurrentTransferError("hetero parameter ({0}) for {1} is of incompatible size with the size "
+                                                 "({2}) of its owner, {1}.".format(hetero_param, self, self.size[0]))
                 if isinstance(hetero_param, (np.ndarray, list, np.matrix)) and hetero_shape[0] != hetero_shape[1]:
                     raise RecurrentTransferError("hetero parameter ({}) for {} must be square.".format(hetero_param, self))
 
@@ -529,7 +529,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     # if __name__ == '__main__':
                     err_msg = ("Number of rows in {} param for {} ({}) must be same as the size of variable for "
                                "{} {} (whose size is {} and whose variable is {})".
-                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.variable))
+                               format(MATRIX, self.name, rows, self.__class__.__name__, self.name, self.size, self.instance_defaults.variable))
                 else:
                     err_msg = ("Size of {} param for {} ({}) must be the same as its variable ({})".
                                format(MATRIX, self.name, rows, size))
@@ -639,7 +639,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # self._matrix = self.recurrent_projection.matrix
 
         if ENERGY in self.output_states.names:
-            energy = Stability(self.variable[0],
+            energy = Stability(self.instance_defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
                                matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -647,7 +647,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         if ENTROPY in self.output_states.names:
             if self.function_object.bounds == (0,1) or range == (0,1):
-                entropy = Stability(self.variable[0],
+                entropy = Stability(self.instance_defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
                                     matrix=self.recurrent_projection._parameter_states[MATRIX])
@@ -725,7 +725,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             if hasattr(self, '_parameter_states') and name in self._parameter_states:
                 param_state = self._parameter_states[name]
-                param_state.variable = val
 
                 if hasattr(param_state.function_object, 'initializer'):
                     param_state.function_object.reset_initializer = val
@@ -743,7 +742,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
 
         if isinstance(matrix, str):
-            size = len(mech.variable[0])
+            size = len(mech.instance_defaults.variable[0])
             matrix = get_matrix(matrix, size, size)
 
         return AutoAssociativeProjection(owner=mech,

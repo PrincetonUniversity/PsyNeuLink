@@ -101,7 +101,7 @@ def show_trial_header():
 
 def show_results():
     import re
-    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    results = sorted(zip(mySystem.terminal_mechanisms.outputStateNames, mySystem.terminal_mechanisms.outputStateValues))
     # print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
     print('\nRESULTS (time step {}): [RANDOM: {}]'.format(CentralClock.time_step, np.random.random()))
     print ('\tDrift rate control signal (from EVC):'

@@ -15,7 +15,7 @@
 Overview
 --------
 
-An AdaptiveMechanism is a type of `Mechanism` that modifies the parameters of one or more other `Components
+An AdaptiveMechanism is a type of `Mechanism <Mechanism>` that modifies the parameters of one or more other `Components
 <Component>`.  In general, an AdaptiveMechanism receives its input from an `ObjectiveMechanism`, however
 this need not be the case. There are three types of AdaptiveMechanism:
 
@@ -25,7 +25,7 @@ this need not be the case. There are three types of AdaptiveMechanism:
     by their `LearningProjections <LearningProjection>` to modulate the `matrix <MappingProjection.matrix>` parameter
     of a `MappingProjection`.
 ..
-* `ControlMechanism`
+* `ControlMechanism <ControlMechanism>`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
     `allocation_policy <ControlMechanism_Base.allocation_policy>`, each item of which is assigned to one of its
     `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
@@ -36,7 +36,7 @@ this need not be the case. There are three types of AdaptiveMechanism:
     `gating_policy <GatingMechanism.gating_policy>`, each item of which is assigned to one of its
     `GatingSignals <ControlSignal>`;  each of those generates a `gating_signal <ControlSignal.control_signal>`
     that is used by its `GatingProjection(s) <ControlProjection>` to modulate the value of the `InputState` or
-    `OutputState` of a `Mechanism`.
+    `OutputState` of a `Mechanism <Mechanism>`.
 
 
 See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the names of Modulatory components.
@@ -55,12 +55,12 @@ Creating an AdaptiveMechanism
 
 An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
 AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
-require them, or a form of modulation is specified for them. For example, a `ControlMechanism` is automatically created
-as part of a `System <System.System_Creation>` (for use as its `controller <System_Base.controller>`), or when
-`control is specified <ControlMechanism_Control_Signals>` for the parameter of a `Mechanism`; and one or more
-`LearningMechanisms <LearningMechanism>` are created when learning is specified for a `System <System_Learning>` or a
-`Process <Process_Learning>` (see the documentation for `subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms
-for more specific information about how to create them).
+require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
+automatically created as part of a `System <System.System_Creation>` (for use as its `controller
+<System_Base.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
+`Mechanism <Mechanism>`; and one or more `LearningMechanisms <LearningMechanism>` are created when learning is
+specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
+`subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms for more specific information about how to create them).
 
 .. _AdaptiveMechanism_Structure:
 
@@ -105,7 +105,7 @@ class AdpativeMechanismError(Exception):
 
 
 class AdaptiveMechanism_Base(Mechanism_Base):
-    """Subclass of `Mechanism` that modulates the value(s) of one or more other `Component(s) <Component>`.
+    """Subclass of `Mechanism <Mechanism>` that modulates the value(s) of one or more other `Component(s) <Component>`.
 
     .. note::
        AdaptiveMechanism is an abstract class and should NEVER be instantiated by a call to its constructor.
@@ -136,9 +136,9 @@ class AdaptiveMechanism_Base(Mechanism_Base):
     #     kwPreferenceSetName: 'AdaptiveMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    # variableClassDefault = defaultControlAllocation
-    # This must be a list, as there may be more than one (e.g., one per control_signal)
-    variableClassDefault = defaultControlAllocation
+    class ClassDefaults(Mechanism_Base.ClassDefaults):
+        # This must be a list, as there may be more than one (e.g., one per control_signal)
+        variable = defaultControlAllocation
 
     def __init__(self,
                  variable,

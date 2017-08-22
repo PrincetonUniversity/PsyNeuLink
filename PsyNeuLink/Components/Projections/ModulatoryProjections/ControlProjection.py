@@ -14,11 +14,12 @@
 Overview
 --------
 
-A ControlProjection is a type of `ModulatoryProjection` that projects to the `ParameterState <ParameterState>` of
-a `ProcessingMechanism`. It takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism` and
-uses it to  modify the value of the parameter associated with the ParameterState to which it projects.  All of the
-ControlProjections in a System, along with its other `control components <ControlMechanism>`, can be displayed using
-the System's `show_graph` method with its **show_control** argument assigned as `True`.
+A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects to the `ParameterState
+<ParameterState>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
+`ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
+with the ParameterState to which it projects.  All of the ControlProjections in a System, along with its other `control
+components <ControlMechanism>`, can be displayed using the System's `show_graph <System_Base.show_graph>` method with
+its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
 
@@ -26,30 +27,31 @@ Creating a ControlProjection
 ----------------------------
 
 A ControlProjection can be created using any of the standard ways to `create a Projection <Projection_Creation>`,
-or by including it in a `tuple <ParameterState_Tuple_Specification>` that specifies a parameter for a `Mechanism`,
-`MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection is created
-explicitly (using its constructor), and its **receiver** argument is not specified, its initialization is `deferred
-<ControlProjection_Deferred_Initialization>`.  If it is included in a parameter specification, the `ParameterState`
-for the parameter being specified will be assigned as the ControlProjection's `receiver <ControlProjection.receiver>`.
-If its **sender** argument is not specified, its assignment depends on the **receiver**.  If the **receiver** belongs
-to a Mechanism that is part of a `System`, then the ControlProjection's  `sender <ControlProjection.sender>` is
-assigned to a `ControlSignal` of the System's `controller`.  Otherwise, its initialization is `deferred
-<ControlProjection_Deferred_Initialization>`.
+or by including it in a `tuple <ParameterState_Tuple_Specification>` that specifies a parameter for a `Mechanism
+<Mechanism>`, `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection
+is created explicitly (using its constructor), and its **receiver** argument is not specified, its initialization is
+`deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a parameter specification,
+the `ParameterState` for the parameter being specified will be assigned as the ControlProjection's `receiver
+<ControlProjection.receiver>`. If its **sender** argument is not specified, its assignment depends on the
+**receiver**.  If the **receiver** belongs to a Mechanism that is part of a `System`, then the ControlProjection's
+`sender <ControlProjection.sender>` is assigned to a `ControlSignal` of the System's `controller`.  Otherwise,
+its initialization is `deferred <ControlProjection_Deferred_Initialization>`.
 
 .. _ControlProjection_Deferred_Initialization:
 
 Deferred Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ControlProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its
-`sender <ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
+When a ControlProjection is created, its full initialization is `deferred <Component_Deferred_Init>` until its `sender
+<ControlProjection.sender>` and `receiver <ControlProjection.receiver>` have been fully specified.  This allows
 a ControlProjection to be created before its `sender <ControlProjection.sender>` and/or `receiver
 <ControlProjection.receiver>` have been created (e.g., before them in a script), by calling its constructor without
 specifying its **sender** or **receiver** arguments. However, for the ControlProjection to be operational,
 initialization must be completed by calling its `deferred_init` method. This is not necessary if the ControlProjection
-is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a `Mechanism` or its
-`function <Mechanism_Base.function>`, in which case the deferred initialization is completed automatically when the
-`ControlMechanism` is created for the `System` to which the parameter's owner belongs (see `ControlMechanism_Creation`).
+is included in a `tuple specification <ParameterState_Tuple_Specification>` for the parameter of a `Mechanism
+<Mechanism>` or its `function <Mechanism_Base.function>`, in which case the deferred initialization is completed
+automatically when the `ControlMechanism <ControlMechanism>` is created for the `System` to which the parameter's owner
+belongs (see `ControlMechanism_Creation`).
 
 
 .. _ControlProjection_Structure:
@@ -57,15 +59,15 @@ is included in a `tuple specification <ParameterState_Tuple_Specification>` for 
 Structure
 ---------
 
-The `sender <ControlProjection.sender>` of a ControlProjection is a `ControlSignal` of a `ControlMechanism`.
-The `value <ControlSignal.value>` of the `sender <ControlProjection.sender>` is used by the ControlProjection as its
-`variable <ControlProjection.variable>`;  this is also assigned to its `control_signal
+The `sender <ControlProjection.sender>` of a ControlProjection is a `ControlSignal` of a `ControlMechanism
+<ControlMechanism>`. The `value <ControlSignal.value>` of the `sender <ControlProjection.sender>` is used by the
+ControlProjection as its `variable <ControlProjection.variable>`;  this is also assigned to its `control_signal
 <ControlProjection.control_signal>` attribute, and serves as the input to the ControlProjection's `function
 <ControlProjection.function>`.  The default `function <ControlProjection.function>` for a
 ControlProjection is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is, it simply
 conveys the value of its `control_signal <ControlProjection.control_signal>` to its `receiver
 <ControlProjection.receiver>`, for use in modifying the value of the parameter that it controls. Its `receiver
-<ControlProjection.receiver>` is the `ParameterState` for the parameter of the `Mechanism` or its `function
+<ControlProjection.receiver>` is the `ParameterState` for the parameter of the `Mechanism <Mechanism>` or its `function
 <Mechanism_Base.function>` that is controlled by the ControlProjection.
 
 .. _ControlProjection_Execution:
@@ -74,7 +76,7 @@ Execution
 ---------
 
 A ControlProjection cannot be executed directly.  It is executed when the `ParameterState` to which it projects is
-updated.  Note that this only occurs when the `Mechanism` to which the `ParameterState` belongs is executed
+updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterState` belongs is executed
 (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
 `function <ControlProjection.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
 <ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used by the
@@ -83,8 +85,8 @@ updated.  Note that this only occurs when the `Mechanism` to which the `Paramete
 how this applies to a ParameterState).
 
 .. note::
-   The changes to a parameter in response to the execution of a ControlProjection are not applied until the
-   `Mechanism` that receives the ControlProjection are next executed; see :ref:`Lazy Evaluation` for an explanation of
+   The changes to a parameter in response to the execution of a ControlProjection are not applied until the `Mechanism
+   <Mechanism>` that receives the ControlProjection are next executed; see :ref:`Lazy Evaluation` for an explanation of
    "lazy" updating).
 
 .. _ControlProjection_Class_Reference:
@@ -132,7 +134,8 @@ class ControlProjection(ModulatoryProjection_Base):
      name=None,            \
      prefs=None)
 
-    Subclass of `ModulatoryProjection` that modulates the value of a `ParameterState` of a `Mechanism`.
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` of a
+    `Mechanism <Mechanism>`.
 
     COMMENT:
         Description:
@@ -187,7 +190,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Projection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
+        the ControlProjection, its `function <ControlProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
@@ -229,13 +232,13 @@ class ControlProjection(ModulatoryProjection_Base):
 
     name : str : default ControlProjection-<index>
         the name of the ControlProjection.
-        Specified in the **name** argument of the constructor for the Projection;
+        Specified in the **name** argument of the constructor for the ControlProjection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for Projection.
-        Specified in the **prefs** argument of the constructor for the Projection;
+        the `PreferenceSet` for ControlProjection.
+        Specified in the **prefs** argument of the constructor for the ControlProjection;
         if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
 
@@ -250,7 +253,8 @@ class ControlProjection(ModulatoryProjection_Base):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    variableClassDefault = 0.0
+    class ClassDefaults(ModulatoryProjection_Base.ClassDefaults):
+        variable = 0.0
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
@@ -294,7 +298,7 @@ class ControlProjection(ModulatoryProjection_Base):
         """Check if DefaultController is being assigned and if so configure it for the requested ControlProjection
 
         If self.sender is a Mechanism, re-assign to <Mechanism>.outputState
-        Insure that sender.value = self.variable
+        Insure that sender.value = self.instance_defaults.variable
 
         This method overrides the corresponding method of Projection, before calling it, to check if the
             DefaultController is being assigned as sender and, if so:
@@ -355,8 +359,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     def execute(self, params=None, clock=CentralClock, time_scale=None, context=None):
     # def execute(self, params=None, clock=CentralClock, time_scale=TimeScale.TRIAL, context=None):
-        self.variable = self.sender.value
-        self.value = self.function(variable=self.variable, params=params, time_scale=time_scale, context=context)
+        self.value = self.function(variable=self.sender.value, params=params, time_scale=time_scale, context=context)
         return self.value
 
     @property
