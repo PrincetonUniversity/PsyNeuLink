@@ -15,7 +15,7 @@ Overview
 
 OutputState(s) represent the result(s) of executing a Mechanism.  This may be the result(s) of its
 `function <OutputState.function>` and/or values derived from that result.  The full set of results are stored in the
-Mechanism's `output_value <Mechanism_Base.output_value>` attribute.  OutputStates are used to represent
+Mechanism's `output_values <Mechanism_Base.output_values>` attribute.  OutputStates are used to represent
 individual items of the Mechanism's `value <Mechanism_Base.value>`, and/or useful quantities derived from
 them.  For example, the `function <TransferMechanism.TransferMechanism.function>` of a `TransferMechanism` generates
 a single result (the transformed value of its input);  however, a TransferMechanism can also be assigned OutputStates
@@ -40,11 +40,11 @@ or to the Process' `output <Process_Input_And_Output>` if the Mechanism is a `TE
 Other configurations can also easily be specified using a Mechanism's **output_states** argument (see
 `OutputState_Specification` below).
 
-An OutputState must be owned by a `Mechanism`.  When OutputState is specified in the constructor for a `Mechanism`
-(see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
-OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner** argument of its
-constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned to
-an owner using the owner's `add_states` method.
+An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
+`Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
+its owner. If the OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner**
+argument of its constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until
+it is assigned to an owner using the owner's `add_states` method.
 
 .. _OutputState_Primary:
 
@@ -56,7 +56,7 @@ Every Mechanism has at least one OutputState, referred to as its *primary Output
 and assigned to its `output_state <Mechanism_Base.output_state>` attribute (note the singular),
 and also to the first entry of the Mechanism's `output_states <Mechanism_Base.output_states>` attribute
 (note the plural).  The `value <OutputState.value>` of the primary OutputState is assigned as the first (and often
-only) item of the Mechanism's `output_value <Mechanism_Base.output_value>` attribute, which is the result
+only) item of the Mechanism's `output_values <Mechanism_Base.output_values>` attribute, which is the result
 of the Mechanism's `function <Mechanism_Base.function>`.
 
 .. _OutputState_Specification:
@@ -109,15 +109,15 @@ specify an OutputState:
     * A **State specification dictionary**.  This creates the specified OutputState using the item of the owner
       `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
-      can have a *PROJECTIONS* entry, the value of which can be a `Projection`, a
+      can have a *PROJECTIONS* entry, the value of which can be a `Projection <Projection>`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
       are either of those.  This can be used to specify one or more efferent `PathwayProjections <PathwayProjection>`
       from the OutpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
     ..
-    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection` specification.
-      This creates a default OutputState using the first item as the OutputState's `variable <OutputState.variable>`,
-      and assigns the OutputState as the `receiver `ModualtoryProjection.receiver` of the type of ModulatoryProjection
-      specified in the second item.
+    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
+      <ModulatoryProjection>` specification. This creates a default OutputState using the first item as the
+      OutputState's `variable <OutputState.variable>`, and assigns the OutputState as the `receiver
+      `ModualtoryProjection.receiver` of the type of ModulatoryProjection specified in the second item.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
@@ -192,7 +192,7 @@ the `Entropy` Function for its `calculate <OutputState.calculate>` attribute, an
 reference the third item of the DDM's `value <DDM.value>` attribute (items are indexed starting with 0), which contains
 the probability of crossing the upper threshold.  The three OutputStates will be assigned to the `output_states
 <Mechanism_Base.output_states>` attribute of ``my_mech``, and their values will be assigned as items in its
-`output_value <Mechanism_Base.output_value>` attribute, in the order in which they are listed in the **output_states**
+`output_values <Mechanism_Base.output_values>` attribute, in the order in which they are listed in the **output_states**
 argument of the constructor for ``my_mech``.
 
 Custom OutputStates can also be created on their own, and separately assigned or added to a Mechanism.  For example,
@@ -404,7 +404,7 @@ class OutputState(State_Base):
     prefs=None,                                \
     context=None)
 
-    Subclass of `State` that calculates and represents an output of a `Mechanism`.
+    Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
 
     COMMENT:
 
@@ -555,6 +555,9 @@ class OutputState(State_Base):
     componentType = OUTPUT_STATES
     paramsType = OUTPUT_STATE_PARAMS
 
+    class ClassDefaults(State_Base.ClassDefaults):
+        variable = None
+
     classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
     # Note: only need to specify setting;  level will be assigned to TYPE automatically
@@ -619,7 +622,7 @@ class OutputState(State_Base):
     def _validate_variable(self, variable, context=None):
         """Insure variable is compatible with output component of owner.function relevant to this State
 
-        Validate self.variable against component of owner's value (output of owner's function)
+        Validate variable against component of owner's value (output of owner's function)
              that corresponds to this OutputState (since that is what is used as the input to OutputState);
              this should have been provided as reference_value in the call to OutputState__init__()
 
@@ -630,17 +633,18 @@ class OutputState(State_Base):
         :param context: (str)
         :return none:
         """
-        super(OutputState,self)._validate_variable(variable, context)
+        variable = self._update_variable(super(OutputState, self)._validate_variable(variable, context))
 
-        self.variableClassDefault = self.reference_value
+        self.instance_defaults.variable = self.reference_value
 
-        # Insure that self.variable is compatible with (relevant item of) output value of owner's function
-        if not iscompatible(self.variable, self.reference_value):
+        # Insure that variable is compatible with (relevant item of) output value of owner's function
+        if not iscompatible(variable, self.reference_value):
             raise OutputStateError("Variable ({}) of OutputState for {} is not compatible with "
                                            "the output ({}) of its function".
-                                           format(self.variable,
+                                           format(variable,
                                                   self.owner.name,
                                                   self.reference_value))
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate index and calculate parameters
@@ -657,7 +661,7 @@ class OutputState(State_Base):
             try:
                 self.owner.default_value[target_set[INDEX]]
             except IndexError:
-                raise OutputStateError("Value of \`{}\` argument for {} is greater than the number of items in "
+                raise OutputStateError("Value of \\`{}\\` argument for {} is greater than the number of items in "
                                        "the output_values ({}) for its owner Mechanism ({})".
                                        format(INDEX, self.name, self.owner.default_value, self.owner.name))
 

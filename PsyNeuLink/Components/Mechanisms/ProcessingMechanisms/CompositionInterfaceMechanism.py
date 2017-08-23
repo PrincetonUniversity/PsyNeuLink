@@ -92,9 +92,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the `Mechanism`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a custom
-        function and its parameters.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
+        the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
+        custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
+        to those parameters in arguments of the constructor.
 
     name : str : default CompositionInterfaceMechanism-<index>
         a string used for the name of the Mechanism.
@@ -136,8 +136,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         kwPreferenceSetName: 'CompositionInterfaceMechanismCustomClassPreferences',
         kpReportOutputPref: PreferenceEntry(True, PreferenceLevel.INSTANCE)}
 
-    # Sets template for variable (input)
-    variableClassDefault = [[0]]
+    class ClassDefaults(ProcessingMechanism_Base.ClassDefaults):
+        # Sets template for variable (input)
+        variable = [[0]]
 
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({})
@@ -155,7 +156,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  context=None):
 
         if default_input_value is None and size is None:
-            default_input_value = self.variableClassDefault
+            default_input_value = self.ClassDefaults.variable
 
         params = self._assign_args_to_param_dicts(function=function,
                                                   params=params)

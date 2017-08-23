@@ -13,20 +13,20 @@
 Overview
 --------
 
-A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition` are executed.
-By default, a Scheduler executes Components in an order determined by the pattern of `Projections <Projection>`
-among the `Mechanisms <Mechanism>` in the `Composition`, with each Mechanism executed once per `PASS` through the
-Composition. For example, in a `System` in which a Mechanism A projects to a Mechanism B that projects to a Mechanism C,
-A will execute first followed by B, and then C in each `PASS` through the System.  However, a Scheduler can be
-used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that determine when and
-how many times individual Components execute, and whether and how this depends on the execution of other Components.
-Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined in arbitrary
-ways to generate any pattern of execution of the Components in a Composition that is logically possible.
+A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition <Composition>` are
+executed. By default, a Scheduler executes Components in an order determined by the pattern of `Projections
+<Projection>` among the `Mechanisms <Mechanism>` in the `Composition <Composition>`, with each Mechanism executed once
+per `PASS` through the Composition. For example, in a `System` in which a Mechanism A projects to a Mechanism B that
+projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the System.  However,
+a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that
+determine when and how many times individual Components execute, and whether and how this depends on the execution of
+other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined
+in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically possible.
 
 .. note::
    In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
    Conditions, and assigned to a Scheduler for execution.  However, in some circumstances, `Projections <Projection>`
-   can also be assigned for execution (e.g., during `learning <Process_Learning>` to insure that
+   can also be assigned for execution (e.g., during `learning <Process_Execution_Learning>` to insure that
    `MappingProjections <MappingProjection>` are updated in the proper order).
 
 .. _Scheduler_Creation:
@@ -35,8 +35,8 @@ Creating a Scheduler
 --------------------
 
 A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
-for a `Composition` when it is created.  When creating a Scheduler explicitly, the set of `Components <Component>`
-to be executed and their order must be specified in the Scheduler's constructor using one the following:
+for a `Composition <Composition>` when it is created.  When creating a Scheduler explicitly, the set of `Components
+<Component>` to be executed and their order must be specified in the Scheduler's constructor using one the following:
 
 COMMENT:
    JDC: WE MAY WANT TO CHANGE THE NAME OF THE ARGUMENT TO 'COMPOSITION` ONCE THAT IS IMPLEMENTED, TO BE FULLY GENERAL
@@ -50,7 +50,7 @@ COMMENT
   each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
   zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
   cycles (e.g., recurrent dependencies) are detected.  The Scheduler computes a `toposort` from the graph that is
-  used as the default order of executions, subject to any `Condition`\ s that have been specified
+  used as the default order of executions, subject to any `Condition`\\ s that have been specified
   (see `below <Scheduler_Algorithm>`).
 
 If both a System and a graph are specified, the System takes precedence, and the graph is ignored.
@@ -154,14 +154,14 @@ execution, over which every Component in the Composition has been considered for
 `consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
 same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
-The Scheduler continues to make `PASS`\ es through the `consideration_queue` until a
+The Scheduler continues to make `PASS`\\ es through the `consideration_queue` until a
 `termination Condition <Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified,
 the Scheduler terminates a `TRIAL` when every Component has been specified for execution at least once (corresponding
 to the `AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
 to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular Component or set of Components
-is met).  When the Scheduler terminates a `TRIAL`, the `Composition` begins processing the next input specified in
-the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of processing associated
-with a given input to the Composition.
+is met).  When the Scheduler terminates a `TRIAL`, the `Composition <Composition>` begins processing the next input
+specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of processing
+associated with a given input to the Composition.
 
 
 .. _Scheduler_Termination_Conditions:
@@ -292,8 +292,8 @@ class SchedulerError(Exception):
 
 
 class Scheduler(object):
-    """Generates an order of execution for `Components <Component>` in a `Composition` or graph specification
-    dictionary, possibly determined by a set of `Conditions <Condition>`.
+    """Generates an order of execution for `Components <Component>` in a `Composition <Composition>` or graph
+    specification dictionary, possibly determined by a set of `Conditions <Condition>`.
 
     Arguments
     ---------
@@ -338,7 +338,7 @@ class Scheduler(object):
 
     times: dict{TimeScale: dict{TimeScale: int}}
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
-        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\ es that have occurred in the
+        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`\\ es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
     """
     def __init__(
@@ -461,14 +461,14 @@ class Scheduler(object):
 
     def add_condition(self, owner, condition):
         '''
-        :param owner: the `Component` that is dependent on the `condition`
+        :param owner: the `Component <Component>` that is dependent on the `condition`
         :param condition: a `Condition` (including All or Any)
         '''
         self.condition_set.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
         '''
-        :param conditions: a `dict` mapping `Component`\ s to `Condition`\ s,
+        :param conditions: a `dict` mapping `Component` to `Condition`\\s,
                which can be added later with `add_condition`
         '''
         self.condition_set.add_condition_set(conditions)
@@ -498,7 +498,7 @@ class Scheduler(object):
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
 
-        :param termination_conds: (dict) - a mapping from `TimeScale`\ s to `Condition`\ s that when met
+        :param termination_conds: (dict) - a mapping from `TimeScale`\\ s to `Condition`\\ s that when met
                terminate the execution of the specified `TimeScale`
         '''
         self._validate_run_state()

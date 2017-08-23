@@ -6,7 +6,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism i
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator, NormalDist, UniformDist
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, NormalDist, SimpleIntegrator, UniformDist
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Process import process
@@ -20,26 +20,26 @@ class TestIntegratorFunctions:
 
     def test_simple_integrator(self):
         I = IntegratorMechanism(
-                function = SimpleIntegrator(
-                    initializer = 10.0,
-                    rate = 5.0,
-                    offset = 10,
-                )
+            function=SimpleIntegrator(
+                initializer=10.0,
+                rate=5.0,
+                offset=10,
             )
+        )
         # P = process(pathway=[I])
         val = I.execute(1)
         assert val == 25
 
     def test_constant_integrator(self):
         I = IntegratorMechanism(
-                function = ConstantIntegrator(
-                    initializer = 10.0,
-                    rate = 5.0,
-                    offset = 10
-                )
+            function=ConstantIntegrator(
+                initializer=10.0,
+                rate=5.0,
+                offset=10
             )
+        )
         # P = process(pathway=[I])
-        # constant integrator does not use input value (self.variable)
+        # constant integrator does not use input value (variable)
 
         # step 1:
         val = I.execute(20000)
@@ -58,12 +58,12 @@ class TestIntegratorFunctions:
 
     def test_adaptive_integrator(self):
         I = IntegratorMechanism(
-                function = AdaptiveIntegrator(
-                    initializer = 10.0,
-                    rate = 0.5,
-                    offset = 10,
-                )
+            function=AdaptiveIntegrator(
+                initializer=10.0,
+                rate=0.5,
+                offset=10,
             )
+        )
         # P = process(pathway=[I])
         # 10*0.5 + 1*0.5 + 10
         val = I.execute(1)
@@ -71,13 +71,13 @@ class TestIntegratorFunctions:
 
     def test_drift_diffusion_integrator(self):
         I = IntegratorMechanism(
-                function = DriftDiffusionIntegrator(
-                    initializer = 10.0,
-                    rate = 10,
-                    time_step_size = 0.5,
-                    offset=10,
-                )
+            function=DriftDiffusionIntegrator(
+                initializer=10.0,
+                rate=10,
+                time_step_size=0.5,
+                offset=10,
             )
+        )
         # P = process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
@@ -85,17 +85,17 @@ class TestIntegratorFunctions:
 
     def test_ornstein_uhlenbeck_integrator(self):
         I = IntegratorMechanism(
-                function = OrnsteinUhlenbeckIntegrator(
-                    initializer = 10.0,
-                    rate = 10,
-                    time_step_size=0.5,
-                    decay = 0.1,
-                    offset=10,
-                )
+            function=OrnsteinUhlenbeckIntegrator(
+                initializer=10.0,
+                rate=10,
+                time_step_size=0.5,
+                decay=0.1,
+                offset=10,
             )
+        )
         # P = process(pathway=[I])
         # value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
-                #time_step_size * noise) * np.random.normal()
+        # time_step_size * noise) * np.random.normal()
         # step 1:
         val = I.execute(1)
         # value = 10 + 0.1*10*1*0.5 + 0
@@ -124,6 +124,7 @@ class TestIntegratorFunctions:
         # P = process(pathway=[I])
         val = float(I.execute(10))
         assert val == 5
+
 
 class TestResetInitializer:
 
@@ -170,8 +171,8 @@ class TestResetInitializer:
     def test_integrator_constant_with_reset_intializer(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function= ConstantIntegrator(
-                rate = 1.0
+            function=ConstantIntegrator(
+                rate=1.0
             ),
             time_scale=TimeScale.TIME_STEP
         )
@@ -190,7 +191,7 @@ class TestResetInitializer:
     def test_integrator_diffusion_with_reset_intializer(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function= DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegrator(
             ),
             time_scale=TimeScale.TIME_STEP
         )
@@ -205,6 +206,7 @@ class TestResetInitializer:
         assert [val, val2] == [10.0, 1.0]
 
 # ======================================= INPUT TESTS ============================================
+
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
@@ -272,7 +274,6 @@ class TestIntegratorInputs:
             e = expected_output[i]
             np.testing.assert_allclose(v, e, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-
     # Part 2: INVALID INPUT
 
     # input = list of length > default length
@@ -324,7 +325,7 @@ class TestIntegratorRate:
     def test_integrator_type_constant_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function= ConstantIntegrator(
+            function=ConstantIntegrator(
                 rate=5.0
             )
         )
@@ -337,7 +338,7 @@ class TestIntegratorRate:
     def test_integrator_type_diffusion_rate_float(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function = DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegrator(
                 rate=5.0
             )
         )
@@ -365,7 +366,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function= ConstantIntegrator(
+            function=ConstantIntegrator(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -379,7 +380,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             default_variable=[0, 0, 0],
             name='IntegratorMechanism',
-            function = DriftDiffusionIntegrator(
+            function=DriftDiffusionIntegrator(
                 rate=[5.0, 5.0, 5.0]
             )
         )
@@ -501,6 +502,7 @@ class TestIntegratorRate:
     #     # RETURN 256
     #     assert (val, val2) == (51, 256)
 
+
 class TestIntegratorNoise:
 
     def test_integrator_simple_noise_fn(self):
@@ -534,20 +536,20 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
+        np.testing.assert_allclose(val, [10.12167502,  10.44386323,  10.33367433,  11.49407907])
 
     def test_integrator_accumulator_noise_fn(self):
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=AccumulatorIntegrator(
-                    noise=NormalDist().function
-                ),
-                time_scale=TimeScale.TIME_STEP
-            )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=AccumulatorIntegrator(
+                noise=NormalDist().function
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
 
-            val = float(I.execute(10))
+        val = float(I.execute(10))
 
-            np.testing.assert_allclose(val, 1.8675579901499675)
+        np.testing.assert_allclose(val, 1.8675579901499675)
 
     def test_integrator_accumulator_noise_fn_var_list(self):
         I = IntegratorMechanism(
@@ -565,17 +567,17 @@ class TestIntegratorNoise:
         np.testing.assert_allclose(val, [-0.15135721, -0.10321885,  0.4105985,   0.14404357])
 
     def test_integrator_constant_noise_fn(self):
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=ConstantIntegrator(
-                    noise=NormalDist().function
-                ),
-                time_scale=TimeScale.TIME_STEP
-            )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=ConstantIntegrator(
+                noise=NormalDist().function
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
 
-            val = float(I.execute(10))
+        val = float(I.execute(10))
 
-            np.testing.assert_allclose(val, 1.8675579901499675)
+        np.testing.assert_allclose(val, 1.8675579901499675)
 
     def test_integrator_constant_noise_fn_var_list(self):
         I = IntegratorMechanism(
@@ -590,20 +592,20 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val,[-0.15135721, -0.10321885,  0.4105985,   0.14404357])
+        np.testing.assert_allclose(val, [0.12167502,  0.44386323,  0.33367433,  1.49407907])
 
     def test_integrator_adaptive_noise_fn(self):
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=AdaptiveIntegrator(
-                    noise=NormalDist().function
-                ),
-                time_scale=TimeScale.TIME_STEP
-            )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=AdaptiveIntegrator(
+                noise=NormalDist().function
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
 
-            val = float(I.execute(10))
+        val = float(I.execute(10))
 
-            np.testing.assert_allclose(val, 11.86755799)
+        np.testing.assert_allclose(val, 11.86755799)
 
     def test_integrator_adaptive_noise_fn_var_list(self):
         I = IntegratorMechanism(
@@ -618,33 +620,30 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [9.848643, 9.896781, 10.410599, 10.144044])
+        np.testing.assert_allclose(val, [10.12167502,  10.44386323,  10.33367433,  11.49407907])
 
     def test_integrator_drift_diffusion_noise_val(self):
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=DriftDiffusionIntegrator(
-                    noise=5.0,
-                ),
-                time_scale=TimeScale.TIME_STEP
-            )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=DriftDiffusionIntegrator(
+                noise=5.0,
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
 
-            val = float(I.execute(10))
+        val = float(I.execute(10))
 
-            np.testing.assert_allclose(val, 15.010789523731438)
+        np.testing.assert_allclose(val, 15.010789523731438)
 
     def test_integrator_ornstein_uhlenbeck_noise_val(self):
-            I = IntegratorMechanism(
-                name='IntegratorMechanism',
-                function=OrnsteinUhlenbeckIntegrator(
-                    noise=5.0,
-                ),
-                time_scale=TimeScale.TIME_STEP
-            )
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=OrnsteinUhlenbeckIntegrator(
+                noise=5.0,
+            ),
+            time_scale=TimeScale.TIME_STEP
+        )
 
-            val = float(I.execute(10))
+        val = float(I.execute(10))
 
-            np.testing.assert_allclose(val, 15.010789523731438)
-
-
-
+        np.testing.assert_allclose(val, 15.010789523731438)

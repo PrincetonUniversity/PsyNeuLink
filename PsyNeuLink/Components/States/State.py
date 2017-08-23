@@ -14,31 +14,34 @@ Overview
 --------
 
 A State provides an interface to one or more `Projections <Projection>`, and receives the `value(s) <Projection>`
-provide by them.  The value of a State can be modulated by a `ModulatoryProjection`. There are three primary types of
-States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
+provide by them.  The value of a State can be modulated by a `ModulatoryProjection <ModulatoryProjection>`. There are
+three primary types of States, all of which are used by `Mechanisms <Mechanism>`, one of which is used by
 `MappingProjections <MappingProjection>`, and that are subject to modulation by `ModulatorySignals <ModulatorySignal>`,
 as summarized in the table below:
 
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-| *State Type*     | *Owner*           |      *Description*     |    *Modulated by*    |      *Specification*          |
-+==================+===================+========================+======================+===============================+
-| `InputState`     |  `Mechanism`      |receives input from     | `GatingSignal`       |`InputState` constructor;      |
-|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
-|                  |                   |(s)                     |                      |its `add_states` method        |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-|`ParameterState`  |  `Mechanism` or   |represents parameter    |`LearningSignal`      |Implicitly whenever a          |
-|                  |  `Projection`     |value for a `Component` |and/or `ControlSignal`|parameter value is             |
-|                  |                   |or its function         |                      |`specified                     |
-|                  |                   |                        |                      |<ParameterState_Specification>`|
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-| `OutputState`    |  `Mechanism`      |provides output to      | `GatingSignal`       |`OutputState` constructor;     |
-|                  |                   |`MappingProjection` \   |                      |`Mechanism` constructor or     |
-|                  |                   |(s)                     |                      |its `add_states` method        |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
-|`ModulatorySignal`|`AdaptiveMechanism`|provides value for      |                      |`AdaptiveMechanism`            |
-|                  |                   |`ModulatoryProjection` \|                      |constructor; tuple in State    |
-|                  |                   |(s)                     |                      |or parameter specification     |
-+------------------+-------------------+------------------------+----------------------+-------------------------------+
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+| *State Type*      | *Owner*            |      *Description*     |    *Modulated by*  |       *Specification*         |
++===================+====================+========================+====================+===============================+
+| `InputState`      |  `Mechanism        |receives input from     | `GatingSignal`     |`InputState` constructor;      |
+|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
+|                   |                    |                        |                    |constructor or its             |
+|                   |                    |                        |                    |`add_states` method            |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+|`ParameterState`   |  `Mechanism        |represents parameter    |`LearningSignal`    |Implicitly whenever a          |
+|                   |  <Mechanism>` or   |value for a `Component  |and/or              |parameter value is             |
+|                   |  `Projection       |<Component>`            |`ControlSignal`     |`specified                     |
+|                   |  <Projection>`     |or its function         |                    |<ParameterState_Specification>`|
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+| `OutputState`     |  `Mechanism        |provides output to      | `GatingSignal`     |`OutputState` constructor;     |
+|                   |  <Mechanism>`      |`MappingProjection`     |                    |`Mechanism <Mechanism>`        |
+|                   |                    |                        |                    |constructor or its             |
+|                   |                    |                        |                    |`add_states` method            |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
+|`ModulatorySignal  |`AdaptiveMechanism  |provides value for      |                    |`AdaptiveMechanism             |
+|<ModulatorySignal>`|<AdaptiveMechanism>`|`ModulatoryProjection   |                    |<AdaptiveMechanism>`           |
+|                   |                    |<ModulatoryProjection>` |                    |constructor; tuple in State    |
+|                   |                    |                        |                    |or parameter specification     |
++-------------------+--------------------+------------------------+--------------------+-------------------------------+
 
 COMMENT:
 
@@ -59,13 +62,15 @@ COMMENT:
     `ModulatoryProjections <ModulatoryProjection>` as described below. The `value <OutputState.value>` of an
     OutputState can be modulated by a `GatingSignal`.
 
-* `ModulatorySignal`:
+* `ModulatorySignal <ModulatorySignal>`:
     a subclass of `OutputState` used by `AdaptiveMechanisms <AdaptiveMechanism>` to modulate the value of the primary
     types of States listed above.  There are three types of ModulatorySignals:
 
     * `LearningSignal`, used by a `LearningMechanism` to modulate the *MATRIX* ParameterState of a `MappingProjection`;
-    * `ControlSignal`, used by a `ControlMechanism` to modulate the `ParameterState` of a `Mechanism`;
-    * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism`.
+    * `ControlSignal`, used by a `ControlMechanism <ControlMechanism>` to modulate the `ParameterState` of a `Mechanism
+      <Mechanism>`;
+    * `GatingSignal`, used by a `GatingMechanism` to modulate the `InputState` or `OutputState` of a `Mechanism
+       <Mechanism>`.
     Modulation is discussed further `below <State_Modulation>`, and described in detail under
     `ModulatorySignals <ModulatorySignal_Modulation>`.
 
@@ -77,16 +82,16 @@ Creating a State
 ----------------
 
 In general, States are created automatically by the objects to which they belong (their `owner <State_Owner>`),
-or by specifying the State in the constructor for its owner.  For example, unless otherwise specified,
-when a `Mechanism` is created it creates a default `InputState` and `OutputState` for itself, and whenever any
-Component is created, it automatically creates a `ParameterState` for each of its
-`configurable parameters <Component_Configurable_Attributes>` and those of its `function <Component_Function>`.
-States are also created in response to explicit specifications.  For example, InputStates and OutputStates can be
-specified in the constructor for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method;
-and a ParameterState is specified in effect when the value of a parameter for any Component or its
-`function <Component.function>` is specified in its constructor.  InputStates and OutputStates (but not
-ParameterStates) can also be created directly using their constructors;  however, Parameter States cannot be created
-in this way; they are always and only created when the Component to which a parameter belongs is created.
+or by specifying the State in the constructor for its owner.  For example, unless otherwise specified, when a
+`Mechanism <Mechanism>` is created it creates a default `InputState` and `OutputState` for itself, and whenever
+any Component is created, it automatically creates a `ParameterState` for each of its `configurable parameters
+<Component_Configurable_Attributes>` and those of its `function <Component_Function>`. States are also created in
+response to explicit specifications.  For example, InputStates and OutputStates can be specified in the constructor
+for a Mechanism (see `Mechanism_State_Specification`) or in its `add_states` method; and a ParameterState is
+specified in effect when the value of a parameter for any Component or its `function <Component.function>` is
+specified in its constructor.  InputStates and OutputStates (but not ParameterStates) can also be created directly
+using their constructors;  however, Parameter States cannot be created in this way; they are always and only created
+when the Component to which a parameter belongs is created.
 
 .. _State_Specification:
 
@@ -171,14 +176,14 @@ argument of its constructor, or in an entry of a dictionary assigned to the **pa
         • `GatingProjection(s) <GatingProjection>`
           - assigned to its `mod_afferents <OutputState.mod_afferents>` attribute.
 
-    * `ModulatorySignal`
+    * `ModulatorySignal <ModulatorySignal>`
         • `ModulatoryProjection(s) <ModulatoryProjection>`
           - assigned to its `efferents <ModulatorySignal.efferents>` attribute.
 
 Projections must be specified in a list.  Each entry must be either a specification for a `projection
-<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`,
-in which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State` or a
-`Mechanism`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
+<Projection_In_Context_Specification>`, or for a `sender <Projection.sender>` or `receiver <Projection.receiver>`, in
+which case the appropriate type of Projection is created.  A sender or receiver can be specified as a `State <State>`
+or a `Mechanism <Mechanism>`. If a Mechanism is specified, its primary `InputState <InputState_Primary>` or `OutputState
 <OutputState_Primary>`  is used, as appropriate.  When a sender or receiver is used to specify the Projection, the type
 of Projection created is inferred from the State and the type of sender or receiver specified, as illustrated in the
 examples below.  Note that the State must be `assigned to an owner <State_Creation>` in order to be functional,
@@ -215,12 +220,13 @@ Owner
 ~~~~~
 
 Every State has an `owner <State_Base.owner>`.  For `InputStates <InputState>` and `OutputStates <OutputState>`, the
-owner must be a `Mechanism`.  For `ParameterStates <ParameterState>` it can be a `Mechanism` or a `PathwayProjection`.
-For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism`.  When a State is created as part of
-another Component, its `owner <State_Base.owner>` is assigned automatically to that Component.  It is also assigned
-automatically when the State is assigned to a `Mechanism` using that Mechanism's `add_states` method.  Otherwise, it
-must be specified explicitly in the **owner** argument of the constructor for the State.  If it is not, the State's
-initialization will be `deferred <State_Deferred_Initialization>` until it has been assigned to an owner.
+owner must be a `Mechanism <Mechanism>`.  For `ParameterStates <ParameterState>` it can be a Mechanism or a
+`PathwayProjection <PathwayProjection>`. For `ModulatorySignals <ModulatorySignal>`, it must be an `AdaptiveMechanism
+<AdaptiveMechanism>`. When a State is created as part of another Component, its `owner <State_Base.owner>` is
+assigned automatically to that Component.  It is also assigned automatically when the State is assigned to a
+`Mechanism <Mechanism>` using that Mechanism's `add_states` method.  Otherwise, it must be specified explicitly in
+the **owner** argument of the constructor for the State.  If it is not, the State's initialization will be `deferred
+<State_Deferred_Initialization>` until it has been assigned to an owner.
 
 Variable, Function and Value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,8 +242,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
     * `function <State_Base.function>`:  for an `InputState` this aggregates the values of the Projections that the
       State receives (the default is `LinearCombination` that sums the values), under the potential influence of a
       `GatingSignal`;  for a `ParameterState`, it determines the value of the associated parameter, under the
-      potential influence of a `ControlSignal` (for a `Mechanism`) or a `LearningSignal` (for a `MappingProjection`);
-      for an OutputState, it conveys the result  of the Mechanism's function to its
+      potential influence of a `ControlSignal` (for a `Mechanism <Mechanism>`) or a `LearningSignal` (for a
+      `MappingProjection`); for an OutputState, it conveys the result  of the Mechanism's function to its
       `output_values <Mechanism_Base.output_values>` attribute, under the potential influence of a `GatingSignal`.  See
       `ModulatorySignals <ModulatorySignal_Structure>` and the `AdaptiveMechanism <AdaptiveMechanism>` associated with
       each type for a description of how they can be used to modulate the `function <State_Base.function>` of a State.
@@ -254,8 +260,8 @@ In addition, like all PsyNeuLink Components, it also has the three following cor
 Modulation
 ~~~~~~~~~~
 
-Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the
-`ModulatoryProjections <ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal`
+Every type of State has a `mod_afferents <State_Base.mod_afferents>` attribute, that lists the `ModulatoryProjections
+<ModulatoryProjection>` it receives.  Each ModulatoryProjection comes from a `ModulatorySignal <ModulatorySignal>`
 that specifies how it should modulate the State's `value <State_Base.value>` when the State is updated (see
 `ModulatorySignal_Modulation` and `ModulatorySignal_Anatomy_Figure`).  In most cases, a ModulatorySignal uses the
 State's `function <State_Base.function>` to modulate its `value <State_Base.value>`.  The function of every State
@@ -285,7 +291,7 @@ to the corresponding parameter of its `function <State_Base.function>`.  If any 
 the State calls its `function <State_Base.function>` to determine its `value <State_Base.value>`.
 
 .. note::
-   The change in the value of a `State` does not occur until the Mechanism to which the State belongs is next
+   The change in the value of a `State <State>` does not occur until the Mechanism to which the State belongs is next
    executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
    of "lazy" updating).
 
@@ -308,7 +314,16 @@ from PsyNeuLink.Components.Functions.Function import LinearCombination, Modulati
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, State
-from PsyNeuLink.Globals.Keywords import CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, EXECUTING, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, LEARNING, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, MODULATION, MODULATORY_SIGNAL, NAME, OWNER, PARAMS, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, RECEIVER, SENDER, SIZE, STANDARD_ARGS, STANDARD_OUTPUT_STATES, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, VALUE, VARIABLE, kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
+from PsyNeuLink.Globals.Keywords import VARIABLE, SIZE, FUNCTION_PARAMS, NAME, OWNER, PARAMS, CONTEXT, EXECUTING, \
+    VALUE, STATE, STATE_PARAMS, STATE_TYPE, STATE_VALUE, \
+    STANDARD_ARGS, STANDARD_OUTPUT_STATES, \
+    PROJECTIONS, PROJECTION_PARAMS,  PROJECTION_TYPE, RECEIVER, SENDER, \
+    MAPPING_PROJECTION_PARAMS, MATRIX, MATRIX_KEYWORD_SET, \
+    MODULATION, MODULATORY_SIGNAL, \
+    LEARNING, LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    GATING, GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INITIALIZING, \
+    kwAssign, kwStateComponentCategory, kwStateContext, kwStateName, kwStatePrefs
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import kpVerbosePref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -432,7 +447,7 @@ class State_Base(State):
             + suffix
             + classPreference (PreferenceSet): StatePreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (value): [0]
+            + ClassDefaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {FUNCTION_PARAMS : [dict],    # Subclass function params
                                                PROJECTION_TYPE: [str, Projection]})   # Default projection type
             + paramClassDefaults (dict): {PROJECTIONS: []}             # Projections to States
@@ -542,11 +557,12 @@ class State_Base(State):
     suffix = " " + className
     paramsType = None
 
+    class ClassDefaults(State.ClassDefaults):
+        variable = [0]
+
     registry = StateRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
@@ -603,7 +619,7 @@ class State_Base(State):
         """
         if kargs:
             try:
-                variable = kargs[VARIABLE]
+                variable = self._update_variable(kargs[VARIABLE])
             except (KeyError, NameError):
                 pass
             try:
@@ -708,7 +724,7 @@ class State_Base(State):
                 size = checkAndCastInt(size)
             try:
                 if variable is not None:
-                    variable = np.atleast_1d(variable)
+                    variable = self._update_variable(np.atleast_1d(variable))
             except:
                 raise StateError("Failed to convert variable (of type {}) to a 1D array.".format(type(variable)))
             # endregion
@@ -716,7 +732,7 @@ class State_Base(State):
             # region if variable is None and size is not None, make variable a 1D array of zeros of length = size
             if variable is None and size is not None:
                 try:
-                    variable = np.zeros(size)
+                    variable = self._update_variable(np.zeros(size))
                 except:
                     raise ComponentError("variable (perhaps default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -733,9 +749,9 @@ class State_Base(State):
         return variable
 
     def _validate_variable(self, variable, context=None):
-        """Validate variable and assign validated values to self.variable
+        """Validate variable and return validated variable
 
-        Sets self.base_value = self.value = self.variable = variable
+        Sets self.base_value = self.value = variable
         Insures that it is a number of list or tuple of numbers
 
         This overrides the class method, to perform more detailed type checking
@@ -743,16 +759,14 @@ class State_Base(State):
         Note:  this method (or the class version) is called only if the parameter_validation attribute is True
         """
 
-        super(State,self)._validate_variable(variable, context)
+        variable = self._update_variable(super(State, self)._validate_variable(variable, context))
 
         if not context:
             context = kwAssign + ' Base Value'
         else:
             context = context + kwAssign + ' Base Value'
 
-        # # MODIFIED 6/1/17 OLD:
-        # self.base_value = self.variable
-        # MODIFIED 6/1/17 END
+        return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """validate projection specification(s)
@@ -803,7 +817,7 @@ class State_Base(State):
                                        self.owner.name))
 
     def _instantiate_function(self, context=None):
-        """Insure that output of function (self.value) is compatible with its input (self.variable)
+        """Insure that output of function (self.value) is compatible with its input (self.instance_defaults.variable)
 
         This constraint reflects the role of State functions:
             they simply update the value of the State;
@@ -821,33 +835,45 @@ class State_Base(State):
         # FIX: UPDATE WITH MODULATION_MODS REMOVE THE FOLLOWING COMMENT:
         #     * no change is made to PARAMETER_MODULATION_FUNCTION here (matrices may be multiplied or added)
         #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterState)
-        if ((inspect.isclass(self.function) and issubclass(self.function, LinearCombination) or
-                 isinstance(self.function, LinearCombination)) and
-                (isinstance(self.variable, np.matrix) or
-                (isinstance(self.variable, np.ndarray) and self.variable.ndim >= 2))):
-            self.variable = [self.variable]
+        if (
+            (
+                (inspect.isclass(self.function) and issubclass(self.function, LinearCombination))
+                or isinstance(self.function, LinearCombination)
+            )
+            and (
+                isinstance(self.instance_defaults.variable, np.matrix)
+                or (
+                    isinstance(self.instance_defaults.variable, np.ndarray)
+                    and self.instance_defaults.variable.ndim >= 2
+                )
+            )
+        ):
+            self.instance_defaults.variable = [self.instance_defaults.variable]
             var_is_matrix = True
 
         super()._instantiate_function(context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:
-            self.variable = self.variable[0]
+            self.instance_defaults.variable = self.instance_defaults.variable[0]
 
-        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.variable)
+        # Ensure that output of the function (self.value) is compatible with (same format as) its input (self.instance_defaults.variable)
         #     (this enforces constraint that State functions should only combine values from multiple projections,
         #     but not transform them in any other way;  so the format of its value should be the same as its variable).
-        if not iscompatible(self.variable, self.value):
-            raise StateError("Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
-                                      " must be the same format as its input ({6}: {7})".
-                                      format(type(self.value).__name__,
-                                             self.value,
-                                             self.function.__self__.componentName,
-                                             self.name,
-                                             self.__class__.__name__,
-                                             self.owner.name,
-                                             self.variable.__class__.__name__,
-                                             self.variable))
+        if not iscompatible(self.instance_defaults.variable, self.value):
+            raise StateError(
+                "Output ({0}: {1}) of function ({2}) for {3} {4} of {5}"
+                " must be the same format as its input ({6}: {7})".format(
+                    type(self.value).__name__,
+                    self.value,
+                    self.function.__self__.componentName,
+                    self.name,
+                    self.__class__.__name__,
+                    self.owner.name,
+                    self.instance_defaults.variable.__class__.__name__,
+                    self.instance_defaults.variable
+                )
+            )
 
     def _instantiate_projections(self, projections, context=None):
         """Implement any Projection(s) to/from State specified in PROJECTIONS entry of params arg
@@ -1142,7 +1168,7 @@ class State_Base(State):
             #    - check that projection's value is compatible with the State's variable
             #    - assign projection to path_afferents
             else:
-                if iscompatible(self.variable, projection_spec.value):
+                if iscompatible(self.instance_defaults.variable, projection_spec.value):
                     # This is needed to avoid duplicates, since instantiation of projection (e.g., of ControlProjection)
                     #    may have already called this method and assigned projection to self.path_afferents list
                     if not projection_spec in self.path_afferents:
@@ -1332,19 +1358,13 @@ class State_Base(State):
                                               context=context)
 
         # Check that self.value is compatible with projection's function variable
-        if not iscompatible(self.value, projection_spec.variable):
+        if not iscompatible(self.value, projection_spec.instance_defaults.variable):
             raise StateError("{0}Output ({1}) of {2} is not compatible with variable ({3}) of function for {4}".
                   format(
-                         # item_prefix_string,
-                         # self.value,
-                         # self.name,
-                         # projection_spec.variable,
-                         # projection_spec.name,
-                         # item_suffix_string))
                          item_prefix_string,
                          self.value,
                          item_suffix_string,
-                         projection_spec.variable,
+                         projection_spec.instance_defaults.variable,
                          projection_spec.name
                          ))
 
@@ -1470,6 +1490,9 @@ class State_Base(State):
 
         Arguments:
         - projection_spec (Projection subclass or str):  str must be a keyword constant for a Projection subclass
+                                                         or an alias for one:  LEARNING = LEARNING_PROJECTION
+                                                                               CONTROL = CONTROL_PROJECTION
+                                                                               GATING = GATING_PROJECTION
         - context (str):
 
         Returns tuple: (Projection subclass or None, error string)
@@ -1485,6 +1508,15 @@ class State_Base(State):
         except TypeError:
             # Try projection spec as keyword string constant
             if isinstance(projection_spec, str):
+
+                # de-alias convenience keywords:
+                if projection_spec is LEARNING:
+                    projection_spec = LEARNING_PROJECTION
+                if projection_spec is CONTROL:
+                    projection_spec = CONTROL_PROJECTION
+                if projection_spec is GATING:
+                    projection_spec = GATING_PROJECTION
+
                 try:
                     from PsyNeuLink.Components.Projections.Projection import ProjectionRegistry
                     projection_spec = ProjectionRegistry[projection_spec].subclass
@@ -1776,7 +1808,7 @@ def _instantiate_state_list(owner,
         - OUTPUT_STATE
     - constraint_value (2D np.array): set of 1D np.ndarrays used as default values and
         for compatibility testing in instantiation of State(s):
-        - INPUT_STATE: self.variable
+        - INPUT_STATE: self.instance_defaults.variable
         - OUTPUT_STATE: self.value
         ?? ** Note:
         * this is ignored if param turns out to be a dict (entry value used instead)
@@ -2061,9 +2093,9 @@ def _instantiate_state(owner,                  # Object to which state will belo
         if state_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
             if not state_spec.init_args[OWNER]:
                 state_spec.init_args[OWNER] = owner
-                state_spec.init_args[VARIABLE] = owner.variable[0]
+                state_spec.init_args[VARIABLE] = owner.instance_defaults.variable[0]
             if not hasattr(state_spec, 'reference_value'):
-                state_spec.reference_value = owner.variable[0]
+                state_spec.reference_value = owner.instance_defaults.variable[0]
             state_spec._deferred_init()
 
         # Check that State's value is compatible with Mechanism's variable
@@ -2232,7 +2264,8 @@ def _check_projection_sender_compatability(owner, projection_type, sender_type):
 def _parse_state_type(owner, state_spec):
     """Determine State type for state_spec and return type
 
-    Determine type from context and/or type of state_spec if the latter is not a `State` or `Mechanism`.
+    Determine type from context and/or type of state_spec if the latter is not a `State <State>` or `Mechanism
+    <Mechanism>`.
     """
 
     # State class reference
@@ -2341,7 +2374,7 @@ def _parse_state_spec(owner,
     #             else:
     #                 state.params[param] = filter_params(state.params[param])
     #     return dict(**{NAME:state.name,
-    #                   VARIABLE:state.variable,
+    #                   VARIABLE:variable,
     #                   VALUE:state.value,
     #                   # PARAMS:{PROJECTIONS:state.pathway_projections}})
     #                   PARAMS:state.params})
@@ -2388,7 +2421,7 @@ def _parse_state_spec(owner,
     if params:
         # If variable is specified in state_params, use that
         if VARIABLE in params and params[VARIABLE] is not None:
-            variable = params[VARIABLE]
+            variable = self._update_variable(params[VARIABLE])
 
     # Create default dict for return
     state_dict = {NAME: name,
@@ -2401,7 +2434,7 @@ def _parse_state_spec(owner,
     # State class
     if inspect.isclass(state_spec) and issubclass(state_spec, State):
         if state_spec is state_type:
-            state_dict[VARIABLE] = state_spec.variableClassDefault
+            state_dict[VARIABLE] = state_spec.ClassDefaults.variable
         else:
             raise StateError("PROGRAM ERROR: state_spec specified as class ({}) that does not match "
                              "class of state being instantiated ({})".format(state_spec, state_type_name))
@@ -2411,8 +2444,7 @@ def _parse_state_spec(owner,
     #     if state_spec is state_type:
     #         name = state_spec.name
     #         # variable = state_spec.value
-    #         # variable = state_spec.variableClassDefault
-    #         variable = state_spec.variable
+    #         # variable = state_spec.ClassDefaults.variable
     #         value = state_spec.value
     #         modulatory_projections =  state_spec.mod_projections
     #         params = state_spec.user_params.copy()

@@ -27,47 +27,48 @@ Overview
 Projections allow information to be passed between `Mechanisms <Mechanism>`.  A Projection takes its input from
 its `sender <Projection.sender>` and transmits that information to its `receiver <Projection.receiver>`.  The
 `sender <Projection.sender>` and `receiver <Projection.receiver>` of a Projection are always `States <State>`:
-the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism`; the `receiver <Projection.receiver>`
-depends upon the type of Projection.  There are two broad categories of Projections, each of which has subtypes that
-differ in the type of information they transmit, how they do this, and the type of `State` to which they project
-(i.e., of their `receiver <Projection.receiver>`):
+the`sender <Projection.sender>` is always the `OutputState` of a `Mechanism <Mechanism>`; the `receiver
+<Projection.receiver>` depends upon the type of Projection.  There are two broad categories of Projections,
+each of which has subtypes that differ in the type of information they transmit, how they do this, and the type of
+`State <State>` to which they project (i.e., of their `receiver <Projection.receiver>`):
 
-* `PathwayProjection`
+* `PathwayProjection <PathwayProjection>`
     Used in conjunction with `ProcessingMechanisms <ProcessingMechanism>` to convey information along a processing
     `pathway <Process_Base.pathway`>.  There is currently one on type of PathwayProjection:
 
   * `MappingProjection`
-      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism` converts it by convolving it
-      with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>` parameter, and transmits the
-      result to the `InputState` of another ProcessingMechanism.  Typically, MappingProjections are used to connect
-      Mechanisms in the `pathway` of a `Process`, though they can be use for other purposes as well (for example, to
-      convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism`).
+      takes the `value <OutputState.value>` of an `OutputState` of a `ProcessingMechanism <ProcessingMechanism>`
+      converts it by convolving it with the MappingProjection's `matrix <MappingProjection.MappingProjection.matrix>`
+      parameter, and transmits the result to the `InputState` of another ProcessingMechanism.  Typically,
+      MappingProjections are used to connect Mechanisms in the `pathway` of a `Process`, though they can be use for
+      other purposes as well (for example, to convey the output of an `ObjectiveMechanism` to an `AdaptiveMechanism
+      <AdaptiveMechanism>`).
 
-* `ModulatoryProjection`
-    takes the `value <OutputState.value>` of a `ModulatorySignal` of an `AdaptiveMechanism <ProcessingMechanism>`,
-    uses it to regulate modify the `value <State.value>` of an `InputState, `ParameterState` or `OutputState` of
-    another Component.  ModulatorySignals are specialized types of `OutputState`, that are used to specify how to
-    modify the `value <State.value>` of the `State` to which a ModulatoryProjection projects.  There are three types
-    of ModulatoryProjections, corresponding to the three types of AdaptiveMechanisms (and corresponding
-    ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`), that project to different types of `States
-    <State>`:
+* `ModulatoryProjection <ModulatoryProjection>`
+    takes the `value <OutputState.value>` of a `ModulatorySignal <ModulatorySignal>` of an `AdaptiveMechanism
+    <ProcessingMechanism>`, uses it to regulate modify the `value <State_Base.value>` of an `InputState,
+    `ParameterState` or `OutputState` of another Component.  ModulatorySignals are specialized types of `OutputState`,
+    that are used to specify how to modify the `value <State_Base.value>` of the `State <State>` to which a
+    ModulatoryProjection projects. There are three types of ModulatoryProjections, corresponding to the three types
+    of AdaptiveMechanisms (and corresponding ModulatorySignals; see `figure <ModulatorySignal_Anatomy_Figure>`),
+    that project to different types of `States <State>`:
 
   * `LearningProjection`
       takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
       this to the `ParameterState` of a `MappingProjection` that uses this to modify its `matrix
       <MappingProjection.MappingProjection.matrix>` parameter. LearningProjections are used when learning has
-      been specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`.
+      been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
   ..
   * `ControlProjection`
-      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism`, and transmit this
-      to the `ParameterState of a `ProcessingMechanism` that uses this to modify the parameter of the (or its
-      `function <Mechanism_Base.function>`) for which it is responsible.  ControlProjections are used when control
-      has been used specified for a `System`.
+      takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism <ControlMechanism>`, and
+      transmit this to the `ParameterState of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify
+      the parameter of the (or its `function <Mechanism_Base.function>`) for which it is responsible.
+      ControlProjections are used when control has been used specified for a `System`.
   ..
   * `GatingProjection`
       takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
-      the `InputState` or `OutputState` of a `ProcessingMechanism` that uses this to modify the State's `value
-      <State.value>`
+      the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify the
+      State's `value <State_Base.value>`
 
 .. _Projection_Creation:
 
@@ -111,17 +112,17 @@ Projection in context:
       |
       * *CONTROL_PROJECTION* (or *CONTROL*)-- this can be used when specifying a parameter using the `tuple format
         <ParameterState_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterState` for that
-        parameter.  If the `Component` to which the parameter belongs is part of a `System`, then a `ControlSignal` is
-        added to the System's `controller <System_Base.controller>` and assigned as the ControlProjection's `sender
-        <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization is deferred
-        <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System, at which time the
-        ControlSignal is added to the System's `controller <System_Base.controller>` and assigned as its the
-        ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
+        parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
+        `ControlSignal` is added to the System's `controller <System_Base.controller>` and assigned as the
+        ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
+        is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
+        at which time the ControlSignal is added to the System's `controller <System_Base.controller>` and assigned
+        as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_Control_Signals` for
         additional details.
       |
       * *GATING_PROJECTION* (or *GATING*)-- this can be used when specifying an `InputState <InputState_Projections>`
-        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State`.  If the
-        GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
+        or an `OutputState <OutputState_Projections>`, to create a default `GatingProjection` to the `State <State>`.
+        If the GatingProjection's `sender <GatingProjection.sender>` cannot be inferred from the context in which this
         specification occurs, then its `initialization is deferred <GatingProjection_Deferred_Initialization>` until
         it can be determined (e.g., a `GatingMechanism` or `GatingSignal` is created to which it is assigned).
   ..
@@ -166,7 +167,8 @@ Automatic creation
 Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
 `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
 <Process_Base.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
-when :keyword:`learning` is specified for a `Process <Process_Learning>` or `System <System_Execution_Learning>`).
+when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>` or `System
+<System_Execution_Learning>`).
 
 .. _MappingProjection_Deferred_Initialization:
 
@@ -220,11 +222,11 @@ summarized in the following table, and described in greater detail in the subsec
 Sender
 ~~~~~~
 
-This must be an `OutputState` or a `ModulatorySignal` (a subclass of OutputState specialized for `ModulatoryProjections
-<ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's `efferents
-<State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to the
-`AdaptiveMechanism` from which it projects.  The OutputState or ModulatorySignal's `value <OutputState.value>` is
-used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
+This must be an `OutputState` or a `ModulatorySignal <ModulatorySignal>` (a subclass of OutputState specialized for
+`ModulatoryProjections <ModulatoryProjection>`).  The Projection is assigned to the OutputState or ModulatorySignal's
+`efferents <State_Base.efferents>` list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
+the `AdaptiveMechanism <AdaptiveMechanism>` from which it projects.  The OutputState or ModulatorySignal's `value
+<OutputState.value>` is used as the `variable <Function.variable>` for Projection's `function <Projection.function>`.
 
 A sender can be specified as:
 
@@ -232,8 +234,8 @@ A sender can be specified as:
     `specifying an OutputState <OutputState_Specification>`.
   ..
   * a **Mechanism**;  for a `MappingProjection`, the Mechanism's `primary OutputState <OutputState_Primary>` is
-    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection`, a `ModulatorySignal` of the appropriate
-    type is created and assigned to the Mechanism.
+    assigned as the `sender <Projection.sender>`; for a `ModulatoryProjection <ModulatoryProjection>`, a
+    `ModulatorySignal <ModulatorySignal>` of the appropriate type is created and assigned to the Mechanism.
 
 If the `sender <Projection.sender>` is not specified and it can't be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then the initialization of the
@@ -251,9 +253,9 @@ The `receiver <Projection.receiver>` required by a Projection depends on its typ
     * ControlProjection: `ParameterState`
     * GatingProjection: `InputState` or OutputState`
 
-A `MappingProjection` (as a `PathwayProjection`) is assigned to the `path_afferents <State.path_afferents>` attribute
-of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to the `mod_afferents
-<State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
+A `MappingProjection` (as a `PathwayProjection <PathwayProjection>`) is assigned to the `path_afferents
+<State.path_afferents>` attribute of its `receiver <Projection.receiver>`.  The ModulatoryProjections are assigned to
+the `mod_afferents <State.mod_afferents>` attribute of their `receiver <Projection.receiver>`.
 
 A `receiver <Projection.receiver>` can be specified as:
 
@@ -270,9 +272,9 @@ A `receiver <Projection.receiver>` can be specified as:
 Execution
 ---------
 
-A Projection cannot be executed directly.  It is executed when the `State` to which it projects (i.e., its `receiver
-<Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism` is executed.  When a
-Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
+A Projection cannot be executed directly.  It is executed when the `State <State>` to which it projects (i.e., its
+`receiver <Projection.receiver>`) is updated;  that occurs when the State's owner `Mechanism <Mechanism>` is executed.
+When a Projection executes, it gets the value of its `sender <Projection.sender>`, assigns this as the `variable
 <Projection.variable>` of its `function <Projection.function>`, calls the `function <Projection.function>`, and
 provides the result as to its `receiver <Projection.receiver>`.  The `function <Projection.function>` of a Projection
 converts the value received from its `sender <Projection.sender>` to a form suitable as input for its `receiver
@@ -370,7 +372,7 @@ class Projection_Base(Projection):
             + registry (dict): ProjectionRegistry
             + classPreference (PreferenceSet): ProjectionPreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
-            + variableClassDefault (value): [0]
+            + ClassDefaults.variable (value): [0]
             + requiredParamClassDefaultTypes = {PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
             + paramClassDefaults (dict)
             + FUNCTION (Function class or object, or method)
@@ -399,7 +401,7 @@ class Projection_Base(Projection):
         State to which Projection sends its output.
 
     value : value
-        Output of Projection, transmitted to InputState.variable of receiver.
+        Output of Projection, transmitted as variable to InputState of receiver.
 
     COMMENT:
         projectionSender : Mechanism, State, or Object
@@ -432,11 +434,12 @@ class Projection_Base(Projection):
     className = componentCategory
     suffix = " " + className
 
+    class ClassDefaults(Projection.ClassDefaults):
+        variable = [0]
+
     registry = ProjectionRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-
-    variableClassDefault = [0]
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
     requiredParamClassDefaultTypes.update({PROJECTION_SENDER: [str, Mechanism, State]}) # Default sender type
@@ -473,15 +476,15 @@ class Projection_Base(Projection):
         * Receiver is required, since can't instantiate a Projection without a receiving State
         * If sender and/or receiver is a Mechanism, the appropriate State is inferred as follows:
             MappingProjection:
-                sender = <Mechanism>.outputState
+                sender = <Mechanism>.output_state
                 receiver = <Mechanism>.input_state
             ControlProjection:
-                sender = <Mechanism>.outputState
+                sender = <Mechanism>.output_state
                 receiver = <Mechanism>.paramsCurrent[<param>] IF AND ONLY IF there is a single one
                             that is a ParameterState;  otherwise, an exception is raised
         * _instantiate_sender, _instantiate_receiver must be called before _instantiate_function:
             - _validate_params must be called before _instantiate_sender, as it validates PROJECTION_SENDER
-            - instantatiate_sender may alter self.variable, so it must be called before _validate_function
+            - instantatiate_sender may alter self.instance_defaults.variable, so it must be called before _validate_function
             - instantatiate_receiver must be called before _validate_function,
                  as the latter evaluates receiver.value to determine whether to use self.function or FUNCTION
         * If variable is incompatible with sender's output, it is set to match that and revalidated (_instantiate_sender)
@@ -552,13 +555,13 @@ class Projection_Base(Projection):
         # AS ASSIGNMENT SHOULD BE DONE IN _validate_variable, OR WHEREVER SENDER IS DETERMINED??
 # FIX:  NEED TO KNOW HERE IF SENDER IS SPECIFIED AS A MECHANISM OR STATE
         try:
-            variable = sender.value
+            variable = self._update_variable(sender.value)
         except:
             try:
                 if self.receiver.prefs.verbosePref:
                     warnings.warn("Unable to get value of sender ({0}) for {1};  will assign default ({2})".
-                                  format(sender, self.name, self.variableClassDefault))
-                variable = None
+                                  format(sender, self.name, self.ClassDefaults.variable))
+                variable = self._update_variable(None)
             except AttributeError:
                 raise ProjectionError("{} has no receiver assigned".format(self.name))
 
@@ -569,7 +572,7 @@ class Projection_Base(Projection):
         if isinstance(self.receiver, Mechanism):
             # if (len(self.receiver.input_states) > 1 and
             #         (self.prefs.verbosePref or self.receiver.prefs.verbosePref)):
-            #     print("{0} has more than one inputState; {1} was assigned to the first one".
+            #     print("{0} has more than one InputState; {1} was assigned to the first one".
             #           format(self.receiver.owner.name, self.name))
             self.receiver = self.receiver.input_state
         # MODIFIED 4/21/17 END
@@ -700,15 +703,15 @@ class Projection_Base(Projection):
 
 
     def _instantiate_sender(self, context=None):
-        """Assign self.sender to OutputState of sender and insure compatibility with self.variable
+        """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable
 
         Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
-        Validate, set self.variable, and assign projection to sender's efferents attribute
+        Validate, set self.instance_defaults.variable, and assign projection to sender's efferents attribute
 
-        If self.sender is a Mechanism, re-assign it to <Mechanism>.outputState
+        If self.sender is a Mechanism, re-assign it to <Mechanism>.output_state
         If self.sender is a State class reference, validate that it is a OutputState
         Assign projection to sender's efferents attribute
-        If self.value / self.variable is None, set to sender.value
+        If self.value / self.instance_defaults.variable is None, set to sender.value
         """
 
         from PsyNeuLink.Components.States.OutputState import OutputState
@@ -748,24 +751,27 @@ class Projection_Base(Projection):
         if not self in self.sender.efferents:
             self.sender.efferents.append(self)
 
-        # Validate projection's variable (self.variable) against sender.outputState.value
-        if iscompatible(self.variable, self.sender.value):
-            # Is compatible, so assign sender.outputState.value to self.variable
-            self.variable = self.sender.value
+        # Validate projection's variable (self.instance_defaults.variable) against sender.output_state.value
+        if iscompatible(self.instance_defaults.variable, self.sender.value):
+            # Is compatible, so assign sender.output_state.value to self.instance_defaults.variable
+            self.instance_defaults.variable = self.sender.value
 
         else:
             # Not compatible, so:
             # - issue warning
             if self.prefs.verbosePref:
-                warnings.warn("The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
-                              " of function {4} for sender ({5}); it has been reassigned".
-                      format(self.variable,
-                             self.name,
-                             self.receiver.owner.name,
-                             self.sender.value,
-                             self.sender.function.__class__.__name__,
-                             self.sender.owner.name))
-            # - reassign self.variable to sender.value
+                warnings.warn(
+                    "The variable ({0}) of {1} projection to {2} is not compatible with output ({3})"
+                    " of function {4} for sender ({5}); it has been reassigned".format(
+                        self.instance_defaults.variable,
+                        self.name,
+                        self.receiver.owner.name,
+                        self.sender.value,
+                        self.sender.function.__class__.__name__,
+                        self.sender.owner.name
+                    )
+                )
+            # - reassign self.instance_defaults.variable to sender.value
             self._instantiate_defaults(variable=self.sender.value, context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
@@ -1091,7 +1097,7 @@ def _add_projection_to(receiver, state, projection_spec, context=None):
                                     constraint_value_name='Projection_spec value for new InputState',
                                     context=context)
 
-    #  Update inputState and input_states
+    #  Update InputState and input_states
     if receiver.input_states:
         receiver.input_states[input_state.name] = input_state
 
@@ -1113,7 +1119,7 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
     Specification of OutputState can be any of the following:
             - OUTPUT_STATE - assigns projection_spec to (primary) OutputState
             - OutputState object
-            - index for Mechanism.outputStates OrderedDict
+            - index for Mechanism OutputStates OrderedDict
             - name of OutputState (i.e., key for Mechanism.OutputStates OrderedDict))
             - the keyword kwAddOutputState or the name for an OutputState to be added
 
@@ -1195,8 +1201,8 @@ def _add_projection_from(sender, state, projection_spec, receiver, context=None)
                                      state_spec=projection_spec.value,
                                      constraint_value=projection_spec.value,
                                      constraint_value_name='Projection_spec value for new InputState',
-                                     context=context)
-    #  Update outputState and outputStates
+context=context)
+    #  Update output_state and output_states
     try:
         sender.output_states[output_state.name] = output_state
     # No OutputState(s) yet, so create them

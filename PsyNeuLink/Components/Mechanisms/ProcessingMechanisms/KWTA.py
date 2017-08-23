@@ -13,7 +13,7 @@ Overview
 --------
 
 A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
-k-winners-take-all (kWTA) behavior.
+k-winners-take-all (KWTA) behavior.
 
 .. _KWTA_Creation:
 
@@ -22,19 +22,27 @@ Creating a KWTA
 
 Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created directly by calling its constructor, or by
 using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The
-**k_value**, **threshold**, and **ratio** arguments are KWTA's characteristic attributes. The **k_value** argument
+**k_value**, **threshold**, and **ratio** arguments specify KWTA's characteristic attributes. The **k_value** argument
 specifies the `k_value` attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the `threshold` attribute (which is specified by the **threshold** argument). For any input, there is a
-range of possible adjusted inputs that would satisfy the requirement for k elements to be above the threshold; the
-**ratio** argument specifies the `ratio` attribute, which determines where within this range the final adjusted input
-falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the accepted range. The
-**inhibition_only** argument is an option to specify whether the KWTA should be allowed to increase the overall value of
-the input. In all other respects, a KWTA is specified in the same way as a standard `RecurrentTransferMechanism`.
+should be above the `threshold` attribute (which is specified by the **threshold** argument).
+
+For any input, there is a range of possible adjusted inputs that would satisfy the requirement for k elements to be
+above the threshold; the **ratio** argument specifies the `ratio` attribute, which determines where within this range
+the final adjusted input falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the
+accepted range. The **inhibition_only** argument specifies the `inhibition_only <KWTA.inhibition_only>` attribute, which
+specifies whether the KWTA should be allowed to increase the overall value of the input. The **average_based** argument
+specifies the `average_based <KWTA.average_based>` attribute, which specifies whether the KWTA uses average-based
+scaling. Average-based scaling uses the average of the top k values, and the average of the remaining values, to
+determine the inhibition range (before the `ratio <KWTA.ratio>` is used to choose where within this range the actual
+inhibition is chosen). In all other respects, a KWTA is specified in the same way as a standard
+`RecurrentTransferMechanism`.
 
 COMMENT:
 
 CW: I know that some of the stuff above should be moved down to the Structure section but I don't understand which stuff
 belongs in Structure and which belongs in the Creation section, so I skipped the Structure section for now.
+And if you're looking for the KWTA explanation written by Randy: the URL is
+https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations
 
 .. _KWTA_Structure:
 
@@ -52,15 +60,21 @@ Like every `RecurrentTransferMechanism`, a KWTA has a recurrent `AutoAssociative
 from the previous execution by its `matrix <AutoAssociativeProjection.matrix>`, so that the output of the previous
 execution is added to the input.
 
-Afterwards, the KWTA does its characteristic adjustment of the input: an additive offset is calculated and added to the
-input such that a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
-`threshold <KWTA.threshold>`. As mentioned above, there is usually a range of possible offsets that would satisfy the
-conditions: within this range, the `ratio <KWTA.ratio>` is used to calculate the chosen offset, with higher values of
-`ratio <KWTA.ratio>` (closer to 1) leading to higher offsets, and lower values (closer to 0) leading to lower offsets.
+Afterwards, the KWTA does its adjustment of the input: an additive offset is calculated and added to the input such that
+a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
+`threshold <KWTA.threshold>`. (That is, the same offset is added to each input value.) As mentioned above, there is
+usually a range of possible offsets that would satisfy having k elements above the threshold: within this range, the
+`ratio <KWTA.ratio>` is used to calculate the chosen offset, with higher values of `ratio <KWTA.ratio>` (closer to 1)
+leading to higher offsets, and lower values (closer to 0) leading to lower offsets. (For the standard, non-average-based
+KWTA, the minimum of the range is the offset that would set the k-th highest element exactly at the threshold, and the
+maximum of the range is the offset that would set the k+1-th highest element exactly at the threshold. For average-based
+KWTA, the minimum of the range is the average of the k offsets which set each of the top k elements at the threshold,
+and the maximum of the range is the average of the other offsets which set the other elements at the threshold. The
+average-based KWTA has less setpoint behavior, since it sometimes allows for more or less than k elements to be above
+the threshold.)
+
 If the offset is greater than zero, and the `inhibition_only <KWTA.inhibition_only>` attribute is True, then the offset
 is set to 0. Finally, the input, added to the offset, is passed to the `function <KWTA.function>`.
-
-(Currently, averaged-based KWTA execution is not available: however, it will be added soon.)
 
 .. _KWTA_Reference:
 
@@ -76,16 +90,17 @@ import warnings
 import numpy as np
 import typecheck as tc
 
+import logging
+
 from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
-from PsyNeuLink.Globals.Keywords import AUTO, HETERO, FULL_CONNECTIVITY_MATRIX, INITIALIZING, K_VALUE, KWTA, MATRIX, RATIO, RESULT, THRESHOLD
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Globals.Keywords import AUTO, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, KWTA, K_VALUE, MATRIX, RATIO, RESULT, THRESHOLD
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -377,6 +392,7 @@ class KWTA(RecurrentTransferMechanism):
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
                  inhibition_only=True,
+                 average_based=False,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
@@ -393,7 +409,8 @@ class KWTA(RecurrentTransferMechanism):
                                                   k_value=k_value,
                                                   threshold=threshold,
                                                   ratio=ratio,
-                                                  inhibition_only=inhibition_only)
+                                                  inhibition_only=inhibition_only,
+                                                  average_based=average_based)
 
         # this defaults the matrix to be an identity matrix (self excitation)
         if matrix is None:
@@ -467,21 +484,28 @@ class KWTA(RecurrentTransferMechanism):
 
         sorted_diffs = sorted(diffs)
 
-        if k == 0:
-            final_diff = sorted_diffs[k]
-        elif k == len(sorted_diffs):
-            final_diff = sorted_diffs[k - 1]
-        elif k > len(sorted_diffs):
-            raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
-                            format(k, current_input[0], self.name))
+        if self.average_based:
+            top_k_mean = np.mean(sorted_diffs[0:k])
+            other_mean = np.mean(sorted_diffs[k:n])
+            final_diff = other_mean * self.ratio + top_k_mean * (1 - self.ratio)
         else:
-            final_diff = sorted_diffs[k] * self.ratio + sorted_diffs[k-1] * (1 - self.ratio)
+            if k == 0:
+                final_diff = sorted_diffs[k]
+            elif k == len(sorted_diffs):
+                final_diff = sorted_diffs[k - 1]
+            elif k > len(sorted_diffs):
+                raise KWTAError("k value ({}) is greater than the length of the first input ({}) for KWTA mechanism {}".
+                                format(k, current_input[0], self.name))
+            else:
+                final_diff = sorted_diffs[k] * self.ratio + sorted_diffs[k-1] * (1 - self.ratio)
+
+
 
         if self.inhibition_only and final_diff > 0:
             final_diff = 0
 
         new_input = np.array(current_input[0] + final_diff)
-        if (sum(new_input > self.threshold) > k):
+        if (sum(new_input > self.threshold) > k) and not self.average_based:
             warnings.warn("KWTA scaling was not successful: the result was too high. The original input was {}, "
                           "and the KWTA-scaled result was {}".format(current_input, new_input))
         new_input = list(new_input)
@@ -553,9 +577,9 @@ class KWTA(RecurrentTransferMechanism):
                 time_scale = TimeScale.TRIAL,
                 context=None):
 
-        self.variable = self._kwta_scale(self.variable, context=context)
+        variable = self._update_variable(self._kwta_scale(variable, context=context))
 
-        return super()._execute(variable=self.variable,
+        return super()._execute(variable=variable,
                        runtime_params=runtime_params,
                        clock=clock,
                        time_scale=time_scale,
@@ -608,11 +632,11 @@ class KWTA(RecurrentTransferMechanism):
         #
         # # FIX: IS THIS CORRECT?  SHOULD THIS BE SET TO INITIAL_VALUE
         # # FIX:     WHICH SHOULD BE DEFAULTED TO 0.0??
-        # # Use self.variable to initialize state of input
+        # # Use self.instance_defaults.variable to initialize state of input
         #
         #
         # if INITIALIZING in context:
-        #     self.previous_input = self.variable
+        #     self.previous_input = self.instance_defaults.variable
         #
         # if self.decay is not None and self.decay != 1.0:
         #     self.previous_input *= self.decay
@@ -639,13 +663,13 @@ class KWTA(RecurrentTransferMechanism):
         #     if not self.integrator_function:
         #
         #         self.integrator_function = AdaptiveIntegrator(
-        #                                     self.variable,
+        #                                     self.instance_defaults.variable,
         #                                     initializer = self.initial_value,
         #                                     noise = self.noise,
         #                                     rate = self.time_constant
         #                                     )
         #
-        #     current_input = self.integrator_function.execute(self.variable,
+        #     current_input = self.integrator_function.execute(variable,
         #                                                 # Should we handle runtime params?
         #                                                      # params={INITIALIZER: self.previous_input,
         #                                                      #         INTEGRATION_TYPE: ADAPTIVE,
@@ -706,7 +730,7 @@ class KWTA(RecurrentTransferMechanism):
     #     """
     #
     #     if isinstance(matrix, str):
-    #         size = len(mech.variable[0])
+    #         size = len(mech.instance_defaults.variable[0])
     #         matrix = get_matrix(matrix, size, size)
     #
     #     return AutoAssociativeProjection(sender=mech,

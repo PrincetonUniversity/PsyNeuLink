@@ -12,14 +12,15 @@
 Overview
 --------
 
-A LearningSignal is a type of `ModulatorySignal` that is specialized for use with a `LearningMechanism` and one or more
-`LearningProjections <LearningProjection>`, to modify the `matrix <MappingProjection.matrix>` parameter of the
-`MappingProjections <MappingProjection>` to which they project.  A LearningSignal receives the value of a
-`learning_signal <LearningMechanism>` calculated by the `LearningMechanism` to which it belongs, which in general is a
-matrix of weight changes to be made to the `matrix <MappingProjection>` parameter of the MappingProjection(s) being
-learned.  The LearningSignal assigns its `learning_signal <LearningSignal.learning_signal>` as the value of its
-LearningProjection(s), which convey it to the MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`,
-which in turn modify the matrix parameter(s) of the MappingProjection(s) being learned.
+A LearningSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a
+`LearningMechanism` and one or more `LearningProjections <LearningProjection>`, to modify the `matrix
+<MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` to which they project.  A
+LearningSignal receives the value of a `learning_signal <LearningMechanism>` calculated by the `LearningMechanism` to
+which it belongs, which in general is a matrix of weight changes to be made to the `matrix <MappingProjection>`
+parameter of the MappingProjection(s) being learned.  The LearningSignal assigns its `learning_signal
+<LearningSignal.learning_signal>` as the value of its LearningProjection(s), which convey it to the
+MappingProjections` *MATRIX* `ParameterState(s) <ParameterState>`, which in turn modify the matrix parameter(s) of
+the MappingProjection(s) being learned.
 
 .. _LearningSignal_Creation:
 
@@ -27,11 +28,11 @@ Creating a LearningSignal
 ------------------------
 
 A LearningSignal is created automatically whenever a `MappingProjection` is `specified for learning
-<LearningMechanism_Creation>` and the Projection belongs to the same `Composition` as the `LearningMechanism`.
-LearningSignals can also be specified in the **learning_signals** argument of the constructor for a `LearningMechanism`.
-Although a LearningSignal can be created directly using its constructor (or any of the other ways for `creating an
-OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a LearningSignal has dedicated
-Components and requirements for configuration that must be met for it to function properly.
+<LearningMechanism_Creation>` and the Projection belongs to the same `Composition <Composition>` as the
+`LearningMechanism`. LearningSignals can also be specified in the **learning_signals** argument of the constructor
+for a `LearningMechanism`. Although a LearningSignal can be created directly using its constructor (or any of the
+other ways for `creating an OutputState <OutputStates_Creation>`), this is neither necessary nor advisable, as a
+LearningSignal has dedicated Components and requirements for configuration that must be met for it to function properly.
 
 .. _LearningSignal_Specification:
 
@@ -85,9 +86,9 @@ Projections
 
 When a LearningSignal is created, it can be assigned one or more `LearningProjections <LearningProjection>`,
 using either the **projections** argument of its constructor, or in an entry of a dictionary assigned to the
-**params** argument with the key *PROJECTIONS*.  These will be assigned to its
-`efferents  <LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional
-details concerning the specification of Projections when creating a State.
+**params** argument with the key *PROJECTIONS*.  These will be assigned to its `efferents
+<LearningSignal.efferents>` attribute.  See `State Projections <State_Projections>` for additional details
+concerning the specification of Projections when creating a State.
 
 .. note::
    Although a LearningSignal can be assigned more than one `LearningProjection`, all of those Projections will convey
@@ -132,10 +133,10 @@ as well the `learning_rate <Process_Base.learning_rate>` for any Process(es) and
 `learning_rate <System_Base.learning_rate>` for any System(s) to which the LearningSignal's owner belongs
 (see `learning_rate <LearningMechanism_Learning_Rate>` of LearningMechanism for additional details).
 
-The `function <LearningSignal.function>` of a LearningSignal converts the
-`learning_signal <LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its
-`value <LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By
-default this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
+The `function <LearningSignal.function>` of a LearningSignal converts the `learning_signal
+<LearningMechanism.learning_signal>` it receives from the LearningMechanism to which it belongs to its `value
+<LearningSignal.value>` (i.e., the LearningSignal's `learning_signal <LearningSignal.learning_signal>`). By default
+this is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0), that simply uses the
 LearningMechanism's `learning_signal <LearningMechanism.learning_signal>` as its own.  However, the LearningSignal's
 `function <LearningSignal.function>` can be assigned another `TransferFunction`, or any other function that takes a
 scalar, ndarray or matrix and returns a similar value.
@@ -200,8 +201,8 @@ class LearningSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of `ModulatorySignal` used by a `LearningMechanism` to modify the `matrix <MappingProjection.matrix>`
-    parameter of one more more `MappingProjection(s) <MappingProjection>`.
+    A subclass of `ModulatorySignal <ModulatorySignal>` used by a `LearningMechanism` to modify the `matrix
+    <MappingProjection.matrix>` parameter of one more more `MappingProjection(s) <MappingProjection>`.
 
     COMMENT:
 
@@ -237,7 +238,7 @@ class LearningSignal(ModulatorySignal):
     function : Function or method : default Linear
         specifies the function used by the LearningSignal to generate its
         `learning_signal <LearningSignal.learning_signal>`.
-    
+
     learning_rate : float or None : default None
         specifies the learning_rate for the LearningSignal's `LearningProjections <LearningProjection>`
         (see `learning_rate <LearningSignal.learning_rate>` for details).
@@ -284,7 +285,7 @@ class LearningSignal(ModulatorySignal):
         LearningSignal's `variable <LearningSignal.variable>` as its `learning_signal <LearningSignal.learning_signal>`.
 
     learning_rate : float : None
-        determines the learning rate for the LearningSignal.  It is used to specify the 
+        determines the learning rate for the LearningSignal.  It is used to specify the
         `learning_rate <LearningProjection.learning_rate>` parameter for its LearningProjection(s) (listed in the
         `efferents <LearningSignal.efferents>` attribute). See `LearningSignal_Learning_Rate` for additional details.
 
@@ -384,10 +385,6 @@ class LearningSignal(ModulatorySignal):
                          name=name,
                          prefs=prefs,
                          context=self)
-
-    @property
-    def error_signal(self):
-        return self.variable
 
     @property
     def learning_signal(self):

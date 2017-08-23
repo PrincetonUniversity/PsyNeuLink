@@ -82,15 +82,15 @@ for i in range(2):
     CentralClock.time_step = 0
     mySystem.execute([[0.5],[0]])
     print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
-                                                     mySystem.terminalMechanisms.outputStateNames,
-                                                     mySystem.terminalMechanisms.outputStateValues))
+                                                     mySystem.terminal_mechanisms.outputStateNames,
+                                                     mySystem.terminal_mechanisms.outputStateValues))
 
     # Present feedback:
     CentralClock.time_step = 1
     mySystem.execute([[0],[1]])
     print ('\nTRIAL: {}; Time Step: {}\n{}\n{}'.format(CentralClock.trial, CentralClock.time_step,
-                                                     mySystem.terminalMechanisms.outputStateNames,
-                                                     mySystem.terminalMechanisms.outputStateValues))
+                                                     mySystem.terminal_mechanisms.outputStateNames,
+                                                     mySystem.terminal_mechanisms.outputStateValues))
 
 #endregion
 

@@ -159,7 +159,7 @@ def show_trial_header():
 
 def show_results():
     import re
-    results = sorted(zip(mySystem.terminalMechanisms.outputStateNames, mySystem.terminalMechanisms.outputStateValues))
+    results = sorted(zip(mySystem.terminal_mechanisms.outputStateNames, mySystem.terminal_mechanisms.outputStateValues))
     print('\nRESULTS (time step {}): '.format(CentralClock.time_step))
     print ('\tDrift rate control signal (from EVC): {}'.
            # format(re.sub('[\[,\],\n]','',str(float(Decision.parameterStates[DRIFT_RATE].value)))))
