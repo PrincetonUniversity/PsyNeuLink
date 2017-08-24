@@ -2,8 +2,9 @@ import pprint
 
 import numpy as np
 
-from PsyNeuLink import CURRENT_STATE
+
 from PsyNeuLink.Components.Functions.Function import TDLearning
+from PsyNeuLink.Globals.Keywords import CURRENT_STATE
 
 
 def test_td_learning():
