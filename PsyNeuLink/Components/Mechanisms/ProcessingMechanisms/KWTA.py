@@ -12,19 +12,26 @@
 Overview
 --------
 
-A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
-k-winners-take-all (KWTA) behavior.
+A KWTA is a subclass of `RecurrentTransferMechanism` that implements a k-winners-take-all (kWTA) constraint on the
+number of elements of the Mechanism's `value <KWTA.value>` that are above a specified threshold.  The implementation is
+based on the one  described in `O'Reilly and Munakata,
+2012 <https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations>`_.
 
 .. _KWTA_Creation:
 
 Creating a KWTA
 ---------------
 
-Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created directly by calling its constructor, or by
-using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The
-**k_value**, **threshold**, and **ratio** arguments specify KWTA's characteristic attributes. The **k_value** argument
-specifies the `k_value` attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the `threshold` attribute (which is specified by the **threshold** argument).
+A KWTA Mechanism can be created directly by calling its constructor, or by using the `mechanism()
+<Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The **k_value**, **threshold**,
+and **ratio** arguments can be used to specify the function of the KWTA Mechanism, and default to a condition
+in which half of the elements in the KWTA Mechanism's `value <KWTA.value>` (**k_value** = 0.5) are above 0 and half
+are below (**threshold** = 0), achieved using an intermediate degree of value displacement (**ratio** = 0.5).
+
+.. _KWTA_Structure:
+
+Structure
+---------
 
 For any input, there is a range of possible adjusted inputs that would satisfy the requirement for k elements to be
 above the threshold; the **ratio** argument specifies the `ratio` attribute, which determines where within this range
@@ -36,20 +43,6 @@ scaling. Average-based scaling uses the average of the top k values, and the ave
 determine the inhibition range (before the `ratio <KWTA.ratio>` is used to choose where within this range the actual
 inhibition is chosen). In all other respects, a KWTA is specified in the same way as a standard
 `RecurrentTransferMechanism`.
-
-COMMENT:
-
-CW: I know that some of the stuff above should be moved down to the Structure section but I don't understand which stuff
-belongs in Structure and which belongs in the Creation section, so I skipped the Structure section for now.
-And if you're looking for the KWTA explanation written by Randy: the URL is
-https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations
-
-.. _KWTA_Structure:
-
-Structure
----------
-
-COMMENT
 
 .. _KWTA_Execution:
 
@@ -209,7 +202,7 @@ class KWTA(RecurrentTransferMechanism):
         inputs below the threshold are considered "low".
 
     ratio : number : default 0.5
-        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`:
+        specifies the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`:
         `ratio` should be a number between 0 and 1. There is generally a range of possible offsets that satisfy the
         constraints set by `k_value <KWTA.k_value>` and `threshold <KWTA.threshold>`: a `ratio` of 1 results in using
         the greatest offset, a `ratio` of 0 results in using the least offset, etc.
