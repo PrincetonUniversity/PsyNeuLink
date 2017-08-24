@@ -128,6 +128,7 @@ class KWTA(RecurrentTransferMechanism):
     threshold=0,                \
     ratio=0.5,                  \
     inhibition_only=True,       \
+    average_based=False,        \
     range=None,                 \
     time_scale=TimeScale.TRIAL, \
     params=None,                \
@@ -220,7 +221,12 @@ class KWTA(RecurrentTransferMechanism):
         below the threshold. If `inhibition_only` is True, then the KWTA will only use negative or zero offsets,
         changing all positive offsets to zero. This may be the desired behavior: for example, the user might expect the
         KWTA to only "inhibit" neurons rather than "excite" them, or might expect that after many low inputs, the KWTA
-        should settle into an entirely non-excited state with no values above the `threshold <KWTA.threshold`
+        should settle into an entirely non-excited state with no values above the `threshold <KWTA.threshold>`
+
+    average_based : boolean : default False
+        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
+        top k values, and the average of the remaining values, to determine the inhibition range (before the
+        `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <KWTA.function>`:
@@ -305,6 +311,11 @@ class KWTA(RecurrentTransferMechanism):
     inhibition_only : boolean : default True
         specifies whether the KWTA is allowed to use positive offsets (if `inhibition_only` is True, then the KWTA will
         set all positive offsets to 0 instead).
+
+    average_based : boolean : default False
+        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
+        top k values, and the average of the remaining values, to determine the inhibition range (before the
+        `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
 
     range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
