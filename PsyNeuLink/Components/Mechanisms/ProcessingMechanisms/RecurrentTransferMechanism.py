@@ -39,7 +39,7 @@ standard `TransferMechanism`.
 
 COMMENT:
 8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
-created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function and specifying
+created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` command and specifying
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
