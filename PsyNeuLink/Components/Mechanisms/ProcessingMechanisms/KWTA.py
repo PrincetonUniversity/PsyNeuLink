@@ -42,40 +42,42 @@ KWTA:
 .. _KWTA_k_value:
 
 * `k_value <KWTA.k_value>` parameter -- determines the number of elements of its `variable <KWTA.value>` that should be
-  at or above the specified `threshold <KWTA.threshold>`.  It can be any number between 0 and the number of elements in
-  the KTWA's `variable <KWTA.variable>` attribute.  Whether or not the exact number is achieved depends on the settings
-  of the `average_based <KWTA.average_based>` and `inhibition_only <KWTA.inhibition_only>` options (see below).
+  at or above the specified `threshold <KWTA.threshold>`.  A value between 0 and 1 specifies the proportion of elements
+  that should be at or above the `threshold <KWTA.threshold>`, while a positive integer specifies the number of values
+  that should be at or above the `threshold <KWTA.threshold>`. A negative integer specifies the number of elements that
+  should be below the `threshold <KWTA.threshold>`.  Whether or not the exact specificadtion is achieved depends on the
+  settings of the `average_based <KWTA.average_based>` and `inhibition_only <KWTA.inhibition_only>` options (see below).
 
 .. _KWTA_threshold:
 
-* `threshold <KWTA.threshold>` parameter -- determines the value that the element of the KWTA's `variable
-  <KTWA.variable>` with the `k_value <KWTA.k_value>`\\-th highest value should equal or exceed.
+* `threshold <KWTA.threshold>` parameter -- determines the value at or above which the KTWA seeks to assign `k_value
+  <KWTA.k_value>` elements of its `variable <KWTA.variable>`.
 
 .. _KWTA_ratio:
 
 * `ratio <KWTA.ratio>` parameter -- determines how the offset applied to the elements of the KWTA's `variable
-  <KWTA.variable>` is selected from the range of possible values;  the `ratio <KWTA.ratio>`  must be a number between 0
-  and 1.  An offset is picked that is above the low end of the range by a proportion of the range equal to the `ratio
-  <KWTA.ratio>` parameter.  How the range is calculated is determined by the `average_based <KWTA.average_based>`
+  <KWTA.variable>` is selected from the scope of possible values;  the `ratio <KWTA.ratio>`  must be a number between 0
+  and 1.  An offset is picked that is above the low end of the scope by a proportion of the scope equal to the `ratio
+  <KWTA.ratio>` parameter.  How the scope is calculated is determined by the `average_based <KWTA.average_based>`
   option, as described below.
 
 .. _KWTA_average_based:
 
-* `average_based <KWTA.average_based>` option -- determines the range of values for the offset applied to the KWTA's
+* `average_based <KWTA.average_based>` option -- determines the scope of values for the offset applied to the KWTA's
   `variable <KWTA.variable>` is calculated; the offset is then chosen based on the `ratio <KWTA.ratio>` parameter.  If
-  `average_based <KWTA.average_based>` is `False`, the low end of the range is the offset that sets the k-th highest
+  `average_based <KWTA.average_based>` is `False`, the low end of the scope is the offset that sets the k-th highest
   element exactly at the threshold (that is, the smallest value that insures that `k_value <KWTA.k_value>` elements are
-  at or above the `threshold <KWTA.threshold>`;  the high end of the range is the offset that sets the k+1-th highest
+  at or above the `threshold <KWTA.threshold>`;  the high end of the scope is the offset that sets the k+1-th highest
   element exactly at the threshold (that is, the largest possible value, such that the `k_value <KWTA.k_value>` elements
   but no more are above the `threshold <KWTA.threshold>` (i.e., the next one is exactly at it). In this case, all values
-  of offset within the range generate exactly `k_value <KTWA.k_value>` elements at or above the `threshold
-  <KWTA.threshold>`.  If `average_based <KWTA.average_based>` is `True`, the low end of the range is the offset that
+  of offset within the scope generate exactly `k_value <KTWA.k_value>` elements at or above the `threshold
+  <KWTA.threshold>`.  If `average_based <KWTA.average_based>` is `True`, the low end of the scope is the offset that
   places the *average* of the elements with the `k_value <KWTA.k_value>` highest values at the `threshold
-  <KWTA.threshold>`, and the high end of the range is the offset that places the average of the remaining elements at
-  the `threshold <KWTA.threshold>`.  In this case, the lowest values of offset within the range may produce fewer than
+  <KWTA.threshold>`, and the high end of the scope is the offset that places the average of the remaining elements at
+  the `threshold <KWTA.threshold>`.  In this case, the lowest values of offset within the scope may produce fewer than
   `k_value <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>`, while the highest values within the
-  range may produce more.  An offset is picked from range as specified by the `ratio <KWTA.ratio>` parameter, as
-  described above.
+  scope may produce more.  An offset is picked from the scope as specified by the `ratio <KWTA.ratio>` parameter
+  (see `above <KWTA_ratio>`).
 
   .. note::
      If the `average_based <KWTA.average_based>` option is `False` (the default), the KWTA's `variable <KWTA.variable>`
@@ -94,8 +96,8 @@ KWTA:
 * `inhibition_only <KWTA.inhibition_only>` option -- determines whether the offset applied to the elements of the
   KWTA's `variable <KWTA.variable>` is allowed to be positive (i.e., whether the KWTA can increase the value of any
   elements of its `variable <KWTA.variable>`).  If set to `False`, the KWTA will use any offset value determined by
-  the `ratio <KWTA.ratio>` parameter from the range determined by the `average_based <KTWA.average_based>` option
-  (including positive offsets). If `inhibition_only <KWTA.inhibition_only>` is `True`, then any positive offse
+  the `ratio <KWTA.ratio>` parameter from the scope determined by the `average_based <KTWA.average_based>` option
+  (including positive offsets). If `inhibition_only <KWTA.inhibition_only>` is `True`, then any positive offset
   selected is "clipped" at (i.e re-assigned a value of) 0.  This insures that the values of the elements of the KWTA's
   `variable <KWTA.variable>` are never increased.
 
@@ -124,10 +126,10 @@ When a KTWA is executed, it first determines its `variable <KWTA.variable>` as f
   as close to `k_value <KWTA.k_value>` elements as possible are at or above the `threshold <KWTA.threshold>`.  The
   offset is determined by carrying out the following steps in each execution of the KTWA:
 
-  - calculate the range of offsets that will satisfy the constraint; how this is done is determined by the
+  - calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
     `average_based <KWTA.average_based>` attribute (see `above <KWTA_average_based>`);
 
-  - select an offset from the range based on the `ratio <KWTA.ratio>` option (see `above <KWTA_ratio>`);
+  - select an offset from the scope based on the `ratio <KWTA.ratio>` option (see `above <KWTA_ratio>`);
 
   - constrain the offset to be 0 or negative if the `inhibition_only <KWTA.inhibition_only>` option is set (see `above
     <KWTA_inhibition_only>`;
@@ -189,8 +191,8 @@ class KWTA(RecurrentTransferMechanism):
     k_value=0.5,                \
     threshold=0,                \
     ratio=0.5,                  \
-    inhibition_only=True,       \
     average_based=False,        \
+    inhibition_only=True,       \
     range=None,                 \
     time_scale=TimeScale.TRIAL, \
     params=None,                \
@@ -259,35 +261,30 @@ class KWTA(RecurrentTransferMechanism):
          (1-time_constant * result on previous time_step)
 
     k_value : number : default 0.5
-        specifies the proportion or number of input values (within the input vector) that should be above the
-        `threshold <KWTA.threshold>` of the KWTA. A `k_value` greater than zero and less than one specifies the
-        proportion of input values that should be above the `threshold <KWTA.threshold>`, while a positive integer
-        `k_value` specifies the number of values that should be above the `threshold <KWTA.threshold>`. A
-        negative integer `k_value` specifies the number of values that should be below the threshold.
+        specifies the proportion or number of the elements of `variable <KWTA.variable>` that should be at or above
+        the `threshold <KWTA.threshold>`. A value between 0 and 1 specifies the proportion of elements that should be at
+        or above the `threshold <KWTA.threshold>`, while a positive integer specifies the number of values that should
+        be at or above the `threshold <KWTA.threshold>`. A negative integer specifies the number of elements that should
+        be below the `threshold <KWTA.threshold>`.
 
     threshold : number : default 0
-        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
-        values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below. Generally, the
-        threshold should be some intermediate value such that inputs above the threshold are considered "high" while
-        inputs below the threshold are considered "low".
+        specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
+        `variable <KWTA.variable>`.
 
     ratio : number : default 0.5
-        specifies the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`:
-        `ratio` should be a number between 0 and 1. There is generally a range of possible offsets that satisfy the
-        constraints set by `k_value <KWTA.k_value>` and `threshold <KWTA.threshold>`: a `ratio` of 1 results in using
-        the greatest offset, a `ratio` of 0 results in using the least offset, etc.
-
-    inhibition_only : boolean : default True
-        specifies whether the KWTA should be allowed to use positive offsets. If set to `False`, the KWTA will use any
-        offset value, including positive offsets, to ensure that there are always the number of elements specified in
-        the **k_value** argument with values above and below the value specified in **threshold**;  see
-        `inhibition_only <KWTA.inhibition_only>` for additional information.
+        specifies the offset used to adjust the elements of `variable <KWTA.variable>` so that there are the number
+        specified by `k_value <KWTA.k_value>` at or above the `threshold <KWTA.threshold>`;  it must be a
+        number from 0 to 1 (see description of `ratio <KWTA_ratio>` parameter for additional details).
 
     average_based : boolean : default False
+        specifies whether the average-based scaling is used to determine the scope of offsets (see description of
+        `average_based option <KWTA_average_based>` for additional details).
 
-        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-        top k values, and the average of the remaining values, to determine the inhibition range (before the
-        `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
+    inhibition_only : boolean : default True
+        specifies whether positive offsets can be applied to the `variable <KWTA.variable>` in an effort to achieve
+        `k_value <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If set to `False`, any offset
+        is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
+        (see description of `inhibition_only <KWTA_inhibition_only>` option for additional details).
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <KWTA.function>`:
@@ -477,8 +474,8 @@ class KWTA(RecurrentTransferMechanism):
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
-                 inhibition_only=True,
                  average_based=False,
+                 inhibition_only=True,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
