@@ -239,7 +239,7 @@ class KWTA(RecurrentTransferMechanism):
         specifies the amount by which to decrement its `previous_input <KWTA.previous_input>` each time it is executed.
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <KWTA.function>`:
+        specifies a stochastically-sampled value added to the result of the `function <KWTA.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -251,7 +251,7 @@ class KWTA(RecurrentTransferMechanism):
          (1-time_constant * result on previous time_step)
 
     k_value : number : default 0.5
-        the proportion or number of input values (within the input vector) that should be above the
+        specifies the proportion or number of input values (within the input vector) that should be above the
         `threshold <KWTA.threshold>` of the KWTA. A `k_value` greater than zero and less than one specifies the
         proportion of input values that should be above the `threshold <KWTA.threshold>`, while a positive integer
         `k_value` specifies the number of values that should be above the `threshold <KWTA.threshold>`. A
@@ -270,14 +270,13 @@ class KWTA(RecurrentTransferMechanism):
         the greatest offset, a `ratio` of 0 results in using the least offset, etc.
 
     inhibition_only : boolean : default True
-        specifies whether the KWTA should be allowed to use positive offsets. If set to False, the KWTA will use any
-        offset value, including positive offsets, ensuring that there are always the expected number of values above and
-        below the threshold. If `inhibition_only` is True, then the KWTA will only use negative or zero offsets,
-        changing all positive offsets to zero. This may be the desired behavior: for example, the user might expect the
-        KWTA to only "inhibit" neurons rather than "excite" them, or might expect that after many low inputs, the KWTA
-        should settle into an entirely non-excited state with no values above the `threshold <KWTA.threshold>`
+        specifies whether the KWTA should be allowed to use positive offsets. If set to `False`, the KWTA will use any
+        offset value, including positive offsets, to ensure that there are always the number of elements specified in
+        the **k_value** argument with values above and below the value specified in **threshold**;  see
+        `inhibition_only <KWTA.inhibition_only>` for additional information.
 
     average_based : boolean : default False
+
         specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
         top k values, and the average of the remaining values, to determine the inhibition range (before the
         `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
@@ -351,24 +350,38 @@ class KWTA(RecurrentTransferMechanism):
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
     k_value : number
-        the proportion or number of input values (within the input vector) that should be above the
+        determines the number or proportion of elements of `value <KWTA>value>` that should be above the
         `threshold <KWTA.threshold>` of the KWTA.
 
     threshold : number
-        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
+        determines the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
         values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below
 
     ratio : number
-        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`.
-        Higher ratios result in greater offsets, lower ratios result in lower offsets, within the appropriate range.
+        determines the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input
+        <KWTA_Execution>`. Higher ratios result in greater offsets, lower ratios result in lower offsets, within the
+        appropriate range.
 
     inhibition_only : boolean : default True
-        specifies whether the KWTA is allowed to use positive offsets (if `inhibition_only` is True, then the KWTA will
+        determines whether the KWTA is allowed to use positive offsets (if `inhibition_only` is True, then the KWTA will
         set all positive offsets to 0 instead).
 
+        specifies whether the KWTA should be allowed to use positive offsets. If set to `False`, the KWTA will use any
+        offset value, including positive offsets, to ensure that there are always the number of elements specified in
+        the **k_value** argument with values above and below the value specified in **threshold**;  see
+        `inhibition_only <KWTA.inhibition_only>` for additional information.
+
+
+        If `inhibition_only` is `True`, then the KWTA will only use negative or zero offsets,
+        changing all positive offsets to zero. This insures that the value of all elements is never increased beyond
+        what the input itself would produce (i.e., irrespective of adjustments made by the KWTA's `function
+        <KWTA.function>`);  this also has that effect that, if the input is low enough, the value of all elements
+        may decay below the `threshold <KWTA.threshold>` and even toward 0 (depending on the value of the `decay
+        <KWTA.decay>` parameter.
+
     average_based : boolean : default False
-        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-        top k values, and the average of the remaining values, to determine the inhibition range (before the
+        determines whether the KWTA uses average-based KWTA scaling. Average-based scaling uses the average of the
+        top k values and the average of the remaining values to determine the inhibition range (before the
         `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
 
     range : Tuple[float, float]
