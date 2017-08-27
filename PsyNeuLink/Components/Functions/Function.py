@@ -3347,7 +3347,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         self._initializer = val
         self.previous_value = val
 
-
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
