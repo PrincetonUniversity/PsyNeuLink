@@ -216,22 +216,22 @@ class ComparatorMechanism(ObjectiveMechanism):
     sample : OutputState, Mechanism, value, or string
         specifies the value to compare with the `target` by the `function <ComparatorMechanism.function>`.
 
-    target:  OutputState, Mechanism, value, or string
+    target :  OutputState, Mechanism, value, or string
         specifies the value with which the `sample` is compared by the `function <ComparatorMechanism.function>`.
 
-    input_states:  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
+    input_states :  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target InputStates;
         by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputStates
         specified in the **sample** and **target** arguments, respectively (see `ComparatorMechanism_Structure`
         for additional details).
 
-    function:  Function, function or method : default Distance(metric=DIFFERENCE)
+    function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
 
-    output_states:  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
         specifies the OutputStates for the Mechanism;
 
-    params:  Optional[Dict[param keyword, param value]]
+    params :  Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
@@ -244,12 +244,12 @@ class ComparatorMechanism(ObjectiveMechanism):
             This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
     COMMENT
 
-    name:  str : default ComparatorMechanism-<index>
+    name :  str : default ComparatorMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs:  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+    prefs :  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
