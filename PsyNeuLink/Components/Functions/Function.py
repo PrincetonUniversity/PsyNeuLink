@@ -579,6 +579,9 @@ class Function_Base(Function):
         self.__llvm_bin_function = None
         self.__llvm_recompile = True
 
+        self._variable_length = len(default_variable) if isinstance(default_variable, np.ndarray) else 1
+
+
     def execute(self, variable=None, params=None, context=None):
         return self.function(variable=variable, params=params, context=context)
 
@@ -1754,6 +1757,7 @@ class TransferFunction(Function_Base):
                          prefs=prefs,
                          context=context)
 
+
     @property
     def multiplicative(self):
         return getattr(self, self.multiplicative_param)
@@ -1883,8 +1887,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
                          context=context)
 
         # self.functionOutputType = None
-        self.__llvm_func_name = self.__get_llvm_function(default_variable)
-        self.__bin_function = None
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -1904,7 +1906,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         builder.store(val, ptro)
 
-    def __get_llvm_function(self, default_variable):
+    def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -1912,7 +1914,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             param_struct_ty = self.get_param_struct_type()
             func_ty = ir.FunctionType(ir.VoidType(), (param_struct_ty, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(len(default_variable))
+            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
             for a in vi, vo:
@@ -1940,19 +1942,19 @@ class Linear(TransferFunction):  # ---------------------------------------------
         # TODO: Port this to llvm
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        if self.__bin_function is None:
-            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        bf = self._llvmBinFunction
+
         ret = np.zeros(len(variable))
         gain = self.paramsCurrent[SLOPE]
         bias = self.paramsCurrent[INTERCEPT]
 
-        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
 
         ct_param = par_struct_ty(gain, bias)
 
         ct_vi = variable.ctypes.data_as(vi_ty)
         ct_vo = ret.ctypes.data_as(vo_ty)
-        self.__bin_function(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_vi, ct_vo)
 
         return ret
 
@@ -2152,8 +2154,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
                          owner=owner,
                          prefs=prefs,
                          context=context)
-        self.__llvm_func_name = self.__get_llvm_function(default_variable)
-        self.__bin_function = None
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2172,7 +2172,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         builder.store(val, ptro)
 
-    def __get_llvm_function(self, default_variable):
+    def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2181,7 +2181,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             param_type = self.get_param_struct_type()
             func_ty = ir.FunctionType(ir.VoidType(), \
                 (param_type, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(len(default_variable))
+            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
             for a in vi, vo:
@@ -2212,20 +2212,19 @@ class Exponential(TransferFunction):  # ----------------------------------------
         # TODO: Port this to llvm
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        if self.__bin_function is None:
-            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        bf = self._llvmBinFunction
         ret = np.zeros(len(variable))
 
         rate = self.paramsCurrent[RATE]
         scale = self.paramsCurrent[SCALE]
 
-        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
 
         ct_param = par_struct_ty(rate, scale)
         ct_vi = variable.ctypes.data_as(vi_ty)
         ct_vo = ret.ctypes.data_as(vo_ty)
 
-        self.__bin_function(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_vi, ct_vo)
 
         return ret
 
@@ -2382,10 +2381,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
                          prefs=prefs,
                          context=context)
 
-        # class Default does not work, skip generation
-        if not isinstance( default_variable, int ):
-            self.__llvm_func_name = self.__get_llvm_function(default_variable)
-        self.__bin_function = None
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2409,7 +2404,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def __get_llvm_function(self, default_variable):
+
+    def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2417,7 +2413,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             struct_param_ty = self.get_param_struct_type()
             func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(len(default_variable))
+            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
             for a in vi, vo:
@@ -2445,19 +2441,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
         # TODO: Port this to llvm
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        if self.__bin_function is None:
-            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        bf = self._llvmBinFunction
+
         ret = np.zeros(len(variable))
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
-        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
 
         ct_param = par_struct_ty(gain, bias)
 
         ct_vi = variable.ctypes.data_as(vi_ty)
         ct_vo = ret.ctypes.data_as(vo_ty)
-        self.__bin_function(ct_param, ct_vi, ct_vo)
+        bf(ct_param, ct_vi, ct_vo)
 
         return ret
 
@@ -2625,13 +2621,13 @@ class SoftMax(TransferFunction):
                          owner=owner,
                          prefs=prefs,
                          context=context)
-        self.__llvm_func_name = self.__get_llvm_function(default_variable)
-        self.__bin_function = None
+
 
     def get_param_struct_type(self):
         with pnlvm.LLVMBuilderContext() as ctx:
             param_type = ir.LiteralStructType([ctx.float_ty])
         return param_type
+
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [index])
@@ -2655,6 +2651,7 @@ class SoftMax(TransferFunction):
         new_index = builder.select(gt, index, old_index)
         builder.store(new_index, max_ind_ptr)
 
+
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
         output_type = self.params[OUTPUT_TYPE]
         ptro = builder.gep(vo, [index])
@@ -2671,7 +2668,8 @@ class SoftMax(TransferFunction):
         val = builder.fdiv(val, exp_sum)
         builder.store(val, ptro)
 
-    def __get_llvm_function(self, default_variable):
+
+    def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -2679,7 +2677,7 @@ class SoftMax(TransferFunction):
             struct_param_ty = self.get_param_struct_type()
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(len(default_variable))
+            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
             for a in vi, vo:
@@ -2735,17 +2733,17 @@ class SoftMax(TransferFunction):
         # TODO: Port this to llvm
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        if self.__bin_function is None:
-            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
+        bf = self._llvmBinFunction
+
         ret = np.zeros(len(variable))
         gain = self.params[GAIN]
-        par_struct_ty, vi_ty, vo_ty = self.__bin_function.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
 
         ct_param = par_struct_ty(gain)
-
         ct_vi = variable.ctypes.data_as(vi_ty)
         ct_vo = ret.ctypes.data_as(vo_ty)
-        self.__bin_function(ct_param, ct_vi, ct_vo)
+
+        bf(ct_param, ct_vi, ct_vo)
 
         return ret
 
