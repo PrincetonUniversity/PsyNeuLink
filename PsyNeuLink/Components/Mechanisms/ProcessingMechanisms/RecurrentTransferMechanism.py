@@ -413,6 +413,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  decay: is_numeric_or_none=None,
                  noise: is_numeric_or_none=0.0,
                  time_constant: is_numeric_or_none=1.0,
+                 integrator_mode=False,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
@@ -434,6 +435,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   initial_value=initial_value,
                                                   matrix=matrix,
                                                   decay=decay,
+                                                  integrator_mode=integrator_mode,
                                                   output_states=output_states,
                                                   params=params,
                                                   noise=noise,
@@ -451,6 +453,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          function=function,
                          initial_value=initial_value,
                          noise=noise,
+                         integrator_mode=integrator_mode,
                          time_constant=time_constant,
                          range=range,
                          output_states=output_states,
@@ -663,9 +666,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
-        if context is None or (INITIALIZING not in context):
-            if self.decay is not None and self.decay != 1.0:
-                self.previous_input = self.previous_input * float(self.decay)
+        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
+
+        # if context is None or (INITIALIZING not in context):
+        #     if self.decay is not None and self.decay != 1.0:
+        #         self.previous_input = self.previous_input * float(self.decay)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,

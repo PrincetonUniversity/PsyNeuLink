@@ -892,7 +892,7 @@ class DDM(ProcessingMechanism_Base):
             variable = self._update_variable(self.instance_defaults.variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if self.timeScale == TimeScale.TIME_STEP:
+        if isinstance(self.function.__self__, Integrator):
 
             result = self.function(variable, context=context)
             if INITIALIZING not in context:
@@ -905,7 +905,7 @@ class DDM(ProcessingMechanism_Base):
 
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
-        elif self.timeScale == TimeScale.TRIAL:
+        else:
 
             result = self.function(variable=variable,
                                    params=runtime_params,
@@ -938,10 +938,6 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
 
             return return_value
-
-        else:
-            raise MechanismError("PROGRAM ERROR: unrecognized or unspecified time_scale ({}) for DDM".
-                                 format(self.timeScale))
 
             # def _out_update(self, particle, drift, noise, time_step_size, decay):
             #     ''' Single update for OU (special case l=0 is DDM)'''
