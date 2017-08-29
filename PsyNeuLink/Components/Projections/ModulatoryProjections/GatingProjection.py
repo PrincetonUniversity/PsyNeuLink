@@ -14,9 +14,9 @@
 Overview
 --------
 
-A GatingProjection is a type of `ModulatoryProjection` that projects to the `InputState` or `OutputState` of a
-`Mechanism`. It takes the value of a `GatingSignal` of a `GatingMechanism`, and uses it to modulate the `value
-<State_Base.value>` of the State to which it projects.
+A GatingProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects to the `InputState` or
+`OutputState` of a `Mechanism <Mechanism>`. It takes the value of a `GatingSignal` of a `GatingMechanism`,
+and uses it to modulate the `value <State_Base.value>` of the State to which it projects.
 
 .. _GatingProjection_Creation:
 
@@ -24,13 +24,13 @@ Creating a GatingProjection
 ----------------------------
 
 A GatingProjection can be created using any of the standard ways to `create a projection <Projection_Creation>`,
-or by including it in the specification of an `InputState <InputState_Projections>` or
-`OutputState <OutputState_Projections>` .  If a GatingProjection is created explicitly (using its constructor),
-its **receiver** argument can be specified as a particular InputState or OutputState of a designated `Mechanism`,
-or simply as the Mechanism.  In the latter case, the Mechanism's `primary InputState <InputState_Primary>` will be
-used. If the GatingProjection is included in an InputState or OutputState specification, that State will be assigned
-as the GatingProjection's `receiver <GatingProjection.receiver>`. If the **sender** and/or **receiver** arguments are
-not specified, its initialization is `deferred  <GatingProjection_Deferred_Initialization>`.
+or by including it in the specification of an `InputState <InputState_Projections>` or `OutputState
+<OutputState_Projections>` .  If a GatingProjection is created explicitly (using its constructor), its **receiver**
+argument can be specified as a particular InputState or OutputState of a designated `Mechanism <Mechanism>`, or simply
+as the Mechanism.  In the latter case, the Mechanism's `primary InputState <InputState_Primary>` will be used. If the
+GatingProjection is included in an InputState or OutputState specification, that State will be assigned as the
+GatingProjection's `receiver <GatingProjection.receiver>`. If the **sender** and/or **receiver** arguments are not
+specified, its initialization is `deferred <GatingProjection_Deferred_Initialization>`.
 
 
 .. _GatingProjection_Deferred_Initialization:
@@ -60,7 +60,7 @@ The `sender <GatingProjection.sender>` of a GatingProjection is a `GatingSignal`
 GatingProjection is an identity function (`Linear` with **slope**\\ =1 and **intercept**\\ =0);  that is,
 it simply conveys the value of its `gating_signal <GatingProjection.gating_signal>` to its `receiver
 <GatingProjection.receiver>`, for use in modifying the `value <State_Base.value>` of the State that it gates. Its
-`receiver <GatingProjection.receiver>` is the `InputState` or `OutputState` of a `Mechanism`.
+`receiver <GatingProjection.receiver>` is the `InputState` or `OutputState` of a `Mechanism <Mechanism>`.
 
 .. _GatingProjection_Execution:
 
@@ -68,14 +68,13 @@ Execution
 ---------
 
 A GatingProjection cannot be executed directly.  It is executed when the `InputState` or `OutputState` to which it
-projects is updated.  Note that this only occurs when the `Mechanism` to which the `State` belongs is executed (see
-:ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a GatingProjection is executed,
-its `function <GatingProjection.function>` gets the `gating_signal <GatingProjection.gating_signal>` from its `sender
-<GatingProjection.sender>` and conveys that to its `receiver <GatingProjection.receiver>`.  This is used by the
-`receiver <GatingProjection.receiver>` to modify the `value <State_Base.value>` of the State gated by the
-GatingProjection (see `ModulatorySignal_Modulation`, `InputState Execution <InputState_Execution>` and
-`OutputState Execution <OutputState_Execution>` for how modulation operates and how this applies to a InputStates and
-OutputStates).
+projects is updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `State <State>`
+belongs is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a GatingProjection
+is executed, its `function <GatingProjection.function>` gets the `gating_signal <GatingProjection.gating_signal>` from
+its `sender <GatingProjection.sender>` and conveys that to its `receiver <GatingProjection.receiver>`.  This is used by
+the `receiver <GatingProjection.receiver>` to modify the `value <State_Base.value>` of the State gated by the
+GatingProjection (see `ModulatorySignal_Modulation`, `InputState Execution <InputState_Execution>` and `OutputState
+Execution <OutputState_Execution>` for how modulation operates and how this applies to a InputStates and OutputStates).
 
 .. note::
    The changes in an InputState or OutputState's `value <State_Base.value >` in response to the execution of a
@@ -124,7 +123,8 @@ class GatingProjection(ModulatoryProjection_Base):
      name=None,        \
      prefs=None)
 
-    Subclass of `ModulatoryProjection` that modulates the value of an `InputState` or `OutputState`.
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of an `InputState` or
+    `OutputState`.
 
     COMMENT:
         Description:
@@ -172,7 +172,7 @@ class GatingProjection(ModulatoryProjection_Base):
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the projection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
+        the GatingProjection, its `function <GatingProjection.function>`, and/or a custom function and its parameters.
         Values specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
@@ -215,13 +215,13 @@ class GatingProjection(ModulatoryProjection_Base):
 
     name : str : default GatingProjection-<index>
         the name of the GatingProjection.
-        Specified in the **name** argument of the constructor for the projection;
+        Specified in the **name** argument of the constructor for the GatingProjection;
         if not is specified, a default is assigned by ProjectionRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Projection.classPreferences
-        the `PreferenceSet` for projection.
-        Specified in the **prefs** argument of the constructor for the projection;
+        the `PreferenceSet` for the GatingProjection.
+        Specified in the **prefs** argument of the constructor for the GatingProjection;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 

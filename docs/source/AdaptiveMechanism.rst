@@ -1,5 +1,5 @@
-Adaptive Mechanism
-==================
+Adaptive Mechanisms
+===================
 
 .. _AdaptiveMechanism_Subtypes:
 
@@ -7,7 +7,7 @@ Adaptive Mechanism
    :maxdepth: 1
 
    LearningMechanism
-   ControlMechanism
+   ControlMechanisms <ControlMechanism>
    GatingMechanism
 
 .. automodule:: AdaptiveMechanisms.AdaptiveMechanism

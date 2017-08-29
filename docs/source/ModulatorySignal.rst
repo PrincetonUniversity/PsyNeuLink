@@ -1,5 +1,5 @@
-ModulatorySignal
-================
+ModulatorySignals
+=================
 
 .. _ModulatorySignal_Subtypes:
 

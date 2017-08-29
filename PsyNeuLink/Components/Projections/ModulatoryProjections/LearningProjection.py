@@ -14,12 +14,12 @@
 Overview
 --------
 
-A LearningProjection is a type of `ModulatoryProjection` that projects from a `LearningMechanism` to the
-*MATRIX* `ParameterState` of a `MappingProjection`.  It takes the `value <LearningSignal.value>` of a `LearningSignal`
-of a `LearningMechanism`, and uses it to modify the value of the `matrix <MappingProjection.matrix>`
+A LearningProjection is a type of `ModulatoryProjection <ModulatoryProjection>` that projects from a `LearningMechanism`
+to the *MATRIX* `ParameterState` of a `MappingProjection`.  It takes the `value <LearningSignal.value>` of a
+`LearningSignal` of a `LearningMechanism`, and uses it to modify the value of the `matrix <MappingProjection.matrix>`
 parameter of that MappingProjection.  All of the LearningProjections in a System, along with its other `learning
-components <LearningMechanism_Learning_Configurations>`, can be displayed using the System's `show_graph` method with
-its **show_learning** argument assigned as `True`.
+components <LearningMechanism_Learning_Configurations>`, can be displayed using the System's `show_graph
+<System_Base.show_graph>` method with its **show_learning** argument assigned as `True`.
 
 .. _LearningProjection_Creation:
 
@@ -129,8 +129,8 @@ possibly modified by a `learning_rate <LearningProjection.learning_rate>` if tha
 
 .. note::
    The changes to the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` in response to the
-   execution of a LearningProjection are not applied until the `Mechanism` that receives MappingProjection are
-   next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   execution of a LearningProjection are not applied until the `Mechanism <Mechanism>` that receives MappingProjection
+   are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 
 .. _LearningProjection_Class_Reference:
@@ -205,7 +205,7 @@ class LearningProjection(ModulatoryProjection_Base):
                  name=None,           \
                  prefs=None)
 
-    Subclass of `ModulatoryProjection` that modulates the value of a `ParameterState` for the
+    Subclass of `ModulatoryProjection <ModulatoryProjection>` that modulates the value of a `ParameterState` for the
     `matrix <MappingProjection.matrix>` parameter of a `MappingProjection`.
 
     COMMENT:

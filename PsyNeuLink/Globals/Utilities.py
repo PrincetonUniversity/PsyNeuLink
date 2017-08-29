@@ -24,7 +24,7 @@ TYPE CHECKING VALUE COMPARISON
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   PsyNeuLink-specific typechecking functions are in the `Component` module
+   PsyNeuLink-specific typechecking functions are in the `Component <Component>` module
 
 * `parameter_spec`
 * `optional_parameter_spec`

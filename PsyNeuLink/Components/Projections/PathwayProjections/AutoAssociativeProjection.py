@@ -18,7 +18,7 @@ An AutoAssociativeProjection is a subclass of `MappingProjection` that acts as t
 `RecurrentTransferMechanism`. The primary difference between an AutoAssociativeProjection and a basic MappingProjection
 is that an AutoAssociativeProjection uses the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters *on the RecurrentTransferMechanism* to help update its matrix:
-this allows for a `ControlMechanism` to control the `auto <RecurrentTransferMechanism.auto>` and
+this allows for a `ControlMechanism <ControlMechanism>` to control the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters and thereby control the matrix.
 
 .. _Auto_Associative_Creation:
@@ -30,7 +30,7 @@ An AutoAssociativeProjection is created automatically by a RecurrentTransferMech
 stored as the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
-`Auto_Associative_Projections blah blah` below).
+`Execution <Auto_Associative_Execution>` below).
 
 .. _Auto_Associative_Structure:
 
@@ -62,18 +62,18 @@ arguments for a RecurrentTransferMechanism:
 Execution
 ---------
 
-An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix> parameter to transform the value of its
+An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of its
 `sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
 `receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
 
 .. note::
-     Under the hood, during execution the AutoAssociativeProjection updates its
-     `matrix <AutoAssociativeProjection.matrix> parameter based on the `auto <RecurrentTransferMechanism.auto>` and
-     `hetero <RecurrentTransferMechanism.hetero>` parameters *on the `RecurrentTransferMechanism`*. (The
-     `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjection.hetero>` parameters of the
-     AutoAssociativeProjection simply refer to their counterparts on the RecurrentTransferMechanism as well.) The reason
-     for putting the `auto <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>`
-     parameters on the RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism`.
+     During execution the AutoAssociativeProjection updates its `matrix <AutoAssociativeProjection.matrix> parameter
+     based on the `auto <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters
+     *on the `RecurrentTransferMechanism`*. (The `auto <AutoAssociativeProjection.auto>` and
+     `hetero <AutoAssociativeProjection.hetero>` parameters of the AutoAssociativeProjection simply refer to their
+     counterparts on the RecurrentTransferMechanism as well.) The reason for putting the `auto
+     <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters on the
+     RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism <ControlMechanism>`.
 
 .. _Auto_Associative_Class_Reference:
 
@@ -81,13 +81,20 @@ Class Reference
 ---------------
 
 """
+import numbers
+import numpy as np
+import typecheck as tc
 
-from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, HETERO, CHANGED
-from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import get_matrix
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import projection_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from PsyNeuLink.Globals.Keywords import AUTO, AUTO_ASSOCIATIVE_PROJECTION, CHANGED, DEFAULT_MATRIX, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
@@ -108,9 +115,13 @@ class AutoAssociativeProjection(MappingProjection):
         prefs=None                                          \
         context=None)
 
-    Implements a MappingProjection that is self-recurrent on a RecurrentTransferMechanism; an AutoAssociativeProjection
-    represents connections between nodes in a single-layer recurrent network. It multiplies the output of
-    the RecurrentTransferMechanism by a matrix, then presents the product as input to the RecurrentTransferMechanism.
+    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an AutoAssociativeProjection
+    represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
+    `RecurrentTransferMechanism` by a matrix, then presents the product as input to the `RecurrentTransferMechanism`.
+
+    Note: The reason **auto** and **hetero** are not arguments to the constructor of the AutoAssociativeProjection is
+    because it is only ever created by a RecurrentTransferMechanism: by the time the AutoAssociativeProjection is
+    created, the **auto** and **hetero** arguments are already incorporated into the **matrix** argument.
 
     Arguments
     ---------
@@ -142,18 +153,11 @@ class AutoAssociativeProjection(MappingProjection):
     name : str : default AutoAssociativeProjection-<index>
         a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
         RecurrentTransferMechanism, its name is specified as "<name of RecurrentTransferMechanism> recurrent projection".
-        If not is specified, a default is assigned by `ProjectionRegistry`
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
     prefs : Optional[PreferenceSet or specification dict : Projection.classPreferences]
         the `PreferenceSet` for the MappingProjection.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see `PreferenceSet <LINK>` for details).
-
-    .. note::
-        The reason **auto** and **hetero** are not arguments to the constructor of the AutoAssociativeProjection because
-        it is only ever created by a RecurrentTransferMechanism: by the time the AutoAssociativeProjection is created,
-        the **auto** and **hetero** arguments are already incorporated into the **matrix** argument.
 
     Attributes
     ----------

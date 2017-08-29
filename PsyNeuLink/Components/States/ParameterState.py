@@ -13,9 +13,9 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism` or a `MappingProjection` and are used to represent, and possibly modify
-the, values of all of the configurable parameters of the `Component` or its `function <Component.function>`. A
-ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `MappingProjection` and are used to represent, and
+possibly modify the, values of all of the configurable parameters of the `Component <Component>` or its `function
+<Component.function>`. A ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
 `LearningProjections <LearningProjection>` that modify the value of the parameter. The Projections received by a
 ParameterState are listed in its `mod_afferents <ParameterState.mod_afferents>` attribute. The ParameterState's
 `function <ParameterState.function>` combines the values of those Projections, and uses the result to
@@ -28,9 +28,9 @@ it executes.
 Creating a ParameterState
 -------------------------
 
-ParameterStates are created automatically when the `Mechanism` or `Projection` to which they belong is created.  The
-`owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism <Mechanism>` or `MappingProjection`.  One
-ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
+ParameterStates are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
+belong is created.  The `owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism or `MappingProjection`.
+One ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
 of the owner's `function <Component.function>` (the `configurable parameters <ParameterState_Configurable_Parameters>`
 of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
 dictionaries. Each ParameterState is created using the value specified for the corresponding parameter, as described
@@ -43,7 +43,7 @@ Specifying Parameters
 
 Parameters can be specified in one of several places:
 
-    * In the **argument** of the constructor for the `Component` to which the parameter belongs
+    * In the **argument** of the constructor for the `Component <Component>` to which the parameter belongs
       (see `Component_Configurable_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
@@ -99,22 +99,25 @@ The specification of the initial value of a parameter can take any of the follow
       (1st) item of the tuple as parameter's `value assignment <ParameterState_Value_Assignment>`, and assigns the
       parameter's name as the name of the ParameterState.  The Modulatory (2nd) item of the tuple is used as the
       ParameterState's `modulatory assignment <ParameterState_Modulatory_Specification>`, and the ParameterState
-      is assigned as the `receiver <Projection.Projection.receiver>` for the corresponding `ModulatoryProjection`.
+      is assigned as the `receiver <Projection.Projection.receiver>` for the corresponding `ModulatoryProjection
+      <ModulatoryProjection>`.
 
       .. note::
-          Currently, the `function <Component.function>` of a Component, although it can be specified as a
-          parameter value, cannot be assigned a `ModulatorySignal` or modified in the **runtime_params** argument of
-          a call to a Mechanism's `execute <Mechanism_Base.execute>` method. This may change in the future.
+          Currently, the `function <Component.function>` of a Component, although it can be specified as a parameter
+          value, cannot be assigned a `ModulatorySignal <ModulatorySignal>` or modified in the **runtime_params**
+          argument of a call to a Mechanism's `execute <Mechanism_Base.execute>` method. This may change in the future.
 
 The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
 of the Component's `function <Mechanism_Base.function>` to which the parameter belongs.  The attribute has the same
-name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example,
-the value of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as``my_component.param``). The parameter's value is assigned as the **default value** for the ParameterState.
+name as the parameter, and can be referenced using standard Python attribute ("dot") notation;  for example, the value
+of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
+``my_component.param``). The parameter's value is assigned as the **default value** for the ParameterState.
 
 .. note::
    If the value of a parameter is specified as `None`, `NotImplemented`, or any other non-numeric value that is not one
-   of those listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal`
-   or in the **runtime_params** argument of a call to a Mechanism's `execute <Mechanism_Base.execute>` method.
+   of those listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal
+   <ModulatorySignal>` or in the **runtime_params** argument of a call to a Mechanism's `execute
+   <Mechanism_Base.execute>` method.
 
 
 .. _ParameterState_Specification_Examples:
@@ -182,7 +185,7 @@ the Logistic function in the example.
 Structure
 ---------
 
-Every ParameterState is owned by a `Mechanism` or `MappingProjection`. It can receive one or more
+Every ParameterState is owned by a `Mechanism <Mechanism>` or `MappingProjection`. It can receive one or more
 `ControlProjections <ControlProjection>` or `LearningProjections <LearningProjection>`, that are listed in its
 `mod_afferents <ParameterState.mod_afferents>` attribute.  A ParameterState cannot receive
 `PathwayProjections <PathwayProjection>` or `GatingProjections <GatingProjection>`.  When the ParameterState is
@@ -287,8 +290,8 @@ class ParameterState(State_Base):
     name=None,                                                   \
     prefs=None)
 
-    Subclass of `State` that represents and possibly modifies the parameter of
-    a `Mechanism`, `Projection`, or its `Function`.
+    Subclass of `State <State>` that represents and possibly modifies the parameter of
+    a `Mechanism <Mechanism>`, `Projection <Projection>`, or its `Function`.
 
 
     COMMENT:
@@ -323,10 +326,10 @@ class ParameterState(State_Base):
     ---------
 
     owner : Mechanism or MappingProjection
-        the `Mechanism` or `MappingProjection` to which to which the ParameterState belongs; it must be specified or
-        determinable from the context in which the ParameterState is created. The owner of a ParameterState for the
-        parameter of a `function <Component.function>` should be specified as the Mechanism or Projection
-        to which the function belongs.
+        the `Mechanism <Mechanism>` or `MappingProjection` to which to which the ParameterState belongs; it must be
+        specified or determinable from the context in which the ParameterState is created. The owner of a ParameterState
+        for the parameter of a `function <Component.function>` should be specified as the Mechanism or Projection to
+        which the function belongs.
 
     reference_value : number, list or np.ndarray
         specifies the default value of the parameter for which the ParameterState is responsible.
@@ -363,7 +366,7 @@ class ParameterState(State_Base):
     ----------
 
     owner : Mechanism or MappingProjection
-        the `Mechanism` or `MappingProjection` to which the ParameterState belongs.
+        the `Mechanism <Mechanism>` or `MappingProjection` to which the ParameterState belongs.
 
     mod_afferents : Optional[List[Projection]]
         a list of the `ModulatoryProjection <ModulatoryProjection>` that project to the ParameterState (i.e.,

@@ -40,11 +40,11 @@ or to the Process' `output <Process_Input_And_Output>` if the Mechanism is a `TE
 Other configurations can also easily be specified using a Mechanism's **output_states** argument (see
 `OutputState_Specification` below).
 
-An OutputState must be owned by a `Mechanism`.  When OutputState is specified in the constructor for a `Mechanism`
-(see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as its owner. If the
-OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner** argument of its
-constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until it is assigned to
-an owner using the owner's `add_states` method.
+An OutputState must be owned by a `Mechanism <Mechanism>`.  When OutputState is specified in the constructor for a
+`Mechanism <Mechanism>` (see `below <InputState_Specification>`), it is automatically assigned to that Mechanism as
+its owner. If the OutputState is created directly, its `owner <OutputState.owner>` can specified in the **owner**
+argument of its constructor; otherwise, its initialization will be `deferred <State_Deferred_Initialization>` until
+it is assigned to an owner using the owner's `add_states` method.
 
 .. _OutputState_Primary:
 
@@ -109,15 +109,15 @@ specify an OutputState:
     * A **State specification dictionary**.  This creates the specified OutputState using the item of the owner
       `value <Mechanism_Base.value>` specified by the *INDEX* entry  as OutputState's `variable <OutputState.variable>`.
       In addition to the standard entries of a `State specification dictionary <State_Specification>`, the dictionary
-      can have a *PROJECTIONS* entry, the value of which can be a `Projection`, a
+      can have a *PROJECTIONS* entry, the value of which can be a `Projection <Projection>`, a
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
       are either of those.  This can be used to specify one or more efferent `PathwayProjections <PathwayProjection>`
       from the OutpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
     ..
-    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection` specification.
-      This creates a default OutputState using the first item as the OutputState's `variable <OutputState.variable>`,
-      and assigns the OutputState as the `receiver `ModualtoryProjection.receiver` of the type of ModulatoryProjection
-      specified in the second item.
+    * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
+      <ModulatoryProjection>` specification. This creates a default OutputState using the first item as the
+      OutputState's `variable <OutputState.variable>`, and assigns the OutputState as the `receiver
+      `ModualtoryProjection.receiver` of the type of ModulatoryProjection specified in the second item.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and
@@ -404,7 +404,7 @@ class OutputState(State_Base):
     prefs=None,                                \
     context=None)
 
-    Subclass of `State` that calculates and represents an output of a `Mechanism`.
+    Subclass of `State <State>` that calculates and represents an output of a `Mechanism <Mechanism>`.
 
     COMMENT:
 

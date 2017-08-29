@@ -53,8 +53,9 @@ types of Mechanisms in PsyNeuLink:
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
       |
-      Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal` (a type of
-      `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection`.
+      Each type of AdaptiveMechanism is associated with a corresponding type of `ModulatorySignal <ModulatorySignal>`
+      (a type of `OutputState` specialized for use with the AdaptiveMechanism) and `ModulatoryProjection
+      <ModulatoryProjection>`.
 
 Every Mechanism is made up of four fundamental components:
 
@@ -108,10 +109,10 @@ mentioned above, or using one of the following:
           the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
           specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
 
-  * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances.
-    For example, a `ComparatorMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when
-    `learning is specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and
-    `ControlMechanism` are created when the `controller <System_Base.controller>` is specified for a `System`.
+  * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
+    a `ComparatorMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when `learning is
+    specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
+    <ControlMechanism>` are created when the `controller <System_Base.controller>` is specified for a `System`.
 
 .. _Mechanism_State_Specification:
 
@@ -125,7 +126,7 @@ ParameterStates it needs to represent its parameters, including those of its `fu
 also creates any InputStates and OutputStates required for the Projections it has been assigned. InputStates and
 OutputStates, and corresponding Projections (including those from `ModulatorySignals <ModulatorySignal>`) can also be
 specified explicitly in the **input_states** and **output_states** arguments of the Mechanism's constructor (see `first
-example <Mechanism_Example_1>` below), or in a `parameter specification dictionary <ParameterState_Specification>
+example <Mechanism_Example_1>` below), or in a `parameter specification dictionary <ParameterState_Specification>`
 assigned to its **params** argument using entries with the keys *INPUT_STATES* and *OUTPUT_STATES*, respectively (see
 `second example <Mechanism_Example_2>` below).  While specifying in the arguments directly is simpler and more
 convenient, the dictionary format allows parameter sets to be created elsewhere and/or re-used.  The value of each
@@ -158,11 +159,11 @@ Specifying Parameters
 
 As described `below <Mechanism_ParameterStates>`, Mechanisms have `ParameterStates <ParameterState>` that provide the
 current value of a parameter used by the Mechanism and/or its `function <Mechanism_Base.function>` when it is `executed
-<Mechanism_Execution>`. These can also be used by a `ControlMechanism` to control the parameters of the Mechanism and/or
-it `function <Mechanism_Base.function>`.  The value of any of these, and their control, can be specified in the
-corresponding argument of the constructor for the Mechanism and/or its `function <Mechanism_Base.function>`,  or in a
-parameter specification dictionary assigned to the **params** argument of its constructor, as described under
-`ParameterState_Specification`.
+<Mechanism_Execution>`. These can also be used by a `ControlMechanism <ControlMechanism>` to control the parameters of
+the Mechanism and/or it `function <Mechanism_Base.function>`.  The value of any of these, and their control, can be
+specified in the corresponding argument of the constructor for the Mechanism and/or its `function
+<Mechanism_Base.function>`,  or in a parameter specification dictionary assigned to the **params** argument of its
+constructor, as described under `ParameterState_Specification`.
 
 
 .. _Mechanism_Structure:
@@ -204,7 +205,7 @@ also be assigned as follows::
 
 Again, while not as simple as specifying these as arguments in the function's construtor, this format is more flexible.
 Any values specified in the parameter dictionary will **override** any specified within the constructor for the function
-itself (see `DDM_Parameters` for an example).
+itself (see `DDM <DDM_Creation>` for an example).
 
 .. _Mechanism_Function_Object:
 
@@ -217,8 +218,8 @@ to the Mechanism's `function <Mechanism_Base.function>` attribute.
 
 .. note::
    It is important to recognize the distinction between a `Function <Function>` and its `function
-   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a PsyNeuLink
-   `Component`, that can be created using a constructor; a *function* is an attribute that contains a callable method
+   <Function_Base.function>` attribute (note the difference in capitalization).  A *Function* is a PsyNeuLink `Component
+   <Component>`, that can be created using a constructor; a *function* is an attribute that contains a callable method
    belonging to a Function, and that is executed when the Component to which the Function belongs is executed.
    Functions are used to assign, store, and apply parameter values associated with their function (see `Function
    <Function_Overview> for a more detailed explanation).
@@ -279,12 +280,12 @@ Custom Functions
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCMechanism_Auxiliary_Functions` of an EVC Mechanmism). A user-defined function
-can be assigned using the Mechanism's `assign_params` method (the safest means) or by assigning it directly to the
-corresponding attribute of the Mechanism (for its primary function, its `function <Mechanism_Base.function>` attribute).
-It is *strongly advised* that auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear
-as an argument in the Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>`
-of a `TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
+Mechanism's constructor (e.g., the `EVCMechanism`). A user-defined function can be assigned using the Mechanism's
+`assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
+(for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
+auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
+Mechanism's constructor, such as the `integrator_function <TransferMechanism.integrator_function>` of a
+`TransferMechanism`) *not* be assigned custom functions;  this is because their parameters are included as
 arguments in the constructor for the Mechanism, and thus changing the function could produce confusing and/or
 unpredictable effects.
 
@@ -478,7 +479,7 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 Additional Attributes
 ~~~~~~~~~~~~~~~~~~~~~
 
-In addition to the `standard attributes <Component_Structure>` of any `Component`, Mechanisms have a set of
+In addition to the `standard attributes <Component_Structure>` of any `Component <Component>`, Mechanisms have a set of
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
 in a `parameter specification dictionary <ParameterState_Specification>` assigned to the **params** argument of the
 Mechanism's constructor, by direct reference to the corresponding attribute of the Mechanisms after it has been
@@ -638,8 +639,8 @@ logger = logging.getLogger(__name__)
 MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies outputStates to be monitored by a `ControlMechanism` (see `ControlMechanism_Monitored_OutputStates
-    for a more complete description of their meanings."""
+    """Specifies outputStates to be monitored by a `ControlMechanism <ControlMechanism>`
+    (see `ControlMechanism_Monitored_OutputStates for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()

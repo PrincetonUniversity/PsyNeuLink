@@ -31,13 +31,13 @@
 Overview
 --------
 
-A System is a `Composition` that is a collection of `Processes <Process>` all of which are executed together.
-Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
-`Projections <Projection>` between Mechanisms in different Processes within the System are permitted,
-as are recurrent Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not
-support ESP).  Every System is associated with a `ControlMechanism`, assigned to its `controller
-<System_Base.controller>` attribute, that can be used to control parameters of other `Mechanisms <Mechanism>` (or
-their `functions <Mechanism_Base.function>` in the System.
+A System is a `Composition <Composition>` that is a collection of `Processes <Process>` all of which are executed
+together. Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
+`Projections <Projection>` between Mechanisms in different Processes within the System are permitted, as are recurrent
+Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  Every
+System is associated with a `ControlMechanism <ControlMechanism>`, assigned to its `controller <System_Base.controller>`
+attribute, that can be used to control parameters of other `Mechanisms <Mechanism>` (or their `functions
+<Mechanism_Base.function>` in the System.
 
 .. _System_Creation:
 
@@ -48,9 +48,9 @@ Systems are created by calling the `system` command.  If no arguments are provid
 containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
 created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
 command, and listed in its `processes <System_Base.processes>` attribute.   Whenever a System is created, a
-`ControlMechanism` is created for it and assigned as its `controller <System_Base.controller>`.  The `controller
-<System_Base.controller>` can be specified by assigning an existing ControlMechanism to the **controller** argument
-of the `system` command, or specifying a class of ControlMechanism; if none is specified,
+`ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller <System_Base.controller>`.
+The `controller <System_Base.controller>` can be specified by assigning an existing ControlMechanism to the
+**controller** argument of the `system` command, or specifying a class of ControlMechanism; if none is specified,
 a `DefaultControlMechanism` is created.
 
 .. note::
@@ -65,6 +65,8 @@ Structure
 ---------
 
 The Components of a System are shown in the figure below and summarized in the sections that follow.
+
+.. _System_Full_Fig:
 
 .. figure:: _static/System_full_fig.svg
    :alt: Overview of major PsyNeuLink components
@@ -88,7 +90,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
 <System_Base.graph>` and/or the role they play in a System:
 
     `ORIGIN`: receives input to the System (provided in the `execute <System_Base.execute>` or `run
-    <System_Base.run> method), and does not receive a `Projection` from any other `ProcessingMechanisms
+    <System_Base.run> method), and does not receive a `Projection <Projection>` from any other `ProcessingMechanisms
     <ProcessingMechanism>`.
 
     `TERMINAL`: provides output from the System, and does not send Projections to any other ProcessingMechanisms.
@@ -114,7 +116,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
        Mechanism of a Process is also the `ORIGIN` and/or `TERMINAL` of a System to which the Process belongs (see
        `example <LearningProjection_Target_vs_Terminal_Figure>`).
 
-    .. note: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism`.
+    .. note: designations are stored in the `systems <Mechanism.systems>` attribute of a `Mechanism <Mechanism>`.
     COMMENT:
     (see _instantiate_graph below)
     COMMENT
@@ -163,15 +165,16 @@ additional details).
 Control
 ~~~~~~~
 
-Every System is assigned a `ControlMechanism` to its `controller <System_Base.controller>` attribute that can be used
-to control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function <Mechanism.function>`.
-If the `controller <System_Base.controller>` is not specified in the **controller** argument of the System's
-constructor, a `DefaultControlMechanism` is created and a `ControlSignal` and `ControlProjection` are assigned to it
-for each parameter of a `Mechanism` or its `function <Mechanism_Base.function>` in the System that has been `specified
-for control <ControlMechanism_Control_Signals>`.  See `ControlMechanism` and `ModulatorySignal_Modulation` for details
-of how control operates, and `below <System_Execution_Control>` for a description of how it is engaged when a System is
-executed.  The control Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>`
-method with its **show_control** argument assigned as `True`.
+Every System is assigned a `ControlMechanism <ControlMechanism>` to its `controller <System_Base.controller>` attribute
+that can be used to control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function
+<Mechanism.function>`. If the `controller <System_Base.controller>` is not specified in the **controller** argument of
+the System's constructor, a `DefaultControlMechanism` is created and a `ControlSignal` and `ControlProjection` are
+assigned to it for each parameter of a `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` in the
+System that has been `specified for control <ControlMechanism_Control_Signals>`.  See `ControlMechanism
+<ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and `below
+<System_Execution_Control>` for a description of how it is engaged when a System is executed.  The control
+Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its
+**show_control** argument assigned as `True`.
 
 .. _System_Learning:
 
@@ -271,17 +274,17 @@ format <Run_Targets_Function_Format>`, which generates a target for each executi
 Control
 ~~~~~~~
 
-The `ControlMechanism` assigned as the System's `controller <System_Base.controller>` (see `System_Control`) uses
-an `ObjectiveMechanism`, specified in its `monitoring_mechanism <ControlMechanism.monitoring_mechanism>` attribute,
-to monitor the `OutputState(s) <OutputState>` listed in the System's `monitored_output_states
-<ControlMechanism_Base.monitored_output_states>` attribute (see `ControlMechanism_Monitored_OutputStates` for a
-description of how to specify which OutputStates are monitored).  The `controller <System_Base.controller>` is executed
-after both `processing <System_Execution_Processing>` and `learning <System_Execution_Learning>` have been
-executed for a `TRIAL`.  The `controller <System_Base.controller>`'s `function <ControlMechanism.function>` uses the
-information received from its `monitoring_mechanism <ControlMechanism.monitoring_mechanism>` to modulate the value of
-the parameters of Components in the System `specified for control <ControlMechanism_Control_Signals>`, which then
-take effect in the next `TRIAL`. The control Components of a System can be displayed using the System's `show_graph`
-method with its **show_control** argument assigned `True`.
+The `ControlMechanism <ControlMechanism>` assigned as the System's `controller <System_Base.controller>` (see
+`System_Control`) uses an `ObjectiveMechanism`, specified in its `monitoring_mechanism
+<ControlMechanism.monitoring_mechanism>` attribute, to monitor the `OutputState(s) <OutputState>` listed in the System's
+`monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute (see
+`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored).  The
+`controller <System_Base.controller>` is executed after both `processing <System_Execution_Processing>` and `learning
+<System_Execution_Learning>` have been executed for a `TRIAL`.  The `controller <System_Base.controller>`'s `function
+<ControlMechanism.function>` uses the information received from its `monitoring_mechanism
+<ControlMechanism.monitoring_mechanism>` to modulate the value of the parameters of Components in the System `specified
+for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL`. The control Components of
+a System can be displayed using the System's `show_graph`method with its **show_control** argument assigned `True`.
 
 
 COMMENT:
@@ -418,8 +421,8 @@ def system(default_variable=None,
 
     Factory method for System: returns instance of System.
 
-    If called with no arguments, returns an instance of System with a single default `Process`` and `Mechanism`;
-    if called with a name string, that is used as the name of the instance of System returned;
+    If called with no arguments, returns an instance of System with a single default `Process`` and `Mechanism
+    <Mechanism>`; if called with a name string, that is used as the name of the instance of System returned;
     if a params dictionary is included, it is passed to the instantiated System.
 
     See :class:`System_Base` for class description
@@ -446,14 +449,14 @@ def system(default_variable=None,
 
     initial_values : Dict[Mechanism:value] : default None
         a dictionary of values used to initialize Mechanisms that close recurrent loops (designated as
-        `INITIALIZE_CYCLE`). The key for each entry is a `Mechanism`, and the value is a number,
+        `INITIALIZE_CYCLE`). The key for each entry is a `Mechanism <Mechanism>`, and the value is a number,
         list or 1d np.array that must be compatible with the format of the first item of the Mechanism's
         `value <Mechanism_Base.value>` (i.e., Mechanism.value[0]).
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        specifies the `ControlMechanism` used to monitor the `value <OutputState.value>` of the OutputState(s) for
-        Mechanisms specified in **monitor_for_control** and that controls the parameters `specified for control
-        <ControlMechanism_Control_Signals>` in the System.
+        specifies the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputState.value>` of the
+        OutputState(s) for Mechanisms specified in **monitor_for_control** and that controls the parameters
+        `specified for control <ControlMechanism_Control_Signals>` in the System.
 
     enable_controller :  bool : default `False`
         specifies whether the `controller` is executed during `System execution <System_Execution>`.
@@ -621,9 +624,9 @@ class System_Base(System):
             Used to construct :py:data:`execution_graph <System_Base.execution_graph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the `ControlMechanism` used to monitor the `value <OutputState.value>` of the `OutputState(s) <OutputState>`
-        and/or `Mechanisms <Mechanism>` specified in the **monitor_for_control** argument, and that controls
-        the parameters specified in the **control_signals** argument of the System's constructor.
+        the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputState.value>` of the `OutputState(s)
+        <OutputState>` and/or `Mechanisms <Mechanism>` specified in the **monitor_for_control** argument,
+        and that controls the parameters specified in the **control_signals** argument of the System's constructor.
 
     enable_controller :  bool : default :keyword:`False`
         determines whether the `controller <System_Base.controller>` is executed during System execution.
@@ -669,8 +672,8 @@ class System_Base(System):
         .. property that points to _allMechanisms.mechanisms (see below)
 
     mechanismsDict : Dict[Mechanism:Process]
-        contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong.
-        The key of each entry is a `Mechanism` object, and the value of each entry is a list of `Processes <Process>`.
+        contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
+        each entry is a `Mechanism <Mechanism>` object, and the value of each entry is a list of `Processes <Process>`.
 
         .. Note: the following attributes use lists of tuples (Mechanism, runtime_param, phaseSpec) and MechanismList
               xxx_mechs are lists of tuples defined in the Process pathways;
@@ -743,7 +746,8 @@ class System_Base(System):
 
 
         .. control_mechanism : MechanismList
-            contains the `ControlMechanism` that is the `controller <System_Base.controller>` of the System
+            contains the `ControlMechanism <ControlMechanism>` that is the `controller <System_Base.controller>` of the
+            System.
             COMMENT:
                 ??and any other `ControlMechanisms <ControlMechanism>` in the System
                 (based on _control_mechs).
@@ -2540,37 +2544,37 @@ class System_Base(System):
 
         Diciontary contains entries for the following attributes and values:
 
-            PROCESSES: list of `Processes <Process>` in system
+            PROCESSES: list of `Processes <Process>` in system;
 
-            MECHANISMS: list of all `Mechanisms <Mechanism>` in the system
+            MECHANISMS: list of all `Mechanisms <Mechanism>` in the system;
 
-            ORIGIN_MECHANISMS: list of `ORIGIN` Mechanisms
+            ORIGIN_MECHANISMS: list of `ORIGIN` Mechanisms;
 
-            INPUT_ARRAY: ndarray of the inputs to the `ORIGIN` Mechanisms
+            INPUT_ARRAY: ndarray of the inputs to the `ORIGIN` Mechanisms;
 
-            RECURRENT_MECHANISMS:  list of `INITALIZE_CYCLE` Mechanisms
+            RECURRENT_MECHANISMS:  list of `INITALIZE_CYCLE` Mechanisms;
 
-            RECURRENT_INIT_ARRAY: ndarray of initial_values
+            RECURRENT_INIT_ARRAY: ndarray of initial_values;
 
-            TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms
+            TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms;
 
-            OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array
+            OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array;
 
             OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
-            Mechanisms
+            Mechanisms;
 
-            NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system
+            NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;
 
-            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`
+            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`;
 
-            TARGET: list of `TARGET` Mechanisms
+            TARGET: list of `TARGET` Mechanisms;
 
             LEARNING_PROJECTION_RECEIVERS: list of `MappingProjections <MappingProjection>` that receive learning
-            projections
+            projections;
 
-            CONTROL_MECHANISM: `ControlMechanism` of the System
+            CONTROL_MECHANISM: `ControlMechanism <ControlMechanism>` of the System;
 
-            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections
+            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections.
 
         Returns
         -------

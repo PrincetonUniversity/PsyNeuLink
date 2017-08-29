@@ -26,8 +26,8 @@ from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 
 # class DefaultProcessingMechanism_Base(ProcessingMechanism_Base):
 class DefaultProcessingMechanism_Base(Mechanism_Base):
-    """Subclass of `ProcessingMechanism` used to implement SystemDefaultInputMechanism, DefaultControlMechanism,
-    and SystemDefaultOutputMechanism.
+    """Subclass of `ProcessingMechanism <ProcessingMechanism>` used to implement SystemDefaultInputMechanism,
+    DefaultControlMechanism, and SystemDefaultOutputMechanism.
 
     Description:
         Implements "dummy" Mechanism used to implement default input, control signals, and outputs to other mechanisms

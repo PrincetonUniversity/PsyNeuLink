@@ -1,10 +1,10 @@
-ModulatoryProjection
-====================
+ModulatoryProjections
+=====================
 
 .. _ModulatoryProjection_Subtypes:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    LearningProjection
    ControlProjection

@@ -12,35 +12,35 @@
 Overview
 --------
 
-A ControlSignal is a type of `ModulatorySignal` that is specialized for use with a `ControlMechanism` and one or more
-`ControlProjections <ControlProjection>`, to modify the parameter(s) of one or more `Components <Component>`. A
-ControlSignal receives an `allocation <ControlSignal.allocation>` value from the ControlMechanism to which it
-belongs, and uses that to compute an `intensity` (also referred to as a `control_signal`) that is assigned as the
-`value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each ControlProjection conveys its value
-to the `ParameterState` for the parameter it controls, which uses that value to `modulate <ModulatorySignal_Modulation>`
-the `value <ParameterState.value>` of the parameter.  A ControlSignal also calculates a `cost`, based on its `intensity`
-and/or its time course, that may be used by the ControlMechanism to adapt the ControlSignal's
-`allocation <ControlSignal.allocation>` in the future.
+A ControlSignal is a type of `ModulatorySignal <ModulatorySignal>` that is specialized for use with a `ControlMechanism
+<ControlMechanism>` and one or more `ControlProjections <ControlProjection>`, to modify the parameter(s) of one or more
+`Components <Component>`. A ControlSignal receives an `allocation <ControlSignal.allocation>` value from the
+ControlMechanism to which it belongs, and uses that to compute an `intensity` (also referred to as a `control_signal`)
+that is assigned as the `value <ControlProjection.ControlProjection.value>` of its ControlProjections. Each
+ControlProjection conveys its value to the `ParameterState` for the parameter it controls, which uses that value to
+`modulate <ModulatorySignal_Modulation>` the `value <ParameterState.value>` of the parameter.  A ControlSignal also
+calculates a `cost`, based on its `intensity` and/or its time course, that may be used by the ControlMechanism to
+adapt the ControlSignal's `allocation <ControlSignal.allocation>` in the future.
 
 .. _ControlSignal_Creation:
 
 Creating a ControlSignal
 ------------------------
 
-A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function
-is `specified for control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the
-**control_signals** argument of the constructor for a `ControlMechanism`.  Although a ControlSignal can be created
-directly using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`),
-this is usually not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for
-configuration that must be met for it to function properly.
+A ControlSignal is created automatically whenever the parameter of a Mechanism or of its function is `specified for
+control <ControlMechanism_Control_Signals>`.  ControlSignals can also be specified in the **control_signals** argument
+of the constructor for a `ControlMechanism <ControlMechanism>`.  Although a ControlSignal can be created directly
+using its constructor (or any of the other ways for `creating an outputState <OutputStates_Creation>`), this is usually
+not necessary nor is it advisable, as a ControlSignal has dedicated components and requirements for configuration
+that must be met for it to function properly.
 
 .. _ControlSignal_Specification:
 
 Specifying ControlSignals
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism`,
-the parameter to be controlled must be specified.  This can take any of the following forms:
+When a ControlSignal is specified in the **control_signals** argument of the constructor for a `ControlMechanism
+<ControlMechanism>`, the parameter to be controlled must be specified.  This can take any of the following forms:
 
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
@@ -66,9 +66,10 @@ the parameter to be controlled must be specified.  This can take any of the foll
 Structure
 ---------
 
-A ControlSignal is owned by an `ControlMechanism`, and controls the parameters of one or more Components by modulating
-the `function <ParameterState.function>` of the `ParameterState` that determines the value of each of the parameters
-that it control.  Its operation is governed by several attributes of the ControlSignal, that are described below.
+A ControlSignal is owned by an `ControlMechanism <ControlMechanism>`, and controls the parameters of one or more
+Components by modulating the `function <ParameterState.function>` of the `ParameterState` that determines the value
+of each of the parameters that it control.  Its operation is governed by several attributes of the ControlSignal,
+that are described below.
 
 .. _ControlSignal_Projections:
 
@@ -178,17 +179,17 @@ the enabled cost components are summed, however this can be modified by specifyi
 Execution
 ---------
 
-A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism` to which it belongs is
-executed.  When this occurs, the ControlMechanism provides the ControlSignal with an
-`allocation <ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its
-`intensity` for that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>`
-to set the `value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal
-projects. Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal
-controls. See `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The
-ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its
-`cost` attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples`
-attribute, to evaluate an `allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's
-`allocation <ControlSignal.allocation>` for the next `TRIAL`.
+A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism <ControlMechanism>` to
+which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
+<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
+that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
+`value <ParameterState.value>` \\(s) of the `ParameterState(s) <ParameterState>` to which the ControlSignal projects.
+Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
+`ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
+`intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
+by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
+`allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's `allocation
+<ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
@@ -379,8 +380,8 @@ class ControlSignal(ModulatorySignal):
         name=None,                                       \
         prefs=None)
 
-    A subclass of `ModulatorySignal` used by a `ControlMechanism` to modulate the parameter(s)
-    of one or more other `Mechanisms <Mechanism>`.
+    A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
+    modulate the parameter(s) of one or more other `Mechanisms <Mechanism>`.
 
     COMMENT:
 
@@ -411,7 +412,7 @@ class ControlSignal(ModulatorySignal):
     ---------
 
     owner : ControlMechanism
-        specifies the `ControlMechanism` to which to assign the ControlSignal.
+        specifies the `ControlMechanism <ControlMechanism>` to which to assign the ControlSignal.
 
     function : Function or method : default Linear
         specifies the function used to determine the `intensity` of the ControlSignal from its `allocation`.
@@ -468,7 +469,7 @@ class ControlSignal(ModulatorySignal):
     ----------
 
     owner : ControlMechanism
-        the `ControlMechanism` to which the ControlSignal belongs.
+        the `ControlMechanism <ControlMechanism>` to which the ControlSignal belongs.
 
     variable : number, list or np.ndarray
         same as `allocation <ControlSignal.allocation>`;  used by `function <ControlSignal.function>` to compute the

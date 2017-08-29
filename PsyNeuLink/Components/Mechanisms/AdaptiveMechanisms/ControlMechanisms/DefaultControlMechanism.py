@@ -15,8 +15,8 @@ DefaultControlMechanism creates an `ControlSignal` for each `ControlProjection` 
 `defaultControlAllocation` as the `value <ControlSignal.value>` for the ControlSignal.  By default,
 `defaultControlAllocation` =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
 parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
-by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism` for additional details of
-how ControlMechanisms are created, executed and their attributes.
+by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism <ControlMechanism>` for additional
+details of how ControlMechanisms are created, executed and their attributes.
 
 COMMENT:
    ADD LINK FOR defaultControlAllocation
@@ -55,7 +55,7 @@ class DefaultControlMechanismError(Exception):
 
 
 class DefaultControlMechanism(ControlMechanism_Base):
-    """Subclass of `ControlMechanism` that implements a DefaultControlMechanism.
+    """Subclass of `ControlMechanism <ControlMechanism>` that implements a DefaultControlMechanism.
 
     COMMENT:
         Description:
