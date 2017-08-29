@@ -6,1296 +6,815 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# *************************************************  EVCMechanism ******************************************************
+# **************************************  LCMechanism ************************************************
 
 """
-
 Overview
 --------
 
-An EVCMechanism is a `ControlMechanism <ControlMechanism>` that manages a "portfolio" of
-`ControlSignals <ControlSignal>` that regulate the performance of the System to which they belong. The
-EVCMechanism is one of the most powerful, but also one of the most complex components in PsyNeuLink.  It is
-designed to implement a form of the Expected Value of Control (EVC) Theory described in
-`Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning
-the purpose and structure of the EVCMechanism.
+An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates the gain of the `TransferMechanisms
+<TransferMechanism>` to which it projects.  It implements an abstract model of the `locus coeruleus (LC)
+<https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a `UtilityIntegrator` Mechanism, implements a
+form of the `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of
+locus coeruleus-norepinephrine  (LC-NE) system function.  The LCMechanism uses a `FitzHughNagumoIntegration` Function
+to adjust LC function between its "tonic" to "phasic" modes of operation (see `Gilzenrat et al.,
+<2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_), and that can be regulated using its `mode <LCMechanism.mode>`
+attribute.
 
-An EVCMechanism belongs to a `System` specified in its `system <EVCMechanism.system>` attribute,
-and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
-controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
-controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
-combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
-uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
-determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
-ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`.
+.. _LCMechanism_Creation:
 
+Creating an LCMechanism
+---------------------------
 
-.. _EVCMechanism_EVC:
+An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation.  The Mechanisms
+<Mechanism>` it controls are specified in the **control_signals** argument.  Like any Mechanism, its **input_states**
+argument can be used to `specify Mechanisms (and/or their OutputState(s) <Mechanism_State_Specification>` to project
+to the LCMechanism.  Finally, one or more Mechanisms and/or OutputStates can be specified in the **monitor_for_control**
+argument, the :keyword:`value`\\(s) of which will then be used to by a `UtilityIntegratorMechanism` to determine its
+`mode <LCMechanism.mode>` parameter.  If the **monitor_for_control** argument is specified, the following Components
+are automatically created by the LCMechanism when it is created:
 
-Expected Value of Control (EVC)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The EVCMechanism uses it `function <EVCMechanism.function>` to select an `allocation_policy` for its `system
-<EVCMechanism.system>`.  In the `default configuration <EVC_Default_Configuration>`, an EVCMechanism carries out an
-exhaustive evaluation of allocation policies, simulating its `system <EVCMechanism.system>` under each, and using an
-`ObjectiveMechanism` and several `auxiliary functions <EVCMechanism_Functions>` to calculate the **expected
-value of control (EVC)** for each `allocation_policy`: a cost-benefit analysis that weighs the `cost
-<ControlSignal.cost> of the ControlSignals against the outcome of the `system <EVCMechanism.system>` \\s performance for
-a given `allocation_policy`. The EVCMechanism selects the `allocation_policy` that generates the maximum EVC, and
-implements that for the next `TRIAL`. Each step of this procedure can be modified, or replaced entirely, by assigning
-custom functions to corresponding parameters of the EVCMechanism, as described `below <EVCMechanism_Functions>`.
-
-.. _EVCMechanism_Creation:
-
-Creating an EVCMechanism
-------------------------
-
-An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`;  it is also
-created automatically when a `System` is created and the EVCMechanism class is specified in the **controller**
-argument of the System's constructor (see `System_Creation`).
-
-When an EVCMechanism is created explicitly (using its constructor), it creates:
-
-* an `ObjectiveMechanism`, using the list of `OutputState` specifications in the **monitor_for_control** argument of
-  the EVCMechanism's constructor to specify the ObjectiveMechanism's `monitored_values
-  <ObjectiveMechanism.monitored_values>` attribute, and the function specified in the **outcome_function** argument
-  of the EVCMechanism's constructor to specify the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;
+* a `UtilityIntegratorMechanism`, using the list of `OutputState` specifications in the **monitor_for_control**
+  argument of the LCMechanism's constructor to specify the UtilityIntegratorMechanism's `monitored_values
+  <UtilityIntegratorMechanism.monitored_values>` attribute;
 ..
-* a `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
-  <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
-..
-* a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
-  <EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`,
-  and assigns these to its `prediction_mechanisms` attribute.
+* a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
+  <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
 
-When an EVCMechanism is created automatically as part of a `System <System_Creation>`, the same set of Components are
-created as described above, with the following modifications:
+STRUCTURE:
+MODE INPUT_STATE <- NAMED ONE, LAST?
+SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
+CONTROL SIGNALS
 
-* the `OutputStates <OutputState>` specified in the System's `monitor_for_control <System_Base.monitor_for_control>`
-  attribute are used to create the ObjectiveMechanism
-..
-* a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals <EVCMechanism.control_signals>`
-  attribute for every parameter of any `Component <Component>` in the System that has been specified for control (that
-  is, by including a `ControlProjection` or `ControlSignal` in a `tuple specification <>` for the parameter, or by
-  specifying the parameter (or its associated `ParameterState`) in the **control_signals** argument of a
-  `ControlMechanism <ControlMechanism_Control_Signals>`.
-
-An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
-those described above, or its `function <EVCMechanism.function>` as described under `EVC_Default_Configuration `below).
-
-.. _EVCMechanism_Structure:
-
-Structure
----------
-
-An EVCMechanism belongs to a `System` (identified in its `system <EVCMechanism.system>` attribute), and has a
-specialized set of Components that support its operation.  It receives its input from the *ERROR_SIGNAL* `OutputState
-<ObjectiveMechanism_Structure>` of an `ObjectiveMechanism` (identified in its `monitoring_mechanism
-<EVCMechansm.monitoring_mechanism>` attribute), and has a specialized set of `functions <EVCMechanism_Functions>` and
-`mechanisms <EVCMechanism_Prediction_Mechanisms>` that it can use to simulate and evaluate the performance of its
-`system <EVCMechanism.system>` under the influence of different values of its `ControlSignals
-<EVCMechanism_ControlSignals>`.  Each of these specialized Components is described below.
+-------------------------------------------------------------------------------------
+.. _LCMechanism_Monitored_OutputStates:
 
 
-ObjectiveMechanism
-~~~~~~~~~~~~~~~~~~
+Specifying Values to Monitor for Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _EVCMechanism_ObjectiveMechanism:
+When an LCMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
+evaluate the values specified in the **monitor_for_control** argument of the LCMechanism's constructor (or of the
+System that created the LCMechanism). The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's
+`monitored_values <ObjectiveMechanism>` attribute (and the LCMechanism's `monitored_output_states`
+<LCMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
+LCMechanism's `monitoring_mechanism <LCMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
+attribute (and the LCMechanism's `monitored_output_states` <LCMechanism_Base.monitored_output_states>`
+attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
+`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the LCMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
+LCMechanism to set the `allocation <ControlSignal.allocation>` for each of the LCMechanism's ControlSignals.
 
-When an EVCMechanism is created, it creates an `ObjectiveMechanism` that is assigned as its `monitoring_mechanism
-<EVCMechanism.monitoring_mechanism>` attribute, and can be used to evaluate the performance of its `system
-<EVCMechanism.system>`.  The `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` receives a `MappingProjection`
-from each of the `OutputStates <OutputState>` specified in the EVCMechanism's `monitored_output_states
-<EVCMechanism.monitored_output_states>` attribute (also listed in the `monitored_values
-<ObjectiveMechanism.monitored_values>` attribute of the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`),
-and the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>` is assinged as the `monitoring_mechanism
-<EVCMechanism.monitoring_mechanism>`'s `function <ObjectiveMechanism.function>`.  By default, this is a
-`LinearCombination` function that calculates the product of the `value <OutputState.value>` of the OutputStates
-specified in `monitored_output_states <EVCMechanism.monitored_output_states>`.  However, the contribution of individual
-OutputStates can be specified in the **monitor_for_control** argument of the EVCMechanism's constructor, by using a
-tuple that includes a weight and exponent along with the OutputState for its entry in the list (see
-`MonitoredOutputState Tuple <ObjectiveMechanism_OutputState_Tuple>`).  The outcome calcuated by the
-`monitoring_mechanism <EVCMechanism.monitoring_mechanism>` is conveyed to the EVCMechanism and assigned as the
-`value <InputState.value>` of its `primary InputState <InputState_Primary>`.
+.. _LCMechanism_Control_Signals:
 
+Specifying Parameters to Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _EVCMechanism_Prediction_Mechanisms:
+LCMechanisms are used to control the parameter values of other `Components <Component>` (including `Functions
+<Function>`).  A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
+(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
+parameters to be controlled by an LCMechanism can also be specified in the **control_signals**  argument of the
+constructor for an LCMechanism (or of the System that created it).  The **control_signals** argument must be a
+list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
 
-Prediction Mechanisms
-~~~~~~~~~~~~~~~~~~~~~
-
-These are used to provide input to the `system <EVCMechanism.system>` when the EVCMechanism's default `function
-<EVCMechanism.function>` (`ControlSignalGridSearch`) `simulates its execution <EVC_Default_Configuration>` to evaluate
-the EVC for each `allocation_policy`.  When an EVCMechanism is created, a prediction Mechanism is created for each
-`ORIGIN` Mechanism in its `system <EVCMechanism.system>`, and for each `Projection <Projection>` received by an `ORIGIN`
-Mechanism, a `MappingProjection` from the same source is created that projects to the corresponding prediction
-Mechanism. The type of `Mechanism <Mechanism>` used for the prediction Mechanisms is specified by the EVCMechanism's
-`prediction_mechanism_type` attribute, and their parameters can be specified with the `prediction_mechanism_params`
-attribute. The default type is an 'IntegratorMechanism`, that calculates an exponentially weighted time-average of
-its input. The prediction mechanisms for an EVCMechanism are listed in its `prediction_mechanisms` attribute.
+A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
+the ControlSignals for an LCMechanism are listed in its `control_signals <LCMechanism_Base.control_signals>`
+attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
+it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's
+`output_states <Mechanism_Base.output_states>` attribute.
 
 
-.. _EVCMechanism_Functions:
+COMMENT:
 
-Function
+.. _LCMechanism_Examples:
+
+Examples
 ~~~~~~~~
 
-The `function <EVCMechanism.function>` of an EVCMechanism returns an `allocation_policy` -- that is, an `allocation
-<ControlSignal.allocation>` for each `ControlSignal` listed in its `control_signals <EVCMechanism.control_signals>`
-attribute -- that are used by the Components of the EVCMechanism's `system <EVCMechanism.system>` in the next `TRIAL`
-of execution.  The default is `ControlSignalGridSearch` (see `EVC_Default_Configuration`), but any function can be used
-that returns an appropriate value (i.e., that specifies an `allocation_policy` for the number of `ControlSignals
-<EVCMechanism_ControlSignals>` in the EVCMechanism's `control_signals` attribute, using the correct format for the
-`allocation <ControlSignal.allocation>` value of each ControlSignal).  In addition to its primary `function
-<EVCMechanism.function>`, an EVCMechanism has a set of auxiliary functions that evaluate the performance of its
-`system <EVCMechanism.system>` (`outcome_function <EVCMechanism.outcome_function>`), the `cost <ControlSignal.cost>`
-associated with its ControlSignals (`cost_function <EVCMechanism.cost_function>`), and combine these
-(combine_outcome_and_cost_function <EVCMechanism.combine_outcome_and_cost_function>`) to calculate the `EVC
-<EVCMechanism_EVC>`.  These functions are used by the EVCMechanism's default function to select an `allocation_policy`
-with the maximum EVC among a range of policies specified by its ControlSignals, as described below.
+EXAMPLES HERE
 
-.. _EVCMechanism_Default_Configuration:
-
-Default Configuration of EVC Function and its Auxiliary Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In its default configuration, an EVCMechanism simulates and evaluates the performance of its `system
-<EVCMechanism.system>` under a set of allocation_policies determined by the `allocation_samples
-<ControlSignal.allocation_samples>` attributes of its `ControlSignals <EVCMechanism_ControlSignals>`, and implements
-the one that generates the maximum `EVC <EVCMechanism_EVC>`.  This is carried out by the EVCMechanism's
-default `function <EVCMechanism.function>` and four auxiliary functions, as described below.
-
-The default `function <EVCMechanism.function>` of an EVCMechanism is `ControlSignalGridSearch`. It identifies the
-`allocation_policy` with the maximum `EVC <EVCMechanism_EVC>` by a conducting an exhaustive search over every possible
-`allocation_policy`— that is, all combinations of `allocation <ControlSignal.allication>` values for its `ControlSignal
-<EVCMechanism_ControlSignals>`, where the `allocation <ControlSignal.allication>` values sampled for each ControlSignal
-are determined by its `allocation_samples` attribute.  For each `allocation_policy`, the EVCMechanism executes the
-`system <EVCMechanism.system>`, evaluates the `EVC <EVCMechanism_EVC>` for that policy, and returns the
-`allocation_policy` that yields the greatest EVC value. The following steps are used to calculate the EVC in each
-`allocation_policy`:
-
-  * **Implement the policy and simulate the system** - assign the `allocation <ControlSignal.allocation>` that the
-    selected `allocation_policy` specifies for each ControlSignal, and then simulate these System using the
-    corresponding parameter values.
-
-  * **Calculate outcome** - combine the `value <OutputState.value>`\\s of the OutputStates listed in the
-    EVCMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute using the function
-    specified by its `outcome_function <EVCMechanism.outcome_function>` attribute (this is done by the EVCMechanism's
-    `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`, and passed to the EVCMechanism's `primary InputState
-    <InputState_Primary>`);  the default is take the product of all the values, but this can be configured
-    to weight and/or exponentiate individual values (see  documentation for `outcome_function
-    <EVCMechanism.outcome_function>`).
-  ..
-  * **Calculate EVC** - by calling the EVCMechanism's `value_function <EVCMechanism.value_function>` with the
-    outcome (received from the `monitoring_mechanism`) and a list of the `costs <ControlSignal.cost>` \\s of its
-    `ControlSignals <EVCMechanism_ControlSignals>`; default `value_function <EVCMechanism.value_function>` calls
-    to additional auxiliary functions:  first it calls the `cost_function <EVCMechanism.cost_function>` which sums
-    the costs, though this can be configured to weight and/or exponentiate individual costs (see `cost_function
-    <EVCMechanism.cost_function>` attribute);  it then calls the `combine_outcome_and_cost_function
-    <EVCMechanism.combine_outcome_and_cost_function>`, which subtracts the sum of the costs from the outcome
-    to generate the EVC, though this too can be configured (see documentation for `combine_outcome_and_cost_function
-    <EVCMechanism.combine_outcome_and_cost_function>`).
-
-In addition to modifying the default functions (as noted above), any or all of them can be replaced with
-a custom function to modify how the `allocation_policy` is determined, so long as the custom function accepts
-arguments and return values that are compatible with any that call that function (see note below).
-
-.. _EVCMechanism_Calling_and_Assigning_Functions:
-
-    .. note::
-       The `EVCMechanism auxiliary functions <EVCMechanism_Functions>` described above are all implemented
-       as PsyNeuLink `Functions <Function>`.  Therefore, to call a function itself, it must be referenced as
-       ``<EVCMechanism>.<function_attribute>.function``.  A custom function assigned to one of the auxiliary functions
-       can be either a PsyNeuLink `Function <Function>`, or a generic python function or method (including a lambda
-       function).  If it is one of the latter, it is automatically "wrapped" as a PsyNeuLink `Function <Function>`
-       (specifically, it is assigned as the `function <UserDefinedFunction.function>` attribute of a
-       `UserDefinedFunction` object), so that it can be referenced and called in the same manner as
-       the default function assignment. Therefore, once assigned, it too must be referenced as
-       ``<EVCMechanism>.<function_attribute>.function``.
-
-.. _EVCMechanism_ControlSignals:
-
-ControlSignals
-~~~~~~~~~~~~~~
-
-The OutputStates of an EVCMechanism (like any `ControlMechanism <ControlMechanism>`) are a set of `ControlSignals
-<ControlSignal>`, that are listed in its `control_signals <EVCMechanism.control_signals>` attribute (as well as its
-`output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
-that projects to the `ParameterState` for a parameter controlled by the EVCMechanism.  When an EVCMechanism is
-`created automatically <EVCMechanism_Creation>`, it is assigned one ControlSignal for each of the parameters
-`specified for control <ControlMechanism_Control_Signals>` in its `system <EVCMechanism.system>`; if it is created
-directly, then it creates one ControlSignal for each of the parameters specified in the **control_signals** argument of
-its constructor. ControlSignals can be added to an EVCMechanism using its `assign_params` method.  Each ControlSignal is
-assigned an item of the EVCMechanism's `allocation_policy`, that determines its `allocation <ControlSignal.allocation>`
-for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
-its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ConrolProjection.value>` of the
-ControlSignal's ControlProjection.   The `value <ControlProjection>` of the ControlProjection is used by the
-`ParameterState` to which it projects to modify the value of the parameter (see `ControlSignal_Modulation` for
-description of how a ControlSignal modulates the value of a parameter it controls).  A ControlSignal also calculates a
-`cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>` and/or its time course. The
-`cost <ControlSignal.cost>` is included in the evaluation that the EVCMechanism carries out for a given
-`allocation_policy`, and that it uses to adapt the ControlSignal's `allocation  <ControlSignal.allocation>` in the
-future.  When the EVCMechanism chooses an `allocation_policy` to evaluate,  it selects an allocation value from the
-ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribute.
+EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
+COMMENT
 
 
-.. _EVCMechanism_Execution:
+.. _LCMechanism_Execution:
 
 Execution
 ---------
 
-An EVCMechanism, like any `ControlMechanism <ControlMechanism>`, is always the last `Mechanism <Mechanism>` to be
-executed in a `TRIAL` for its `system <EVCMechanism.system>` (see `System Control <System_Execution_Control>` and
-`Execution <System_Execution>`). When an EVCMechanism is executed, it updates the value of its `prediction_mechanisms`
-and `monitoring_mechanism`, and then calls its `function <EVCMechanism.function>`, which determines and implements the
-`allocation_policy` for the next `TRIAL` of its `system <EVCMechanism.system>` \\s execution.  The default `function
-<EVCMechanism.function>` executes the following steps (described in greater detailed `above
-<EVC_Default_Configuration>`):
+An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
+`TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
+LCMechanism's `function <LCMechanism_Base.function>` takes as its input the `value <InputState.value>` of
+its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
+<LCMechanism_Base.allocation_policy>` which specifies the value assigned to the `allocation
+<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
+calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
+to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
+subsequent `TRIAL` of execution.
 
-* samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the EVCMechanism's
-  ControlSignals specified by their `allocation_samples` attributes);  for each `allocation_policy`, it:
+.. note::
+   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
+   LCMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
+   to which it belongs has executed.
 
-  * Executes the EVCMechanism's `system <EVCMechanism.system>` with the parameter values specified by that
-    `allocation_policy`;  this includes the EVCMechanism's `monitoring_mechanism`, which executes the function
-    specified in the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>`, and provides the result
-    to the EVCMechanism.
-
-  * Calls the EVCMechanism's `value_function <EVCMechanism.value_function>`, which in turn calls EVCMechanism's
-    `cost_function <EVCMechanism.cost_function>` and `combine_outcome_and_cost_function
-    <EVCMechanism.combine_outcome_and_cost_function>` to evaluate the EVC for that `allocation_policy`.
-
-  * Selects and returns the `allocation_policy` that generates the maximum EVC value.
-
-This procedure can be modified by specifying a custom function for any or all of the `functions
-<EVCMechanism_Functions>` referred to above.
-
-
-.. _EVCMechanism_Examples:
-
-Examples
---------
-
-The following example implements a System with an EVCMechanism (and two processes not shown)::
-
-    mySystem = system(processes=[myRewardProcess, myDecisionProcess],
-                      controller=EVCMechanism,
-                      monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
-
-It uses the System's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
-references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
-The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
-The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
-computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
-*DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
-OutputState of the DDM Mechanism.
-
-COMMENT:
-ADD: This example specifies the EVCMechanism on its own, and then uses it for a System.
-COMMENT
-
-
-.. _EVCMechanism_Class_Reference:
+.. _LCMechanism_Class_Reference:
 
 Class Reference
 ---------------
 
 """
-import numbers
-
 import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import function_type
+from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
+from PsyNeuLink.Components.Projections.Projection import _validate_receiver
+from PsyNeuLink.Components.ShellClasses import Mechanism, System
+from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import modulatory_signal_keywords
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, COST_FUNCTION, EVC_MECHANISM, EXPONENT, FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MONITOR_FOR_CONTROL, NAME, OUTCOME_FUNCTION, PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, PRODUCT, SUM, WEIGHT
+from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MECHANISM, MONITOR_FOR_CONTROL, NAME, OWNER, PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
-from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
-OBJECT_INDEX = 0
-WEIGHT_INDEX = 1
-EXPONENT_INDEX = 2
+ControlMechanismRegistry = {}
 
-# -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-MONITORING_MECHANISM = 'monitoring_mechanism'
-ALLOCATION_POLICY = 'allocation_policy'
-
-# ControlSignal Costs
-INTENSITY_COST = 'INTENSITY COST'
-ADJUSTMENT_COST = 'ADJUSTMENT COST'
-DURATION_COST = 'DURATION COST'
-
-# ControlSignal Cost Function Names
-INTENSITY_COST_FUNCTION = 'intensity_cost_function'
-ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
-DURATION_COST_FUNCTION = 'duration_cost_function'
-COST_COMBINATION_FUNCTION = 'cost_combination_function'
-costFunctionNames = [INTENSITY_COST_FUNCTION,
-                     ADJUSTMENT_COST_FUNCTION,
-                     DURATION_COST_FUNCTION,
-                     COST_COMBINATION_FUNCTION]
-
-# Attributes / KVO keypaths
-# kpLog = "Control Signal Log"
-kpAllocation = "Control Signal Allocation"
-kpIntensity = "Control Signal Intensity"
-kpCostRange = "Control Signal Cost Range"
-kpIntensityCost = "Control Signal Intensity Cost"
-kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal duration_cost"
-kpCost = "Control Signal Cost"
-
-
-class EVCError(Exception):
+class LCMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-    def __str__(self):
-        return repr(self.error_value)
 
+class LCMechanism(ControlMechanism_Base):
+    """
+    LCMechanism(                                   \
+        monitor_for_control=None,                  \
+        control_signals=None,                      \
+        modulation=ModulationParam.MULTIPLICATIVE  \
+        function=Linear,                           \
+        params=None,                               \
+        name=None,                                 \
+        prefs=None)
 
-class EVCMechanism(ControlMechanism_Base):
-    """EVCMechanism(                                                   \
-    prediction_mechanism_type=IntegratorMechanism,                     \
-    prediction_mechanism_params=None,                                  \
-    monitor_for_control=None,                                          \
-    control_signals=None,                                              \
-    function=ControlSignalGridSearch                                   \
-    value_function=ValueFunction,                                      \
-    outcome_function=LinearCombination(operation=PRODUCT),             \
-    cost_function=LinearCombination(operation=SUM),                    \
-    combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
-    save_all_values_and_policies:bool=:keyword:`False`,                \
-    params=None,                                                       \
-    name=None,                                                         \
-    prefs=None)
+    Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
+    of one or more `Component(s) <Component>`.
 
-    Subclass of `ControlMechanism <ControlMechanism>` that optimizes the `ControlSignals <ControlSignal>` for a
-    `System`.
+    .. note::
+       LCMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the constructor for a `subclass <LCMechanism_Subtypes>`.
 
     COMMENT:
+        Description:
+            Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
+               If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
+                   it is flagged for deferred_init() in its __init__ method
+               When the next LCMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
+                   its _assign_as_controller method is called in _instantiate_attributes_after_function;
+                   it then iterates through all of the ParameterStates of all of the Mechanisms in its System,
+                   identifies ones without a sender specified, calls its deferred_init() method,
+                   instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
+
+            MONITOR_FOR_CONTROL param determines which States will be monitored.
+                specifies the OutputStates of the terminal Mechanisms in the System to be monitored by LCMechanism
+                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+                ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
+                    System.execution_graph by default
+                if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
+                    no OutputStates are listed; it is overridden for any Mechanism for which OutputStates are
+                    explicitly listed
+                TBI: if it appears in a tuple with a Mechanism, or in the Mechamism's params list, it applies to
+                    just that Mechanism
+
         Class attributes:
             + componentType (str): System Default Mechanism
             + paramClassDefaults (dict):
-                + SYSTEM (System)
-                + MONITOR_FOR_CONTROL (list of Mechanisms and/or OutputStates)
-
-        Class methods:
-            None
-
-       **********************************************************************************************
-
-       PUT SOME OF THIS STUFF IN ATTRIBUTES, BUT USE DEFAULTS HERE
-
-        # - specification of System:  required param: SYSTEM
-        # - kwDefaultController:  True =>
-        #         takes over all unassigned ControlProjections (i.e., without a sender) in its System;
-        #         does not take monitored states (those are created de-novo)
-        # TBI: - CONTROL_PROJECTIONS:
-        #         list of projections to add (and for which outputStates should be added)
-
-        # - input_states: one for each performance/environment variable monitiored
-
-        ControlProjection Specification:
-        #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION
-        #     this should override the default sender SYSTEM_DEFAULT_CONTROLLER in ControlProjection._instantiate_sender
-        #    ? expclitly, in call to "EVC.monitor(input_state, parameter_state=NotImplemented) method
-
-        # - specification of function: default is default allocation policy (BADGER/GUMBY)
-        #   constraint:  if specified, number of items in variable must match number of input_states in INPUT_STATES
-        #                  and names in list in kwMonitor must match those in INPUT_STATES
-
-       **********************************************************************************************
-
-       NOT CURRENTLY IN USE:
-
-        system : System
-            System for which the EVCMechanism is the controller;  this is a required parameter.
-
-        default_variable : Optional[number, list or np.ndarray] : `defaultControlAllocation <LINK]>`
-
+                + FUNCTION: Linear
+                + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
+                + MONITOR_FOR_CONTROL: List[]
     COMMENT
-
 
     Arguments
     ---------
 
-    system : System : default None
-        specifies the `System` for which the EVCMechanism should serve as a `controller <System_Base.controller>`;
-        the EVCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
-        specified in its **control_signals** argument.
-
-    prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
-        the `Mechanism <Mechanism>` class used for `prediction Mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
-        Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
-        and assigned an `OutputState` with a name based on the same.
-
-    prediction_mechanism_params : Optional[Dict[param keyword, param value]] : default None
-        a `parameter dictionary <ParameterState_Specification>` passed to the constructor for a Mechanism
-        of `prediction_mechanism_type`. The same parameter dictionary is passed to all
-        `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` created for the EVCMechanism.
-
-    monitor_for_control : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
-    default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
-        specifies set of `OutputStates <OutputState>` to monitor (see `ControlMechanism_Monitored_OutputStates` for
+    monitor_for_control : List[OutputState specification] : default None
+        specifies set of OutputStates to monitor (see :ref:`LCMechanism_Monitored_OutputStates` for
         specification options).
 
-    control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
-        specifies the parameters to be controlled by the EVCMechanism
-        (see `control_signals <EVCMechanism.control_signals>` for details).
+    control_signals : List[parameter of Mechanism or its function, \
+                      ParameterState, Mechanism tuple[str, Mechanism] or dict]
+        specifies the parameters to be controlled by the LCMechanism
+        (see `control_signals <LCMechanism_Base.control_signals>` for details).
 
-    function : function or method : ControlSignalGridSearch
-        specifies the function used to determine the `allocation_policy` for the next execution of the
-        EVCMechanism's `system <EVCMechanism.system>` (see `function <EVCMechanism.function>` for details).
+    modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
+        specifies the default form of modulation used by the LCMechanism's `ControlSignals <ControlSignal>`,
+        unless they are `individually specified <ControlSignal_Specification>`.
 
-    value_function : function or method : value_function
-        specifies the function used to calculate the `EVC <EVCMechanism_EVC>` for the current `allocation_policy`
-        (see `value_function <EVCMechanism.value_function>` for details).
-
-    outcome_function : function or method : LinearCombination(operation=PRODUCT)
-        specifies the function used to calculate the outcome associated with the current `allocation_policy`
-        (see `outcome_function <EVCMechanism.outcome_function>) for details).
-
-    cost_function : function or method : LinearCombination(operation=SUM)
-        specifies the function used to calculate the cost associated with the current `allocation_policy`
-        (see `cost_function <EVCMechanism.cost_function>` for details).
-
-    combine_outcome_and_cost_function : function or method : LinearCombination(operation=SUM)
-        specifies the function used to combine the outcome and cost associated with the current `allocation_policy`,
-        to determine its value (see `combine_outcome_and_cost_function` for details).
-
-    save_all_values_and_policies : bool : default False
-        specifes whether to save every `allocation_policy` tested in `EVC_policies` and their values in `EVC_values`.
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored OutputStates.
 
     params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
-        Mechanism, its `function <EVCMechanism.function>`, and/or a custom function and its parameters.  Values
+        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
+        for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default EVCMechanism-<index>
+    name : str : default LCMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : Optional[PreferenceSet or specification dict] : default Process.classPreferences
+    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for the Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see `PreferenceSet <LINK>` for details).
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
 
-    make_default_controller : bool : default True
-        if `True`, calls deferred_init() for each `ControlProjection` in its System without a sender,
-        creates a `ControlSignal` for it, and assigns itself as its sender.
-
-    system : System
-        the `System` for which EVCMechanism is the `controller <System_Base.controller>`.
-
-    control_signals : ContentAddressableList[ControlSignal]
-        list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCMechanism.system>`.
-
-    prediction_mechanisms : List[ProcessingMechanism]
-        list of `predictions mechanisms <EVCMechanism_Prediction_Mechanisms>` generated for the EVCMechanism's
-        `system <EVCMechanism.system>` when the EVCMechanism is created, one for each `ORIGIN` Mechanism in the System.
-
-    origin_prediction_mechanisms : Dict[ProcessingMechanism, ProcessingMechanism]
-        dictionary of `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` added to the EVCMechanism's
-        `system <EVCMechanism.system>`, one for each of its `ORIGIN` Mechanisms.  The key for each
-        entry is an `ORIGIN` Mechanism of the System, and the value is the corresponding prediction Mechanism.
-
-    prediction_mechanism_type : ProcessingMechanism : default IntegratorMechanism
-        the `ProcessingMechanism <ProcessingMechanism>` class used for `prediction Mechanism(s)
-        <EVCMechanism_Prediction_Mechanisms>`. Each instance is named based on `ORIGIN` Mechanism +
-        "PREDICTION_MECHANISM", and assigned an `OutputState` with a name based on the same.
-
-    prediction_mechanism_params : Dict[param key, param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` passed to `prediction_mechanism_type` when
-        the `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` is created.  The same dictionary will be passed
-        to all instances of `prediction_mechanism_type` created.
-
-    predicted_input : Dict[ProcessingMechanism, value]
-        dictionary with the `value <Mechanism_Base.value>` of each `prediction Mechanism
-        <EVCMechanism_Prediction_Mechanisms>` listed in `prediction_mechanisms` corresponding to each `ORIGIN`
-        Mechanism of the System. The key for each entry is the name of an `ORIGIN` Mechanism, and its
-        value the `value <Mechanism_Base.value>` of the corresponding prediction Mechanism.
-
     monitoring_mechanism : ObjectiveMechanism
-        the 'ObjectiveMechanism' used by the EVCMechanism to evaluate the performance of its `system
-        <EVCMechanism.system>`.  The OutputStates specified in the **monitor_for_control** argument of the
-        EVCMechanism's constructor are assigned as the `monitored_values <ObjectiveMechanism.monitored_values>`
-        attribute for the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`, the EVCMechanism's
-        `outcome_function <EVCMechanism.outcome_function>` is assigned as the `function <ObjectiveMechanism.function>`
-        for the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`, and a MappingProjection is assigned from
-        it to the EVCMechanism's `primary InputState <InputState_Primary>`.
+        Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
+        argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
+        `input_state <Mechanism_Base.input_state>`.
 
     monitored_output_states : List[OutputState]
-        list of the OutputStates specified in the **monitor_for_control** argument of the EVCMechanism's constructor,
-        and assigned to the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` for use in evaluating the
-        performance of the EVCMechanism's `system <EVCMechanism.system>`.
+        each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument of
+        the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
+        LCMechanism's `variable <Mechanism_Base.variable>`.
 
-    COMMENT:
-    [TBI]
-        monitored_values : 3D np.array
-            an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
-            the EVCMechanism's `input_states <EVCMechanism.input_states>`).
-    COMMENT
+    control_signals : List[ControlSignal]
+        list of `ControlSignals <ControlSignals>` for the LCMechanism, each of which sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls (same as LCMechanism's
+        `output_states <Mechanism_Base.output_states>` attribute).
 
-    monitor_for_control_weights_and_exponents: List[Tuple[scalar, scalar]]
-        a list of tuples, each of which contains the weight and exponent (in that order) for an OutputState in
-        `monitored_outputStates`, listed in the same order as the outputStates are listed in `monitored_outputStates`.
+    control_projections : List[ControlProjection]
+        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
 
-    function : function : default ControlSignalGridSearch
-        determines the `allocation_policy` to use for the next round of the System's
-        execution. The default function, `ControlSignalGridSearch`, conducts an exhaustive (*grid*) search of all
-        combinations of the `allocation_samples` of its ControlSignals (and contained in its
-        `control_signal_search_space` attribute), by executing the System (using `run_simulation`) for each
-        combination, evaluating the result using `value_function`, and returning the `allocation_policy` that yielded
-        the greatest `EVC <EVCMechanism_EVC>` value (see `EVCMechanism_Default_Configuration` for additional details).
-        If a custom function is specified, it must accommodate a **controller** argument that specifies an EVCMechanism
-        (and provides access to its attributes, including `control_signal_search_space`), and must return an array with
-        the same format (number and type of elements) as the EVCMechanism's `allocation_policy` attribute.
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
+        **monitor_for_control** argument of the LCMechanism's constructor are used to generate its
+        `allocation_policy <LCMechanism_Base.allocation_policy>`.
 
-    COMMENT:
-        NOTES ON API FOR CUSTOM VERSIONS:
-            Gets controller as argument (along with any standard params specified in call)
-            Must include **kwargs to receive standard args (variable, params, time_scale, and context)
-            Must return an allocation policy compatible with controller.allocation_policy:
-                2d np.array with one array for each allocation value
+    allocation_policy : 2d np.array
+        each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
+        ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
+        LCMechanism's `value <Mechanism_Base.value>` attribute).
 
-            Following attributes are available:
-            controller._get_simulation_system_inputs gets inputs for a simulated run (using predictionMechanisms)
-            controller._assign_simulation_inputs assigns value of prediction_mechanisms to inputs of `ORIGIN` Mechanisms
-            controller.run will execute a specified number of trials with the simulation inputs
-            controller.monitored_states is a list of the Mechanism OutputStates being monitored for outcome
-            controller.input_value is a list of current outcome values (values for monitored_states)
-            controller.monitor_for_control_weights_and_exponents is a list of parameterizations for OutputStates
-            controller.control_signals is a list of control_signal objects
-            controller.control_signal_search_space is a list of all allocationPolicies specifed by allocation_samples
-            control_signal.allocation_samples is the set of samples specified for that control_signal
-            [TBI:] control_signal.allocation_range is the range that the control_signal value can take
-            controller.allocation_policy - holds current allocation_policy
-            controller.output_values is a list of current control_signal values
-            controller.value_function - calls the three following functions (done explicitly, so each can be specified)
-            controller.outcome_function - aggregates monitored outcomes (using specified weights and exponentiation)
-            controller.cost_function - aggregate costs of control signals
-            controller.combine_outcome_and_cost_function - combines outcomes and costs
-    COMMENT
-
-    allocation_policy : 2d np.array : defaultControlAllocation
-        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
-        associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
-        that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
-        number of ControlSignals in the EVCMechanism's `control_signals` attribute.
-
-    value_function : function : default ValueFunction
-        calculates the `EVC <EVCMechanism_EVC>` for a given `allocation_policy`.  It takes as its arguments an
-        `EVCMechanism`, an **outcome** value and a list or ndarray of **costs**, uses these to calculate an EVC,
-        and returns a three item tuple with the calculated EVC, and the outcome value and aggregated value of costs
-        used to calculate the EVC.  The default, `ValueFunction`,  calls the EVCMechanism's `cost_function
-        <EVCMechanism.cost_function>` to aggregate the value of the costs, and then calls its
-        `combine_outcome_and_costs <EVCMechanism.combine_outcome_and_costs>` to calculate the EVC from the outcome
-        and aggregated cost (see `EVCMechanism_Default_Configuration` for additional details).  A custom
-        function can be assigned to `value_function` so long as it returns a tuple with three items: the calculated
-        EVC (which must be a scalar value), and the outcome and cost from which it was calculated (these can be scalar
-        values or `None`). If used with the EVCMechanism's default `function <EVCMechanism.function>`, a custom
-        `value_function` must accommodate three arguments (passed by name): a **controller** argument that is the
-        EVCMechanism for which it is carrying out the calculation; an **outcome** argument that is a value; and a
-        `costs` argument that is a list or ndarray.  A custom function assigned to `value_function` can also call any
-        of the `helper functions <EVCMechanism_Functions>` that it calls (however, see `note
-        <EVCMechanism_Calling_and_Assigning_Functions>` above).
-
-    outcome_function : function : default LinearCombination(operation=PRODUCT)
-        calculates a measure of performance of the EVCMechanism's `system <EVCMechanism.system>` for the current
-        `allocation_policy`.
-
-        .. note::
-
-            This function is not called by the EVCMechanism directly; it is assigned to its
-            `monitoring_mechanism` when that is created (or when a new assignment is made to its `outcome_function
-            <EVCMechanism.outcome_function>` attribute), and then called when the `monitoring_mechanism
-            <EVCMechanism.monitoring>` executes.
-
-        The default function combines the values of the OutputStates listed in the EVCMechanism's
-        `monitored_output_states <EVCMechanism.monitored_output_states>` attribute (and the `monitoring_mechanism
-        <EVCMechanism.monitoring_mechanism>`'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
-        by taking their elementwise (Hadamard) product.  Any weighs and exponents `specified in a tuple
-        <ObjectiveMechanism_OutputState_Tuple>` for an OutputState in the **monitor_for_control** argument of
-        the EVCMechanism's constructor are used as the `weights <LinearCombination.weights>` and
-        `exponents <LinearCombination.exponents>` parameters of the `LinearCombination` (default) function. The
-        default function can be replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that
-        accepts an array of values as its input and returns a scalar value.
-
-    cost_function : function : default LinearCombination(operation=SUM)
-        calculates the cost of the `ControlSignals <ControlSignal>` for the current `allocation_policy`.  The default
-        function sums the `cost <ControlSignal.cost>` of each of the EVCMechanism's `ControlSignals
-        <EVCMechanism_ControlSignals>`.  The `weights <LinearCombination.weights>` and/or `exponents
-        <LinearCombination.exponents>` parameters of the function can be used, respectively, to scale and/or
-        exponentiate the contribution of each ControlSignal cost to the combined cost.  These must be specified as
-        1d arrays in a *WEIGHTS* and/or *EXPONENTS* entry of a `parameter dictionary <ParameterState_Specification>`
-        assigned to the **params** argument of the constructor of a `LinearCombination` function; the length of
-        each array must equal the number of (and the values listed in the same order as) the ControlSignals in the
-        EVCMechanism's `control_signals <EVCMechanism.control_signals>` attribute. The default function can also be
-        replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that takes an array as
-        input and returns a scalar value.  If used with the EVCMechanism's default `value_function
-        <EVCMechanism.value_function>`, a custom `cost_function <EVCMechanism.cost_function>` must accommodate two
-        arguments (passed by name): a **controller** argument that is the EVCMechanism itself;  and a **costs**
-        argument that is a 1d array of scalar values specifying the `cost <ControlSignal.cost>` for each ControlSignal
-        listed in the `control_signals` attribute of the ControlMechanism specified in the **controller** argument.
-
-    combine_outcome_and_cost_function : function : default LinearCombination(operation=SUM)
-        combines the outcome and cost for given `allocation_policy` to determine its `EVC <EVCMechanisms_EVC>`. The
-        default function subtracts the cost from the outcome, and returns the difference.  This can be modified using
-        the `weights <LinearCombination.weights>` and/or `exponents <LinearCombination.exponents>` parameters of the
-        function, as described for the `cost_function <EVCMechanisms.cost_function>`.  The default function can also be
-        replaced with any `custom function <EVCMechanism_Calling_and_Assigning_Functions>` that returns a scalar value.  If used with the EVCMechanism's default `value_function`, a custom
-        If used with the EVCMechanism's default `value_function`, a custom combine_outcome_and_cost_function must
-        accomoudate three arguments (passed by name): a **controller** argument that is the EVCMechanism itself; an
-        **outcome** argument that is a 1d array with the outcome of the current `allocation_policy`; and a **cost**
-        argument that is 1d array with the cost of the current `allocation_policy`.
-
-    control_signal_search_space : 2d np.array
-        an array each item of which is an `allocation_policy`.  By default, it is assigned the set of all possible
-        allocation policies, using np.meshgrid to construct all permutations of `ControlSignal` values from the set
-        specified for each by its `allocation_samples <EVCMechanism.allocation_samples>` attribute.
-
-    EVC_max : 1d np.array with single value
-        the maximum `EVC <EVCMechanism_EVC>` value over all allocation policies in `control_signal_search_space`.
-
-    EVC_max_state_values : 2d np.array
-        an array of the values for the OutputStates in `monitored_output_states` using the `allocation_policy` that
-        generated `EVC_max`.
-
-    EVC_max_policy : 1d np.array
-        an array of the ControlSignal `intensity <ControlSignal.intensity> values for the allocation policy that
-        generated `EVC_max`.
-
-    save_all_values_and_policies : bool : default False
-        specifies whether or not to save every `allocation_policy and associated EVC value (in addition to the max).
-        If it is specified, each `allocation_policy` tested in the `control_signal_search_space` is saved in
-        `EVC_policies`, and their values are saved in `EVC_values`.
-
-    EVC_policies : 2d np.array
-        array with every `allocation_policy` tested in `control_signal_search_space`.  The `EVC <EVCMechanism_EVC>`
-        value of each is stored in `EVC_values`.
-
-    EVC_values :  1d np.array
-        array of `EVC <EVCMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in `EVC_policies`;
+    modulation : ModulationParam
+        the default form of modulation used by the LCMechanism's `ControlSignals <GatingSignal>`,
+        unless they are `individually specified <ControlSignal_Specification>`.
 
     """
 
-    componentType = EVC_MECHANISM
-    initMethod = INIT_FUNCTION_METHOD_ONLY
+    componentType = "LCMechanism"
 
+    initMethod = INIT__EXECUTE__METHOD_ONLY
 
-    classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # classPreferenceLevel = PreferenceLevel.TYPE
+    classPreferenceLevel = PreferenceLevel.TYPE
     # Any preferences specified below will override those specified in TypeDefaultPreferences
-    # Note: only need to specify setting;  level will be assigned to Type automatically
+    # Note: only need to specify setting;  level will be assigned to TYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
+    #     kwPreferenceSetName: 'ControlMechanismClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+    class ClassDefaults(AdaptiveMechanism_Base.ClassDefaults):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
-    from PsyNeuLink.Components.Functions.Function import LinearCombination
-    # from Components.__init__ import DefaultSystem
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
-                               ALLOCATION_POLICY: None,
-                               PARAMETER_STATES: False})
+    from PsyNeuLink.Components.Functions.Function import Linear
+    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({CONTROL_PROJECTIONS: None})
 
     @tc.typecheck
     def __init__(self,
+                 default_variable=None,
+                 size=None,
                  system=None,
-                 # default_variable=None,
-                 # size=None,
-                 prediction_mechanism_type=IntegratorMechanism,
-                 prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
+                 function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
-                 function=ControlSignalGridSearch,
-                 value_function=ValueFunction,
-                 outcome_function=LinearCombination(operation=PRODUCT),
-                 cost_function=LinearCombination(operation=SUM,
-                                                 context=componentType+COST_FUNCTION),
-                 combine_outcome_and_cost_function=LinearCombination(operation=SUM,
-                                                                     context=componentType+FUNCTION),
-                 save_all_values_and_policies:bool=False,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
-                 context=componentType+INITIALIZING):
-
-        # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
-        prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
+                 context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(system=system,
-                                                  prediction_mechanism_type=prediction_mechanism_type,
-                                                  prediction_mechanism_params=prediction_mechanism_params,
-                                                  monitor_for_control=monitor_for_control,
-                                                  control_signals=control_signals,
-                                                  modulation=modulation,
+        params = self._assign_args_to_param_dicts(monitor_for_control=monitor_for_control,
                                                   function=function,
-                                                  value_function=value_function,
-                                                  outcome_function=outcome_function,
-                                                  cost_function=cost_function,
-                                                  combine_outcome_and_cost_function=combine_outcome_and_cost_function,
-                                                  save_all_values_and_policies=save_all_values_and_policies,
+                                                  control_signals=control_signals,
+                                                  # modulation=modulation,
                                                   params=params)
 
-        super(EVCMechanism, self).__init__(# default_variable=default_variable,
-                                           # size=size,
-                                           monitor_for_control=monitor_for_control,
-                                           control_signals=control_signals,
-                                           function=function,
-                                           params=params,
-                                           name=name,
-                                           prefs=prefs,
-                                           context=self)
+        super().__init__(variable=default_variable,
+                         size=size,
+                         modulation=modulation,
+                         params=params,
+                         name=name,
+                         prefs=prefs,
+                         context=self)
 
-    # TODO: delete this? seems pointless override
+        try:
+            self.monitored_output_states
+        except AttributeError:
+            raise LCMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
+                                              format(self.__class__.__name__,
+                                                     self.__class__.__bases__[0].__name__))
+
     def _validate_params(self, request_set, target_set=None, context=None):
+        """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-    def _instantiate_input_states(self, context=None):
-        """Instantiate InputState and MappingProjections for list of Mechanisms and/or States to be monitored
-
-        """
-        super()._instantiate_input_states(context=context)
-
-        self._instantiate_prediction_mechanisms(context=context)
-        self._instantiate_monitoring_mechanism(context=context)
-
-    def _instantiate_prediction_mechanisms(self, context=None):
-        """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in the System
-
-        Instantiate prediction_mechanisms for `ORIGIN` Mechanisms in self.system; these will now be `TERMINAL`
-        Mechanisms:
-            - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
-            - therefore if an associated input Mechanism must be monitored by the EVCMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or System MONITOR_FOR_CONTROL param (see below)
-
-        For each `ORIGIN` Mechanism in self.system:
-            - instantiate a corresponding predictionMechanism
-            - instantiate a Process, with a pathway that projects from the ORIGIN to the prediction Mechanism
-            - add the process to self.system.processes
-
-        Instantiate self.predicted_input dict:
-            - key for each entry is an `ORIGIN` Mechanism of the System
-            - value of each entry is the value of the corresponding predictionMechanism:
-            -     each value is a 2d array, each item of which is the value of an InputState of the predictionMechanism
-
-        Args:
-            context:
+        If System is specified, validate it
+        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputStates for Mechanisms in self.system
+        Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
-        # Dictionary of prediction_mechanisms, keyed by the ORIGIN Mechanism to which they correspond
-        self.origin_prediction_mechanisms = {}
-
-        # self.predictionProcesses = []
-
-        # List of prediction Mechanism tuples (used by system to execute them)
-        self.prediction_mechs = []
-
-        # Get any params specified for predictionMechanism(s) by EVCMechanism
-        try:
-            prediction_mechanism_params = self.paramsCurrent[PREDICTION_MECHANISM_PARAMS]
-        except KeyError:
-            prediction_mechanism_params = {}
-
-
-        for origin_mech in self.system.origin_mechanisms.mechanisms:
-
-            # # IMPLEMENT THE FOLLOWING ONCE INPUT_STATES CAN BE SPECIFIED IN CONSTRUCTION OF ALL MECHANISMS
-            # #           (AS THEY CAN CURRENTLY FOR ObjectiveMechanisms)
-            # state_names = []
-            # variables = []
-            # for state_name in origin_mech.input_states.keys():
-            #     state_names.append(state_name)
-            #     variables.append(origin_mech_intputStates[state_name].instance_defaults.variable)
-
-            # Instantiate predictionMechanism
-            prediction_mechanism = self.paramsCurrent[PREDICTION_MECHANISM_TYPE](
-                name=origin_mech.name + " " + PREDICTION_MECHANISM,
-                default_variable = origin_mech.input_state.instance_defaults.variable,
-                # default_variable=variables,
-                # INPUT_STATES=state_names,
-                params = prediction_mechanism_params,
-                context=context,
-            )
-            prediction_mechanism._role = CONTROL
-            prediction_mechanism.origin_mech = origin_mech
-
-            # Assign projections to prediction_mechanism that duplicate those received by origin_mech
-            #    (this includes those from ProcessInputState, SystemInputState and/or recurrent ones
-            for orig_input_state, prediction_input_state in zip(origin_mech.input_states,
-                                                            prediction_mechanism.input_states):
-                for projection in orig_input_state.path_afferents:
-                    MappingProjection(sender=projection.sender,
-                                      receiver=prediction_input_state,
-                                      matrix=projection.matrix)
-
-            # Assign list of processes for which prediction_mechanism will provide input during the simulation
-            # - used in _get_simulation_system_inputs()
-            # - assign copy,
-            #       since don't want to include the prediction process itself assigned to origin_mech.processes below
-            prediction_mechanism.use_for_processes = list(origin_mech.processes.copy())
-
-            # # FIX: REPLACE REFERENCE TO THIS ELSEWHERE WITH REFERENCE TO MECH_TUPLES BELOW
-            self.origin_prediction_mechanisms[origin_mech] = prediction_mechanism
-
-            # Add to list of EVCMechanism's prediction_object_items
-            # prediction_object_item = prediction_mechanism
-            self.prediction_mechs.append(prediction_mechanism)
-
-            # Add to system execution_graph and execution_list
-            self.system.execution_graph[prediction_mechanism] = set()
-            self.system.execution_list.append(prediction_mechanism)
-
-        self.prediction_mechanisms = MechanismList(self, self.prediction_mechs)
-
-        # Assign list of destinations for predicted_inputs:
-        #    the variable of the ORIGIN Mechanism for each process in the system
-        self.predicted_input = {}
-        for i, origin_mech in zip(range(len(self.system.origin_mechanisms)), self.system.origin_mechanisms):
-            # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
-            self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].instance_defaults.variable
-
-    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    # FIX: MOVE THIS TO ControlMechanism??
-    def _instantiate_monitoring_mechanism(self, context=None):
-        """
-        Assign InputState to ControlMechanism for each OutputState to be monitored;
-            uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
-            For each item in self.monitored_output_states:
-            - if it is a OutputState, call _instantiate_monitoring_input_state()
-            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
-                (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
-            - each InputState is assigned a name with the following format:
-                '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
-
-        Notes:
-        * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
-          Projection will be instantiated to a corresponding InputState of the ControlMechanism
-        * self.input_states is the usual ordered dict of states,
-            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
-        """
-
-        self._get_monitored_states(context=context)
-
-        monitoring_input_states = []
-        for i, state in enumerate(self.monitored_output_states):
-            self._validate_monitored_state_in_system(state)
-            monitoring_input_states.append({NAME: state.name,
-                                            WEIGHT: float(self.monitor_for_control_weights_and_exponents[i][0]),
-                                            EXPONENT: float(self.monitor_for_control_weights_and_exponents[i][1])
-                                            })
-
-        # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
-        self.monitoring_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
-                                                       # input_states=monitoring_input_states,
-                                                       function=self.outcome_function,
-                                                       name=self.name + ' Monitoring Mechanism')
-
-        if self.prefs.verbosePref:
-            print ("{0} monitoring:".format(self.name))
-            for state in self.monitored_output_states:
-                weight = self.monitor_for_control_weights_and_exponents[self.monitored_output_states.index(state)][0]
-                exponent = self.monitor_for_control_weights_and_exponents[self.monitored_output_states.index(state)][1]
-                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
-
-        MappingProjection(sender=self.monitoring_mechanism,
-                          receiver=self,
-                          matrix=AUTO_ASSIGN_MATRIX,
-                          name = self.system.name + ' outcome signal'
-                          )
-
-        self.system.execution_list.append(self.monitoring_mechanism)
-        self.system.execution_graph[self.monitoring_mechanism] = set(self.system.execution_list[:-1])
-
-    def _get_monitored_states(self, context=None):
-        """
-        Parse paramsCurent[MONITOR_FOR_CONTROL] for System, controller, Mechanisms and/or their OutputStates:
-            - if specification in output_state is None:
-                 do NOT monitor this state (this overrides any other specifications)
-            - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
-            - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
-                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
-                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
-
-        Notes:
-        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
-            - it specifies options for assigning outputStates of terminal Mechanisms in the System
-                to self.monitored_output_states;  the options are:
-                + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
-                  TERMINAL Mechanism
-                + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
-            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
-        * self.monitored_output_states is a list, each item of which is a Mechanism OutputState from which a Projection
-            will be instantiated to a corresponding InputState of the ControlMechanism
-        * self.input_states is the usual ordered dict of states,
-            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
-
-        """
-
-        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import _validate_monitored_value
-
-        # PARSE SPECS
-
-        # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
-        try:
-            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL].copy() or []
-        except KeyError:
-            controller_specs = []
-
-        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
-        system_specs = self.system.monitor_for_control.copy()
-
-        # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
-        if controller_specs:
-            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
-                option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
-                if option_item is not None:
-                    del system_specs[option_item]
-            for item in controller_specs:
-                if item in system_specs:
-                    del system_specs[system_specs.index(item)]
-
-        # Combine controller and system specs
-        # If there are none, assign PRIMARY_OUTPUT_STATES as default
-        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
-
-        # Extract references to mechanisms and/or outputStates from any tuples
-        # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
-        all_specs_extracted_from_tuples = []
-        for item in all_specs:
-            # VALIDATE SPECIFICATION
-            # Handle EVCMechanism's tuple format:
-            # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
-            if isinstance(item, tuple):
-                if len(item) != 3:
-                    raise EVCError("Specification of tuple ({0}) in MONITOR_FOR_CONTROL for {1} "
-                                         "has {2} items;  it should be 3".
-                                         format(item, self.name, len(item)))
-                if not isinstance(item[1], numbers.Number):
-                    raise EVCError("Specification of the exponent ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                         "must be a number".
-                                         format(item[1], self.name))
-                if not isinstance(item[2], numbers.Number):
-                    raise EVCError("Specification of the weight ({0}) for MONITOR_FOR_CONTROL of {1} "
-                                         "must be a number".
-                                         format(item[0], self.name))
-                # Set state_spec to the output_state item for validation below
-                item = item[0]
-            # MODIFIED 2/22/17 END
-            # Validate by ObjectiveMechanism:
-            _validate_monitored_value(self, item, context=context)
-            # Extract references from specification tuples
-            if isinstance(item, tuple):
-                all_specs_extracted_from_tuples.append(item[OBJECT_INDEX])
-            # Otherwise, add item as specified:
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+        if SYSTEM in target_set:
+            if not isinstance(target_set[SYSTEM], System):
+                raise KeyError
             else:
-                all_specs_extracted_from_tuples.append(item)
+                self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
-        option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
-        if not option_specs:
-            ctlr_or_sys_option_spec = None
-        elif len(option_specs) == 1:
-            ctlr_or_sys_option_spec = option_specs[0]
+        if MONITOR_FOR_CONTROL in target_set:
+            for spec in target_set[MONITOR_FOR_CONTROL]:
+                if isinstance(spec, MonitoredOutputStatesOption):
+                    continue
+                if isinstance(spec, tuple):
+                    spec = spec[0]
+                if isinstance(spec, (OutputState, Mechanism_Base)):
+                    spec = spec.name
+                if not isinstance(spec, str):
+                    raise LCMechanismError("Invalid specification in {} arg for {} ({})".
+                                                format(MONITOR_FOR_CONTROL, self.name, spec))
+                # If controller has been assigned to a System,
+                #    check that all the items in monitor_for_control are in the same System
+                # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                #                       when the controller is assigned to a System [TBI]
+                if self.system:
+                    if not any((spec is mech.name or spec in mech.output_states.names)
+                               for mech in self.system.mechanisms):
+                        raise LCMechanismError("Specification in {} arg for {} ({}) must be a "
+                                                    "Mechanism or an OutputState of one in {}".
+                                                    format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
+
+        # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
+        if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
+
+            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+
+            for spec in target_set[CONTROL_SIGNALS]:
+
+                # Specification is for a ControlSignal
+                if isinstance(spec, ControlSignal):
+                    # If controller has been assigned to a System,
+                    #    check that any ControlProjections the ControlSignal has
+                    #    are to Mechanisms in the controller's System
+                    # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                    #                       when the controller is assigned to a System [TBI]
+                    if self.system:
+                        if not all(control_proj.receiver.owner in self.system.mechanisms
+                                   for control_proj in spec.efferents):
+                            raise LCMechanismError("The {} specified in the {} arg for {} ({}) "
+                                                        "has one or more ControlProjections to a Mechanism "
+                                                        "that is not in {}".
+                                                        format(CONTROL_SIGNAL,
+                                                               CONTROL_SIGNALS,
+                                                               self.name,
+                                                               spec.name,
+                                                               self.system.name))
+                    continue
+
+                # Specification is for a ParameterState
+                elif isinstance(spec, ParameterState):
+                    param_name = spec.name
+                    mech = spec.owner
+                    #  Check that owner is in controller's System
+                    if not self.system in mech.systems:
+                        raise LCMechanismError("The {} specified in the {} arg for {} ({}) "
+                                                    "belongs to a Mechanism ({}) that is not in "
+                                                    "the System for which {} is a controller ({})".
+                                                    format(PARAMETER_STATE,
+                                                           CONTROL_SIGNALS,
+                                                           self.name,
+                                                           spec.name,
+                                                           mech.name,
+                                                           self.name,
+                                                           self.system.name))
+
+                # Specification is for a tuple (str, Mechanism):
+                elif isinstance(spec, tuple):
+                    param_name = spec[0]
+                    mech = spec[1]
+                    # Check that 1st item is a str (presumably the name of the Mechanism's attribute for the param)
+                    if not isinstance(param_name, str):
+                        raise LCMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                                                    "must be a string".format(CONTROL_SIGNAL, self.name, param_name))
+                    # Check that 2nd item is a Mechanism
+                    if not isinstance(mech, Mechanism):
+                        raise LCMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                                                    "must be a Mechanism".format(CONTROL_SIGNAL, self.name, mech))
+
+
+                # ControlSignal specification dictionary, must have the following entries:
+                #    NAME:str - must be the name of an attribute of MECHANISM
+                #    MECHANISM:Mechanism - must have an attribute and corresponding ParameterState with PARAMETER
+                #    PARAMS:dict - entries must be valid ControlSignal parameters (e.g., ALLOCATION_SAMPLES)
+                elif isinstance(spec, dict):
+                    if not NAME in spec:
+                        raise LCMechanismError("Specification dict for {} of {} must have a NAME entry".
+                                                    format(CONTROL_SIGNAL, self.name))
+                    param_name = spec[NAME]
+                    if not MECHANISM in spec:
+                        raise LCMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
+                                                    format(CONTROL_SIGNAL, self.name))
+                    mech = spec[MECHANISM]
+                    # Check that all of the other entries in the specification dictionary are valid ControlSignal params
+                    for param in spec:
+                        if param in {NAME, MECHANISM} | modulatory_signal_keywords:
+                            continue
+                        if not hasattr(mech, param):
+                            raise LCMechanismError("\'{}\' entry in specification dictionary for {} arg of {} "
+                                                       "is not a valid {} specification".
+                                                       format(CONTROL_SIGNAL, param, self.name,
+                                                              ControlSignal.__name__))
+                else:
+                    raise LCMechanismError("PROGRAM ERROR: unrecognized specification of the {} arg for {} ({})".
+                                                format(CONTROL_SIGNALS, self.name, spec))
+                    # raise LCMechanismError("Specification of {} for {} ({}) must be a ParameterState, Mechanism, "
+                    #                             "a tuple specifying a parameter and Mechanism, "
+                    #                             "a ControlSignal specification dictionary, "
+                    #                             "or an existing ControlSignal".
+                    #                             format(CONTROL_SIGNAL, self.name, spec))
+
+                # Check that param_name is the name of an attribute of the Mechanism
+                if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
+                    raise LCMechanismError("{} (in specification of {} for {}) is not an "
+                                                "attribute of {} or its function"
+                                                .format(param_name, CONTROL_SIGNAL, self.name, mech))
+                # Check that the Mechanism has a ParameterState for the param
+                if not param_name in mech._parameter_states.names:
+                    raise LCMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                                                "specified in {} for {}".
+                                                format(param_name, mech.name, CONTROL_SIGNAL, self.name))
+                # If self has been assigned to a System,
+                #    check that the Mechanism to which the parameter belongs is in the controller's System
+                # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                #                       when the controller is assigned to a System [TBI]
+                if self.system and not mech in self.system.mechanisms:
+                    raise LCMechanismError("Specification in {} arg for {} ({} param of {}) "
+                                                "must be for a Mechanism in {}".
+                                                format(CONTROL_SIGNALS,
+                                                       self.name,
+                                                       param_name,
+                                                       mech.name,
+                                                       self.system.name))
+
+    def _instantiate_monitored_output_states(self, context=None):
+        raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
+                                          format(self.__class__.__name__,
+                                                 self.__class__.__bases__[0].__name__))
+
+    def _instantiate_output_states(self, context=None):
+
+        # Create registry for GatingSignals (to manage names)
+        from PsyNeuLink.Globals.Registry import register_category
+        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.State import State_Base
+        register_category(entry=ControlSignal,
+                          base_class=State_Base,
+                          registry=self._stateRegistry,
+                          context=context)
+
+        if self.control_signals:
+            for control_signal in self.control_signals:
+                self._instantiate_control_signal(control_signal=control_signal, context=context)
+
+        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default OutputState
+        # super()._instantiate_output_states(context=context)
+
+    # ---------------------------------------------------
+    # IMPLEMENTATION NOTE:  IMPLEMENT _instantiate_output_states THAT CALLS THIS FOR EACH ITEM
+    #                       DESIGN PATTERN SHOULD COMPLEMENT THAT FOR _instantiate_input_states of ObjectiveMechanism
+    #                           (with control_signals taking the place of monitored_values)
+    # FIX 5/23/17: PROJECTIONS AND PARAMS SHOULD BE PASSED BY ASSIGNING TO STATE SPECIFICATION DICT
+    # FIX          UPDATE parse_state_spec TO ACCOMODATE (param, ControlSignal) TUPLE
+    # FIX          TRACK DOWN WHERE PARAMS ARE BEING HANDED OFF TO ControlProjection
+    # FIX                   AND MAKE SURE THEY ARE NOW ADDED TO ControlSignal SPECIFICATION DICT
+    #
+    def _instantiate_control_signal(self, control_signal=None, context=None):
+        """Instantiate ControlSignal OutputState and assign (if specified) or instantiate ControlProjection
+
+        # Extends allocation_policy and control_signal_costs attributes to accommodate instantiated Projection
+
+        Notes:
+        * control_signal arg can be a:
+            - ControlSignal object;
+            - ControlProjection;
+            - ParameterState;
+            - params dict, from _assign_as_controller(), containing a ControlProjection;
+            - tuple (param_name, Mechanism), from control_signals arg of constructor;
+                    [NOTE: this is a convenience format;
+                           it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
+            - ControlSignal specification dictionary, from control_signals arg of constructor
+                    [NOTE: this must have at least NAME:str (param name) and MECHANISM:Mechanism entries;
+                           it can also include a PARAMS entry with a params dict containing ControlSignal params]
+        * State._parse_state_spec() is used to parse control_signal arg
+        * params are expected to be for (i.e., to be passed to) ControlSignal;
+        * wait to instantiate deferred_init() Projections until after ControlSignal is instantiated,
+             so that correct OutputState can be assigned as its sender;
+        * index of OutputState is incremented based on number of ControlSignals already instantiated;
+            this means that the LCMechanism's function must return as many items as it has ControlSignals,
+            with each item of the function's value used by a corresponding ControlSignal.
+            Note: multiple ControlProjections can be assigned to the same ControlSignal to achieve "divergent control"
+                  (that is, control of many parameters with a single value)
+
+        Returns ControlSignal (OutputState)
+        """
+        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+        from PsyNeuLink.Components.States.ParameterState import _get_parameter_state
+        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+
+        # EXTEND allocation_policy TO ACCOMMODATE NEW ControlSignal -------------------------------------------------
+        #        also used to determine constraint on ControlSignal value
+
+        if self.allocation_policy is None:
+            self.allocation_policy = np.array(defaultControlAllocation)
         else:
-            raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
-                           format(self.name, option_specs))
+            self.allocation_policy = np.append(self.allocation_policy, defaultControlAllocation)
 
-        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
-        # Assign outputStates to self.monitored_output_states
-        self.monitored_output_states = []
+        # Update self.value to reflect change in allocation_policy (and the new number of  control_signals);
+        #    this is necessary, since function is not fully executed during initialization (in _instantiate_function)
+        #    it returns default_allocation policy which has only a single item,
+        #    however validation of indices for OutputStates requires that proper number of items be in self.value
+        self.value = self.allocation_policy
+        self._default_value = self.value
 
-        # Notes:
-        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
-        #     (for use in generating exponents and weights below)
-        # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
-        #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
-        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+        # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
 
-        for mech in self.system.mechanisms:
+        control_projection = None
+        control_signal_params = None
 
-            # For each Mechanism:
-            # - add its specifications to all_specs (for use below in generating exponents and weights)
-            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
-            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
-            # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
-            #     to assign outputStates to self.monitored_output_states
+        control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
 
-            mech_specs = []
-            output_state_specs = []
-            local_specs = controller_and_system_specs.copy()
-            option_spec = ctlr_or_sys_option_spec
+        # Specification is a ParameterState
+        if isinstance(control_signal_spec, ParameterState):
+            mech = control_signal_spec.owner
+            param_name = control_signal_spec.name
+            parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
 
-            # PARSE MECHANISM'S SPECS
+        # Specification was tuple or dict, now parsed into a dict
+        elif isinstance(control_signal_spec, dict):
+            param_name = control_signal_spec[NAME]
+            control_signal_params = control_signal_spec[PARAMS]
 
-            # Get MONITOR_FOR_CONTROL specification from Mechanism
-            try:
-                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+            # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
+            if control_signal_params and MECHANISM in control_signal_params:
+                mech = control_signal_params[MECHANISM]
+                # Delete MECHANISM entry as it is not a parameter of ControlSignal
+                #     (which will balk at it in ControlSignal._validate_params)
+                del control_signal_params[MECHANISM]
+                parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
 
-                if mech_specs is NotImplemented:
-                    raise AttributeError
+            # Specification was originally a tuple, either in parameter specification or control_signal arg;
+            #    1st item was either assigned to the NAME entry of the control_signal_spec dict
+            #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
+            #        or used as param value, if it was a parameter specification tuple
+            #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
+            #        so parse:
+            # IMPLEMENTATION NOTE:
+            #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
+            #                         to pass specification from a parameter specification tuple
+            #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
+            #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
+            #    Delete whichever one it was, as neither is a recognized ControlSignal param
+            #        (which will balk at it in ControlSignal._validate_params)
+            elif (control_signal_params and
+                    any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
+                if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
+                    spec = control_signal_params[CONTROL_SIGNAL_SPECS]
+                    del control_signal_params[CONTROL_SIGNAL_SPECS]
+                elif PROJECTIONS in control_signal_spec[PARAMS]:
+                    spec = control_signal_params[PROJECTIONS]
+                    del control_signal_params[PROJECTIONS]
 
-                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
-                if mech_specs is None:
-                    raise ValueError
+                # ControlSignal
+                if isinstance(spec, ControlSignal):
+                    control_signal_spec = spec
 
-            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
-            except (KeyError, AttributeError):
-                pass
-
-            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputStates
-            except ValueError:
-                continue
-
-            # Parse specs in Mechanism's MONITOR_FOR_CONTROL
-            else:
-
-                # Add mech_specs to all_specs
-                all_specs.extend(mech_specs)
-
-                # Extract refs from tuples and add to local_specs
-                for item in mech_specs:
-                    if isinstance(item, tuple):
-                        local_specs.append(item[OBJECT_INDEX])
-                        continue
-                    local_specs.append(item)
-
-                # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
-                #    if there is one, use it in place of any specified for controller or system
-                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
-                if not option_specs:
-                    option_spec = ctlr_or_sys_option_spec
-                elif option_specs and len(option_specs) == 1:
-                    option_spec = option_specs[0]
                 else:
-                    raise EVCError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
-                                   format(mech.name, option_specs))
+                    # Mechanism
+                    # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
+                    if isinstance(spec, list) and isinstance(spec[0], Mechanism):
+                        mech = spec[0]
+                        parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
 
-            # PARSE OUTPUT STATE'S SPECS
+                    # Projection (in a list)
+                    elif isinstance(spec, list):
+                        control_projection = spec[0]
+                        if not isinstance(control_projection, ControlProjection):
+                            raise LCMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
+                                                        "must contain a single ControlProjection".
+                                                        format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
+                        if len(spec)>1:
+                            raise LCMechanismError("PROGRAM ERROR: Multiple ControlProjections are not "
+                                                        "currently supported in specification of a ControlSignal")
+                        # Get receiver mech
+                        if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                            parameter_state = control_projection.init_args[RECEIVER]
+                            # ControlProjection was created in response to specification of ControlSignal
+                            #     (in a 2-item tuple where the parameter was specified),
+                            #     so get ControlSignal spec
+                            if SENDER in control_projection.init_args:
+                                control_signal_spec = control_projection.init_args[SENDER]
+                                if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
+                                    raise LCMechanismError("PROGRAM ERROR: "
+                                                                "Sender of {} for {} {} of {} is not a {}".
+                                                                format(CONTROL_PROJECTION,
+                                                                       parameter_state.name,
+                                                                       PARAMETER_STATE,
+                                                                       parameter_state.owner.name,
+                                                                       CONTROL_SIGNAL))
+                        else:
+                            parameter_state = control_projection.receiver
+                        param_name = parameter_state.name
 
-            # for output_state_name, output_state in list(mech.outputStates.items()):
-            for output_state in mech.output_states:
-
-                # Get MONITOR_FOR_CONTROL specification from OutputState
-                try:
-                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
-                    if output_state_specs is NotImplemented:
-                        raise AttributeError
-
-                    # Setting MONITOR_FOR_CONTROL to None specifies OutputState should NOT be monitored
-                    if output_state_specs is None:
-                        raise ValueError
-
-                # OutputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
-                except (KeyError, AttributeError):
-                    pass
-
-                # OutputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
-                except ValueError:
-                    continue
-
-                # Parse specs in OutputState's MONITOR_FOR_CONTROL
-                else:
-
-                    # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
-                    #       as a specification for an OutputState
-
-                    # Add OutputState specs to all_specs and local_specs
-                    all_specs.extend(output_state_specs)
-
-                    # Extract refs from tuples and add to local_specs
-                    for item in output_state_specs:
-                        if isinstance(item, tuple):
-                            local_specs.append(item[OBJECT_INDEX])
-                            continue
-                        local_specs.append(item)
-
-            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
-            for output_state in mech.output_states:
-                if (output_state in local_specs or output_state.name in local_specs):
-                    option_spec = None
-
-
-            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO self.monitored_output_states
-
-            for output_state in mech.output_states:
-
-                # If OutputState is named or referenced anywhere, include it
-                if (output_state in local_specs or output_state.name in local_specs):
-                    self.monitored_output_states.append(output_state)
-                    continue
-
-# FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
-# THE LIST NOR IS IT A TERMINAL MECHANISM
-
-                # If:
-                #   Mechanism is named or referenced in any specification
-                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
-                #   or it is a terminal Mechanism
-                elif (mech.name in local_specs or mech in local_specs or
-                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
-                              mech in self.system.terminal_mechanisms.mechanisms):
-                    #
-                    if (not (mech.name in local_specs or mech in local_specs) and
-                            not mech in self.system.terminal_mechanisms.mechanisms):
-                        continue
-
-                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
-                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-                        if output_state is mech.output_state:
-                            self.monitored_output_states.append(output_state)
-                            continue
-                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
-                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
-                        self.monitored_output_states.append(output_state)
-                    elif mech.name in local_specs or mech in local_specs:
-                        if output_state is mech.output_state:
-                            self.monitored_output_states.append(output_state)
-                            continue
-                    elif option_spec is None:
-                        continue
                     else:
-                        raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
-                                       "{0} of {1}".
-                                       format(output_state.name, mech.name))
+                        raise LCMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
+                                                    format(CONTROL_SIGNAL, self.name))
+            else:
+                raise LCMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
+                                            "parameter Mechanism or ControlProjection for {} of {}".
+                                            format(CONTROL_SIGNAL, self.name))
 
 
-        # ASSIGN WEIGHTS AND EXPONENTS TO OUTCOME_FUNCTION
+        default_name = param_name + '_' + ControlSignal.__name__
 
-        # Note: these values will be superseded by any assigned as arguments to the outcome_function
-        #       if it is specified in the constructor for the Mechanism
+        # Get constraint for ControlSignal value
+        #    - get LCMechanism's value
+        self._update_value(context=context)
+        # - get OutputState's index
+        try:
+            output_state_index = len(self.output_states)
+        except (AttributeError, TypeError):
+            output_state_index = 0
+        # - get constraint for OutputState's value
+        output_state_constraint_value = self.allocation_policy[output_state_index]
 
-        num_monitored_output_states = len(self.monitored_output_states)
-        weights = np.ones((num_monitored_output_states,1))
-        exponents = np.ones_like(weights)
+        # Specification is a ControlSignal (either passed in directly, or parsed from tuple above)
+        if isinstance(control_signal_spec, ControlSignal):
+            # Deferred Initialization, so assign owner, name, and initialize
+            if control_signal_spec.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                control_signal_spec.init_args[OWNER] = self
+                control_signal_spec.init_args[NAME] = control_signal_spec.init_args[NAME] or default_name
+                # control_signal_spec.init_args[REFERENCE_VALUE] = output_state_constraint_value
+                control_signal_spec.init_args[REFERENCE_VALUE] = defaultControlAllocation
+                control_signal_spec._deferred_init(context=context)
+                control_signal = control_signal_spec
+            elif not control_signal_spec.owner is self:
+                raise LCMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
+                                            format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
+            else:
+                control_signal = control_signal_spec
+                control_signal_name = control_signal_spec.name
+                control_projections = control_signal_spec.efferents
 
-        # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
-        for spec in all_specs:
-            if isinstance(spec, tuple):
-                object_spec = spec[OBJECT_INDEX]
-                # For each OutputState in monitored_output_states
-                for item in self.monitored_output_states:
-                    # If either that OutputState or its owner is the object specified in the tuple
-                    if item is object_spec or item.name is object_spec or item.owner is object_spec:
-                        # Assign the weight and exponent specified in the tuple to that OutputState
-                        i = self.monitored_output_states.index(item)
-                        weights[i] = spec[WEIGHT_INDEX]
-                        exponents[i] = spec[EXPONENT_INDEX]
+                # IMPLEMENTATION NOTE:
+                #    THIS IS TO HANDLE FUTURE POSSIBILITY OF MULTIPLE ControlProjections FROM A SINGLE ControlSignal;
+                #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
+                # parameter_states = [proj.recvr for proj in control_projections]
+                if len(control_projections) > 1:
+                    raise LCMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
+                                                "as specification in a ControlSignal")
+                else:
+                    control_projection = control_projections[0]
+                    parameter_state = control_projection.receiver
 
-        # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
-        # Note: done here (rather than in call to outcome_function in value_function) for efficiency
-        self.outcome_function.weights = weights
-        self.outcome_function.exponents = exponents
+        # Instantiate OutputState for ControlSignal
+        else:
+            control_signal_name = default_name
 
-        # Assign weights and exponents to monitor_for_control_weights_and_exponents attribute
-        #    (so that it is accessible to custom functions)
-        self.monitor_for_control_weights_and_exponents = list(zip(weights, exponents))
+            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+            from PsyNeuLink.Components.States.State import _instantiate_state
 
-    def _validate_monitored_state_in_system(self, state_spec, context=None):
-        """Validate specified OutputState is for a Mechanism in the controller's System
+            control_signal_params.update({CONTROLLED_PARAM:param_name})
 
-        Called by both self._instantiate_monitoring_mechanism() and self.add_monitored_value() (in ControlMechanism)
-        """
+            # FIX 5/23/17: CALL super()_instantiate_output_states ??
+            # FIX:         OR AGGREGATE ALL ControlSignals AND SEND AS LIST (AS FOR input_states IN ObjectiveMechanism)
+            control_signal = _instantiate_state(owner=self,
+                                                state_type=ControlSignal,
+                                                state_name=control_signal_name,
+                                                state_spec=defaultControlAllocation,
+                                                state_params=control_signal_params,
+                                                constraint_value=output_state_constraint_value,
+                                                constraint_value_name='Default control allocation',
+                                                context=context)
 
-        # Get OutputState's owner
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, OutputState):
-            state_spec = state_spec.owner
+        # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
 
-        # Confirm it is a Mechanism in the system
-        if not state_spec in self.system.mechanisms:
-            raise EVCError("Request for controller in {0} to monitor the OutputState(s) of "
-                                              "a Mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
+        # Validate control_projection (if specified) and get receiver's name
+        if control_projection:
+            _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
-        # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminal_mechanisms.mechanisms:
-            if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the OutputState(s) of a Mechanism ({1}) that is not"
-                      " a TERMINAL Mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            if not isinstance(control_projection, ControlProjection):
+                raise LCMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+                                                  "that is not a ControlProjection, to ControlSignal of {}".
+                                                  format(control_projection, self.name))
+            if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                control_projection.init_args['sender']=control_signal
+                if control_projection.init_args['name'] is None:
+                    # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
+                    control_projection.init_args['name'] = CONTROL_PROJECTION + \
+                                                   ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
+                control_projection._deferred_init()
+            else:
+                control_projection.sender = control_signal
+
+        # Instantiate ControlProjection
+        else:
+            # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+            from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+            control_projection = ControlProjection(sender=control_signal,
+                                                   receiver=parameter_state,
+                                                   name=CONTROL_PROJECTION + control_signal_name)
+
+        # Add ControlProjection to list of OutputState's outgoing Projections
+        # (note: if it was deferred, it just added itself, skip)
+        if not control_projection in control_signal.efferents:
+            control_signal.efferents.append(control_projection)
+
+        # Add ControlProjection to LCMechanism's list of ControlProjections
+        try:
+            self.control_projections.append(control_projection)
+        except AttributeError:
+            self.control_projections = [control_projection]
+
+        # Update control_signal_costs to accommodate instantiated Projection
+        try:
+            self.control_signal_costs = np.append(self.control_signal_costs, np.empty((1,1)),axis=0)
+        except AttributeError:
+            self.control_signal_costs = np.empty((1,1))
+
+        # UPDATE output_states AND control_projections -------------------------------------------------------------
+
+        try:
+            self.output_states[control_signal.name] = control_signal
+        except (AttributeError, TypeError):
+            from PsyNeuLink.Components.States.State import State_Base
+            self.output_states = ContentAddressableList(component_type=State_Base,
+                                                        list=[control_signal],
+                                                        name = self.name+'.output_states')
+
+        # Add index assignment to OutputState
+        control_signal.index = output_state_index
+
+        # (Re-)assign control_signals attribute to output_states
+        self.control_signals = self.output_states
+
+        return control_signal
 
     def _instantiate_attributes_after_function(self, context=None):
+        """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
+
+        Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
+            that insures that any ControlSignals specified in control_signals arg are instantiated first
+        Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
+            along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
+        """
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if not self.system.enable_controller:
-            return
+        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
+            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
+                self._assign_as_controller(context=context)
+            if not self.system.enable_controller:
+                return
 
-        outcome_Function = self.outcome_function
-        cost_Function = self.cost_function
+    def _assign_as_controller(self, context=None):
 
-        if isinstance(outcome_Function, Function):
-            # Insure that length of the weights and/or exponents arguments for the outcome_function
-            #    matches the number of monitored_output_states
-            num_monitored_output_states = len(self.monitored_output_states)
-            if outcome_Function.weights is not None:
-                num_outcome_weights = len(outcome_Function.weights)
-                if  num_outcome_weights != num_monitored_output_states:
-                    raise EVCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its monitored_output_states {}".
-                                   format(num_outcome_weights,
-                                          outcome_Function,
-                                          self.name,
-                                          num_monitored_output_states))
-            if outcome_Function.exponents is not None:
-                num_outcome_exponents = len(outcome_Function.exponents)
-                if  num_outcome_exponents != num_monitored_output_states:
-                    raise EVCError("The length of the exponents argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_outcome_exponents,
-                                          OUTCOME_FUNCTION,
-                                          self.name,
-                                          num_monitored_output_states))
-
-        if isinstance(cost_Function, Function):
-            # Insure that length of the weights and/or exponents arguments for the cost_function
-            #    matches the number of control signals
-            num_control_projections = len(self.control_projections)
-            if cost_Function.weights is not None:
-                num_cost_weights = len(cost_Function.weights)
-                if  num_cost_weights != num_control_projections:
-                    raise EVCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_weights,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
-            if cost_Function.exponents is not None:
-                num_cost_exponents = len(cost_Function.exponents)
-                if  num_cost_exponents != num_control_projections:
-                    raise EVCError("The length of the exponents argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_cost_exponents,
-                                          COST_FUNCTION,
-                                          self.name,
-                                          num_control_projections))
+        # Check the ParameterStates of the System's Mechanisms for any ControlProjections with deferred_init()
+        # Note: this includes any ControlProjections created where a ControlSignal rather than a ControlProjection
+        #       was used to specify control for a parameter (e.g., in a 2-item tuple specification for the parameter);
+        #       the initialization of the ControlProjection and, if specified, the ControlSignal
+        #       are completed in the call to _instantiate_control_signal() below
+        for mech in self.system.mechanisms:
+            for parameter_state in mech._parameter_states:
+                for projection in parameter_state.mod_afferents:
+                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
+                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        control_signal_specs = projection.control_signal_params or {}
+                        control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
+                        self._instantiate_control_signal(control_signal_specs, context=context)
 
     def _execute(self,
                     variable=None,
@@ -1303,232 +822,35 @@ class EVCMechanism(ControlMechanism_Base):
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Determine `allocation_policy <EVCMechanism.allocation_policy>` for next run of System
+        """Updates ControlSignals based on inputs
 
-        Update prediction mechanisms
-        Construct control_signal_search_space (from allocation_samples of each item in control_signals):
-            * get `allocation_samples` for each ControlSignal in `control_signals`
-            * construct `control_signal_search_space`: a 2D np.array of control allocation policies, each policy of which
-              is a different combination of values, one from the `allocation_samples` of each ControlSignal.
-        Call self.function -- default is ControlSignalGridSearch
-        Return an allocation_policy
+        Must be overriden by subclass
         """
+        raise LCMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
-        self._update_predicted_input()
-        # self.system._cache_state()
+    def show(self):
 
-        # CONSTRUCT SEARCH SPACE
+        print ("\n---------------------------------------------------------")
 
-        control_signal_sample_lists = []
-        control_signals = self.control_signals
+        print ("\n{0}".format(self.name))
+        print("\n\tMonitoring the following Mechanism OutputStates:")
+        for state in self.monitoring_mechanism.input_states:
+            for projection in state.path_afferents:
+                monitored_state = projection.sender
+                monitored_state_mech = projection.sender.owner
+                monitored_state_index = self.monitored_output_states.index(monitored_state)
 
-        # Get allocation_samples for all ControlSignals
-        num_control_signals = len(control_signals)
+                weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
+                exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
 
-        for control_signal in self.control_signals:
-            control_signal_sample_lists.append(control_signal.allocation_samples)
+                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                       format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
-        # Construct control_signal_search_space:  set of all permutations of ControlProjection allocations
-        #                                     (one sample from the allocationSample of each ControlProjection)
-        # Reference for implementation below:
-        # http://stackoverflow.com/questions/1208118/using-numpy-to-build-an-array-of-all-combinations-of-two-arrays
-        self.control_signal_search_space = \
-            np.array(np.meshgrid(*control_signal_sample_lists)).T.reshape(-1,num_control_signals)
+        print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+        # Sort for consistency of output:
+        state_names_sorted = sorted(self.output_states.names)
+        for state_name in state_names_sorted:
+            for projection in self.output_states[state_name].efferents:
+                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
-        # EXECUTE SEARCH
-
-        # IMPLEMENTATION NOTE:
-        # self.system._store_system_state()
-
-        allocation_policy = self.function(controller=self,
-                                          variable=variable,
-                                          runtime_params=runtime_params,
-                                          time_scale=time_scale,
-                                          context=context)
-        # IMPLEMENTATION NOTE:
-        # self.system._restore_system_state()
-
-        return allocation_policy
-
-    def _update_predicted_input(self):
-        """Assign values of prediction mechanisms to predicted_input
-
-        Assign value of each predictionMechanism.value to corresponding item of self.predictedIinput
-        Note: must be assigned in order of self.system.processes
-
-        """
-
-        # Assign predicted_input for each process in system.processes
-
-        # The number of ORIGIN mechanisms requiring input should = the number of prediction mechanisms
-        num_origin_mechs = len(self.system.origin_mechanisms)
-        num_prediction_mechs = len(self.origin_prediction_mechanisms)
-        if num_origin_mechs != num_prediction_mechs:
-            raise EVCError("PROGRAM ERROR:  The number of ORIGIN mechanisms ({}) does not equal"
-                           "the number of prediction_predictions mechanisms ({}) for {}".
-                           format(num_origin_mechs, num_prediction_mechs, self.system.name))
-        for origin_mech in self.system.origin_mechanisms:
-            # Get origin Mechanism for each process
-            # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
-            self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
-            # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
-
-    def add_monitored_values(self, states_spec, context=None):
-        """Validate and then instantiate outputStates to be monitored by EVC
-
-        Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, each of its outputStates will be used
-        All of the outputStates specified must be for a Mechanism that is in self.System
-
-        Args:
-            states_spec (Mechanism, MechanimsOutputState or list of either or both:
-            context:
-        """
-        states_spec = list(states_spec)
-        self._validate_monitored_state_in_system(states_spec, context=context)
-        self._instantiate_monitored_output_states(states_spec, context=context)
-
-    def run_simulation(self,
-                       inputs,
-                       allocation_vector,
-                       runtime_params=None,
-                       time_scale=TimeScale.TRIAL,
-                       context=None):
-        """
-        Run simulation of `System` for which the EVCMechanism is the `controller <System_Base.controller>`.
-
-        Arguments
-        ----------
-
-        inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism in the `System`.  This should be the
-            `value <Mechanism_Base.value> for each `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` listed
-            in the `prediction_mechanisms` attribute.  The inputs are available from the `predicted_input` attribute.
-
-        allocation_vector : (1D np.array)
-            the allocation policy to use in running the simulation, with one allocation value for each of the
-            EVCMechanism's ControlSignals (listed in `control_signals`).
-
-        runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]
-            a dictionary that can include any of the parameters used as arguments to instantiate the mechanisms,
-            their functions, or Projection(s) to any of their states.  See `Mechanism_Runtime_Parameters` for a full
-            description.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
-
-        """
-
-        if self.value is None:
-            # Initialize value if it is None
-            self.value = self.allocation_policy
-
-        # Implement the current allocation_policy over ControlSignals (outputStates),
-        #    by assigning allocation values to EVCMechanism.value, and then calling _update_output_states
-        for i in range(len(self.control_signals)):
-            # self.control_signals[list(self.control_signals.values())[i]].value = np.atleast_1d(allocation_vector[i])
-            self.value[i] = np.atleast_1d(allocation_vector[i])
-        self._update_output_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-
-        # Execute simulation run of system for the current allocation_policy
-        sim_clock = Clock('EVC SIMULATION CLOCK')
-
-        self.system.run(inputs=inputs, clock=sim_clock, time_scale=time_scale, context=context)
-
-        # Get outcomes for current allocation_policy
-        #    = the values of the monitored output states (self.input_states)
-        # self.monitoring_mechanism.execute(context=EVC_SIMULATION)
-        monitored_states = self._update_input_states(runtime_params=runtime_params, time_scale=time_scale,context=context)
-
-        for i in range(len(self.control_signals)):
-            self.control_signal_costs[i] = self.control_signals[i].cost
-
-        return monitored_states
-
-    # The following implementation of function attributes as properties insures that even if user sets the value of a
-    #    function directly (i.e., without using assign_params), it will still be wrapped as a UserDefinedFunction.
-    # This is done to insure they can be called by value_function in the same way as the defaults
-    #    (which are all Functions), and so that they can be passed a params dict.
-
-    # def wrap_function(self, function):
-    #     if isinstance(function, function_type):
-    #         return ValueFunction(function)
-    #     elif inspect.isclass(assignment) and issubclass(assignment, Function):
-    #         self._value_function = ValueFunction()
-    #     else:
-    #         self._value_function = assignment
-
-    @property
-    def value_function(self):
-        return self._value_function
-
-    @value_function.setter
-    def value_function(self, assignment):
-        if isinstance(assignment, function_type):
-            self._value_function = ValueFunction(assignment)
-        elif assignment is ValueFunction:
-            self._value_function = ValueFunction()
-        else:
-            self._value_function = assignment
-
-    @property
-    def outcome_function(self):
-        # # MODIFIED 7/27/17 OLD:
-        # return self._outcome_function
-        # MODIFIED 7/27/17 NEW:
-        # Get outcome_function from monitoring_mechanism if it has the attribute
-        if hasattr(self, MONITORING_MECHANISM) and self.monitoring_mechanism:
-            # # Check that outcome_function is same as function of monitoring_mechanism
-            # if not self._outcome_function == self.monitoring_mechanism.function_object:
-            #     raise EVCError("PROGRAM ERROR: outcome_function for {} ({}) is not same as "
-            #                    "monitoring_mechanism.function_object ({})".
-            #                    format(self.name, self._outcome_function, self.monitoring_mechanism.function_object))
-            return self.monitoring_mechanism.function_object
-        #     return self._outcome_function
-        # else:
-        return self._outcome_function
-        # MODIFIED 7/27/17 END
-
-    @outcome_function.setter
-    def outcome_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._outcome_function = udf
-        # elif inspect.isclass(value) and issubclass(value, Function):
-        #     self._outcome_function = UserDefinedFunction()
-        else:
-            self._outcome_function = value
-
-        # MODIFIED 7/27/17 NEW:
-        # Assign outcome_function to monitoring_mechanism
-        if hasattr(self, MONITORING_MECHANISM):
-            self.monitoring_mechanism.assign_params({FUNCTION:self.outcome_function})
-        # MODIFIED 7/27/17 END
-
-    @property
-    def cost_function(self):
-        return self._cost_function
-
-    @cost_function.setter
-    def cost_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._cost_function = udf
-        else:
-            self._cost_function = value
-
-    @property
-    def combine_outcome_and_cost_function(self):
-        return self._combine_outcome_and_cost_function
-
-    @combine_outcome_and_cost_function.setter
-    def combine_outcome_and_cost_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._combine_outcome_and_cost_function = udf
-        else:
-            self._combine_outcome_and_cost_function = value
+        print ("\n---------------------------------------------------------")
