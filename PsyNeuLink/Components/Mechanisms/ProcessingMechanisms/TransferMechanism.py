@@ -729,7 +729,10 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
         """
-        print_input = self.previous_input
+        # KAM Changed 8/29/17 print_input = self.previous_input --> print_input = input
+        # because self.previous_input is not a valid attrib of TransferMechanism
+
+        print_input = input
         print_params = params.copy()
         # Only report time_constant if in TIME_STEP mode
         if params['time_scale'] is TimeScale.TRIAL:
