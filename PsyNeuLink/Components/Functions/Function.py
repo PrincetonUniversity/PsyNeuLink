@@ -6595,10 +6595,8 @@ class Distance(ObjectiveFunction):
                          context=context)
 
         self.functionOutputType = None
+        self._variable_length = len(default_variable[0])
 
-        #TODO: Is this legit? Can we guarantee vector sizes?
-        self.__llvm_func_name = self.__get_llvm_function(default_variable)
-        self.__bin_function = None
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
@@ -6699,7 +6697,7 @@ class Distance(ObjectiveFunction):
         builder.store(acc_y2_val, acc_y2)
 
 
-    def __get_llvm_function(self, default_variable):
+    def _gen_llvm_function(self):
         func_name = None
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
@@ -6707,7 +6705,7 @@ class Distance(ObjectiveFunction):
             func_name = ctx.module.get_unique_name("distance")
             double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             func_ty = ir.FunctionType(ctx.float_ty, (double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(len(default_variable[0]))
+            vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             v1, v2 = llvm_func.args
             for a in v1,v2:
@@ -6756,7 +6754,7 @@ class Distance(ObjectiveFunction):
             elif (self.metric == PEARSON):
                 # (n * acc_xy - acc_x * acc_y) /
                 # sqrt((n * acc_x2 - acc_x^2)*(n * acc_y2 - acc_y^2))
-                fn = ctx.float_ty(len(default_variable[0]))
+                fn = ctx.float_ty(self._variable_length)
                 acc_xy = builder.load(acc_xy_ptr)
                 acc_x = builder.load(acc_x_ptr)
                 acc_y = builder.load(acc_y_ptr)
@@ -6800,11 +6798,12 @@ class Distance(ObjectiveFunction):
         v1 = variable[0]
         v2 = variable[1]
 
-        if self.__bin_function is None:
-            self.__bin_function = pnlvm.LLVMBinaryFunction.get(self.__llvm_func_name)
-        ct_v1 = v1.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ct_v2 = v2.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
-        ret = self.__bin_function(ct_v1, ct_v2)
+        bf = self._llvmBinFunction
+        v1_ty, v2_ty = bf.c_func.argtypes
+
+        ct_v1 = v1.ctypes.data_as(v1_ty)
+        ct_v2 = v2.ctypes.data_as(v2_ty)
+        ret = bf(ct_v1, ct_v2)
 
         # FIXME: PEARSON breaks output format
         if (self.metric == PEARSON):
