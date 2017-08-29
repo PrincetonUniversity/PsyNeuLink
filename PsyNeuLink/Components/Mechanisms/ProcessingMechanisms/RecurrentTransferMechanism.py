@@ -666,9 +666,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
-        if context is None or (INITIALIZING not in context):
-            if self.decay is not None and self.decay != 1.0:
-                self.previous_input = self.previous_input * float(self.decay)
+        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
+
+        # if context is None or (INITIALIZING not in context):
+        #     if self.decay is not None and self.decay != 1.0:
+        #         self.previous_input = self.previous_input * float(self.decay)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
