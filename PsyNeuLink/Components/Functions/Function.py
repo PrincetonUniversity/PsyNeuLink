@@ -6781,7 +6781,7 @@ class Distance(ObjectiveFunction):
             # len(self.argument) is always 2, perhaps the size of vector
             # should be used instead
             if self.normalize:
-                ret = builder.fdiv(ret, ctx.float_ty(2), name="sqrt")
+                ret = builder.fdiv(ret, ctx.float_ty(self._variable_length), name="sqrt")
             builder.ret(ret)
         return func_name
 
@@ -6807,7 +6807,7 @@ class Distance(ObjectiveFunction):
 
         # FIXME: PEARSON breaks output format
         if (self.metric == PEARSON):
-            selfcor = 0.5 if self.normalize else 1
+            selfcor = 1/self._variable_length if self.normalize else 1
             return np.array([[selfcor, ret], [ret, selfcor]])
         return ret
 

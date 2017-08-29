@@ -9,7 +9,7 @@ SIZE=1000
 test_var = [np.random.rand(SIZE) + Function.EPSILON, np.random.rand(SIZE) + Function.EPSILON]
 v1 = test_var[0]
 v2 = test_var[1]
-norm = len(test_var)
+norm = len(test_var[0])
 
 test_data = [
     (test_var, kw.DIFFERENCE, False, None, np.sum(np.abs(v1 - v2))),
