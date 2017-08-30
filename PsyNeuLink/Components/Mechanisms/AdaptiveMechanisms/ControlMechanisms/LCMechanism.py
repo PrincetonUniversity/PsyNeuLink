@@ -12,27 +12,61 @@
 Overview
 --------
 
-An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates the gain of the `TransferMechanisms
-<TransferMechanism>` to which it projects.  It implements an abstract model of the `locus coeruleus (LC)
-<https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a `UtilityIntegrator` Mechanism, implements a
-form of the `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of
-locus coeruleus-norepinephrine  (LC-NE) system function.  The LCMechanism uses a `FitzHughNagumoIntegration` Function
-to adjust LC function between its "tonic" to "phasic" modes of operation (see `Gilzenrat et al.,
-<2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_), and that can be regulated using its `mode <LCMechanism.mode>`
-attribute.
+An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates the multiplicative parameter of the `function
+<TransferMechanism.function>` of one ore more `TransferMechanisms <TransferMechanism>`.  It implements an abstract
+model of the `locus coeruleus (LC) <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a
+`UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
+<http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
+(LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to regulate its output (between its
+"tonic" to "phasic" modes of responding (see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_),
+which can be modified using its `mode <LCMechanism.mode>` parameter.
 
 .. _LCMechanism_Creation:
 
 Creating an LCMechanism
 ---------------------------
 
-An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation.  The Mechanisms
-<Mechanism>` it controls are specified in the **control_signals** argument.  Like any Mechanism, its **input_states**
-argument can be used to `specify Mechanisms (and/or their OutputState(s) <Mechanism_State_Specification>` to project
-to the LCMechanism.  Finally, one or more Mechanisms and/or OutputStates can be specified in the **monitor_for_control**
-argument, the :keyword:`value`\\(s) of which will then be used to by a `UtilityIntegratorMechanism` to determine its
-`mode <LCMechanism.mode>` parameter.  If the **monitor_for_control** argument is specified, the following Components
-are automatically created by the LCMechanism when it is created:
+An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation.  Like any Mechanism,
+its **input_states** argument can be used to `specify Mechanisms (and/or their OutputState(s)
+<Mechanism_State_Specification>` to project to the LCMechanism (i.e., that drive its response).  The Mechanisms
+<Mechanism>` it controls are specified in the **control_signals** argument (see `LCMechanism_Control_Signals`). In
+addition, one or more Mechanisms can be specified to govern the LCMechanism's `mode <LCMechanism.mode>` parameter, by
+specifying them in the **monitor_for_control** argument of its constructor (see `LCMechanism_Monitored_OutputStates`).
+
+.. _LCMechanism_Control_Signals:
+
+Specifying Mechanisms to Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+MUST BE PROCESSING MECHANISM WITH A FUNCTION THAT HAS A MULTIPLICATIVE PARAMETER
+
+An LCMechanism is used to control the multiplicative parameter of the `function <TransferMechanism.function>` of a
+`TransferMechanism`.  Therefore, any Mechamism specified for control by an LCMechanims must have a `function`
+with a XXX`multipi;cative` parameter.  These can be specified in...
+
+list of Mechanisms it controls is specified in the **control_signals** argument of its constructor
+
+A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
+(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
+parameters to be controlled by an LCMechanism can also be specified in the **control_signals**  argument of the
+constructor for an LCMechanism (or of the System that created it).  The **control_signals** argument must be a
+list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
+
+A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
+the ControlSignals for an LCMechanism are listed in its `control_signals <LCMechanism.control_signals>`
+attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
+it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's
+`output_states <Mechanism_Base.output_states>` attribute.
+
+
+.. _LCMechanism_Monitored_OutputStates:
+
+Specifying Values to Monitor for Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+If the **monitor_for_control** argument is specified, the following
+Components are automatically created by the LCMechanism when it is created:
 
 * a `UtilityIntegratorMechanism`, using the list of `OutputState` specifications in the **monitor_for_control**
   argument of the LCMechanism's constructor to specify the UtilityIntegratorMechanism's `monitored_values
@@ -40,50 +74,25 @@ are automatically created by the LCMechanism when it is created:
 ..
 * a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
   <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
+..
+* `MappingProjections <MappingProjection> from Mechanisms or OutputStates specified in **monitor_for_control** to
+  the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+COMMENT
 
-STRUCTURE:
-MODE INPUT_STATE <- NAMED ONE, LAST?
-SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
-CONTROL SIGNALS
+When an LCMechanism is created, if its **monitor_for_control** argument is specified  it automatically creates a
+`UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified in the **monitor_for_control**
+argument of the LCMechanism's constructor. The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
+`monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states`
+<LCMechanism.monitored_output_states>` attribute), and the UtilityIntegratorMechanism is referenced by the LCMechanism's `monitoring_mechanism <LCMechanism.monitoring_mechanism>` attribute. The UtilityIntegratorMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values
+<UtilityIntegratorMechanism.monitored_values>` attribute (and the LCMechanism's `monitored_output_states`
+<LCMechanism.monitored_output_states>`attribute), and evaluates them using the its `function
+<ObjectiveMechanism.function>`.  The result is assigned as the `value <OutputState.value>` of the
+UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the LCMechanism's *MODE* `InputState`. This information is used by the
+LCMechanism to set the `allocation <ControlSignal.allocation>` for its `ControlSignals <ControlSignal>`.
 
--------------------------------------------------------------------------------------
-.. _LCMechanism_Monitored_OutputStates:
-
-
-Specifying Values to Monitor for Control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-When an LCMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
-evaluate the values specified in the **monitor_for_control** argument of the LCMechanism's constructor (or of the
-System that created the LCMechanism). The **monitor_for_control** argument must be a list, each item of which must
-refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's
-`monitored_values <ObjectiveMechanism>` attribute (and the LCMechanism's `monitored_output_states`
-<LCMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
-LCMechanism's `monitoring_mechanism <LCMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
-monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
-attribute (and the LCMechanism's `monitored_output_states` <LCMechanism_Base.monitored_output_states>`
-attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
-`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
-`MappingProjection`) to the LCMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
-LCMechanism to set the `allocation <ControlSignal.allocation>` for each of the LCMechanism's ControlSignals.
-
-.. _LCMechanism_Control_Signals:
-
-Specifying Parameters to Control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-LCMechanisms are used to control the parameter values of other `Components <Component>` (including `Functions
-<Function>`).  A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
-(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
-parameters to be controlled by an LCMechanism can also be specified in the **control_signals**  argument of the
-constructor for an LCMechanism (or of the System that created it).  The **control_signals** argument must be a
-list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
-
-A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
-the ControlSignals for an LCMechanism are listed in its `control_signals <LCMechanism_Base.control_signals>`
-attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
-it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's
-`output_states <Mechanism_Base.output_states>` attribute.
 
 
 COMMENT:
@@ -98,6 +107,12 @@ EXAMPLES HERE
 EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
 COMMENT
 
+STRUCTURE:
+MODE INPUT_STATE <- NAMED ONE, LAST?
+SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
+CONTROL SIGNALS
+
+
 
 .. _LCMechanism_Execution:
 
@@ -106,9 +121,9 @@ Execution
 
 An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
-LCMechanism's `function <LCMechanism_Base.function>` takes as its input the `value <InputState.value>` of
+LCMechanism's `function <LCMechanism.function>` takes as its input the `value <InputState.value>` of
 its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
-<LCMechanism_Base.allocation_policy>` which specifies the value assigned to the `allocation
+<LCMechanism.allocation_policy>` which specifies the value assigned to the `allocation
 <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
 calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
 to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
@@ -211,7 +226,7 @@ class LCMechanism(ControlMechanism_Base):
     control_signals : List[parameter of Mechanism or its function, \
                       ParameterState, Mechanism tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the LCMechanism
-        (see `control_signals <LCMechanism_Base.control_signals>` for details).
+        (see `control_signals <LCMechanism.control_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the LCMechanism's `ControlSignals <ControlSignal>`,
@@ -260,7 +275,7 @@ class LCMechanism(ControlMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the LCMechanism's constructor are used to generate its
-        `allocation_policy <LCMechanism_Base.allocation_policy>`.
+        `allocation_policy <LCMechanism.allocation_policy>`.
 
     allocation_policy : 2d np.array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
