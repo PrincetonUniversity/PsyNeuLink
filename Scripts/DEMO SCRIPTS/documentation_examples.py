@@ -21,9 +21,9 @@ from PsyNeuLink.Components.States.ModulatorySignals import ControlSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
     INTERCEPT, MECHANISM, MODULATION, GATE
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM, \
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, \
     NOISE, THRESHOLD, TimeScale
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import \
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
     ComparatorMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism \
     import \

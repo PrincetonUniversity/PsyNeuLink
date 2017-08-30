@@ -139,8 +139,8 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, k
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, \
     kwCompatibilityNumeric
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ERROR_SIGNAL, MONITORED_VALUES, \
-    ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+    import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'

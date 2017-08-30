@@ -52,7 +52,7 @@ register_category(entry=DefaultControlMechanism,
 
 # DDM (used as DefaultMechanism)
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
-register_category(entry=DDM,
+register_category(entry=DDM.DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
@@ -251,7 +251,7 @@ Mechanism.classPreferences = ComponentPreferenceSet(owner=Mechanism,
                                                    level=PreferenceLevel.TYPE,
                                                    context=".__init__.py")
 
-DDM.classPreferences = ComponentPreferenceSet(owner=DDM,
+DDM.classPreferences = ComponentPreferenceSet(owner=DDM.DDM,
                                              prefs=ComponentDefaultPrefDicts[PreferenceLevel.TYPE],
                                              level=PreferenceLevel.TYPE,
                                              context=".__init__.py")

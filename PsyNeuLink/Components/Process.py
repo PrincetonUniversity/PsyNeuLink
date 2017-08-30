@@ -470,7 +470,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -2076,7 +2076,8 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
+        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism  \
+            import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
@@ -2566,7 +2567,7 @@ class Process_Base(Process):
                      re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
-            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
+            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
                 import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:

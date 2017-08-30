@@ -21,7 +21,7 @@ from PsyNeuLink.Globals.Keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CON
     MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, \
     WEIGHTS
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import \
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import \
     ComparatorMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock

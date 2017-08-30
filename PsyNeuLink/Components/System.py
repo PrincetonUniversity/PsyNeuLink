@@ -385,7 +385,7 @@ class SystemError(Exception):
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -2417,8 +2417,7 @@ class System_Base(System):
         #                      re.sub('[\[,\],\n]','',str(["{:0.3}".
         #                                         format(float(i)) for i in object_item.mechanism.output_state.value]))))
         if self.learning:
-            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
-                import MSE
+            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue
@@ -2786,8 +2785,10 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
+        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+            import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+            import LearningMechanism
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         import graphviz as gv

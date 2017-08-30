@@ -160,7 +160,8 @@ from PsyNeuLink.Globals.Keywords import ENABLED, FUNCTION, FUNCTION_PARAMS, INIT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import iscompatible, parameter_spec
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ERROR_SIGNAL, ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+    import ERROR_SIGNAL, ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 # Params:

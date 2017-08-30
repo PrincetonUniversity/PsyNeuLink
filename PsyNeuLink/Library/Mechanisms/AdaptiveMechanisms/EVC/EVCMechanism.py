@@ -309,7 +309,7 @@ from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import \
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
     ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Function
@@ -962,7 +962,8 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import _validate_monitored_value
+        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+            import _validate_monitored_value
 
         # PARSE SPECS
 
