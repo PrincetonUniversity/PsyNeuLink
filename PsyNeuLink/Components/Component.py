@@ -669,7 +669,7 @@ class Component(object):
             return vardict
 
     class ClassDefaults(Defaults):
-        variable = NotImplemented
+        pass
 
     class InstanceDefaults(Defaults):
         def __init__(self, **kwargs):
@@ -741,7 +741,11 @@ class Component(object):
         self.execution_status = ExecutionStatus.INITIALIZING
         self.init_status = InitStatus.UNSET
 
-        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **param_defaults)
+        defaults = self.ClassDefaults.values().copy()
+        defaults.update(param_defaults)
+        del defaults[VARIABLE]
+
+        self.instance_defaults = self.InstanceDefaults(variable=default_variable, **defaults)
 
         # These ensure that subclass values are preserved, while allowing them to be referred to below
         self.paramInstanceDefaults = {}
@@ -1115,7 +1119,7 @@ class Component(object):
 
 
             # The params arg is never a default (nor is anything in it)
-            if arg_name is PARAMS:
+            if arg_name is PARAMS or arg_name is VARIABLE:
                 continue
 
             # Check if param exists in paramClassDefaults
