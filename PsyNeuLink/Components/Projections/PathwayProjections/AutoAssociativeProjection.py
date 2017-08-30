@@ -81,13 +81,20 @@ Class Reference
 ---------------
 
 """
+import numbers
+import numpy as np
+import typecheck as tc
 
-from PsyNeuLink.Globals.Keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, AUTO, HETERO, CHANGED
-from PsyNeuLink.Components.Projections.Projection import *
+from PsyNeuLink.Components.Component import parameter_keywords
+from PsyNeuLink.Components.Functions.Function import get_matrix
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Functions.Function import *
+from PsyNeuLink.Components.Projections.Projection import projection_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Scheduling.TimeScale import CentralClock
+from PsyNeuLink.Globals.Keywords import AUTO, AUTO_ASSOCIATIVE_PROJECTION, CHANGED, DEFAULT_MATRIX, HETERO, HOLLOW_MATRIX, INITIALIZING, MATRIX
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
+from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
+from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 parameter_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})

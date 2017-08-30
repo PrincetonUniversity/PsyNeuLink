@@ -460,6 +460,7 @@ class KWTA(RecurrentTransferMechanism):
                  decay: tc.optional(tc.any(int, float)) = 1.0,
                  noise: is_numeric_or_none = 0.0,
                  time_constant: is_numeric_or_none = 1.0,
+                 integrator_mode=False,
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
@@ -478,6 +479,7 @@ class KWTA(RecurrentTransferMechanism):
             output_states = [RESULT]
 
         params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  integrator_mode=integrator_mode,
                                                   k_value=k_value,
                                                   threshold=threshold,
                                                   ratio=ratio,
@@ -498,6 +500,7 @@ class KWTA(RecurrentTransferMechanism):
                          matrix=matrix,
                          auto=auto,
                          hetero=hetero,
+                         integrator_mode=integrator_mode,
                          initial_value=initial_value,
                          decay=decay,
                          noise=noise,
