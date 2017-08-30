@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms import TransferMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 
 
 def test_reinforcement():

@@ -3,7 +3,7 @@ import numpy as np
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Globals.Keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 
 
 # does not run a system, can be used to ensure that running processes alone still works
