@@ -12,69 +12,134 @@
 Overview
 --------
 
-A KWTA is a subclass of `RecurrentTransferMechanism` that implements a single-layered recurrent network with
-k-winners-take-all (KWTA) behavior.
+A KWTA is a subclass of `RecurrentTransferMechanism` that implements a k-winners-take-all (kWTA) constraint on the
+number of elements of the Mechanism's `variable <KWTA.variable>` that are above a specified threshold.  The
+implementation is based on the one  described in `O'Reilly and Munakata, 2012
+<https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations>`_.
 
 .. _KWTA_Creation:
 
 Creating a KWTA
 ---------------
 
-Similar to a `RecurrentTransferMechanism`, a KWTA mechanism can be created directly by calling its constructor, or by
-using the `mechanism() <Mechanism.mechanism>` function and specifying KWTA as its **mech_spec** argument. The
-**k_value**, **threshold**, and **ratio** arguments specify KWTA's characteristic attributes. The **k_value** argument
-specifies the `k_value` attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the `threshold` attribute (which is specified by the **threshold** argument).
-
-For any input, there is a range of possible adjusted inputs that would satisfy the requirement for k elements to be
-above the threshold; the **ratio** argument specifies the `ratio` attribute, which determines where within this range
-the final adjusted input falls: a `ratio` of 1 gives the highest value, and a `ratio` of 0 gives the lowest value in the
-accepted range. The **inhibition_only** argument specifies the `inhibition_only <KWTA.inhibition_only>` attribute, which
-specifies whether the KWTA should be allowed to increase the overall value of the input. The **average_based** argument
-specifies the `average_based <KWTA.average_based>` attribute, which specifies whether the KWTA uses average-based
-scaling. Average-based scaling uses the average of the top k values, and the average of the remaining values, to
-determine the inhibition range (before the `ratio <KWTA.ratio>` is used to choose where within this range the actual
-inhibition is chosen). In all other respects, a KWTA is specified in the same way as a standard
-`RecurrentTransferMechanism`.
-
-COMMENT:
-
-CW: I know that some of the stuff above should be moved down to the Structure section but I don't understand which stuff
-belongs in Structure and which belongs in the Creation section, so I skipped the Structure section for now.
-And if you're looking for the KWTA explanation written by Randy: the URL is
-https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations
+A KWTA Mechanism can be created directly by calling its constructor, or by using the `mechanism()
+<Mechanism.mechanism>` command and specifying KWTA as its **mech_spec** argument. The **k_value**, **threshold**,
+and **ratio** arguments can be used to specify the function of the KWTA Mechanism, and default to a condition
+in which half of the elements in the KWTA Mechanism's `variable <KWTA.variable>` (**k_value** = 0.5) are above 0 and
+half are below (**threshold** = 0), achieved using an intermediate degree of value displacement (**ratio** = 0.5).
 
 .. _KWTA_Structure:
 
 Structure
 ---------
 
-COMMENT
+The KWTA calculates an offset to apply to all elements of the Mechanism's `variable <KWTA.variable>` array so that it
+has a specified number of the elements that are at or above a specified threshold value.  Typically, this constraint
+can be satisfied in a number of ways;  how it is satisfied is determined by three parameters and two options of the
+KWTA:
+
+.. _KWTA_k_value:
+
+* `k_value <KWTA.k_value>` parameter -- determines the number of elements of its `variable <KWTA.variable>` that should
+  be at or above the specified `threshold <KWTA.threshold>`.  A value between 0 and 1 specifies the *proportion* of
+  elements that should be at or above the `threshold <KWTA.threshold>`, while a positive integer specifies the
+  *number* of elements that should be at or above the `threshold <KWTA.threshold>`.  A negative integer specifies the
+  number of elements that should be below the `threshold <KWTA.threshold>`.  Whether or not the exact specification
+  is achieved depends on the settings of the `average_based <KWTA.average_based>` and `inhibition_only
+  <KWTA.inhibition_only>` options (see below).
+
+.. _KWTA_threshold:
+
+* `threshold <KWTA.threshold>` parameter -- determines the value at or above which the KTWA seeks to assign
+  `k_value <KWTA.k_value>` elements of its `variable <KWTA.variable>`.
+
+.. _KWTA_ratio:
+
+* `ratio <KWTA.ratio>` parameter -- determines how the offset applied to the elements of the KWTA's `variable
+  <KWTA.variable>` is selected from the scope of possible values;  the `ratio <KWTA.ratio>` must be a number
+  between 0 and 1.  An offset is picked that is above the low end of the scope by a proportion of the scope
+  equal to the `ratio <KWTA.ratio>` parameter.  How the scope is calculated is determined by the `average_based
+  <KWTA.average_based>` option, as described below.
+
+.. _KWTA_average_based:
+
+* `average_based <KWTA.average_based>` option -- determines how the scope of values is calculated from which the
+  offset applied to the elements of the KWTA's `variable <KWTA.variable>` is selected;  If `average_based
+  <KWTA.average_based>` is `False`, the low end of the scope is the offset that sets the k-th highest element exactly at
+  at the threshold (that is, the smallest value that insures that `k_value <KWTA.k_value>` elements are at or above the
+  `threshold <KWTA.threshold>`;  the high end of the scope is the offset that sets the k+1-th highest element exactly at
+  the threshold (that is, the largest possible value, such that the `k_value <KWTA.k_value>` elements but no more are
+  above the `threshold <KWTA.threshold>` (i.e., the next one is exactly at it). With this setting, all values of offset
+  within the scope generate exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If
+  `average_based <KWTA.average_based>` is `True`, the low end of the scope is the offset that places the *average* of
+  the elements with the `k_value <KWTA.k_value>` highest values at the `threshold <KWTA.threshold>`, and the high end of
+  the scope is the offset that places the average of the remaining elements at the `threshold <KWTA.threshold>`.  In
+  this case, the lowest values of offset within the scope may produce fewer than `k_value <KWTA.k_value>` elements at or
+  above the `threshold <KWTA.threshold>`, while the highest values within the scope may produce more.  An offset is
+  picked from the scope as specified by the `ratio <KWTA.ratio>` parameter (see `above <KWTA_ratio>`).
+
+  .. note::
+     If the `average_based <KWTA.average_based>` option is `False` (the default), the KWTA's `variable <KWTA.variable>`
+     is guaranteed to have exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTA.threshold>` (that
+     is, for *any* value of the `ratio <KTWA.ratio>`).  However, if `average_based <KWTA.average_based>` is `True`, this
+     guarantee does not hold;  `variable <KWTA.variable>` may have fewer than `k_value <KWTA.k_value>` elements at or
+     above the `threshold <KWTA.threshold>` (if the `ratio <KWTA.ratio>` is low), or more than `k_value <KWTA.k_value>`
+     (if the `ratio <KWTA.ratio>` is high).
+
+  Although setting the `average_based <KWTA.average_based>` option to `True` does not guarantee that *exactly* `k_value
+  <KWTA.k_value>` elements will be above the threshold, the additional flexibility it affords in the Mechanism's
+  `variable <KWTA.variable>` attribute  can be useful in some settings -- for example, when training hidden layers
+  in a `multilayered network <LearningMechanism_Multilayer_Learning>`, which may require different numbers of elements
+  to be above the specified `threshold <KWTA.threshold>` for different input-target pairings.
+
+.. _KWTA_inhibition_only:
+
+* `inhibition_only <KWTA.inhibition_only>` option -- determines whether the offset applied to the elements of the
+  KWTA's `variable <KWTA.variable>` is allowed to be positive (i.e., whether the KWTA can increase the value of any
+  elements of its `variable <KWTA.variable>`).  If set to `False`, the KWTA will use any offset value determined by
+  the `ratio <KWTA.ratio>` parameter from the scope determined by the `average_based <KTWA.average_based>` option
+  (including positive offsets). If `inhibition_only <KWTA.inhibition_only>` is `True`, then any positive offset
+  selected is "clipped" at (i.e re-assigned a value of) 0.  This ensures that the values of the elements of the KWTA's
+  `variable <KWTA.variable>` are never increased.
+
+  .. note::
+     If the `inhibition_only <KWTA.inhibition_only>` option is set to `True`, the number of elements at or above the
+     `threshold <KWTA.threshold>` may fall below `k_value <KWTA.k_value>`; and, if the input to the KWTA is sufficiently
+     low, the value of all elements may decay to 0 (depending on the value of the `decay <KWTA.decay>` parameter.
+
+In all other respects, a KWTA has the same attributes and is specified in the same way as a standard
+`RecurrentTransferMechanism`.
+
 
 .. _KWTA_Execution:
 
 Execution
 ---------
 
-Like every `RecurrentTransferMechanism`, a KWTA has a recurrent `AutoAssociativeProjection` which multiplies its output
-from the previous execution by its `matrix <AutoAssociativeProjection.matrix>`, so that the output of the previous
-execution is added to the input.
+When a KTWA is executed, it first determines its `variable <KWTA.variable>` as follows:
 
-Afterwards, the KWTA does its adjustment of the input: an additive offset is calculated and added to the input such that
-a correct amount or proportion of values (based on the `k_value <KWTA.k_value>`) is above the
-`threshold <KWTA.threshold>`. (That is, the same offset is added to each input value.) As mentioned above, there is
-usually a range of possible offsets that would satisfy having k elements above the threshold: within this range, the
-`ratio <KWTA.ratio>` is used to calculate the chosen offset, with higher values of `ratio <KWTA.ratio>` (closer to 1)
-leading to higher offsets, and lower values (closer to 0) leading to lower offsets. (For the standard, non-average-based
-KWTA, the minimum of the range is the offset that would set the k-th highest element exactly at the threshold, and the
-maximum of the range is the offset that would set the k+1-th highest element exactly at the threshold. For average-based
-KWTA, the minimum of the range is the average of the k offsets which set each of the top k elements at the threshold,
-and the maximum of the range is the average of the other offsets which set the other elements at the threshold. The
-average-based KWTA has less setpoint behavior, since it sometimes allows for more or less than k elements to be above
-the threshold.)
+* First, like every `RecurrentTransferMechanism`, it combines the input it receives from its recurrent
+  `AutoAssociativeProjection` (see `Recurrent_Transfer_Structure <Recurrent_Transfer_Structure>`) with the input
+  from any other `MappingProjections <MappingProjection>` it receives, and assigns this to its `variable
+  <KWTA.variable>` attribute.
+..
+* Then it modifies its `variable <KWTA.variable>`, by calculating and assigning an offset to its elements, so that
+  as close to `k_value <KWTA.k_value>` elements as possible are at or above the `threshold <KWTA.threshold>`.  The
+  offset is determined by carrying out the following steps in each execution of the KTWA:
 
-If the offset is greater than zero, and the `inhibition_only <KWTA.inhibition_only>` attribute is True, then the offset
-is set to 0. Finally, the input, added to the offset, is passed to the `function <KWTA.function>`.
+  - calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
+    `average_based <KWTA.average_based>` attribute (see `above <KWTA_average_based>`);
+  |
+  - select an offset from the scope based on the `ratio <KWTA.ratio>` option (see `above <KWTA_ratio>`);
+  |
+  - constrain the offset to be 0 or negative if the `inhibition_only <KWTA.inhibition_only>` option is set (see `above
+    <KWTA_inhibition_only>`;
+  |
+  - apply the offset to all elements of the `variable <KWTA.variable>`.
+..
+The modified `variable <KWTA.variable>` is then passed to the KWTA's `function <KWTA.function>` to determine its
+`value <KWTA.value>`.
+
 
 .. _KWTA_Reference:
 
@@ -127,8 +192,8 @@ class KWTA(RecurrentTransferMechanism):
     k_value=0.5,                \
     threshold=0,                \
     ratio=0.5,                  \
-    inhibition_only=True,       \
     average_based=False,        \
+    inhibition_only=True,       \
     range=None,                 \
     time_scale=TimeScale.TRIAL, \
     params=None,                \
@@ -185,7 +250,7 @@ class KWTA(RecurrentTransferMechanism):
         specifies the amount by which to decrement its `previous_input <KWTA.previous_input>` each time it is executed.
 
     noise : float or function : default 0.0
-        a stochastically-sampled value added to the result of the `function <KWTA.function>`:
+        specifies a stochastically-sampled value added to the result of the `function <KWTA.function>`:
         if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
         if it is a function, it must return a scalar value.
 
@@ -197,36 +262,30 @@ class KWTA(RecurrentTransferMechanism):
          (1-time_constant * result on previous time_step)
 
     k_value : number : default 0.5
-        the proportion or number of input values (within the input vector) that should be above the
-        `threshold <KWTA.threshold>` of the KWTA. A `k_value` greater than zero and less than one specifies the
-        proportion of input values that should be above the `threshold <KWTA.threshold>`, while a positive integer
-        `k_value` specifies the number of values that should be above the `threshold <KWTA.threshold>`. A
-        negative integer `k_value` specifies the number of values that should be below the threshold.
+        specifies the proportion or number of the elements of `variable <KWTA.variable>` that should be at or above
+        the `threshold <KWTA.threshold>`. A value between 0 and 1 specifies the proportion of elements that should be at
+        or above the `threshold <KWTA.threshold>`, while a positive integer specifies the number of values that should
+        be at or above the `threshold <KWTA.threshold>`. A negative integer specifies the number of elements that should
+        be below the `threshold <KWTA.threshold>`.
 
     threshold : number : default 0
-        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
-        values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below. Generally, the
-        threshold should be some intermediate value such that inputs above the threshold are considered "high" while
-        inputs below the threshold are considered "low".
+        specifies the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
+        `variable <KWTA.variable>`.
 
     ratio : number : default 0.5
-        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`:
-        `ratio` should be a number between 0 and 1. There is generally a range of possible offsets that satisfy the
-        constraints set by `k_value <KWTA.k_value>` and `threshold <KWTA.threshold>`: a `ratio` of 1 results in using
-        the greatest offset, a `ratio` of 0 results in using the least offset, etc.
-
-    inhibition_only : boolean : default True
-        specifies whether the KWTA should be allowed to use positive offsets. If set to False, the KWTA will use any
-        offset value, including positive offsets, ensuring that there are always the expected number of values above and
-        below the threshold. If `inhibition_only` is True, then the KWTA will only use negative or zero offsets,
-        changing all positive offsets to zero. This may be the desired behavior: for example, the user might expect the
-        KWTA to only "inhibit" neurons rather than "excite" them, or might expect that after many low inputs, the KWTA
-        should settle into an entirely non-excited state with no values above the `threshold <KWTA.threshold>`
+        specifies the offset used to adjust the elements of `variable <KWTA.variable>` so that there are the number
+        specified by `k_value <KWTA.k_value>` at or above the `threshold <KWTA.threshold>`;  it must be a
+        number from 0 to 1 (see `ratio <KWTA_ratio>` for additional information).
 
     average_based : boolean : default False
-        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-        top k values, and the average of the remaining values, to determine the inhibition range (before the
-        `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
+        specifies whether the average-based scaling is used to determine the scope of offsets (see `average_based
+        <KWTA_average_based>` for additional information).
+
+    inhibition_only : boolean : default True
+        specifies whether positive offsets can be applied to the `variable <KWTA.variable>` in an effort to achieve
+        `k_value <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If set to `False`, any offset
+        is allowed, including positive offsets;  if set to `True`, a positive offset will be re-assigned the value of 0
+        (see `inhibition_only <KWTA_inhibition_only>` for additional information).
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <KWTA.function>`:
@@ -297,25 +356,27 @@ class KWTA(RecurrentTransferMechanism):
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
     k_value : number
-        the proportion or number of input values (within the input vector) that should be above the
-        `threshold <KWTA.threshold>` of the KWTA.
+        determines the number or proportion of elements of `variable <KWTA.variable>` that should be above the
+        `threshold <KWTA.threshold>` of the KWTA (see `k_value <KWTA_k_value>` for additional information).
 
     threshold : number
-        specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
-        values (according to `k_value <KWTA.k_value>`) above the threshold, and some values below
+        determines the threshold at or above which the KTWA seeks to assign `k_value <KWTA.k_value>` elements of its
+        `variable <KWTA.variable>`.
 
     ratio : number
-        the ratio used to choose the offset used by the KWTA mechanism when `adjusting the input <KWTA_Execution>`.
-        Higher ratios result in greater offsets, lower ratios result in lower offsets, within the appropriate range.
-
-    inhibition_only : boolean : default True
-        specifies whether the KWTA is allowed to use positive offsets (if `inhibition_only` is True, then the KWTA will
-        set all positive offsets to 0 instead).
+        determines the offset used to adjust the elements of `variable <KWTA.variable>` so that there are `k_value
+        <KWTA.k_value>` elements at or above the `threshold <KWTA.threshold>` (see `ratio <KWTA_ratio>` for additional
+        information).
 
     average_based : boolean : default False
-        specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-        top k values, and the average of the remaining values, to determine the inhibition range (before the
-        `ratio <KWTA.ratio>` is used to choose where within this range the actual inhibition is chosen).
+        determines the way in which the scope of offsets is determined, from which the one is selected that is applied
+        to the elements of the `variable <KWTA.variable>` (see `average_based <KWTA_average_based>` for additional
+        information).
+
+    inhibition_only : boolean : default True
+        determines whether a positive offset is allowed;  if it is `True`, then the value of the offset is
+        "clipped" at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
+        `inhibition_only <KWTA_inhibition_only>` for additional information).
 
     range : Tuple[float, float]
         determines the allowable range of the result: the first value specifies the minimum allowable value
@@ -403,8 +464,8 @@ class KWTA(RecurrentTransferMechanism):
                  k_value: is_numeric_or_none = 0.5,
                  threshold: is_numeric_or_none = 0,
                  ratio: is_numeric_or_none = 0.5,
-                 inhibition_only=True,
                  average_based=False,
+                 inhibition_only=True,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,

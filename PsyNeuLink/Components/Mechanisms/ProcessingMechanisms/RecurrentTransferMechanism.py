@@ -39,7 +39,7 @@ standard `TransferMechanism`.
 
 COMMENT:
 8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
-created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function and specifying
+created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` command and specifying
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
@@ -50,18 +50,16 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`,
-`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` parameters, which
-specify a self-projecting `AutoAssociativeProjection`;  that is, one that projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.
-In all other respects the Mechanism is identical to a standard `TransferMechanism`.
-
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
-multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it is
-executed.  It also has two additional OutputStates:  an ENERGY OutputState and, if its
-`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
-OutputState, that each report the respective values of the vector in it its
-`primary (RESULTS) OutputState <OutputState_Primary>`.
+The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
+is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
+InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
+`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes.
+In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that
+multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
+is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
+<RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
+OutputState.  Each of these report the respective values of the vector in it its `primary (*RESULTS*) OutputState
+<OutputState_Primary>`.  In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Execution:
 
