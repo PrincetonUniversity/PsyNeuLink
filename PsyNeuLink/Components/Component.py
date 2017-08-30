@@ -803,10 +803,10 @@ class Component(object):
             # type_requirements = [self.__class__ if item=='Function' else item for item in type_requirements]
 
             # get type for kwComponentCategory specification
-            import PsyNeuLink.Components.Functions.Function
+            from PsyNeuLink.Components.Functions.Function import Function_Base
             if kwComponentCategory in type_requirements:
                type_requirements[type_requirements.index(kwComponentCategory)] = \
-                   type(PsyNeuLink.Components.Functions.Function.Function_Base)
+                   type(Function_Base)
 
             if required_param not in self.paramClassDefaults.keys():
                 raise ComponentError("Param \'{}\' must be in paramClassDefaults for {}".
