@@ -1,6 +1,6 @@
 import pytest
 import typecheck
-
+import numpy as np
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError
@@ -271,7 +271,6 @@ def test_DDM_input_list_len_2():
 def test_DDM_input_fn():
     with pytest.raises(TypeError) as error_text:
         stim = NormalDist().function
-        print(stim)
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
@@ -525,3 +524,25 @@ def test_DDM_size_too_long():
             time_scale=TimeScale.TIME_STEP
         )
     assert "is greater than 1, implying there are" in str(error_text.value)
+
+
+def test_DDM_size_too_long():
+
+    D = DDM(
+        name='DDM',
+        function=DriftDiffusionIntegrator(
+            noise=0.0,
+            rate=-5.0,
+            time_step_size=0.2,
+            t0=0.5
+        )
+    )
+    # t0 = 0.5
+    np.testing.assert_allclose(D.function_object.previous_time, 0.5, atol=1e-08)
+    D.execute(10)   # t_1 = 0.5 + 0.2 = 0.7
+    np.testing.assert_allclose(D.function_object.previous_time, 0.7, atol=1e-08)
+    D.execute(10)   # t_2 = 0.7 + 0.2 = 0.9
+    D.execute(10)   # t_3 = 0.9 + 0.2 = 1.1
+    D.execute(10)   # t_4 = 1.1 + 0.2 = 1.3
+    D.execute(10)  # t_4 = 1.3 + 0.2 = 1.5
+    np.testing.assert_allclose(D.function_object.previous_time, 1.5, atol=1e-08)

@@ -3927,7 +3927,7 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Integrate current value of `variable <DriftDiffusionIntegrator.variable>` with its prior value.
+    Accumulate evidence overtime based on a stimulus and previous position.
 
     Arguments
     ---------
@@ -3947,6 +3947,10 @@ class DriftDiffusionIntegrator(
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
         <DriftDiffusionIntegrator.time_step_size>` for details.
+
+    t0 : float
+        determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
+        the DDM Mechanism.
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -3988,19 +3992,18 @@ class DriftDiffusionIntegrator(
         determines the timing precision of the integration process and is used to scale the `noise
         <DriftDiffusionIntegrator.noise>` parameter appropriately.
 
+    t0 : float
+        determines the start time of the integration process and is used to compute the RESPONSE_TIME output state of
+        the DDM Mechanism.
+
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
         `previous_value <DriftDiffusionIntegrator.previous_value>` is set.
 
         If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
 
-        TBI:
-
-        Initializer may be a function or list/array of functions.
-
-        If initializer is specified as a single float or function, while `variable <DriftDiffusionIntegrator.variable>` is
-        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-        this means that the function will be executed separately for each variable element.
+    previous_time : float
+        stores previous time at which the function was executed and accumulates according to time_step_size
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
@@ -4037,6 +4040,7 @@ class DriftDiffusionIntegrator(
                  noise=0.0,
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
+                 t0=0.0,
                  initializer=ClassDefaults.variable,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4046,6 +4050,7 @@ class DriftDiffusionIntegrator(
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   time_step_size=time_step_size,
+                                                  t0=t0,
                                                   initializer=initializer,
                                                   noise=noise,
                                                   offset=offset,
@@ -4062,7 +4067,7 @@ class DriftDiffusionIntegrator(
 
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
-
+        self.previous_time = self.t0
         self.auto_dependent = True
 
     def _validate_noise(self, noise, var):
@@ -4077,8 +4082,8 @@ class DriftDiffusionIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <DriftDiffusionIntegrator.variable>` combined with some fraction of
-        `previous_value <DriftDiffusionIntegrator.previous_value>`.
+        Return: previous_value + rate * new_value * time_step_size + (
+            time_step_size * noise) * np.random.normal()
 
         Arguments
         ---------
@@ -4090,9 +4095,6 @@ class DriftDiffusionIntegrator(
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
@@ -4126,6 +4128,7 @@ class DriftDiffusionIntegrator(
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
+            self.previous_time += time_step_size
 
         return adjusted_value
 
