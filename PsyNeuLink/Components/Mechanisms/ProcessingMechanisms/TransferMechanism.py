@@ -83,14 +83,17 @@ the following parameters (in addition to any specified for the `function <Transf
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if the `time_scale <TransferMechanism.time_scale>` attribute
-      is `TimeScale.TIME_STEP`, the input is exponentially time-averaged before transforming it, using the value
-      of the `time_constant <TransferMechanism.time_constant>` attribute as the rate of integration (a higher value
-      specifies a faster rate); if `time_scale <TransferMechanism.time_scale>` is `TimeScale.TRIAL`,
-      `time_constant <TransferMechanism.time_constant>` is ignored.
-    ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
+    ..
+    * `integrator_mode <TransferMechanism.integrator_mode>`: when `integrator_mode <TransferMechanism.integrator_mode>`
+      is set to True, a TransferMechanism exponentially time-averages its input before transforming it.
+    ..
+    * `time_constant <TransferMechanism.time_constant>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
+      attribute is set to True, the `time_constant <TransferMechanism.time_constant>` attribute is the rate of
+      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is
+      False, `time_constant <TransferMechanism.time_constant>` is ignored and time-averaging does not occur.
+
 
 
 .. _Transfer_OutputState:
@@ -194,6 +197,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     initial_value=None,          \
     noise=0.0,                   \
     time_constant=1.0,           \
+    integrator_mode=False,       \
     range=(float:min, float:max),\
     time_scale=TimeScale.TRIAL,  \
     params=None,                 \
@@ -246,8 +250,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         or a custom function.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input (only relevant if
-        `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if `integrator_mode
+        <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
@@ -256,11 +260,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`::
+        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+        set to True::
 
-         result = (time_constant * current input) +
-         (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) + ((1-time_constant) * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -272,11 +275,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
-        parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
         a string used for the name of the Mechanism.
@@ -312,8 +310,8 @@ class TransferMechanism(ProcessingMechanism_Base):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input
-        (only relevant if `time_constant <TransferMechanism.time_constant>` parameter is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if `integrator_mode
+        <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
@@ -322,19 +320,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input
-        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+        set to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (time_constant * current input) + ( (1-time_constant) * result on previous time_step)
+
+    integrator_mode : boolean : default False
+        when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
+        (see `time_constant <TransferMechanisms.time_constant>`).
 
     range : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
         is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
-
-    previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the previous execution of the Mechanism.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
@@ -360,9 +359,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         ones may be included, based on the specifications made in the
         **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
         <TransferMechanism_Standard_OutputStates>`).
-
-    time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
         the name of the Mechanism.
