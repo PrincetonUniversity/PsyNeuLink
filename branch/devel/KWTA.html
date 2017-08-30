@@ -166,52 +166,132 @@
 <span id="kwta"></span><h1>KWTA<a class="headerlink" href="#module-ProcessingMechanisms.KWTA" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A KWTA is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a single-layered recurrent network with
-k-winners-take-all (KWTA) behavior.</p>
+<p>A KWTA is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that implements a k-winners-take-all (kWTA) constraint on the
+number of elements of the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that are above a specified threshold.  The
+implementation is based on the one  described in <a class="reference external" href="https://grey.colorado.edu/CompCogNeuro/index.php/CCNBook/Networks/kWTA_Equations">O&#8217;Reilly and Munakata, 2012</a>.</p>
 </div>
 <div class="section" id="creating-a-kwta">
 <span id="kwta-creation"></span><h2>Creating a KWTA<a class="headerlink" href="#creating-a-kwta" title="Permalink to this headline">¶</a></h2>
-<p>Similar to a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>, a KWTA mechanism can be created directly by calling its constructor, or by
-using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> function and specifying KWTA as its <strong>mech_spec</strong> argument. The
-<strong>k_value</strong>, <strong>threshold</strong>, and <strong>ratio</strong> arguments specify KWTA&#8217;s characteristic attributes. The <strong>k_value</strong> argument
-specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> attribute of the KWTA, which is the number (or proportion) of values in the input vector that
-should be above the <a class="reference internal" href="Function.html#Function.NavarroAndFuss.threshold" title="Function.NavarroAndFuss.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> attribute (which is specified by the <strong>threshold</strong> argument).</p>
-<p>For any input, there is a range of possible adjusted inputs that would satisfy the requirement for k elements to be
-above the threshold; the <strong>ratio</strong> argument specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> attribute, which determines where within this range
-the final adjusted input falls: a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 1 gives the highest value, and a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 0 gives the lowest value in the
-accepted range. The <strong>inhibition_only</strong> argument specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> attribute, which
-specifies whether the KWTA should be allowed to increase the overall value of the input. The <strong>average_based</strong> argument
-specifies the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> attribute, which specifies whether the KWTA uses average-based
-scaling. Average-based scaling uses the average of the top k values, and the average of the remaining values, to
-determine the inhibition range (before the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is used to choose where within this range the actual
-inhibition is chosen). In all other respects, a KWTA is specified in the same way as a standard
+<p>A KWTA Mechanism can be created directly by calling its constructor, or by using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism()</span></code></a> command and specifying KWTA as its <strong>mech_spec</strong> argument. The <strong>k_value</strong>, <strong>threshold</strong>,
+and <strong>ratio</strong> arguments can be used to specify the function of the KWTA Mechanism, and default to a condition
+in which half of the elements in the KWTA Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (<strong>k_value</strong> = 0.5) are above 0 and
+half are below (<strong>threshold</strong> = 0), achieved using an intermediate degree of value displacement (<strong>ratio</strong> = 0.5).</p>
+</div>
+<div class="section" id="structure">
+<span id="kwta-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>The KWTA calculates an offset to apply to all elements of the Mechanism&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> array so that it
+has a specified number of the elements that are at or above a specified threshold value.  Typically, this constraint
+can be satisfied in a number of ways;  how it is satisfied is determined by three parameters and two options of the
+KWTA:</p>
+<ul class="simple" id="kwta-k-value">
+<li><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> parameter &#8211; determines the number of elements of its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should
+be at or above the specified <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  A value between 0 and 1 specifies the <em>proportion</em> of
+elements that should be at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while a positive integer specifies the
+<em>number</em> of elements that should be at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  A negative integer specifies the
+number of elements that should be below the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  Whether or not the exact specification
+is achieved depends on the settings of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> options (see below).</li>
+</ul>
+<ul class="simple" id="kwta-threshold">
+<li><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> parameter &#8211; determines the value at or above which the KTWA seeks to assign
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+<ul class="simple" id="kwta-ratio">
+<li><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter &#8211; determines how the offset applied to the elements of the KWTA&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is selected from the scope of possible values;  the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> must be a number
+between 0 and 1.  An offset is picked that is above the low end of the scope by a proportion of the scope
+equal to the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter.  How the scope is calculated is determined by the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option, as described below.</li>
+</ul>
+<ul id="kwta-average-based">
+<li><p class="first"><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option &#8211; determines how the scope of values is calculated from which the
+offset applied to the elements of the KWTA&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is selected;  If <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">False</span></code>, the low end of the scope is the offset that sets the k-th highest element exactly at
+at the threshold (that is, the smallest value that insures that <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements are at or above the
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>;  the high end of the scope is the offset that sets the k+1-th highest element exactly at
+the threshold (that is, the largest possible value, such that the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements but no more are
+above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (i.e., the next one is exactly at it). With this setting, all values of offset
+within the scope generate exactly <code class="xref any docutils literal"><span class="pre">k_value</span></code> elements at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  If
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, the low end of the scope is the offset that places the <em>average</em> of
+the elements with the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> highest values at the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, and the high end of
+the scope is the offset that places the average of the remaining elements at the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  In
+this case, the lowest values of offset within the scope may produce fewer than <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or
+above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while the highest values within the scope may produce more.  An offset is
+picked from the scope as specified by the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">above</span></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option is <code class="xref any docutils literal"><span class="pre">False</span></code> (the default), the KWTA&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+is guaranteed to have exactly <code class="xref any docutils literal"><span class="pre">k_value</span></code> elements at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (that
+is, for <em>any</em> value of the <code class="xref any docutils literal"><span class="pre">ratio</span></code>).  However, if <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, this
+guarantee does not hold;  <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> may have fewer than <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or
+above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (if the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is low), or more than <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>
+(if the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is high).</p>
+</div>
+<p>Although setting the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> option to <code class="xref any docutils literal"><span class="pre">True</span></code> does not guarantee that <em>exactly</em> <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements will be above the threshold, the additional flexibility it affords in the Mechanism&#8217;s
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute  can be useful in some settings &#8211; for example, when training hidden layers
+in a <a class="reference internal" href="LearningMechanism.html#learningmechanism-multilayer-learning"><span class="std std-ref">multilayered network</span></a>, which may require different numbers of elements
+to be above the specified <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> for different input-target pairings.</p>
+</li>
+</ul>
+<ul id="kwta-inhibition-only">
+<li><p class="first"><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option &#8211; determines whether the offset applied to the elements of the
+KWTA&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is allowed to be positive (i.e., whether the KWTA can increase the value of any
+elements of its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>).  If set to <code class="xref any docutils literal"><span class="pre">False</span></code>, the KWTA will use any offset value determined by
+the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> parameter from the scope determined by the <code class="xref any docutils literal"><span class="pre">average_based</span></code> option
+(including positive offsets). If <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, then any positive offset
+selected is &#8220;clipped&#8221; at (i.e re-assigned a value of) 0.  This ensures that the values of the elements of the KWTA&#8217;s
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> are never increased.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option is set to <code class="xref any docutils literal"><span class="pre">True</span></code>, the number of elements at or above the
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> may fall below <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>; and, if the input to the KWTA is sufficiently
+low, the value of all elements may decay to 0 (depending on the value of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.decay" title="ProcessingMechanisms.KWTA.KWTA.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> parameter.</p>
+</div>
+</li>
+</ul>
+<p>In all other respects, a KWTA has the same attributes and is specified in the same way as a standard
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
 </div>
 <div class="section" id="execution">
 <span id="kwta-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Like every <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>, a KWTA has a recurrent <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> which multiplies its output
-from the previous execution by its <a class="reference internal" href="AutoAssociativeProjection.html#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, so that the output of the previous
-execution is added to the input.</p>
-<p>Afterwards, the KWTA does its adjustment of the input: an additive offset is calculated and added to the input such that
-a correct amount or proportion of values (based on the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>) is above the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. (That is, the same offset is added to each input value.) As mentioned above, there is
-usually a range of possible offsets that would satisfy having k elements above the threshold: within this range, the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is used to calculate the chosen offset, with higher values of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> (closer to 1)
-leading to higher offsets, and lower values (closer to 0) leading to lower offsets. (For the standard, non-average-based
-KWTA, the minimum of the range is the offset that would set the k-th highest element exactly at the threshold, and the
-maximum of the range is the offset that would set the k+1-th highest element exactly at the threshold. For average-based
-KWTA, the minimum of the range is the average of the k offsets which set each of the top k elements at the threshold,
-and the maximum of the range is the average of the other offsets which set the other elements at the threshold. The
-average-based KWTA has less setpoint behavior, since it sometimes allows for more or less than k elements to be above
-the threshold.)</p>
-<p>If the offset is greater than zero, and the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> attribute is True, then the offset
-is set to 0. Finally, the input, added to the offset, is passed to the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.function" title="ProcessingMechanisms.KWTA.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<p>When a KTWA is executed, it first determines its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as follows:</p>
+<ul class="simple">
+<li>First, like every <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>, it combines the input it receives from its recurrent
+<a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> (see <a class="reference internal" href="RecurrentTransferMechanism.html#recurrent-transfer-structure"><span class="std std-ref">Recurrent_Transfer_Structure</span></a>) with the input
+from any other <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> it receives, and assigns this to its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute.</li>
+</ul>
+<ul>
+<li><p class="first">Then it modifies its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, by calculating and assigning an offset to its elements, so that
+as close to <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements as possible are at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  The
+offset is determined by carrying out the following steps in each execution of the KTWA:</p>
+<ul class="simple">
+<li>calculate the scope of offsets that will satisfy the constraint; how this is done is determined by the
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="ProcessingMechanisms.KWTA.KWTA.average_based"><code class="xref any py py-attr docutils literal"><span class="pre">average_based</span></code></a> attribute (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">above</span></a>);</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>select an offset from the scope based on the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> option (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">above</span></a>);</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>constrain the offset to be 0 or negative if the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> option is set (see <a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">above</span></a>;</li>
+</ul>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ul class="simple">
+<li>apply the offset to all elements of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+</ul>
+</li>
+</ul>
+<p>The modified <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is then passed to the KWTA&#8217;s <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.function" title="ProcessingMechanisms.KWTA.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine its
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.value" title="ProcessingMechanisms.KWTA.KWTA.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="kwta-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="ProcessingMechanisms.KWTA.KWTA">
-<em class="property">class </em><code class="descclassname">ProcessingMechanisms.KWTA.</code><code class="descname">KWTA</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Logistic</em>, <em>matrix=None</em>, <em>auto=None</em>, <em>hetero=None</em>, <em>initial_value=None</em>, <em>decay=1.0</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>k_value=0.5</em>, <em>threshold=0</em>, <em>ratio=0.5</em>, <em>inhibition_only=True</em>, <em>average_based=False</em>, <em>range=None</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">ProcessingMechanisms.KWTA.</code><code class="descname">KWTA</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Logistic</em>, <em>matrix=None</em>, <em>auto=None</em>, <em>hetero=None</em>, <em>initial_value=None</em>, <em>decay=1.0</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>k_value=0.5</em>, <em>threshold=0</em>, <em>ratio=0.5</em>, <em>average_based=False</em>, <em>inhibition_only=True</em>, <em>range=None</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that dynamically regulates its input relative to a given threshold.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -246,7 +326,7 @@ equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be mod
 <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.time_constant" title="ProcessingMechanisms.KWTA.KWTA.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is not 1.0).
 <code class="xref py py-data docutils literal"><span class="pre">Transfer_DEFAULT_BIAS</span></code></li>
 <li><strong>decay</strong> (<em>number : default 1.0</em>) &#8211; specifies the amount by which to decrement its <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.previous_input" title="ProcessingMechanisms.KWTA.KWTA.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> each time it is executed.</li>
-<li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; a stochastically-sampled value added to the result of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.function" title="ProcessingMechanisms.KWTA.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+<li><strong>noise</strong> (<em>float or function : default 0.0</em>) &#8211; specifies a stochastically-sampled value added to the result of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.function" title="ProcessingMechanisms.KWTA.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
 if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
 if it is a function, it must return a scalar value.</li>
 <li><strong>time_constant</strong> (<em>float : default 1.0</em>) &#8211; <p>the time constant for exponential time averaging of input when the mechanism is executed with <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.time_scale" title="ProcessingMechanisms.KWTA.KWTA.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
@@ -256,28 +336,21 @@ set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.T
 </pre></div>
 </div>
 </li>
-<li><strong>k_value</strong> (<em>number : default 0.5</em>) &#8211; the proportion or number of input values (within the input vector) that should be above the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> of the KWTA. A <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> greater than zero and less than one specifies the
-proportion of input values that should be above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while a positive integer
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> specifies the number of values that should be above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. A
-negative integer <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> specifies the number of values that should be below the threshold.</li>
-<li><strong>threshold</strong> (<em>number : default 0</em>) &#8211; specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
-values (according to <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>) above the threshold, and some values below. Generally, the
-threshold should be some intermediate value such that inputs above the threshold are considered &#8220;high&#8221; while
-inputs below the threshold are considered &#8220;low&#8221;.</li>
-<li><strong>ratio</strong> (<em>number : default 0.5</em>) &#8211; the ratio used to choose the offset used by the KWTA mechanism when <a class="reference internal" href="#kwta-execution"><span class="std std-ref">adjusting the input</span></a>:
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> should be a number between 0 and 1. There is generally a range of possible offsets that satisfy the
-constraints set by <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> and <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>: a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 1 results in using
-the greatest offset, a <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> of 0 results in using the least offset, etc.</li>
-<li><strong>inhibition_only</strong> (<em>boolean : default True</em>) &#8211; specifies whether the KWTA should be allowed to use positive offsets. If set to False, the KWTA will use any
-offset value, including positive offsets, ensuring that there are always the expected number of values above and
-below the threshold. If <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> is True, then the KWTA will only use negative or zero offsets,
-changing all positive offsets to zero. This may be the desired behavior: for example, the user might expect the
-KWTA to only &#8220;inhibit&#8221; neurons rather than &#8220;excite&#8221; them, or might expect that after many low inputs, the KWTA
-should settle into an entirely non-excited state with no values above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a></li>
-<li><strong>average_based</strong> (<em>boolean : default False</em>) &#8211; specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-top k values, and the average of the remaining values, to determine the inhibition range (before the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is used to choose where within this range the actual inhibition is chosen).</li>
+<li><strong>k_value</strong> (<em>number : default 0.5</em>) &#8211; specifies the proportion or number of the elements of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should be at or above
+the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. A value between 0 and 1 specifies the proportion of elements that should be at
+or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>, while a positive integer specifies the number of values that should
+be at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>. A negative integer specifies the number of elements that should
+be below the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.</li>
+<li><strong>threshold</strong> (<em>number : default 0</em>) &#8211; specifies the threshold at or above which the KTWA seeks to assign <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>ratio</strong> (<em>number : default 0.5</em>) &#8211; specifies the offset used to adjust the elements of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> so that there are the number
+specified by <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>;  it must be a
+number from 0 to 1 (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">ratio</span></a> for additional information).</li>
+<li><strong>average_based</strong> (<em>boolean : default False</em>) &#8211; specifies whether the average-based scaling is used to determine the scope of offsets (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">average_based</span></a> for additional information).</li>
+<li><strong>inhibition_only</strong> (<em>boolean : default True</em>) &#8211; specifies whether positive offsets can be applied to the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in an effort to achieve
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>.  If set to <code class="xref any docutils literal"><span class="pre">False</span></code>, any offset
+is allowed, including positive offsets;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, a positive offset will be re-assigned the value of 0
+(see <a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">inhibition_only</span></a> for additional information).</li>
 <li><strong>range</strong> (<em>Optional[Tuple[float, float]]</em>) &#8211; specifies the allowable range for the result of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.function" title="ProcessingMechanisms.KWTA.KWTA.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
 the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
 any element of the result that exceeds the specified minimum or maximum value is set to the value of
@@ -361,37 +434,38 @@ when the Mechanism is executed using the <a class="reference internal" href="Tim
 <dl class="attribute">
 <dt id="ProcessingMechanisms.KWTA.KWTA.k_value">
 <code class="descname">k_value</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number</em> &#8211; the proportion or number of input values (within the input vector) that should be above the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> of the KWTA.</p>
+<dd><p><em>number</em> &#8211; determines the number or proportion of elements of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> that should be above the
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> of the KWTA (see <a class="reference internal" href="#kwta-k-value"><span class="std std-ref">k_value</span></a> for additional information).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.KWTA.KWTA.threshold">
 <code class="descname">threshold</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number</em> &#8211; specifies the threshold used for KWTA calculation: the KWTA mechanism will aim to set some number of input
-values (according to <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a>) above the threshold, and some values below</p>
+<dd><p><em>number</em> &#8211; determines the threshold at or above which the KTWA seeks to assign <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements of its
+<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.KWTA.KWTA.ratio">
 <code class="descname">ratio</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number</em> &#8211; the ratio used to choose the offset used by the KWTA mechanism when <a class="reference internal" href="#kwta-execution"><span class="std std-ref">adjusting the input</span></a>.
-Higher ratios result in greater offsets, lower ratios result in lower offsets, within the appropriate range.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="ProcessingMechanisms.KWTA.KWTA.inhibition_only">
-<code class="descname">inhibition_only</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>boolean : default True</em> &#8211; specifies whether the KWTA is allowed to use positive offsets (if <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="ProcessingMechanisms.KWTA.KWTA.inhibition_only"><code class="xref any py py-attr docutils literal"><span class="pre">inhibition_only</span></code></a> is True, then the KWTA will
-set all positive offsets to 0 instead).</p>
+<dd><p><em>number</em> &#8211; determines the offset used to adjust the elements of <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> so that there are <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.k_value" title="ProcessingMechanisms.KWTA.KWTA.k_value"><code class="xref any py py-attr docutils literal"><span class="pre">k_value</span></code></a> elements at or above the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.threshold" title="ProcessingMechanisms.KWTA.KWTA.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> (see <a class="reference internal" href="#kwta-ratio"><span class="std std-ref">ratio</span></a> for additional
+information).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="ProcessingMechanisms.KWTA.KWTA.average_based">
 <code class="descname">average_based</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.average_based" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>boolean : default False</em> &#8211; specifies whether the KWTA will use average-based KWTA scaling. Average-based scaling uses the average of the
-top k values, and the average of the remaining values, to determine the inhibition range (before the
-<a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.ratio" title="ProcessingMechanisms.KWTA.KWTA.ratio"><code class="xref any py py-attr docutils literal"><span class="pre">ratio</span></code></a> is used to choose where within this range the actual inhibition is chosen).</p>
+<dd><p><em>boolean : default False</em> &#8211; determines the way in which the scope of offsets is determined, from which the one is selected that is applied
+to the elements of the <a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA.variable" title="ProcessingMechanisms.KWTA.KWTA.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#kwta-average-based"><span class="std std-ref">average_based</span></a> for additional
+information).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ProcessingMechanisms.KWTA.KWTA.inhibition_only">
+<code class="descname">inhibition_only</code><a class="headerlink" href="#ProcessingMechanisms.KWTA.KWTA.inhibition_only" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>boolean : default True</em> &#8211; determines whether a positive offset is allowed;  if it is <code class="xref any docutils literal"><span class="pre">True</span></code>, then the value of the offset is
+&#8220;clipped&#8221; at (that is, any positive value is replaced by) 0.  Otherwise, any offset is allowed (see
+<a class="reference internal" href="#kwta-inhibition-only"><span class="std std-ref">inhibition_only</span></a> for additional information).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -476,7 +550,7 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of KWTA</strong></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#module-ProcessingMechanisms.KWTA" title="ProcessingMechanisms.KWTA">KWTA</a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#ProcessingMechanisms.KWTA.KWTA" title="ProcessingMechanisms.KWTA.KWTA">KWTA</a></td>
 </tr>
 </tbody>
 </table>
