@@ -1,11 +1,8 @@
-import logging
-
 from PsyNeuLink.Components.Functions.Function import Integrator, Linear
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import DIFFUSION
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, Any, AtPass, WhenFinished
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import TimeScale

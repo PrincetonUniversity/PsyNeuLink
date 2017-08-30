@@ -280,7 +280,7 @@ COMMENT
 **Figure: Learning Components in a Process**
 
 .. figure:: _static/Process_Learning_fig.svg
-   :alt: Schematic of LearningMechanisms and LearningProjections in a Process
+   :alt: Schematic of LearningMechanism and LearningProjections in a Process
 
    Learning using the `BackPropagation` learning algorithm in a three-layered network, using a `TransferMechanism` for
    each layer (capitalized labels in Mechanism components are their `designated roles
@@ -445,29 +445,32 @@ import inspect
 import numbers
 import re
 import warnings
-
 from collections import UserList, namedtuple
 
 import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
-from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
-from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, _is_learning_spec
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
+    _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection import _add_projection_to, _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, Projection, System
+from PsyNeuLink.Components.States.ModulatorySignals.LearningSignal import LearningSignal
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
+from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, \
+    FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, \
+    SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -592,7 +595,7 @@ def process(process_spec=None,
                    `MappingProjections <MappingProjection>` in the Process.
 
     learning_rate : Optional[float] : default None
-        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms <LearningMechanism>`
+        specifies the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanism <LearningMechanism>`
         associated with the Process (see Process' `learning_rate <Process_Base.learning_rate>` attribute for
         additional information).
 
@@ -820,7 +823,7 @@ class Process_Base(Process):
          :class:`MechanismTuple` for all Mechanisms in the Process, listed in the order specified in pathway.
          MechanismTuples are of the form: (Mechanism, runtime_params, phase) where runtime_params is dictionary
          of {argument keyword: argument values} entries and phase is an int.
-         Note:  the list includes ComparatorMechanisms and LearningMechanisms.
+         Note:  the list includes ComparatorMechanisms and LearningMechanism.
 
     .. _allMechanisms : MechanismList
          Contains all Mechanisms in the System (based on _mechs).
@@ -838,7 +841,7 @@ class Process_Base(Process):
          (Note:  the use of a list is for compatibility with the MechanismList object)
 
     .. _learning_mechs : List[MechanismTuple]
-         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanisms>` in the
+         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanism>` in the
          Process (used for learning).
 
     .. mechanisms : List[Mechanism]
@@ -878,7 +881,7 @@ class Process_Base(Process):
     COMMENT
 
     learning_mechanisms : MechanismList
-        all of the `LearningMechanisms in the Process <Process_Learning_Sequence>`, listed in
+        all of the `LearningMechanism in the Process <Process_Learning_Sequence>`, listed in
         ``learning_mechanisms.data``.
 
         .. based on _learning_mechs
@@ -1983,7 +1986,7 @@ class Process_Base(Process):
         # Label monitoring mechanisms and add _learning_mechs to _mechs for execution
         if self._learning_mechs:
 
-            # Add designations to newly created LearningMechanisms:
+            # Add designations to newly created LearningMechanism:
             for object_item in self._learning_mechs:
                 mech = object_item
                 # If
@@ -2000,7 +2003,7 @@ class Process_Base(Process):
                     object_item.processes[self] = TARGET
                 else:
                     # mech must be a LearningMechanism;
-                    # If a learning_rate has been specified for the process, assign that to all LearningMechanisms
+                    # If a learning_rate has been specified for the process, assign that to all LearningMechanism
                     #    for which a mechanism-specific learning_rate has NOT been assigned
                     if (self.learning_rate is not None and
                                 mech.function_object.learning_rate is None):
@@ -2013,7 +2016,7 @@ class Process_Base(Process):
             self._mechs.extend(self._learning_mechs)
 
             # IMPLEMENTATION NOTE:
-            #   LearningMechanisms are assigned _phaseSpecMax;
+            #   LearningMechanism are assigned _phaseSpecMax;
             #   this is so that they will run after the last ProcessingMechansisms have run
 
     def _instantiate__deferred_init_projections(self, projection_list, context=None):
@@ -2073,7 +2076,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;
                    return TARGET ObjectiveMechanism if one is found upstream;
@@ -2113,7 +2116,7 @@ class Process_Base(Process):
             try:
                 target_mech = trace_learning_objective_mechanism_projections(self._learning_mechs[0][0])
             except IndexError:
-                raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanisms found"
+                raise ProcessError("Learning specified for {} but no ObjectiveMechanisms or LearningMechanism found"
                                    .format(self.name))
 
             if target_mech:
@@ -2310,7 +2313,7 @@ class Process_Base(Process):
                 #     in case it is repeated in the pathway or receives a recurrent Projection
                 variable = self._update_variable(variable * 0)
 
-        # Execute LearningMechanisms
+        # Execute LearningMechanism
         if self._learning_enabled:
 
             self._execute_learning(target=target, clock=clock, context=context)
@@ -2363,7 +2366,7 @@ class Process_Base(Process):
                 for target_input_state in  process.target_input_states:
                     target_input_state.value *= 0
 
-        # THEN, execute ComparatorMechanism and LearningMechanisms
+        # THEN, execute ComparatorMechanism and LearningMechanism
         for mechanism in self._learning_mechs:
             mechanism.execute(clock=clock,
                               time_scale=self.timeScale,
@@ -2563,7 +2566,7 @@ class Process_Base(Process):
                      re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
-            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
                 import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:

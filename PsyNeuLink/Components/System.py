@@ -313,26 +313,29 @@ import math
 import numbers
 import re
 import warnings
-
 from collections import OrderedDict
 
 import numpy as np
 import typecheck as tc
-
 from toposort import toposort, toposort_flatten
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, MATRIX, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, kwSystemComponentCategory
+from PsyNeuLink.Globals.Keywords import COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
+    EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, \
+    LEARNING, MATRIX, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, \
+    kwSystemComponentCategory
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
-from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
+from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, \
+    iscompatible, \
+    parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
@@ -382,7 +385,7 @@ class SystemError(Exception):
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -471,7 +474,7 @@ def system(default_variable=None,
     COMMENT
 
     learning_rate : float : default None
-        sets the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanisms <LearningMechanism>` in
+        sets the `learning_rate <LearningMechanism.learning_rate>` for all `LearningMechanism <LearningMechanism>` in
         the System (see `learning_rate <System_Base.learning_rate>` attribute for additional information).
 
     targets : Optional[List[List]], 2d np.ndarray] : default ndarrays of zeroes
@@ -636,8 +639,8 @@ class System_Base(System):
         `Processes <Process>` in the System.
 
     learning_rate : float : default None
-        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
-        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
+        determines the learning_rate for all `LearningMechanism <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanism or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
         <System_Base.learning_rate> is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
@@ -696,7 +699,7 @@ class System_Base(System):
             Tuples for all TERMINAL Mechanisms in the System.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanisms in the System.
+            Tuples for all LearningMechanism in the System.
 
         .. _target_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
             Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the System that are a `TERMINAL`
@@ -704,7 +707,7 @@ class System_Base(System):
             being a target used in learning.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanisms in the System (used for learning).
+            Tuples for all LearningMechanism in the System (used for learning).
 
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
@@ -728,7 +731,7 @@ class System_Base(System):
         <System_Execution_Input_And_Initialization>`, listed in ``recurrent_init_mechanisms.data``.
 
     learning_mechanisms : MechanismList
-        all `LearningMechanisms <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
+        all `LearningMechanism <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
@@ -749,7 +752,7 @@ class System_Base(System):
             contains the `ControlMechanism <ControlMechanism>` that is the `controller <System_Base.controller>` of the
             System.
             COMMENT:
-                ??and any other `ControlMechanisms <ControlMechanism>` in the System
+                ??and any other `ControlMechanism <ControlMechanism>` in the System
                 (based on _control_mechs).
             COMMENT
 
@@ -1574,7 +1577,7 @@ class System_Base(System):
 
 
     def _instantiate_learning_graph(self, context=None):
-        """Build graph of LearningMechanisms and LearningProjections
+        """Build graph of LearningMechanism and LearningProjections
         """
 
         self.learningGraph = OrderedDict()
@@ -1663,7 +1666,7 @@ class System_Base(System):
                         raise SystemError("{} does not project to a LearningMechanism in the same process {}".
                                           format(sender_mech.name, process.name))
 
-                    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningAuxilliary \
+                    from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningAuxilliary \
                         import ACTIVATION_INPUT, ERROR_SIGNAL
 
                     # Get the ProcessingMechanism that projected to sender_mech
@@ -1828,7 +1831,7 @@ class System_Base(System):
             if isinstance(item, MappingProjection):
                 continue
 
-            # If a learning_rate has been specified for the system, assign that to all LearningMechanisms
+            # If a learning_rate has been specified for the system, assign that to all LearningMechanism
             #    for which a mechanism-specific learning_rate has NOT been assigned
             if (isinstance(item, LearningMechanism) and
                         self.learning_rate is not None and
@@ -2308,7 +2311,7 @@ class System_Base(System):
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the LearningMechanisms of the System for each execution.
+            the target values for the LearningMechanism of the System for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2414,7 +2417,7 @@ class System_Base(System):
         #                      re.sub('[\[,\],\n]','',str(["{:0.3}".
         #                                         format(float(i)) for i in object_item.mechanism.output_state.value]))))
         if self.learning:
-            from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
                 import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
@@ -2565,7 +2568,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;
 
-            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`;
+            LEARNING_MECHANISMS: list of `LearningMechanism <LearningMechanism>`;
 
             TARGET: list of `TARGET` Mechanisms;
 
@@ -2783,8 +2786,8 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
-        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import LearningMechanism
+        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ObjectiveMechanism
+        from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import LearningMechanism
         from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 
         import graphviz as gv

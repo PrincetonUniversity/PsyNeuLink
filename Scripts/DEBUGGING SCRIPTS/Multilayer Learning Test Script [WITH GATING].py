@@ -1,10 +1,9 @@
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
+from PsyNeuLink.Components.States.OutputState import *
 from PsyNeuLink.Components.System import system
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
@@ -230,7 +229,7 @@ elif COMPOSITION is SYSTEM:
     # x.show_graph()
     # x.show_graph(show_learning=True)
 
-    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism \
+    # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism \
     #     import _add_gating_mechanism_to_system
     # _add_gating_mechanism_to_system(Gating_Mechanism)
     #

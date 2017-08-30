@@ -35,8 +35,8 @@ Creating an ObjectiveMechanism
 ------------------------------
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
-AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and
-`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
+AdaptiveMechanisms such as `LearningMechanism <LearningMechanism_Creation>` and
+`ControlMechanism <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
 constructor.  Its **monitored_values** argument is used to specify the OutputStates to be monitored.  Any of the forms
 used for `specifying OutputStates <OutputState_Specification>` can be used, as well as a value of
 MonitoredOutputStateOption.  When an ObjectiveMechanism is created, an InputState is created for each of the

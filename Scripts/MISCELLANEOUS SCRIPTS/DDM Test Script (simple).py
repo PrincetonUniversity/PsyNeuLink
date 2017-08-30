@@ -1,6 +1,4 @@
-from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Components.Process import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 
 # myMechanism = DDM(function=NavarroAndFuss(drift_rate=1.0,
 #                                       threshold=10.0,

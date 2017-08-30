@@ -135,10 +135,10 @@ import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     import ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, ObjectiveMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ERROR_SIGNAL, ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -147,6 +147,27 @@ from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+
+import warnings
+
+import numpy as np
+
+from PsyNeuLink.Components.Component import function_type, method_type
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, \
+    ACTIVATION_OUTPUT, LearningMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
+from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
+from PsyNeuLink.Components.ShellClasses import Function
+from PsyNeuLink.Components.States.OutputState import OutputState
+from PsyNeuLink.Components.States.ParameterState import ParameterState
+from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, \
+    LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
+    import ComparatorMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms import ERROR_SIGNAL, ObjectiveMechanism
 
 
 class LearningAuxilliaryError(Exception):
@@ -174,7 +195,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         sequence.  A learning sequence is defined as a sequence of ProcessingMechanisms, each of which has a
         projection — that has been specified for learning — to the next Mechanism in the sequence.  This method
         instantiates the components required to support learning for those projections (most importantly,
-        the LearningMechanisms that provide them with the learning_signal required to modify the matrix of the
+        the LearningMechanism that provide them with the learning_signal required to modify the matrix of the
         projection, and the ObjectiveMechanism that calculates the error_signal used to generate the learning_signals).
 
 
@@ -214,7 +235,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     #                      - SHOULD CHECK UP FRONT WHETHER SENDER OR RECEIVER IS SPECIFIED, AND BRANCH ACCORDINGLY
     #                            FAILURE TO SPECIFY BOTH SHOULD RAISE AN EXCEPTION (OR FURTHER DEFER INSTANTIATION?)
     #                      - WILL REQUIRE MORE EXTENSIVE CHECKING AND VALIDATION
-    #                              (E.G., OF WHETHER ANY LearningMechanisms IDENTIFIED HAVE A PROJECTION FROM AN
+    #                              (E.G., OF WHETHER ANY LearningMechanism IDENTIFIED HAVE A PROJECTION FROM AN
     #                               APPROPRIATE ObjectiveMechanism, etc.
     if not learning_projection.name in context:
         raise LearningAuxilliaryError("PROGRAM ERROR".format("_instantiate_learning_components only supports "

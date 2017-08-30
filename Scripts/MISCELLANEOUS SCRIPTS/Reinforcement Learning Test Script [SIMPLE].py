@@ -1,14 +1,14 @@
+import random
+
 import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import PROB
 from PsyNeuLink.Components.Functions.Function import Reinforcement, SoftMax
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
-from PsyNeuLink.Components.System import System, system
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
-import random
 random.seed(0)
 np.random.seed(0)
 

@@ -36,16 +36,14 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismRegistry
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
     import DefaultProcessingMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism \
-    import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism \
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base
 register_category(entry=ControlMechanism_Base,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism \
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.DefaultControlMechanism \
     import DefaultControlMechanism
 register_category(entry=DefaultControlMechanism,
                   base_class=Mechanism_Base,
@@ -53,7 +51,7 @@ register_category(entry=DefaultControlMechanism,
                   context=kwInitPy)
 
 # DDM (used as DefaultMechanism)
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
