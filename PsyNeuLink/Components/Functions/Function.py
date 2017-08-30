@@ -4089,7 +4089,7 @@ class DriftDiffusionIntegrator(
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           the stimulus component of drift rate in the Drift Diffusion Model. 
+           the stimulus component of drift rate in the Drift Diffusion Model.
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4262,6 +4262,7 @@ class OrnsteinUhlenbeckIntegrator(
                  noise=0.0,
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
+                 t0=0.0,
                  decay = 1.0,
                  initializer=ClassDefaults.variable,
                  params: tc.optional(dict) = None,
@@ -4274,6 +4275,7 @@ class OrnsteinUhlenbeckIntegrator(
                                                   time_step_size=time_step_size,
                                                   decay = decay,
                                                   initializer=initializer,
+                                                  t0=t0,
                                                   noise=noise,
                                                   offset=offset,
                                                   params=params)
@@ -4289,6 +4291,7 @@ class OrnsteinUhlenbeckIntegrator(
 
         # Reassign to kWInitializer in case default value was overridden
         self.previous_value = self.initializer
+        self.previous_time = self.t0
 
         self.auto_dependent = True
 
@@ -4355,6 +4358,7 @@ class OrnsteinUhlenbeckIntegrator(
 
         if not context or not INITIALIZING in context:
             self.previous_value = adjusted_value
+            self.previous_time += time_step_size
 
         return adjusted_value
 

@@ -119,6 +119,29 @@ class TestIntegratorFunctions:
 
         assert (val, val2, val3) == (20.5, 31, 41.5)
 
+    def test_ornstein_uhlenbeck_integrator_time(self):
+        OU = IntegratorMechanism(
+            function=OrnsteinUhlenbeckIntegrator(
+                initializer=10.0,
+                rate=10,
+                time_step_size=0.2,
+                t0=0.5,
+                decay=0.1,
+                offset=10,
+            )
+        )
+        time_0 = OU.function_object.previous_time  # t_0  = 0.5
+        np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
+
+        OU.execute(10)
+        time_1 = OU.function_object.previous_time  # t_1  = 0.5 + 0.2 = 0.7
+        np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
+
+        for i in range(11):  # t_11 = 0.7 + 10*0.2 = 2.7
+            OU.execute(10)
+        time_12 = OU.function_object.previous_time # t_12 = 2.7 + 0.2 = 2.9
+        np.testing.assert_allclose(time_12, [2.9], atol=1e-08)
+
     def test_integrator_no_function(self):
         I = IntegratorMechanism(time_scale=TimeScale.TIME_STEP)
         # P = process(pathway=[I])
