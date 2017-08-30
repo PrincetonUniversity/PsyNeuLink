@@ -2517,7 +2517,10 @@ class Component(object):
         try:
             self.value = self.execute(variable=self.instance_defaults.variable, context=context)
         except TypeError:
-            self.value = self.execute(context=context)
+            try:
+                self.value = self.execute(input=self.instance_defaults.variable, context=context)
+            except TypeError:
+                self.value = self.execute(context=context)
         if self.value is None:
             raise ComponentError("PROGRAM ERROR: Execute method for {} must return a value".format(self.name))
         try:
