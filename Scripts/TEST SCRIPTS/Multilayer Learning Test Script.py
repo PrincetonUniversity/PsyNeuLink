@@ -6,7 +6,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.Condition import AfterNCalls
-from PsyNeuLink.Scheduling.TimeScale import TimeScale
+from PsyNeuLink.Scheduling.TimeScale import TimeScale, CentralClock
 
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 

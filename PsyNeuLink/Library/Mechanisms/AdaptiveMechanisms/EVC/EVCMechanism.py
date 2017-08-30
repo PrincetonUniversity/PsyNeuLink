@@ -728,7 +728,7 @@ class EVCMechanism(ControlMechanism_Base):
                  system=None,
                  # default_variable=None,
                  # size=None,
-                 prediction_mechanism_type=IntegratorMechanism,
+                 prediction_mechanism_type=IntegratorMechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
                  monitor_for_control:tc.optional(list)=None,
                  control_signals:tc.optional(list) = None,

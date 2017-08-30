@@ -1,3 +1,4 @@
+from PsyNeuLink.Components.Functions.Function import Logistic
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.States.ModulatorySignals.GatingSignal import GatingSignal
