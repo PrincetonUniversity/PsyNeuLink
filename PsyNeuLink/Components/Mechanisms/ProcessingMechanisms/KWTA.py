@@ -69,7 +69,7 @@ KWTA:
   at the threshold (that is, the smallest value that insures that `k_value <KWTA.k_value>` elements are at or above the
   `threshold <KWTA.threshold>`;  the high end of the scope is the offset that sets the k+1-th highest element exactly at
   the threshold (that is, the largest possible value, such that the `k_value <KWTA.k_value>` elements but no more are
-  above the `threshold <KWTA.threshold>` (i.e., the next one is exactly at it). In this case, all values of offset
+  above the `threshold <KWTA.threshold>` (i.e., the next one is exactly at it). With this setting, all values of offset
   within the scope generate exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTA.threshold>`.  If
   `average_based <KWTA.average_based>` is `True`, the low end of the scope is the offset that places the *average* of
   the elements with the `k_value <KWTA.k_value>` highest values at the `threshold <KWTA.threshold>`, and the high end of
@@ -78,19 +78,19 @@ KWTA:
   above the `threshold <KWTA.threshold>`, while the highest values within the scope may produce more.  An offset is
   picked from the scope as specified by the `ratio <KWTA.ratio>` parameter (see `above <KWTA_ratio>`).
 
-  COMMENT:
   .. note::
      If the `average_based <KWTA.average_based>` option is `False` (the default), the KWTA's `variable <KWTA.variable>`
-     always has exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTA.threshold>` (that is, for
-     *any* value of the `ratio <KTWA.ratio>`).  However, if `average_based <KWTA.average_based>` is `True`, the
-     `variable <KWTA.variable>` may have fewer than `k_value <KWTA.k_value>` elements at or above the `threshold
-     <KWTA.threshold>` (if the `ratio <KWTA.ratio>` is low), or more than `k_value <KWTA.k_value>` (if the `ratio
-     <KWTA.ratio>` is high).
-  COMMENT
+     is guaranteed to have exactly `k_value <KTWA.k_value>` elements at or above the `threshold <KWTA.threshold>` (that
+     is, for *any* value of the `ratio <KTWA.ratio>`).  However, if `average_based <KWTA.average_based>` is `True`, this
+     guarantee does not hold;  `variable <KWTA.variable>` may have fewer than `k_value <KWTA.k_value>` elements at or
+     above the `threshold <KWTA.threshold>` (if the `ratio <KWTA.ratio>` is low), or more than `k_value <KWTA.k_value>`
+     (if the `ratio <KWTA.ratio>` is high).
 
-  COMMENT:
-  WHY USE THIS OPTION?
-  COMMENT
+  Although setting the `average_based <KWTA.average_based>` option to `True` does not guarantee that *exactly* `k_value
+  <KWTA.k_value>` elements will be above the threshold, the additional flexibility it affords in the Mechanism's
+  `variable <KWTA.variable>` attribute  can be useful in some settings -- for example, when training hidden layers
+  in a `multilayered network <LearningMechanism_Multilayer_Learning>`, which may require different numbers of elements
+  to be above the specified `threshold <KWTA.threshold>` for different input-target pairings.
 
 .. _KWTA_inhibition_only:
 
