@@ -901,7 +901,7 @@ class DDM(ProcessingMechanism_Base):
                 logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
                 self.is_finished = True
 
-            return np.array([result, [0.0], [0.0], [0.0]])
+            return np.array([result, self.function_object.previous_time])
 
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------

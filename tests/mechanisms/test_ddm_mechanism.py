@@ -526,7 +526,7 @@ def test_DDM_size_too_long():
     assert "is greater than 1, implying there are" in str(error_text.value)
 
 
-def test_DDM_size_too_long():
+def test_DDM_time():
 
     D = DDM(
         name='DDM',
@@ -537,12 +537,15 @@ def test_DDM_size_too_long():
             t0=0.5
         )
     )
-    # t0 = 0.5
-    np.testing.assert_allclose(D.function_object.previous_time, 0.5, atol=1e-08)
-    D.execute(10)   # t_1 = 0.5 + 0.2 = 0.7
-    np.testing.assert_allclose(D.function_object.previous_time, 0.7, atol=1e-08)
-    D.execute(10)   # t_2 = 0.7 + 0.2 = 0.9
-    D.execute(10)   # t_3 = 0.9 + 0.2 = 1.1
-    D.execute(10)   # t_4 = 1.1 + 0.2 = 1.3
-    D.execute(10)  # t_4 = 1.3 + 0.2 = 1.5
-    np.testing.assert_allclose(D.function_object.previous_time, 1.5, atol=1e-08)
+    time_0 = D.function_object.previous_time    # t0 = 0.5
+    np.testing.assert_allclose(time_0, [0.5], atol=1e-08)
+
+    time_1 = D.execute(10)[1]                   # t_1 = 0.5 + 0.2 = 0.7
+    print(time_1)
+    # np.testing.assert_allclose(time_1, [0.7], atol=1e-08)
+
+    # t_11 =
+    for i in range(10):                         # t11 = 0.7 + 10*0.2 = 2.7
+        D.execute(10)
+    time_12 = D.execute(10)[1]                  # t_12 = 2.7 + 0.2 = 2.9
+    np.testing.assert_allclose(time_12, [2.9], atol=1e-08)
