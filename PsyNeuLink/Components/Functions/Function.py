@@ -4082,14 +4082,14 @@ class DriftDiffusionIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: previous_value + rate * new_value * time_step_size + (
-            time_step_size * noise) * np.random.normal()
+        Return: previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
+        sample from Normal distribution
 
         Arguments
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
+           the stimulus component of drift rate in the Drift Diffusion Model. 
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
