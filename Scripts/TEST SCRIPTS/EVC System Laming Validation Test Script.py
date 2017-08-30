@@ -8,6 +8,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import *
 
+import random
 random.seed(0)
 np.random.seed(0)
 
