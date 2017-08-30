@@ -2567,8 +2567,7 @@ class Process_Base(Process):
                      re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i))) for i in self.output_state.value]))))
 
         if self.learning:
-            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-                import MSE
+            from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import MSE
             for mech in self.target_mechanisms:
                 if not MSE in mech.output_states:
                     continue

@@ -1,13 +1,13 @@
 import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES
 from PsyNeuLink.Globals.Keywords import CYCLE, INITIALIZE_CYCLE, INTERNAL, ORIGIN, TERMINAL
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 
 

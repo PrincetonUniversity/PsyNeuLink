@@ -1,11 +1,10 @@
 import numpy
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import IntegratorMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan

@@ -1,6 +1,6 @@
 import pytest
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError, \
-    RecurrentTransferMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
+    RecurrentTransferError,  RecurrentTransferMechanism
 
 from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, \
     Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
