@@ -385,9 +385,11 @@ It also contains:
 COMMENT
 
 """
+import copy
 import inspect
 import numbers
 import warnings
+
 from collections import Iterable, OrderedDict, UserDict
 from enum import Enum, IntEnum
 
@@ -834,6 +836,11 @@ class Component(object):
     # IMPLEMENTATION NOTE: Primarily used to track and prevent recursive calls to assign_params from setters.
     prev_context = None
 
+    deepcopy_shared_keys = set([
+        'owner',
+        'function_object'
+    ])
+
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -999,6 +1006,19 @@ class Component(object):
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
+
+    # based off the answer here https://stackoverflow.com/a/15774013/3131666
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k in self.deepcopy_shared_keys:
+                res_val = v
+            else:
+                res_val = copy.deepcopy(v, memo)
+            setattr(result, k, res_val)
+        return result
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
