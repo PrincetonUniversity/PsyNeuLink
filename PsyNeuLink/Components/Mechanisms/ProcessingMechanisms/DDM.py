@@ -101,22 +101,25 @@ details.
 
 .. _DDM_Modes:
 
-DDM Modes of Operation
+DDM Function Types
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
-Analytic Mode
-^^^^^^^^^^^^^
+Analytic Solutions
+^^^^^^^^^^^^^^^^^^
 
-This is used when one of the two `Functions <Function>` that calculate an analytic solution -- `BogaczEtAl <BogaczEtAl>`
-or `NavarroAndFuss <NavarroAndFuss>` -- is specified as the Mechanism's `function <DDM.function>`.  It generates a
-single estimate of the outcome for the decision process (see `DDM_Execution` for details).  In addition to
-`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions return an accuracy
-value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
-rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  the `NavarroAndFuss
-<NavarroAndFuss>` Function also returns expected values for mean correct response time (`RT_CORRECT_MEAN
-<DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `BogaczEtAl <BogaczEtAl>`
+and `NavarroAndFuss <NavarroAndFuss>`. When one of these functions is specified as the DDM Mechanism's
+`function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
+`DDM_Execution` for details).
+
+In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions
+return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
+OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
+OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns expected values for mean correct response time
+(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+
 Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
@@ -126,8 +129,7 @@ Examples for each, that illustrate all of their parameters, are shown below:
                                                 threshold=30.0,
                                                 noise=1.5,
                                                 t0 = 2.0),
-                            time_scale= TimeScale.TRIAL,
-                            name='MY_DDM_BogaczEtAl')
+                            name='my_DDM_BogaczEtAl')
 
 `NavarroAndFuss <NavarroAndFuss>` Function::
 
@@ -136,31 +138,25 @@ Examples for each, that illustrate all of their parameters, are shown below:
                                                         threshold=30.0,
                                                         noise=1.5,
                                                         t0 = 2.0),
-                                time_scale= TimeScale.TRIAL,
-                                name='MY_DDM_NavarroAndFuss')
+                                name='my_DDM_NavarroAndFuss')
 
 .. _DDM_Integration_Mode:
 
-Path Integration Mode
-~~~~~~~~~~~~~~~~~~~~~
+Path Integration
+^^^^^^^^^^^^^^^^
 
-COMMENT:
-   IS THIS MORE CORRECT FOR THE BELOW:
-        This is used when `DriftDiffusionIntegrator` is specified as the DDM's `function <DDM.function>`
-        attribute.
-COMMENT
-
-This is used when an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION* is
-specified as the DDM's `function <DDM.function>` attribute.  In this case, the DDM Mechanism uses the `Euler method
-<https://en.wikipedia.org/wiki/Euler_method>`_ to carry out numerical step-wise integration of the decision process
-(see `Execution <DDM_Execution>` below).  In this mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
-`RESPONSE_TIME <DDM_RESPONSE_TIME>` are returned by default.
+The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegrator
+<DriftDiffusionIntegrator>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
+carry out numerical step-wise integration of the decision process (see `Execution <DDM_Execution>` below).  In this
+mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` are available.
 
 `Integrator <Integrator>` Function::
 
-    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
-                          time_scale=TimeScale.TIME_STEP,
-                          name='My_DDM_TimeStep')
+    my_DDM_path_integrator = DDM(function=DriftDiffusionIntegrator(noise=0.5,
+                                                            initializer = 1.0,
+                                                            t0 = 2.0,
+                                                            rate = 3.0),
+                          name='my_DDM_path_integrator')
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -271,14 +267,14 @@ When a DDM Mechanism is executed, it computes the decision process either `analy
 `numerical step-wise integration <DDM_Integration_Mode>` of its path.  The method used is determined by its `function
 <DDM.function>` (see `DDM_Modes`). The DDM's `function <DDM.function>` always returns values for the `DECISION_VARIABLE
 <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, and assigns these as the first two items of its `value
-<DDM.value>` attribute, irrespective of its `mode <DDM_Modes>` of operation. The mode of operation is determined by
-the Function assigned to its `function <DDM.function>` attribute (see `DDM_Structure`). In the `analytic mode
-<DDM_Analytic_Mode>` the same set of values is returned for every execution, that are determined entirely by the set of
-parameters passed to its `function <DDM.function>`;  generally, this corresponds to a `TRIAL` of execution.  In the
-`path intergration mode <DDM_Integration_Mode>`, a single step of integration is conducted each time the Mechanism is
-executed; generally, this corresponds to a `TIME_STEP` of execution.  In addition to `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, other values are returned by the different modes and
-functions (see `DDM_Modes` and `Standard OutputStates  <DDM_Standard_OutputStates>`).
+<DDM.value>` attribute, irrespective of its function.
+
+When an `analytic <DDM_Analytic_Mode>` function is selected, the same set of values is returned for every execution,
+that are determined entirely by the set of parameters passed to its `function <DDM.function>`;  generally, this
+corresponds to a `TRIAL` of execution.
+
+When the `path integration <DDM_Integration_Mode>`, function is selected, a single step of integration is conducted each
+time the Mechanism is executed; generally, this corresponds to a `TIME_STEP` of execution. 
 
 .. _DDM_Class_Reference:
 
