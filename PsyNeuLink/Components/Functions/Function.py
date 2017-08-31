@@ -3919,6 +3919,8 @@ class DriftDiffusionIntegrator(
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         time_step_size=1.0,             \
+        t0=0.0,                         \
+        decay=0.0,                      \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -3927,7 +3929,7 @@ class DriftDiffusionIntegrator(
 
     .. _DriftDiffusionIntegrator:
 
-    Accumulate evidence overtime based on a stimulus and previous position.
+    Accumulate evidence overtime based on a stimulus, previous position, and noise.
 
     Arguments
     ---------
@@ -3973,8 +3975,7 @@ class DriftDiffusionIntegrator(
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <DriftDiffusionIntegrator.rate>`) that will be
-        added to the prior value;  if it is an array, each element is independently integrated.
+        current input value, which represents the stimulus component of drift.
 
     rate : float or 1d np.array
         determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
@@ -4003,7 +4004,8 @@ class DriftDiffusionIntegrator(
         If initializer is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.default_variable>`.
 
     previous_time : float
-        stores previous time at which the function was executed and accumulates according to time_step_size
+        stores previous time at which the function was executed and accumulates with each execution according to
+        `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
@@ -4082,7 +4084,9 @@ class DriftDiffusionIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
+        Return: One time step of evidence accumulation according to the Drift Diffusion Model
+
+        previous_value + rate * variable * time_step_size + :math:`\\sqrt{time_step_size * noise}` * random
         sample from Normal distribution
 
         Arguments
@@ -4123,7 +4127,7 @@ class DriftDiffusionIntegrator(
             time_step_size * noise) * np.random.normal()
 
         adjusted_value = value + offset
-        # If this NOT an initialization run, update the old value
+        # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not context or not INITIALIZING in context:
@@ -4142,6 +4146,7 @@ class OrnsteinUhlenbeckIntegrator(
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         time_step_size=1.0,             \
+        t0=0.0,                         \
         initializer,                    \
         params=None,                    \
         owner=None,                     \
@@ -4150,7 +4155,7 @@ class OrnsteinUhlenbeckIntegrator(
 
     .. _OrnsteinUhlenbeckIntegrator:
 
-    Integrate current value of `variable <OrnsteinUhlenbeckIntegrator.variable>` with its prior value.
+    Accumulate evidence overtime based on a stimulus, noise, decay, and previous position.
 
     Arguments
     ---------
@@ -4171,6 +4176,10 @@ class OrnsteinUhlenbeckIntegrator(
     time_step_size : float : default 0.0
         determines the timing precision of the integration process (see `time_step_size
         <OrnsteinUhlenbeckIntegrator.time_step_size>` for details.
+
+    t0 : float : default 0.0
+        represents the starting time of the model and is used to compute
+        `previous_time <OrnsteinUhlenbeckIntegrator.previous_time>`
 
     initializer float, list or 1d np.array : default 0.0
         specifies starting value for integration.  If it is a list or array, it must be the same length as
@@ -4194,17 +4203,19 @@ class OrnsteinUhlenbeckIntegrator(
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <OrnsteinUhlenbeckIntegrator.rate>`) that will be
-        added to the prior value;  if it is an array, each element is independently integrated.
+        current input value which represents the stimulus component of drift. The product of
+        `variable <OrnsteinUhlenbeckIntegrator.variable>` and `rate <OrnsteinUhlenbeckIntegrator.rate>` is multiplied
+        by `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
+        one step.
 
     rate : float or 1d np.array
-        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
-        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
-        applies to all elements of `variable <OrnsteinUhlenbeckIntegrator.variable>`;  if it has more than one element, each element
-        applies to the corresponding element of `variable <OrnsteinUhlenbeckIntegrator.variable>`.
+        represents the attentional component of drift. The product of `rate <OrnsteinUhlenbeckIntegrator.rate>` and
+        `variable <OrnsteinUhlenbeckIntegrator.variable>` is multiplied by
+        `time_step_size <OrnsteinUhlenbeckIntegrator.time_step_size>` to model the accumulation of evidence during
+        one step.
 
     noise : float, function, list, or 1d np.array
-        scales the random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>
+        scales the random value to be added in each call to `function <OrnsteinUhlenbeckIntegrator.function>`
 
         Noise must be specified as a float (or list or array of floats) because this
         value will be used to construct the standard DDM probability distribution.
@@ -4215,20 +4226,17 @@ class OrnsteinUhlenbeckIntegrator(
 
     initializer : float, 1d np.array or list
         determines the starting value for integration (i.e., the value to which
-        `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>` is set.
+        `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>` is originally set.)
 
-        If initializer is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.default_variable>`.
-
-        TBI:
-
-        Initializer may be a function or list/array of functions.
-
-        If initializer is specified as a single float or function, while `variable <OrnsteinUhlenbeckIntegrator.variable>` is
-        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-        this means that the function will be executed separately for each variable element.
+        If initializer is a list or array, it must be the same length as `variable
+        <OrnsteinUhlenbeckIntegrator.default_variable>`.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
+
+    previous_time : float
+        stores previous time at which the function was executed and accumulates with each execution according to
+        `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -4307,14 +4315,18 @@ class OrnsteinUhlenbeckIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: some fraction of `variable <OrnsteinUhenbeckIntegrator.variable>` combined with some fraction of
-        `previous_value <OrnsteinUhenbeckIntegrator.previous_value>`
+        Return: One time step of evidence accumulation according to the Ornstein Uhlenbeck Model
+
+        previous_value + decay * (previous_value -  rate * variable) + :math:`\\sqrt{time_step_size * noise}` * random
+        sample from Normal distribution
+
 
         Arguments
         ---------
 
         variable : number, list or np.array : default ClassDefaults.variable
-           a single value or array of values to be integrated.
+           the stimulus component of drift rate in the Drift Diffusion Model.
+
 
         params : Optional[Dict[param keyword, param value]]
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4347,11 +4359,11 @@ class OrnsteinUhlenbeckIntegrator(
 
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
-
-        value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
+        # dx = (lambda*x + A)dt + c*dW
+        value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
             time_step_size * noise) * np.random.normal()
 
-        # If this NOT an initialization run, update the old value
+        # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         adjusted_value = value + offset
@@ -4396,7 +4408,7 @@ class AccumulatorIntegrator(
         `variable <AccumulatorIntegrator.default_variable>`.
 
     increment : float, list or 1d np.array : default 0.0
-        specifies an amount to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        specifies an amount to be added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
         `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
         If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>`
         (see `increment <AccumulatorIntegrator.increment>` for details).
@@ -4466,14 +4478,6 @@ class AccumulatorIntegrator(
         determines the starting value for integration (i.e., the value to which `previous_value
         <AccumulatorIntegrator.previous_value>` is set. If initializer is a list or array, it must be the same length
         as `variable <AccumulatorIntegrator.default_variable>`.
-
-        TBI:
-
-        Initializer may be a function or list/array of functions.
-
-        If initializer is specified as a single float or function, while `variable <AccumulatorIntegrator.variable>` is
-        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-        this means that the function will be executed separately for each variable element.
 
     previous_value : 1d np.array : default ClassDefaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
