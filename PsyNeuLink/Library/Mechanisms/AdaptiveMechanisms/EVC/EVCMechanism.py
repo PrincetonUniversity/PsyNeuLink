@@ -309,7 +309,8 @@ from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
     ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Function
@@ -321,7 +322,6 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCAuxiliary import ControlSignalGridSearch, ValueFunction
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import IntegratorMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale
 
 OBJECT_INDEX = 0
@@ -962,7 +962,7 @@ class EVCMechanism(ControlMechanism_Base):
         """
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
             import _validate_monitored_value
 
         # PARSE SPECS

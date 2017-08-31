@@ -1,8 +1,6 @@
 Processing Mechanisms
 =====================
 
-.. _ProcessingMechanism_Subtypes:
-
 .. toctree::
    :maxdepth: 1
 

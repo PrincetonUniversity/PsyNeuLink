@@ -385,7 +385,7 @@ class SystemError(Exception):
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -2785,7 +2785,7 @@ class System_Base(System):
 
         """
 
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
             import ObjectiveMechanism
         from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
             import LearningMechanism

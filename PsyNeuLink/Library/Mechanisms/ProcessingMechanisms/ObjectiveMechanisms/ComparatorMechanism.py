@@ -129,6 +129,8 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+    import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
@@ -139,8 +141,6 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, k
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, \
     kwCompatibilityNumeric
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism \
-    import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'

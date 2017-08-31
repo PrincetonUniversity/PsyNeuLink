@@ -11,6 +11,7 @@ import logging
 
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Exponential, FunctionOutputType, Integrator, \
     Linear, LinearCombination, LinearMatrix, Logistic, SoftMax, UserDefinedFunction
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
@@ -23,7 +24,6 @@ from PsyNeuLink.Globals.Keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CON
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism import \
     ComparatorMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 

@@ -6,5 +6,4 @@ PathwayProjections
 .. toctree::
    :maxdepth: 1
 
-   MappingProjection
-   Library.Projections.PathwayProjections.AutoAssociativeProjection
+   AutoAssociativeProjection

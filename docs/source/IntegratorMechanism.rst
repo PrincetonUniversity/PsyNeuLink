@@ -1,6 +1,6 @@
 IntegratorMechanism
 ===================
 
-.. automodule:: Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.IntegratorMechanism
+.. automodule:: IntegratorMechanism
    :members:
    :exclude-members: random

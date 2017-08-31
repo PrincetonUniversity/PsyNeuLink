@@ -35,7 +35,7 @@ class ScratchPadError(Exception):
 
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 
 #region SIMPLE NN EXAMPLE:
 

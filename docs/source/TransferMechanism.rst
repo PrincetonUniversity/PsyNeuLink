@@ -1,6 +1,6 @@
 TransferMechanism
 =================
 
-.. automodule:: Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism
+.. automodule:: TransferMechanism
    :members:
    :exclude-members: random

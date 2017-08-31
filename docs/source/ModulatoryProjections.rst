@@ -5,7 +5,3 @@ ModulatoryProjections
 
 .. toctree::
    :maxdepth: 1
-
-   LearningProjection
-   ControlProjection
-   GatingProjection

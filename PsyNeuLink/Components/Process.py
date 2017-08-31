@@ -454,6 +454,7 @@ from PsyNeuLink.Components.Component import Component, ExecutionStatus, InitStat
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -470,7 +471,6 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import append_type_to_name, convert_to_np_array, iscompatible, parameter_spec
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 # *****************************************    PROCESS CLASS    ********************************************************
@@ -2076,7 +2076,7 @@ class Process_Base(Process):
              and report assignment if verbose
         """
 
-        from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism  \
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
             import ObjectiveMechanism
         def trace_learning_objective_mechanism_projections(mech):
             """Recursively trace projections to Objective mechanisms;

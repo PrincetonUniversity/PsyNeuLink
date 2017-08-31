@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDi
     OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.IntegratorMechanism \
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
     import IntegratorMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 

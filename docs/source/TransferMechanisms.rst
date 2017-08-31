@@ -6,7 +6,6 @@ TransferMechanisms
 .. toctree::
    :maxdepth: 1
 
-   TransferMechanism
    RecurrentTransferMechanism
    LCA
    KWTA

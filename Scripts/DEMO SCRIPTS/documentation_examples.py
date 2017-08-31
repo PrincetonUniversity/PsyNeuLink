@@ -13,6 +13,11 @@ from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism \
     .GatingMechanism import \
     GatingMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+    ComparatorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
+    import \
+    MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
 from PsyNeuLink.Components.Process import PARAMETER_STATE_PARAMS, \
     RANDOM_CONNECTIVITY_MATRIX, process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
@@ -23,11 +28,6 @@ from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
     INTERCEPT, MECHANISM, MODULATION, GATE
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, \
     NOISE, THRESHOLD, TimeScale
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import \
-    ComparatorMechanism
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.TransferMechanism \
-    import \
-    MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 
