@@ -373,7 +373,8 @@ def setup(app):
     return app
 
 # Ordering of members:
-
 autodoc_member_order = 'bysource'
 
 default_role = 'any'
+
+epub_tocdepth = 5

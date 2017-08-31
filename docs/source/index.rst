@@ -177,7 +177,6 @@ Table of Contents
 
 .. toctree::
    :titlesonly:
-   :maxdepth: 1
 
    self
    BasicsAndSampler
@@ -185,6 +184,7 @@ Table of Contents
    Components <Component>
    Compositions <Composition>
    Scheduling
+   Library
 
 .. _Indices_and_Tables:
 
