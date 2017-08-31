@@ -23,21 +23,25 @@ Overview
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (`TRIAL`
-mode), or integrated numerically (`integration mode <DDM_Integration_Mode>`).
+forced choice (TAFC) decision making ([REF]).
+
+The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
+solutions and path integration (see `DDM_Modes` below for more about these options.)
 
 .. _DDM_Creation:
 
 Creating a DDM Mechanism
 -----------------------------
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` command and
-specifying DDM as its **mech_spec** argument.  The analytic solution used `analytic mode <DDM_Analytic_Mode>` is
-selected using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example
-below), or a call to the function with arguments specifying its parameters (second example below; see `DDM_Execution`
-for a description of DDM function parameters)::
+specifying DDM as its **mech_spec** argument.  The model implementation is selected using the `function <DDM.function>`
+argument. The function selection can be simply the name of a DDM function::
 
     my_DDM = DDM(function=BogaczEtAl)
+
+or a call to the function with arguments specifying its parameters::
+
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=1.0))
+
 
 COMMENT:
 .. _DDM_Input:
@@ -61,23 +65,39 @@ Structure
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
 `value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for the process.  That parameter, along with all
+<Mechanism_Base.run>` methods, which represents the stimulus for the process.  That parameter, along with all
 of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
 `DDM_Modes` below, and individual `Functions <Function>` for additional details).
 
-The decision process can be configured to operate in two different `modes <DDM_modes>`, as determined by the assignment
-made to its `function <DDM.function>`. In the `analytic mode` <DDM_Analytic_Mode>` it generates a single estimated for
-the process;  in the `path integration mode <DDM_Integration_Mode>`, it carries out step-wise integration of the Process
-(see `DDM_Modes` and `DDM_Execution` for additional details).
+The DDM Mechanism can generate two different types of results depending on which function is selected. When a
+function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
+When the path integration function is selected, the mechanism carries out step-wise integration of the process; each
+execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Execution` for additional details).
 
-The `value <DDM.value>` of the DDM Mechanism has six  items. The first two of these are always assigned, and represented
-by two `OutputStates <OutputState>` in the DDM's output_states <DDM.output_states>` attribute: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. Other items of its `value <DDM.value>`, and
-corresponding OutputStates in its `output_states <DDM.output_states>` attribute, may also be assigned, depending on the
-`function <DDM.function>` (and corresponding mode of operation) that has been specified, as described below. Unassigned
-items of the DDM's `value <DDM.value>` attribute are given the value `None`. The set of `output_states
-<DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of `Standard OutputStates
-<DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its constructor.
+The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
+are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. The other `output_states <DDM.output_states>` may be
+assigned depending on (1) whether the selected function produces those quantities and (2) customization.
+
++---------------------------------+-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|**Function**                     |**Type**   | **Output States**                                                                                                                                                    |
+|                                 |           +------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|                                 |           |`DECISION_VARIABLE      |`RESPONSE_TIME      |`PROBABILITY_UPPER_THRESHOLD      |`PROBABILITY_LOWER_THRESHOLD       |`RT_CORRECT_MEAN      |`RT_CORRECT_VARIANCE      |
+|                                 |           |<DDM_DECISION_VARIABLE>`|<DDM_RESPONSE_TIME>`|<DDM_PROBABILITY_UPPER_THRESHOLD>`|<DDM_PROBABILITY_LOWER_THRESHOLD>` |<DDM_RT_CORRECT_MEAN>`|<DDM_RT_CORRECT_VARIANCE>`|
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`BogaczEtAl <BogaczEtAl>`        |Analytic   |     X                  |   X                |     X                            |     X                             |                      |                          |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`NavarroAndFuss <NavarroAndFuss>`|Analytic   |     X                  |   X                |     X                            |     X                             |         X            |             X            |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`DriftDiffusionIntegrator        |Path       |                        |                    |                                  |                                   |                      |                          |
+|<DriftDiffusionIntegrator>`      |Integration|     X                  |   X                |                                  |                                   |                      |                          |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+
+The set of `output_states <DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of
+`Standard OutputStates <DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its
+constructor. Some `OutputStates <OutputState>`, or elements of `value <DDM.value>`, represent slightly different quantities
+depending on the function in which they are computed. See `Standard OutputStates <DDM_Standard_OutputStates>` for more
+details.
 
 .. _DDM_Modes:
 
