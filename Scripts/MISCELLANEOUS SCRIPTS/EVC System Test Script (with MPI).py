@@ -1,9 +1,9 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.Deprecated.LinearMechanism import *
+
+from PsyNeuLink.Components.Functions.Function import Exponential, Linear
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import System_Base
-from PsyNeuLink.Components.Functions.Function import Exponential, Linear
 from PsyNeuLink.Globals.Keywords import *
 
 if MPI_IMPLEMENTATION:

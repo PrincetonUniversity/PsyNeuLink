@@ -25,14 +25,14 @@ The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
 COMMENT
 The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
-`LearningMechanisms <LearningMechanism>`, and  `ControlMechanisms <ControlMechanism>` in that System have been executed.
+`LearningMechanism <LearningMechanism>`, and  `ControlMechanism <ControlMechanism>` in that System have been executed.
 
 .. _GatingMechanism_Creation:
 
 Creating A GatingMechanism
 ---------------------------
 
-GatingMechanisms can be created using the standard Python method of calling the constructor for the desired type.
+GatingMechanism can be created using the standard Python method of calling the constructor for the desired type.
 A GatingMechanism is also created automatically if `gating is specified <GatingMechanism_Specifying_Gating>` for an
 `InputState`, `OutputState` or `Mechanism <Mechanism>`, in which case a `GatingProjection` is automatically created
 that projects from the GatingMechanism to the specified target
@@ -42,7 +42,7 @@ that projects from the GatingMechanism to the specified target
 Specifying gating
 ~~~~~~~~~~~~~~~~~
 
-GatingMechanisms are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
+GatingMechanism are used to modulate the value of an `InputState` or `OutputState`. An InputState or OutputState can
 be specified for gating by assigning it a `GatingProjection` or `GatingSignal` anywhere that the Projections to a State
 or its ModulatorySignals `can be specified <State_Creation>`.  A `Mechanism <Mechanism>` can also be specified for
 gating, in which case the `primary InputState <InputState_Primary>` of the specified Mechanism is used.  States
@@ -223,7 +223,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     gating_signals : List[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
         `GatingProjection(s) <GatingProjection>` to the `InputState(s) <InputState>` and/or `OutputStates <OutputState>`
-        that it gates; same as GatingMechanisms `output_states <Mechanism_Base.output_states>` attribute.
+        that it gates; same as GatingMechanism `output_states <Mechanism_Base.output_states>` attribute.
 
     gating_projections : List[GatingProjection]
         list of all of the `GatingProjections <GatingProjection>` assigned to the GatingMechanism's

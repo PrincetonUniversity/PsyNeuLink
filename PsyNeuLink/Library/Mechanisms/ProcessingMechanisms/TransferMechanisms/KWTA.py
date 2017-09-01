@@ -148,23 +148,20 @@ Class Reference
 
 """
 
-import builtins
+import logging
 import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-import logging
-
-from PsyNeuLink.Components.Functions.Function import Logistic, get_matrix
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import AUTO, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, KWTA, K_VALUE, MATRIX, RATIO, RESULT, THRESHOLD
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpVerbosePref
+from PsyNeuLink.Components.Functions.Function import Logistic
+from PsyNeuLink.Globals.Keywords import INITIALIZING, KWTA, K_VALUE, RATIO, RESULT, THRESHOLD
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
+    RecurrentTransferMechanism
+from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 logger = logging.getLogger(__name__)
