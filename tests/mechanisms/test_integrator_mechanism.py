@@ -86,38 +86,36 @@ class TestIntegratorFunctions:
     def test_ornstein_uhlenbeck_integrator(self):
         I = IntegratorMechanism(
             function=OrnsteinUhlenbeckIntegrator(
+                decay=0.5,
                 initializer=10.0,
-                rate=10,
+                rate=0.25,
                 time_step_size=0.5,
-                decay=0.1,
-                offset=10,
+                noise = 0.0,
+                offset= 1.0
             )
         )
         # P = process(pathway=[I])
-        # value = previous_value + decay * rate * new_value * time_step_size + np.sqrt(
+        # value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
         # time_step_size * noise) * np.random.normal()
         # step 1:
+
         val = I.execute(1)
-        # value = 10 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 10.5 + 10
-        # previous_value = 20.5
-        # RETURN 20.5
+        # value = 10 + 0.5 * ( 10.0 - 0.25*1.0) * 0.5 + sqrt(0.25*0)*random_sample
+        #       = 10 + 0.5*9.75*0.5
+        #       = 12.4375
+        # adjusted_value = 12.4375 + 1.0
+        # previous_value = 13.4375
+        # RETURN 13.4375
 
         # step 2:
         val2 = I.execute(1)
-        # value = 20.5 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 21 + 10
-        # previous_value = 31
+        # value = 13.4375 + 0.5 * ( 13.4375 - 0.25*1.0) * 0.5
+        #       = 13.4375 + 3.296875
+        # adjusted_value = 16.734375 + 1.0
+        # previous_value = 17.734375
         # RETURN 31
 
-        # step 3:
-        val3 = I.execute(1)
-        # value = 31 + 0.1*10*1*0.5 + 0
-        # adjusted_value = 31.5 + 10
-        # previous_value = 41.5
-        # RETURN 41.5
-
-        assert (val, val2, val3) == (20.5, 31, 41.5)
+        assert (val, val2) == (13.4375, 17.734375)
 
     def test_ornstein_uhlenbeck_integrator_time(self):
         OU = IntegratorMechanism(
@@ -662,11 +660,16 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=OrnsteinUhlenbeckIntegrator(
-                noise=5.0,
+                noise=2.0,
+                decay=0.5,
+                initializer=1.0,
+                rate=0.25
             ),
             time_scale=TimeScale.TIME_STEP
         )
 
-        val = float(I.execute(10))
+        # val = 1.0 + 0.5 * (1.0 - 0.25 * 2.5) * 1.0 + np.sqrt(1.0 * 2.0) * np.random.normal()
 
-        np.testing.assert_allclose(val, 15.010789523731438)
+        val = float(I.execute(2.5))
+
+        np.testing.assert_allclose(val, 4.356601554140335)
