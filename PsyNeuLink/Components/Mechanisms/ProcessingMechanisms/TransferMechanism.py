@@ -195,7 +195,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     noise=0.0,                   \
     time_constant=1.0,           \
     range=(float:min, float:max),\
-    time_scale=TimeScale.TRIAL,  \
     params=None,                 \
     name=None,                   \
     prefs=None)
