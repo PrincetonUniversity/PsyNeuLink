@@ -4,4 +4,6 @@ AdaptiveMechanisms
 .. toctree::
    :maxdepth: 1
 
-   EVCMechanism
+   LearningMechanisms
+   ControlMechanisms
+   GatingMechanisms
