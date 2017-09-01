@@ -445,20 +445,20 @@ class DDM(ProcessingMechanism_Base):
             DDM is a subclass Type of the Mechanism Category of the Component class
             It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
                 two alternative forced choice (2AFC) decision making:
-                - Bogacz et al. (2006) analytic solution (TimeScale.TRIAL mode -- see kwBogaczEtAl option below):
+                - Bogacz et al. (2006) analytic solution:
                     generates error rate (ER) and decision time (DT);
                     ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-                - Navarro and Fuss (2009) analytic solution (TImeScale.TRIAL mode -- see kwNavarrosAndFuss:
+                - Navarro and Fuss (2009) analytic solution:
                     generates error rate (ER), decision time (DT) and their distributions;
                     ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-                - stepwise integrator that simulates each step of the integration process (TimeScale.TIME_STEP mode)
+                - stepwise integrator that simulates each step of the integration process
         Class attributes
         ----------------
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + ClassDefaults.variable (value):  STARTING_POINT
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
+            + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
                                                                   STARTING_POINT:<>
@@ -497,14 +497,6 @@ class DDM(ProcessingMechanism_Base):
     function : IntegratorFunction : default BogaczEtAl
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
-
-    COMMENT:
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the time_step or trial time scale.
-            This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
-            `function <DDM.function>`. This  must be set to `TimeScale.TIME_STEP` to numerically (path) integrate the
-            decision variable.
-    COMMENT
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
@@ -566,11 +558,6 @@ class DDM(ProcessingMechanism_Base):
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
         **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
         <DDM_Standard_OutputStates>`).
-
-    COMMENT:
-        time_scale : TimeScale : default TimeScale.TRIAL
-            determines the `TimeScale` at which the decision process is executed.
-    COMMENT
 
     name : str : default DDM-<index>
         the name of the Mechanism.
@@ -816,21 +803,11 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
 
-            if self.timeScale == TimeScale.TRIAL:
-                if function == Integrator:
-                    raise DDMError("In TRIAL mode, the {} param of {} cannot be Integrator. Please choose an analytic "
-                                   "solution for the function param: BogaczEtAl or NavarroAndFuss.".
-                                   format(FUNCTION, self.name))
-            else:
-                if function != DriftDiffusionIntegrator:
-                    raise DDMError("In TIME_STEP mode, the {} param of {} "
-                                   "must be DriftDiffusionIntegrator.".
-                                   format(FUNCTION, self.name))
-                else:
-                    self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                        noise=self.function_params['noise'], context='plot').function
-                    self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+            if isinstance(function, DriftDiffusionIntegrator):
+                self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
                                                     noise=self.function_params['noise'], context='plot').function
+                self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                noise=self.function_params['noise'], context='plot').function
 
             if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
                 # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
@@ -883,7 +860,6 @@ class DDM(ProcessingMechanism_Base):
             + kwDDM_Bias (float)
             + NON_DECISION_TIME (float)
             + NOISE (float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
         Returns the following values in self.value (2D np.array) and in
             the value of the corresponding outputState in the self.outputStates dict:
@@ -895,7 +871,6 @@ class DDM(ProcessingMechanism_Base):
         :param self:
         :param variable (float)
         :param params: (dict)
-        :param time_scale: (TimeScale)
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
