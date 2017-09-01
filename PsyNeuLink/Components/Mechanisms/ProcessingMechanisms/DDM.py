@@ -799,7 +799,8 @@ class DDM(ProcessingMechanism_Base):
                                                               noise=self.function_params['noise'],
                                                               context='plot').function
             self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                          noise=self.function_params['noise'], context='plot').function
+                                                          noise=self.function_params['noise'],
+                                                          context='plot').function
 
 
     def _execute(self,

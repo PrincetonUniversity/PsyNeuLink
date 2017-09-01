@@ -4123,9 +4123,11 @@ class DriftDiffusionIntegrator(
         previous_value = np.atleast_2d(previous_value)
         new_value = variable
 
-        value = previous_value + rate * new_value * time_step_size + np.sqrt(
-            time_step_size * noise) * np.random.normal()
-
+        value = previous_value + rate * new_value * time_step_size \
+            #     + np.sqrt(
+            # time_step_size * noise) * np.random.normal()
+        print("noise = ", np.sqrt(0.5) * np.random.normal())
+        print()
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
