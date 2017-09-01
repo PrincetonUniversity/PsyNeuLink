@@ -1,0 +1,557 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="TransferMechanisms" href="TransferMechanisms.html"/>
+        <link rel="next" title="LCA" href="LCA.html"/>
+        <link rel="prev" title="TransferMechanisms" href="TransferMechanisms.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">RecurrentTransferMechanism</a></li>
+<li class="toctree-l5"><a class="reference internal" href="LCA.html">LCA</a></li>
+<li class="toctree-l5"><a class="reference internal" href="KWTA.html">KWTA</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &raquo;</li>
+        
+          <li><a href="TransferMechanisms.html">TransferMechanisms</a> &raquo;</li>
+        
+      <li>RecurrentTransferMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/RecurrentTransferMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism">
+<span id="recurrenttransfermechanism"></span><h1>RecurrentTransferMechanism<a class="headerlink" href="#module-Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<span id="recurrent-transfer-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A RecurrentTransferMechanism is a subclass of <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that implements a single-layered recurrent
+network, in which each element is connected to every other element (instantiated in a recurrent
+<a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> referenced by the Mechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter).
+It also allows its previous input to be decayed, and reports the energy and, if appropriate, the entropy of its output.</p>
+</div>
+<div class="section" id="creating-a-recurrenttransfermechanism">
+<span id="recurrent-transfer-creation"></span><h2>Creating a RecurrentTransferMechanism<a class="headerlink" href="#creating-a-recurrenttransfermechanism" title="Permalink to this headline">¶</a></h2>
+<p>A RecurrentTransferMechanism can be created directly by calling its constructor, or using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> command and
+specifying RECURRENT_TRANSFER_MECHANISM as its <strong>mech_spec</strong> argument.  The recurrent projection is automatically
+created using the <strong>matrix</strong> (or <strong>auto</strong> and <strong>hetero</strong>) argument of the Mechanism’s constructor. If used, the
+<strong>matrix</strong> argument must specify either a square matrix or a <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that uses one (the default is
+<a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>). Alternatively, <strong>auto</strong> and <strong>hetero</strong> can be specified: these set the diagonal and
+off-diagonal terms, respectively. In all other respects, a RecurrentTransferMechanism is specified in the same way as a
+standard <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
+</div>
+<div class="section" id="structure">
+<span id="recurrent-transfer-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>The distinguishing feature of a RecurrentTransferMechanism is a self-projecting <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> – that
+is, one that projects from the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> back to its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary
+InputState</span></a>.  This can be parametrized using its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>,
+<code class="xref any docutils literal"><span class="pre">auto</span></code>, and <code class="xref any docutils literal"><span class="pre">hetero</span></code> attributes.
+In addition, a RecurrentTransferMechanism also has a <a class="reference internal" href="LCA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA.decay" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> &lt;RecurrentTransferMechanism.decay&gt;’ attribute, that
+multiplies its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> value by the specified factor each time it
+is executed.  It also has two additional <code class="xref any docutils literal"><span class="pre">OutputStates</span></code> is bounded between 0 and 1 (e.g., a <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function), an <em>ENTROPY</em>
+OutputState.  Each of these report the respective values of the vector in it its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary (*RESULTS*) OutputState</span></a>.  In all other respects the Mechanism is identical to a standard <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>.</p>
+</div>
+<div class="section" id="execution">
+<span id="recurrent-transfer-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a RecurrentTransferMechanism executes, it includes in its input the value of its
+<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> (after multiplication by the <a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.matrix" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> of the recurrent projection) from its
+last execution.</p>
+<p>Like a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, the function used to update each element can be assigned using its
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> parameter.  When a RecurrentTransferMechanism is executed,
+if its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay"><code class="xref any py py-attr docutils literal"><span class="pre">decay</span></code></a> parameter is specified (and is not 1.0), it
+decays the value of its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a> parameter by the
+specified factor.  It then transforms its input (including from the recurrent projection) using the specified
+function and parameters (see <a class="reference internal" href="TransferMechanism.html#transfer-execution"><span class="std std-ref">Execution</span></a>), and returns the results in its OutputStates.</p>
+</div>
+<div class="section" id="class-reference">
+<span id="recurrent-transfer-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RECURRENT_OUTPUT">
+<em class="property">class </em><code class="descclassname">Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.</code><code class="descname">RECURRENT_OUTPUT</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RECURRENT_OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p id="recurrenttransfermechanism-standard-outputstates"><a class="reference internal" href="OutputState.html#outputstate-standard"><span class="std std-ref">Standard OutputStates</span></a> for
+<a class="reference internal" href="#"><span class="doc">RecurrentTransferMechanism</span></a></p>
+<dl class="docutils">
+<dt><em>RESULT</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
+<dd>the result of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+of the Mechanism</dd>
+</dl>
+<dl class="docutils">
+<dt><em>MEAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>the mean of the result</dd>
+<dt><em>VARIANCE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>the variance of the result</dd>
+</dl>
+<dl class="docutils">
+<dt><em>ENERGY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>the energy of the result, which is calculated using the <a class="reference internal" href="Function.html#Function.Stability.function" title="Function.Stability.function"><code class="xref any py py-meth docutils literal"><span class="pre">Stability</span>
+<span class="pre">Function</span></code></a> with the <code class="docutils literal"><span class="pre">ENERGY</span></code> metric</dd>
+</dl>
+<dl class="docutils">
+<dt><em>ENTROPY</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>The entropy of the result, which is calculated using the <a class="reference internal" href="Function.html#Function.Stability.function" title="Function.Stability.function"><code class="xref any py py-meth docutils literal"><span class="pre">Stability</span>
+<span class="pre">Function</span></code></a> with the ENTROPY metric
+(Note: this is only present if the Mechanism’s <a class="reference internal" href="Function.html#Function.LinearMatrix.function" title="Function.LinearMatrix.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is bounded
+between 0 and 1 (e.g. the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function)).</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism">
+<em class="property">class </em><code class="descclassname">Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.</code><code class="descname">RecurrentTransferMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>function=Linear</em>, <em>matrix=FULL_CONNECTIVITY_MATRIX</em>, <em>auto=None</em>, <em>hetero=None</em>, <em>initial_value=None</em>, <em>decay=None</em>, <em>noise=0.0</em>, <em>time_constant=1.0</em>, <em>range=(float:min</em>, <em>float:max)</em>, <em>time_scale=TimeScale.TRIAL</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that implements a single-layer auto-recurrent network.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the input to the Mechanism to use if none is provided in a call to its
+<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
+also serves as a template to specify the length of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
+of the Mechanism.</li>
+<li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies variable as array(s) of zeros if <strong>variable</strong> is not passed as an argument;
+if <strong>variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default Linear</em>) – specifies the function used to transform the input;  can be <a class="reference internal" href="Function.html#Function.Linear" title="Function.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a>, <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="Function.html#Function.Exponential" title="Function.Exponential"><code class="xref any py py-class docutils literal"><span class="pre">Exponential</span></code></a>,
+or a custom function.</li>
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>matrix keyword</em><em>, or </em><em>AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX</em>) – specifies the matrix to use for creating a <a class="reference internal" href="#recurrent-transfer-structure"><span class="std std-ref">recurrent AutoAssociativeProjection</span></a>,
+or a AutoAssociativeProjection to use. If <strong>auto</strong> or <strong>hetero</strong> arguments are specified, the <strong>matrix</strong> argument
+will be ignored in favor of those arguments.</li>
+<li><strong>auto</strong> (<em>number</em><em>, </em><em>1D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a diagonal matrix with diagonal entries equal to <strong>auto</strong>, if <strong>auto</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. if the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>auto</strong> can be specified as a 1D array with length equal
+to the size of the Mechanism, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>hetero</strong> (<em>number</em><em>, </em><em>2D array</em><em>, or </em><em>None : default None</em>) – specifies matrix as a hollow matrix with all non-diagonal entries equal to <strong>hetero</strong>, if <strong>hetero</strong> is not None;
+If <strong>auto</strong> and <strong>hetero</strong> are both specified, then matrix is the sum of the two matrices from <strong>auto</strong> and
+<strong>hetero</strong>. For example, setting <strong>auto</strong> to 1 and <strong>hetero</strong> to -1 would set matrix to have a diagonal of
+1 and all non-diagonal entries -1. if the <strong>matrix</strong> argument is specified, it will be overwritten by
+<strong>auto</strong> and/or <strong>hetero</strong>, if either is specified. <strong>hetero</strong> can be specified as a 2D array with dimensions
+equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.</li>
+<li><strong>initial_value</strong> (<a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default Transfer_DEFAULT_BIAS</em>) – specifies the starting value for time-averaged input (only relevant if
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> is not 1.0).
+<code class="xref py py-data docutils literal"><span class="pre">Transfer_DEFAULT_BIAS</span></code></li>
+<li><strong>decay</strong> (<em>number : default 1.0</em>) – specifies the amount by which to decrement its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a>
+each time it is executed.</li>
+<li><strong>noise</strong> (<em>float</em><em> or </em><em>function : default 0.0</em>) – a stochastically-sampled value added to the result of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</li>
+<li><strong>time_constant</strong> (<em>float : default 1.0</em>) – <p>the time constant for exponential time averaging of input when the Mechanism is executed with <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale"><code class="xref any py py-attr docutils literal"><span class="pre">time_scale</span></code></a>
+set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span>
+<span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><strong>range</strong> (<em>Optional</em><em>[</em><em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>]</em>) – specifies the allowable range for the result of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+the first item specifies the minimum allowable value of the result, and the second its maximum allowable value;
+any element of the result that exceeds the specified minimum or maximum value is set to the value of
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> that it exceeds.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the constructor.</li>
+<li><strong>time_scale</strong> (<em>TimeScale : TimeScale.TRIAL</em>) – specifies whether the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
+This must be set to <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> for the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a>
+parameter to have an effect.</li>
+<li><strong>name</strong> (<em>str : default RecurrentTransferMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+<li><strong>context</strong> (<em>str : default componentType+INITIALIZING</em>) – string used for contextualization of instantiation, hierarchical calls, executions, etc.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable">
+<code class="descname">variable</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> – the input to Mechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function</em> – the Function used to transform the input.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – the <a class="reference internal" href="AutoAssociativeProjection.html#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> for the Mechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection">
+<code class="descname">recurrent_projection</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>AutoAssociativeProjection</em> – an <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> that projects from the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary outputState</span></a>
+back to its <a class="reference internal" href="Mechanism.html#mechanism-inputstates"><span class="std std-ref">primary inputState</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay">
+<code class="descname">decay</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.decay" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 1.0</em> – determines the amount by which to multiply the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input"><code class="xref any py py-attr docutils literal"><span class="pre">previous_input</span></code></a>
+value each time it is executed.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.initial_value">
+<code class="descname">initial_value</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.initial_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value, list or np.ndarray : Transfer_DEFAULT_BIAS</em> – determines the starting value for time-averaged input
+(only relevant if <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant"><code class="xref any py py-attr docutils literal"><span class="pre">time_constant</span></code></a> parameter is not 1.0).
+<code class="xref py py-data docutils literal"><span class="pre">Transfer_DEFAULT_BIAS</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.noise">
+<code class="descname">noise</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or function : default 0.0</em> – a stochastically-sampled value added to the output of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:
+if it is a float, it must be in the interval [0,1] and is used to scale the variance of a zero-mean Gaussian;
+if it is a function, it must return a scalar value.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant">
+<code class="descname">time_constant</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_constant" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float</em> – the time constant for exponential time averaging of input
+when the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">current</span> <span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">time_constant</span> <span class="o">*</span> <span class="n">result</span> <span class="n">on</span> <span class="n">previous</span> <span class="n">time_step</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range">
+<code class="descname">range</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Tuple[float, float]</em> – determines the allowable range of the result: the first value specifies the minimum allowable value
+and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
+is set to the value of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> it exceeds.  If
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+is <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a>, <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.range"><code class="xref any py py-attr docutils literal"><span class="pre">range</span></code></a> is set by default to (0,1).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input">
+<code class="descname">previous_input</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array of floats</em> – the value of the input on the previous execution, including the value of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value">
+<code class="descname">value</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array [array(float64)]</em> – result of executing <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; same value as first item of
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.output_values" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.outputStates">
+<code class="descname">outputStates</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.outputStates" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str, OutputState]</em> – an OrderedDict with the following <a class="reference internal" href="OutputState.html"><span class="doc">outputStates</span></a>:</p>
+<ul class="simple">
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_RESULT</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the <strong>result</strong> of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_MEAN</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the mean of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">TRANSFER_VARIANCE</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the variance of the result;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENERGY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the energy of the result,
+calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENERGY metric;</li>
+<li><code class="xref any docutils literal"><span class="pre">ENTROPY</span></code>, the <code class="xref std std-keyword docutils literal"><span class="pre">value</span></code> of which is the entropy of the result,
+calculated using the <a class="reference internal" href="Function.html#Function.Stability" title="Function.Stability"><code class="xref any py py-class docutils literal"><span class="pre">Stability</span></code></a> Function with the ENTROPY metric;
+note:  this is only present if the Mechanism’s <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is bounded between 0 and 1
+(e.g., the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.output_values">
+<code class="descname">output_values</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[array(float64), float, float]</em> – a list with the following items:</p>
+<ul class="simple">
+<li><strong>result</strong> of the <code class="docutils literal"><span class="pre">function</span></code> calculation (value of TRANSFER_RESULT outputState);</li>
+<li><strong>mean</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_MEAN outputState)</li>
+<li><strong>variance</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of TRANSFER_VARIANCE outputState);</li>
+<li><strong>energy</strong> of the result (<code class="docutils literal"><span class="pre">value</span></code> of ENERGY outputState);</li>
+<li><strong>entropy</strong> of the result (if the ENTROPY outputState is present).</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale">
+<code class="descname">time_scale</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TimeScale</em> – specifies whether the Mechanism is executed using the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> or <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default RecurrentTransferMechanism-&lt;index&gt;</em> – the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Projection;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of RecurrentTransferMechanism</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism">RecurrentTransferMechanism</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LCA.html" class="btn btn-neutral float-right" title="LCA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="TransferMechanisms.html" class="btn btn-neutral" title="TransferMechanisms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

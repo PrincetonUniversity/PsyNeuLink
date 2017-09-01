@@ -1,0 +1,475 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0.3.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
+        <link rel="up" title="ObjectiveMechanisms" href="ObjectiveMechanisms.html"/>
+        <link rel="next" title="AdaptiveMechanisms" href="AdaptiveMechanisms.html"/>
+        <link rel="prev" title="ObjectiveMechanisms" href="ObjectiveMechanisms.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PsyNeuLink
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="Mechanisms.html">Mechanisms</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="ProcessingMechanisms.html">Processing Mechanisms</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="TransferMechanisms.html">TransferMechanisms</a></li>
+<li class="toctree-l4"><a class="reference internal" href="IntegratorMechanisms.html">IntegratorMechanisms</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="ObjectiveMechanisms.html">ObjectiveMechanisms</a><ul class="current">
+<li class="toctree-l5 current"><a class="current reference internal" href="#">ComparatorMechanism</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanisms.html">AdaptiveMechanisms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Projections.html">Projections</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &raquo;</li>
+        
+          <li><a href="ObjectiveMechanisms.html">ObjectiveMechanisms</a> &raquo;</li>
+        
+      <li>ComparatorMechanism</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/ComparatorMechanism.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism">
+<span id="comparatormechanism"></span><h1>ComparatorMechanism<a class="headerlink" href="#module-Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A ComparatorMechanism is a subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that receives two inputs (a sample and a target), compares
+them using its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and places the calculted discrepancy between the two in its
+<em>ERROR_SIGNAL</em> <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a>.</p>
+</div>
+<div class="section" id="creating-a-comparatormechanism">
+<span id="comparatormechanism-creation"></span><h2>Creating a ComparatorMechanism<a class="headerlink" href="#creating-a-comparatormechanism" title="Permalink to this headline">¶</a></h2>
+<p>ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
+<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanism</span></a>.  A ComparatorMechanism can also be created directly by calling
+its constructor.  Its <strong>sample</strong> and <strong>target</strong> arguments are used to specify the OutputStates that provide the
+sample and target inputs, respectively (see <code class="xref any docutils literal"><span class="pre">ObjectiveMechanism_Monitored_States</span></code> for details concerning their
+specification, which are special versions of an ObjectiveMechanism’s <strong>monitored_values</strong> argument).  When the
+ComparatorMechanism is created, two InputStates are created, one each for its sample and target inputs (and named,
+by default, <em>SAMPLE</em> and <em>TARGET</em>). Each is assigned a MappingProjection from the corresponding OutputState specified
+in the <strong>sample</strong> and <strong>target</strong> arguments.</p>
+<p>It is important to recognize that the value of the <em>SAMPLE</em> and <em>TARGET</em> InputStates must have the same length and type,
+so that they can be compared using the ComparatorMechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  By default,
+they use the format of the OutputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively,
+and the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to each uses an <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.  Therefore, for the default configuration, the
+OutputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments must have values of the same length and type.
+If these differ, the <strong>input_states</strong> argument can be used to explicitly specify the format of the ComparatorMechanism’s
+<em>SAMPLE</em> and <em>TARGET</em> InputStates, to insure they are compatible with one another (as well as to customize their
+names, if desired).  If the <strong>input_states</strong> argument is used, <em>both</em> the sample and target InputStates must be
+specified.  Any of the formats for <code class="xref any docutils literal"><span class="pre">specifying</span> <span class="pre">InputStates</span></code> can be used in the argument.
+If values are assigned for the InputStates, they must be of equal length and type.  Their types must be
+also be compatible with the value of the OutputStates specified in the <strong>sample</strong> and <strong>target</strong> arguments.  However,
+the length specified for an InputState can differ from its corresponding OutputState;  in that case, by default, the
+MappingProjection created uses a <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY</span></code> matrix.  Thus, OutputStates of differing lengths can be mapped
+to the sample and target InputStates of a ComparatorMechanism (see the <a class="reference internal" href="#comparatormechanism-example"><span class="std std-ref">example</span></a> below),
+so long as the latter are of the same length.  If a projection other than a <code class="xref any docutils literal"><span class="pre">FULL_CONNECTIVITY</span></code> matrix is needed, this
+can be specified using the <em>PROJECTION</em> entry of a <a class="reference internal" href="State.html#state-specification"><span class="std std-ref">State specification dictionary</span></a> for the
+InputState in the <strong>input_states</strong> argument.</p>
+</div>
+<div class="section" id="structure">
+<span id="comparatormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A ComparatorMechanism has two <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a>, each of which receives a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from a corresponding OutputState specified in the <strong>sample</strong> and <strong>target</strong> arguments of its
+constructor.  The InputStates are listed in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_states</span></code> attribute
+and named, respectively, <em>SAMPLE</em> and <em>TARGET</em>.  The OutputStates from which they receive their projections (specified
+in the <strong>sample</strong> and <strong>target</strong> arguments) are listed in the Mechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attributes as well as in its <code class="xref any docutils literal"><span class="pre">monitored_values</span></code>
+attribute. The ComparatorMechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> compares the value of the sample and
+target InputStates.  By default, it uses a <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function, assigning the sample InputState a <code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>-1</em> and the target a <code class="xref any docutils literal"><span class="pre">weight</span></code> of <em>1</em>, so that the sample is
+subtracted from the target.  However, the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be customized, so long as it is
+replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
+The result is assigned as the value of the Comparator Mechanism’s <em>ERROR_SIGNAL</em> (<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>)
+OutputState.</p>
+</div>
+<div class="section" id="execution">
+<span id="comparatormechanism-function"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When an ComparatorMechanism is executed, it updates its input_states with the values of the OutputStates specified
+in its <strong>sample</strong> and <strong>target</strong> arguments, and then uses its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to
+compare these.  By default, the result is assigned as to the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>ERROR_SIGNAL</em>
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state"><code class="xref any py py-attr docutils literal"><span class="pre">output_state</span></code></a>, and as the first item of the Mechanism’s
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_values" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute.</p>
+<p class="rubric" id="comparatormechanism-example">Example</p>
+<p id="comparatormechanism-default-input-value-example"><em>Formatting InputState values</em></p>
+<p>The <strong>input_states</strong> argument can be used to specify a particular format for the SAMPLE and/or TARGET InputStates
+of a ComparatorMechanism.  This can be useful when one or both of these must be different than the format of the
+OutputState(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For example, for <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, a ComparatorMechanism is used to monitor an action selection Mechanism (the sample), and compare
+this with a reinforcement signal (the target).  In the example below, the action selection Mechanism is a
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="Function.html#Function.SoftMax" title="Function.SoftMax"><code class="xref any py py-class docutils literal"><span class="pre">SoftMax</span></code></a> function (and the <code class="xref any docutils literal"><span class="pre">PROB</span></code> as its output format) to select
+an action.  This generates a vector with a single non-zero value (the selected action). Because the output is a vector,
+specifying it as the ComparatorMechanism’s <strong>sample</strong> argument will generate a corresponding InputState with a vector
+as its value.  This will not match the reward signal specified in the ComparatorMechanism’s <strong>target</strong> argument, the
+value of which is a single scalar.  This can be dealt with by explicitly specifying the format for the SAMPLE and
+TARGET InputStates in the <strong>input_states</strong> argument of the ComparatorMechanism’s constructor, as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_action_selection_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                                             <span class="n">function</span><span class="o">=</span><span class="n">SoftMax</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">PROB</span><span class="p">))</span>
+
+<span class="n">my_reward_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">my_comparator_mech</span> <span class="o">=</span> <span class="n">ComparatorMechanism</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">my_action_selection_mech</span><span class="p">,</span>
+                                         <span class="n">target</span><span class="o">=</span><span class="n">my_reward_mech</span><span class="p">,</span>
+                                         <span class="n">input_states</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal"><span class="pre">my_action_selection_mechanism</span></code> is specified to take an array of length 5 as its input, and therefore
+generate one of the same length as its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary output</span></a>.  Since it is assigned as the <strong>sample</strong>
+of the ComparatorMechanism, by default this will create a <em>SAMPLE</em> InputState of length 5, that will not match the
+length of the <em>TARGET</em> InputState (which is 1).  This is taken care of, by specifying the <strong>input_states</strong> argument
+as an array with two single-value arrays (corresponding to the <em>SAMPLE</em> and <em>TARGET</em> InputStates). (In this
+example, the <strong>sample</strong> and <strong>target</strong> arguments are specified as Mechanisms since, by default, each has only a single
+(<a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a>) OutputState, that will be used;  if either had more than one OutputState, and
+one of those was desired, it would have had to be specified explicitly in the <strong>sample</strong> or <strong>target</strong> argument).</p>
+</div>
+<div class="section" id="class-reference">
+<span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.COMPARATOR_OUTPUT">
+<em class="property">class </em><code class="descclassname">Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">COMPARATOR_OUTPUT</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.COMPARATOR_OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dd><p id="comparatormechanism-standard-outputstates"><a class="reference internal" href="OutputState.html#outputstate-standard"><span class="std std-ref">Standard OutputStates</span></a> for <a class="reference internal" href="#"><span class="doc">ComparatorMechanism</span></a></p>
+<dl class="docutils">
+<dt><em>SSE</em></dt>
+<dd>the value of the sum squared error of the Mechanism’s function</dd>
+</dl>
+<dl class="docutils">
+<dt><em>MSE</em></dt>
+<dd>the value of the mean squared error of the Mechanism’s function</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism">
+<em class="property">class </em><code class="descclassname">Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.</code><code class="descname">ComparatorMechanism</code><span class="sig-paren">(</span><em>                                        sample,                                                 target,                                                 input_states=[SAMPLE,TARGET]                            function=LinearCombination(weights=[[-1],[1]],          input_states=[ERROR_SIGNAL]                             params=None,                                            name=None,                                              prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that compares the values of two <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sample</strong> (<a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value"><em>value</em></a><em>, or </em><em>string</em>) – specifies the value to compare with the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>target</strong> (<a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value"><em>value</em></a><em>, or </em><em>string</em>) – specifies the value with which the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
+<li><strong>input_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>SAMPLE</em><em>, </em><a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.TARGET" title="Keywords.MechanismRoles.TARGET"><em>TARGET</em></a><em>]</em>) – specifies the names and/or formats to use for the values of the sample and target InputStates;
+by default they are named <em>SAMPLE</em> and <em>TARGET</em>, and their formats are match the value of the OutputStates
+specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively (see <a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a>
+for additional details).</li>
+<li><strong>function</strong> (<a class="reference internal" href="Function.html#module-Function" title="Function"><em>Function</em></a><em>, </em><a class="reference internal" href="Function.html#Function.LinearMatrix.function" title="Function.LinearMatrix.function"><em>function</em></a><em> or </em><em>method : default Distance</em><em>(</em><em>metric=DIFFERENCE</em><em>)</em>) – specifies the <code class="xref any docutils literal"><span class="pre">function</span></code> used to compare the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.</li>
+<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>ERROR_SIGNAL</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
+the dictionary override any assigned to those parameters in arguments of the
+constructor.</li>
+<li><strong>name</strong> (<em>str : default ComparatorMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample">
+<code class="descname">sample</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> – determines the value to compare with the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target">
+<code class="descname">target</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> – determines the value with which <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states">
+<code class="descname">input_states</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[InputState, InputState]</em> – contains the two InputStates named, by default, <em>SAMPLE</em> and <em>TARGET</em>, each of which receives a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the OutputStates referenced by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> and <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a> attributes
+(see <a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a> for additional details).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>CombinationFunction, function or method</em> – used to compare the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>.  It can be any PsyNeuLink <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>,
+or a python function that takes a 2d array with two items and returns a 1d array of the same length
+as the two input items.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value">
+<code class="descname">value</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d np.array</em> – the result of the comparison carried out by the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state">
+<code class="descname">output_state</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> – contains the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary</span></a> OutputState of the ComparatorMechanism; the default is
+its <em>ERROR_SIGNAL</em> OutputState, the value of which is equal to the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+attribute of the ComparatorMechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_states">
+<code class="descname">output_states</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_states" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>ContentAddressableList[OutputState]</em> – contains, by default, only the <em>ERROR_SIGNAL</em> (primary) OutputState of the ComparatorMechanism.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_values">
+<code class="descname">output_values</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.array</em> – contains one item that is the value of the <em>ERROR_SIGNAL</em> OutputState.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.name">
+<code class="descname">name</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default ComparatorMechanism-&lt;index&gt;</em> – the name of the Mechanism.
+Specified in the <strong>name</strong> argument of the constructor for the Mechanism;
+if not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
+(see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Mechanism.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Mechanism.
+Specified in the <strong>prefs</strong> argument of the constructor for the Mechanism;
+if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="AdaptiveMechanisms.html" class="btn btn-neutral float-right" title="AdaptiveMechanisms" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ObjectiveMechanisms.html" class="btn btn-neutral" title="ObjectiveMechanisms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.3.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
