@@ -663,7 +663,7 @@ class DDM(ProcessingMechanism_Base):
                                   size=size,
                                   # context=context)
                                   context=self)
-
+        self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
         # for param in self.user_params.keys():
@@ -729,44 +729,6 @@ class DDM(ProcessingMechanism_Base):
             # number of seconds to wait before next point is plotted
             time.sleep(.1)
 
-
-        #
-        # import matplotlib.pyplot as plt
-        # plt.ion()
-        #
-        # # # Select a random seed to ensure that the test run will be the same as the real run
-        # seed_value = np.random.randint(0, 100)
-        # np.random.seed(seed_value)
-        # variable = stimulus
-        #
-        # result_check = 0
-        # time_check = 0
-        #
-        # while abs(result_check) < threshold:
-        #     time_check += 1
-        #     result_check = self.get_axes_function(variable, context='plot')
-        #
-        # # Re-set random seed for the real run
-        # np.random.seed(seed_value)
-        # axes = plt.gca()
-        # axes.set_xlim([0, time_check])
-        # axes.set_xlabel("Time Step", weight="heavy", size="large")
-        # axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
-        # axes.set_ylabel("Position", weight="heavy", size="large")
-        # plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
-        # plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
-        # plt.plot()
-        #
-        # result = 0
-        # time = 0
-        # while abs(result) < threshold:
-        #     time += 1
-        #     result = self.plot_function(variable, context='plot')
-        #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
-        #     plt.pause(0.01)
-        #
-        # plt.pause(10000)
-
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Ensures that input to DDM is a single value.
@@ -794,20 +756,14 @@ class DDM(ProcessingMechanism_Base):
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
-            function = target_set[FUNCTION]
-            if isinstance(function, method_type):
-                function = function.__self__.__class__
+            fun = target_set[FUNCTION]
+            if isinstance(fun, method_type):
+                fun = fun.__self__.__class__
 
-            if not function in functions:
-                function_names = [function.componentName for function in functions]
+            if not fun in functions:
+                function_names = [function.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
-
-            if isinstance(function, DriftDiffusionIntegrator):
-                self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                    noise=self.function_params['noise'], context='plot').function
-                self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                noise=self.function_params['noise'], context='plot').function
 
             if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
                 # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
@@ -836,6 +792,15 @@ class DDM(ProcessingMechanism_Base):
         """
 
         super()._instantiate_attributes_before_function(context=context)
+
+    def _instantiate_plotting_functions(self, context=None):
+        if "DriftDiffusionIntegrator" in str(self.function):
+            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                              noise=self.function_params['noise'],
+                                                              context='plot').function
+            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                          noise=self.function_params['noise'], context='plot').function
+
 
     def _execute(self,
                  variable=None,
