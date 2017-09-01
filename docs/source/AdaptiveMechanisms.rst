@@ -5,3 +5,4 @@ AdaptiveMechanisms
    :maxdepth: 1
 
    EVCMechanism
+   LCMechanism

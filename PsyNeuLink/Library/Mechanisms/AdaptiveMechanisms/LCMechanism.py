@@ -12,13 +12,13 @@
 Overview
 --------
 
-An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates gain of (i.e., multiplicatively modulates)
-the `function <TransferMechanism.function>` of one or more `TransferMechanisms <TransferMechanism>`.  It implements
-an abstract model of the `locus coeruleus (LC) <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a
-`UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
+An LCMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
+<Mechanism.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
+It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that,
+together with a `UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
 (LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to regulate its output (between its
-"tonic" to "phasic" modes of responding (see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_),
+"tonic" to "phasic" modes of responding -- see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_),
 which can be modified using its `mode <LCMechanism.mode>` parameter.
 
 .. _LCMechanism_Creation:
@@ -38,26 +38,18 @@ specifying them in the **monitor_for_control** argument of its constructor (see 
 Specifying Mechanisms to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-MUST BE PROCESSING MECHANISM WITH A FUNCTION THAT HAS A MULTIPLICATIVE PARAMETER
-
-The Mechanisms to be controlled by a LCMechanism are listed in its **control_signals** argument. An LCMechanism
-controls the gain of a `TransferMechanism` by modifying the `multiplicative parameter` of the TransferMechanism's
-`function <TransferMechanism.function>`.  Therefore, any Mechanism specified for control by an LCMechanism must have
-a `function` with a `multiplicative` parameter.
-
-list of Mechanisms it controls is specified in the **control_signals** argument of its constructor
-
-A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
-(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
-parameters to be controlled by an LCMechanism can also be specified in the **control_signals**  argument of the
-constructor for an LCMechanism (or of the System that created it).  The **control_signals** argument must be a
-list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
-
-A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
-the ControlSignals for an LCMechanism are listed in its `control_signals <LCMechanism.control_signals>`
-attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
-it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's
-`output_states <Mechanism_Base.output_states>` attribute.
+The Mechanisms to be controlled by a LCMechanism are specified in its **control_signals** argument. An LCMechanism
+controls a `Mechanism` by modifying the `multiplicative parameter <Function_Modulatory_Params>` of the
+Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism specified for control by
+an LCMechanism must be either a `TransferMechanism`, or a Mechanism that uses a `TransferFunction` or a class of
+`Function <Function>` that implements a `multiplicative parameter <Function_Modulatory_Params>`.  The
+**controls_signals** argument must be a list of such Mechanisms.  The keyword *ALL* can also be used to specify all
+of the eligible Mechanisms in all of the `Compositions <Composition>` to which the LCMechanism belongs.  If a
+Mechanism specified in the **control_signals** argument does not implement a multiplicative parameter, it is ignored.
+A `ControlProjection` is automatically created from the LCMechanism to the `ParameterState` for the `multiplicative
+parameter <Function_Modulatory_Params>` of every Mechanism specified in the **control_signals** argument.
+ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's `output_states
+<Mechanism_Base.output_states>` attribute.
 
 
 .. _LCMechanism_Monitored_OutputStates:
@@ -65,36 +57,39 @@ it controls. ControlSignals are a type of `OutputState`, and so they are also li
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-If the **monitor_for_control** argument is specified, the following
-Components are automatically created by the LCMechanism when it is created:
+If the **monitor_for_control** argument is specified in the LCMechanism's constructor, it automatically creates a
+`UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified.  The **monitor_for_control**
+argument must be a list, each item of which must refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These
+are assigned to the UtilityIntegratorMechanism's `monitored_values <UtilityIntegratorMechanism>` attribute (and the
+LCMechanism's `monitored_output_states` <LCMechanism.monitored_output_states>` attribute).
+The UtilityIntegratorMechanism itself is assigned to the LCMechanism's `monitoring_mechanism
+<LCMechanism.monitoring_mechanism>` attribute).
 
-* a `UtilityIntegratorMechanism`, using the list of `OutputState` specifications in the **monitor_for_control**
-  argument of the LCMechanism's constructor to specify the UtilityIntegratorMechanism's `monitored_values
-  <UtilityIntegratorMechanism.monitored_values>` attribute;
+
+.. _LCMechanism_Structure:
+
+Structure
+---------
+
+An LCMechanism has a single `ControlSignal` used to modulate the function of the Mechanism(s) that it controls.  The
+ControlSignal is assigned a `ControlProjection` to the `ParameterState` for the `multiplicative parameter
+<Function_Modulatory_Params>` of each Mechanism.  If the **monitor_for_control** argument is specified, the following
+Components are also automatically created and assigned to the LCMechanism when it is created:
+
+* a `UtilityIntegratorMechanism` -- this monitors the `value <OutputState.value>` of each of the `OutputStates
+  <OutputState>` specified in the **monitor_for_control** argument of the LCMechanism's constructor;  these are
+  listed in the LCMechanis's `monitored_output_states` <LCMechanism.monitored_output_states>` attribute, and the
+  `monitored_values <UtilityIntegratorMechanism>` attribute of the UtilityIntegratorMechanism.  They are evaluated by
+  the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism>`;  the result is assigned as the `value
+  <OutputState.value>` of the UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+  `MappingProjection` -- see below) to the LCMechanism's *MODE* `InputState`. This information is used by the
+  LCMechanism to set the `value <ControlSignal.value>` for its `ControlSignal`.
 ..
 * a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
   <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
 ..
 * `MappingProjections <MappingProjection> from Mechanisms or OutputStates specified in **monitor_for_control** to
   the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
-COMMENT
-
-When an LCMechanism is created, if its **monitor_for_control** argument is specified  it automatically creates a
-`UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified in the **monitor_for_control**
-argument of the LCMechanism's constructor. The **monitor_for_control** argument must be a list, each item of which must
-refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
-`monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states`
-<LCMechanism.monitored_output_states>` attribute), and the UtilityIntegratorMechanism is referenced by the LCMechanism's `monitoring_mechanism <LCMechanism.monitoring_mechanism>` attribute. The UtilityIntegratorMechanism
-monitors each Mechanism and/or OutputState listed in its `monitored_values
-<UtilityIntegratorMechanism.monitored_values>` attribute (and the LCMechanism's `monitored_output_states`
-<LCMechanism.monitored_output_states>`attribute), and evaluates them using the its `function
-<ObjectiveMechanism.function>`.  The result is assigned as the `value <OutputState.value>` of the
-UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
-`MappingProjection`) to the LCMechanism's *MODE* `InputState`. This information is used by the
-LCMechanism to set the `allocation <ControlSignal.allocation>` for its `ControlSignals <ControlSignal>`.
-
-
 
 COMMENT:
 
@@ -113,13 +108,12 @@ MODE INPUT_STATE <- NAMED ONE, LAST?
 SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
 CONTROL SIGNALS
 
-
-
 .. _LCMechanism_Execution:
 
 Execution
 ---------
 
+Like other ControlMechanisms
 An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
 LCMechanism's `function <LCMechanism.function>` takes as its input the `value <InputState.value>` of
@@ -148,6 +142,7 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -156,7 +151,10 @@ from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MECHANISM, MONITOR_FOR_CONTROL, NAME, OWNER, PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
+from PsyNeuLink.Globals.Keywords import CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
+                                        CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, INIT__EXECUTE__METHOD_ONLY, \
+                                        MAKE_DEFAULT_CONTROLLER, MECHANISM, MONITOR_FOR_CONTROL, NAME, OWNER, \
+                                        PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList

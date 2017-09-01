@@ -1,5 +1,5 @@
-EVCMechanism
-============
+LCMechanism
+===========
 
-.. automodule:: Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism
+.. automodule:: Library.Mechanisms.AdaptiveMechanisms.LCMechanism
    :exclude-members: random, LinearCombination
