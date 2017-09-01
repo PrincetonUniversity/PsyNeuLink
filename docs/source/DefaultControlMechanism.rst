@@ -1,5 +1,5 @@
 DefaultControlMechanism
 =======================
 
-.. automodule:: AdaptiveMechanisms.ControlMechanisms.DefaultControlMechanism
+.. automodule:: DefaultControlMechanism
    :exclude-members: random

@@ -75,7 +75,7 @@ ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of 
 Specifying Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ControlMechanisms are used to control the parameter values of other `Components <Component>` (including `Functions
+ControlMechanism are used to control the parameter values of other `Components <Component>` (including `Functions
 <Function>`).  A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
 (along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
 parameters to be controlled by a ControlMechanism can also be specified in the **control_signals**  argument of the
@@ -171,11 +171,12 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
     of one or more `Component(s) <Component>`.
 
+
+    COMMENT:
     .. note::
        ControlMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
        It should be instantiated using the constructor for a `subclass <ControlMechanism_Subtypes>`.
 
-    COMMENT:
         Description:
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)

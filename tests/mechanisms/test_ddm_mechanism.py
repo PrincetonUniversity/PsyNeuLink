@@ -3,7 +3,7 @@ import typecheck
 
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, DriftDiffusionIntegrator, FunctionError, NormalDist
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DDMError
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDMError
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 

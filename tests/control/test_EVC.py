@@ -1,16 +1,18 @@
-import pytest
 import numpy as np
+import pytest
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
 from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, \
+    kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DECISION_VARIABLE, \
+    PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 
 
 def test_EVC():
@@ -54,18 +56,18 @@ def test_EVC():
         name='Decision',
     )
 
-    Input.prefs.paramValidationPref = False
-    Reward.prefs.paramValidationPref = False
-    Decision.prefs.paramValidationPref = False
-    Decision.input_state.prefs.paramValidationPref = False
-    for mech in [Input, Reward, Decision]:
-        mech.function_object.prefs.paramValidationPref = False
-        for os in mech.output_states:
-            os.prefs.paramValidationPref = False
-        for instate in mech.input_states:
-            instate.prefs.paramValidationPref = False
-        for pstate in mech._parameter_states:
-            pstate.prefs.paramValidationPref = False
+    # Input.prefs.paramValidationPref = False
+    # Reward.prefs.paramValidationPref = False
+    # Decision.prefs.paramValidationPref = False
+    # Decision.input_state.prefs.paramValidationPref = False
+    # for mech in [Input, Reward, Decision]:
+    #     mech.function_object.prefs.paramValidationPref = False
+    #     for os in mech.output_states:
+    #         os.prefs.paramValidationPref = False
+    #     for instate in mech.input_states:
+    #         instate.prefs.paramValidationPref = False
+    #     for pstate in mech._parameter_states:
+    #         pstate.prefs.paramValidationPref = False
 
     # Processes:
     TaskExecutionProcess = process(
@@ -95,9 +97,9 @@ def test_EVC():
         name='EVC Test System',
     )
 
-    TaskExecutionProcess.prefs.paramValidationPref = False
-    RewardProcess.prefs.paramValidationPref = False
-    mySystem.prefs.paramValidationPref = False
+    # TaskExecutionProcess.prefs.paramValidationPref = False
+    # RewardProcess.prefs.paramValidationPref = False
+    # mySystem.prefs.paramValidationPref = False
 
     # Stimuli
     stim_list_dict = {

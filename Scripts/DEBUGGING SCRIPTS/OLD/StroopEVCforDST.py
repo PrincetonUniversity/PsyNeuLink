@@ -5,11 +5,10 @@ Created on Mon Feb  6 13:47:38 2017
 @author: lauraab
 """
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import *
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
 
 #helpful commands! .show()   .excute()
 color_word_combine = TransferMechanism(name='color_word_combine', function = Linear()) #default_variable = [1], #JON HOW TO MAKE THIS A SUBTRACTION?

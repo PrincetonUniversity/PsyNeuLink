@@ -1,16 +1,14 @@
 import numpy as np
 import pytest
 
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, NormalDist, SimpleIntegrator, UniformDist
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
+from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
+    SimpleIntegrator
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
+    OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import EXECUTING
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
+    import IntegratorMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
