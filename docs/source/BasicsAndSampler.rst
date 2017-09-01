@@ -69,7 +69,7 @@ Composition -- a `Process` -- to create a 3-layered 5-2-5 encoder network, the f
 uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction::
 
-    # Construct Mechanisms:
+    # Construct the Mechanisms:
     input_layer = TransferMechanism(size=5)
     hidden_layer = TransferMechanism(size=2, function=Logistic)
     output_layer = TransferMechanism(size=5, function=Logistic)
