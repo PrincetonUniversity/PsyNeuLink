@@ -219,7 +219,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
         -------------
@@ -631,7 +630,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + NOISE (float)
             + TIME_CONSTANT (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -643,7 +641,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         :param self:
         :param variable (float)
         :param params: (dict)
-        :param time_scale: (TimeScale)
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
