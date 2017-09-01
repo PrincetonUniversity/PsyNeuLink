@@ -1,4 +1,3 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection

@@ -111,7 +111,7 @@ Allocation, Function and Intensity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
-which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
+which it belongs. Some ControlMechanism sample different allocation values for their ControlSignals to determine
 which to use (such as the `EVCMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
@@ -187,7 +187,7 @@ that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjection
 Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
 `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
 `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
-by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
+by some ControlMechanism, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
 `allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
@@ -274,28 +274,34 @@ Class Reference
 """
 
 import inspect
+import warnings
+from enum import IntEnum
+
 import numpy as np
 import typecheck as tc
-import warnings
-
-from enum import IntEnum
 
 from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
+from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
+    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
+from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, \
+    FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, \
+    SLOPE, SUM, kwAssign
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
+    kwCompatibilityType
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism import \
+    ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, \
+    costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):

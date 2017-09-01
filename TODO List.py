@@ -56,7 +56,7 @@
 
 # TASKS:
 #  0) IMPLEMENT: Composition
-#       Assign projections for ObjectiveMechanisms, LearningMechanisms, ControlMechanisms, etc.
+#       Assign projections for ObjectiveMechanisms, LearningMechanism, ControlMechanism, etc.
 #       Validate that all items are in the same Composition
 #       add_projection_to and add_projection_from methods
 #       methods in LearningAuxilliary
@@ -618,7 +618,7 @@
 #                  System
 # IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
 #            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
-#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            (SINCE LearningMechanism ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
 #            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
 
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --

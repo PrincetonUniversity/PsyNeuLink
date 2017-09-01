@@ -1,16 +1,18 @@
-import pytest
 import numpy as np
+import pytest
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, DECISION_VARIABLE, PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
+from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Functions.Function import Linear, BogaczEtAl, Exponential, DRIFT_RATE, THRESHOLD
 from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, IDENTITY_MATRIX, MEAN, RESULT, VARIANCE
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, kpReportOutputPref
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import ComponentPreferenceSet, kpVerbosePref, \
+    kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DECISION_VARIABLE, \
+    PROBABILITY_UPPER_THRESHOLD, RESPONSE_TIME
 
 
 def test_EVC():

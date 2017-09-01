@@ -7,13 +7,8 @@ Processing Mechanisms
    :maxdepth: 1
 
    TransferMechanism
-   RecurrentTransferMechanism
-   LCA
-   KWTA
    IntegratorMechanism
-   DDM
    ObjectiveMechanism
-   ComparatorMechanism
 
 .. automodule:: ProcessingMechanisms.ProcessingMechanism
    :members:

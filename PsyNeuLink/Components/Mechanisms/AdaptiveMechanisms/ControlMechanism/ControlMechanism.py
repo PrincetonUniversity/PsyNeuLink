@@ -6,99 +6,92 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 
-# **************************************  LCMechanism ************************************************
+# **************************************  ControlMechanism ************************************************
 
 """
 Overview
 --------
 
-An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates gain of (i.e., multiplicatively modulates)
-the `function <TransferMechanism.function>` of one or more `TransferMechanisms <TransferMechanism>`.  It implements
-an abstract model of the `locus coeruleus (LC) <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a
-`UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
-<http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
-(LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to regulate its output (between its
-"tonic" to "phasic" modes of responding (see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_),
-which can be modified using its `mode <LCMechanism.mode>` parameter.
+A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
+`Components <Component>`. Its `function <ControlMechanism_Base.function>` takes an evaluative signal (usually the
+output of an `ObjectiveMechanism`) and uses that to calculate an `allocation_policy
+<ControlMechanism_Base.allocation_policy>`:  a list of `allocation <ControlSignal.allocation>` values for each of its
+`ControlSignals <ControlSignal>`.  This is used by each ControlSignal to calculate its `intensity`, which is then
+conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the `ParameterState(s)
+<ParameterState>` to which they project.  Each ParameterState then uses the value received by a ControlProjection to
+modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation` for a more detailed
+description of how modulation operates).  A ControlMechanism can regulate only the parameters of Components in the
+`System` for which it is the `controller <System_Execution_Control>`.  The control Components of a System can be
+displayed using the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
+COMMENT: TBI
+The control Components of a System can be displayed using the System's
+`show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
+COMMENT
 
-.. _LCMechanism_Creation:
+The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
+`learning components <LearningMechanism>` in that System have been executed (see `System Execution <System_Execution>`).
 
-Creating an LCMechanism
+.. _ControlMechanism_Creation:
+
+Creating a ControlMechanism
 ---------------------------
 
-An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation.  Like any Mechanism,
-its **input_states** argument can be used to `specify Mechanisms (and/or their OutputState(s)
-<Mechanism_State_Specification>` to project to the LCMechanism (i.e., that drive its response).  The Mechanisms
-<Mechanism>` it controls are specified in the **control_signals** argument (see `LCMechanism_Control_Signals`). In
-addition, one or more Mechanisms can be specified to govern the LCMechanism's `mode <LCMechanism.mode>` parameter, by
-specifying them in the **monitor_for_control** argument of its constructor (see `LCMechanism_Monitored_OutputStates`).
+A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
+A ControlMechanism is also created automatically whenever a `System is created <System_Creation>`,
+and the ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's
+constructor (see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), the
+values it monitors are specified in the **monitor_for_control** argument of its constructor, and the parameters it
+controls are specified in the **control_signals** argument.  If the ControlMechanism is created automatically by a
+System, then the values to be monitored and parameters to be controlled can be specified in the **monitor_for_control**
+and **control_signals** argument of the System's constructor, respectively.  When the ControlMechanism is created, it
+automatically creates an `ObjectiveMechanism` (used to monitor and evaluate the values specified in
+**monitor_for_control**) as well as `ControlSignals <ControlSignal>` and `ControlProjections <ControlProjection>`
+used to control the parameters specified in **control_signals**, as described below. The kind of ObjectiveMechanism
+created by a ControlMechanism, and how it evaluates the values it monitors, depends on the `subclass <LINK>` of
+ControlMechanism.
 
-.. _LCMechanism_Control_Signals:
+.. _ControlMechanism_Monitored_OutputStates:
 
-Specifying Mechanisms to Control
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-MUST BE PROCESSING MECHANISM WITH A FUNCTION THAT HAS A MULTIPLICATIVE PARAMETER
-
-The Mechanisms to be controlled by a LCMechanism are listed in its **control_signals** argument. An LCMechanism
-controls the gain of a `TransferMechanism` by modifying the `multiplicative parameter` of the TransferMechanism's
-`function <TransferMechanism.function>`.  Therefore, any Mechanism specified for control by an LCMechanism must have
-a `function` with a `multiplicative` parameter.  These can be specified in...
-
-list of Mechanisms it controls is specified in the **control_signals** argument of its constructor
-
-A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
-(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
-parameters to be controlled by an LCMechanism can also be specified in the **control_signals**  argument of the
-constructor for an LCMechanism (or of the System that created it).  The **control_signals** argument must be a
-list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
-
-A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
-the ControlSignals for an LCMechanism are listed in its `control_signals <LCMechanism.control_signals>`
-attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
-it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the LCMechanism's
-`output_states <Mechanism_Base.output_states>` attribute.
-
-
-.. _LCMechanism_Monitored_OutputStates:
 
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+When a ControlMechanism is created, it automatically creates an `ObjectiveMechanism` that is used to monitor and
+evaluate the values specified in the **monitor_for_control** argument of the ControlMechanism's constructor (or of the
+System that created the ControlMechanism). The **monitor_for_control** argument must be a list, each item of which must
+refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the ObjectiveMechanism's
+`monitored_values <ObjectiveMechanism>` attribute (and the ControlMechanism's `monitored_output_states`
+<ControlMechanism_Base.monitored_output_states>` attribute), and the ObjectiveMechanism is referenced by the
+ControlMechanism's `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>` attribute. The ObjectiveMechanism
+monitors each Mechanism and/or OutputState listed in its `monitored_values <ObjectiveMechanism.monitored_values>`
+attribute (and the ControlMechanism's `monitored_output_states` <ControlMechanism_Base.monitored_output_states>`
+attribute), and evaluates them using the its `function <ObjectiveMechanism.function>`.  The result is assigned as the
+`value <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+`MappingProjection`) to the ControlMechanism's *ERROR_SIGNAL* `InputState`. This information is used by the
+ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of the ControlMechanism's ControlSignals.
+
+.. _ControlMechanism_Control_Signals:
+
+Specifying Parameters to Control
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ControlMechanism are used to control the parameter values of other `Components <Component>` (including `Functions
+<Function>`).  A parameter can be specified for control by assigning it a `ControlProjection` or `ControlSignal`
+(along with the parameter's value) wherever a parameter can be specified (see `ParameterState_Specification`).  The
+parameters to be controlled by a ControlMechanism can also be specified in the **control_signals**  argument of the
+constructor for a ControlMechanism (or of the System that created it).  The **control_signals** argument must be a
+list, each item of which can use any of the forms used for `specifying a ControlSignal <ControlSignal_Specification>`.
+
+A `ControlSignal` is created for each item listed in the **control_signals** argument of its constructor, and all of
+the ControlSignals for a ControlMechanism are listed in its `control_signals <ControlMechanism_Base.control_signals>`
+attribute.  Each ControlSignal is assigned a `ControlProjection` to the `ParameterState` associated with each parameter
+it controls. ControlSignals are a type of `OutputState`, and so they are also listed in the ControlMechanism's
+`output_states <Mechanism_Base.output_states>` attribute.
+
+
 COMMENT:
-If the **monitor_for_control** argument is specified, the following
-Components are automatically created by the LCMechanism when it is created:
 
-* a `UtilityIntegratorMechanism`, using the list of `OutputState` specifications in the **monitor_for_control**
-  argument of the LCMechanism's constructor to specify the UtilityIntegratorMechanism's `monitored_values
-  <UtilityIntegratorMechanism.monitored_values>` attribute;
-..
-* a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
-  <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
-..
-* `MappingProjections <MappingProjection> from Mechanisms or OutputStates specified in **monitor_for_control** to
-  the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
-COMMENT
-
-When an LCMechanism is created, if its **monitor_for_control** argument is specified  it automatically creates a
-`UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified in the **monitor_for_control**
-argument of the LCMechanism's constructor. The **monitor_for_control** argument must be a list, each item of which must
-refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
-`monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states`
-<LCMechanism.monitored_output_states>` attribute), and the UtilityIntegratorMechanism is referenced by the LCMechanism's `monitoring_mechanism <LCMechanism.monitoring_mechanism>` attribute. The UtilityIntegratorMechanism
-monitors each Mechanism and/or OutputState listed in its `monitored_values
-<UtilityIntegratorMechanism.monitored_values>` attribute (and the LCMechanism's `monitored_output_states`
-<LCMechanism.monitored_output_states>`attribute), and evaluates them using the its `function
-<ObjectiveMechanism.function>`.  The result is assigned as the `value <OutputState.value>` of the
-UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
-`MappingProjection`) to the LCMechanism's *MODE* `InputState`. This information is used by the
-LCMechanism to set the `allocation <ControlSignal.allocation>` for its `ControlSignals <ControlSignal>`.
-
-
-
-COMMENT:
-
-.. _LCMechanism_Examples:
+.. _ControlMechanism_Examples:
 
 Examples
 ~~~~~~~~
@@ -108,23 +101,17 @@ EXAMPLES HERE
 EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
 COMMENT
 
-STRUCTURE:
-MODE INPUT_STATE <- NAMED ONE, LAST?
-SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
-CONTROL SIGNALS
 
-
-
-.. _LCMechanism_Execution:
+.. _ControlMechanism_Execution:
 
 Execution
 ---------
 
-An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
+A ControlMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
-LCMechanism's `function <LCMechanism.function>` takes as its input the `value <InputState.value>` of
+ControlMechanism's `function <ControlMechanism_Base.function>` takes as its input the `value <InputState.value>` of
 its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
-<LCMechanism.allocation_policy>` which specifies the value assigned to the `allocation
+<ControlMechanism_Base.allocation_policy>` which specifies the value assigned to the `allocation
 <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
 calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
 to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
@@ -133,10 +120,10 @@ subsequent `TRIAL` of execution.
 .. note::
    A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   LCMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
 
-.. _LCMechanism_Class_Reference:
+.. _ControlMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -164,14 +151,15 @@ from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 ControlMechanismRegistry = {}
 
-class LCMechanismError(Exception):
+class ControlMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
 
-class LCMechanism(ControlMechanism_Base):
+# class ControlMechanism_Base(Mechanism_Base):
+class ControlMechanism_Base(AdaptiveMechanism_Base):
     """
-    LCMechanism(                                   \
+    ControlMechanism_Base(                         \
         monitor_for_control=None,                  \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
@@ -183,23 +171,24 @@ class LCMechanism(ControlMechanism_Base):
     Subclass of `AdaptiveMechanism <AdaptiveMechanism>` that modulates the parameter(s)
     of one or more `Component(s) <Component>`.
 
-    .. note::
-       LCMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
-       It should be instantiated using the constructor for a `subclass <LCMechanism_Subtypes>`.
 
     COMMENT:
+    .. note::
+       ControlMechanism is an abstract class and should NEVER be instantiated by a direct call to its constructor.
+       It should be instantiated using the constructor for a `subclass <ControlMechanism_Subtypes>`.
+
         Description:
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
                    it is flagged for deferred_init() in its __init__ method
-               When the next LCMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
+               When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
                    its _assign_as_controller method is called in _instantiate_attributes_after_function;
                    it then iterates through all of the ParameterStates of all of the Mechanisms in its System,
                    identifies ones without a sender specified, calls its deferred_init() method,
                    instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
 
             MONITOR_FOR_CONTROL param determines which States will be monitored.
-                specifies the OutputStates of the terminal Mechanisms in the System to be monitored by LCMechanism
+                specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
                 this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
                     System.execution_graph by default
@@ -221,16 +210,16 @@ class LCMechanism(ControlMechanism_Base):
     ---------
 
     monitor_for_control : List[OutputState specification] : default None
-        specifies set of OutputStates to monitor (see :ref:`LCMechanism_Monitored_OutputStates` for
+        specifies set of OutputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
         specification options).
 
     control_signals : List[parameter of Mechanism or its function, \
                       ParameterState, Mechanism tuple[str, Mechanism] or dict]
-        specifies the parameters to be controlled by the LCMechanism
-        (see `control_signals <LCMechanism.control_signals>` for details).
+        specifies the parameters to be controlled by the ControlMechanism
+        (see `control_signals <ControlMechanism_Base.control_signals>` for details).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
-        specifies the default form of modulation used by the LCMechanism's `ControlSignals <ControlSignal>`,
+        specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -242,7 +231,7 @@ class LCMechanism(ControlMechanism_Base):
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default LCMechanism-<index>
+    name : str : default ControlMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -256,18 +245,18 @@ class LCMechanism(ControlMechanism_Base):
     ----------
 
     monitoring_mechanism : ObjectiveMechanism
-        Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
-        argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
+        Mechanism that monitors and evaluates the values specified in the ControlMechanism's **monitor_for_control**
+        argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
         `input_state <Mechanism_Base.input_state>`.
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument of
-        the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
-        LCMechanism's `variable <Mechanism_Base.variable>`.
+        the ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
+        ControlMechanism's `variable <Mechanism_Base.variable>`.
 
     control_signals : List[ControlSignal]
-        list of `ControlSignals <ControlSignals>` for the LCMechanism, each of which sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls (same as LCMechanism's
+        list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
         `output_states <Mechanism_Base.output_states>` attribute).
 
     control_projections : List[ControlProjection]
@@ -275,21 +264,21 @@ class LCMechanism(ControlMechanism_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
-        **monitor_for_control** argument of the LCMechanism's constructor are used to generate its
-        `allocation_policy <LCMechanism.allocation_policy>`.
+        **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
+        `allocation_policy <ControlMechanism_Base.allocation_policy>`.
 
     allocation_policy : 2d np.array
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
-        LCMechanism's `value <Mechanism_Base.value>` attribute).
+        ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     modulation : ModulationParam
-        the default form of modulation used by the LCMechanism's `ControlSignals <GatingSignal>`,
+        the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
 
     """
 
-    componentType = "LCMechanism"
+    componentType = "ControlMechanism"
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
@@ -329,18 +318,18 @@ class LCMechanism(ControlMechanism_Base):
                                                   # modulation=modulation,
                                                   params=params)
 
-        super().__init__(variable=default_variable,
-                         size=size,
-                         modulation=modulation,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         context=self)
+        super(ControlMechanism_Base, self).__init__(variable=default_variable,
+                                                    size=size,
+                                                    modulation=modulation,
+                                                    params=params,
+                                                    name=name,
+                                                    prefs=prefs,
+                                                    context=self)
 
         try:
             self.monitored_output_states
         except AttributeError:
-            raise LCMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
+            raise ControlMechanismError("{} (subclass of {}) must implement a \'monitored_output_states\' attribute".
                                               format(self.__class__.__name__,
                                                      self.__class__.__bases__[0].__name__))
 
@@ -352,9 +341,9 @@ class LCMechanism(ControlMechanism_Base):
         Check that all items in CONTROL_SIGNALS are parameters or ParameterStates for Mechanisms in self.system
         """
 
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
+        super(ControlMechanism_Base, self)._validate_params(request_set=request_set,
+                                                                 target_set=target_set,
+                                                                 context=context)
         if SYSTEM in target_set:
             if not isinstance(target_set[SYSTEM], System):
                 raise KeyError
@@ -370,7 +359,7 @@ class LCMechanism(ControlMechanism_Base):
                 if isinstance(spec, (OutputState, Mechanism_Base)):
                     spec = spec.name
                 if not isinstance(spec, str):
-                    raise LCMechanismError("Invalid specification in {} arg for {} ({})".
+                    raise ControlMechanismError("Invalid specification in {} arg for {} ({})".
                                                 format(MONITOR_FOR_CONTROL, self.name, spec))
                 # If controller has been assigned to a System,
                 #    check that all the items in monitor_for_control are in the same System
@@ -379,7 +368,7 @@ class LCMechanism(ControlMechanism_Base):
                 if self.system:
                     if not any((spec is mech.name or spec in mech.output_states.names)
                                for mech in self.system.mechanisms):
-                        raise LCMechanismError("Specification in {} arg for {} ({}) must be a "
+                        raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
                                                     "Mechanism or an OutputState of one in {}".
                                                     format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
@@ -400,7 +389,7 @@ class LCMechanism(ControlMechanism_Base):
                     if self.system:
                         if not all(control_proj.receiver.owner in self.system.mechanisms
                                    for control_proj in spec.efferents):
-                            raise LCMechanismError("The {} specified in the {} arg for {} ({}) "
+                            raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
                                                         "has one or more ControlProjections to a Mechanism "
                                                         "that is not in {}".
                                                         format(CONTROL_SIGNAL,
@@ -416,7 +405,7 @@ class LCMechanism(ControlMechanism_Base):
                     mech = spec.owner
                     #  Check that owner is in controller's System
                     if not self.system in mech.systems:
-                        raise LCMechanismError("The {} specified in the {} arg for {} ({}) "
+                        raise ControlMechanismError("The {} specified in the {} arg for {} ({}) "
                                                     "belongs to a Mechanism ({}) that is not in "
                                                     "the System for which {} is a controller ({})".
                                                     format(PARAMETER_STATE,
@@ -433,11 +422,11 @@ class LCMechanism(ControlMechanism_Base):
                     mech = spec[1]
                     # Check that 1st item is a str (presumably the name of the Mechanism's attribute for the param)
                     if not isinstance(param_name, str):
-                        raise LCMechanismError("1st item of tuple in specification of {} for {} ({}) "
+                        raise ControlMechanismError("1st item of tuple in specification of {} for {} ({}) "
                                                     "must be a string".format(CONTROL_SIGNAL, self.name, param_name))
                     # Check that 2nd item is a Mechanism
                     if not isinstance(mech, Mechanism):
-                        raise LCMechanismError("2nd item of tuple in specification of {} for {} ({}) "
+                        raise ControlMechanismError("2nd item of tuple in specification of {} for {} ({}) "
                                                     "must be a Mechanism".format(CONTROL_SIGNAL, self.name, mech))
 
 
@@ -447,11 +436,11 @@ class LCMechanism(ControlMechanism_Base):
                 #    PARAMS:dict - entries must be valid ControlSignal parameters (e.g., ALLOCATION_SAMPLES)
                 elif isinstance(spec, dict):
                     if not NAME in spec:
-                        raise LCMechanismError("Specification dict for {} of {} must have a NAME entry".
+                        raise ControlMechanismError("Specification dict for {} of {} must have a NAME entry".
                                                     format(CONTROL_SIGNAL, self.name))
                     param_name = spec[NAME]
                     if not MECHANISM in spec:
-                        raise LCMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
+                        raise ControlMechanismError("Specification dict for {} of {} must have a MECHANISM entry".
                                                     format(CONTROL_SIGNAL, self.name))
                     mech = spec[MECHANISM]
                     # Check that all of the other entries in the specification dictionary are valid ControlSignal params
@@ -459,14 +448,14 @@ class LCMechanism(ControlMechanism_Base):
                         if param in {NAME, MECHANISM} | modulatory_signal_keywords:
                             continue
                         if not hasattr(mech, param):
-                            raise LCMechanismError("\'{}\' entry in specification dictionary for {} arg of {} "
+                            raise ControlMechanismError("\'{}\' entry in specification dictionary for {} arg of {} "
                                                        "is not a valid {} specification".
                                                        format(CONTROL_SIGNAL, param, self.name,
                                                               ControlSignal.__name__))
                 else:
-                    raise LCMechanismError("PROGRAM ERROR: unrecognized specification of the {} arg for {} ({})".
+                    raise ControlMechanismError("PROGRAM ERROR: unrecognized specification of the {} arg for {} ({})".
                                                 format(CONTROL_SIGNALS, self.name, spec))
-                    # raise LCMechanismError("Specification of {} for {} ({}) must be a ParameterState, Mechanism, "
+                    # raise ControlMechanismError("Specification of {} for {} ({}) must be a ParameterState, Mechanism, "
                     #                             "a tuple specifying a parameter and Mechanism, "
                     #                             "a ControlSignal specification dictionary, "
                     #                             "or an existing ControlSignal".
@@ -474,12 +463,12 @@ class LCMechanism(ControlMechanism_Base):
 
                 # Check that param_name is the name of an attribute of the Mechanism
                 if not hasattr(mech, param_name) and not hasattr(mech.function_object, param_name):
-                    raise LCMechanismError("{} (in specification of {} for {}) is not an "
+                    raise ControlMechanismError("{} (in specification of {} for {}) is not an "
                                                 "attribute of {} or its function"
                                                 .format(param_name, CONTROL_SIGNAL, self.name, mech))
                 # Check that the Mechanism has a ParameterState for the param
                 if not param_name in mech._parameter_states.names:
-                    raise LCMechanismError("There is no ParameterState for the parameter ({}) of {} "
+                    raise ControlMechanismError("There is no ParameterState for the parameter ({}) of {} "
                                                 "specified in {} for {}".
                                                 format(param_name, mech.name, CONTROL_SIGNAL, self.name))
                 # If self has been assigned to a System,
@@ -487,7 +476,7 @@ class LCMechanism(ControlMechanism_Base):
                 # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
                 #                       when the controller is assigned to a System [TBI]
                 if self.system and not mech in self.system.mechanisms:
-                    raise LCMechanismError("Specification in {} arg for {} ({} param of {}) "
+                    raise ControlMechanismError("Specification in {} arg for {} ({} param of {}) "
                                                 "must be for a Mechanism in {}".
                                                 format(CONTROL_SIGNALS,
                                                        self.name,
@@ -496,7 +485,7 @@ class LCMechanism(ControlMechanism_Base):
                                                        self.system.name))
 
     def _instantiate_monitored_output_states(self, context=None):
-        raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
+        raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
 
@@ -549,7 +538,7 @@ class LCMechanism(ControlMechanism_Base):
         * wait to instantiate deferred_init() Projections until after ControlSignal is instantiated,
              so that correct OutputState can be assigned as its sender;
         * index of OutputState is incremented based on number of ControlSignals already instantiated;
-            this means that the LCMechanism's function must return as many items as it has ControlSignals,
+            this means that the ControlMechanism's function must return as many items as it has ControlSignals,
             with each item of the function's value used by a corresponding ControlSignal.
             Note: multiple ControlProjections can be assigned to the same ControlSignal to achieve "divergent control"
                   (that is, control of many parameters with a single value)
@@ -638,11 +627,11 @@ class LCMechanism(ControlMechanism_Base):
                     elif isinstance(spec, list):
                         control_projection = spec[0]
                         if not isinstance(control_projection, ControlProjection):
-                            raise LCMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
+                            raise ControlMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
                                                         "must contain a single ControlProjection".
                                                         format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
                         if len(spec)>1:
-                            raise LCMechanismError("PROGRAM ERROR: Multiple ControlProjections are not "
+                            raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections are not "
                                                         "currently supported in specification of a ControlSignal")
                         # Get receiver mech
                         if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -653,7 +642,7 @@ class LCMechanism(ControlMechanism_Base):
                             if SENDER in control_projection.init_args:
                                 control_signal_spec = control_projection.init_args[SENDER]
                                 if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
-                                    raise LCMechanismError("PROGRAM ERROR: "
+                                    raise ControlMechanismError("PROGRAM ERROR: "
                                                                 "Sender of {} for {} {} of {} is not a {}".
                                                                 format(CONTROL_PROJECTION,
                                                                        parameter_state.name,
@@ -665,10 +654,10 @@ class LCMechanism(ControlMechanism_Base):
                         param_name = parameter_state.name
 
                     else:
-                        raise LCMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
+                        raise ControlMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
                                                     format(CONTROL_SIGNAL, self.name))
             else:
-                raise LCMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
+                raise ControlMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
                                             "parameter Mechanism or ControlProjection for {} of {}".
                                             format(CONTROL_SIGNAL, self.name))
 
@@ -676,7 +665,7 @@ class LCMechanism(ControlMechanism_Base):
         default_name = param_name + '_' + ControlSignal.__name__
 
         # Get constraint for ControlSignal value
-        #    - get LCMechanism's value
+        #    - get ControlMechanism's value
         self._update_value(context=context)
         # - get OutputState's index
         try:
@@ -697,7 +686,7 @@ class LCMechanism(ControlMechanism_Base):
                 control_signal_spec._deferred_init(context=context)
                 control_signal = control_signal_spec
             elif not control_signal_spec.owner is self:
-                raise LCMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
+                raise ControlMechanismError("Attempt to assign ControlSignal to {} ({}) that is already owned by {}".
                                             format(self.name, control_signal_spec.name, control_signal_spec.owner.name))
             else:
                 control_signal = control_signal_spec
@@ -709,7 +698,7 @@ class LCMechanism(ControlMechanism_Base):
                 #    FOR NOW, HOWEVER, ONLY A SINGLE ONE IS SUPPORTED
                 # parameter_states = [proj.recvr for proj in control_projections]
                 if len(control_projections) > 1:
-                    raise LCMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
+                    raise ControlMechanismError("PROGRAM ERROR: list of ControlProjections is not currently supported "
                                                 "as specification in a ControlSignal")
                 else:
                     control_projection = control_projections[0]
@@ -743,7 +732,7 @@ class LCMechanism(ControlMechanism_Base):
 
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             if not isinstance(control_projection, ControlProjection):
-                raise LCMechanismError("PROGRAM ERROR: Attempt to assign {}, "
+                raise ControlMechanismError("PROGRAM ERROR: Attempt to assign {}, "
                                                   "that is not a ControlProjection, to ControlSignal of {}".
                                                   format(control_projection, self.name))
             if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
@@ -769,7 +758,7 @@ class LCMechanism(ControlMechanism_Base):
         if not control_projection in control_signal.efferents:
             control_signal.efferents.append(control_projection)
 
-        # Add ControlProjection to LCMechanism's list of ControlProjections
+        # Add ControlProjection to ControlMechanism's list of ControlProjections
         try:
             self.control_projections.append(control_projection)
         except AttributeError:
@@ -842,7 +831,7 @@ class LCMechanism(ControlMechanism_Base):
 
         Must be overriden by subclass
         """
-        raise LCMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
 
     def show(self):
 

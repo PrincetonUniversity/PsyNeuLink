@@ -1,5 +1,5 @@
-from PsyNeuLink.Components.Process import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Process import *
 
 # simple_ddm_process = process('Simple DDM Process')
 # simple_ddm_process.execute([1])

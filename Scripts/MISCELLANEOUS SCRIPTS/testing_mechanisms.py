@@ -1,16 +1,9 @@
-import numpy as np
-
-from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, Linear, SimpleIntegrator
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator
-from PsyNeuLink.Components.Functions.Function import FunctionError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Functions.Function import Linear, SimpleIntegrator
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Globals.Keywords import ADAPTIVE, CONSTANT, DIFFUSION, SIMPLE
 from PsyNeuLink.Globals.Keywords import EXECUTING
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
-
 
 I = IntegratorMechanism(
         name='IntegratorMechanism',
