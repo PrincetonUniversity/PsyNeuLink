@@ -220,7 +220,7 @@ Projections that connects each to the next one in the list.  For example, the fo
 Composition – a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> – to create a 3-layered 5-2-5 encoder network, the first layer of which
 uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct Mechanisms:</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
 <span class="n">input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
 <span class="n">output_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
