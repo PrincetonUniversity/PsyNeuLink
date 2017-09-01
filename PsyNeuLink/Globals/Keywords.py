@@ -326,7 +326,7 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 # Component SUBTYPES -----------------
 
-# ControlMechanisms:
+# ControlMechanism:
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 

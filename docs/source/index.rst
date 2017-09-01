@@ -3,8 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Intro
-=====
+:tocdepth: 5
+
+Welcome to PsyNeuLink
+=====================
 
 * `Purpose`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -176,7 +178,6 @@ Table of Contents
 
 .. toctree::
    :titlesonly:
-   :maxdepth: 1
 
    self
    BasicsAndSampler
@@ -184,6 +185,7 @@ Table of Contents
    Components <Component>
    Compositions <Composition>
    Scheduling
+   Library
 
 .. _Indices_and_Tables:
 
