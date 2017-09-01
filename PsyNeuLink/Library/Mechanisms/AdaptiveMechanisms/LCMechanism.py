@@ -113,7 +113,8 @@ CONTROL SIGNALS
 Execution
 ---------
 
-Like other ControlMechanisms
+Like other `ControlMechanisms <ControlMechanism>`, an LCMechanism executes after all of the `ProcessingMechanisms
+<ProcessingMechanism>` in the `Composition` to which it belongs have `executed <Composition_Execution>`.
 An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
 `TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
 LCMechanism's `function <LCMechanism.function>` takes as its input the `value <InputState.value>` of
