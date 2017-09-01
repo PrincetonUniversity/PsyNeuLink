@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,8 +88,11 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -102,6 +108,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -114,8 +121,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -124,25 +133,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Component.html">Components</a> &raquo;</li>
-      
-    <li>Projections</li>
+        
+      <li>Projections</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Projection.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Projection.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -171,15 +197,14 @@ each of which has subtypes that differ in the type of information they transmit,
 <code class="xref any docutils literal"><span class="pre">pathway</span> <span class="pre">&lt;Process_Base.pathway</span></code>&gt;.  There is currently one on type of PathwayProjection:</p>
 </dd>
 </dl>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
-converts it by convolving it with the MappingProjection&#8217;s <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+<dd>takes the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
+converts it by convolving it with the MappingProjection’s <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter, and transmits the result to the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> of another ProcessingMechanism.  Typically,
 MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, though they can be use for
-other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>).</p>
-</dd>
+other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a>).</dd>
 </dl>
 </li>
 </ul>
@@ -194,34 +219,31 @@ of AdaptiveMechanisms (and corresponding ModulatorySignals; see <a class="refere
 that project to different types of <a class="reference internal" href="State.html"><span class="doc">States</span></a>:</p>
 </dd>
 </dl>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.value" title="ModulatorySignals.LearningSignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> of a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmits
+<dd>takes the <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.value" title="ModulatorySignals.LearningSignal.LearningSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> of a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmits
 this to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that uses this to modify its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. LearningProjections are used when learning has
-been specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</p>
-</dd>
+been specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</dd>
 </dl>
 </li>
 </ul>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and
+<dd>takes the <a class="reference internal" href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.value" title="ModulatorySignals.ControlSignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and
 transmit this to the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ParameterState of a `ProcessingMechanism</span></a> that uses this to modify
 the parameter of the (or its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.function" title="Mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) for which it is responsible.
-ControlProjections are used when control has been used specified for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</p>
-</dd>
+ControlProjections are used when control has been used specified for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</dd>
 </dl>
 </li>
 </ul>
-<ul>
+<ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
-<dd><p class="first last">takes the <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and transmits this to
+<dd>takes the <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and transmits this to
 the <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that uses this to modify the
-State&#8217;s <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></p>
-</dd>
+State’s <a class="reference internal" href="State.html#State.State_Base.value" title="State.State_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></dd>
 </dl>
 </li>
 </ul>
@@ -251,7 +273,7 @@ Projection in context:</p>
 <li><p class="first"><strong>Keyword</strong>.  This creates a default instance of the specified type, and can be any of the following:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>MAPPING_PROJECTION</em> &#8211; if the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then its
+<li><em>MAPPING_PROJECTION</em> – if the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then its
 <a class="reference internal" href="#mappingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until both of those have been
 determined (e.g., it is used in the specification of a <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>).</li>
 </ul>
@@ -259,31 +281,31 @@ determined (e.g., it is used in the specification of a <a class="reference inter
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><em>LEARNING_PROJECTION</em>  (or <em>LEARNING</em>) &#8211; this can only be used in the specification of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
+<li><em>LEARNING_PROJECTION</em>  (or <em>LEARNING</em>) – this can only be used in the specification of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
 (see <a class="reference internal" href="MappingProjection.html#mapping-matrix-specification"><span class="std std-ref">tuple</span></a> format).  If the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of the
 MappingProjection projects to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> or a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that projects to one, then a
-<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> is added to that LearningMechanism and assigned as the LearningProjection&#8217;s <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  otherwise, a LearningMechanism is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">automatically created</span></a>, along with a LearningSignal that is assigned as the LearningProjection&#8217;s <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>. See <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a> for additional details.</li>
+<a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> is added to that LearningMechanism and assigned as the LearningProjection’s <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  otherwise, a LearningMechanism is <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">automatically created</span></a>, along with a LearningSignal that is assigned as the LearningProjection’s <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.sender" title="ModulatoryProjections.LearningProjection.LearningProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>. See <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a> for additional details.</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>)&#8211; this can be used when specifying a parameter using the <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple format</span></a>, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for that
+<li><em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>)– this can be used when specifying a parameter using the <a class="reference internal" href="ParameterState.html#parameterstate-tuple-specification"><span class="std std-ref">tuple format</span></a>, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for that
 parameter.  If the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs is part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, then a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned as the
-ControlProjection&#8217;s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  otherwise, the ControlProjection&#8217;s <a class="reference internal" href="ControlProjection.html#controlprojection-deferred-initialization"><span class="std std-ref">initialization
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the System’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned as the
+ControlProjection’s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  otherwise, the ControlProjection’s <a class="reference internal" href="ControlProjection.html#controlprojection-deferred-initialization"><span class="std std-ref">initialization
 is deferred</span></a> until the Mechanism is assigned to a System,
-at which time the ControlSignal is added to the System&#8217;s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned
-as its the ControlProjection&#8217;s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.  See <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">Specifying Parameters to Control</span></a> for
+at which time the ControlSignal is added to the System’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned
+as its the ControlProjection’s <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.  See <a class="reference internal" href="ControlMechanism.html#controlmechanism-control-signals"><span class="std std-ref">Specifying Parameters to Control</span></a> for
 additional details.</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><em>GATING_PROJECTION</em> (or <em>GATING</em>)&#8211; this can be used when specifying an <a class="reference internal" href="InputState.html#inputstate-projections"><span class="std std-ref">InputState</span></a>
+<li><em>GATING_PROJECTION</em> (or <em>GATING</em>)– this can be used when specifying an <a class="reference internal" href="InputState.html#inputstate-projections"><span class="std std-ref">InputState</span></a>
 or an <a class="reference internal" href="OutputState.html#outputstate-projections"><span class="std std-ref">OutputState</span></a>, to create a default <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the <a class="reference internal" href="State.html"><span class="doc">State</span></a>.
-If the GatingProjection&#8217;s <a class="reference internal" href="GatingProjection.html#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> cannot be inferred from the context in which this
+If the GatingProjection’s <a class="reference internal" href="GatingProjection.html#ModulatoryProjections.GatingProjection.GatingProjection.sender" title="ModulatoryProjections.GatingProjection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> cannot be inferred from the context in which this
 specification occurs, then its <a class="reference internal" href="GatingProjection.html#gatingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until
 it can be determined (e.g., a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> or <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is created to which it is assigned).</li>
 </ul>
@@ -292,7 +314,7 @@ it can be determined (e.g., a <a class="reference internal" href="GatingMechanis
 </ul>
 <ul class="simple">
 <li><strong>Projection type</strong>.  This creates a default instance of the specified Projection subclass.  The assignment or
-creation of the Projection&#8217;s <code class="xref any docutils literal"><span class="pre">sender</span></code> is handled in the same manner as described above for the
+creation of the Projection’s <code class="xref any docutils literal"><span class="pre">sender</span></code> is handled in the same manner as described above for the
 keyword specifications.</li>
 </ul>
 <ul>
@@ -300,7 +322,7 @@ keyword specifications.</li>
 specifying the value of parameters used to instantiate it. These should take the following form:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>PROJECTION_TYPE</em>: <em>&lt;name of a Projection type&gt;</em> &#8211;
+<li><em>PROJECTION_TYPE</em>: <em>&lt;name of a Projection type&gt;</em> –
 if this entry is absent, a default Projection will be created that is appropriate for the context
 (for example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> for an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> for the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> for any other
 type of parameter.</li>
@@ -309,7 +331,7 @@ type of parameter.</li>
 <div class="line"><br /></div>
 </div>
 <ul class="simple">
-<li><em>PROJECTION_PARAMS</em>: <em>Dict[Projection argument, argument value]</em> &#8211;
+<li><em>PROJECTION_PARAMS</em>: <em>Dict[Projection argument, argument value]</em> –
 the key for each entry of the dictionary must be the name of a Projection parameter, and its value the value
 of the parameter.  It can contain any of the standard parameters for instantiating a Projection (in particular
 its <a class="reference internal" href="#projection-sender"><span class="std std-ref">sender</span></a> and <a class="reference internal" href="#projection-receiver"><span class="std std-ref">receiver</span></a>, or ones specific to a particular type
@@ -331,12 +353,12 @@ when <code class="xref std std-keyword docutils literal"><span class="pre">learn
 <div class="section" id="deferred-initialization">
 <span id="mappingprojection-deferred-initialization"></span><h3>Deferred Initialization<a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a Projection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.receiver" title="ModulatoryProjections.ControlProjection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a Projection to be created before its <a class="reference internal" href="ControlProjection.html#ModulatoryProjections.ControlProjection.ControlProjection.sender" title="ModulatoryProjections.ControlProjection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a script),
+a Projection to be created before its <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.receiver" title="ModulatoryProjections.LearningProjection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a script),
 by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the Projection
 to be operational, initialization must be completed by calling its <code class="xref any docutils literal"><span class="pre">_deferred_init</span></code> method.  Under most conditions
 this occurs automatically (e.g., when the projection is assigned to a type of Component that expects to be the
 <code class="xref any docutils literal"><span class="pre">sender</span></code> or <code class="xref any docutils literal"><span class="pre">receiver</span></code> for that type of Projection); these conditions are
-described in the section on <em>Deferred Initialization</em> for each type of Projection.  Otherwise, the Projection&#8217;s
+described in the section on <em>Deferred Initialization</em> for each type of Projection.  Otherwise, the Projection’s
 <code class="xref any docutils literal"><span class="pre">_deferred_init</span></code> method must be called explicitly, once the missing attribute assignments have been made.</p>
 </div>
 </div>
@@ -391,22 +413,22 @@ summarized in the following table, and described in greater detail in the subsec
 <div class="section" id="sender">
 <span id="projection-sender"></span><h3>Sender<a class="headerlink" href="#sender" title="Permalink to this headline">¶</a></h3>
 <p>This must be an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> or a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> (a subclass of OutputState specialized for
-<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>).  The Projection is assigned to the OutputState or ModulatorySignal&#8217;s
+<a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a>).  The Projection is assigned to the OutputState or ModulatorySignal’s
 <a class="reference internal" href="State.html#State.State_Base.efferents" title="State.State_Base.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a> list and, for ModulatoryProjections, to the list of ModulatorySignals specific to
-the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> from which it projects.  The OutputState or ModulatorySignal&#8217;s <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is used as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for Projection&#8217;s <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
+the <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> from which it projects.  The OutputState or ModulatorySignal’s <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is used as the <code class="xref any docutils literal"><span class="pre">variable</span></code> for Projection’s <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 <p>A sender can be specified as:</p>
 <blockquote>
 <div><ul class="simple">
-<li>an <strong>OutputState</strong> or <strong>ModulatorySignal</strong>, as appropriate for the Projection&#8217;s type, using any of the ways for
+<li>an <strong>OutputState</strong> or <strong>ModulatorySignal</strong>, as appropriate for the Projection’s type, using any of the ways for
 <a class="reference internal" href="OutputState.html#outputstate-specification"><span class="std std-ref">specifying an OutputState</span></a>.</li>
 </ul>
 <ul class="simple">
-<li>a <strong>Mechanism</strong>;  for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the Mechanism&#8217;s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is
+<li>a <strong>Mechanism</strong>;  for a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is
 assigned as the <code class="xref any docutils literal"><span class="pre">sender</span></code>; for a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>, a
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> of the appropriate type is created and assigned to the Mechanism.</li>
 </ul>
 </div></blockquote>
-<p>If the <code class="xref any docutils literal"><span class="pre">sender</span></code> is not specified and it can&#8217;t be determined from the context, or an OutputState
+<p>If the <code class="xref any docutils literal"><span class="pre">sender</span></code> is not specified and it can’t be determined from the context, or an OutputState
 specification is not associated with a Mechanism that can be determined from context, then the initialization of the
 Projection is <code class="xref any docutils literal"><span class="pre">deferred</span></code>.</p>
 </div>
@@ -441,7 +463,7 @@ determined by the type of Projection —&nbsp;see subclasses for details).</li>
 <div class="section" id="execution">
 <span id="projection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A Projection cannot be executed directly.  It is executed when the <a class="reference internal" href="State.html"><span class="doc">State</span></a> to which it projects (i.e., its
-<code class="xref any docutils literal"><span class="pre">receiver</span></code>) is updated;  that occurs when the State&#8217;s owner <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is executed.
+<code class="xref any docutils literal"><span class="pre">receiver</span></code>) is updated;  that occurs when the State’s owner <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is executed.
 When a Projection executes, it gets the value of its <code class="xref any docutils literal"><span class="pre">sender</span></code>, assigns this as the <code class="xref any docutils literal"><span class="pre">variable</span></code> of its <code class="xref any docutils literal"><span class="pre">function</span></code>, calls the <code class="xref any docutils literal"><span class="pre">function</span></code>, and
 provides the result as to its <code class="xref any docutils literal"><span class="pre">receiver</span></code>.  The <code class="xref any docutils literal"><span class="pre">function</span></code> of a Projection
 converts the value received from its <code class="xref any docutils literal"><span class="pre">sender</span></code> to a form suitable as input for its <code class="xref any docutils literal"><span class="pre">receiver</span></code>.</p>
@@ -450,15 +472,18 @@ converts the value received from its <code class="xref any docutils literal"><sp
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="PathwayProjection.html" class="btn btn-neutral float-right" title="PathwayProjections" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="PathwayProjection.html" class="btn btn-neutral float-right" title="PathwayProjections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GatingMechanism.html" class="btn btn-neutral" title="Gating Mechanism" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="GatingMechanism.html" class="btn btn-neutral" title="Gating Mechanism" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -492,7 +517,8 @@ converts the value received from its <code class="xref any docutils literal"><sp
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

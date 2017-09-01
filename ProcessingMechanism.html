@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,21 +88,19 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="Mechanism.html">Mechanisms</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">ProcessingMechanisms</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="LCA.html">LCA</a></li>
-<li class="toctree-l4"><a class="reference internal" href="KWTA.html">KWTA</a></li>
 <li class="toctree-l4"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="AdaptiveMechanism.html">AdaptiveMechanisms</a></li>
@@ -112,6 +113,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -124,8 +126,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -134,27 +138,44 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Component.html">Components</a> &raquo;</li>
-      
+        
           <li><a href="Mechanism.html">Mechanisms</a> &raquo;</li>
-      
-    <li>Processing Mechanisms</li>
+        
+      <li>Processing Mechanisms</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/ProcessingMechanism.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/ProcessingMechanism.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -165,13 +186,8 @@
 <div class="toctree-wrapper compound" id="processingmechanism-subtypes">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="TransferMechanism.html">TransferMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="RecurrentTransferMechanism.html">RecurrentTransferMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LCA.html">LCA</a></li>
-<li class="toctree-l1"><a class="reference internal" href="KWTA.html">KWTA</a></li>
 <li class="toctree-l1"><a class="reference internal" href="IntegratorMechanism.html">IntegratorMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DDM.html">DDM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ObjectiveMechanism.html">ObjectiveMechanism</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ComparatorMechanism.html">ComparatorMechanism</a></li>
 </ul>
 </div>
 <span class="target" id="module-ProcessingMechanisms.ProcessingMechanism"></span><div class="section" id="overview">
@@ -192,7 +208,7 @@ when a System or Process is created, if <code class="xref any docutils literal">
 </div>
 <div class="section" id="structure">
 <span id="adaptivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism has the same basic structure as a <code class="xref any docutils literal"><span class="pre">Mechanism</span></code>.  See the documentation for
+<p>A ProcessingMechanism has the same basic structure as a <a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanism</span></a>.  See the documentation for
 individual subtypes of ProcessingMechanism for more specific information about their structure.</p>
 </div>
 <div class="section" id="execution">
@@ -203,15 +219,18 @@ individual subtypes of ProcessingMechanism for more specific information about t
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="TransferMechanism.html" class="btn btn-neutral float-right" title="TransferMechanism" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="TransferMechanism.html" class="btn btn-neutral float-right" title="TransferMechanism" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Mechanism.html" class="btn btn-neutral" title="Mechanisms" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Mechanism.html" class="btn btn-neutral" title="Mechanisms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -245,7 +264,8 @@ individual subtypes of ProcessingMechanism for more specific information about t
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

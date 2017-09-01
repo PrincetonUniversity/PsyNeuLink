@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -35,7 +37,7 @@
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
         <link rel="next" title="Quick Reference" href="QuickReference.html"/>
-        <link rel="prev" title="Intro" href="index.html"/> 
+        <link rel="prev" title="Welcome to PsyNeuLink" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -44,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -84,13 +87,17 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -103,8 +110,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -113,23 +122,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Basics and Sampler</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Basics and Sampler</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/BasicsAndSampler.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/BasicsAndSampler.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -137,12 +163,11 @@
             
   <div class="section" id="basics-and-sampler">
 <h1>Basics and Sampler<a class="headerlink" href="#basics-and-sampler" title="Permalink to this headline">¶</a></h1>
-<ul>
-<li><p class="first"><a class="reference internal" href="#basics"><span class="std std-ref">Basics</span></a></p>
-</li>
+<ul class="simple">
+<li><a class="reference internal" href="#basics"><span class="std std-ref">Basics</span></a></li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#sampler"><span class="std std-ref">Sampler</span></a></dt>
-<dd><ul class="first last simple">
+<dd><ul class="first last">
 <li><a class="reference internal" href="#simple-configurations"><span class="std std-ref">Simple Configurations</span></a></li>
 <li><a class="reference internal" href="#elaborate-configurations"><span class="std std-ref">More Elaborate Configurations</span></a></li>
 <li><a class="reference internal" href="#dynamics-of-execution"><span class="std std-ref">Dynamics of Execution</span></a></li>
@@ -156,8 +181,8 @@
 <p>PsyNeuLink models are made of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>:
 Components are objects that perform a specific function, and Compositions are used to combine Components into an
 executable model.  There are two primary kinds of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.
-For those familiar with block modeling systems, Mechanisms are the &#8220;blocks&#8221; in PsyNeuLink, and Projections are the
-&#8220;links&#8221;.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+For those familiar with block modeling systems, Mechanisms are the “blocks” in PsyNeuLink, and Projections are the
+“links”.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
 other Mechanisms. Projections are used to send information from one Mechanism to another.  A <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> uses Projections to link Mechanisms together into pathways that can execute a Process, and Processes
 can be combined into Systems to form networks or circuits that make up a systems-level model.  A <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>
 coordinates the execution of Mechanisms in a Composition, each of which can be assigned one or more pre-specified or
@@ -168,7 +193,7 @@ of information.  PsyNeuLink provides a library of Components of each type.  For 
 ProcessingMechanisms that can be used to transform, integrate, and evaluate information in various ways (e.g., to
 implement layers of a feedforward or recurrent neural network, or a drift diffusion decision process); and there
 are LearningMechanisms, ControlMechanisms, and GatingMechanisms that can be used to modulate those Mechanisms.</p>
-<p>Since Mechanisms can implement any function, Projections ensure that they can &#8220;communicate&#8221; with each other
+<p>Since Mechanisms can implement any function, Projections ensure that they can “communicate” with each other
 seamlessly.  A Scheduler, together with Conditions, can be used to specify any pattern of execution among the
 Mechanisms in a Composition.  Together, these allow PsyNeuLink to integrate Mechanisms of different types, levels of
 analysis, and/or time scales of operation, composing heterogeneous Components into a single integrated System.  This
@@ -190,9 +215,9 @@ items are examples of elements planned for future implementation.</span></p>
 <span id="id3"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
 <p>Mechanisms can be executed on their own (to gain familiarity with their functions), linked in simple configurations
 (for testing isolated interactions), or in Compositions to implement a full model.
-Linking Mechanisms for execution can be as simple as placing them in a list &#8211; PsyNeuLink provides the necessary
+Linking Mechanisms for execution can be as simple as placing them in a list – PsyNeuLink provides the necessary
 Projections that connects each to the next one in the list.  For example, the following script uses a simple form of
-Composition &#8211; a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> &#8211; to create a 3-layered 5-2-5 encoder network, the first layer of which
+Composition – a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> – to create a 3-layered 5-2-5 encoder network, the first layer of which
 uses a Linear
 function (the default for a TransferMechanism), and the other two of which use a LogisticFunction:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
@@ -249,7 +274,7 @@ trained using backpropagation simply by adding the <strong>learning</strong> arg
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">],</span> <span class="n">learning</span><span class="o">=</span><span class="n">ENABLED</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>and then specifying the target for each trial when it is executed (here, the Process&#8217; <a class="reference internal" href="Process.html#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> command
+<p>and then specifying the target for each trial when it is executed (here, the Process’ <a class="reference internal" href="Process.html#Process.Process_Base.run" title="Process.Process_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> command
 is used to execute a series of five training trials, one that trains it on each element of the input):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span>
                <span class="n">target</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
@@ -259,7 +284,7 @@ is used to execute a series of five training trials, one that trains it on each 
 <a class="reference internal" href="Function.html#Function.Reinforcement" title="Function.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span> <span class="pre">Learning</span></code></a>, and others are currently being implemented (including Hebbian, Temporal
 Differences, and supervised learning for recurrent networks).</p>
 <p>PsyNeuLink can also be used to construct models with different kinds of Mechanisms.  For example, the script below
-uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> &#8211; a more powerful form of Composition &#8211; to create two feedforward networks that converge on a single
+uses a <a class="reference internal" href="System.html"><span class="doc">System</span></a> – a more powerful form of Composition – to create two feedforward networks that converge on a single
 output layer, which combines the inputs and projects to a drift diffusion mechanism (DDM) that decides the response:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
 <span class="n">colors_input_layer</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLORS INPUT&#39;</span><span class="p">)</span>
@@ -295,9 +320,9 @@ display and/or analysis (such as <a class="reference external" href="https://net
 <div class="section" id="dynamics-of-execution">
 <span id="id4"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
 <p>Finally, perhaps the most powerful feature of PsyNeuLink is its ability to simulate models with Components
-that execute at arbitrary and disparate &#8220;time scales&#8221;. For example, a Composition can include some Mechanisms
+that execute at arbitrary and disparate “time scales”. For example, a Composition can include some Mechanisms
 that require fine-grained updates (e.g., Euler integration of a drift diffusion process) with ones that carry out
-&#8220;single shot&#8221; computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
+“single shot” computations (e.g., a single pass through a feedforward neural network). By default, when a Composition
 is run, each Component in it is executed at least once.  However, PsyNeuLink has a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> that can be used to
 design more complex dynamics of execution by assigning one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> to any Mechanism. Conditions
 can specify the isolated behavior of a Mechanism (e.g., how many times it should be executed in each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>), or its
@@ -364,7 +389,7 @@ execute until the change in its value falls below a specified threshold as follo
 <p>Here, the criterion for stopping execution is defined as a function (<code class="docutils literal"><span class="pre">converge</span></code>), that is used in a <a class="reference internal" href="Condition.html#Scheduling.Condition.WhileNot" title="Scheduling.Condition.WhileNot"><code class="xref any py py-class docutils literal"><span class="pre">WhileNot</span></code></a>
 Condition.  Any arbitrary Conditions can be created and flexibly combined to construct virtually any schedule of
 execution that is logically sensible.</p>
-<p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User&#8217;s Guide</span></a> provides a more detailed review of PsyNeuLink&#8217;s organization and capabilities,
+<p>The <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides a more detailed review of PsyNeuLink’s organization and capabilities,
 and the <a class="reference internal" href="index.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides an interactive introduction to its use.</p>
 </div>
 </div>
@@ -372,15 +397,18 @@ and the <a class="reference internal" href="index.html#tutorial"><span class="st
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="QuickReference.html" class="btn btn-neutral float-right" title="Quick Reference" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="QuickReference.html" class="btn btn-neutral float-right" title="Quick Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Intro" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="Welcome to PsyNeuLink" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -414,7 +442,8 @@ and the <a class="reference internal" href="index.html#tutorial"><span class="st
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

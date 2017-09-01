@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -42,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -82,13 +85,17 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -101,8 +108,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -111,23 +120,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Log</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Log</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Log.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Log.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -137,20 +163,20 @@
 <span id="log"></span><h1>Log<a class="headerlink" href="#module-Log" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A Log object is used to record information about PsyNeuLink components during their &#8220;life cycle&#8221; (i.e., as they are
-created, validated and executed).  Every component has a log object &#8211; assigned to its <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute
-when the component is created &#8211; that maintains a dictionary with entries for each attribute of the component that
+<p>A Log object is used to record information about PsyNeuLink components during their “life cycle” (i.e., as they are
+created, validated and executed).  Every component has a log object – assigned to its <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute
+when the component is created – that maintains a dictionary with entries for each attribute of the component that
 has been designated to be logged.  Information is added to the entries under specified conditions (e.g., when the
 component is initialized, validated, or executed), which can be designated by a <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specification in the
-component&#8217;s preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
+component’s preferences.  Entries can also be made by the user programmatically. Each entry contains the time at
 which a value was assigned to the attribute, the context in which this occurred, and the value assigned.  This
-information can be displayed using the log&#8217;s <a class="reference internal" href="#Log.Log.print_entries" title="Log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method.</p>
+information can be displayed using the log’s <a class="reference internal" href="#Log.Log.print_entries" title="Log.Log.print_entries"><code class="xref any py py-meth docutils literal"><span class="pre">print_entries</span></code></a> method.</p>
 </div>
 <div class="section" id="creating-logs-and-entries">
 <h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
 <p>Whenever any PsyNeuLink component is created, a log object is also automatically created and assigned to the
-component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute.  Entries are made to the log based on the <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specified in the
-<code class="xref any docutils literal"><span class="pre">logPref</span></code> item of the component&#8217;s <code class="xref std std-keyword docutils literal"><span class="pre">prefs</span></code> attribute.</p>
+component’s <code class="xref std std-keyword docutils literal"><span class="pre">log</span></code> attribute.  Entries are made to the log based on the <a class="reference internal" href="#Log.LogLevel" title="Log.LogLevel"><code class="xref any py py-class docutils literal"><span class="pre">LogLevel</span></code></a> specified in the
+<code class="xref any docutils literal"><span class="pre">logPref</span></code> item of the component’s <code class="xref std std-keyword docutils literal"><span class="pre">prefs</span></code> attribute.</p>
 <p>Adding an item to prefs.logPref will validate and add an entry for that attribute to the log dict</p>
 <p>An attribute is logged if:</p>
 <ul class="simple">
@@ -181,14 +207,12 @@ the <strong>params</strong> argument of the constructor for the component;</li>
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <dl class="docutils">
 <dt>Each entry of log.entries has:</dt>
-<dd><ul class="first last">
-<li><p class="first">a key that is the name of the attribute being logged</p>
-</li>
-<li><p class="first">a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</p>
-</li>
+<dd><ul class="first last simple">
+<li>a key that is the name of the attribute being logged</li>
+<li>a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</li>
 <li><dl class="first docutils">
 <dt>each tuple has three items:</dt>
-<dd><ul class="first last simple">
+<dd><ul class="first last">
 <li>time (CentralClock): when it was recorded in the run</li>
 <li>context (str): the context in which it was recorded (i.e., where the attribute value was assigned)</li>
 <li>value (value): the value assigned to the attribute</li>
@@ -216,37 +240,32 @@ the <strong>params</strong> argument of the constructor for the component;</li>
 </ul>
 </dd>
 <dt>The owner.prefs.logPref setting contains a list of entries to actively record</dt>
-<dd><ul class="first">
+<dd><ul class="first simple">
 <li><dl class="first docutils">
-<dt>when entries are added to an object&#8217;s logPref list, the log.add_entries() method is called,</dt>
-<dd><p class="first last">which validates the entries against the object&#8217;s attributes and SystemLogEntries</p>
-</dd>
+<dt>when entries are added to an object’s logPref list, the log.add_entries() method is called,</dt>
+<dd>which validates the entries against the object’s attributes and SystemLogEntries</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt>if entries are removed from the object&#8217;s logPref list, they still remain in the log dict;</dt>
-<dd><p class="first last">they can be deleted from the log dict using the remove_log_entries() method</p>
-</dd>
+<dt>if entries are removed from the object’s logPref list, they still remain in the log dict;</dt>
+<dd>they can be deleted from the log dict using the remove_log_entries() method</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>data is recorded in an entry using the log_entries() method, which records data to all entries</dt>
-<dd><p class="first last">in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
+<dd>in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
 of Category classes in the Function hierarchy (e.g., Process, Mechanism and Projection)
-on each cycle of the execution sequence;</p>
-</dd>
+on each cycle of the execution sequence;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>log_entries() adds entries to the self.owner.prefs.logPrefs list,</dt>
-<dd><p class="first last">which will record data for those attributes when logging is active;</p>
-</dd>
+<dd>which will record data for those attributes when logging is active;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt>suspend_entries() removes entries from the self.owner.prefs.logPrefs list;</dt>
-<dd><p class="first last">data will not be recorded for those entries when logging is active</p>
-</dd>
+<dd>data will not be recorded for those entries when logging is active</dd>
 </dl>
 </li>
 </ul>
@@ -266,31 +285,31 @@ on each cycle of the execution sequence;</p>
 <dd><p>Specifies levels of logging, as descrdibed below.</p>
 <dl class="attribute">
 <dt id="Log.LogLevel.OFF">
-<code class="descname">OFF</code><em class="property"> = &lt;LogLevel.OFF: 0&gt;</em><a class="headerlink" href="#Log.LogLevel.OFF" title="Permalink to this definition">¶</a></dt>
+<code class="descname">OFF</code><em class="property"> = 0</em><a class="headerlink" href="#Log.LogLevel.OFF" title="Permalink to this definition">¶</a></dt>
 <dd><p>No recording.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Log.LogLevel.VALUE_ASSIGNMENT">
-<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = &lt;LogLevel.VALUE_ASSIGNMENT: 1&gt;</em><a class="headerlink" href="#Log.LogLevel.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
+<code class="descname">VALUE_ASSIGNMENT</code><em class="property"> = 1</em><a class="headerlink" href="#Log.LogLevel.VALUE_ASSIGNMENT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record only final value assignments during execution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Log.LogLevel.EXECUTION">
-<code class="descname">EXECUTION</code><em class="property"> = &lt;LogLevel.EXECUTION: 2&gt;</em><a class="headerlink" href="#Log.LogLevel.EXECUTION" title="Permalink to this definition">¶</a></dt>
+<code class="descname">EXECUTION</code><em class="property"> = 2</em><a class="headerlink" href="#Log.LogLevel.EXECUTION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record all value assignments during execution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Log.LogLevel.VALIDATION">
-<code class="descname">VALIDATION</code><em class="property"> = &lt;LogLevel.VALIDATION: 3&gt;</em><a class="headerlink" href="#Log.LogLevel.VALIDATION" title="Permalink to this definition">¶</a></dt>
+<code class="descname">VALIDATION</code><em class="property"> = 3</em><a class="headerlink" href="#Log.LogLevel.VALIDATION" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record all value assignemnts during validation and execution.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Log.LogLevel.ALL_ASSIGNMENTS">
-<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = &lt;LogLevel.ALL_ASSIGNMENTS: 4&gt;</em><a class="headerlink" href="#Log.LogLevel.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ALL_ASSIGNMENTS</code><em class="property"> = 4</em><a class="headerlink" href="#Log.LogLevel.ALL_ASSIGNMENTS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Record all value assignments during initialization, validation and execution.</p>
 </dd></dl>
 
@@ -322,8 +341,8 @@ on each cycle of the execution sequence;</p>
 <dl class="class">
 <dt id="Log.EntriesDict">
 <em class="property">class </em><code class="descclassname">Log.</code><code class="descname">EntriesDict</code><span class="sig-paren">(</span><em>owner</em><span class="sig-paren">)</span><a class="headerlink" href="#Log.EntriesDict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add setter method for entries that checks owner Mechanism&#8217;s prefs to see whether entry is currently recording</p>
-<p>If entry is in owner Mechanism&#8217;s prefs.logPref.setting list, then append attribute value to entry&#8217;s list
+<dd><p>Add setter method for entries that checks owner Mechanism’s prefs to see whether entry is currently recording</p>
+<p>If entry is in owner Mechanism’s prefs.logPref.setting list, then append attribute value to entry’s list
 Otherwise, either initialize or just update entry with value</p>
 </dd></dl>
 
@@ -336,14 +355,12 @@ Otherwise, either initialize or just update entry with value</p>
 <dd><p class="first">Log maintains a dict (self.entries), with an entry for each attribute of the owner object being logged
 Each entry of self.entries has:</p>
 <blockquote>
-<div><ul>
-<li><p class="first">a key that is the name of the attribute being logged</p>
-</li>
-<li><p class="first">a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</p>
-</li>
+<div><ul class="simple">
+<li>a key that is the name of the attribute being logged</li>
+<li>a value that is a list of sequentially entered LogEntry tuples since recording of the attribute began</li>
 <li><dl class="first docutils">
 <dt>each tuple has three items:</dt>
-<dd><ul class="first last simple">
+<dd><ul class="first last">
 <li>time (CentralClock): when it was recorded in the run</li>
 <li>context (str): the context in which it was recorded (i.e., where the attribute value was assigned)</li>
 <li>value (value): the value assigned to the attribute</li>
@@ -389,9 +406,9 @@ The following entries are automatically included in self.entries for a Mechanism
 #     - using the add_entries() method (see below)
 #     - using the log_entries() method (see below)
 # The owner.prefs.logPref setting contains a list of entries to actively record
-#     - when entries are added to an object&#8217;s logPref list, the log.add_entries() method is called,
-#         which validates the entries against the object&#8217;s attributes and SystemLogEntries
-#     - if entries are removed from the object&#8217;s logPref list, they still remain in the log dict;
+#     - when entries are added to an object’s logPref list, the log.add_entries() method is called,
+#         which validates the entries against the object’s attributes and SystemLogEntries
+#     - if entries are removed from the object’s logPref list, they still remain in the log dict;
 #         they can be deleted from the log dict using the remove_log_entries() method
 #     - data is recorded in an entry using the log_entries() method, which records data to all entries
 #         in the self.owner.prefs.logPrefs list;  this is generally carried out by the update methods
@@ -422,15 +439,12 @@ The following entries are automatically included in self.entries for a Mechanism
 </ul>
 </dd>
 <dt>Class Methods:</dt>
-<dd><ul class="first">
-<li><p class="first">add_entries(entries) - add entries to log dict</p>
-</li>
-<li><p class="first">delete_entries(entries, confirm) - delete entries from log dict; confirm=True requires user confirmation</p>
-</li>
+<dd><ul class="first simple">
+<li>add_entries(entries) - add entries to log dict</li>
+<li>delete_entries(entries, confirm) - delete entries from log dict; confirm=True requires user confirmation</li>
 <li><dl class="first docutils">
 <dt>reset_entries(entries, confirm) - delete all data from entries but leave them in log dict;</dt>
-<dd><p class="first last">confirm=True requires user confirmation</p>
-</dd>
+<dd>confirm=True requires user confirmation</dd>
 </dl>
 </li>
 </ul>
@@ -453,7 +467,7 @@ Note: adding an entry does not mean data will be recorded;</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entry</strong> &#8211; (str)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entry</strong> – (str)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -476,8 +490,8 @@ Notes:
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entries</strong> &#8211; (str, list, or Log.ALL_LOG_ENTRIES)</li>
-<li><strong>confirm</strong> &#8211; (bool)</li>
+<li><strong>entries</strong> – (str, list, or Log.ALL_LOG_ENTRIES)</li>
+<li><strong>confirm</strong> – (bool)</li>
 </ul>
 </td>
 </tr>
@@ -502,8 +516,8 @@ Notes:
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entries</strong> &#8211; (list, str or Log.ALL_LOG_ENTRIES)</li>
-<li><strong>confirm</strong> &#8211; (bool)</li>
+<li><strong>entries</strong> – (list, str or Log.ALL_LOG_ENTRIES)</li>
+<li><strong>confirm</strong> – (bool)</li>
 </ul>
 </td>
 </tr>
@@ -523,7 +537,7 @@ Notes:
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> &#8211; (str or list)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> – (str or list)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -541,7 +555,7 @@ Issue a warning if an entry is not in the log dict</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> &#8211; (str, list, or ALL_ENTRIES)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entries</strong> – (str, list, or ALL_ENTRIES)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
 </tr>
@@ -555,6 +569,9 @@ Issue a warning if an entry is not in the log dict</p>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -589,7 +606,8 @@ Issue a warning if an entry is not in the log dict</p>
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

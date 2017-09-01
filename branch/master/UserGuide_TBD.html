@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -42,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -82,13 +85,17 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -101,8 +108,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -111,30 +120,47 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>User&#8217;s Guide</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>User’s Guide</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/UserGuide_TBD.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/UserGuide_TBD.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
   <div class="section" id="user-s-guide">
-<h1>User&#8217;s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
+<h1>User’s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="#user-guide-organization-and-principles"><span class="std std-ref">Organization and Basic Principles</span></a></li>
 <li><a class="reference internal" href="#user-guide-components"><span class="std std-ref">Components</span></a></li>
@@ -152,16 +178,16 @@ that combine Components into a runnable model.</p>
 <h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>There are two primary types of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.
-For those familiar with block modeling systems, Mechanisms are the &#8220;blocks&#8221; in PsyNeuLink, and Projections are the
-&#8220;links&#8221;.  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
+For those familiar with block modeling systems, Mechanisms are the “blocks” in PsyNeuLink, and Projections are the
+“links”.  Mechanisms take inputs, process them in some way, and generate outputs that can be sent to other
 Mechanisms. Projections are the means of sending information from one Mechanism to another.  There are several
 varieties of Mechanisms and Projections, that serve a range of different functions.  At the highest level, they
 are divided into two types:  ones responsible for processing, and ones responsible for modulation.</p>
 <p><strong>Processing</strong>
 The Components responsible for processing are <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and
-<code class="xref any docutils literal"><span class="pre">PathwayProjection</span></code>.  They are used to create pathways that transmit and transform
+<a class="reference internal" href="PathwayProjections.html"><span class="doc">PathwayProjection</span></a>.  They are used to create pathways that transmit and transform
 information, taking the inputs to a model and generating its outputs. The primary types of ProcessingMechanisms
-are <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> (that perform a &#8220;memory-less&#8221; transformation of
+are <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a> (that perform a “memory-less” transformation of
 their input), IntegratorMechanisms (that maintain a memory of their prior state, and integrate that with new
 inputs), and ObjectiveMechanisms (that evaluate and/or compare different sources of input).</p>
 </div></blockquote>
@@ -246,6 +272,9 @@ Gating</div></blockquote>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
@@ -279,7 +308,8 @@ Gating</div></blockquote>
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

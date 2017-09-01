@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -42,6 +44,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -82,13 +85,17 @@
           
             
             
-                <ul>
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -101,8 +108,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -111,23 +120,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Keywords</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Keywords</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Keywords.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Keywords.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -222,29 +248,29 @@ details, see <a class="reference internal" href="LearningMechanism.html#learning
 <dd><dl class="attribute">
 <dt id="Keywords.MatrixKeywords.IDENTITY_MATRIX">
 <code class="descname">IDENTITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.IDENTITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a square matrix of 1&#8217;s along the diagnoal, 0&#8217;s elsewhere; this requires that the length of the sender and
+<dd><p>a square matrix of 1’s along the diagnoal, 0’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.HOLLOW_MATRIX">
 <code class="descname">HOLLOW_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.HOLLOW_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a square matrix of 0&#8217;s along the diagnoal, 1&#8217;s elsewhere; this requires that the length of the sender and
+<dd><p>a square matrix of 0’s along the diagnoal, 1’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX">
 <code class="descname">FULL_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
-to the length of the receiver&#8217;s value, all the elements of which are 1&#8217;s.</p>
+<dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
+to the length of the receiver’s value, all the elements of which are 1’s.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX">
 <code class="descname">RANDOM_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#Keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>a matrix that has a number of rows equal to the length of the sender&#8217;s value, and a number of columns equal
-to the length of the receiver&#8217;s value, all the elements of which are filled with random values uniformly
+<dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
+to the length of the receiver’s value, all the elements of which are filled with random values uniformly
 distributed between 0 and 1.</p>
 </dd></dl>
 
@@ -266,6 +292,9 @@ distributed between 0 and 1.</p>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
@@ -300,7 +329,8 @@ distributed between 0 and 1.</p>
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

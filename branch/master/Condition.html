@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,8 +88,11 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
@@ -98,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -110,8 +117,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -120,25 +129,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Scheduling.html">Scheduling</a> &raquo;</li>
-      
-    <li>Condition</li>
+        
+      <li>Condition</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Condition.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Condition.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -174,14 +200,14 @@ arguments that must be specified to achieve the desired behavior. Many Condition
 <a class="reference internal" href="#Scheduling.Condition.Condition.owner" title="Scheduling.Condition.Condition.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute (a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the Condition belongs), and a
 <a class="reference internal" href="#Scheduling.Condition.Condition.scheduler" title="Scheduling.Condition.Condition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> attribute (that maintains data used to test for satisfaction of the Condition).
 When pre-specified Conditions are instantiated within a call to the <code class="xref any docutils literal"><span class="pre">add</span></code> method of a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> or <a class="reference internal" href="#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a>,
-the Condition&#8217;s <a class="reference internal" href="#Scheduling.Condition.Condition.owner" title="Scheduling.Condition.Condition.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> and <a class="reference internal" href="#Scheduling.Condition.Condition.scheduler" title="Scheduling.Condition.Condition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> attributes are determined through
+the Condition’s <a class="reference internal" href="#Scheduling.Condition.Condition.owner" title="Scheduling.Condition.Condition.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> and <a class="reference internal" href="#Scheduling.Condition.Condition.scheduler" title="Scheduling.Condition.Condition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a> attributes are determined through
 context and assigned automatically, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">EveryNPasses</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.OrnsteinUhlenbeckIntegrator.owner" title="Function.OrnsteinUhlenbeckIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
+<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.AccumulatorIntegrator.owner" title="Function.AccumulatorIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
 </div>
 <div class="section" id="custom-conditions">
 <span id="condition-custom"></span><h3>Custom Conditions<a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -193,7 +219,7 @@ used to determine whether the associated Component is allowed to execute on that
 arbitrary schedules to be created, in which the execution of each Component can depend on one or more attributes of
 any other Components in the Composition.</p>
 <p id="condition-recurrent-example">For example, the following script fragment creates a custom Condition in which <code class="xref any docutils literal"><span class="pre">mech_A</span></code> is scheduled to wait to
-execute until a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> <code class="xref any docutils literal"><span class="pre">mech_B</span></code> has &#8220;converged&#8221; (that is, settled to the point that none of
+execute until a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> <code class="xref any docutils literal"><span class="pre">mech_B</span></code> has “converged” (that is, settled to the point that none of
 its elements has changed in value more than a specified amount since the previous <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">converge</span><span class="p">(</span><span class="n">mech</span><span class="p">,</span> <span class="n">thresh</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">mech</span><span class="o">.</span><span class="n">delta</span><span class="p">:</span>
@@ -204,8 +230,8 @@ its elements has changed in value more than a specified amount since the previou
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">mech_A</span><span class="p">,</span> <span class="n">NWhen</span><span class="p">(</span><span class="n">Condition</span><span class="p">(</span><span class="n">converge</span><span class="p">,</span> <span class="n">mech_B</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>In the example, a function <code class="xref any docutils literal"><span class="pre">converge</span></code> is defined that references the <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.delta" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.delta"><code class="xref any py py-attr docutils literal"><span class="pre">delta</span></code></a> attribute of
-a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> (which reports the change in its <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.value" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>). The function is assigned to
+<p>In the example, a function <code class="xref any docutils literal"><span class="pre">converge</span></code> is defined that references the <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.delta" title="TransferMechanism.TransferMechanism.delta"><code class="xref any py py-attr docutils literal"><span class="pre">delta</span></code></a> attribute of
+a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> (which reports the change in its <a class="reference internal" href="TransferMechanism.html#TransferMechanism.TransferMechanism.value" title="TransferMechanism.TransferMechanism.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>). The function is assigned to
 the standard <a class="reference internal" href="#Scheduling.Condition.Condition" title="Scheduling.Condition.Condition"><code class="xref any py py-class docutils literal"><span class="pre">Condition()</span></code></a> with <code class="xref any docutils literal"><span class="pre">mech_A</span></code> and <code class="xref any docutils literal"><span class="pre">epsilon</span></code> as its arguments, and <a class="reference internal" href="#conditions-composite"><span class="std std-ref">composite Condition</span></a>
 <a class="reference internal" href="#Scheduling.Condition.NWhen" title="Scheduling.Condition.NWhen"><code class="xref any py py-class docutils literal"><span class="pre">NWhen</span></code></a> (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to <code class="xref any docutils literal"><span class="pre">mech_B</span></code>,
 thus scheduling it to execute one time when all of the elements of <code class="xref any docutils literal"><span class="pre">mech_A</span></code> have changed by less than <code class="xref any docutils literal"><span class="pre">epsilon</span></code>.</p>
@@ -234,198 +260,170 @@ evaluates to <code class="xref any docutils literal"><span class="pre">True</spa
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The optional <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> argument in many <a class="reference internal" href="#"><span class="doc">Conditions</span></a> specifies the unit of time over which the
-Condition operates;  the default value is <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for all Conditions except those with &#8220;Trial&#8221; in their name,
+Condition operates;  the default value is <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> for all Conditions except those with “Trial” in their name,
 for which it is <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.RUN" title="Scheduling.TimeScale.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>.</p>
 </div>
 <p id="conditions-generic"><strong>Generic Conditions</strong> (used to construct <a class="reference internal" href="#condition-custom"><span class="std std-ref">custom Conditions</span></a>):</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.While" title="Scheduling.Condition.While"><code class="xref any py py-attr docutils literal"><span class="pre">While</span></code></a>(func, <a href="#id1"><span class="problematic" id="id2">*</span></a>args, <a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs)</dt>
-<dd><p class="first last">satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to <code class="xref any docutils literal"><span class="pre">True</span></code>.       Equivalent to <code class="xref any docutils literal"><span class="pre">Condition(func,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></p>
-</dd>
+<dd>satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to <code class="xref any docutils literal"><span class="pre">True</span></code>.       Equivalent to <code class="xref any docutils literal"><span class="pre">Condition(func,</span> <span class="pre">*args,</span> <span class="pre">**kwargs)</span></code></dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.WhileNot" title="Scheduling.Condition.WhileNot"><code class="xref any py py-class docutils literal"><span class="pre">WhileNot</span></code></a>(func, <a href="#id5"><span class="problematic" id="id6">*</span></a>args, <a href="#id7"><span class="problematic" id="id8">**</span></a>kwargs)</dt>
-<dd><p class="first last">satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to <code class="xref any docutils literal"><span class="pre">False</span></code>.       Equivalent to <code class="xref any docutils literal"><span class="pre">Not(Condition(func,</span> <span class="pre">*args,</span> <span class="pre">**kwargs))</span></code></p>
-</dd>
+<dd>satisfied whenever the specified function (or callable) called with args and/or kwargs evaluates to <code class="xref any docutils literal"><span class="pre">False</span></code>.       Equivalent to <code class="xref any docutils literal"><span class="pre">Not(Condition(func,</span> <span class="pre">*args,</span> <span class="pre">**kwargs))</span></code></dd>
 </dl>
 </li>
 </ul>
 </div></blockquote>
 <p id="conditions-static"><strong>Static Conditions</strong> (independent of other Conditions, Components or time):</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.Always" title="Scheduling.Condition.Always"><code class="xref any py py-class docutils literal"><span class="pre">Always</span></code></a></dt>
-<dd><p class="first last">always satisfied.</p>
-</dd>
+<dd>always satisfied.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.Never" title="Scheduling.Condition.Never"><code class="xref any py py-class docutils literal"><span class="pre">Never</span></code></a></dt>
-<dd><p class="first last">never satisfied.</p>
-</dd>
+<dd>never satisfied.</dd>
 </dl>
 </li>
 </ul>
 </div></blockquote>
 <p id="conditions-composite"><strong>Composite Conditions</strong> (based on one or more other Conditions):</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.All" title="Scheduling.Condition.All"><code class="xref any py py-class docutils literal"><span class="pre">All</span></code></a>(<a href="#id9"><span class="problematic" id="id10">*</span></a>Conditions)</dt>
-<dd><p class="first last">satisfied whenever all of the specified Conditions are satisfied.</p>
-</dd>
+<dd>satisfied whenever all of the specified Conditions are satisfied.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.Any" title="Scheduling.Condition.Any"><code class="xref any py py-class docutils literal"><span class="pre">Any</span></code></a>(<a href="#id11"><span class="problematic" id="id12">*</span></a>Conditions)</dt>
-<dd><p class="first last">satisfied whenever any of the specified Conditions are satisfied.</p>
-</dd>
+<dd>satisfied whenever any of the specified Conditions are satisfied.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.Not" title="Scheduling.Condition.Not"><code class="xref any py py-class docutils literal"><span class="pre">Not</span></code></a>(Condition)</dt>
-<dd><p class="first last">satisfied whenever the specified Condition is not satisfied.</p>
-</dd>
+<dd>satisfied whenever the specified Condition is not satisfied.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.NWhen" title="Scheduling.Condition.NWhen"><code class="xref any py py-class docutils literal"><span class="pre">NWhen</span></code></a>(Condition, int)</dt>
-<dd><p class="first last">satisfied the first specified number of times the specified Condition is satisfied.</p>
-</dd>
+<dd>satisfied the first specified number of times the specified Condition is satisfied.</dd>
 </dl>
 </li>
 </ul>
 </div></blockquote>
 <p id="conditions-time-based"><strong>Time-Based Conditions</strong> (based on the count of units of time at a specified <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>):</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.BeforePass" title="Scheduling.Condition.BeforePass"><code class="xref any py py-class docutils literal"><span class="pre">BeforePass</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time before the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> occurs.</p>
-</dd>
+<dd>satisfied any time before the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> occurs.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AtPass" title="Scheduling.Condition.AtPass"><code class="xref any py py-class docutils literal"><span class="pre">AtPass</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied only during the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.</p>
-</dd>
+<dd>satisfied only during the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterPass" title="Scheduling.Condition.AfterPass"><code class="xref any py py-class docutils literal"><span class="pre">AfterPass</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time after the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> has occurred.</p>
-</dd>
+<dd>satisfied any time after the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> has occurred.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterNPasses" title="Scheduling.Condition.AfterNPasses"><code class="xref any py py-class docutils literal"><span class="pre">AfterNPasses</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied when or any time after the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es has occurred.</p>
-</dd>
+<dd>satisfied when or any time after the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es has occurred.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.EveryNPasses" title="Scheduling.Condition.EveryNPasses"><code class="xref any py py-class docutils literal"><span class="pre">EveryNPasses</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied every time the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es occurs.</p>
-</dd>
+<dd>satisfied every time the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es occurs.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.BeforeTrial" title="Scheduling.Condition.BeforeTrial"><code class="xref any py py-class docutils literal"><span class="pre">BeforeTrial</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time before the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</p>
-</dd>
+<dd>satisfied any time before the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AtTrial" title="Scheduling.Condition.AtTrial"><code class="xref any py py-class docutils literal"><span class="pre">AtTrial</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time during the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
-</dd>
+<dd>satisfied any time during the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterTrial" title="Scheduling.Condition.AfterTrial"><code class="xref any py py-class docutils literal"><span class="pre">AfterTrial</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time after the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</p>
-</dd>
+<dd>satisfied any time after the specified <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> occurs.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterNTrials" title="Scheduling.Condition.AfterNTrials"><code class="xref any py py-class docutils literal"><span class="pre">AfterNTrials</span></code></a>(int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time after the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s has occurred.</p>
-</dd>
+<dd>satisfied any time after the specified number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s has occurred.</dd>
 </dl>
 </li>
 </ul>
 </div></blockquote>
 <p id="conditions-component-based"><strong>Component-Based Conditions</strong> (based on the execution or state of other Components):</p>
 <blockquote>
-<div><ul>
+<div><ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.BeforeNCalls" title="Scheduling.Condition.BeforeNCalls"><code class="xref any py py-class docutils literal"><span class="pre">BeforeNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time before the specified Component has executed the specified number of times.</p>
-</dd>
+<dd>satisfied any time before the specified Component has executed the specified number of times.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AtNCalls" title="Scheduling.Condition.AtNCalls"><code class="xref any py py-class docutils literal"><span class="pre">AtNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied when the specified Component has executed the specified number of times.</p>
-</dd>
+<dd>satisfied when the specified Component has executed the specified number of times.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterCall" title="Scheduling.Condition.AfterCall"><code class="xref any py py-class docutils literal"><span class="pre">AfterCall</span></code></a>(Component, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied any time after the Component has executed the specified number of times.</p>
-</dd>
+<dd>satisfied any time after the Component has executed the specified number of times.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterNCalls" title="Scheduling.Condition.AfterNCalls"><code class="xref any py py-class docutils literal"><span class="pre">AfterNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied when or any time after the Component has executed the specified number of times.</p>
-</dd>
+<dd>satisfied when or any time after the Component has executed the specified number of times.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AfterNCallsCombined" title="Scheduling.Condition.AfterNCallsCombined"><code class="xref any py py-class docutils literal"><span class="pre">AfterNCallsCombined</span></code></a>(<a href="#id13"><span class="problematic" id="id14">*</span></a>Components, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied when or any time after the specified Components have executed the specified number       of times among themselves, in total.</p>
-</dd>
+<dd>satisfied when or any time after the specified Components have executed the specified number       of times among themselves, in total.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.EveryNCalls" title="Scheduling.Condition.EveryNCalls"><code class="xref any py py-class docutils literal"><span class="pre">EveryNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd><p class="first last">satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.OrnsteinUhlenbeckIntegrator.owner" title="Function.OrnsteinUhlenbeckIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</p>
-</dd>
+<dd>satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.AccumulatorIntegrator.owner" title="Function.AccumulatorIntegrator.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.JustRan" title="Scheduling.Condition.JustRan"><code class="xref any py py-class docutils literal"><span class="pre">JustRan</span></code></a>(Component)</dt>
-<dd><p class="first last">satisfied if the specified Component was assigned to run in the previous <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</p>
-</dd>
+<dd>satisfied if the specified Component was assigned to run in the previous <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.AllHaveRun" title="Scheduling.Condition.AllHaveRun"><code class="xref any py py-class docutils literal"><span class="pre">AllHaveRun</span></code></a>(<a href="#id15"><span class="problematic" id="id16">*</span></a>Components)</dt>
-<dd><p class="first last">satisfied when all of the specified Components have executed at least once.</p>
-</dd>
+<dd>satisfied when all of the specified Components have executed at least once.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.WhenFinished" title="Scheduling.Condition.WhenFinished"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinished</span></code></a>(Component)</dt>
-<dd><p class="first last">satisfied when the specified Component has set its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
-</dd>
+<dd>satisfied when the specified Component has set its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.WhenFinishedAny" title="Scheduling.Condition.WhenFinishedAny"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinishedAny</span></code></a>(<a href="#id17"><span class="problematic" id="id18">*</span></a>Components)</dt>
-<dd><p class="first last">satisfied when any of the specified Components has set their <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
-</dd>
+<dd>satisfied when any of the specified Components has set their <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal"><span class="pre">True</span></code>.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.WhenFinishedAll" title="Scheduling.Condition.WhenFinishedAll"><code class="xref any py py-class docutils literal"><span class="pre">WhenFinishedAll</span></code></a>(<a href="#id19"><span class="problematic" id="id20">*</span></a>Components)</dt>
-<dd><p class="first last">satisfied when all of the specified Components have set their <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
-</dd>
+<dd>satisfied when all of the specified Components have set their <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal"><span class="pre">True</span></code>.</dd>
 </dl>
 </li>
 </ul>
@@ -451,9 +449,9 @@ of execution generated by that <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#module-Scheduling.Scheduler" title="Scheduling.Scheduler"><em>Scheduler</em></a>) &#8211; specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
+<li><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler" title="Scheduling.Scheduler.Scheduler"><em>Scheduler</em></a>) – specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
 evaluate the <a class="reference internal" href="#"><span class="doc">Conditions</span></a></li>
-<li><strong>conditions</strong> (dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>}) &#8211; specifies an iterable collection of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and the <a class="reference internal" href="#"><span class="doc">Conditions</span></a> associated
+<li><strong>conditions</strong> (dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>}) – specifies an iterable collection of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and the <a class="reference internal" href="#"><span class="doc">Conditions</span></a> associated
 with each.</li>
 </ul>
 </td>
@@ -463,16 +461,16 @@ with each.</li>
 <dl class="attribute">
 <dt id="Scheduling.Condition.ConditionSet.scheduler">
 <code class="descname">scheduler</code><a class="headerlink" href="#Scheduling.Condition.ConditionSet.scheduler" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Scheduler</em> &#8211; specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
+<dd><p><em>Scheduler</em> – specifies the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> used to evaluate and maintain a record of the information required to
 evaluate the <a class="reference internal" href="#"><span class="doc">Conditions</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Scheduling.Condition.ConditionSet.conditions">
 <code class="descname">conditions</code><a class="headerlink" href="#Scheduling.Condition.ConditionSet.conditions" title="Permalink to this definition">¶</a></dt>
-<dd><p>dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>} &#8211; the key of each entry is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, and its value is the <a class="reference internal" href="#"><span class="doc">Condition</span></a> associated
+<dd><p>dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>} – the key of each entry is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, and its value is the <a class="reference internal" href="#"><span class="doc">Condition</span></a> associated
 with that Component.  Conditions can be added to the
-ConditionSet using the ConditionSet&#8217;s <a class="reference internal" href="#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> method.</p>
+ConditionSet using the ConditionSet’s <a class="reference internal" href="#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> method.</p>
 </dd></dl>
 
 <dl class="method">
@@ -484,8 +482,8 @@ ConditionSet using the ConditionSet&#8217;s <a class="reference internal" href="
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; specifies the Component with which the <strong>condition</strong> should be associated.</li>
-<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) &#8211; specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – specifies the Component with which the <strong>condition</strong> should be associated.</li>
+<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
 </ul>
 </td>
 </tr>
@@ -501,7 +499,7 @@ ConditionSet using the ConditionSet&#8217;s <a class="reference internal" href="
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> (dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>}) &#8211; specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> (dict{<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>: <a class="reference internal" href="#"><span class="doc">Condition</span></a>}) – specifies an iterable collection of Conditions to be added to the ConditionSet, in the form of a dict
 each entry of which maps a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (the key) to a <a class="reference internal" href="#"><span class="doc">Condition</span></a> (the value).</td>
 </tr>
 </tbody>
@@ -520,9 +518,9 @@ allowed to execute.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>func</strong> (<em>callable</em>) &#8211; specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</li>
-<li><strong>args</strong> (<a href="#id21"><span class="problematic" id="id22">*</span></a>args) &#8211; specifies formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
-<li><strong>kwargs</strong> (<a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs) &#8211; specifies keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
+<li><strong>func</strong> (<em>callable</em>) – specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</li>
+<li><strong>args</strong> (<a href="#id21"><span class="problematic" id="id22">*</span></a>args) – specifies formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
+<li><strong>kwargs</strong> (<a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs) – specifies keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
 </ul>
 </td>
 </tr>
@@ -531,7 +529,7 @@ allowed to execute.</p>
 <dl class="attribute">
 <dt id="Scheduling.Condition.Condition.scheduler">
 <code class="descname">scheduler</code><a class="headerlink" href="#Scheduling.Condition.Condition.scheduler" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Scheduler</em> &#8211; the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> with which the Condition is associated;  the Scheduler&#8217;s state is used to evaluate whether
+<dd><p><em>Scheduler</em> – the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> with which the Condition is associated;  the Scheduler’s state is used to evaluate whether
 the Condition`s specifications are satisfied.</p>
 </dd></dl>
 
@@ -575,11 +573,11 @@ the Condition`s specifications are satisfied.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>func</strong> &#8211; callable
+<li><strong>func</strong> – callable
 specifies function to be called when the Condition is evaluated, to determine whether it is currently satisfied.</li>
-<li><strong>args</strong> &#8211; <a href="#id25"><span class="problematic" id="id26">*</span></a>args
+<li><strong>args</strong> – <a href="#id25"><span class="problematic" id="id26">*</span></a>args
 specifies formal arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
-<li><strong>kwargs</strong> &#8211; <a href="#id27"><span class="problematic" id="id28">**</span></a>kwargs
+<li><strong>kwargs</strong> – <a href="#id27"><span class="problematic" id="id28">**</span></a>kwargs
 specifies keyword arguments to pass to <code class="xref any docutils literal"><span class="pre">func</span></code> when the Condition is evaluated.</li>
 </ul>
 </td>
@@ -601,7 +599,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>none</strong> &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>none</strong> – </td>
 </tr>
 </tbody>
 </table>
@@ -620,7 +618,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>none</strong> &#8211; </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>none</strong> – </td>
 </tr>
 </tbody>
 </table>
@@ -639,7 +637,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> &#8211; one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> – one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -670,7 +668,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> &#8211; one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> – one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -701,7 +699,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) &#8211; a <a class="reference internal" href="#"><span class="doc">Condition</span></a></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -721,8 +719,8 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) &#8211; a <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the maximum number of times this condition will be satisfied</li>
+<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
+<li><strong>n</strong> (<em>int</em>) – the maximum number of times this condition will be satisfied</li>
 </ul>
 </td>
 </tr>
@@ -744,8 +742,8 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the &#8216;PASS&#8217; before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>n</strong> (<em>int</em>) – the ‘PASS’ before which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -772,8 +770,8 @@ so, <code class="xref any docutils literal"><span class="pre">BeforePass(2)</spa
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> at which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -787,7 +785,7 @@ so, <code class="xref any docutils literal"><span class="pre">BeforePass(2)</spa
 </div></blockquote>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li>Counts of TimeScales are zero-indexed (that is, the first &#8216;PASS&#8217; is pass 0, the second &#8216;PASS&#8217; is 1, etc.);
+<li>Counts of TimeScales are zero-indexed (that is, the first ‘PASS’ is pass 0, the second ‘PASS’ is 1, etc.);
 so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></code> is satisfied when a single <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0) has occurred, and <code class="xref any docutils literal"><span class="pre">AtPass(2)</span> <span class="pre">is</span> <span class="pre">satisfied</span>
 <span class="pre">when</span> <span class="pre">two</span> <span class="pre">`PASS</span></code>es have occurred (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 0 and <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> 1), etc..</li>
 </ul>
@@ -801,8 +799,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -829,8 +827,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -852,8 +850,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the frequency of passes with which this condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
+<li><strong>n</strong> (<em>int</em>) – the frequency of passes with which this condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -877,8 +875,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtPass(1)</span></
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> before which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -905,8 +903,8 @@ so, <code class="xref any docutils literal"><span class="pre">BeforeTrial(2)</sp
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> at which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -933,8 +931,8 @@ so, <code class="xref any docutils literal"><span class="pre">AtTrial(1)</span><
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s. (default: TimeScale.RUN)</li>
+<li><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s. (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -962,8 +960,8 @@ etc.).</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
+<li><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s (default: TimeScale.RUN)</li>
 </ul>
 </td>
 </tr>
@@ -985,9 +983,9 @@ etc.).</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of executions of <strong>component</strong> before which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> before which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1010,9 +1008,9 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of executions of <strong>component</strong> at which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> at which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1035,9 +1033,9 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1060,9 +1058,9 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the number of executions of <strong>component</strong> after which the Condition is satisfied</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1079,15 +1077,15 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 
 <dl class="class">
 <dt id="Scheduling.Condition.AfterNCallsCombined">
-<em class="property">class </em><code class="descclassname">Scheduling.Condition.</code><code class="descname">AfterNCallsCombined</code><span class="sig-paren">(</span><em>*dependencies</em>, <em>*</em>, <em>n=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#Scheduling.Condition.AfterNCallsCombined" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Scheduling.Condition.</code><code class="descname">AfterNCallsCombined</code><span class="sig-paren">(</span><em>*dependencies</em>, <em>n=None</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#Scheduling.Condition.AfterNCallsCombined" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>*components</strong> (<em>Components</em>) &#8211; one or more Components on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the number of combined executions of all Components specified in <strong>components</strong> after which the         Condition is satisfied (default: None)</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>*components</strong> (<em>Components</em>) – one or more Components on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the number of combined executions of all Components specified in <strong>components</strong> after which the         Condition is satisfied (default: None)</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1110,8 +1108,8 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</li>
-<li><strong>n</strong> (<em>int</em>) &#8211; the frequency of executions of <strong>component</strong> at which the Condition is satisfied</li>
+<li><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</li>
+<li><strong>n</strong> (<em>int</em>) – the frequency of executions of <strong>component</strong> at which the Condition is satisfied</li>
 </ul>
 </td>
 </tr>
@@ -1121,12 +1119,12 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <blockquote>
 <div><ul class="simple">
 <li>the Component specified in <strong>component</strong> has executed at least n times since the last time the
-Condition&#8217;s owner executed.</li>
+Condition’s owner executed.</li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li>Scheduler&#8217;s count of each other Component that is &#8220;useable&#8221; by the Component is reset to 0.</li>
+<li>Scheduler’s count of each other Component that is “useable” by the Component is reset to 0.</li>
 </ul>
 </dd></dl>
 
@@ -1137,7 +1135,7 @@ Condition&#8217;s owner executed.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</td>
 </tr>
 </tbody>
 </table>
@@ -1157,14 +1155,14 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 
 <dl class="class">
 <dt id="Scheduling.Condition.AllHaveRun">
-<em class="property">class </em><code class="descclassname">Scheduling.Condition.</code><code class="descname">AllHaveRun</code><span class="sig-paren">(</span><em>*dependencies</em>, <em>*</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#Scheduling.Condition.AllHaveRun" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Scheduling.Condition.</code><code class="descname">AllHaveRun</code><span class="sig-paren">(</span><em>*dependencies</em>, <em>time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#Scheduling.Condition.AllHaveRun" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>*components</strong> (<em>Components</em>) &#8211; an iterable of Components on which the Condition depends</li>
-<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) &#8211; the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
+<li><strong>*components</strong> (<em>Components</em>) – an iterable of Components on which the Condition depends</li>
+<li><strong>time_scale</strong> (<a class="reference internal" href="TimeScale.html#module-Scheduling.TimeScale" title="Scheduling.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong>         (default: TimeScale.TRIAL)</li>
 </ul>
 </td>
 </tr>
@@ -1186,7 +1184,7 @@ within one unit of time at the <a class="reference internal" href="TimeScale.htm
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) &#8211; the Component on which the Condition depends</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>component</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – the Component on which the Condition depends</td>
 </tr>
 </tbody>
 </table>
@@ -1211,7 +1209,7 @@ this Condition) can vary arbitrarily in time.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*components</strong> (<em>Components</em>) &#8211; zero or more Components on which the Condition depends</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*components</strong> (<em>Components</em>) – zero or more Components on which the Condition depends</td>
 </tr>
 </tbody>
 </table>
@@ -1225,7 +1223,7 @@ this Condition) can vary arbitrarily in time.</li>
 <ul class="simple">
 <li>This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
 Any(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
-If no components are specified, the condition will default to checking all of its scheduler&#8217;s Components.</li>
+If no components are specified, the condition will default to checking all of its scheduler’s Components.</li>
 <li>This is a dynamic Condition: Each Component is responsible for assigning its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute on it
 own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
 this Condition) can vary arbitrarily in time.</li>
@@ -1239,7 +1237,7 @@ this Condition) can vary arbitrarily in time.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*components</strong> (<em>Components</em>) &#8211; zero or more Components on which the Condition depends</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*components</strong> (<em>Components</em>) – zero or more Components on which the Condition depends</td>
 </tr>
 </tbody>
 </table>
@@ -1253,7 +1251,7 @@ this Condition) can vary arbitrarily in time.</li>
 <ul class="simple">
 <li>This is a convenience class; WhenFinishedAny(A, B, C) is equivalent to
 All(WhenFinished(A), WhenFinished(B), WhenFinished(C)).
-If no components are specified, the condition will default to checking all of its scheduler&#8217;s Components.</li>
+If no components are specified, the condition will default to checking all of its scheduler’s Components.</li>
 <li>This is a dynamic Condition: Each Component is responsible for assigning its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.is_finished" title="Mechanism.Mechanism_Base.is_finished"><code class="xref any py py-attr docutils literal"><span class="pre">is_finished</span></code></a> attribute on it
 own, which can occur independently of the execution of other Components.  Therefore the satisfaction of
 this Condition) can vary arbitrarily in time.</li>
@@ -1265,15 +1263,18 @@ this Condition) can vary arbitrarily in time.</li>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="TimeScale.html" class="btn btn-neutral float-right" title="TimeScale" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="TimeScale.html" class="btn btn-neutral float-right" title="TimeScale" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Scheduler.html" class="btn btn-neutral" title="Scheduler" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Scheduler.html" class="btn btn-neutral" title="Scheduler" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1307,7 +1308,8 @@ this Condition) can vary arbitrarily in time.</li>
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

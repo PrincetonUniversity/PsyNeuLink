@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,8 +88,11 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
@@ -98,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -110,8 +117,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -120,25 +129,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Scheduling.html">Scheduling</a> &raquo;</li>
-      
-    <li>Scheduler</li>
+        
+      <li>Scheduler</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/Scheduler.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/Scheduler.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -167,10 +193,10 @@ can also be assigned for execution (e.g., during <a class="reference internal" h
 <div class="section" id="creating-a-scheduler">
 <span id="scheduler-creation"></span><h2>Creating a Scheduler<a class="headerlink" href="#creating-a-scheduler" title="Permalink to this headline">¶</a></h2>
 <p>A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
-for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler&#8217;s constructor using one the following:</p>
+for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler’s constructor using one the following:</p>
 <ul class="simple">
 <li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
-the Scheduler is created using the Components in the System&#8217;s <code class="xref any docutils literal"><span class="pre">execution_list</span></code> and an order
+the Scheduler is created using the Components in the System’s <code class="xref any docutils literal"><span class="pre">execution_list</span></code> and an order
 of execution specified by the dependencies among the Components in its <code class="xref any docutils literal"><span class="pre">execution_graph</span></code>.</li>
 <li>a <em>graph specification dictionary</em> in the <strong>graph</strong> argument -
 each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
@@ -190,8 +216,8 @@ ConditionSets can also be added after the  Scheduler has been created, using its
 <p>When a Scheduler is created, it constructs a <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.consideration_queue" title="Scheduling.Scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>:  a list of <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code>
 that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
 among them specified in the System, or on the dependencies specified in the graph specification dictionary, whichever
-was provided in the Scheduler&#8217;s constructor.  Each <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> is a set of Components that are eligible to
-execute at the same time/<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> (i.e., that appear at the same &#8220;depth&#8221; in a sequence of dependencies, and
+was provided in the Scheduler’s constructor.  Each <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> is a set of Components that are eligible to
+execute at the same time/<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> (i.e., that appear at the same “depth” in a sequence of dependencies, and
 among which there are no dependencies).  The first <code class="xref any docutils literal"><span class="pre">consideration_set</span></code> consists of only <a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.ORIGIN" title="Keywords.MechanismRoles.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms.
 The second consists of all Components that receive <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> from the Mechanisms in the first
 <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>. The third consists of Components that receive Projections from Components in the first two
@@ -233,7 +259,7 @@ while TimeScale.TRIAL termination conditions are not satisfied:
 <div class="section" id="execution">
 <span id="scheduler-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
-System or graph specification dictionary, and any <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, specified in the Scheduler&#8217;s constructor.
+System or graph specification dictionary, and any <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, specified in the Scheduler’s constructor.
 For each call to the <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.run" title="Scheduling.Scheduler.Scheduler.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, the Scheduler sequentially evaluates its
 <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in their order in the <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.consideration_queue" title="Scheduling.Scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> has
@@ -259,7 +285,7 @@ time steps: [{A}, {A, B}, {C}, ...]
 </div>
 <p class="last">Since there are no graph dependencies between <code class="xref any docutils literal"><span class="pre">A</span></code> and <code class="xref any docutils literal"><span class="pre">B</span></code>, they may execute in the same <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>. Morever,
 <code class="xref any docutils literal"><span class="pre">A</span></code> and <code class="xref any docutils literal"><span class="pre">B</span></code> are in the same <code class="xref any docutils literal"><span class="pre">consideration_set</span></code>. Since <code class="xref any docutils literal"><span class="pre">B</span></code> is specified to run every two times <code class="xref any docutils literal"><span class="pre">A</span></code> runs,
-<code class="xref any docutils literal"><span class="pre">A</span></code>&#8216;s second execution in the second <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> allows <code class="xref any docutils literal"><span class="pre">B</span></code> to run within that <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, rather
+<code class="xref any docutils literal"><span class="pre">A</span></code>’s second execution in the second <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> allows <code class="xref any docutils literal"><span class="pre">B</span></code> to run within that <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, rather
 than waiting for the next <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>.</p>
 </div>
 <p>For each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, the Scheduler evaluates  whether any specified
@@ -392,11 +418,11 @@ specification dictionary, possibly determined by a set of <a class="reference in
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>system</strong> (<a class="reference internal" href="System.html#module-System" title="System"><em>System</em></a>) &#8211; specifies the Components to be ordered for execution, and any dependencies among them, based on the
-System&#8217;s <code class="xref any docutils literal"><span class="pre">execution_graph</span></code> and <code class="xref any docutils literal"><span class="pre">execution_list</span></code>.</li>
-<li><strong>condition_set</strong> (<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><em>ConditionSet</em></a>) &#8211; set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>system</strong>
+<li><strong>system</strong> (<a class="reference internal" href="System.html#module-System" title="System"><em>System</em></a>) – specifies the Components to be ordered for execution, and any dependencies among them, based on the
+System’s <code class="xref any docutils literal"><span class="pre">execution_graph</span></code> and <code class="xref any docutils literal"><span class="pre">execution_list</span></code>.</li>
+<li><strong>condition_set</strong> (<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>system</strong>
 execute and any dependencies among them</li>
-<li><strong>graph</strong> (<em>dict{Component: set(Component)}</em>) &#8211; a graph specification dictionary - each entry of the dictionary must be a Component,
+<li><strong>graph</strong> (<em>dict{Component: set</em><em>(</em><a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a><em>)</em><em>}</em>) – a graph specification dictionary - each entry of the dictionary must be a Component,
 and the value of each entry must be a set of zero or more Components that project directly to the key.</li>
 </ul>
 </td>
@@ -406,32 +432,32 @@ and the value of each entry must be a set of zero or more Components that projec
 <dl class="attribute">
 <dt id="Scheduling.Scheduler.Scheduler.condition_set">
 <code class="descname">condition_set</code><a class="headerlink" href="#Scheduling.Scheduler.Scheduler.condition_set" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ConditionSet</em> &#8211; the set of Conditions the Scheduler uses when running</p>
+<dd><p><em>ConditionSet</em> – the set of Conditions the Scheduler uses when running</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Scheduling.Scheduler.Scheduler.execution_list">
 <code class="descname">execution_list</code><a class="headerlink" href="#Scheduling.Scheduler.Scheduler.execution_list" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list</em> &#8211; the full history of time steps the Scheduler has produced</p>
+<dd><p><em>list</em> – the full history of time steps the Scheduler has produced</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Scheduling.Scheduler.Scheduler.consideration_queue">
 <code class="descname">consideration_queue</code><a class="headerlink" href="#Scheduling.Scheduler.Scheduler.consideration_queue" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list</em> &#8211; a list form of the Scheduler&#8217;s toposort ordering of its nodes</p>
+<dd><p><em>list</em> – a list form of the Scheduler’s toposort ordering of its nodes</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Scheduling.Scheduler.Scheduler.termination_conds">
 <code class="descname">termination_conds</code><a class="headerlink" href="#Scheduling.Scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict{TimeScale: Condition}</em> &#8211; a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScales</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
+<dd><p><em>dict{TimeScale: Condition}</em> – a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScales</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
 of the specified <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Scheduling.Scheduler.Scheduler.times">
 <code class="descname">times</code><a class="headerlink" href="#Scheduling.Scheduler.Scheduler.times" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>dict{TimeScale: dict{TimeScale: int}}</em> &#8211; a structure counting the number of occurrences of a certain <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the scope of another <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
+<dd><p><em>dict{TimeScale: dict{TimeScale: int}}</em> – a structure counting the number of occurrences of a certain <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a> within the scope of another <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>.
 For example, <code class="xref any docutils literal"><span class="pre">times[TimeScale.RUN][TimeScale.PASS]</span></code> is the number of <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.PASS" title="Scheduling.TimeScale.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>es that have occurred in the
 current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.RUN" title="Scheduling.TimeScale.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> that the Scheduler is scheduling at the time it is accessed</p>
 </dd></dl>
@@ -444,8 +470,8 @@ current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> &#8211; the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that is dependent on the <code class="xref any docutils literal"><span class="pre">condition</span></code></li>
-<li><strong>condition</strong> &#8211; a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> (including All or Any)</li>
+<li><strong>owner</strong> – the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that is dependent on the <code class="xref any docutils literal"><span class="pre">condition</span></code></li>
+<li><strong>condition</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> (including All or Any)</li>
 </ul>
 </td>
 </tr>
@@ -460,7 +486,7 @@ current <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> &#8211; a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>conditions</strong> – a <code class="xref any docutils literal"><span class="pre">dict</span></code> mapping <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s,
 which can be added later with <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a></td>
 </tr>
 </tbody>
@@ -476,7 +502,7 @@ executions at each iteration</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>termination_conds</strong> &#8211; (dict) - a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>s to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that when met
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>termination_conds</strong> – (dict) - a mapping from <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a>s to <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>s that when met
 terminate the execution of the specified <a class="reference internal" href="TimeScale.html"><span class="doc">TimeScale</span></a></td>
 </tr>
 </tbody>
@@ -492,15 +518,18 @@ terminate the execution of the specified <a class="reference internal" href="Tim
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Condition.html" class="btn btn-neutral float-right" title="Condition" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Condition.html" class="btn btn-neutral float-right" title="Condition" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Scheduling.html" class="btn btn-neutral" title="Scheduling" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Scheduling.html" class="btn btn-neutral" title="Scheduling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -534,7 +563,8 @@ terminate the execution of the specified <a class="reference internal" href="Tim
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

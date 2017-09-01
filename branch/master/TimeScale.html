@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,8 +88,11 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
@@ -98,6 +104,7 @@
 <li class="toctree-l2"><a class="reference internal" href="Run.html">Run</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -110,8 +117,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -120,25 +129,42 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Scheduling.html">Scheduling</a> &raquo;</li>
-      
-    <li>TimeScale</li>
+        
+      <li>TimeScale</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/TimeScale.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/TimeScale.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -150,7 +176,7 @@
 <dt id="Scheduling.TimeScale.TimeScale">
 <em class="property">class </em><code class="descclassname">Scheduling.TimeScale.</code><code class="descname">TimeScale</code><a class="headerlink" href="#Scheduling.TimeScale.TimeScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents divisions of time used by the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, and the <strong>time_scale</strong>
-argument of a Composition&#8217;s <a class="reference internal" href="Composition.html#Composition.Composition.run" title="Composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
+argument of a Composition’s <a class="reference internal" href="Composition.html#Composition.Composition.run" title="Composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
 <p>The values of TimeScale are defined as follows (in order of increasingly coarse granularity):</p>
 <dl class="attribute">
 <dt id="Scheduling.TimeScale.TimeScale.TIME_STEP">
@@ -162,7 +188,7 @@ from a single <code class="xref any docutils literal"><span class="pre">consider
 <dl class="attribute">
 <dt id="Scheduling.TimeScale.TimeScale.PASS">
 <code class="descname">PASS</code><a class="headerlink" href="#Scheduling.TimeScale.TimeScale.PASS" title="Permalink to this definition">¶</a></dt>
-<dd><p>a full iteration through all of the <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler&#8217;s</span></a>
+<dd><p>a full iteration through all of the <code class="xref any docutils literal"><span class="pre">consideration_sets</span></code> in a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler's</span></a>
 <a class="reference internal" href="Scheduler.html#Scheduling.Scheduler.Scheduler.consideration_queue" title="Scheduling.Scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>, consisting of one or more <a class="reference internal" href="#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEPs</span></code></a>, over which every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> <a class="reference internal" href="Scheduler.html#scheduler-creation"><span class="std std-ref">specified to a Scheduler</span></a> is considered for execution at least once.</p>
 </dd></dl>
 
@@ -199,15 +225,18 @@ state of their assigned <a class="reference internal" href="Scheduler.html"><spa
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Run.html" class="btn btn-neutral float-right" title="Run" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Condition.html" class="btn btn-neutral" title="Condition" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Condition.html" class="btn btn-neutral" title="Condition" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -241,7 +270,8 @@ state of their assigned <a class="reference internal" href="Scheduler.html"><spa
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

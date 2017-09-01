@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -34,9 +36,9 @@
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
     <link rel="top" title="PsyNeuLink 0.3.2 documentation" href="index.html"/>
-        <link rel="up" title="PathwayProjections" href="PathwayProjection.html"/>
-        <link rel="next" title="ModulatoryProjections" href="ModulatoryProjection.html"/>
-        <link rel="prev" title="MappingProjection" href="MappingProjection.html"/> 
+        <link rel="up" title="PathwayProjections" href="PathwayProjections.html"/>
+        <link rel="next" title="ModulatoryProjections" href="ModulatoryProjections.html"/>
+        <link rel="prev" title="PathwayProjections" href="PathwayProjections.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,27 +88,28 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projections.html">Projections</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjections.html">PathwayProjections</a><ul class="current">
 <li class="toctree-l4 current"><a class="current reference internal" href="#">AutoAssociativeProjection</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjections.html">ModulatoryProjections</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
-<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 </ul>
 
             
@@ -118,8 +122,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -128,36 +134,53 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-          <li><a href="Component.html">Components</a> &raquo;</li>
-      
-          <li><a href="Projection.html">Projections</a> &raquo;</li>
-      
-          <li><a href="PathwayProjection.html">PathwayProjections</a> &raquo;</li>
-      
-    <li>AutoAssociativeProjection</li>
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Library.html">Library</a> &raquo;</li>
+        
+          <li><a href="Projections.html">Projections</a> &raquo;</li>
+        
+          <li><a href="PathwayProjections.html">PathwayProjections</a> &raquo;</li>
+        
+      <li>AutoAssociativeProjection</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/AutoAssociativeProjection.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/AutoAssociativeProjection.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-PathwayProjections.AutoAssociativeProjection">
-<span id="autoassociativeprojection"></span><h1>AutoAssociativeProjection<a class="headerlink" href="#module-PathwayProjections.AutoAssociativeProjection" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-Library.Projections.PathwayProjections.AutoAssociativeProjection">
+<span id="autoassociativeprojection"></span><h1>AutoAssociativeProjection<a class="headerlink" href="#module-Library.Projections.PathwayProjections.AutoAssociativeProjection" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <span id="auto-associative-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is a subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that acts as the recurrent projection for a
@@ -170,19 +193,19 @@ this allows for a <a class="reference internal" href="ControlMechanism.html"><sp
 <div class="section" id="creating-an-autoassociativeprojection">
 <span id="auto-associative-creation"></span><h2>Creating an AutoAssociativeProjection<a class="headerlink" href="#creating-an-autoassociativeprojection" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is created automatically by a RecurrentTransferMechanism (or its subclasses), and is
-stored as the <a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> parameter of the
+stored as the <a class="reference internal" href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
-<code class="xref any docutils literal"><span class="pre">Auto_Associative_Projections</span> <span class="pre">blah</span> <span class="pre">blah</span></code> below).</p>
+<a class="reference internal" href="#auto-associative-execution"><span class="std std-ref">Execution</span></a> below).</p>
 </div>
 <div class="section" id="auto-associative-structure">
 <span id="id1"></span><h2>Auto Associative Structure<a class="headerlink" href="#auto-associative-structure" title="Permalink to this headline">¶</a></h2>
 <p>In structure, the AutoAssociativeProjection is almost identical to a MappingProjection: the only additional attributes
-are <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
+are <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a>.</p>
 <div class="section" id="configurable-attributes">
 <span id="auto-associative-configurable-attributes"></span><h3>Configurable Attributes<a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="RecurrentTransferMechanism.html#ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable" title="ProcessingMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="TransferMechanism.html#ProcessingMechanisms.TransferMechanism.TransferMechanism.function" title="ProcessingMechanisms.TransferMechanism.TransferMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="LearningSignal.html#ModulatorySignals.LearningSignal.LearningSignal.variable" title="ModulatorySignals.LearningSignal.LearningSignal.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.function" title="Function.AdaptiveIntegrator.function"><code class="xref any py py-meth docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="auto-associative-matrix">
@@ -195,13 +218,14 @@ the off-diagonal entries (representing connections between nodes).</li>
 </div>
 <div class="section" id="execution">
 <span id="auto-associative-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AutoAssociativeProjection uses its <code class="xref any docutils literal"><span class="pre">matrix</span></code>, and provide the result as input for its
-<a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, the primary input state of the RecurrentTransferMechanism.</p>
+<p>An AutoAssociativeProjection uses its <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter to transform the value of its
+<a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>, and provide the result as input for its
+<a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, the primary input state of the RecurrentTransferMechanism.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">During execution the AutoAssociativeProjection updates its <code class="xref any docutils literal"><span class="pre">matrix</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters
-<em>on the `RecurrentTransferMechanism`</em>. (The <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and
-<a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a> parameters of the AutoAssociativeProjection simply refer to their
+<em>on the `RecurrentTransferMechanism`</em>. (The <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto"><code class="xref any py py-attr docutils literal"><span class="pre">auto</span></code></a> and
+<a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero"><code class="xref any py py-attr docutils literal"><span class="pre">hetero</span></code></a> parameters of the AutoAssociativeProjection simply refer to their
 counterparts on the RecurrentTransferMechanism as well.) The reason for putting the <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters on the
 RecurrentTransferMechanism is that this allows them to be modified by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
 </div>
@@ -209,120 +233,118 @@ RecurrentTransferMechanism is that this allows them to be modified by a <a class
 <div class="section" id="class-reference">
 <span id="auto-associative-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection">
-<em class="property">class </em><code class="descclassname">PathwayProjections.AutoAssociativeProjection.</code><code class="descname">AutoAssociativeProjection</code><span class="sig-paren">(</span><em>owner=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None                                                  context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements a MappingProjection that is self-recurrent on a RecurrentTransferMechanism; an AutoAssociativeProjection
-represents connections between nodes in a single-layer recurrent network. It multiplies the output of
-the RecurrentTransferMechanism by a matrix, then presents the product as input to the RecurrentTransferMechanism.</p>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection">
+<em class="property">class </em><code class="descclassname">Library.Projections.PathwayProjections.AutoAssociativeProjection.</code><code class="descname">AutoAssociativeProjection</code><span class="sig-paren">(</span><em>owner=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>matrix=DEFAULT_MATRIX</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None                                                  context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a MappingProjection that is self-recurrent on a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>; an AutoAssociativeProjection
+represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> by a matrix, then presents the product as input to the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
+<p>Note: The reason <strong>auto</strong> and <strong>hetero</strong> are not arguments to the constructor of the AutoAssociativeProjection is
+because it is only ever created by a RecurrentTransferMechanism: by the time the AutoAssociativeProjection is
+created, the <strong>auto</strong> and <strong>hetero</strong> arguments are already incorporated into the <strong>matrix</strong> argument.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>owner</strong> (<em>Optional[Mechanism]</em>) &#8211; simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
+<li><strong>owner</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em>) – simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
 identical to setting sender=myMechanism and receiver=myMechanism.</li>
-<li><strong>sender</strong> (<em>Optional[OutputState or Mechanism]</em>) &#8211; specifies the source of the Projection&#8217;s input. If a Mechanism is specified, its
+<li><strong>sender</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em> or </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em>) – specifies the source of the Projection’s input. If a Mechanism is specified, its
 <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>receiver</strong> (<em>Optional[InputState or Mechanism]</em>) &#8211; specifies the destination of the Projection&#8217;s output.  If a Mechanism is specified, its
+<li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em> or </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em>) – specifies the destination of the Projection’s output.  If a Mechanism is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used.</li>
-<li><strong>matrix</strong> (<em>list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX</em>) &#8211; the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
-the value of the <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
-<li><strong>params</strong> (<em>Optional[Dict[param keyword, param value]]</em>) &#8211; a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="Function.html#Function.AdaptiveIntegrator.function" title="Function.AdaptiveIntegrator.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform
+the value of the <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.</li>
+<li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-the Projection&#8217;s default assignment (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  Values specified for parameters in the dictionary
+the Projection’s default assignment (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (<em>str : default AutoAssociativeProjection-&lt;index&gt;</em>) &#8211; a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
-RecurrentTransferMechanism, its name is specified as &#8220;&lt;name of RecurrentTransferMechanism&gt; recurrent projection&#8221;.
-If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">ProjectionRegistry</span></code>
-(see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</li>
-<li><strong>prefs</strong> (<em>Optional[PreferenceSet or specification dict : Projection.classPreferences]</em>) &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the MappingProjection.
+<li><strong>name</strong> (<em>str : default AutoAssociativeProjection-&lt;index&gt;</em>) – a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
+RecurrentTransferMechanism, its name is specified as “&lt;name of RecurrentTransferMechanism&gt; recurrent projection”.</li>
+<li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Projection.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the MappingProjection.
 If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
 (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
-<li><strong>note</strong> (<em>.</em>) &#8211; The reason <strong>auto</strong> and <strong>hetero</strong> are not arguments to the constructor of the AutoAssociativeProjection because
-it is only ever created by a RecurrentTransferMechanism: by the time the AutoAssociativeProjection is created,
-the <strong>auto</strong> and <strong>hetero</strong> arguments are already incorporated into the <strong>matrix</strong> argument.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.componentType">
-<code class="descname">componentType</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.componentType" title="Permalink to this definition">¶</a></dt>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.componentType">
+<code class="descname">componentType</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.componentType" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>AUTO_ASSOCIATIVE_PROJECTION</em></p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender">
-<code class="descname">sender</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputState</em> &#8211; identifies the source of the Projection&#8217;s input.</p>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender">
+<code class="descname">sender</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OutputState</em> – identifies the source of the Projection’s input.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver">
-<code class="descname">receiver</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>InputState</em> &#8211; identifies the destination of the Projection.</p>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver">
+<code class="descname">receiver</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>InputState</em> – identifies the destination of the Projection.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.learning_mechanism">
-<code class="descname">learning_mechanism</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.learning_mechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>LearningMechanism</em> &#8211; source of error signal for that determine changes to the <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.learning_mechanism">
+<code class="descname">learning_mechanism</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.learning_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>LearningMechanism</em> – source of error signal for that determine changes to the <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> when
 <a class="reference internal" href="LearningProjection.html"><span class="doc">learning</span></a> is used.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.ndarray</em> &#8211; matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
-<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix">
+<code class="descname">matrix</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d np.ndarray</em> – matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the
+<a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto">
-<code class="descname">auto</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 1d np.ndarray</em> &#8211; diagonal terms of the <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> used by the AutoAssociativeProjection: if auto
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto">
+<code class="descname">auto</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.auto" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or 1d np.ndarray</em> – diagonal terms of the <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> used by the AutoAssociativeProjection: if auto
 is a single number, it means the diagonal is uniform</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero">
-<code class="descname">hetero</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or 2d np.ndarray</em> &#8211; off-diagonal terms of the <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> used by the AutoAssociativeProjection: if
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero">
+<code class="descname">hetero</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.hetero" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or 2d np.ndarray</em> – off-diagonal terms of the <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> used by the AutoAssociativeProjection: if
 hetero is a single number, it means the off-diagonal terms are all the same</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.has_learning_projection">
-<code class="descname">has_learning_projection</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : False</em> &#8211; identifies whether the AutoAssociativeProjection&#8217;s <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> has been assigned
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.has_learning_projection">
+<code class="descname">has_learning_projection</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool : False</em> – identifies whether the AutoAssociativeProjection’s <code class="xref any docutils literal"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> has been assigned
 a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.value">
-<code class="descname">value</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>np.ndarray</em> &#8211; Output of AutoAssociativeProjection, transmitted to <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.value">
+<code class="descname">value</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>np.ndarray</em> – Output of AutoAssociativeProjection, transmitted to <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver" title="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.name">
-<code class="descname">name</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default AutoAssociativeProjection-&lt;index&gt;</em> &#8211; a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
-RecurrentTransferMechanism, its name is specified as &#8220;&lt;name of RecurrentTransferMechanism&gt; recurrent projection&#8221;.
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.name">
+<code class="descname">name</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str : default AutoAssociativeProjection-&lt;index&gt;</em> – a string used for the name of the MappingProjection. When an AutoAssociativeProjection is created by a
+RecurrentTransferMechanism, its name is specified as “&lt;name of RecurrentTransferMechanism&gt; recurrent projection”.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">ProjectionRegistry</span></code>
 (see <code class="xref any docutils literal"><span class="pre">Registry</span></code> for conventions used in naming, including for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> &#8211; the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Projection.
+<dt id="Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#Library.Projections.PathwayProjections.AutoAssociativeProjection.AutoAssociativeProjection.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Projection.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for Projection.
 Specified in the <strong>prefs</strong> argument of the constructor for the Projection;
 if it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py
-(see <span class="xref doc">PreferenceSet</span> for details).</p>
+(see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -332,15 +354,18 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="ModulatoryProjection.html" class="btn btn-neutral float-right" title="ModulatoryProjections" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ModulatoryProjections.html" class="btn btn-neutral float-right" title="ModulatoryProjections" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="MappingProjection.html" class="btn btn-neutral" title="MappingProjection" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="PathwayProjections.html" class="btn btn-neutral" title="PathwayProjections" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -374,7 +399,8 @@ if it is not specified, a default is assigned using <code class="xref any docuti
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>

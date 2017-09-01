@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -45,6 +47,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -85,8 +88,11 @@
           
             
             
-                <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="index.html">Intro</a></li>
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
@@ -94,7 +100,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">PathwayProjections</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a></li>
@@ -106,6 +111,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -118,8 +124,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PsyNeuLink</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PsyNeuLink</a>
+        
       </nav>
 
 
@@ -128,27 +136,44 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
           <li><a href="Component.html">Components</a> &raquo;</li>
-      
+        
           <li><a href="Projection.html">Projections</a> &raquo;</li>
-      
-    <li>PathwayProjections</li>
+        
+      <li>PathwayProjections</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/PathwayProjection.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/PathwayProjection.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -156,10 +181,9 @@
             
   <div class="section" id="pathwayprojections">
 <h1>PathwayProjections<a class="headerlink" href="#pathwayprojections" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound" id="pathwayprojection-subtypes">
+<div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="MappingProjection.html">MappingProjection</a></li>
-<li class="toctree-l1"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
 </ul>
 </div>
 <span class="target" id="module-PathwayProjections.PathwayProjection"></span><div class="section" id="overview">
@@ -185,15 +209,18 @@ are <a class="reference internal" href="Projection.html#projection-automatic-cre
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="MappingProjection.html" class="btn btn-neutral float-right" title="MappingProjection" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Projection.html" class="btn btn-neutral" title="Projections" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="Projection.html" class="btn btn-neutral" title="Projections" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -227,7 +254,8 @@ are <a class="reference internal" href="Projection.html#projection-automatic-cre
             VERSION:'0.3.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="_static/jquery.js"></script>
