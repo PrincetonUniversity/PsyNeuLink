@@ -43,8 +43,8 @@ See `ModulatorySignal <ModulatorySignal_Naming>` for conventions used for the na
 
 COMMENT:
 AdaptiveMechanisms are always executed after all `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
-`System` to which they belong have been executed, with all LearningMechanisms executed first, then GatingMechanisms,
-ControlMechanisms. All three types of AdaptiveMechanisms are executed before the next `TRIAL`, so that the
+`System` to which they belong have been executed, with all LearningMechanism executed first, then GatingMechanism,
+ControlMechanism. All three types of AdaptiveMechanisms are executed before the next `TRIAL`, so that the
 modifications they make are available during the next `TRIAL` run for the Process or System.
 COMMENT
 
@@ -58,7 +58,7 @@ AdaptiveMechanisms of the appropriate subtype are also created automatically whe
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
 automatically created as part of a `System <System.System_Creation>` (for use as its `controller
 <System_Base.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
-`Mechanism <Mechanism>`; and one or more `LearningMechanisms <LearningMechanism>` are created when learning is
+`Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
 specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
 `subtypes <AdaptiveMechanism_Subtypes>` of AdaptiveMechanisms for more specific information about how to create them).
 
@@ -78,10 +78,10 @@ subtypes of AdaptiveMechanism for more specific information about their structur
 Execution
 ---------
 
-LearningMechanisms and ControlMechanisms are always executed at the end of a `TRIAL`, after all `ProcessingMechanisms
-<ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed; all LearningMechanisms
-executed first, and then ControlMechanisms.  All modifications made are available during the next `TRIAL`.
-GatingMechanisms are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
+LearningMechanism and ControlMechanism are always executed at the end of a `TRIAL`, after all `ProcessingMechanisms
+<ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed; all LearningMechanism
+executed first, and then ControlMechanism.  All modifications made are available during the next `TRIAL`.
+GatingMechanism are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
 introduce recurrent connections, care must be given to their `initialization and/or scheduling
 <GatingMechanism_Execution>`).
 

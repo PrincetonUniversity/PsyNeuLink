@@ -3347,7 +3347,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         self._initializer = val
         self.previous_value = val
 
-
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
@@ -6203,7 +6202,7 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=ClassDefaults.variable,
-                 metric:tc.enum(EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, ANGLE)=DIFFERENCE,
+                 metric:tc.enum(PEARSON, EUCLIDEAN, DIFFERENCE, CROSS_ENTROPY, CORRELATION, ANGLE)=DIFFERENCE,
                  normalize:bool=False,
                  params=None,
                  owner=None,
@@ -6287,7 +6286,7 @@ class Distance(ObjectiveFunction):
         if self.normalize:
             # if np.sum(denom):
             # result /= np.sum(x,y)
-            result /= len(variable)
+            result /= len(variable[0])
 
         return result
 

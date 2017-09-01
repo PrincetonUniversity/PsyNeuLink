@@ -1,11 +1,9 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Components.Process import process
-
-
-
 import time
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Globals.Keywords import *
+
 print("========TIME STEP MODE========")
 print()
 print("MECHANISM ")
