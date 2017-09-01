@@ -97,26 +97,15 @@ def test_DDM_noise_0_5():
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
-            noise=0.0,
+            noise=0.5,
             rate=1.0,
             time_step_size=1.0
         )
     )
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
+
     val = float(T.execute(stim)[0])
 
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-    print(np.sqrt(0.5) * np.random.normal())
-
-
-    assert val == 9.892974291631234
+    assert val == 9.308960184035778
 
 # ------------------------------------------------------------------------------------------------
 # TEST 3
@@ -134,7 +123,7 @@ def test_DDM_noise_2_0():
         )
     )
     val = float(T.execute(stim)[0])
-    assert val == 9.785948583262465
+    assert val == 8.617920368071555
 
 # ------------------------------------------------------------------------------------------------
 
