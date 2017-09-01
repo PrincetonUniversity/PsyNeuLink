@@ -1,5 +1,4 @@
 # GLOBALS:
-from PsyNeuLink.Globals.Keywords import *
 
 # MECHANISMS:
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
@@ -9,7 +8,6 @@ from PsyNeuLink.Globals.Keywords import *
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.System import system
 
 
 # FUNCTIONS:
@@ -38,11 +36,6 @@ class ScratchPadError(Exception):
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Functions.Function import Logistic
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-import numpy as np
-
 
 #region SIMPLE NN EXAMPLE:
 
@@ -381,8 +374,8 @@ import numpy as np
 #region TEST Modulation @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCMechanism import EVCMechanism
 # from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.Functions.Function import *
@@ -432,7 +425,7 @@ import numpy as np
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
 #     import ComparatorMechanism
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanisms.LearningMechanism \
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
 #     import LearningMechanism
 # from PsyNeuLink.Components.Functions.Function import *
 # from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
@@ -2484,9 +2477,9 @@ TEST=True
 
 # print("TEST parse_gated_state_spec")
 #
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import _parse_gating_signal_spec
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingSignal import GatingSignal
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms.GatingMechanism import GatingMechanism
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import _parse_gating_signal_spec
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingSignal import GatingSignal
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
 # from PsyNeuLink.Components.Functions.Function import ModulationParam
 # from PsyNeuLink.Components.States.OutputState import OutputState

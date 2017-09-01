@@ -22,7 +22,7 @@ Creating a ComparatorMechanism
 ------------------------------
 
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
-`LearningMechanisms <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
+`LearningMechanism <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitored_values** argument).  When the
@@ -129,14 +129,18 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+    import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, \
+    TIME_SCALE, \
+    VARIABLE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
+from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, \
+    kwCompatibilityNumeric
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'
