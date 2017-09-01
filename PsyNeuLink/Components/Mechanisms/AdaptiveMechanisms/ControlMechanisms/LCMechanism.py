@@ -12,9 +12,9 @@
 Overview
 --------
 
-An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates the multiplicative parameter of the `function
-<TransferMechanism.function>` of one ore more `TransferMechanisms <TransferMechanism>`.  It implements an abstract
-model of the `locus coeruleus (LC) <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a
+An LCMechanism is a `ControlMechanism <ControlMechanism>` that regulates gain of (i.e., multiplicatively modulates)
+the `function <TransferMechanism.function>` of one or more `TransferMechanisms <TransferMechanism>`.  It implements
+an abstract model of the `locus coeruleus (LC) <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that, together with a
 `UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
 (LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to regulate its output (between its
@@ -40,9 +40,10 @@ Specifying Mechanisms to Control
 
 MUST BE PROCESSING MECHANISM WITH A FUNCTION THAT HAS A MULTIPLICATIVE PARAMETER
 
-An LCMechanism is used to control the multiplicative parameter of the `function <TransferMechanism.function>` of a
-`TransferMechanism`.  Therefore, any Mechamism specified for control by an LCMechanims must have a `function`
-with a XXX`multipi;cative` parameter.  These can be specified in...
+The Mechanisms to be controlled by a LCMechanism are listed in its **control_signals** argument. An LCMechanism
+controls the gain of a `TransferMechanism` by modifying the `multiplicative parameter` of the TransferMechanism's
+`function <TransferMechanism.function>`.  Therefore, any Mechanism specified for control by an LCMechanism must have
+a `function` with a `multiplicative` parameter.  These can be specified in...
 
 list of Mechanisms it controls is specified in the **control_signals** argument of its constructor
 
