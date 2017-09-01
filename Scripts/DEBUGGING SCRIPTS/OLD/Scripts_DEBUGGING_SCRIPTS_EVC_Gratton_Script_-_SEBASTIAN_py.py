@@ -5,7 +5,7 @@ from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 
 
 def test_search_function(controller=None, **kwargs):

@@ -7,7 +7,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
