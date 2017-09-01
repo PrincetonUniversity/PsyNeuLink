@@ -1,5 +1,5 @@
 EVCMechanism
 ============
 
-.. automodule:: Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism
+.. automodule:: Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism
    :exclude-members: random, LinearCombination
