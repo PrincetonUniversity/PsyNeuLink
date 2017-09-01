@@ -86,8 +86,9 @@ the following parameters (in addition to any specified for the `function <Transf
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
     ..
-    * `integrator_mode <TransferMechanism.integrator_mode>`: when `integrator_mode <TransferMechanism.integrator_mode>`
-      is set to True, a TransferMechanism exponentially time-averages its input before transforming it.
+    * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input will be time-averaged before
+      passing through the function of the mechanisms. When `integrator_mode <TransferMechanism.integrator_mode>` is set
+      to True, the TransferMechanism exponentially time-averages its input before transforming it.
     ..
     * `time_constant <TransferMechanism.time_constant>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
       attribute is set to True, the `time_constant <TransferMechanism.time_constant>` attribute is the rate of
@@ -199,7 +200,6 @@ class TransferMechanism(ProcessingMechanism_Base):
     time_constant=1.0,           \
     integrator_mode=False,       \
     range=(float:min, float:max),\
-    time_scale=TimeScale.TRIAL,  \
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -251,7 +251,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for time-averaged input (only relevant if `integrator_mode
-        <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        <TransferMechanism.integrator_mode>` is True).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
