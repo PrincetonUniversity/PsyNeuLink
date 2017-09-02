@@ -6,4 +6,5 @@ PathwayProjections
 .. toctree::
    :maxdepth: 1
 
+   MappingProjection
    AutoAssociativeProjection
