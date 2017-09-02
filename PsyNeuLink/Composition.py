@@ -31,6 +31,14 @@ Composition's add methods.  However, more commonly, a Composition is created usi
 subclasses:  `System` or `Process`.  These automatically create Compositions from lists of Components.  Once created,
 Components can be added or removed from an existing Composition using its add and/or remove methods.
 
+.. _Composition_Execution:
+
+Execution
+---------
+
+See `System <System_Execution>` or `Process <Process_Execution>` for documentation concerning execution of the
+corresponding subclass.
+
 .. _Composition_Class_Reference:
 
 Class Reference
