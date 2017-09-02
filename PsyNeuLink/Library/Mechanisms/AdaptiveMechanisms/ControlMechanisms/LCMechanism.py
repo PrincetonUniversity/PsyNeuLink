@@ -17,9 +17,9 @@ An LCMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively 
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that,
 together with a `UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
-(LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to regulate its output (between its
-"tonic" to "phasic" modes of responding -- see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_),
-which can be modified using its `mode <LCMechanism.mode>` parameter.
+(LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to generate its output, under the
+influence of a `mode <LCMechanisms.mode>` parameter that regulates its operation between "tonic" to "phasic" modes of
+responding -- see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_).
 
 .. _LCMechanism_Creation:
 
@@ -30,9 +30,12 @@ An LCMechanism can be created in any of the ways used to `create Mechanisms <Mec
 its **input_states** argument can be used to `specify Mechanisms (and/or their OutputState(s)
 <Mechanism_State_Specification>` to project to the LCMechanism (i.e., to drive its response).  The `Mechanisms
 <Mechanism>` it controls are specified in the **control_signals** argument of its constructor (see
-`LCMechanism_Control_Signals`). In addition, one or more Mechanisms can be specified to govern the LCMechanism's
-`mode <LCMechanism.mode>` parameter, by specifying them in the **monitor_for_control** argument of its constructor (
-see `LCMechanism_Monitored_OutputStates`).
+`LCMechanism_Control_Signals`).
+COMMENT:
+In addition, one or more Mechanisms can be specified to govern the LCMechanism's
+`mode <LCMechanism.mode>` parameter, by specifying them in the **monitor_for_control** argument of its constructor
+(see `LCMechanism_Monitored_OutputStates`).
+COMMENT
 
 .. _LCMechanism_Control_Signals:
 
@@ -53,36 +56,54 @@ ControlSignals are a type of `OutputState`, and so they are also listed in the L
 <Mechanism_Base.output_states>` attribute.
 
 
+COMMENT:
 .. _LCMechanism_Monitored_OutputStates:
 
 Specifying Values to Monitor for Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the **monitor_for_control** argument is specified in the LCMechanism's constructor, it automatically creates a
-`UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified.  The **monitor_for_control**
-argument must be a list, each item of which must refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These
-are assigned to the UtilityIntegratorMechanism's `monitored_values <UtilityIntegratorMechanism>` attribute (and the
-LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute).
-The UtilityIntegratorMechanism itself is assigned to the LCMechanism's `monitoring_mechanism
-<LCMechanism.monitoring_mechanism>` attribute).
-
+`UtilityIntegratorMechanism` that is used to monitor and evaluate the `value <OutputState.value>` of the `OutputStates
+<OutputState>` specified.  The **monitor_for_control** argument must be a list, each item of which must refer to a
+`Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
+`monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states
+<LCMechanism.monitored_output_states>` attribute). The UtilityIntegratorMechanism itself is assigned to the
+LCMechanism's `monitoring_mechanism <LCMechanism.monitoring_mechanism>` attribute).
+COMMENT
 
 .. _LCMechanism_Structure:
 
 Structure
 ---------
 
-An LCMechanism has a single `ControlSignal` used to modulate the function of the Mechanism(s) that it controls.  The
-ControlSignal is assigned a `ControlProjection` to the `ParameterState` for the `multiplicative parameter
-<Function_Modulatory_Params>` of each Mechanism.  If the **monitor_for_control** argument is specified, the following
+Input
+~~~~~
+
+An LCMechanism has a single (primary) `InputState <InputState_Primary>` that receives projections from any Mechanisms
+specified in the **input_states** argument of the LCMechanism's constructor;  its `value <InputState.value>` is used as
+the input to the LCMechanism's `function <LCMechanism.function>`.
+
+Function
+~~~~~~~~
+
+An LCMechanism uses the `FitzHughNagumoIntegrator` as its Function.  This takes the input the LCMechanism as its
+`variable <FitzHughNagumoIntegrator.variable>`, and uses the LCMechanism's `mode <LCMechanism.mode>` attribute as its
+XXX parameter.  Its result is assigned as the `value <ControlSignal.value>` of the LCMechanism's `ControlSignal`.
+
+COMMENT:
+If the **monitor_for_control** argument of the LCMechanism's constructor is specified, the following
 Components are also automatically created and assigned to the LCMechanism when it is created:
+
+XXX ASSIGN CONTROLLER:  USES THE monitored_values ATTRIBUTE OF ITS CONTROLLER, AS WELL AS ANY SPECIFIED IN monitor_for_control
+XXX ASSIGN monitor_for_control:  THESE ARE ADDED TO ITS CONTROLLER'S monitored_values LIST;
+                                 IF NO CONTROLLER IS SPECIFIED, ONE IS CREATED
 
 * a `UtilityIntegratorMechanism` -- this monitors the `value <OutputState.value>` of each of the `OutputStates
   <OutputState>` specified in the **monitor_for_control** argument of the LCMechanism's constructor;  these are
   listed in the LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute, and the
   `monitored_values <UtilityIntegratorMechanism>` attribute of the UtilityIntegratorMechanism.  They are evaluated by
   the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism>`;  the result is assigned as the `value
-  <OutputState.value>` of the UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
+  <OutputState.value>` of the UtilityIntegratorMechanism's , and (by way of a
   `MappingProjection` -- see below) to the LCMechanism's *MODE* `InputState`. This information is used by the
   LCMechanism to set the `value <ControlSignal.value>` for its `ControlSignal`.
 ..
@@ -91,6 +112,14 @@ Components are also automatically created and assigned to the LCMechanism when i
 ..
 * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
   the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
+COMMENT
+
+Outputs
+~~~~~~~
+
+An LCMechanism has a single `ControlSignal` used to modulate the function of the Mechanism(s) that it controls.  The
+ControlSignal is assigned a `ControlProjection` to the `ParameterState` for the `multiplicative parameter
+<Function_Modulatory_Params>` of each Mechanism.
 
 COMMENT:
 
@@ -118,10 +147,10 @@ Execution
 Like other `ControlMechanisms <ControlMechanism>`, an LCMechanism executes after all of the `ProcessingMechanisms
 <ProcessingMechanism>` in the `Composition` to which it belongs have `executed <Composition_Execution>` in a `TRIAL`.
 It's `function <LCMechanism.function>` takes the `value <InputState.value>` of the LCMechanism's `primary InputState
-<InputState_Primary>` as its input, and generates a response -- under the potential influence of its `mode
-<LCMechanism.mode>` parameter -- that is assigned as the `value <ControlSignal.value>` of its `ControlSignal`.  The
-latter is used by its `ControlProjections <ControlProjection>` to modulate the response of the Mechanisms to which
-the LCMechanism projects in the next `TRIAL` of execution.
+<InputState_Primary>` as its input, and generates a response -- under the influence of its `mode <LCMechanism.mode>`
+parameter -- that is assigned as the `value <ControlSignal.value>` of its `ControlSignal`.  The latter is used by its
+`ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
+Mechanisms to which the LCMechanism projects
 
 .. note::
    The `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
