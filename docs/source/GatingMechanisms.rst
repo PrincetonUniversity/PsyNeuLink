@@ -11,3 +11,5 @@ GatingMechanisms
 
 .. toctree::
    :maxdepth: 1
+
+[None]
