@@ -1,13 +1,13 @@
-LearningMechanisms
+ControlProjections
 ==================
 
 **Base class**:
 
-* `LearningMechanism`
+* `ControlProjection`
 
 **Subtypes**:
 
-.. _LearningMechanism_Subtypes:
+.. _ControlProjection_Subtypes:
 
 .. toctree::
    :maxdepth: 1

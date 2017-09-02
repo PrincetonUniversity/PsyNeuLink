@@ -4,4 +4,8 @@ ModulatoryProjections
 .. _ModulatoryProjection_Subtypes:
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth:
+
+   LearningProjections
+   ControlProjections
+   GatingProjections

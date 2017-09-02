@@ -1,13 +1,13 @@
-LearningMechanisms
+GatingProjections
 ==================
 
 **Base class**:
 
-* `LearningMechanism`
+* `GatingProjection`
 
 **Subtypes**:
 
-.. _LearningMechanism_Subtypes:
+.. _GatingProjection_Subtypes:
 
 .. toctree::
    :maxdepth: 1
