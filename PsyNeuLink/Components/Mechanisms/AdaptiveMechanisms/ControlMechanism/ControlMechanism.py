@@ -161,9 +161,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     """
     ControlMechanism_Base(                         \
         monitor_for_control=None,                  \
+        function=Linear,                           \
         control_signals=None,                      \
         modulation=ModulationParam.MULTIPLICATIVE  \
-        function=Linear,                           \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -213,6 +213,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         specifies set of OutputStates to monitor (see :ref:`ControlMechanism_Monitored_OutputStates` for
         specification options).
 
+    function : TransferFunction : default Linear(slope=1, intercept=0)
+        specifies function used to combine values of monitored OutputStates.
+
     control_signals : List[parameter of Mechanism or its function, \
                       ParameterState, Mechanism tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the ControlMechanism
@@ -221,9 +224,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
-
-    function : TransferFunction : default Linear(slope=1, intercept=0)
-        specifies function used to combine values of monitored OutputStates.
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -254,14 +254,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         the ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
         ControlMechanism's `variable <Mechanism_Base.variable>`.
 
-    control_signals : List[ControlSignal]
-        list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
-        `output_states <Mechanism_Base.output_states>` attribute).
-
-    control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
-
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
@@ -271,6 +263,14 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         each item is the value assigned as the `allocation <ControlSignal.allocation>` for the corresponding
         ControlSignal listed in the `control_signals` attribute;  the allocation_policy is the same as the
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
+
+    control_signals : List[ControlSignal]
+        list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
+        `output_states <Mechanism_Base.output_states>` attribute).
+
+    control_projections : List[ControlProjection]
+        list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
 
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,

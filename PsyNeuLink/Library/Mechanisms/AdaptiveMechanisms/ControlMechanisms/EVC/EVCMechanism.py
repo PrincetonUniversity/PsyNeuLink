@@ -374,13 +374,13 @@ class EVCMechanism(ControlMechanism_Base):
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \
     monitor_for_control=None,                                          \
-    control_signals=None,                                              \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     outcome_function=LinearCombination(operation=PRODUCT),             \
     cost_function=LinearCombination(operation=SUM),                    \
     combine_outcome_and_cost_function=LinearCombination(operation=SUM) \
     save_all_values_and_policies:bool=:keyword:`False`,                \
+    control_signals=None,                                              \
     params=None,                                                       \
     name=None,                                                         \
     prefs=None)
@@ -456,10 +456,6 @@ class EVCMechanism(ControlMechanism_Base):
         specifies set of `OutputStates <OutputState>` to monitor (see `ControlMechanism_Monitored_OutputStates` for
         specification options).
 
-    control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
-        specifies the parameters to be controlled by the EVCMechanism
-        (see `control_signals <EVCMechanism.control_signals>` for details).
-
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the
         EVCMechanism's `system <EVCMechanism.system>` (see `function <EVCMechanism.function>` for details).
@@ -482,6 +478,10 @@ class EVCMechanism(ControlMechanism_Base):
 
     save_all_values_and_policies : bool : default False
         specifes whether to save every `allocation_policy` tested in `EVC_policies` and their values in `EVC_values`.
+
+    control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
+        specifies the parameters to be controlled by the EVCMechanism
+        (see `control_signals <EVCMechanism.control_signals>` for details).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
@@ -508,10 +508,6 @@ class EVCMechanism(ControlMechanism_Base):
 
     system : System
         the `System` for which EVCMechanism is the `controller <System_Base.controller>`.
-
-    control_signals : ContentAddressableList[ControlSignal]
-        list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCMechanism.system>`.
 
     prediction_mechanisms : List[ProcessingMechanism]
         list of `predictions mechanisms <EVCMechanism_Prediction_Mechanisms>` generated for the EVCMechanism's
@@ -599,12 +595,6 @@ class EVCMechanism(ControlMechanism_Base):
             controller.cost_function - aggregate costs of control signals
             controller.combine_outcome_and_cost_function - combines outcomes and costs
     COMMENT
-
-    allocation_policy : 2d np.array : defaultControlAllocation
-        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
-        associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
-        that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
-        number of ControlSignals in the EVCMechanism's `control_signals` attribute.
 
     value_function : function : default ValueFunction
         calculates the `EVC <EVCMechanism_EVC>` for a given `allocation_policy`.  It takes as its arguments an
@@ -699,6 +689,16 @@ class EVCMechanism(ControlMechanism_Base):
 
     EVC_values :  1d np.array
         array of `EVC <EVCMechanism_EVC>` values, each of which corresponds to an `allocation_policy` in `EVC_policies`;
+
+    allocation_policy : 2d np.array : defaultControlAllocation
+        determines the value assigned as the `variable <ControlSignal.variable>` for each `ControlSignal` and its
+        associated `ControlProjection`.  Each item of the array must be a 1d array (usually containing a scalar)
+        that specifies an `allocation` for the corresponding ControlSignal, and the number of items must equal the
+        number of ControlSignals in the EVCMechanism's `control_signals` attribute.
+
+    control_signals : ContentAddressableList[ControlSignal]
+        list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
+        from its `system <EVCMechanism.system>`.
 
     """
 
