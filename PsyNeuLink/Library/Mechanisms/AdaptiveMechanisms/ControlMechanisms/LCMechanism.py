@@ -26,7 +26,7 @@ which can be modified using its `mode <LCMechanism.mode>` parameter.
 Creating an LCMechanism
 ---------------------------
 
-An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation.  Like any Mechanism,
+An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation`.  Like any Mechanism,
 its **input_states** argument can be used to `specify Mechanisms (and/or their OutputState(s)
 <Mechanism_State_Specification>` to project to the LCMechanism (i.e., that drive its response).  The Mechanisms
 <Mechanism>` it controls are specified in the **control_signals** argument (see `LCMechanism_Control_Signals`). In
@@ -61,7 +61,7 @@ If the **monitor_for_control** argument is specified in the LCMechanism's constr
 `UtilityIntegratorMechanism` that is used to monitor and evaluate the values specified.  The **monitor_for_control**
 argument must be a list, each item of which must refer to a `Mechanism <Mechanism>` or the `OutputState` of one.  These
 are assigned to the UtilityIntegratorMechanism's `monitored_values <UtilityIntegratorMechanism>` attribute (and the
-LCMechanism's `monitored_output_states` <LCMechanism.monitored_output_states>` attribute).
+LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute).
 The UtilityIntegratorMechanism itself is assigned to the LCMechanism's `monitoring_mechanism
 <LCMechanism.monitoring_mechanism>` attribute).
 
@@ -78,7 +78,7 @@ Components are also automatically created and assigned to the LCMechanism when i
 
 * a `UtilityIntegratorMechanism` -- this monitors the `value <OutputState.value>` of each of the `OutputStates
   <OutputState>` specified in the **monitor_for_control** argument of the LCMechanism's constructor;  these are
-  listed in the LCMechanis's `monitored_output_states` <LCMechanism.monitored_output_states>` attribute, and the
+  listed in the LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute, and the
   `monitored_values <UtilityIntegratorMechanism>` attribute of the UtilityIntegratorMechanism.  They are evaluated by
   the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism>`;  the result is assigned as the `value
   <OutputState.value>` of the UtilityIntegratorMechanism's *ERROR_SIGNAL* `OutputState`, and (by way of a
@@ -88,7 +88,7 @@ Components are also automatically created and assigned to the LCMechanism when i
 * a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
   <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
 ..
-* `MappingProjections <MappingProjection> from Mechanisms or OutputStates specified in **monitor_for_control** to
+* `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in **monitor_for_control** to
   the UtilityIntegratorMechanism's `primary InputState <InputState_Primary>`.
 
 COMMENT:
@@ -101,12 +101,13 @@ Examples
 EXAMPLES HERE
 
 EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **control_signals**
-COMMENT
 
 STRUCTURE:
 MODE INPUT_STATE <- NAMED ONE, LAST?
 SIGNAL INPUT_STATE(S) <- PRIMARY;  MUST BE FROM PROCESSING MECHANISMS
 CONTROL SIGNALS
+
+COMMENT
 
 .. _LCMechanism_Execution:
 
@@ -114,11 +115,15 @@ Execution
 ---------
 
 Like other `ControlMechanisms <ControlMechanism>`, an LCMechanism executes after all of the `ProcessingMechanisms
-<ProcessingMechanism>` in the `Composition` to which it belongs have `executed <Composition_Execution>`.
-An LCMechanism that is a System's `controller` is always the last `Mechanism <Mechanism>` to be executed in a
-`TRIAL` for that System (see `System Control <System_Execution_Control>` and `Execution <System_Execution>`).  The
-LCMechanism's `function <LCMechanism.function>` takes as its input the `value <InputState.value>` of
-its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its `allocation_policy
+<ProcessingMechanism>` in the `Composition` to which it belongs have `executed <Composition_Execution>` in a `TRIAL`.
+
+PRIMARY INPUT STATE
+MODE INPUTSTATE
+
+If the **monitored_states** argument of its constructor was specified, and/or a `UtilityIntegratorMechanism`
+was created for the LCMechanism, then its `function <LCMechanism.function>` takes as its input the `value
+<InputState.value>` of its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its
+`allocation_policy
 <LCMechanism.allocation_policy>` which specifies the value assigned to the `allocation
 <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
 calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
