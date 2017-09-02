@@ -26,12 +26,13 @@ which can be modified using its `mode <LCMechanism.mode>` parameter.
 Creating an LCMechanism
 ---------------------------
 
-An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation`.  Like any Mechanism,
+An LCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.  Like any Mechanism,
 its **input_states** argument can be used to `specify Mechanisms (and/or their OutputState(s)
-<Mechanism_State_Specification>` to project to the LCMechanism (i.e., that drive its response).  The Mechanisms
-<Mechanism>` it controls are specified in the **control_signals** argument (see `LCMechanism_Control_Signals`). In
-addition, one or more Mechanisms can be specified to govern the LCMechanism's `mode <LCMechanism.mode>` parameter, by
-specifying them in the **monitor_for_control** argument of its constructor (see `LCMechanism_Monitored_OutputStates`).
+<Mechanism_State_Specification>` to project to the LCMechanism (i.e., to drive its response).  The `Mechanisms
+<Mechanism>` it controls are specified in the **control_signals** argument of its constructor (see
+`LCMechanism_Control_Signals`). In addition, one or more Mechanisms can be specified to govern the LCMechanism's
+`mode <LCMechanism.mode>` parameter, by specifying them in the **monitor_for_control** argument of its constructor (
+see `LCMechanism_Monitored_OutputStates`).
 
 .. _LCMechanism_Control_Signals:
 
@@ -116,25 +117,18 @@ Execution
 
 Like other `ControlMechanisms <ControlMechanism>`, an LCMechanism executes after all of the `ProcessingMechanisms
 <ProcessingMechanism>` in the `Composition` to which it belongs have `executed <Composition_Execution>` in a `TRIAL`.
-
-PRIMARY INPUT STATE
-MODE INPUTSTATE
-
-If the **monitored_states** argument of its constructor was specified, and/or a `UtilityIntegratorMechanism`
-was created for the LCMechanism, then its `function <LCMechanism.function>` takes as its input the `value
-<InputState.value>` of its *ERROR_SIGNAL* `input_state <Mechanism_Base.input_state>`, and uses that to determine its
-`allocation_policy
-<LCMechanism.allocation_policy>` which specifies the value assigned to the `allocation
-<ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each ControlSignal uses that value to
-calculate its `intensity <ControlSignal.intensity>`, which is used by its `ControlProjection(s) <ControlProjection>`
-to modulate the value of the ParameterState(s) for the parameter(s) it controls, which are then used in the
-subsequent `TRIAL` of execution.
+It's `function <LCMechanism.function>` takes the `value <InputState.value>` of the LCMechanism's `primary InputState
+<InputState_Primary>` as its input, and generates a response -- under the potential influence of its `mode
+<LCMechanism.mode>` parameter -- that is assigned as the `value <ControlSignal.value>` of its `ControlSignal`.  The
+latter is used by its `ControlProjections <ControlProjection>` to modulate the response of the Mechanisms to which
+the LCMechanism projects in the next `TRIAL` of execution.
 
 .. note::
-   A `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
+   The `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   LCMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-   to which it belongs has executed.
+   LCMechanism has executed, the `multiplicative parameter <Function_Modulatory_Params>` parameter of the `function
+   <Mechanism.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
+   executed.
 
 .. _LCMechanism_Class_Reference:
 
