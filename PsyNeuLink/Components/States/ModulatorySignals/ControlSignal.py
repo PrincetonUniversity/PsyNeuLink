@@ -299,7 +299,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
     kwCompatibilityType
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.EVC.EVCMechanism import \
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import \
     ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, \
     costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
