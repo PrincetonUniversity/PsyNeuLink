@@ -381,6 +381,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
 
+            # MODIFIED 9/3/17 OLD:
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 
             for spec in target_set[CONTROL_SIGNALS]:
@@ -489,6 +490,16 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                        param_name,
                                                        mech.name,
                                                        self.system.name))
+
+            # # MODIFIED 9/3/17 NEW:
+            # if not isinstance(target_set[CONTROL_SIGNALS], list):
+            #     raise ControlMechanismError("{} arg of {} must be list".
+            #                                format(CONTROL_SIGNAL, self.name))
+            #
+            # for spec in target_set[CONTROL_SIGNALS]:
+            #     _parse_state_spec(self, spec)
+            #
+            # # MODIFIED 9/3/17 END:
 
     def _instantiate_monitored_output_states(self, context=None):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".

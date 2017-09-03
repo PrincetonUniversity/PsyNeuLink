@@ -398,7 +398,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
             # Deferred Initialization, so assign owner, name, and initialize
             if gating_signal.init_status is InitStatus.DEFERRED_INITIALIZATION:
                 # FIX 5/23/17:  IMPLEMENT DEFERRED_INITIALIZATION FOR GatingSignal
-                # CALL DEFERRED INIT WITH SELF AS OWNER ??AND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
+                # CALL DEFERRED INIT WITH SELF AS OWNER ??A˝ND NAME FROM gating_signal_dict?? (OR WAS IT SPECIFIED)
                 # OR ASSIGN NAME IF IT IS DEFAULT, USING GATING_SIGNAL_DICT??
                 # # MODIFIED 7/7/17 OLD:
                 # pass

@@ -3,22 +3,22 @@ from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.LCMechan
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism.GatingMechanism import GatingMechanism
 from PsyNeuLink.Components.Functions.Function import ModulationParam
+from PsyNeuLink.Components.Functions.Function import Linear, Logistic
 
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import *
 
-mech_1 = TransferMechanism()
-mech_2 = TransferMechanism()
-mech_3 = TransferMechanism()
+my_mech_1 = TransferMechanism(function=Linear, name='my_linear_mechanism')
+my_mech_2 = TransferMechanism(function=Logistic, name='my_logistic_mechanism')
 
-# LC = LCMechanism(modulated_mechanisms=[mech_1, mech_2, mech_3])
-#
-# LC.show()
+LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2], name='my_LC')
 
-my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [mech_1,
-                                                                    mech_2,
-                                                                    mech_3]}],
-                                      modulation=ModulationParam.ADDITIVE)
+LC.show()
+
+# my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [mech_1,
+#                                                                     mech_2,
+#                                                                     mech_3]}],
+#                                       modulation=ModulationParam.ADDITIVE)
 
 TEST = True

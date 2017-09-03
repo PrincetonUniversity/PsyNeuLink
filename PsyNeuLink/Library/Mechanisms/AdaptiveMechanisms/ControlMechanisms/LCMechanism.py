@@ -124,21 +124,56 @@ COMMENT
 Output
 ~~~~~~
 
+COMMENT:
+VERSION FOR SINGLE ControlSignal
 An LCMechanism has a single `ControlSignal` used to modulate the function of the Mechanism(s) listed in its
 `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute.  The ControlSignal is assigned a
 `ControlProjection` to the `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the
 `function <Mechanism.function>` for each of those Mechanisms.
+COMMENT
 
-COMMENT:
+An LCMechanism has a `ControlSignal` for each Mechanism listed in its `modulated_mechanisms
+<LCMechanism.modulated_mechanisms>` attribute.  All of its ControlSignals are assigned the same value:  the result of
+the LCMechanism's `function <LCMechanism.function>`.  Each ControlSignal is assigned a `ControlProjection` to the
+`ParameterState` for the  `multiplicative parameter <Function_Modulatory_Params>` of `function <Mechanism.function>`
+for the Mechanism in `modulated_mechanisms <LCMechanism.modulate_mechanisms>` to which it corresponds.
+
 
 .. _LCMechanism_Examples:
 
-Examples
-~~~~~~~~
+Example
+~~~~~~~
 
-EXAMPLES HERE
+The following example generates an LCMechanism that modulates the function of two TransferMechanisms, one that uses
+`Linear` function and the other a `Logistic` function::
 
-EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR **monitor_for_control** and **modulated_mechanisms**
+    my_mech_1 = TransferMechanism(function=Linear,
+                                  name='my_linear_mechanism')
+    my_mech_2 = TransferMechanism(function=Logistic,
+                                  name='my_logistic_mechanism')
+
+    LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2],
+                     name='my_LC')
+
+Calling `my_LC.show()` generates the following report::
+
+    my_LC
+
+        Monitoring the following Mechanism OutputStates:
+            None
+
+        Controlling the following Mechanism parameters:
+            my_logistic_mechanism: gain
+            my_linear_mechanism: slope
+
+Note that the LCMechanism controls the `multiplicative parameter <Function_Modulatory_Params>` of the function of each
+Mechanism;  the `gain <Logistic.gain>` parameter for ``my_mech_1`` since it uses a `Logistic` Function, and the
+the `slope <Linear.slope>` parameter for ``my_mech_2`` since it uses a `Linear` Function.
+
+COMMENT:
+
+ADDITIONAL EXAMPLES HERE OF THE DIFFERENT FORMS OF SPECIFICATION FOR
+**monitor_for_control** and **modulated_mechanisms**
 
 STRUCTURE:
 MODE INPUT_STATE <- NAMED ONE, LAST?
@@ -251,7 +286,7 @@ COMMENT
     Attributes
     ----------
 
-COMMENT
+COMMENT:
     monitoring_mechanism : ObjectiveMechanism
         Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
         argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
@@ -261,7 +296,7 @@ COMMENT
         each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument of
         the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
         LCMechanism's `variable <Mechanism_Base.variable>`.
-COMMENT:
+COMMENT
 
     mode : float : default 0.0
         determines the value for the mode parameter of the LCMechanism's `FitzHughNagumoIntegrator` function.
@@ -270,6 +305,8 @@ COMMENT:
         takes the LCMechanism's `input <LCMechanism_Input>` and generates its response <LCMechanism_Output>` under
         the influence of its `mode <LCMechanism.mode>` parameter.
 
+COMMENT:
+VERSIONS FOR SINGLE ControlSignal
     control_signals : List[ControlSignal]
         contains the LCMechanism's single `ControlSignal`, which sends `ControlProjections` to the
         `multiplicative parameter <Function_Modulatory_Params>` of each of the Mechanisms the LCMechanism
@@ -280,6 +317,17 @@ COMMENT:
         projects to the `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the
         `function <Mechanism.function>` of one of the Mechanisms listed in `modulated_mechanisms
         <LCMechanism.modulated_mechanisms>` attribute.
+COMMENT
+
+    control_signals : List[ControlSignal]
+        contains a ControlSignal for each Mechanism listed in the LCMechanism's `modulated_mechanisms
+        <LCMechanism.modulated_mechanisms>` attribute; each ControlSignal sends a `ControlProjections` to the
+        `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the `function
+        <Mechanism_Base.function>corresponding Mechanism.
+
+    control_projections : List[ControlProjection]
+        list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
+        in `control_signals <LC_Mechanism.control_signals>`.
 
     modulated_mechanisms : List[Mechanism]
         list of Mechanisms modulated by the LCMechanism.
@@ -454,16 +502,16 @@ COMMENT:
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             self.modulated_mechanisms.append(mech)
 
-        # MODIFIED 9/3/17 OLD:
+        # # MODIFIED 9/3/17 OLD [ASSIGN ALL ControlProjections TO A SINGLE ControlSignal]
         # # Get the ParameterState for the multiplicative parameter of each Mechanism in self.modulated_mechanisms
         # multiplicative_params = []
         # for mech in self.modulated_mechanisms:
         #     multiplicative_params.append(mech._parameter_states[mech.function_object.multiplicative_param])
         #
-        # # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
+        # # Create specification for **control_signals** argument of ControlSignal constructor
         # self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
-        # MODIFIED 9/3/17 END
 
+        # MODIFIED 9/3/17 NEW [ASSIGN EACH ControlProjection TO A DIFFERENT ControlSignal]
         # Get the name of the multiplicative parameter of each Mechanism in self.modulated_mechanisms
         multiplicative_param_names = []
         for mech in self.modulated_mechanisms:
@@ -473,6 +521,10 @@ COMMENT:
         self.control_signals = []
         for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
             self.control_signals.append((mult_param_name, mech))
+
+        # MODIFIED 9/3/17 END
+
+
 
         super()._instantiate_output_states(context=context)
 
