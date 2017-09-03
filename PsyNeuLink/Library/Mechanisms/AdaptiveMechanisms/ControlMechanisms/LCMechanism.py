@@ -173,30 +173,21 @@ Class Reference
 ---------------
 
 """
-import numpy as np
 import typecheck as tc
 
-from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
+    import ControlMechanism_Base, ALLOCATION_POLICY
 from PsyNeuLink.Components.Functions.Function import Integrator
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Projections.Projection import _validate_receiver
-from PsyNeuLink.Components.ShellClasses import Mechanism, System
-from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import modulatory_signal_keywords
-from PsyNeuLink.Components.States.OutputState import OutputState
-from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Components.States.State import _parse_state_spec
+from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
+from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALL, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
-                                        CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, \
-                                        INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MECHANISM, \
-                                        MONITOR_FOR_CONTROL, NAME, OWNER, FUNCTION,\
-                                        PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
+from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
+                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS
+
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import ContentAddressableList
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
@@ -316,7 +307,7 @@ COMMENT:
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:Integrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
@@ -383,7 +374,6 @@ COMMENT:
         #                                             "Mechanism or an OutputState of one in {}".
         #                                             format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
-
         if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
 
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
@@ -408,10 +398,33 @@ COMMENT:
                                            "that does not have a {}.".
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
-    def _instantiate_monitored_output_states(self, context=None):
-        raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
-                                          format(self.__class__.__name__,
-                                                 self.__class__.__bases__[0].__name__))
+    # def _instantiate_monitored_output_states(self, context=None):
+    #     raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
+    #                                       format(self.__class__.__name__,
+    #                                              self.__class__.__bases__[0].__name__))
+
+    def _instantiate_input_states(self, context=None):
+        """Instantiate input_value attribute
+
+        Instantiate input_states and monitored_output_states attributes (in case they are referenced)
+            and assign any OutputStates that project to the input_states to monitored_output_states
+
+        IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
+                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              method should be implemented that also implements an _instantiate_monitored_output_states
+                              method, and that can be used to add OutputStates/Mechanisms to be monitored.
+        """
+
+        self.monitored_output_states = []
+
+        if not hasattr(self, INPUT_STATES):
+            self._input_states = None
+        elif self.input_states:
+            for input_state in self.input_states:
+                for projection in input_state.path_afferents:
+                    self.monitored_output_states.append(projection.sender)
+
+
 
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
@@ -441,75 +454,39 @@ COMMENT:
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             self.modulated_mechanisms.append(mech)
 
-        # # INSTANTIATE ControlSignal WITH ControlProjections TO ALL OF THE Mechanisms IN self.modulated_mechanisms
-        #
-        # # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
+        # MODIFIED 9/3/17 OLD:
         # # Get the ParameterState for the multiplicative parameter of each Mechanism in self.modulated_mechanisms
         # multiplicative_params = []
         # for mech in self.modulated_mechanisms:
-        #     multiplicative_params.append(mech._parameter_states[mech.multiplicative_param])
+        #     multiplicative_params.append(mech._parameter_states[mech.function_object.multiplicative_param])
         #
-        # # Instantiate ControlSignal
-        # # Get constraint for ControlSignal value
-        # #    - get LCMechanism's value
-        # self._update_value(context=context)
-        # output_state_constraint_value = self.value
-        #
-        # from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        # from PsyNeuLink.Components.States.State import _instantiate_state
-        #
-        # control_signal_params = {PROJECTIONS:multiplicative_params}
-        #
-        # control_signal = _instantiate_state(owner=self,
-        #                                     state_type=ControlSignal,
-        #                                     state_name='LC_ControlSignal',
-        #                                     state_spec=defaultControlAllocation,
-        #                                     state_params=control_signal_params,
-        #                                     constraint_value=output_state_constraint_value,
-        #                                     constraint_value_name='Default control allocation',
-        #                                     context=context)
-        #
-        # # Add ControlProjections to self.control_projections
-        # for control_projection in control_signal.efferents:
-        #     self.control_projections.append(control_projection)
-        #
-        # # ASSIGN ControlSignal TO output_states
-        # # -------------------------------------
-        #
-        # try:
-        #     self.output_states[control_signal.name] = control_signal
-        # except (AttributeError, TypeError):
-        #     from PsyNeuLink.Components.States.State import State_Base
-        #     self.output_states = ContentAddressableList(component_type=State_Base,
-        #                                                 list=[control_signal],
-        #                                                 name = self.name+'.output_states')
-        #
-        # # (Re-)assign control_signals attribute to output_states
-        # self.control_signals = self.output_states
-        #
-        # return control_signal
+        # # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
+        # self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
+        # MODIFIED 9/3/17 END
 
-        # Get the ParameterState for the multiplicative parameter of each Mechanism in self.modulated_mechanisms
-        multiplicative_params = []
+        # Get the name of the multiplicative parameter of each Mechanism in self.modulated_mechanisms
+        multiplicative_param_names = []
         for mech in self.modulated_mechanisms:
-            multiplicative_params.append(mech._parameter_states[mech.function_object.multiplicative_param])
+            multiplicative_param_names.append(mech.function_object.multiplicative_param)
 
-        # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
-        self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
+        # Create specification for **control_signals** argument of ControlSignal constructor
+        self.control_signals = []
+        for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
+            self.control_signals.append((mult_param_name, mech))
 
         super()._instantiate_output_states(context=context)
 
-    def _instantiate_attributes_after_function(self, context=None):
-        """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
-
-        Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
-            that insures that any ControlSignals specified in control_signals arg are instantiated first
-        Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
-            along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
-        """
-
-        super()._instantiate_attributes_after_function(context=context)
-
+    # def _instantiate_attributes_after_function(self, context=None):
+    #     """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
+    #
+    #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
+    #         that insures that any ControlSignals specified in control_signals arg are instantiated first
+    #     Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
+    #         along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
+    #     """
+    #
+    #     super()._instantiate_attributes_after_function(context=context)
+    #
     def _execute(self,
                     variable=None,
                     runtime_params=None,
@@ -585,17 +562,20 @@ COMMENT:
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
-        for state in self.monitoring_mechanism.input_states:
-            for projection in state.path_afferents:
-                monitored_state = projection.sender
-                monitored_state_mech = projection.sender.owner
-                monitored_state_index = self.monitored_output_states.index(monitored_state)
+        if self.monitoring_mechanism is None:
+            print ("\t\tNone")
+        else:
+            for state in self.monitoring_mechanism.input_states:
+                for projection in state.path_afferents:
+                    monitored_state = projection.sender
+                    monitored_state_mech = projection.sender.owner
+                    monitored_state_index = self.monitored_output_states.index(monitored_state)
 
-                weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
-                exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
+                    weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
+                    exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
 
-                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_state_mech.name, monitored_state.name, weight, exponent))
+                    print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                           format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
         print ("\n\tControlling the following Mechanism parameters:".format(self.name))
         # Sort for consistency of output:

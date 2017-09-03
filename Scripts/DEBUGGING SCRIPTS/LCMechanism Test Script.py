@@ -12,13 +12,13 @@ mech_1 = TransferMechanism()
 mech_2 = TransferMechanism()
 mech_3 = TransferMechanism()
 
-LC = LCMechanism(modulated_mechanisms=[mech_1, mech_2, mech_3])
+# LC = LCMechanism(modulated_mechanisms=[mech_1, mech_2, mech_3])
+#
+# LC.show()
 
-# my_input_layer = TransferMechanism(size=3)
-# my_hidden_layer = TransferMechanism(size=5)
-# my_output_layer = TransferMechanism(size=2)
-# my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [my_input_layer,
-#                                                                     my_hidden_layer,
-#                                                                     my_output_layer]}],
-#                                       modulation=ModulationParam.ADDITIVE)
+my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [mech_1,
+                                                                    mech_2,
+                                                                    mech_3]}],
+                                      modulation=ModulationParam.ADDITIVE)
 
+TEST = True

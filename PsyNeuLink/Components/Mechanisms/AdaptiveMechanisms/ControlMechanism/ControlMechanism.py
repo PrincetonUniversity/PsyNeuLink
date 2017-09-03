@@ -149,6 +149,9 @@ from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
+MONITORING_MECHANISM = 'monitoring_mechanism'
+ALLOCATION_POLICY = 'allocation_policy'
+
 ControlMechanismRegistry = {}
 
 class ControlMechanismError(Exception):
@@ -295,7 +298,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({CONTROL_PROJECTIONS: None})
+    paramClassDefaults.update({
+        MONITORING_MECHANISM: None,
+        ALLOCATION_POLICY: None,
+        CONTROL_PROJECTIONS: None})
 
     @tc.typecheck
     def __init__(self,

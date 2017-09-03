@@ -307,7 +307,8 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
+    import ControlMechanism_Base, MONITORING_MECHANISM, ALLOCATION_POLICY
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
@@ -331,9 +332,6 @@ WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 
 # -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-MONITORING_MECHANISM = 'monitoring_mechanism'
-ALLOCATION_POLICY = 'allocation_policy'
 
 # ControlSignal Costs
 INTENSITY_COST = 'INTENSITY COST'
@@ -722,7 +720,6 @@ class EVCMechanism(ControlMechanism_Base):
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
-                               ALLOCATION_POLICY: None,
                                PARAMETER_STATES: False})
 
     @tc.typecheck
@@ -1507,9 +1504,13 @@ class EVCMechanism(ControlMechanism_Base):
         else:
             self._outcome_function = value
 
-        # MODIFIED 7/27/17 NEW:
+        # # MODIFIED 7/27/17 NEW:
+        # # Assign outcome_function to monitoring_mechanism
+        # if hasattr(self, MONITORING_MECHANISM):
+        #     self.monitoring_mechanism.assign_params({FUNCTION:self.outcome_function})
+        # MODIFIED 9/3/17 NEWER:
         # Assign outcome_function to monitoring_mechanism
-        if hasattr(self, MONITORING_MECHANISM):
+        if self.monitoring_mechanism is not None:
             self.monitoring_mechanism.assign_params({FUNCTION:self.outcome_function})
         # MODIFIED 7/27/17 END
 
