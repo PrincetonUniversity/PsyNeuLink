@@ -464,7 +464,7 @@ def _parse_gating_signal_spec(owner, state_spec):
         - {NAME:str, MECHANISM:Mechanism} dict
         where:
             str is the name of an InputState or OutputState of the Mechanism,
-            Mechanism is a reference to an existing that belongs to self.system
+            Mechanism is a reference to an existing Mechanism that belongs to self.system
 
     Checks for duplicate state specifications within state_spec or with any existing GatingSignal of the owner
         (i.e., states that will receive more than one GatingProjection from the owner)

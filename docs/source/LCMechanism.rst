@@ -2,4 +2,5 @@ LCMechanism
 ===========
 
 .. automodule:: Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.LCMechanism
-   :exclude-members: random, LinearCombination
+   :members:
+   :exclude-members: random, LinearCombination, Linear

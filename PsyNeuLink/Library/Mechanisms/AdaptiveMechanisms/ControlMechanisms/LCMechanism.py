@@ -13,7 +13,7 @@ Overview
 --------
 
 An LCMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
-<Mechanism.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
+<Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that,
 together with a `UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
@@ -129,23 +129,24 @@ VERSION FOR SINGLE ControlSignal
 An LCMechanism has a single `ControlSignal` used to modulate the function of the Mechanism(s) listed in its
 `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute.  The ControlSignal is assigned a
 `ControlProjection` to the `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the
-`function <Mechanism.function>` for each of those Mechanisms.
+`function <Mechanism_Base.function>` for each of those Mechanisms.
 COMMENT
 
 An LCMechanism has a `ControlSignal` for each Mechanism listed in its `modulated_mechanisms
 <LCMechanism.modulated_mechanisms>` attribute.  All of its ControlSignals are assigned the same value:  the result of
 the LCMechanism's `function <LCMechanism.function>`.  Each ControlSignal is assigned a `ControlProjection` to the
-`ParameterState` for the  `multiplicative parameter <Function_Modulatory_Params>` of `function <Mechanism.function>`
-for the Mechanism in `modulated_mechanisms <LCMechanism.modulate_mechanisms>` to which it corresponds.
+`ParameterState` for the  `multiplicative parameter <Function_Modulatory_Params>` of `function
+<Mechanism_Base.function>` for the Mechanism in `modulated_mechanisms <LCMechanism.modulate_mechanisms>` to which it
+corresponds.
 
 
 .. _LCMechanism_Examples:
 
-Example
-~~~~~~~
+Examples
+~~~~~~~~
 
 The following example generates an LCMechanism that modulates the function of two TransferMechanisms, one that uses
-`Linear` function and the other a `Logistic` function::
+a `Linear` function and the other a `Logistic` function::
 
     my_mech_1 = TransferMechanism(function=Linear,
                                   name='my_linear_mechanism')
@@ -158,17 +159,18 @@ The following example generates an LCMechanism that modulates the function of tw
 Calling `my_LC.show()` generates the following report::
 
     my_LC
-
+COMMENT:
         Monitoring the following Mechanism OutputStates:
             None
+COMMENT
 
         Controlling the following Mechanism parameters:
             my_logistic_mechanism: gain
             my_linear_mechanism: slope
 
-Note that the LCMechanism controls the `multiplicative parameter <Function_Modulatory_Params>` of the function of each
-Mechanism;  the `gain <Logistic.gain>` parameter for ``my_mech_1`` since it uses a `Logistic` Function, and the
-the `slope <Linear.slope>` parameter for ``my_mech_2`` since it uses a `Linear` Function.
+Note that the LCMechanism controls the `multiplicative parameter <Function_Modulatory_Params>` of the `function
+<Mechanism_Base.function>` of each Mechanism:  the `gain <Logistic.gain>` parameter for ``my_mech_1``, since it uses
+a `Logistic` Function; and the `slope <Linear.slope>` parameter for ``my_mech_2``, since it uses a `Linear` Function.
 
 COMMENT:
 
@@ -199,7 +201,7 @@ Mechanisms to which the LCMechanism projects
    The `ParameterState` that receives a `ControlProjection` does not update its value until its owner Mechanism
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    LCMechanism has executed, the `multiplicative parameter <Function_Modulatory_Params>` parameter of the `function
-   <Mechanism.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
+   <Mechanism_Base.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
    executed.
 
 .. _LCMechanism_Class_Reference:
@@ -214,6 +216,7 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base, ALLOCATION_POLICY
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.Functions.Function import Integrator
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism
@@ -237,32 +240,32 @@ class LCMechanismError(Exception):
 
 class LCMechanism(ControlMechanism_Base):
     """
-    LCMechanism(                                   \
-        monitor_for_control=None,                  \
-        mode=0.0,                                  \
-        modulated_mechanisms=None,                 \
-        params=None,                               \
-        name=None,                                 \
-        prefs=None)
+    LCMechanism(                               \
+    monitor_for_control=None,                  \
+    mode=0.0,                                  \
+    modulated_mechanisms=None,                 \
+    params=None,                               \
+    name=None,                                 \
+    prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative parameter
-    <Function_Modulatory_Params>` of the `function <Mechanism.function>` of one or more `Mechanisms <Mechanism>`.
+    <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
 
     Arguments
     ---------
 
-COMMENT:
-    monitor_for_control : List[OutputState specification] : default None
-        specifies set of OutputStates to monitor (see :ref:`LCMechanism_Monitored_OutputStates` for
-        specification options).
-COMMENT
-
     mode : float : default 0.0
         specifies the default value for the mode parameter of the LCMechanism's `function <LCMechanism.function>`.
 
+    COMMENT:
+        monitor_for_control : List[OutputState specification] : default None
+            specifies set of OutputStates to monitor (see :ref:`LCMechanism_Monitored_OutputStates` for
+            specification options).
+    COMMENT
+
     modulated_mechanisms : List[Mechanism] or *ALL*
         specifies the Mechanisms to be modulated by the LCMechanism.
-        If it is a list, every item must be a Mechanism with a `function <Mechanism.function>` that implements a
+        If it is a list, every item must be a Mechanism with a `function <Mechanism_Base.function>` that implements a
         `multiplicative parameter <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to
         specify all of the `ProcessingMechanisms <ProcessingMechanism>` in the Composition(s) to which the LCMechanism
         belongs.
@@ -283,41 +286,42 @@ COMMENT
         If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
         (see :doc:`PreferenceSet <LINK>` for details).
 
+
     Attributes
     ----------
 
-COMMENT:
-    monitoring_mechanism : ObjectiveMechanism
-        Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
-        argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
-        `input_state <Mechanism_Base.input_state>`.
-
-    monitored_output_states : List[OutputState]
-        each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument of
-        the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
-        LCMechanism's `variable <Mechanism_Base.variable>`.
-COMMENT
-
     mode : float : default 0.0
         determines the value for the mode parameter of the LCMechanism's `FitzHughNagumoIntegrator` function.
+
+    COMMENT:
+        monitoring_mechanism : ObjectiveMechanism
+            Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
+            argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
+            `input_state <Mechanism_Base.input_state>`.
+
+        monitored_output_states : List[OutputState]
+            each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument
+            of the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
+            LCMechanism's `variable <Mechanism_Base.variable>`.
+    COMMENT
 
     function : `FitzHughNagumoIntegrator`
         takes the LCMechanism's `input <LCMechanism_Input>` and generates its response <LCMechanism_Output>` under
         the influence of its `mode <LCMechanism.mode>` parameter.
 
-COMMENT:
-VERSIONS FOR SINGLE ControlSignal
-    control_signals : List[ControlSignal]
-        contains the LCMechanism's single `ControlSignal`, which sends `ControlProjections` to the
-        `multiplicative parameter <Function_Modulatory_Params>` of each of the Mechanisms the LCMechanism
-        controls (listed in its `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute).
+    COMMENT:
+    VERSIONS FOR SINGLE ControlSignal
+        control_signals : List[ControlSignal]
+            contains the LCMechanism's single `ControlSignal`, which sends `ControlProjections` to the
+            `multiplicative parameter <Function_Modulatory_Params>` of each of the Mechanisms the LCMechanism
+            controls (listed in its `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute).
 
-    control_projections : List[ControlProjection]
-        list of `ControlProjections <ControlProjection>` sent by the LCMechanism's `ControlSignal`, each of which
-        projects to the `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the
-        `function <Mechanism.function>` of one of the Mechanisms listed in `modulated_mechanisms
-        <LCMechanism.modulated_mechanisms>` attribute.
-COMMENT
+        control_projections : List[ControlProjection]
+            list of `ControlProjections <ControlProjection>` sent by the LCMechanism's `ControlSignal`, each of which
+            projects to the `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the
+            `function <Mechanism_Base.function>` of one of the Mechanisms listed in `modulated_mechanisms
+            <LCMechanism.modulated_mechanisms>` attribute.
+    COMMENT
 
     control_signals : List[ControlSignal]
         contains a ControlSignal for each Mechanism listed in the LCMechanism's `modulated_mechanisms
@@ -335,7 +339,6 @@ COMMENT
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         the default form of modulation used by the LCMechanism's `ControlProjections`,
         unless they are `individually specified <ControlSignal_Specification>`.
-        XXX CORRECT??
 
     """
 
@@ -554,8 +557,6 @@ COMMENT
         """Add ControlProjections to the specified Mechanisms.
         """
 
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-
         request_set = {MODULATED_MECHANISMS:mechanisms}
         target_set = {}
         self._validate_params(request_set=request_set, target_set=target_set)
@@ -574,8 +575,6 @@ COMMENT
     def remove_modulated_mechanisms(self, mechanisms:list):
         """Remove the ControlProjections to the specified Mechanisms.
         """
-
-        from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 
         for mech in mechanisms:
             if not mech in self.modulated_mechanisms:

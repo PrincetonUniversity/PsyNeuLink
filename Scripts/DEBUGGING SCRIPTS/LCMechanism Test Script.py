@@ -20,5 +20,3 @@ LC.show()
 #                                                                     mech_2,
 #                                                                     mech_3]}],
 #                                       modulation=ModulationParam.ADDITIVE)
-
-TEST = True
