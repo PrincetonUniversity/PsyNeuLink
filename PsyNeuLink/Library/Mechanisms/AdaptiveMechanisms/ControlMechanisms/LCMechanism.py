@@ -192,7 +192,7 @@ from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import ALL, CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, \
                                         CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS, \
                                         INIT__EXECUTE__METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MECHANISM, \
-                                        MONITOR_FOR_CONTROL, NAME, OWNER, \
+                                        MONITOR_FOR_CONTROL, NAME, OWNER, FUNCTION,\
                                         PARAMETER_STATE, PARAMS, PROJECTIONS, RECEIVER, REFERENCE_VALUE, SENDER, SYSTEM
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -200,6 +200,7 @@ from PsyNeuLink.Globals.Utilities import ContentAddressableList
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 MODULATED_MECHANISMS = 'modulated_mechanisms'
+CONTROL_SIGNAL_NAME = 'LCMechanism_ControlSignal'
 
 ControlMechanismRegistry = {}
 
@@ -213,7 +214,7 @@ class LCMechanism(ControlMechanism_Base):
     LCMechanism(                                   \
         monitor_for_control=None,                  \
         mode=0.0,                                  \
-        modulated_mechanisms=None,                             \
+        modulated_mechanisms=None,                 \
         params=None,                               \
         name=None,                                 \
         prefs=None)
@@ -316,7 +317,10 @@ COMMENT:
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({CONTROL_PROJECTIONS: None})
+    paramClassDefaults.update({FUNCTION:Integrator,
+                               CONTROL_SIGNALS: None,
+                               CONTROL_PROJECTIONS: None,
+                               })
 
     @tc.typecheck
     def __init__(self,
@@ -339,7 +343,6 @@ COMMENT:
         super().__init__(default_variable=default_variable,
                          size=size,
                          monitor_for_control=monitor_for_control,
-                         function=Integrator,
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -381,16 +384,16 @@ COMMENT:
         #                                             format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
 
 
-        if MODULATE in target_set and target_set[MODULATE]:
+        if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
 
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 
-            spec = target_set[MODULATE]
+            spec = target_set[MODULATED_MECHANISMS]
 
             if isinstance (spec, str):
                 if not spec == ALL:
                     raise LCMechanismError("A string other than the keyword \'ALL\' was specified for the {} argument "
-                                           "the constructor for {}".format(MODULATE, self.name))
+                                           "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
 
             if not isinstance(spec, list):
                 spec = [spec]
@@ -398,12 +401,12 @@ COMMENT:
             for mech in spec:
                 if not isinstance(mech, Mechanism):
                     raise LCMechanismError("The specification of the {} argument for {} contained an item ({})"
-                                           "that is not a Mechanism.".format(MODULATE, self.name, mech))
+                                           "that is not a Mechanism.".format(MODULATED_MECHANISMS, self.name, mech))
 
                 if not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
                     raise LCMechanismError("The specification of the {} argument for {} contained a Mechanism ({})"
                                            "that does not have a {}.".
-                                           format(MODULATE, self.name, mech, MULTIPLICATIVE_PARAM))
+                                           format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
     def _instantiate_monitored_output_states(self, context=None):
         raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
@@ -411,13 +414,6 @@ COMMENT:
                                                  self.__class__.__bases__[0].__name__))
 
     def _instantiate_output_states(self, context=None):
-
-        self._instantiate_control_signal(context=context)
-
-        # IMPLEMENTATION NOTE:  Don't want to call this because it instantiates undesired default OutputState
-        super()._instantiate_output_states(context=context)
-
-    def _instantiate_control_signal(self, control_signal=None, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
         If **modulated_mechanisms** argument of constructor was specified as *ALL*,
@@ -432,8 +428,8 @@ COMMENT:
         from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 
-
-        # Assign all Processing Mechanisms in the LCMechanism's Composition(s) to its modulated_mechanisms attribute
+        # *ALL* is specified for modulated_mechanisms:
+        #    assign all Processing Mechanisms in the LCMechanism's Composition(s) to its modulated_mechanisms attribute
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
             self.modulated_mechanisms = []
             for system in self.systems:
@@ -445,52 +441,63 @@ COMMENT:
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             self.modulated_mechanisms.append(mech)
 
-        # INSTANTIATE ControlSignal WITH ControlProjections TO ALL OF THE Mechanisms IN self.modulated_mechanisms
+        # # INSTANTIATE ControlSignal WITH ControlProjections TO ALL OF THE Mechanisms IN self.modulated_mechanisms
+        #
+        # # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
+        # # Get the ParameterState for the multiplicative parameter of each Mechanism in self.modulated_mechanisms
+        # multiplicative_params = []
+        # for mech in self.modulated_mechanisms:
+        #     multiplicative_params.append(mech._parameter_states[mech.multiplicative_param])
+        #
+        # # Instantiate ControlSignal
+        # # Get constraint for ControlSignal value
+        # #    - get LCMechanism's value
+        # self._update_value(context=context)
+        # output_state_constraint_value = self.value
+        #
+        # from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
+        # from PsyNeuLink.Components.States.State import _instantiate_state
+        #
+        # control_signal_params = {PROJECTIONS:multiplicative_params}
+        #
+        # control_signal = _instantiate_state(owner=self,
+        #                                     state_type=ControlSignal,
+        #                                     state_name='LC_ControlSignal',
+        #                                     state_spec=defaultControlAllocation,
+        #                                     state_params=control_signal_params,
+        #                                     constraint_value=output_state_constraint_value,
+        #                                     constraint_value_name='Default control allocation',
+        #                                     context=context)
+        #
+        # # Add ControlProjections to self.control_projections
+        # for control_projection in control_signal.efferents:
+        #     self.control_projections.append(control_projection)
+        #
+        # # ASSIGN ControlSignal TO output_states
+        # # -------------------------------------
+        #
+        # try:
+        #     self.output_states[control_signal.name] = control_signal
+        # except (AttributeError, TypeError):
+        #     from PsyNeuLink.Components.States.State import State_Base
+        #     self.output_states = ContentAddressableList(component_type=State_Base,
+        #                                                 list=[control_signal],
+        #                                                 name = self.name+'.output_states')
+        #
+        # # (Re-)assign control_signals attribute to output_states
+        # self.control_signals = self.output_states
+        #
+        # return control_signal
 
         # Get the ParameterState for the multiplicative parameter of each Mechanism in self.modulated_mechanisms
         multiplicative_params = []
         for mech in self.modulated_mechanisms:
-            multiplicative_params.append(mech._parameter_states[mech.multiplicative_param])
-        
-        # Instantiate ControlSignal
-        # Get constraint for ControlSignal value
-        #    - get LCMechanism's value
-        self._update_value(context=context)
-        output_state_constraint_value = self.value
+            multiplicative_params.append(mech._parameter_states[mech.function_object.multiplicative_param])
 
-        from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-        from PsyNeuLink.Components.States.State import _instantiate_state
+        # Assign list of ParameterStates as spec for LCMechanism's control_signals attribute
+        self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
 
-        control_signal_params = {PROJECTIONS:multiplicative_params}
-
-        control_signal = _instantiate_state(owner=self,
-                                            state_type=ControlSignal,
-                                            state_name='LC_ControlSignal',
-                                            state_spec=defaultControlAllocation,
-                                            state_params=control_signal_params,
-                                            constraint_value=output_state_constraint_value,
-                                            constraint_value_name='Default control allocation',
-                                            context=context)
-
-        # Add ControlProjections to self.control_projections
-        for control_projection in control_signal.efferents:
-            self.control_projections.append(control_projection)
-
-        # ASSIGN ControlSignal TO output_states 
-        # -------------------------------------
-
-        try:
-            self.output_states[control_signal.name] = control_signal
-        except (AttributeError, TypeError):
-            from PsyNeuLink.Components.States.State import State_Base
-            self.output_states = ContentAddressableList(component_type=State_Base,
-                                                        list=[control_signal],
-                                                        name = self.name+'.output_states')
-
-        # (Re-)assign control_signals attribute to output_states
-        self.control_signals = self.output_states
-
-        return control_signal
+        super()._instantiate_output_states(context=context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
@@ -509,11 +516,9 @@ COMMENT:
                     clock=CentralClock,
                     time_scale=TimeScale.TRIAL,
                     context=None):
-        """Updates ControlSignals based on inputs
-
-        Must be overriden by subclass
+        """Updates LCMechanism's ControlSignal based on input and mode parameter value
         """
-        raise LCMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        return self.function()
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

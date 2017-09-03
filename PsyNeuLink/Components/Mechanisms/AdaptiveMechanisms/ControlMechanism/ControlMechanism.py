@@ -350,7 +350,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             else:
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
-        if MONITOR_FOR_CONTROL in target_set:
+        if MONITOR_FOR_CONTROL in target_set and target_set[MONITOR_FOR_CONTROL] is not None:
             for spec in target_set[MONITOR_FOR_CONTROL]:
                 if isinstance(spec, MonitoredOutputStatesOption):
                     continue
