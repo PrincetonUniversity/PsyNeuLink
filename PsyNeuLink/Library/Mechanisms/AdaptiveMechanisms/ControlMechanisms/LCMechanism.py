@@ -9,6 +9,17 @@
 # **************************************  LCMechanism ************************************************
 
 """
+
+.. note::
+   **THIS MECHANISM IS ONLY PARTIALLY IMPLEMENTED.**
+
+   IT CAN MODULATE MECHANISMS, BUT:
+
+   - IT DOES NOT YET AUTOMATICALLY GENERATE A `UtilityIntegrator` AS ITS OBJECTIVE MECHANISM
+   ..
+   - THE `FitzHughNagumoIntegration` FUNCTION AND ASSOCIATED `mode` PARAMETER HAVE NOT YET BEEN IMPLEMENTED
+
+
 Overview
 --------
 
