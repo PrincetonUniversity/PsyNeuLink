@@ -106,11 +106,12 @@ XXX ASSIGN monitor_for_control:  THESE ARE ADDED TO ITS CONTROLLER'S monitored_v
 * a `UtilityIntegratorMechanism` -- this monitors the `value <OutputState.value>` of each of the `OutputStates
   <OutputState>` specified in the **monitor_for_control** argument of the LCMechanism's constructor;  these are
   listed in the LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute, and the
-  `monitored_values <UtilityIntegratorMechanism>` attribute of the UtilityIntegratorMechanism.  They are evaluated by
-  the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism>`;  the result is assigned as the `value
-  <OutputState.value>` of the UtilityIntegratorMechanism's , and (by way of a
-  `MappingProjection` -- see below) to the LCMechanism's *MODE* `InputState`. This information is used by the
-  LCMechanism to set the `value <ControlSignal.value>` for its `ControlSignal`.
+  `monitored_values <UtilityIntegratorMechanism.monitored_values>` attribute of the UtilityIntegratorMechanism.  They
+  are evaluated by the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism.function>`;  the result is
+  assigned as the `value <OutputState.value>` of the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
+  <UtilityIntegratorMechanism_Structure>` and (by way of a `MappingProjection` -- see below) to the LCMechanism's *MODE*
+  `InputState`. This information is used by the LCMechanism to set the `value <ControlSignal.value>` for its
+  `ControlSignal`.
 ..
 * a `MappingProjection` that projects from the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
   <UtilityIntegratorMechanism_Structure>` to the LCMechanism's *MODE* <InputState_Primary>`.
@@ -139,6 +140,7 @@ the LCMechanism's `function <LCMechanism.function>`.  Each ControlSignal is assi
 <Mechanism_Base.function>` for the Mechanism in `modulated_mechanisms <LCMechanism.modulate_mechanisms>` to which it
 corresponds.
 
+The Mechanisms modulated by an LCMechanism can be displayed using its :func:`show <LCMechanism.show>` method.
 
 .. _LCMechanism_Examples:
 
@@ -164,7 +166,7 @@ COMMENT:
             None
 COMMENT
 
-        Controlling the following Mechanism parameters:
+        Modulating the following Mechanism parameters:
             my_logistic_mechanism: gain
             my_linear_mechanism: slope
 
@@ -608,6 +610,9 @@ class LCMechanism(ControlMechanism_Base):
             del(self.modulated_mechanisms[index])
 
     def show(self):
+        """Display the `OutputStates <OutputState>` monitored by the LCMechanism's `monitoring_mechanism`
+        and the `multiplicative parameters <Function_Modulatory_Params>` modulated by the LCMechanism.
+        """
 
         print ("\n---------------------------------------------------------")
 
@@ -628,7 +633,7 @@ class LCMechanism(ControlMechanism_Base):
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                            format(monitored_state_mech.name, monitored_state.name, weight, exponent))
 
-        print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+        print ("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
         state_names_sorted = sorted(self.output_states.names)
         for state_name in state_names_sorted:

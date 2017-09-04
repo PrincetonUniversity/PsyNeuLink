@@ -16,7 +16,9 @@ LC = LCMechanism(modulated_mechanisms=[my_mech_1, my_mech_2], name='my_LC')
 
 LC.show()
 
-# my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [mech_1,
-#                                                                     mech_2,
-#                                                                     mech_3]}],
-#                                       modulation=ModulationParam.ADDITIVE)
+my_gating_mechanism = GatingMechanism(gating_signals=[{'GATE_ALL': [my_mech_1,
+                                                                    my_mech_2]}],
+                                      modulation=ModulationParam.ADDITIVE)
+
+
+my_gating_mechanism.show()

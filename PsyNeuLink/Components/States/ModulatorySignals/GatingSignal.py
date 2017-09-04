@@ -182,7 +182,7 @@ the `function <InputState.function>` of each `InputState`. By default that is a 
 of which is its `intercept <Linear.intercept>` parameter. Therefore, in the example above, each time the InputStates
 are updated, the value of the GatingSignal will be assigned as the `intercept` of each InputState's
 `function <InputState.function>`, thus adding that amount to the input to the State before determining its
-`value <InputStat.value>`.
+`value <InputState.value>`.
 
 **Gate InputStates differentially**.  In the example above, the InputStates for all of the Mechanisms were gated
 using a single GatingSignal.  In the example below, a different GatingSignal is assigned to the InputState of each

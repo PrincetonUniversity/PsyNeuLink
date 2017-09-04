@@ -24,6 +24,10 @@ COMMENT: TBI
 The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
 COMMENT
+
+The InputStates and/or OutputStates gated by a GatingMechanism can be displayed using its `show <LCMehanism.show>`
+method.
+
 The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
 `LearningMechanism <LearningMechanism>`, and  `ControlMechanism <ControlMechanism>` in that System have been executed.
 
@@ -60,8 +64,7 @@ GatingSignals
 A `GatingSignal` is created for each item listed in the **gating_signals** argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its `gating_signals <GatingMechanism.gating_signals>` attribute.
 Each GatingSignal is assigned one or more `GatingProjections <GatingProjection>` to the InputState(s) and/or
-OutputState(s) it gates. GatingSignals are a type of `OutputState`, and so they are also listed in the
-GatingMechanism's `output_states <GatingMechanism.outut_states>` attribute.
+OutputState(s) it gates.
 
 .. _GatingMechanism_Modulation:
 
@@ -73,6 +76,42 @@ in which its GatingSignals modulate the value of the States they gate
 (see `modulation <ModulatorySignal_Modulation>` for an explanation of how this attribute is specified and used to
 modulate the value of a State).  Each GatingSignal uses this value, unless its value is
 `individually specified <GatingSignal_Modulation>`.
+
+.. _GatingMechanism_Structure:
+
+Structure
+---------
+
+.. _GatingMechanism_Input:
+
+Input
+~~~~~
+
+By default, a GatingMechanism has a single `InputState`, the `value <InputState.value>` of which is used
+as the input to the GatingMechanism's `function <GatingMechanism.function>`.
+
+.. _GatingMechanism_Function:
+
+Function
+~~~~~~~~
+
+A GatingMechanism's `function <GatingMechanism.function>` uses the `value <InputState.value>` of its
+`primary InputState  <InputState_Primary>` to generate an `gating_policy <GatingMechanism.gating_policy>`,
+each item of which is  assigned as the `value <GatingSignal.value>` of a corresponding `GatingSignal` in its
+`gating_signals <GatingMechanism.gating_signals>` attribute.
+
+.. _GatingMechanism_Output:
+
+Output
+~~~~~~
+
+A GatingMechanism has a `GatingSignal` for each `InputState` and/or `OutputState` specified in its `gating_signals
+<GatingMechanism.gating_signals>` attribute, to which it sends a `GatingProjection`.  The `value <GatingSignal.value>`
+of each GatingSignal is assigned the value of the corresponding item in the GatingMechanism's `gating_policy
+<GatingMechanism.gating_policy>` attribute.  GatingSignals are a type of `OutputState`, and so they are also listed
+in the GatingMechanism's `output_states <Mechanism_Base.output_states>` attribute. The InputStates and/or OutputStates
+modulated by a GatingMechanism's GatingSignals can be displayed using its :func:`show <GatingMechanism.show>` method.
+
 
 .. _GatingMechanism_Execution:
 
@@ -181,8 +220,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
-        to a `gating_policy`;  the default is an identity function that simply assigns
-        `variable <GatingMechanism.variable>` as the `gating_policy <GatingMechanism.gating_policy>`.
+        to a `gating_policy`.
 
     gating_signals : List[GatingSignal, InputState, OutputState, Mechanism, tuple[str, Mechanism], or dict]
         specifies the `InputStates <InputState>` and/or `OutputStates <OutputStates>`
@@ -200,7 +238,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
         specified for parameters in the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    name : str : default ControlMechanism-<index>
+    name : str : default GatingMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
@@ -219,6 +257,11 @@ class GatingMechanism(AdaptiveMechanism_Base):
         by the **default_gating_policy** or **size** argument of the GatingMechanism's constructor (see above),
         and is the same format as its `gating_policy <GatingMechanis.gating_policy>` (unless a custom
         `function <GatingMechanism.function>` has been assigned).
+
+    function : TransferFunction
+        determines the function used to transform the GatingMechanism's `variable <GatingMechanism.variable>`
+        to a `gating_policy`;  the default is an identity function that simply assigns
+        `variable <GatingMechanism.variable>` as the `gating_policy <GatingMechanism.gating_policy>`.
 
     gating_signals : List[GatingSignal]
         list of `GatingSignals <GatingSignals>` for the GatingMechanism, each of which sends
@@ -580,13 +623,16 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # return gating_policy
 
     def show(self):
+        """Display the InputStates and/or OutputStates gated by the GatingMechanism's `gating_signals
+        <GatingMechanism.gating_signals>`.
+        """
 
         print ("\n---------------------------------------------------------")
 
         print ("\n{0}".format(self.name))
         print ("\n\tGating the following Mechanism InputStates and/or OutputStates:".format(self.name))
         # Sort for consistency of output:
-        state_names_sorted = sorted(self.output_states.keys())
+        state_names_sorted = sorted(self.output_states)
         for state_name in state_names_sorted:
             for projection in self.output_states[state_name].efferents:
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
