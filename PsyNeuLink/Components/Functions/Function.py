@@ -1720,14 +1720,15 @@ BOUNDS = 'bounds'
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
 
-    All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
-        if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
-        tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    All TransferFunctions must have the following attributes:
 
-    All TransferFunctions must also have two attributes - multiplicative_param and additive_param -
-        each of which is assigned the name of one of the function's parameters;
-        this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the TransferFunction is used as the function of an InputState or OutputState).
+    `bounds` -- specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+    `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
+    respectively, with `None` as the entry for no bound.
+
+    `multiplicative_param` and `additive_param` -- each of these is assigned the name of one of the function's
+    parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
+    TransferFunction's function (see `Function_Modulatory_Params`).
 
     """
     componentType = TRANSFER_FUNCTION_TYPE

@@ -250,7 +250,9 @@ COMMENT:
                                     name='My EVC Mechanism')
 COMMENT
 
-*Modulate the parameters of several Mechanisms in a System*.  This shows::
+*Modulate the parameters of several Mechanisms in a System*.  The following example assigns ControlSignals to modulate
+the `gain <Logistic.gain>` parameter of the `Logistic` function for ``My_Mech_A`` and the `intercept
+<Logistic.intercept>` parameter of the `Linear` function for ``My_Mech_B``::
 
     My_Mech_A = TransferMechanism(function=Logistic)
     My_Mech_B = TransferMechanism(function=Linear,
@@ -264,7 +266,7 @@ COMMENT
                                     control_signals=[(GAIN, My_Mech_A),
                                                      {NAME: INTERCEPT,
                                                       MECHANISM: My_Mech_B,
-                                                      MODULATION:ModulationParam.ADDITIVE}],
+                                                      MODULATION: ModulationParam.ADDITIVE}],
                        name='My Test System')
 
 
