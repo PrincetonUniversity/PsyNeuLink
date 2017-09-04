@@ -154,6 +154,9 @@ def _convert_llvm_ir_to_ctype(t):
         new_type._fields_ = field_list
         assert len(new_type._fields_) == len(t.elements)
         return new_type
+    elif type(t) is ir.ArrayType:
+        element_type = _convert_llvm_ir_to_ctype(t.element)
+        return element_type * len(t)
 
     print(t)
     assert(False)
