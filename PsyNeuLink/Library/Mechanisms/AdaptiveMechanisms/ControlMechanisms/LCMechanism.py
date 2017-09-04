@@ -19,7 +19,8 @@ together with a `UtilityIntegrator` Mechanism, implement a form of the `Adaptive
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
 (LC-NE) system.  The LCMechanism uses a `FitzHughNagumoIntegration` Function to generate its output, under the
 influence of a `mode <LCMechanisms.mode>` parameter that regulates its operation between "tonic" to "phasic" modes of
-responding -- see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_).
+responding -- see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_).  The Mechanisms modulated
+by an LCMechanism can be listed using its `show <LCMechanism.show>` method.
 
 .. _LCMechanism_Creation:
 

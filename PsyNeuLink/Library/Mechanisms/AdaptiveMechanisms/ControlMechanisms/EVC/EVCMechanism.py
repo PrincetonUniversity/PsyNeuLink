@@ -27,7 +27,9 @@ controls, with the magnitude of that regulation determined by the ControlSignal'
 combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
 uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
 determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
-ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`.
+ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used to
+determine an EVCMechanism's `allocation_policy <EVCMechanism.allocation_policy>` and the parameters it controls can
+be listed using its `show <EVCMechanism.show>` method.
 
 
 .. _EVCMechanism_EVC:

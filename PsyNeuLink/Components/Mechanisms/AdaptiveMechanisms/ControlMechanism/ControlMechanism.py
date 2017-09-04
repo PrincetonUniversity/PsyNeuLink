@@ -14,15 +14,18 @@ Overview
 
 A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
 `Components <Component>`. Its `function <ControlMechanism_Base.function>` takes an evaluative signal (usually the
-output of an `ObjectiveMechanism`) and uses that to calculate an `allocation_policy
-<ControlMechanism_Base.allocation_policy>`:  a list of `allocation <ControlSignal.allocation>` values for each of its
-`ControlSignals <ControlSignal>`.  This is used by each ControlSignal to calculate its `intensity`, which is then
-conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the `ParameterState(s)
-<ParameterState>` to which they project.  Each ParameterState then uses the value received by a ControlProjection to
-modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation` for a more detailed
-description of how modulation operates).  A ControlMechanism can regulate only the parameters of Components in the
-`System` for which it is the `controller <System_Execution_Control>`.  The control Components of a System can be
-displayed using the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
+output of an `ObjectiveMechanism`, listed in its `monitoring_mechanism <ControlMechanism_Base.monitoring_mechanism>`
+attribute) and uses that to  calculate an `allocation_policy <ControlMechanism_Base.allocation_policy>`:  a list of
+`allocation <ControlSignal.allocation>` values for each of its `ControlSignals <ControlSignal>`.  This is used by
+each ControlSignal to calculate its `intensity`, which is then conveyed by the ControlSignal's `ControlProjection(s)
+<ControlProjection>` to the `ParameterState(s) <ParameterState>` to which they project.  Each ParameterState then
+uses the value received by a ControlProjection to modify the value of the parameter for which it is responsible (see
+`ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  A ControlMechanism can
+regulate only the parameters of Components in the `System` for which it is the `controller
+<System_Execution_Control>`.  The OutputStates used to determine the ControlMechanism's `allocation_policy
+<ControlMechanism_Base.allocation_policy>` and the parameter is controls can be listed using its `show
+<ControlMechanism_Base.show>` method. The control Components of a System can be displayed using the System's
+`System_Base.show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
 The control Components of a System can be displayed using the System's
 `show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.

@@ -19,14 +19,13 @@ GatingMechanism's `variable <GatingMechanism.variable>` and uses that generate a
 one for each of its `GatingSignals <GatingSignal>`.  Each of those, in turn, generates a `gating_signal
 <GatingSignal.gating_signal>` used by its `GatingProjections <GatingProjection>` to modulate the value of the State(
 s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the `System` to which
-it belongs.
+it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its `show
+<GatingMehanism.show>` method.
+
 COMMENT: TBI
 The gating components of a System can be displayed using the System's
 `show_graph` method with its **show_gating** argument assigned as :keyword:``True`.
 COMMENT
-
-The InputStates and/or OutputStates gated by a GatingMechanism can be displayed using its `show <LCMehanism.show>`
-method.
 
 The gating components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>`,
 `LearningMechanism <LearningMechanism>`, and  `ControlMechanism <ControlMechanism>` in that System have been executed.
