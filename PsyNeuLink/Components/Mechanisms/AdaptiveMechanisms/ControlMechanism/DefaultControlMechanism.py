@@ -134,8 +134,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_states attribute (in case they are referenced) and
-            assign any OutputStates that project to them to monitored_output_states
+        Instantiate input_states and monitored_output_states attributes (in case they are referenced)
+            and assign any OutputStates that project to the input_states to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
                               subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
