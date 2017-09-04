@@ -188,12 +188,12 @@
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A GatingMechanism is an <a class="reference internal" href="AdaptiveMechanism.html"><span class="doc">AdaptiveMechanism</span></a> that modulates the value of the InputState(s) and/or
-OutputState(s) of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.   Its <code class="xref any docutils literal"><span class="pre">function</span></code> takes the
+OutputState(s) of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.   Its <a class="reference internal" href="#GatingMechanism.GatingMechanism.function" title="GatingMechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the
 GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and uses that generate a <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>:  a list of values,
 one for each of its <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>.  Each of those, in turn, generates a <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.gating_signal" title="ModulatorySignals.GatingSignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> used by its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to modulate the value of the State(
 s) to which they project.   A GatingMechanism can regulate only the parameters of Mechanisms in the <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which
-it belongs.
-The gating components of a System are executed after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
+it belongs.  The InputStates and/or OutputStates gated by a GatingMechanism can be list using its <code class="xref any docutils literal"><span class="pre">show</span></code> method.</p>
+<p>The gating components of a System are executed after all <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>,
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, and  <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> in that System have been executed.</p>
 </div>
 <div class="section" id="creating-a-gatingmechanism">
@@ -217,8 +217,7 @@ list can use any of the forms used to <a class="reference internal" href="Gating
 <p>A <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is created for each item listed in the <strong>gating_signals</strong> argument of the constructor, and all of the
 GatingSignals for a GatingMechanism are listed in its <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_signals" title="GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.
 Each GatingSignal is assigned one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> to the InputState(s) and/or
-OutputState(s) it gates. GatingSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and so they are also listed in the
-GatingMechanism’s <code class="xref any docutils literal"><span class="pre">output_states</span></code> attribute.</p>
+OutputState(s) it gates.</p>
 </div>
 <div class="section" id="modulation">
 <span id="gatingmechanism-modulation"></span><h4>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h4>
@@ -228,6 +227,28 @@ in which its GatingSignals modulate the value of the States they gate
 modulate the value of a State).  Each GatingSignal uses this value, unless its value is
 <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">individually specified</span></a>.</p>
 </div>
+</div>
+</div>
+<div class="section" id="structure">
+<span id="gatingmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="input">
+<span id="gatingmechanism-input"></span><h3>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<p>By default, a GatingMechanism has a single <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is used
+as the input to the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.function" title="GatingMechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+</div>
+<div class="section" id="function">
+<span id="gatingmechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
+<p>A GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.function" title="GatingMechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its
+<a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> to generate an <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>,
+each item of which is  assigned as the <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a corresponding <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> in its
+<a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_signals" title="GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute.</p>
+</div>
+<div class="section" id="output">
+<span id="gatingmechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>A GatingMechanism has a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> for each <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> and/or <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> specified in its <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_signals" title="GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a> attribute, to which it sends a <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal.value" title="ModulatorySignals.GatingSignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of each GatingSignal is assigned the value of the corresponding item in the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a> attribute.  GatingSignals are a type of <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, and so they are also listed
+in the GatingMechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute. The InputStates and/or OutputStates
+modulated by a GatingMechanism’s GatingSignals can be displayed using its <a class="reference internal" href="#GatingMechanism.GatingMechanism.show" title="GatingMechanism.GatingMechanism.show"><code class="xref py py-func docutils literal"><span class="pre">show</span></code></a> method.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -266,9 +287,8 @@ its length must equal the number of items specified in the <strong>gating_signal
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>1d np.array of ints</em>) – specifies default_gating_policy as an array of zeros if <strong>default_gating_policy</strong> is not passed as an
 argument;  if <strong>default_gating_policy</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies the function used to transform the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
-to a <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>;  the default is an identity function that simply assigns
-<a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>.</li>
-<li><strong>gating_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="GatingSignal.html#module-ModulatorySignals.GatingSignal" title="ModulatorySignals.GatingSignal"><em>GatingSignal</em></a><em>, </em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em><em>, or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>
+to a <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>.</li>
+<li><strong>gating_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="GatingSignal.html#ModulatorySignals.GatingSignal.GatingSignal" title="ModulatorySignals.GatingSignal.GatingSignal"><em>GatingSignal</em></a><em>, </em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em><em>, or </em><em>dict</em><em>]</em>) – specifies the <a class="reference internal" href="InputState.html"><span class="doc">InputStates</span></a> and/or <code class="xref any docutils literal"><span class="pre">OutputStates</span></code>
 to be gated by the GatingMechanism; the number of items must equal the length of the <strong>default_gating_policy</strong>
 argument; if a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> is used
 (see <a href="#id1"><span class="problematic" id="id2">`</span></a>GatingMechanism_GatingSignals for details).</li>
@@ -278,7 +298,7 @@ unless they are <a class="reference internal" href="GatingSignal.html#gatingsign
 for the Mechanism, parameters for its function, and/or a custom function and its parameters. Values
 specified for parameters in the dictionary override any assigned to those parameters in arguments of the
 constructor.</li>
-<li><strong>name</strong> (<em>str : default ControlMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
+<li><strong>name</strong> (<em>str : default GatingMechanism-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
 If not is specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">MechanismRegistry</span></code>
 (see <span class="xref std std-doc">Registry</span> for conventions used in naming, including for default and duplicate names).</li>
 <li><strong>prefs</strong> (<em>Optional</em><em>[</em><em>PreferenceSet</em><em> or </em><em>specification dict : Mechanism.classPreferences</em><em>]</em>) – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism.
@@ -292,10 +312,18 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="GatingMechanism.GatingMechanism.variable">
 <code class="descname">variable</code><a class="headerlink" href="#GatingMechanism.GatingMechanism.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>value, list or ndarray</em> – used as the input to the GatingMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code>.  Its format is determined
+<dd><p><em>value, list or ndarray</em> – used as the input to the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.function" title="GatingMechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Its format is determined
 by the <strong>default_gating_policy</strong> or <strong>size</strong> argument of the GatingMechanism’s constructor (see above),
 and is the same format as its <code class="xref any docutils literal"><span class="pre">gating_policy</span></code> (unless a custom
-<code class="xref any docutils literal"><span class="pre">function</span></code> has been assigned).</p>
+<a class="reference internal" href="#GatingMechanism.GatingMechanism.function" title="GatingMechanism.GatingMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> has been assigned).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="GatingMechanism.GatingMechanism.function">
+<code class="descname">function</code><a class="headerlink" href="#GatingMechanism.GatingMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>TransferFunction</em> – determines the function used to transform the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+to a <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>;  the default is an identity function that simply assigns
+<a class="reference internal" href="#GatingMechanism.GatingMechanism.variable" title="GatingMechanism.GatingMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> as the <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_policy" title="GatingMechanism.GatingMechanism.gating_policy"><code class="xref any py py-attr docutils literal"><span class="pre">gating_policy</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -339,6 +367,12 @@ Default is a single item used by all of the <a class="reference internal" href="
 <dd>the default form of modulation used by the GatingMechanism’s <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>,
 unless they are <a class="reference internal" href="GatingSignal.html#gatingsignal-specification"><span class="std std-ref">individually specified</span></a>.</dd>
 </dl>
+<dl class="method">
+<dt id="GatingMechanism.GatingMechanism.show">
+<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#GatingMechanism.GatingMechanism.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display the InputStates and/or OutputStates gated by the GatingMechanism’s <a class="reference internal" href="#GatingMechanism.GatingMechanism.gating_signals" title="GatingMechanism.GatingMechanism.gating_signals"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signals</span></code></a>.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
