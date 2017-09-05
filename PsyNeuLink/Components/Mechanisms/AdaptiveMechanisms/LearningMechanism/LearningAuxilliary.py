@@ -134,11 +134,13 @@ import warnings
 import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
-from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
+from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, \
+    Reinforcement, TDLearning
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import OUTCOME, ObjectiveMechanism
+    import ObjectiveMechanism
+
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -146,10 +148,12 @@ from PsyNeuLink.Components.Projections.Projection import _is_projection_spec
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.States.ParameterState import ParameterState
-from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, \
-    LEARNING_MECHANISM, MATRIX, MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism \
     import ComparatorMechanism
+from PsyNeuLink.Globals.Keywords import BACKPROPAGATION_FUNCTION, \
+    COMPARATOR_MECHANISM, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, MATRIX, \
+    MONITOR_FOR_LEARNING, NAME, RL_FUNCTION, SAMPLE, TARGET, VARIABLE, WEIGHT, \
+    TDLEARNING_FUNCTION
 
 
 class LearningAuxilliaryError(Exception):
@@ -449,6 +453,21 @@ def _instantiate_learning_components(learning_projection, context=None):
                                             error_matrix=error_matrix,
                                             learning_rate=learning_rate,
                                             context=context)
+
+    # TD LEARNING FUNCTION
+    elif learning_function.componentName is TDLEARNING_FUNCTION:
+        activation_input = np.zeros_like(lc.activation_mech_input.value)
+        activation_output = np.zeros_like(lc.activation_mech_output.value)
+
+        error_output = error_signal = np.array([0])
+        learning_rate = learning_projection.learning_function.learning_rate
+
+        # questionable...
+        # also how do you get the target???
+        learning_function = TDLearning(default_variable=[activation_input,
+                                                         activation_output,
+                                                         error_signal],
+                                       reward=learning_projection.learning_function.reward)
 
     else:
         raise LearningAuxilliaryError("PROGRAM ERROR: unrecognized learning function ({}) for {}".
