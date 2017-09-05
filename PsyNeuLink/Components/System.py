@@ -896,7 +896,7 @@ class System_Base(System):
         # Instantiate controller from class specification
         else:
             self.controller = self.controller(system=self,
-                                              monitor_for_control=monitor_for_control,
+                                              objective_mechanism=monitor_for_control,
                                               control_signals=control_signals)
 
         # Check whether controller has input, and if not then disable

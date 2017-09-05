@@ -38,10 +38,11 @@ import typecheck as tc
 import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.States.InputState import InputState
 
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, MONITOR_FOR_CONTROL, NAME, SLOPE
+from PsyNeuLink.Globals.Keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_STATES, INTERCEPT, MODULATION, OBJECTIVE_MECHANISM, NAME, SLOPE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -98,7 +99,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
     paramClassDefaults.update({# MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
                                FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
-                               MONITOR_FOR_CONTROL:None,
+                               OBJECTIVE_MECHANISM:None,
                                MODULATION:None,
                                })
 
@@ -107,7 +108,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
                  # default_variable=None,
                  # size=None,
                  system=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list)=None,
                  params=None,
                  name=None,
@@ -115,7 +116,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
         super(DefaultControlMechanism, self).__init__(# default_variable=default_variable,
                                                     # size=size,
-                                                    monitor_for_control=monitor_for_control,
+                                                    objective_mechanism=objective_mechanism,
                                                     control_signals=control_signals,
                                                     params=params,
                                                     name=name,

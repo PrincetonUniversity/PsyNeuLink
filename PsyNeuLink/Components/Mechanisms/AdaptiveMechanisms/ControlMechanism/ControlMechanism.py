@@ -374,7 +374,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  system=None,
-                 objective_mechanism:tc.optional(ObjectiveMechanism, list)=None,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,

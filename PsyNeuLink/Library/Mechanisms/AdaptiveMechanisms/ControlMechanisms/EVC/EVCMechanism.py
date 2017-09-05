@@ -319,7 +319,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, COST_FUNCTION, EVC_MECHANISM, EXPONENT, FUNCTION, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, MONITOR_FOR_CONTROL, NAME, OUTCOME_FUNCTION, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, OBJECTIVE_MECHANISM, NAME, OUTCOME_FUNCTION, \
     PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, PRODUCT, SUM, WEIGHT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -731,7 +731,7 @@ class EVCMechanism(ControlMechanism_Base):
                  # size=None,
                  prediction_mechanism_type=IntegratorMechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
@@ -748,13 +748,13 @@ class EVCMechanism(ControlMechanism_Base):
                  context=componentType+INITIALIZING):
 
         # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
-        prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
+        prediction_mechanism_params = prediction_mechanism_params or {OBJECTIVE_MECHANISM:None}
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanism_type=prediction_mechanism_type,
                                                   prediction_mechanism_params=prediction_mechanism_params,
-                                                  monitor_for_control=monitor_for_control,
+                                                  objective_mechanism=objective_mechanism,
                                                   control_signals=control_signals,
                                                   modulation=modulation,
                                                   function=function,
@@ -767,7 +767,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         super(EVCMechanism, self).__init__(# default_variable=default_variable,
                                            # size=size,
-                                           monitor_for_control=monitor_for_control,
+                                           objective_mechanism=objective_mechanism,
                                            control_signals=control_signals,
                                            function=function,
                                            params=params,
@@ -796,7 +796,7 @@ class EVCMechanism(ControlMechanism_Base):
         Mechanisms:
             - if their associated input mechanisms were TERMINAL MECHANISMS, they will no longer be so
             - therefore if an associated input Mechanism must be monitored by the EVCMechanism, it must be specified
-                explicitly in an OutputState, Mechanism, controller or System MONITOR_FOR_CONTROL param (see below)
+                explicitly in an OutputState, Mechanism, controller or System OBJECTIVE_MECHANISM param (see below)
 
         For each `ORIGIN` Mechanism in self.system:
             - instantiate a corresponding predictionMechanism
@@ -970,7 +970,7 @@ class EVCMechanism(ControlMechanism_Base):
 
         # Get controller's MONITOR_FOR_CONTROL specifications (optional, so need to try)
         try:
-            controller_specs = self.paramsCurrent[MONITOR_FOR_CONTROL].copy() or []
+            controller_specs = self.paramsCurrent[OBJECTIVE_MECHANISM].copy() or []
         except KeyError:
             controller_specs = []
 
@@ -1062,7 +1062,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
-                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+                mech_specs = mech.paramsCurrent[OBJECTIVE_MECHANISM]
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
@@ -1110,7 +1110,7 @@ class EVCMechanism(ControlMechanism_Base):
 
                 # Get MONITOR_FOR_CONTROL specification from OutputState
                 try:
-                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
+                    output_state_specs = output_state.paramsCurrent[OBJECTIVE_MECHANISM]
                     if output_state_specs is NotImplemented:
                         raise AttributeError
 
