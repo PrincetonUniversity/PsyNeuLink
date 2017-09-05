@@ -3365,6 +3365,35 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 param = param()
         return param
 
+    def _euler(self, previous_value, previous_time, slope, time_step_size):
+
+        if callable(self.slope):
+            slope = self.slope(previous_time, previous_value)
+        else:
+            slope = self.slope
+
+        return previous_value + slope*time_step_size
+
+    def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
+
+        if callable(self.slope):
+            slope_approx_1 = self.slope(previous_time,
+                                        previous_value)
+            slope_approx_2 = self.slope(previous_time + time_step_size/2,
+                                        previous_value + (0.5 * time_step_size * slope_approx_1))
+            slope_approx_3 = self.slope(previous_time + time_step_size/2,
+                                        previous_value + (0.5 * time_step_size * slope_approx_2))
+            slope_approx_4 = self.slope(previous_time + time_step_size,
+                                        previous_value + (time_step_size * slope_approx_3))
+            value = previous_value \
+                    + (time_step_size/6)*(slope_approx_1 + 2*(slope_approx_2 + slope_approx_3) + slope_approx_4)
+        else:
+            slope = self.slope
+            value = previous_value + time_step_size*slope
+
+        return value
+
+
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
 
