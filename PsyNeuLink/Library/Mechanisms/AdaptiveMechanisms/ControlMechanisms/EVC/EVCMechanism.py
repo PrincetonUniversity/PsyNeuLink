@@ -56,31 +56,41 @@ An EVCMechanism can be created in any of the ways used to `create Mechanisms <Me
 created automatically when a `System` is created and the EVCMechanism class is specified in the **controller**
 argument of the System's constructor (see `System_Creation`).
 
-When an EVCMechanism is created explicitly (using its constructor), it creates:
+When an EVCMechanism is created explicitly (using its constructor), the **objective_mechanism** argument of its
+constructor is used to specify the `ObjectiveMechanism` used to evaluate the performance of the system. This can
+be specified in one of the two following ways:
 
-* an `ObjectiveMechanism`, using the list of `OutputState` specifications in the **monitor_for_control** argument of
-  the EVCMechanism's constructor to specify the ObjectiveMechanism's `monitored_values
-  <ObjectiveMechanism.monitored_values>` attribute, and the function specified in the **outcome_function** argument
-  of the EVCMechanism's constructor to specify the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;
-..
-* a `MappingProjection` that projects from the ObjectiveMechanism's *OUTCOME* `OutputState
-  <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
-..
-* a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
-  <EVCMechanism.system>`, assigns a MappingProjection to each from the `system <EVCMechanism.system>`,
-  and assigns these to its `prediction_mechanisms` attribute.
+  * an existing `ObjectiveMechanism` or a constructor for one;  in this case, a `MappingProjection` is created from
+    the ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary
+    InputState <InputState_Primary>`;
+
+  * a list of `OutputState specifications <ControlMechanism_Monitored_OutputStates>`;  in this case, the following
+    a default ObjectiveMechanism is created, and the list of OutputStates is assigned as the **monitored_values**
+    argument of its constructor;
+
+If **objective_mechanism** is not specified, a default ObjectiveMechanism is created but not assigned any
+OutputStates to monitor (this must be done explicitly after the EVCMechanism is created).  In all cases,
+the ObjectiveMechanism is assigned to the EVCMechanism's `monitoring_mechanism <EVCMechanism.monitoring_mechanisms>`
+attribute, and a `MappingProjection` is created that projects from the ObjectiveMechanism's *OUTCOME* `OutputState
+<ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
 
 When an EVCMechanism is created automatically as part of a `System <System_Creation>`, the same set of Components are
 created as described above, with the following modifications:
 
-* the `OutputStates <OutputState>` specified in the System's `monitor_for_control <System_Base.monitor_for_control>`
-  attribute are used to create the ObjectiveMechanism
+* an ObjectiveMechanism is created automatically for the EVCMechanism, using the list of `OutputStates <OutputState>`
+  specified in the System's `monitor_for_control <System_Base.monitor_for_control>` attribute as the
+  **monitored_values** argument for the ObjectiveMechanism's constructor.
 ..
 * a `ControlSignal` is created and assigned to the EVCMechanisn's `control_signals <EVCMechanism.control_signals>`
   attribute for every parameter of any `Component <Component>` in the System that has been specified for control (that
   is, by including a `ControlProjection` or `ControlSignal` in a `tuple specification <>` for the parameter, or by
   specifying the parameter (or its associated `ParameterState`) in the **control_signals** argument of a
   `ControlMechanism <ControlMechanism_Control_Signals>`.
+
+Finally, Whenever an EVCMechanism is created, a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` is
+created for each `ORIGIN` Mechanism in its `system <EVCMechanism.system>`, and assigned a MappingProjection from
+the `system <EVCMechanism.system>`.  The prediction Mechanisms are assigned to the EVCMechanism's
+`prediction_mechanisms` attribute.
 
 An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
 those described above, or its `function <EVCMechanism.function>` as described under `EVC_Default_Configuration `below).
@@ -91,25 +101,26 @@ Structure
 ---------
 
 An EVCMechanism belongs to a `System` (identified in its `system <EVCMechanism.system>` attribute), and has a
-specialized set of Components that support its operation.  It receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Structure>` of an `ObjectiveMechanism` (identified in its `monitoring_mechanism
-<EVCMechansm.monitoring_mechanism>` attribute), and has a specialized set of `functions <EVCMechanism_Functions>` and
-`mechanisms <EVCMechanism_Prediction_Mechanisms>` that it can use to simulate and evaluate the performance of its
-`system <EVCMechanism.system>` under the influence of different values of its `ControlSignals
-<EVCMechanism_ControlSignals>`.  Each of these specialized Components is described below.
+specialized set of Components that support its operation, as described below:
 
+.. _EVCMechanism_Input:
 
+Input
+~~~~~
+
+An EVCMechanism receives its input from the *OUTCOME* `OutputState <ObjectiveMechanism_Structure>` of an
+`ObjectiveMechanism`, via a MappingProjection to its `primary InputState <InputStatePrimary>`. The Objective
+Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
+`monitoring_mechanism <EVCMechansm.monitoring_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism
-~~~~~~~~~~~~~~~~~~
 
-.. _EVCMechanism_ObjectiveMechanism:
+are listed in
+its `monitored_output_states <EVCMechanism.monitored_output_states>`
+attribute (also listed in the `monitored_values <ObjectiveMechanism.monitored_values>` attribute of the
+`monitoring_mechanism <EVCMechanism.monitoring_mechanism>`).  If no ObjectiveMechanism is specified in
 
-When an EVCMechanism is created, it creates an `ObjectiveMechanism` that is assigned as its `monitoring_mechanism
-<EVCMechanism.monitoring_mechanism>` attribute, and can be used to evaluate the performance of its `system
-<EVCMechanism.system>`.  The `monitoring_mechanism <EVCMechanism.monitoring_mechanism>` receives a `MappingProjection`
-from each of the `OutputStates <OutputState>` specified in the EVCMechanism's `monitored_output_states
-<EVCMechanism.monitored_output_states>` attribute (also listed in the `monitored_values
-<ObjectiveMechanism.monitored_values>` attribute of the `monitoring_mechanism <EVCMechanism.monitoring_mechanism>`),
+
+
 and the EVCMechanism's `outcome_function <EVCMechanism.outcome_function>` is assinged as the `monitoring_mechanism
 <EVCMechanism.monitoring_mechanism>`'s `function <ObjectiveMechanism.function>`.  By default, this is a
 `LinearCombination` function that calculates the product of the `value <OutputState.value>` of the OutputStates
@@ -141,6 +152,13 @@ its input. The prediction mechanisms for an EVCMechanism are listed in its `pred
 
 Function
 ~~~~~~~~
+
+
+and has a specialized set of `functions <EVCMechanism_Functions>` and
+`mechanisms <EVCMechanism_Prediction_Mechanisms>` that it can use to simulate and evaluate the performance of its
+`system <EVCMechanism.system>` under the influence of different values of its `ControlSignals
+<EVCMechanism_ControlSignals>`.  Each of these specialized Components is described below.
+
 
 The `function <EVCMechanism.function>` of an EVCMechanism returns an `allocation_policy` -- that is, an `allocation
 <ControlSignal.allocation>` for each `ControlSignal` listed in its `control_signals <EVCMechanism.control_signals>`
@@ -372,9 +390,9 @@ class EVCError(Exception):
 
 class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                   \
+    objective_mechanism=None,                                          \
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \
-    monitor_for_control=None,                                          \
     function=ControlSignalGridSearch                                   \
     value_function=ValueFunction,                                      \
     outcome_function=LinearCombination(operation=PRODUCT),             \
@@ -442,6 +460,13 @@ class EVCMechanism(ControlMechanism_Base):
         argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
+    objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
+    np.array]] : \
+    default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
+        specifies either an `ObjectiveMechanism` to use for the EVCMechanism; if a list of `OutputState
+        specifications <ControlMechanism_Monitored_OutputStates>` is specified, a default ObjectiveMechanism is created
+        and the list is passed as its **monitored_output_states** argument.
+
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
         the `Mechanism <Mechanism>` class used for `prediction Mechanism(s) <EVCMechanism_Prediction_Mechanisms>`.
         Each instance is named using the name of the `ORIGIN` Mechanism + "PREDICTION_MECHANISM"
@@ -451,11 +476,6 @@ class EVCMechanism(ControlMechanism_Base):
         a `parameter dictionary <ParameterState_Specification>` passed to the constructor for a Mechanism
         of `prediction_mechanism_type`. The same parameter dictionary is passed to all
         `prediction mechanisms <EVCMechanism_Prediction_Mechanisms>` created for the EVCMechanism.
-
-    monitor_for_control : List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d np.array]] : \
-    default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
-        specifies set of `OutputStates <OutputState>` to monitor (see `ControlMechanism_Monitored_OutputStates` for
-        specification options).
 
     function : function or method : ControlSignalGridSearch
         specifies the function used to determine the `allocation_policy` for the next execution of the
@@ -728,11 +748,9 @@ class EVCMechanism(ControlMechanism_Base):
     @tc.typecheck
     def __init__(self,
                  system=None,
-                 # default_variable=None,
-                 # size=None,
+                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanism_type=IntegratorMechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
-                 objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,

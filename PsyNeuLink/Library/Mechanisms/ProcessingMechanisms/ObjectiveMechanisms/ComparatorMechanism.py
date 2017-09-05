@@ -14,7 +14,7 @@ Overview
 
 A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
 them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
-*OUTCOME* `output_state <ComparatorMechanism.output_state>`.
+*OUTCOME* `OutputState <ComparatorMechanism.output_state>`.
 
 .. _ComparatorMechanism_Creation:
 

@@ -335,7 +335,7 @@ MappingProjections are created:
 ..
 * from the Process or System to the ComparatorMechanism's *TARGET* `InputState <ComparatorMechanism_Structure>`;
 ..
-* from the ComparatorMechanism's *OUTCOME* `output_state <ComparatorMechanism_Structure>` to the
+* from the ComparatorMechanism's *OUTCOME* `OutputState <ComparatorMechanism_Structure>` to the
   LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Activation_Input>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal<LearningMechanism_LearningSignal>` for the
