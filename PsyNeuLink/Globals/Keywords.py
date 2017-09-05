@@ -326,7 +326,7 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 # Component SUBTYPES -----------------
 
-# ControlMechanisms:
+# ControlMechanism:
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
@@ -485,6 +485,7 @@ MODULATION = 'modulation'
 
 # ControlMechanism / EVCMechanism
 MAKE_DEFAULT_CONTROLLER = "make_default_controller"
+OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"

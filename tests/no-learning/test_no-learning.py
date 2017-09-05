@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 
 from PsyNeuLink.Components.Functions.Function import Logistic
@@ -6,8 +7,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Keywords import SOFT_CLAMP
+from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
 logger = logging.getLogger(__name__)
 

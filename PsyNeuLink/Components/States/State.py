@@ -1969,12 +1969,21 @@ def _instantiate_state_list(owner,
                 #   Note:  still need to get indexed element of constraint_value,
                 #          since it was passed in as a 2D array (one for each State)
                 else:
+                    # # MODIFIED 9/3/17 OLD:
+                    # # If only one State, don't add index suffix
+                    # if num_states == 1:
+                    #     state_name = 'Default_' + state_param_identifier[:-1]
+                    # # Add incremented index suffix for each State name
+                    # else:
+                    #     state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+                    # MODIFIED 9/3/17 NEW:
                     # If only one State, don't add index suffix
                     if num_states == 1:
-                        state_name = 'Default_' + state_param_identifier[:-1]
+                        state_name = 'Default_' + state_param_identifier
                     # Add incremented index suffix for each State name
                     else:
-                        state_name = 'Default_' + state_param_identifier[:-1] + "-" + str(index+1)
+                        state_name = 'Default_' + state_param_identifier + "-" + str(index+1)
+                    # MODIFIED 9/3/17 END
                     # If it is an "exposed" number, make it a 1d np.array
                     if isinstance(state_spec, numbers.Number):
                         state_spec = np.atleast_1d(state_spec)

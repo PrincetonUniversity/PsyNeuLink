@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
 
 from PsyNeuLink.Components.Component import ComponentError
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, Reinforcement, SoftMax
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, Linear, Logistic, Reduce, \
+    Reinforcement, SoftMax
 from PsyNeuLink.Components.Functions.Function import ExponentialDist, GammaDist, NormalDist, UniformDist, WaldDist
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Globals.Utilities import UtilitiesError
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
@@ -19,7 +20,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([10, 10, 10, 10]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
@@ -31,7 +32,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([10.0, 10.0, 10.0, 10.0]).tolist()
         assert val == [[10.0, 10.0, 10.0, 10.0]]
@@ -41,7 +42,7 @@ class TestTransferMechanismInputs:
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
@@ -50,8 +51,8 @@ class TestTransferMechanismInputs:
 
         T = TransferMechanism(
             name='T',
-            default_variable=[[[0, 0, 0, 0]], [[1, 1, 1, 1]]],
-            time_scale=TimeScale.TIME_STEP
+            default_variable=[[[0, 0, 0, 0]],[[1,1,1,1]]],
+            integrator_mode=True
         )
         assert len(T.instance_defaults.variable) == 1 and len(T.instance_defaults.variable[0]) == 4 and (T.instance_defaults.variable[0] == 0).all()
 
@@ -67,7 +68,7 @@ class TestTransferMechanismInputs:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute(["one", "two", "three", "four"]).tolist()
         assert "has non-numeric entries" in str(error_text.value)
@@ -77,7 +78,7 @@ class TestTransferMechanismInputs:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 2, 3, 4, 5]).tolist()
         assert "does not match required length" in str(error_text.value)
@@ -87,7 +88,7 @@ class TestTransferMechanismInputs:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0, 0, 0],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 2, 3, 4, 5]).tolist()
         assert "does not match required length" in str(error_text.value)
@@ -103,7 +104,7 @@ class TestTransferMechanismNoise:
             function=Linear(),
             noise=5.0,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[5.0, 5.0, 5.0, 5.0]]
@@ -116,7 +117,7 @@ class TestTransferMechanismNoise:
             function=Linear(),
             noise=NormalDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
@@ -129,7 +130,7 @@ class TestTransferMechanismNoise:
             function=Linear(),
             noise=[NormalDist().function, NormalDist().function, NormalDist().function, NormalDist().function],
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[1.8675579901499675, -0.977277879876411, 0.9500884175255894, -0.1513572082976979]]
@@ -142,7 +143,7 @@ class TestTransferMechanismNoise:
             function=Linear(),
             noise=[5.0, 5.0, 5.0, 5.0],
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[5.0, 5.0, 5.0, 5.0]]
@@ -155,7 +156,7 @@ class TestTransferMechanismNoise:
                 function=Linear(),
                 noise=[5.0, 5.0, 5.0],
                 time_constant=0.1,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute()
         assert 'noise parameter' in str(error_text.value)
@@ -169,7 +170,7 @@ class TestTransferMechanismNoise:
                 function=Linear(),
                 noise=[5.0, 5.0],
                 time_constant=0.1,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute()
         assert 'noise parameter' in str(error_text.value)
@@ -185,7 +186,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=NormalDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]]
@@ -198,7 +199,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=ExponentialDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
@@ -211,7 +212,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=UniformDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]]
@@ -224,7 +225,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=GammaDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]]
@@ -237,7 +238,7 @@ class TestDistributionFunctions:
             function=Linear(),
             noise=WaldDist().function,
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[1.3939555850782692, 0.25118783985272053, 1.2272797824363235, 0.1190661760253029]]
@@ -252,7 +253,7 @@ class TestTransferMechanismFunctions:
             default_variable=[0, 0, 0, 0],
             function=Logistic(),
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[0.5, 0.5, 0.5, 0.5]]
@@ -264,7 +265,7 @@ class TestTransferMechanismFunctions:
             default_variable=[0, 0, 0, 0],
             function=Exponential(),
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[1.0, 1.0, 1.0, 1.0]]
@@ -276,7 +277,7 @@ class TestTransferMechanismFunctions:
             default_variable=[0, 0, 0, 0],
             function=SoftMax(),
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0]).tolist()
         assert val == [[1.0, 1.0, 1.0, 1.0]]
@@ -288,7 +289,7 @@ class TestTransferMechanismFunctions:
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -300,7 +301,7 @@ class TestTransferMechanismFunctions:
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -312,7 +313,7 @@ class TestTransferMechanismFunctions:
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -324,7 +325,7 @@ class TestTransferMechanismFunctions:
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -338,7 +339,7 @@ class TestTransferMechanismTimeConstant:
             default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0.8,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.8, 0.8, 0.8, 0.8]]
@@ -351,7 +352,7 @@ class TestTransferMechanismTimeConstant:
             default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=1.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[1.0, 1.0, 1.0, 1.0]]
@@ -362,7 +363,7 @@ class TestTransferMechanismTimeConstant:
             default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.0, 0.0, 0.0, 0.0]]
@@ -374,7 +375,7 @@ class TestTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[.5, .5, .5, .5]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.9, 0.9, 0.9, 0.9]]
@@ -390,7 +391,7 @@ class TestTransferMechanismTimeConstant:
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
                 time_constant=[0.8, 0.8, 0.8, 0.8],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 1, 1, 1]).tolist()
         assert (
@@ -405,7 +406,7 @@ class TestTransferMechanismTimeConstant:
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
                 time_constant=2,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 1, 1, 1]).tolist()
         assert (
@@ -420,7 +421,7 @@ class TestTransferMechanismTimeConstant:
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
                 time_constant=1,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 1, 1, 1]).tolist()
         assert (
@@ -435,7 +436,7 @@ class TestTransferMechanismTimeConstant:
                 default_variable=[0, 0, 0, 0],
                 function=Linear(),
                 time_constant=0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             T.execute([1, 1, 1, 1]).tolist()
         assert (
@@ -482,7 +483,7 @@ class TestTransferMechanismSize:
         T = TransferMechanism(
             name='T',
             size=4,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
@@ -531,7 +532,7 @@ class TestTransferMechanismSize:
         T = TransferMechanism(
             name='T',
             size=4.0,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = T.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]

@@ -1,8 +1,8 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Functions.Function import Integrator,BogaczEtAl
-from PsyNeuLink.Globals.Utilities import *
 from pprint import pprint
+
+from PsyNeuLink.Components.Functions.Function import Integrator, BogaczEtAl
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
 
 
 def test_DDM_rate_int():

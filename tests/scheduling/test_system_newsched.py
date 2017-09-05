@@ -1,14 +1,14 @@
 import numpy
 
 from PsyNeuLink.Components.Functions.Function import BogaczEtAl, Linear, Logistic, SimpleIntegrator
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism import IntegratorMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
+    import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import SIMPLE
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM
 from PsyNeuLink.Scheduling.Condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import TimeScale

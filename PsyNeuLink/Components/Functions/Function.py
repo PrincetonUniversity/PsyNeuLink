@@ -59,22 +59,21 @@ A Function is a `Component <Component>` that "packages" a function (in its `func
 for use by other Components.  Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
 Function's `function <Function_Base.function>` is executed.  The `function <Function_Base.function>` can be any callable
 operation, although most commonly it is a mathematical operation (and, for those, almost always uses a call to one or
-more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component: to *manage
-parameters*, and for *modularity*.
+more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component:
 
-**Manage parameters**. Parameters are attributes of a Function that either remain stable over multiple calls to the
-function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
-of a learning function); or, if they change, they do so less frequently or under the control of different factors
-than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
-function's variable, and not have to provide them every time the function is called.  To address this, every
-PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
-the time the Function is created (in arguments to its constructor), and can be modified independently
-of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
-PsyNeuLink Components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
-
-**Modularity**. By providing a standard interface, any Function assigned to a Components in PsyNeuLink can be replaced
-with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain standards
-(the PsyNeuLink :ref:`Function API <LINK>`).
+* **Manage parameters** -- parameters are attributes of a Function that either remain stable over multiple calls to the
+  function (e.g., the `gain <Logistic.gain>` or `bias <Logistic.bias>` of a `Logistic` function, or the learning rate
+  of a learning function); or, if they change, they do so less frequently or under the control of different factors
+  than the function's variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
+  function's variable, and not have to provide them every time the function is called.  To address this, every
+  PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
+  the time the Function is created (in arguments to its constructor), and can be modified independently
+  of a call to its :keyword:`function`. Modifications can be directly (e.g., in a script), or by the operation of other
+  PsyNeuLink Components (e.g., `AdaptiveMechanisms`) by way of `ControlProjections <ControlProjection>`.
+..
+* **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
+  replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
+  standards (the PsyNeuLink :ref:`Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -94,17 +93,34 @@ below.
 Structure
 ---------
 
-Every Function has a `variable <Function_Base.variable>` that provides the input to its
-`function <Function_Base.function>` method.  Its core attribute is its `function <Function_Base.function>` attribute
-that determines the computation that it carries out.  Ths must be a callable object (that is, a python function or
-method of some kind). Unlike other PsyNeuLink `Components <Component>`, it *cannot* be (another) Function object (it
-can't be "turtles" all the way down!).  A Function also has an attribute for each of the parameters of its `function
-<Function_Base.function>`.   If a Function has been assigned to another Component, then it also has an `owner
-<Function_Base.owner>` attribute that refers to that Component.  The Function itself is assigned as the Component's
+.. _Function_Core_Attributes:
+
+Core Attributes
+~~~~~~~~~~~~~~~
+
+Every Function has the following core attributes:
+
+* `variable <Function_Base.variable>` -- provides the input to the Function's `function <Function_Base.function>`.
+..
+* `function <Function_Base.function>` -- determines the computation carried out by the Function; it must be a
+  callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink `Components
+  <Component>`, it *cannot* be (another) Function object (it can't be "turtles" all the way down!). If the Function
+  has been assigned to another `Component`, then its `function <Function_Base.function>` is also assigned as the
+  the `function <Component.function>` attribute of the Component to which it has been assigned (i.e., its
+  `owner <Function_Base.owner>`.
+
+A Function also has an attribute for each of the parameters of its `function <Function_Base.function>`.
+
+Owner
+~~~~~
+
+If a Function has been assigned to another `Component`, then it also has an `owner <Function_Base.owner>` attribute
+that refers to that Component.  The Function itself is assigned as the Component's
 `function_object <Component.function_object>` attribute.  Each of the Function's attributes is also assigned
 as an attribute of the `owner <Function_Base.owner>`, and those are each associated with with a
 `parameterState <ParameterState>` of the `owner <Function_Base.owner>`.  Projections to those parameterStates can be
 used by `ControlProjections <ControlProjection>` to modify the Function's parameters.
+
 
 COMMENT:
 .. _Function_Output_Type_Conversion:
@@ -120,6 +136,19 @@ To implement FunctionOutputTypeConversion, the Function's FUNCTION_OUTPUT_TYPE_C
 and function type conversion must be implemented by its `function <Function_Base.function>` method
 (see `Linear` for an example).
 COMMENT
+
+.. _Function_Modulatory_Params:
+
+Modulatory Parameters
+~~~~~~~~~~~~~~~~~~~~~
+
+Some classes of Functions also implement a pair of modulatory parameters: `multiplicative_param` and `additive_param`.
+Each of these is assigned the name of one of the function's parameters. These are used by `ModulatoryProjections
+<ModulatoryProjection>` to modulate the output of the function.  For example, they are used by `GatingProjections
+<GatingProjection>` to modulate the `function <State_Base.function>` (and thereby the `value <State_Base.value>`) of
+an `InputState` or `OutputState`; and by the `ControlProjection(s) <ControlProjection>` of an `LCMechanism` to
+modulate the `function <TransferMechanism.function>` of a `TransferMechanism`.
+
 
 .. _Function_Execution:
 
@@ -1691,14 +1720,15 @@ BOUNDS = 'bounds'
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape
 
-    All TransferFunctions must have the attribute `bounds` that specifies the lower and upper limits of the result;
-        if there are none, the attribute is set to `None`;  if it has at least one bound, the attribute is set to a
-        tuple specifying the lower and upper bounds, respectively, with `None` as the entry for no bound.
+    All TransferFunctions must have the following attributes:
 
-    All TransferFunctions must also have two attributes - multiplicative_param and additive_param -
-        each of which is assigned the name of one of the function's parameters;
-        this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the TransferFunction is used as the function of an InputState or OutputState).
+    `bounds` -- specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+    `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
+    respectively, with `None` as the entry for no bound.
+
+    `multiplicative_param` and `additive_param` -- each of these is assigned the name of one of the function's
+    parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
+    TransferFunction's function (see `Function_Modulatory_Params`).
 
     """
     componentType = TRANSFER_FUNCTION_TYPE
@@ -3346,7 +3376,6 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
     def reset_initializer(self, val):
         self._initializer = val
         self.previous_value = val
-
 
 class SimpleIntegrator(
     Integrator):  # --------------------------------------------------------------------------------

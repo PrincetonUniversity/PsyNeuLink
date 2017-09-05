@@ -23,14 +23,14 @@ sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms'))
-# sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ControlMechanisms'))
+# sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ControlMechanism'))
 # sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/MonitoringMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/ProcessingMechanisms/ObjectiveMechanisms'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/LearningMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/ControlMechanisms'))
-sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/GatingMechanisms'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/LearningMechanism'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/ControlMechanism'))
+sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Mechanisms/AdaptiveMechanisms/GatingMechanism'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/PathwayProjections'))
 sys.path.insert(0, os.path.abspath('../../PsyNeuLink/Components/Projections/ModulatoryProjections'))
@@ -144,16 +144,16 @@ todo_include_todos = False
 #
 import sphinx_rtd_theme
 html_theme = "sphinx_rtd_theme"
+# Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_options = {
+    'navigation_depth': 5
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#
-# html_theme_options = {}
-
-# Add any paths that contain custom themes here, relative to this directory.
-# html_theme_path = []
+# html_theme_options = {'navigation_depth': 5}
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
@@ -373,7 +373,8 @@ def setup(app):
     return app
 
 # Ordering of members:
-
 autodoc_member_order = 'bysource'
 
 default_role = 'any'
+
+epub_tocdepth = 5

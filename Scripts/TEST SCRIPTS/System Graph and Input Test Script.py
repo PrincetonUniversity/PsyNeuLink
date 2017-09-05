@@ -1,6 +1,7 @@
-from PsyNeuLink.Components.System import system
-from PsyNeuLink.Components.Process import process
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.System import system
+
 # from PsyNeuLink.Globals.Run import run, construct_inputs
 # from PsyNeuLink.Components.Process import MappingProjection
 

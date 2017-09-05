@@ -1,8 +1,6 @@
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
-from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Globals.Keywords import *
 from matplotlib import pyplot as plt
+
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 
 threshold = 10
 
