@@ -63,7 +63,7 @@ When an EVCMechanism is created explicitly (using its constructor), it creates:
   <ObjectiveMechanism.monitored_values>` attribute, and the function specified in the **outcome_function** argument
   of the EVCMechanism's constructor to specify the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;
 ..
-* a `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
+* a `MappingProjection` that projects from the ObjectiveMechanism's *OUTCOME* `OutputState
   <ObjectiveMechanism_Structure>` to the EVCMechanism's `primary InputState <InputState_Primary>`.
 ..
 * a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` for each `ORIGIN` Mechanism in its `system
@@ -91,7 +91,7 @@ Structure
 ---------
 
 An EVCMechanism belongs to a `System` (identified in its `system <EVCMechanism.system>` attribute), and has a
-specialized set of Components that support its operation.  It receives its input from the *ERROR_SIGNAL* `OutputState
+specialized set of Components that support its operation.  It receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Structure>` of an `ObjectiveMechanism` (identified in its `monitoring_mechanism
 <EVCMechansm.monitoring_mechanism>` attribute), and has a specialized set of `functions <EVCMechanism_Functions>` and
 `mechanisms <EVCMechanism_Prediction_Mechanisms>` that it can use to simulate and evaluate the performance of its

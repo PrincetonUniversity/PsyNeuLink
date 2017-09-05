@@ -13,8 +13,8 @@ Overview
 --------
 
 A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
-them using its `function <ComparatorMechanism.function>`, and places the calculted discrepancy between the two in its
-*ERROR_SIGNAL* `output_state <ComparatorMechanism.output_state>`.
+them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
+*OUTCOME* `output_state <ComparatorMechanism.output_state>`.
 
 .. _ComparatorMechanism_Creation:
 
@@ -64,7 +64,7 @@ target InputStates.  By default, it uses a `LinearCombination` function, assigni
 <LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample is
 subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as it is
 replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
-The result is assigned as the value of the Comparator Mechanism's *ERROR_SIGNAL* (`primary <OutputState_Primary>`)
+The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
 OutputState.
 
 .. _ComparatorMechanism_Function:
@@ -74,7 +74,7 @@ Execution
 
 When an ComparatorMechanism is executed, it updates its input_states with the values of the OutputStates specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
-compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *ERROR_SIGNAL*
+compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *OUTCOME*
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
@@ -130,7 +130,7 @@ import typecheck as tc
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
+    import OUTCOME, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
@@ -182,7 +182,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         target,                                         \
         input_states=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
-        input_states=[ERROR_SIGNAL]                     \
+        output_states=[OUTCOME]                         \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
@@ -232,7 +232,7 @@ class ComparatorMechanism(ObjectiveMechanism):
     function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
 
-    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
         specifies the OutputStates for the Mechanism;
 
     params :  Optional[Dict[param keyword, param value]]
@@ -287,14 +287,14 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     output_state : OutputState
         contains the `primary <OutputState_Primary>` OutputState of the ComparatorMechanism; the default is
-        its *ERROR_SIGNAL* OutputState, the value of which is equal to the `value <ComparatorMechanism.value>`
+        its *OUTCOME* OutputState, the value of which is equal to the `value <ComparatorMechanism.value>`
         attribute of the ComparatorMechanism.
 
     output_states : ContentAddressableList[OutputState]
-        contains, by default, only the *ERROR_SIGNAL* (primary) OutputState of the ComparatorMechanism.
+        contains, by default, only the *OUTCOME* (primary) OutputState of the ComparatorMechanism.
 
     output_values : 2d np.array
-        contains one item that is the value of the *ERROR_SIGNAL* OutputState.
+        contains one item that is the value of the *OUTCOME* OutputState.
 
     name : str : default ComparatorMechanism-<index>
         the name of the Mechanism.
@@ -340,7 +340,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL, MSE],
+                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -361,8 +361,8 @@ class ComparatorMechanism(ObjectiveMechanism):
                                          value=None)
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
-        #                     (in this case, to [ERROR_SIGNAL, {NAME= MSE}]), but fails to expose default in IDE
-        # output_states = output_states or [ERROR_SIGNAL, MSE]
+        #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
+        # output_states = output_states or [OUTCOME, MSE]
 
         # Create a StandardOutputStates object from the list of stand_output_states specified for the class
         if not isinstance(self.standard_output_states, StandardOutputStates):

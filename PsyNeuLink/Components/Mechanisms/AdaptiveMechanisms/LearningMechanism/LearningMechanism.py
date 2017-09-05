@@ -118,18 +118,19 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - receives the value of an error signal from either a `ComparatorMechanism` or another
-  `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the `primary_learned_projection` projects to the
-  `TERMINAL` Mechanism of the Process or System being learned, or is not part of a `multilayer learning sequence
-  <LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from a ComparatorMechanism. If the
-  `primary_learned_projection` is part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
-  then the `error_signal` comes from the next LearningMechanism in the sequence (i.e., the one associated with the
-  `output_source`).  It is used by the LearningMechanism's `function <LearningMechanism.function>` to calculate the
-  `learning_signal <LearningMechanism.learning_signal>`;  note that the value of the *ERROR_SIGNAL* InputState may
-  not be the same as that of the `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL*
-  `OutputState <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Error_Signal>` below).
-  The `value <InputState.value>` of the *ERROR_SIGNAL* InputState is assigned as the third item of the
-  LearningMechanism's `variable <LearningMechanism.variable>` attribute.
+* *ERROR_SIGNAL* - receives the `value <OutputState.value> from the *OUTCOME* OutputState of a `ComparatorMechanism` or
+  the *ERROR_SIGNAL* OutputState of another `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the
+  `primary_learned_projection` projects to the `TERMINAL` Mechanism of the Process or System being learned,
+  or is not part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
+  then the `error_signal` comes from a ComparatorMechanism. If the `primary_learned_projection` is part of a
+  `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`, then the `error_signal` comes from the next
+  LearningMechanism in the sequence (i.e., the one associated with the `output_source`).  It is used by the
+  LearningMechanism's `function <LearningMechanism.function>` to calculate the `learning_signal
+  <LearningMechanism.learning_signal>`;  note that the value of the *ERROR_SIGNAL* InputState may not be the same as
+  that of the `error_signal <LearningMechanism.error_signal>` attribute or *ERROR_SIGNAL* `OutputState
+  <LearningMechanism_Output_Error_Signal>` (see `note <LearningMechanism_Error_Signal>` below). The `value
+  <InputState.value>` of the *ERROR_SIGNAL* InputState is assigned as the third item of the LearningMechanism's
+  `variable <LearningMechanism.variable>` attribute.
 
 .. _LearningMechanism_Function:
 
@@ -334,7 +335,7 @@ MappingProjections are created:
 ..
 * from the Process or System to the ComparatorMechanism's *TARGET* `InputState <ComparatorMechanism_Structure>`;
 ..
-* from the ComparatorMechanism's *ERROR_SIGNAL* `output_state <ComparatorMechanism_Structure>` to the
+* from the ComparatorMechanism's *OUTCOME* `output_state <ComparatorMechanism_Structure>` to the
   LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Activation_Input>`.
 
 In addition, a `LearningProjection` is created from the `LearningSignal<LearningMechanism_LearningSignal>` for the
@@ -490,7 +491,7 @@ from PsyNeuLink.Components.Functions.Function \
     import BackPropagation, ModulationParam, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ERROR_SIGNAL, ObjectiveMechanism
+    import OUTCOME, ObjectiveMechanism
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.Projection \
     import Projection_Base, _is_projection_spec, _validate_receiver, projection_keywords
@@ -528,10 +529,10 @@ ACTIVATION_OUTPUT_INDEX = 1
 ERROR_OUTPUT_INDEX = 2
 ERROR_SIGNAL_INDEX = 3
 
-# Used to name input_states:
+# Used to name input_states and output_states:
 ACTIVATION_INPUT = 'activation_input'     # InputState
 ACTIVATION_OUTPUT = 'activation_output'   # InputState
-
+ERROR_SIGNAL = 'error_signal'
 input_state_names =  [ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL]
 output_state_names = [ERROR_SIGNAL, LEARNING_SIGNAL]
 
@@ -1352,7 +1353,7 @@ def _instantiate_error_signal_projection(sender, receiver):
     """
 
     if isinstance(sender, ObjectiveMechanism):
-        sender = sender.output_states[ERROR_SIGNAL]
+        sender = sender.output_states[OUTCOME]
     elif isinstance(sender, LearningMechanism):
         sender = sender.output_states[ERROR_SIGNAL]
     else:
@@ -1376,4 +1377,4 @@ def _instantiate_error_signal_projection(sender, receiver):
     return MappingProjection(sender=sender,
                              receiver=receiver,
                              matrix=IDENTITY_MATRIX,
-                             name = sender.owner.name + ' ' + ERROR_SIGNAL)
+                             name = sender.owner.name + ' ' + OUTCOME)
