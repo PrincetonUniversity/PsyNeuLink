@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
-    SimpleIntegrator
+    SimpleIntegrator, FHNIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
     OrnsteinUhlenbeckIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
@@ -645,3 +645,26 @@ class TestIntegratorNoise:
         val = float(I.execute(10))
 
         np.testing.assert_allclose(val, 15.010789523731438)
+
+
+class TestFHN:
+
+    def test_integrator_simple_noise_fn(self):
+        F = IntegratorMechanism(
+            name='IntegratorMech-FHNFunction',
+            function=FHNIntegrator(
+
+            )
+        )
+        v_list = []
+        w_list = []
+        for i in range(15000):
+            v_list.append(F.execute(1)[0][0])
+            v_list.append(F.execute(1)[0][1])
+        # val = float(I.execute(10))
+        #
+        # I.function_object.reset_initializer = 5.0
+        #
+        # val2 = float(I.execute(0))
+        #
+        # np.testing.assert_allclose(val, 4.022722120123589)

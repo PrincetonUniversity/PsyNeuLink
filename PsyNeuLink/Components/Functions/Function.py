@@ -4719,7 +4719,7 @@ class FHNIntegrator(
                  default_variable=None,
                  initial_w = 0.0,
                  initial_v = 0.0,
-                 time_step_size = 1.0,
+                 time_step_size = 0.1,
                  t_0 = 0.0,
                  a = 0.08,
                  b = 0.7,
