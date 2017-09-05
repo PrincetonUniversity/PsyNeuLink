@@ -404,8 +404,8 @@
 #             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
 #                   (that is, gating of many states with a single value -- e.g., LC)
 # DOCUMENTATION: revise LearningMechanism docstring to include output_state attribute, and describe situation with
-#                    (multiple possible) LearningSignal entries, their relatioship to learing_signal attribute, and
-#                    the ERROR_SIGNAL OutputState.
+#                    (multiple possible) LearningSignal entries, their relatioship to learning_signal attribute, and
+#                    the OUTCOME OutputState.
 # DOCUMENTATION: add output_states to attribute in docstring for ControlMechanism and GatingMechanism
 # DOCUMENTATION: add section on LearningSignals to LearningMechanism docstring:
 #                   note that default (and most common case) is for a single LearningSignal

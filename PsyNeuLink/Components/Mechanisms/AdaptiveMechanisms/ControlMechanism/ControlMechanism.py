@@ -113,12 +113,12 @@ Components are also automatically created and assigned to the ControlMechanism w
       (as well as the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute).
       The `monitored_output_states <ControlMechanism_Base.monitored_output_states>` are evaluated by the
       ObjectiveMechanism's `function <ObjectiveMechanism.function>`; the result is assigned as the `value
-      <OutputState.value>` of the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState <ObjectiveMechanism_Structure>`
+      <OutputState.value>` of the ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Structure>`
       and (by way of a `MappingProjection` -- see below) to the ControlMechanism's *ERROR_SIGNAL* `InputState`.
       This information is used by the ControlMechanism to set the `allocation <ControlSignal.allocation>` for each of
       the ControlMechanism's ControlSignals (see `ControlMechanism_Function`).
     ..
-    * a `MappingProjection` that projects from the ObjectiveMechanism's *ERROR_SIGNAL* `OutputState
+    * a `MappingProjection` that projects from the ObjectiveMechanism's *OUTCOME* `OutputState
       <ObjectiveMechanism_Structure>` to the ControlMechanism's *ERROR_SIGNAL* `InputState`.
     ..
     * `MappingProjections <MappingProjection>` from Mechanisms or OutputStates specified in

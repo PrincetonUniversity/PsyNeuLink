@@ -135,10 +135,10 @@ import numpy as np
 
 from PsyNeuLink.Components.Component import function_type, method_type
 from PsyNeuLink.Components.Functions.Function import BackPropagation, Linear, Reinforcement
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism import ACTIVATION_INPUT, \
-    ACTIVATION_OUTPUT, LearningMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
+    import LearningMechanism, ACTIVATION_INPUT, ACTIVATION_OUTPUT, ERROR_SIGNAL
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-    import ERROR_SIGNAL, ObjectiveMechanism
+    import OUTCOME, ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
