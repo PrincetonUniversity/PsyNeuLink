@@ -200,7 +200,7 @@ from numpy import abs, exp, tanh
 
 from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FHN_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -3367,28 +3367,25 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
     def _euler(self, previous_value, previous_time, slope, time_step_size):
 
-        if callable(self.slope):
-            slope = self.slope(previous_time, previous_value)
-        else:
-            slope = self.slope
+        if callable(slope):
+            slope = slope(previous_time, previous_value)
 
         return previous_value + slope*time_step_size
 
     def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
 
-        if callable(self.slope):
-            slope_approx_1 = self.slope(previous_time,
+        if callable(slope):
+            slope_approx_1 = slope(previous_time,
                                         previous_value)
-            slope_approx_2 = self.slope(previous_time + time_step_size/2,
+            slope_approx_2 = slope(previous_time + time_step_size/2,
                                         previous_value + (0.5 * time_step_size * slope_approx_1))
-            slope_approx_3 = self.slope(previous_time + time_step_size/2,
+            slope_approx_3 = slope(previous_time + time_step_size/2,
                                         previous_value + (0.5 * time_step_size * slope_approx_2))
-            slope_approx_4 = self.slope(previous_time + time_step_size,
+            slope_approx_4 = slope(previous_time + time_step_size,
                                         previous_value + (time_step_size * slope_approx_3))
             value = previous_value \
                     + (time_step_size/6)*(slope_approx_1 + 2*(slope_approx_2 + slope_approx_3) + slope_approx_4)
         else:
-            slope = self.slope
             value = previous_value + time_step_size*slope
 
         return value
@@ -4697,13 +4694,13 @@ class FHNIntegrator(
 
     """
 
-    componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
+    componentName = FHN_INTEGRATOR_FUNCTION
 
     class ClassDefaults(Integrator.ClassDefaults):
         variable = [[0]]
 
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
     paramClassDefaults.update({
         NOISE: None,
         RATE: None,
@@ -4716,7 +4713,7 @@ class FHNIntegrator(
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
+                 default_variable=1.0,
                  initial_w = 0.0,
                  initial_v = 0.0,
                  time_step_size = 0.1,
@@ -4730,7 +4727,8 @@ class FHNIntegrator(
                  context="FHNIntegrator Init"):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(initial_v = initial_v,
+        params = self._assign_args_to_param_dicts(default_variable = default_variable,
+                                                  initial_v = initial_v,
                                                   initial_w = initial_w,
                                                   time_step_size = time_step_size,
                                                   t_0 = t_0,
@@ -4739,19 +4737,22 @@ class FHNIntegrator(
                                                   c = c,
                                                   params=params)
 
-        super().__init__(
-            # default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
         self.previous_t = self.t_0
-        self.instance_defaults.variable = self.initializer
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context)
 
+        self.variable = self.default_variable
         self.auto_dependent = True
+
+
+
+
 
     def function(self,
                  variable=None,
@@ -4805,325 +4806,325 @@ class FHNIntegrator(
 
         return new_v, new_w
 
-    class AccumulatorIntegrator(
-        Integrator):  # --------------------------------------------------------------------------------
+class AccumulatorIntegrator(
+    Integrator):  # --------------------------------------------------------------------------------
+    """
+    AccumulatorIntegrator(              \
+        default_variable=None,          \
+        rate=1.0,                       \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initializer,                    \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
+
+    .. _AccumulatorIntegrator:
+
+    Integrates prior value by multiplying `previous_value <AccumulatorIntegrator.previous_value>` by `rate
+    <Integrator.rate>` and adding `increment <AccumulatorIntegrator.increment>` and  `noise
+    <AccumulatorIntegrator.noise>`. Ignores `variable <Integrator.variable>`).
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
+        the rate of exponential decay).  If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>`.
+
+    increment : float, list or 1d np.array : default 0.0
+        specifies an amount to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
+        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>`
+        (see `increment <AccumulatorIntegrator.increment>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`. If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>` (see `noise <AccumulatorIntegrator.noise>` for details).
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
+        <AccumulatorIntegrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        **Ignored** by the AccumulatorIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for
+        integrator functions that depend on both a prior value and a new value (variable).
+
+    rate : float or 1d np.array
+        determines the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e., the
+        rate of exponential decay) in each call to `function <AccumulatorIntegrator.function>`.  If it is a list or
+        array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and each element is
+        used to multiply the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
+        it is used for Hadamard multiplication).  If it is a scalar or has a single element, its value is used to
+        multiply all the elements of `previous_value <AccumulatorIntegrator.previous_value>`.
+
+    increment : float, function, list, or 1d np.array
+        determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
+        `variable <AccumulatorIntegrator.default_variable>` and each element is added to the corresponding element of
+        `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
+        scalar or has a single element, its value is added to all the elements of `previous_value
+        <AccumulatorIntegrator.previous_value>`.
+
+    noise : float, function, list, or 1d np.array
+        determines a random value to be added in each call to `function <AccumulatorIntegrator.function>`.
+        If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and
+        each element is added to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`
+        (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
+        the elements of `previous_value <AccumulatorIntegrator.previous_value>`.  If it is a function, it will be
+        executed separately and added to each element.
+
+        .. note::
+
+            In order to generate random noise, a probability distribution function should be selected (see
+            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
+            then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : float, 1d np.array or list
+        determines the starting value for integration (i.e., the value to which `previous_value
+        <AccumulatorIntegrator.previous_value>` is set. If initializer is a list or array, it must be the same length
+        as `variable <AccumulatorIntegrator.default_variable>`.
+
+        TBI:
+
+        Initializer may be a function or list/array of functions.
+
+        If initializer is specified as a single float or function, while `variable <AccumulatorIntegrator.variable>` is
+        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
+        this means that the function will be executed separately for each variable element.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
+        will be added.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
+
+    class ClassDefaults(Integrator.ClassDefaults):
+        variable = [[0]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None,
+        INCREMENT: None,
+    })
+
+    # multiplicative param does not make sense in this case
+    multiplicative_param = RATE
+    additive_param = INCREMENT
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 # rate: parameter_spec = 1.0,
+                 rate=None,
+                 noise=0.0,
+                 increment=None,
+                 initializer=ClassDefaults.variable,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context="AccumulatorIntegrator Init"):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  increment=increment,
+                                                  params=params)
+
+        super().__init__(
+            # default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context)
+
+        self.previous_value = self.initializer
+        self.instance_defaults.variable = self.initializer
+
+        self.auto_dependent = True
+
+    def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
+        """validate params and assign any runtime params.
+
+        Called by AccumulatorIntegrator to validate params
+        Validation can be suppressed by turning parameter_validation attribute off
+        target_set is a params dictionary to which params should be assigned;
+           otherwise, they are assigned to paramsCurrent;
+
+        Does the following:
+        - assign runtime params to paramsCurrent
+        - validate params if PARAM_VALIDATION is set
+
+        :param params: (dict) - params to validate
+        :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
+        :return:
         """
-        AccumulatorIntegrator(              \
-            default_variable=None,          \
-            rate=1.0,                       \
-            noise=0.0,                      \
-            scale: parameter_spec = 1.0,    \
-            offset: parameter_spec = 0.0,   \
-            initializer,                    \
-            params=None,                    \
-            owner=None,                     \
-            prefs=None,                     \
-            )
 
-        .. _AccumulatorIntegrator:
+        # PARAMS ------------------------------------------------------------
 
-        Integrates prior value by multiplying `previous_value <AccumulatorIntegrator.previous_value>` by `rate
-        <Integrator.rate>` and adding `increment <AccumulatorIntegrator.increment>` and  `noise
-        <AccumulatorIntegrator.noise>`. Ignores `variable <Integrator.variable>`).
+        # If target_set is not specified, use paramsCurrent
+        if target_set is None:
+            target_set = self.paramsCurrent
 
-        Arguments
-        ---------
+        # # MODIFIED 11/27/16 OLD:
+        # # If parameter_validation is set, the function was called with params,
+        # #   and they have changed, then validate requested values and assign to target_set
+        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
+        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
+        #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        default_variable : number, list or np.array : default ClassDefaults.variable
-            specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-            integrated.
-
-        rate : float, list or 1d np.array : default 1.0
-            specifies the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
-            the rate of exponential decay).  If it is a list or array, it must be the same length as
-            `variable <AccumulatorIntegrator.default_variable>`.
-
-        increment : float, list or 1d np.array : default 0.0
-            specifies an amount to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
-            `function <AccumulatorIntegrator.function>` (see `increment <AccumulatorIntegrator.increment>` for details).
-            If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>`
-            (see `increment <AccumulatorIntegrator.increment>` for details).
-
-        noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-            specifies random value to be added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
-            `function <AccumulatorIntegrator.function>`. If it is a list or array, it must be the same length as
-            `variable <AccumulatorIntegrator.default_variable>` (see `noise <AccumulatorIntegrator.noise>` for details).
-
-        initializer float, list or 1d np.array : default 0.0
-            specifies starting value for integration.  If it is a list or array, it must be the same length as
-            `default_variable <AccumulatorIntegrator.default_variable>` (see `initializer
-            <AccumulatorIntegrator.initializer>` for details).
-
-        params : Optional[Dict[param keyword, param value]]
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-            arguments of the constructor.
-
-        owner : Component
-            `component <Component>` to which to assign the Function.
-
-        prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
-            the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
-            defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
-
-
-        Attributes
-        ----------
-
-        variable : number or np.array
-            **Ignored** by the AccumulatorIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for
-            integrator functions that depend on both a prior value and a new value (variable).
-
-        rate : float or 1d np.array
-            determines the multiplicative decrement of `previous_value <AccumulatorIntegrator.previous_value>` (i.e., the
-            rate of exponential decay) in each call to `function <AccumulatorIntegrator.function>`.  If it is a list or
-            array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and each element is
-            used to multiply the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>` (i.e.,
-            it is used for Hadamard multiplication).  If it is a scalar or has a single element, its value is used to
-            multiply all the elements of `previous_value <AccumulatorIntegrator.previous_value>`.
-
-        increment : float, function, list, or 1d np.array
-            determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
-            `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
-            `variable <AccumulatorIntegrator.default_variable>` and each element is added to the corresponding element of
-            `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
-            scalar or has a single element, its value is added to all the elements of `previous_value
-            <AccumulatorIntegrator.previous_value>`.
-
-        noise : float, function, list, or 1d np.array
-            determines a random value to be added in each call to `function <AccumulatorIntegrator.function>`.
-            If it is a list or array, it must be the same length as `variable <AccumulatorIntegrator.default_variable>` and
-            each element is added to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`
-            (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
-            the elements of `previous_value <AccumulatorIntegrator.previous_value>`.  If it is a function, it will be
-            executed separately and added to each element.
-
-            .. note::
-
-                In order to generate random noise, a probability distribution function should be selected (see
-                `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-                its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-                then the noise will simply be an offset that remains the same across all executions.
-
-        initializer : float, 1d np.array or list
-            determines the starting value for integration (i.e., the value to which `previous_value
-            <AccumulatorIntegrator.previous_value>` is set. If initializer is a list or array, it must be the same length
-            as `variable <AccumulatorIntegrator.default_variable>`.
-
-            TBI:
-
-            Initializer may be a function or list/array of functions.
-
-            If initializer is specified as a single float or function, while `variable <AccumulatorIntegrator.variable>` is
-            a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-            this means that the function will be executed separately for each variable element.
-
-        previous_value : 1d np.array : default ClassDefaults.variable
-            stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
-            will be added.
-
-        owner : Mechanism
-            `component <Component>` to which the Function has been assigned.
-
-        prefs : PreferenceSet or specification dict : Projection.classPreferences
-            the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
-            if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-            (see :doc:`PreferenceSet <LINK>` for details).
-
-        """
-
-        componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
-
-        class ClassDefaults(Integrator.ClassDefaults):
-            variable = [[0]]
-
-        paramClassDefaults = Function_Base.paramClassDefaults.copy()
-        # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
-        paramClassDefaults.update({
-            NOISE: None,
-            RATE: None,
-            INCREMENT: None,
-        })
-
-        # multiplicative param does not make sense in this case
-        multiplicative_param = RATE
-        additive_param = INCREMENT
-
-        @tc.typecheck
-        def __init__(self,
-                     default_variable=None,
-                     # rate: parameter_spec = 1.0,
-                     rate=None,
-                     noise=0.0,
-                     increment=None,
-                     initializer=ClassDefaults.variable,
-                     params: tc.optional(dict) = None,
-                     owner=None,
-                     prefs: is_pref_set = None,
-                     context="AccumulatorIntegrator Init"):
-
-            # Assign args to params and functionParams dicts (kwConstants must == arg names)
-            params = self._assign_args_to_param_dicts(rate=rate,
-                                                      initializer=initializer,
-                                                      noise=noise,
-                                                      increment=increment,
-                                                      params=params)
-
-            super().__init__(
-                # default_variable=default_variable,
-                params=params,
-                owner=owner,
-                prefs=prefs,
-                context=context)
-
-            self.previous_value = self.initializer
-            self.instance_defaults.variable = self.initializer
-
-            self.auto_dependent = True
-
-        def _accumulator_check_args(self, variable=None, params=None, target_set=None, context=None):
-            """validate params and assign any runtime params.
-
-            Called by AccumulatorIntegrator to validate params
-            Validation can be suppressed by turning parameter_validation attribute off
-            target_set is a params dictionary to which params should be assigned;
-               otherwise, they are assigned to paramsCurrent;
-
-            Does the following:
-            - assign runtime params to paramsCurrent
-            - validate params if PARAM_VALIDATION is set
-
-            :param params: (dict) - params to validate
-            :target_set: (dict) - set to which params should be assigned (default: self.paramsCurrent)
-            :return:
-            """
-
-            # PARAMS ------------------------------------------------------------
-
-            # If target_set is not specified, use paramsCurrent
-            if target_set is None:
-                target_set = self.paramsCurrent
-
-            # # MODIFIED 11/27/16 OLD:
-            # # If parameter_validation is set, the function was called with params,
-            # #   and they have changed, then validate requested values and assign to target_set
-            # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
-            #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
-            #     self._validate_params(request_set=params, target_set=target_set, context=context)
-
-            # If params have been passed, treat as runtime params and assign to paramsCurrent
-            #   (relabel params as runtime_params for clarity)
-            runtime_params = params
-            if runtime_params and runtime_params is not None:
-                for param_name in self.user_params:
-                    # Ignore input_states and output_states -- they should not be modified during run
-                    # IMPLEMENTATION NOTE:
-                    #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
-                    #        At present, assignment of ``function`` as runtime param is not supported
-                    #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                    #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                    if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
-                        continue
-                    # If param is specified in runtime_params, then assign it
-                    if param_name in runtime_params:
-                        self.paramsCurrent[param_name] = runtime_params[param_name]
-                    # Otherwise, (re-)assign to paramInstanceDefaults
-                    #    this insures that any params that were assigned as runtime on last execution are reset here
-                    #    (unless they have been assigned another runtime value)
-                    elif not self.runtimeParamStickyAssignmentPref:
-                        if param_name is FUNCTION_PARAMS:
-                            for function_param in self.function_object.user_params:
-                                self.function_object.paramsCurrent[function_param] = \
-                                    self.function_object.paramInstanceDefaults[function_param]
-                            continue
-                        self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
-                self.runtime_params_in_use = True
-
-            # Otherwise, reset paramsCurrent to paramInstanceDefaults
-            elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
-                # Can't do the following since function could still be a class ref rather than abound method (see below)
-                # self.paramsCurrent = self.paramInstanceDefaults
-                for param_name in self.user_params:
-                    # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
-                    #    At present, assignment of ``function`` as runtime param is not supported
-                    #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
-                    #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
-                    if param_name is FUNCTION:
-                        continue
+        # If params have been passed, treat as runtime params and assign to paramsCurrent
+        #   (relabel params as runtime_params for clarity)
+        runtime_params = params
+        if runtime_params and runtime_params is not None:
+            for param_name in self.user_params:
+                # Ignore input_states and output_states -- they should not be modified during run
+                # IMPLEMENTATION NOTE:
+                #    FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED:
+                #        At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name in {FUNCTION, INPUT_STATES, OUTPUT_STATES}:
+                    continue
+                # If param is specified in runtime_params, then assign it
+                if param_name in runtime_params:
+                    self.paramsCurrent[param_name] = runtime_params[param_name]
+                # Otherwise, (re-)assign to paramInstanceDefaults
+                #    this insures that any params that were assigned as runtime on last execution are reset here
+                #    (unless they have been assigned another runtime value)
+                elif not self.runtimeParamStickyAssignmentPref:
                     if param_name is FUNCTION_PARAMS:
                         for function_param in self.function_object.user_params:
                             self.function_object.paramsCurrent[function_param] = \
                                 self.function_object.paramInstanceDefaults[function_param]
                         continue
                     self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
+            self.runtime_params_in_use = True
 
-                self.runtime_params_in_use = False
+        # Otherwise, reset paramsCurrent to paramInstanceDefaults
+        elif self.runtime_params_in_use and not self.runtimeParamStickyAssignmentPref:
+            # Can't do the following since function could still be a class ref rather than abound method (see below)
+            # self.paramsCurrent = self.paramInstanceDefaults
+            for param_name in self.user_params:
+                # IMPLEMENTATION NOTE: FUNCTION_RUNTIME_PARAM_NOT_SUPPORTED
+                #    At present, assignment of ``function`` as runtime param is not supported
+                #        (this is because paramInstanceDefaults[FUNCTION] could be a class rather than an bound method;
+                #        i.e., not yet instantiated;  could be rectified by assignment in _instantiate_function)
+                if param_name is FUNCTION:
+                    continue
+                if param_name is FUNCTION_PARAMS:
+                    for function_param in self.function_object.user_params:
+                        self.function_object.paramsCurrent[function_param] = \
+                            self.function_object.paramInstanceDefaults[function_param]
+                    continue
+                self.paramsCurrent[param_name] = self.paramInstanceDefaults[param_name]
 
-            # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
-            if self.prefs.paramValidationPref and params and not params is target_set:
-                try:
-                    self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
-                except TypeError:
-                    self._validate_params(request_set=params, target_set=target_set, context=context)
+            self.runtime_params_in_use = False
 
-        def function(self,
-                     variable=None,
-                     params=None,
-                     time_scale=TimeScale.TRIAL,
-                     context=None):
-            """
-            Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
-            `noise <ConstantIntegrator.noise>`.
+        # If parameter_validation is set and they have changed, then validate requested values and assign to target_set
+        if self.prefs.paramValidationPref and params and not params is target_set:
+            try:
+                self._validate_params(variable=variable, request_set=params, target_set=target_set, context=context)
+            except TypeError:
+                self._validate_params(request_set=params, target_set=target_set, context=context)
 
-            Arguments
-            ---------
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
+        `noise <ConstantIntegrator.noise>`.
 
-            params : Optional[Dict[param keyword, param value]]
-                a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-                function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-                arguments of the constructor.
+        Arguments
+        ---------
 
-            time_scale :  TimeScale : default TimeScale.TRIAL
-                specifies whether the function is executed on the time_step or trial time scale.
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
 
-            Returns
-            -------
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
 
-            updated value of integral : 2d np.array
+        Returns
+        -------
 
-            """
-            self._accumulator_check_args(variable, params=params, context=context)
+        updated value of integral : 2d np.array
 
-            # rate = np.array(self.rate).astype(float)
-            # increment = self.increment
+        """
+        self._accumulator_check_args(variable, params=params, context=context)
 
-            if self.rate is None:
-                rate = 1.0
-            else:
-                rate = self.rate
+        # rate = np.array(self.rate).astype(float)
+        # increment = self.increment
 
-            if self.increment is None:
-                increment = 0.0
-            else:
-                increment = self.increment
+        if self.rate is None:
+            rate = 1.0
+        else:
+            rate = self.rate
 
-            # execute noise if it is a function
-            noise = self._try_execute_param(self.noise, variable)
+        if self.increment is None:
+            increment = 0.0
+        else:
+            increment = self.increment
 
-            # try:
-            #     previous_value = params[INITIALIZER]
-            # except (TypeError, KeyError):
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
 
-            previous_value = np.atleast_2d(self.previous_value)
+        # try:
+        #     previous_value = params[INITIALIZER]
+        # except (TypeError, KeyError):
 
-            value = previous_value * rate + noise + increment
+        previous_value = np.atleast_2d(self.previous_value)
 
-            # If this NOT an initialization run, update the old value
-            # If it IS an initialization run, leave as is
-            #    (don't want to count it as an execution step)
-            if not context or not INITIALIZING in context:
-                self.previous_value = value
-            return value
+        value = previous_value * rate + noise + increment
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not context or not INITIALIZING in context:
+            self.previous_value = value
+        return value
 
 
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()

@@ -649,22 +649,42 @@ class TestIntegratorNoise:
 
 class TestFHN:
 
-    def test_integrator_simple_noise_fn(self):
+
+    def test_FHN(self):
+
         F = IntegratorMechanism(
             name='IntegratorMech-FHNFunction',
             function=FHNIntegrator(
 
             )
         )
-        v_list = []
-        w_list = []
-        for i in range(15000):
-            v_list.append(F.execute(1)[0][0])
-            v_list.append(F.execute(1)[0][1])
-        # val = float(I.execute(10))
-        #
-        # I.function_object.reset_initializer = 5.0
-        #
-        # val2 = float(I.execute(0))
-        #
-        # np.testing.assert_allclose(val, 4.022722120123589)
+        plot_v_list = []
+        plot_w_list = []
+
+        expected_v_list = []
+        expected_w_list = []
+        stimulus = 1.0
+        for i in range(10):
+            for j in range(10):
+                new_v = F.execute(stimulus)[0][0]
+                new_w = F.execute(stimulus)[1][0]
+                # ** uncomment the lines below if you want to view the plot:
+                # plot_v_list.append(new_v)
+                # plot_w_list.append(new_w)
+            expected_v_list.append(new_v)
+            expected_w_list.append(new_w)
+
+        # ** uncomment the lines below if you want to view the plot:
+        # import matplotlib.pyplot as plt
+        # plt.plot(v_list)
+        # plt.plot(w_list)
+        # plt.show()
+
+        np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+                                                     1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+                                                     1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+                                                     0.34785588139530099])
+        np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+                                                     1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+                                                     1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+                                                     1.7817328532815251])
