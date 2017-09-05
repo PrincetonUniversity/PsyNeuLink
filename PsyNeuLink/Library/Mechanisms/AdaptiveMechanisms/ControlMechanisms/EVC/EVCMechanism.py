@@ -319,7 +319,8 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, COST_FUNCTION, EVC_MECHANISM, EXPONENT, FUNCTION, \
-    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, OBJECTIVE_MECHANISM, NAME, OUTCOME_FUNCTION, \
+    INITIALIZING, INIT_FUNCTION_METHOD_ONLY, MAKE_DEFAULT_CONTROLLER, OBJECTIVE_MECHANISM, MONITOR_FOR_CONTROL, NAME, \
+    OUTCOME_FUNCTION, \
     PARAMETER_STATES, PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE, PRODUCT, SUM, WEIGHT
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -747,8 +748,10 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
-        # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
-        prediction_mechanism_params = prediction_mechanism_params or {OBJECTIVE_MECHANISM:None}
+        # MODIFIED 9/5/17 OLD:
+        # # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
+        # prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
+        # MODIFIED 9/5/17 END
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,

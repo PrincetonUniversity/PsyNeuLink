@@ -423,26 +423,40 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 self.paramClassDefaults[SYSTEM] = request_set[SYSTEM]
 
         if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
-            for spec in target_set[OBJECTIVE_MECHANISM]:
-                if isinstance(spec, MonitoredOutputStatesOption):
-                    continue
-                if isinstance(spec, tuple):
-                    spec = spec[0]
-                if isinstance(spec, (OutputState, Mechanism_Base)):
-                    spec = spec.name
-                if not isinstance(spec, str):
-                    raise ControlMechanismError("Invalid specification in {} arg for {} ({})".
-                                                format(OBJECTIVE_MECHANISM, self.name, spec))
-                # If controller has been assigned to a System,
-                #    check that all the items in monitor_for_control are in the same System
-                # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
-                #                       when the controller is assigned to a System [TBI]
-                if self.system:
-                    if not any((spec is mech.name or spec in mech.output_states.names)
-                               for mech in self.system.mechanisms):
-                        raise ControlMechanismError("Specification in {} arg for {} ({}) must be a "
-                                                    "Mechanism or an OutputState of one in {}".
-                                                    format(OBJECTIVE_MECHANISM, self.name, spec, self.system.name))
+
+            if isinstance(target_set[OBJECTIVE_MECHANISM], list):
+                for spec in target_set[OBJECTIVE_MECHANISM]:
+                    if isinstance(spec, MonitoredOutputStatesOption):
+                        continue
+                    if isinstance(spec, tuple):
+                        spec = spec[0]
+                    if isinstance(spec, (OutputState, Mechanism_Base)):
+                        spec = spec.name
+                    if not isinstance(spec, str):
+                        raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
+                                                    "Mechanisms and/or OutputStates to be monitored, but one"
+                                                    "of the items ({}) is invalid".
+                                                    format(OBJECTIVE_MECHANISM, self.name, spec))
+                    # If controller has been assigned to a System,
+                    #    check that all the items in monitor_for_control are in the same System
+                    # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
+                    #                       when the controller is assigned to a System [TBI]
+                    if self.system:
+                        if not any((spec is mech.name or spec in mech.output_states.names)
+                                   for mech in self.system.mechanisms):
+                            raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
+                                                        "Mechanisms and/or OutputStates to be monitored, but one"
+                                                        "of them ({}) is in a different System".
+                                                        format(OBJECTIVE_MECHANISM, self.name, spec))
+
+            elif not isinstance(target_set[OBJECTIVE_MECHANISM], ObjectiveMechanism):
+                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
+                                            "or a list of Mechanisms and/or OutputStates to be monitored for control".
+                                            format(OBJECTIVE_MECHANISM,
+                                                   self.name, target_set[OBJECTIVE_MECHANISM],
+                                                   ObjectiveMechanism.componentName))
+
+
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:

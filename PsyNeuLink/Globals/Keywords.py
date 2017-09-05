@@ -331,7 +331,7 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # ObjectiveMechanisms:
-OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 
 # ProcessingMechanisms:
