@@ -23,7 +23,7 @@ uses the value received by a ControlProjection to modify the value of the parame
 `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  A ControlMechanism can
 regulate only the parameters of Components in the `System` for which it is the `controller
 <System_Execution_Control>`.  The OutputStates used to determine the ControlMechanism's `allocation_policy
-<ControlMechanism_Base.allocation_policy>` and the parameter is controls can be listed using its `show
+<ControlMechanism_Base.allocation_policy>` and the parameter it controls can be listed using its `show
 <ControlMechanism_Base.show>` method. The control Components of a System can be displayed using the System's
 `System_Base.show_graph` method with its **show_control** argument assigned as `True`.
 COMMENT: TBI
@@ -112,6 +112,9 @@ one of two ways:
 When a ControlMechanism is created as part of a System, a `ControlSignal` is created and assigned to the
 ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control.
 
+Parameters to be controlled can be added to an existing ControlMechanism by using its `assign_params` method to
+add a `ControlSignal` for each additional parameter.
+
 All of the ControlSignals for a ControlMechanism are listed in its `control_signals
 <ControlMechanism_Base.control_signals>` attribute, and all of its ControlProjections are listed in its
 `control_projections <ControlMechanism_Base.control_projections>` attribute.
@@ -147,9 +150,12 @@ Function
 ~~~~~~~~
 
 A ControlMechanism's `function <ControlMechanism_Base.function>` uses the `value <InputState.value>` of its
-*ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism_Base.allocation_policy>`.  Each item
-of the `allocation_policy <ControlMechanism_Base.allocation_policy>` is  assigned as the `value
-<ControlSignal.value>` of a corresponding `ControlSignal` in `control_signals <ControlMechanism_Base.control_signals>`.
+*ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism_Base.allocation_policy>`.  By
+default, the `allocation_policy <ControlMechanism_Base.allocation_policy>` is assigned as the `value
+<ControlSignal.value>` of the corresponding `ControlSignal` in `control_signals
+<ControlMechanism_Base.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
+(for example, an `LCMechanism` assigns a single value to all of its ControlSignals).
+
 
 .. _ControlMechanism_Output:
 
@@ -158,37 +164,16 @@ Output
 
 A ControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism_Base.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
-corresponding parameter.  The `value <ControlSignal.value>` of each ControlSignal is assigned the value of the
-corresponding item in the ControlMechanism's `allocation_policy <ControlMechanism_Base.allocation_policy>` attribute.
-ControlSignals are a type of `OutputState`, and so they are also listed in the ControlMechanism's `output_states
-<GatingMechanism.output_states>` attribute. The parameters modulated by an ControlMechanism's ControlSignals can be
-displayed using its :func:`show <ControlMechanism_Base.show>` method.
-
-
-@@@@@@@@@@@@@@@@@@@@@@
-FROM EVCMechanism:
-The OutputStates of an EVCMechanism (like any `ControlMechanism <ControlMechanism>`) are a set of `ControlSignals
-<ControlSignal>`, that are listed in its `control_signals <EVCMechanism.control_signals>` attribute (as well as its
-`output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
-that projects to the `ParameterState` for a parameter controlled by the EVCMechanism.  When an EVCMechanism is
-`created automatically <EVCMechanism_Creation>`, it is assigned one ControlSignal for each of the parameters
-`specified for control <ControlMechanism_Control_Signals>` in its `system <EVCMechanism.system>`; if it is created
-directly, then it creates one ControlSignal for each of the parameters specified in the **control_signals** argument of
-its constructor. ControlSignals can be added to an EVCMechanism using its `assign_params` method.  Each ControlSignal is
-assigned an item of the EVCMechanism's `allocation_policy`, that determines its `allocation <ControlSignal.allocation>`
-for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
-its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ConrolProjection.value>` of the
+corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
+ControlMechanism's `output_states <ControlMechanism.output_states>` attribute. The parameters modulated by a
+ControlMechanism's ControlSignals can be displayed using its `show <ControlMechanism_Base.show>` method. By default,
+each value of each `ControlSignal` is assigned the value of the corresponding item from the ControlMechanism's
+`allocation_policy <ControlMechanism.allocation_policy>`;  however, subtypes of ControlMechanism may assign values
+differently.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
+its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's ControlProjection.   The `value <ControlProjection>` of the ControlProjection is used by the
 `ParameterState` to which it projects to modify the value of the parameter (see `ControlSignal_Modulation` for
-description of how a ControlSignal modulates the value of a parameter it controls).  A ControlSignal also calculates a
-`cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>` and/or its time course. The
-`cost <ControlSignal.cost>` is included in the evaluation that the EVCMechanism carries out for a given
-`allocation_policy`, and that it uses to adapt the ControlSignal's `allocation  <ControlSignal.allocation>` in the
-future.  When the EVCMechanism chooses an `allocation_policy` to evaluate,  it selects an allocation value from the
-ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribute.
-
-@@@@@@@@@@@@@@@@@@@@@@
-
+description of how a ControlSignal modulates the value of a parameter it controls).
 
 COMMENT:
 

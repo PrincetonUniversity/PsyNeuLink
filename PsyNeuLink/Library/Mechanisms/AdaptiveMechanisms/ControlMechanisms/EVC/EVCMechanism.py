@@ -198,17 +198,13 @@ function accepts arguments and return values that are compatible with any that c
 ControlSignals
 ~~~~~~~~~~~~~~
 
-The OutputStates of an EVCMechanism (like any `ControlMechanism <ControlMechanism>`) are a set of `ControlSignals
+The OutputStates of an EVCMechanism (like any `ControlMechanism`) are a set of `ControlSignals
 <ControlSignal>`, that are listed in its `control_signals <EVCMechanism.control_signals>` attribute (as well as its
 `output_states <ControlMechanism.output_states>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
-that projects to the `ParameterState` for a parameter controlled by the EVCMechanism.  When an EVCMechanism is
-`created automatically <EVCMechanism_Creation>`, it is assigned one ControlSignal for each of the parameters
-`specified for control <ControlMechanism_Control_Signals>` in its `system <EVCMechanism.system>`; if it is created
-directly, then it creates one ControlSignal for each of the parameters specified in the **control_signals** argument of
-its constructor. ControlSignals can be added to an EVCMechanism using its `assign_params` method.  Each ControlSignal is
+that projects to the `ParameterState` for a parameter controlled by the EVCMechanism.  Each ControlSignal is
 assigned an item of the EVCMechanism's `allocation_policy`, that determines its `allocation <ControlSignal.allocation>`
 for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
-its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ConrolProjection.value>` of the
+its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's ControlProjection.   The `value <ControlProjection>` of the ControlProjection is used by the
 `ParameterState` to which it projects to modify the value of the parameter (see `ControlSignal_Modulation` for
 description of how a ControlSignal modulates the value of a parameter it controls).  A ControlSignal also calculates a
