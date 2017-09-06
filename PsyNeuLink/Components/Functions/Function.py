@@ -4714,20 +4714,23 @@ class FHNIntegrator(
     @tc.typecheck
     def __init__(self,
                  default_variable=1.0,
-                 initial_w = 0.0,
-                 initial_v = 0.0,
-                 time_step_size = 0.1,
-                 t_0 = 0.0,
-                 v_a = -1/3,
-                 v_b = 0.0,
-                 v_c = 1.0,
+                 offset=0.0,
+                 scale=1.0,
+                 initial_w=0.0,
+                 initial_v=0.0,
+                 time_step_size=0.1,
+                 t_0=0.0,
+                 v_a=-1/3,
+                 v_b=0.0,
+                 v_c=1.0,
                  v_d=0.0,
                  v_e=-1.0,
                  v_f=1.0,
-                 a = 0.08,
-                 b = 0.7,
-                 c =0.8,
-                 tau = 1.0,
+                 v_time_constant=1.0,
+                 w_a=1.0,
+                 w_b=-0.8,
+                 w_c=0.7,
+                 w_time_constant = 12.5,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4735,19 +4738,23 @@ class FHNIntegrator(
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(default_variable = default_variable,
-                                                  initial_v = initial_v,
-                                                  initial_w = initial_w,
-                                                  time_step_size = time_step_size,
-                                                  t_0 = t_0,
-                                                  v_a = v_a,
-                                                  v_b = v_b,
-                                                  v_c = v_c,
+                                                  offset=offset,
+                                                  scale=scale,
+                                                  initial_v=initial_v,
+                                                  initial_w=initial_w,
+                                                  time_step_size=time_step_size,
+                                                  t_0=t_0,
+                                                  v_a=v_a,
+                                                  v_b=v_b,
+                                                  v_c=v_c,
                                                   v_d=v_d,
                                                   v_e=v_e,
                                                   v_f=v_f,
-                                                  a = a,
-                                                  b = b,
-                                                  c = c,
+                                                  v_time_constant=v_time_constant,
+                                                  w_a=w_a,
+                                                  w_b=w_b,
+                                                  w_c=w_c,
+                                                  w_time_constant=w_time_constant,
                                                   params=params)
 
         self.previous_v = self.initial_v
@@ -4797,20 +4804,28 @@ class FHNIntegrator(
         variable = self.variable
 
         def dv_dt(time, v):
+            # standard coeffs:
             # return v - (v**3)/3 - self.previous_w + variable
-            return (self.v_a*v**3 + self.v_b*v**2 + self.v_c*v + self.v_d + self.v_e*self.previous_w + self.v_f*variable)/self.v_time_constant
+
+            # general:
+            return (self.v_a*v**3 + self.v_b*v**2 + self.v_c*v + self.v_d
+                    + self.v_e*self.previous_w + self.v_f*variable)/self.v_time_constant
         def dw_dt(time, w):
-            return self.a*(self.previous_v + self.b - self.c*w)
+            # standard coeffs:
+            # return self.a*(self.previous_v + self.b - self.c*w)
+
+            # general:
+            return (self.w_a*self.previous_v + self.w_b*w + self.w_c)/self.w_time_constant
 
         new_v = self._runge_kutta_4(previous_time=self.previous_t,
                                     previous_value=self.previous_v,
                                     slope=dv_dt,
-                                    time_step_size=self.time_step_size)
+                                    time_step_size=self.time_step_size)*self.scale + self.offset
 
         new_w = self._runge_kutta_4(previous_time=self.previous_t,
                                     previous_value=self.previous_w,
                                     slope=dw_dt,
-                                    time_step_size=self.time_step_size)
+                                    time_step_size=self.time_step_size)*self.scale + self.offset
 
         if not context or INITIALIZING not in context:
             self.previous_v = new_v
