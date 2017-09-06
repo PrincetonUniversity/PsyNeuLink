@@ -3377,14 +3377,19 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
         if callable(slope):
             slope_approx_1 = slope(previous_time,
                                         previous_value)
+
             slope_approx_2 = slope(previous_time + time_step_size/2,
                                         previous_value + (0.5 * time_step_size * slope_approx_1))
+
             slope_approx_3 = slope(previous_time + time_step_size/2,
                                         previous_value + (0.5 * time_step_size * slope_approx_2))
+
             slope_approx_4 = slope(previous_time + time_step_size,
                                         previous_value + (time_step_size * slope_approx_3))
+
             value = previous_value \
                     + (time_step_size/6)*(slope_approx_1 + 2*(slope_approx_2 + slope_approx_3) + slope_approx_4)
+
         else:
             value = previous_value + time_step_size*slope
 
@@ -4690,41 +4695,41 @@ class FHNIntegrator(
                  initial_v=0.0,
                  time_step_size=0.1,
                  t_0=0.0,
-                 v_a=-1/3,
-                 v_b=0.0,
-                 v_c=1.0,
-                 v_d=0.0,
-                 v_e=-1.0,
-                 v_f=1.0,
-                 v_time_constant=1.0,
-                 w_a=1.0,
-                 w_b=-0.8,
-                 w_c=0.7,
-                 w_time_constant = 12.5,
+                 a_v=-1/3,
+                 b_v=0.0,
+                 c_v=1.0,
+                 d_v=0.0,
+                 e_v=-1.0,
+                 f_v=1.0,
+                 time_constant_v=1.0,
+                 a_w=1.0,
+                 b_w=-0.8,
+                 c_w=0.7,
+                 time_constant_w = 12.5,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context="FHNIntegrator Init"):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(default_variable = default_variable,
+        params = self._assign_args_to_param_dicts(default_variable=default_variable,
                                                   offset=offset,
                                                   scale=scale,
                                                   initial_v=initial_v,
                                                   initial_w=initial_w,
                                                   time_step_size=time_step_size,
                                                   t_0=t_0,
-                                                  v_a=v_a,
-                                                  v_b=v_b,
-                                                  v_c=v_c,
-                                                  v_d=v_d,
-                                                  v_e=v_e,
-                                                  v_f=v_f,
-                                                  v_time_constant=v_time_constant,
-                                                  w_a=w_a,
-                                                  w_b=w_b,
-                                                  w_c=w_c,
-                                                  w_time_constant=w_time_constant,
+                                                  a_v=a_v,
+                                                  b_v=b_v,
+                                                  c_v=c_v,
+                                                  d_v=d_v,
+                                                  e_v=e_v,
+                                                  f_v=f_v,
+                                                  time_constant_v=time_constant_v,
+                                                  a_w=a_w,
+                                                  b_w=b_w,
+                                                  c_w=c_w,
+                                                  time_constant_w=time_constant_w,
                                                   params=params)
 
         self.previous_v = self.initial_v
@@ -4783,14 +4788,15 @@ class FHNIntegrator(
             # return v - (v**3)/3 - self.previous_w + variable
 
             # general:
-            return (self.v_a*v**3 + self.v_b*v**2 + self.v_c*v + self.v_d
-                    + self.v_e*self.previous_w + self.v_f*variable)/self.v_time_constant
+            val= (self.a_v*(v**3) + self.b_v*(v**2) + self.c_v*v + self.d_v
+                    + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
+            return val
         def dw_dt(time, w):
             # standard coeffs:
             # return self.a*(self.previous_v + self.b - self.c*w)
 
             # general:
-            return (self.w_a*self.previous_v + self.w_b*w + self.w_c)/self.w_time_constant
+            return (self.a_w*self.previous_v + self.b_w*w + self.c_w)/self.time_constant_w
 
         new_v = self._runge_kutta_4(previous_time=self.previous_t,
                                     previous_value=self.previous_v,

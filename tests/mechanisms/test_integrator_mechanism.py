@@ -650,7 +650,7 @@ class TestIntegratorNoise:
 class TestFHN:
 
 
-    def test_FHN(self):
+    def test_FHN_defaults(self):
 
         F = IntegratorMechanism(
             name='IntegratorMech-FHNFunction',
@@ -676,8 +676,8 @@ class TestFHN:
 
         # ** uncomment the lines below if you want to view the plot:
         # import matplotlib.pyplot as plt
-        # plt.plot(v_list)
-        # plt.plot(w_list)
+        # plt.plot(plot_v_list)
+        # plt.plot(plot_w_list)
         # plt.show()
 
         np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
@@ -688,3 +688,59 @@ class TestFHN:
                                                      1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
                                                      1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
                                                      1.7817328532815251])
+
+    # def test_FHN_gilzenrat(self):
+    #
+    #     F = IntegratorMechanism(
+    #         name='IntegratorMech-FHNFunction',
+    #         function=FHNIntegrator(
+    #             time_step_size=0.0001,
+    #             initial_v=0.2,
+    #             initial_w=0.0,
+    #             t_0=0.0,
+    #             time_constant_v=1.0,
+    #             a_v=-1.0,
+    #             b_v=1.5,
+    #             c_v=-0.5,
+    #             d_v=0.0,
+    #             e_v=-1.0,
+    #             f_v=0.0,
+    #             time_constant_w=100.0,
+    #             a_w=1.0,
+    #             b_w=-0.5,
+    #             c_w=0.0
+    #         )
+    #     )
+    #     plot_v_list = []
+    #     plot_w_list = []
+    #
+    #     expected_v_list = []
+    #     expected_w_list = []
+    #     stimulus = 0.0
+    #     for i in range(10):
+    #
+    #         for j in range(200):
+    #             new_v = F.execute(stimulus)[0][0]
+    #             new_w = F.execute(stimulus)[1][0]
+    #             # ** uncomment the lines below if you want to view the plot:
+    #             plot_v_list.append(new_v)
+    #             plot_w_list.append(new_w)
+    #         expected_v_list.append(new_v)
+    #         expected_w_list.append(new_w)
+    #     # print(plot_v_list)
+    #     # print(plot_w_list)
+    #     # ** uncomment the lines below if you want to view the plot:
+    #     import matplotlib.pyplot as plt
+    #     plt.plot(plot_v_list)
+    #     plt.plot(plot_w_list)
+    #     plt.show()
+    #
+    #     # np.testing.assert_allclose(expected_v_list, [1.9861589924245777, 1.9184159304279109, 1.7920107368145777,
+    #     #                                              1.6651158106802393, 1.5360917598075965, 1.4019128309448776,
+    #     #                                              1.2568420252868404, 1.08773745582042, 0.8541804646541804,
+    #     #                                              0.34785588139530099])
+    #     # np.testing.assert_allclose(expected_w_list, [0.28713219302304327, 0.65355262255707869, 0.9581082373550347,
+    #     #                                              1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
+    #     #                                              1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
+    #     #                                              1.7817328532815251])
+    #     #
