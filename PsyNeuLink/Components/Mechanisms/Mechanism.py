@@ -495,8 +495,8 @@ COMMENT:
 COMMENT
     ..
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
-      the `controller` for the System to which the Mechanism belongs (see :ref:`specifying monitored OutputStates
-      <ControlMechanism_Monitored_OutputStates>` for details of specification).
+      the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputStates
+      <ObjectiveMechanism_Monitored_Values>` for details of specification).
     ..
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
@@ -640,7 +640,7 @@ MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies outputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ControlMechanism_Monitored_OutputStates for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitored_Values` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()

@@ -139,7 +139,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
             and assign any OutputStates that project to the input_states to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
-                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """

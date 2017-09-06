@@ -275,14 +275,14 @@ Control
 ~~~~~~~
 
 The `ControlMechanism <ControlMechanism>` assigned as the System's `controller <System_Base.controller>` (see
-`System_Control`) uses an `ObjectiveMechanism`, specified in its `monitoring_mechanism
-<ControlMechanism.monitoring_mechanism>` attribute, to monitor the `OutputState(s) <OutputState>` listed in the System's
+`System_Control`) uses an `ObjectiveMechanism`, specified in its `objective_mechanism
+<ControlMechanism.objective_mechanism>` attribute, to monitor the `OutputState(s) <OutputState>` listed in the System's
 `monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute (see
-`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored).  The
+`ObjectiveMechanism_Monitored_Values` for a description of how to specify which OutputStates are monitored).  The
 `controller <System_Base.controller>` is executed after both `processing <System_Execution_Processing>` and `learning
 <System_Execution_Learning>` have been executed for a `TRIAL`.  The `controller <System_Base.controller>`'s `function
-<ControlMechanism.function>` uses the information received from its `monitoring_mechanism
-<ControlMechanism.monitoring_mechanism>` to modulate the value of the parameters of Components in the System `specified
+<ControlMechanism.function>` uses the information received from its `objective_mechanism
+<ControlMechanism.objective_mechanism>` to modulate the value of the parameters of Components in the System `specified
 for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL`. The control Components of
 a System can be displayed using the System's `show_graph`method with its **show_control** argument assigned `True`.
 
@@ -466,7 +466,7 @@ def system(default_variable=None,
 
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by its
-        `controller` (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
+        `controller` (see `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
 
     COMMENT:
         learning : [LearningProjection specification]

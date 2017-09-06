@@ -76,58 +76,56 @@ Monitored Values
 ~~~~~~~~~~~~~~~~
 
 These can be specified in a variety of ways, each of which must eventually resolve to an OutputState, the
-value of which is to be monitored.
-
-Note that some forms of
-specification may depend on specifications made for the OutputState referenced, the Mechanism to which it belongs,
-and/or the Process or System to which that Mechanism belongs. These interactions (and the precedence afforded to
-each) are described below.
+value of which is to be monitored. Note that some forms of specification may depend on specifications made for the
+OutputState referenced, the Mechanism to which it belongs, and/or the Process or System to which that Mechanism
+belongs. These interactions (and the precedence afforded to each) are described below.
 
 If an OutputState is specified at the time the ObjectiveMechanism is created, or the specification can be resolved
 to an OutputState, a MappingProjection is automatically created from it to the corresponding InputState
-using `AUTO_ASSIGN_MATRIX` as its `matrix <MapppingProjection.matrix>` parameter.  If the OutputState can't be
-determined, no MappingProjection is assigned, and this must be done by some other means;  any values in
-`monitored_values` that are not associated with an OutputState at the time the ObjectiveMechanism is executed are
-ignored.
+using `AUTO_ASSIGN_MATRIX` as its `matrix <MappingProjection.matrix>` parameter.  If the OutputState can't be
+determined, no MappingProjection is assigned, and this must be done by some other means;  any values assigned to the
+ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute that are not associated with
+an OutputState at the time the ObjectiveMechanism is executed are ignored.
 
-The specification of item in `monitored_values` can take any of the following forms:
+The specification of eacah item in the **monitored_values** argument can take any of the following forms:
 
-* **OutputState**:  a reference to the `OutputState <OutputState>` of a Mechanism.  This will create a
-  `MappingProjection` from it to the corresponding InputState in `input_states <ObjectiveMechanism.input_states>`.
-COMMENT: TBI
-    Note that an outputState can be *excluded* from being monitored by assigning `None` as the value of its
-    `monitoring_status` attribute.  This specification takes precedence over any others;  that is, it will suppress
-    monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
-    outputState, including those described below.
-COMMENT
-..
-* **Mechanism**: by default, the Mechanism's `primary OutputState <OutputState_Primary>` will be used.  However,
-  if the Mechanism has any OutputStates specified in its `monitored_states` attribute, those will be used (except for
-  any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
-  types listed below:  if it is `None`, then none of that Mechanism's OutputStates will be monitored; if it
-  specifies OutputStates to be monitored, those will be monitored even if they do not satisfy any of the conditions
-  described in the specifications below.
-..
+  * **OutputState** -- a reference to the `OutputState <OutputState>` of a Mechanism.  This will create a
+    `MappingProjection` from it to the corresponding InputState in `input_states <ObjectiveMechanism.input_states>`.
+  COMMENT: TBI
+      Note that an outputState can be *excluded* from being monitored by assigning `None` as the value of its
+      `monitoring_status` attribute.  This specification takes precedence over any others;  that is, it will suppress
+      monitoring of that outputState, irrespective of any other specifications that might otherwise apply to that
+      outputState, including those described below.
+  ..
+  * **Mechanism** -- by default, the Mechanism's `primary OutputState <OutputState_Primary>` will be used.  However,
+    if the Mechanism has any OutputStates specified in its `monitored_states` attribute, those will be used (except for
+    any that specify `None` as their `monitoring_status`). This specification takes precedence over any of the other
+    types listed below:  if it is `None`, then none of that Mechanism's OutputStates will be monitored; if it
+    specifies OutputStates to be monitored, those will be monitored even if they do not satisfy any of the conditions
+    described in the specifications below.
+  COMMENT
+  ..
+  * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` will be used.
 
-.. _ObjectiveMechanism_OutputState_Tuple:
+  .. _ObjectiveMechanism_OutputState_Tuple:
 
-* **MonitoredOutputState Tuple**: a tuple can be used wherever an OutputState can be specified, to determine how
-  its value is combined with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
-  `example <ObjectiveMechanism_OutputState_Tuple_Example>`). Each tuple must have the three following items in the
-  order listed:
+  * **MonitoredOutputState Tuple** -- a tuple can be used wherever an OutputState can be specified, to determine how
+    its value is combined with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
+    `example <ObjectiveMechanism_OutputState_Tuple_Example>`). Each tuple must have the three following items in the
+    order listed:
 
-      * an OutputState or Mechanism, the name of one, or a specification dictionary for one;
-      ..
-      * a weight (int) - multiplies the value of the OutputState.
-      ..
-      * an exponent (int) - exponentiates the value of the OutputState;
+        * an OutputState or Mechanism, the name of one, or a specification dictionary for one;
+        ..
+        * a weight (int) - multiplies the value of the OutputState.
+        ..
+        * an exponent (int) - exponentiates the value of the OutputState.
 
-* **string**, **value** or **dict**: These can be used as placemarkers for a monitored_state that will be instantiated
-  later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as the
-  default name of the corresponding InputState (specified in the `input_states <ObjectiveMechanism.input_states>`
-  attribute of the ObjectiveMechanism) If a value is specified, it is used as the default value for the corresponding
-  InputState.  If a dict is specified, it must have a single entry, the key of which will be used as a string
-  specification -- i.e., as the name of the InputState -- and the value as its value specification.
+  * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
+    instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as
+    the default name of the corresponding InputState (specified in the `input_states <ObjectiveMechanism.input_states>`
+    attribute of the ObjectiveMechanism). If a value is specified, it is used as the default value for the corresponding
+    InputState.  If a dict is specified, it must have a single entry, the key of which is used as a string
+    specification -- i.e., as the name of the InputState -- and the value as its value specification.
 
 .. _ObjectiveMechanism_Function:
 
@@ -142,6 +140,7 @@ However, this can easily be configured to calculate differences, ratios, etc. (s
 `CombinationFunction`, or any python function that takes a 2d array with an arbitrary number of
 items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
 input_states), and returns a 1d array.
+
 
 .. _ObjectiveMechanism_Execution:
 

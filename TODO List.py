@@ -608,7 +608,7 @@
 # FIX: DERIVATIVE FOR SoftMax Function
 
 # FIX: ADD owner ARG TO Function CONSTRUCTOR (DEFAULT = NONE)
-# FIX: SEARCH FOR AND PURGE: monitoringMechanism and monitoring_mechanism AND monitoring_mech
+# FIX: SEARCH FOR AND PURGE: monitoringMechanism and objective_mechanism AND monitoring_mech
 # FIX: GET STRAIGHT target, self.target, self.targets and self.current_targets IN Process AND System
 # FIX: GET STRAIGHT THE HANDLING OF learning_rate for:
 #                  LearningMechanism
@@ -3362,8 +3362,8 @@
 #endregion
 
 #region EVCMechanism -----------------------------------------------------------------------------------
-#     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.monitoring_mechanism
-#     Allow it to take monitoring_mechanism as an argument
+#     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.objective_mechanism
+#     Allow it to take objective_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
 #     Make sure add_monitored_value works:
 #           Needs to call ObjectiveMechanism.add_monitored_value
