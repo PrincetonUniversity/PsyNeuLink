@@ -4576,7 +4576,21 @@ class FHNIntegrator(
         noise=0.0,                      \
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
-        initializer,                    \
+        initial_w=0.0,                  \
+        initial_v=0.0,                  \
+        time_step_size=0.1,             \
+        t_0=0.0,                        \
+        a_v=-1/3,                       \
+        b_v=0.0,                        \
+        c_v=1.0,                        \
+        d_v=0.0,                        \
+        e_v=-1.0,                       \
+        f_v=1.0,                        \
+        time_constant_v=1.0,            \
+        a_w=1.0,                        \
+        b_w=-0.8,                       \
+        c_w=0.7,                        \
+        time_constant_w = 12.5,         \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -4584,9 +4598,12 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Integrates prior value by multiplying `previous_value <FHNIntegrator.previous_value>` by `rate
-    <Integrator.rate>` and adding `increment <FHNIntegrator.increment>` and  `noise
-    <FHNIntegrator.noise>`. Ignores `variable <Integrator.variable>`).
+    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration. The model is
+    defined by a system of differential equations: dv/dt and dw/dt, which are parameterized as follows:
+
+    time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+
+    time_constant_w * dw/dt = a_w * v + b_w * w + c_w
 
     Arguments
     ---------
@@ -4595,26 +4612,18 @@ class FHNIntegrator(
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float, list or 1d np.array : default 1.0
-        specifies the multiplicative decrement of `previous_value <FHNIntegrator.previous_value>` (i.e.,
-        the rate of exponential decay).  If it is a list or array, it must be the same length as
-        `variable <FHNIntegrator.default_variable>`.
-
-    increment : float, list or 1d np.array : default 0.0
-        specifies an amount to be added to `prevous_value <FHNIntegrator.previous_value>` in each call to
-        `function <FHNIntegrator.function>` (see `increment <FHNIntegrator.increment>` for details).
-        If it is a list or array, it must be the same length as `variable <FHNIntegrator.default_variable>`
-        (see `increment <FHNIntegrator.increment>` for details).
-
-    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added to `prevous_value <FHNIntegrator.previous_value>` in each call to
-        `function <FHNIntegrator.function>`. If it is a list or array, it must be the same length as
-        `variable <FHNIntegrator.default_variable>` (see `noise <FHNIntegrator.noise>` for details).
-
-    initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
+    initial_w : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
         `default_variable <FHNIntegrator.default_variable>` (see `initializer
         <FHNIntegrator.initializer>` for details).
+
+    initial_v : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+        `default_variable <FHNIntegrator.default_variable>` (see `initializer
+        <FHNIntegrator.initializer>` for details).
+
+    t_0 : float : default 0.0
+        specifies starting value for time
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4633,56 +4642,17 @@ class FHNIntegrator(
     ----------
 
     variable : number or np.array
-        **Ignored** by the FHNIntegrator function. Refer to SimpleIntegrator or AdaptiveIntegrator for
-        integrator functions that depend on both a prior value and a new value (variable).
+        External stimulus
 
-    rate : float or 1d np.array
-        determines the multiplicative decrement of `previous_value <FHNIntegrator.previous_value>` (i.e., the
-        rate of exponential decay) in each call to `function <FHNIntegrator.function>`.  If it is a list or
-        array, it must be the same length as `variable <FHNIntegrator.default_variable>` and each element is
-        used to multiply the corresponding element of `previous_value <FHNIntegrator.previous_value>` (i.e.,
-        it is used for Hadamard multiplication).  If it is a scalar or has a single element, its value is used to
-        multiply all the elements of `previous_value <FHNIntegrator.previous_value>`.
 
-    increment : float, function, list, or 1d np.array
-        determines the amount added to `previous_value <FHNIntegrator.previous_value>` in each call to
-        `function <FHNIntegrator.function>`.  If it is a list or array, it must be the same length as
-        `variable <FHNIntegrator.default_variable>` and each element is added to the corresponding element of
-        `previous_value <FHNIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
-        scalar or has a single element, its value is added to all the elements of `previous_value
-        <FHNIntegrator.previous_value>`.
+    previous_v : 1d np.array : default ClassDefaults.variable
+        stores accumulated value of v during integration
 
-    noise : float, function, list, or 1d np.array
-        determines a random value to be added in each call to `function <FHNIntegrator.function>`.
-        If it is a list or array, it must be the same length as `variable <FHNIntegrator.default_variable>` and
-        each element is added to the corresponding element of `previous_value <FHNIntegrator.previous_value>`
-        (i.e., it is used for Hadamard addition).  If it is a scalar or has a single element, its value is added to all
-        the elements of `previous_value <FHNIntegrator.previous_value>`.  If it is a function, it will be
-        executed separately and added to each element.
+    previous_w : 1d np.array : default ClassDefaults.variable
+        stores accumulated value of w during integration
 
-        .. note::
-
-            In order to generate random noise, a probability distribution function should be selected (see
-            `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output,
-            then the noise will simply be an offset that remains the same across all executions.
-
-    initializer : float, 1d np.array or list
-        determines the starting value for integration (i.e., the value to which `previous_value
-        <FHNIntegrator.previous_value>` is set. If initializer is a list or array, it must be the same length
-        as `variable <FHNIntegrator.default_variable>`.
-
-        TBI:
-
-        Initializer may be a function or list/array of functions.
-
-        If initializer is specified as a single float or function, while `variable <FHNIntegrator.variable>` is
-        a list or array, initializer will be applied to each variable element. In the case of an initializer function,
-        this means that the function will be executed separately for each variable element.
-
-    previous_value : 1d np.array : default ClassDefaults.variable
-        stores previous value to which `rate <FHNIntegrator.rate>` and `noise <FHNIntegrator.noise>`
-        will be added.
+    previous_t : float
+        stores accumulated value of time, which is incremented by time_step_size on each execution of the function
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
@@ -4780,8 +4750,13 @@ class FHNIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: `previous_value <ConstantIntegrator.previous_value>` combined with `rate <ConstantIntegrator.rate>` and
-        `noise <ConstantIntegrator.noise>`.
+        Return: previous_v , previous_w at each time step, which represents the numerical integration of the follwing
+        system of differential equations:
+
+        time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+
+        time_constant_w * dw/dt = a_w * v + b_w * w + c_w
+
 
         Arguments
         ---------
@@ -4797,7 +4772,7 @@ class FHNIntegrator(
         Returns
         -------
 
-        updated value of integral : 2d np.array
+        previous_v , previous_w
 
         """
 
