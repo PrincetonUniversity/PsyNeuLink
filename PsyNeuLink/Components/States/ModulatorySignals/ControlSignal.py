@@ -277,6 +277,7 @@ Class Reference
 
 import inspect
 import warnings
+
 from enum import IntEnum
 
 import numpy as np
@@ -286,24 +287,18 @@ from PsyNeuLink.Components.Component import InitStatus, function_type, method_ty
 # import Components
 # FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
-    LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
+from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import ModulatorySignal
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE
 from PsyNeuLink.Components.States.State import State_Base
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, \
-    FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, \
-    SLOPE, SUM, kwAssign
+from PsyNeuLink.Globals.Keywords import ALLOCATION_SAMPLES, AUTO, CONTROLLED_PARAM, CONTROL_PROJECTION, EXECUTING, FUNCTION, FUNCTION_PARAMS, INTERCEPT, OFF, ON, OUTPUT_STATES, OUTPUT_STATE_PARAMS, PROJECTION_TYPE, SEPARATOR_BAR, SLOPE, SUM, kwAssign
 from PsyNeuLink.Globals.Log import LogEntry, LogLevel
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, \
-    kwCompatibilityType
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import \
-    ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, \
-    costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
+from PsyNeuLink.Globals.Utilities import is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import ADJUSTMENT_COST_FUNCTION, COST_COMBINATION_FUNCTION, DURATION_COST_FUNCTION, INTENSITY_COST_FUNCTION, costFunctionNames, kpAdjustmentCost, kpAllocation, kpCost, kpDurationCost, kpIntensity, kpIntensityCost
 from PsyNeuLink.Scheduling.TimeScale import CurrentTime, TimeScale
 
 # class OutputStateLog(IntEnum):
@@ -635,7 +630,7 @@ class ControlSignal(ModulatorySignal):
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          variable=variable,

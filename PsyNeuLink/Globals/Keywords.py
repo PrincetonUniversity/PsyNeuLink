@@ -95,11 +95,11 @@ class MatrixKeywords:
     ----------
 
     IDENTITY_MATRIX
-        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and 
+        a square matrix of 1's along the diagnoal, 0's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     HOLLOW_MATRIX
-        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and 
+        a square matrix of 0's along the diagnoal, 1's elsewhere; this requires that the length of the sender and
         receiver values are the same.
 
     FULL_CONNECTIVITY_MATRIX
@@ -266,7 +266,7 @@ FUNCTION = "function" # Param name for function, method, or type to instantiate 
 FUNCTION_PARAMS  = "function_params" # Params used to instantiate or assign to a FUNCTION
 
 PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
-PARAM_INSTANCE_DEFAULTS = "paramsInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
+PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Params used to instantiate a Function; supercede paramClassDefaults
 PARAMS_CURRENT = "paramsCurrent"                  # Params currently in effect for an instance of a Function
                                                    #    in general, this includes params specifed as arg in a
                                                    #    to Function.execute;  however, there are some exceptions
