@@ -253,8 +253,8 @@ Class Reference
 
 import inspect
 
-import typecheck as tc
 import numpy as np
+import typecheck as tc
 
 from PsyNeuLink.Components.Component import Component, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear, get_param_value_for_keyword
@@ -456,7 +456,7 @@ class ParameterState(State_Base):
 
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of Mechanism (to override assignment of componentName in super.__init__)
         super(ParameterState, self).__init__(owner,
                                              variable=variable,
