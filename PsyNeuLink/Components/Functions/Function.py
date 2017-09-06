@@ -200,7 +200,7 @@ from numpy import abs, exp, tanh
 
 from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import FHN_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, DECAY, DIFFERENCE, DISTANCE_FUNCTION, DISTANCE_METRICS, DIST_FUNCTION_TYPE, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, ENERGY, ENTROPY, EUCLIDEAN, EXAMPLE_FUNCTION_TYPE, EXECUTING, EXPONENTIAL_DIST_FUNCTION, EXPONENTIAL_FUNCTION, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, FUNCTION_PARAMS, GAIN, GAMMA_DIST_FUNCTION, HIGH, HOLLOW_MATRIX, IDENTITY_MATRIX, INCREMENT, INITIALIZER, INITIALIZING, INPUT_STATES, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, INTERCEPT, LEARNING_FUNCTION_TYPE, LINEAR_COMBINATION_FUNCTION, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, LOW, MATRIX, MATRIX_KEYWORD_NAMES, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, NOISE, NORMAL_DIST_FUNCTION, OBJECTIVE_FUNCTION_TYPE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_STATES, OUTPUT_TYPE, PARAMETER_STATE_PARAMS, PEARSON, PROB, PRODUCT, RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, REDUCE_FUNCTION, RL_FUNCTION, SCALE, SIMPLE_INTEGRATOR_FUNCTION, SLOPE, SOFTMAX_FUNCTION, STABILITY_FUNCTION, STANDARD_DEVIATION, SUM, TIME_STEP_SIZE, TRANSFER_FUNCTION_TYPE, UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -3365,6 +3365,37 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 param = param()
         return param
 
+    def _euler(self, previous_value, previous_time, slope, time_step_size):
+
+        if callable(slope):
+            slope = slope(previous_time, previous_value)
+
+        return previous_value + slope*time_step_size
+
+    def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
+
+        if callable(slope):
+            slope_approx_1 = slope(previous_time,
+                                        previous_value)
+
+            slope_approx_2 = slope(previous_time + time_step_size/2,
+                                        previous_value + (0.5 * time_step_size * slope_approx_1))
+
+            slope_approx_3 = slope(previous_time + time_step_size/2,
+                                        previous_value + (0.5 * time_step_size * slope_approx_2))
+
+            slope_approx_4 = slope(previous_time + time_step_size,
+                                        previous_value + (time_step_size * slope_approx_3))
+
+            value = previous_value \
+                    + (time_step_size/6)*(slope_approx_1 + 2*(slope_approx_2 + slope_approx_3) + slope_approx_4)
+
+        else:
+            value = previous_value + time_step_size*slope
+
+        return value
+
+
     def function(self, *args, **kwargs):
         raise FunctionError("Integrator is not meant to be called explicitly")
 
@@ -4541,6 +4572,249 @@ class OrnsteinUhlenbeckIntegrator(
 
         return adjusted_value
 
+class FHNIntegrator(
+    Integrator):  # --------------------------------------------------------------------------------
+    """
+    FHNIntegrator(              \
+        default_variable=None,          \
+        rate=1.0,                       \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initial_w=0.0,                  \
+        initial_v=0.0,                  \
+        time_step_size=0.1,             \
+        t_0=0.0,                        \
+        a_v=-1/3,                       \
+        b_v=0.0,                        \
+        c_v=1.0,                        \
+        d_v=0.0,                        \
+        e_v=-1.0,                       \
+        f_v=1.0,                        \
+        time_constant_v=1.0,            \
+        a_w=1.0,                        \
+        b_w=-0.8,                       \
+        c_w=0.7,                        \
+        time_constant_w = 12.5,         \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
+
+    .. _FHNIntegrator:
+
+    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration. The model is
+    defined by a system of differential equations: dv/dt and dw/dt, which are parameterized as follows:
+
+    time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+
+    time_constant_w * dw/dt = a_w * v + b_w * w + c_w
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    initial_w : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+        `default_variable <FHNIntegrator.default_variable>` (see `initializer
+        <FHNIntegrator.initializer>` for details).
+
+    initial_v : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+        `default_variable <FHNIntegrator.default_variable>` (see `initializer
+        <FHNIntegrator.initializer>` for details).
+
+    t_0 : float : default 0.0
+        specifies starting value for time
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        External stimulus
+
+
+    previous_v : 1d np.array : default ClassDefaults.variable
+        stores accumulated value of v during integration
+
+    previous_w : 1d np.array : default ClassDefaults.variable
+        stores accumulated value of w during integration
+
+    previous_t : float
+        stores accumulated value of time, which is incremented by time_step_size on each execution of the function
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = FHN_INTEGRATOR_FUNCTION
+
+    class ClassDefaults(Integrator.ClassDefaults):
+        variable = [[0]]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None,
+        INCREMENT: None,
+    })
+
+    # multiplicative param does not make sense in this case
+    multiplicative_param = RATE
+    additive_param = INCREMENT
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=1.0,
+                 offset=0.0,
+                 scale=1.0,
+                 initial_w=0.0,
+                 initial_v=0.0,
+                 time_step_size=0.1,
+                 t_0=0.0,
+                 a_v=-1/3,
+                 b_v=0.0,
+                 c_v=1.0,
+                 d_v=0.0,
+                 e_v=-1.0,
+                 f_v=1.0,
+                 time_constant_v=1.0,
+                 a_w=1.0,
+                 b_w=-0.8,
+                 c_w=0.7,
+                 time_constant_w = 12.5,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context="FHNIntegrator Init"):
+
+        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+        params = self._assign_args_to_param_dicts(default_variable=default_variable,
+                                                  offset=offset,
+                                                  scale=scale,
+                                                  initial_v=initial_v,
+                                                  initial_w=initial_w,
+                                                  time_step_size=time_step_size,
+                                                  t_0=t_0,
+                                                  a_v=a_v,
+                                                  b_v=b_v,
+                                                  c_v=c_v,
+                                                  d_v=d_v,
+                                                  e_v=e_v,
+                                                  f_v=f_v,
+                                                  time_constant_v=time_constant_v,
+                                                  a_w=a_w,
+                                                  b_w=b_w,
+                                                  c_w=c_w,
+                                                  time_constant_w=time_constant_w,
+                                                  params=params)
+
+        self.previous_v = self.initial_v
+        self.previous_w = self.initial_w
+        self.previous_t = self.t_0
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context)
+
+        self.variable = self.default_variable
+        self.auto_dependent = True
+
+
+
+
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: previous_v , previous_w at each time step, which represents the numerical integration of the follwing
+        system of differential equations:
+
+        time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+
+        time_constant_w * dw/dt = a_w * v + b_w * w + c_w
+
+
+        Arguments
+        ---------
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        previous_v , previous_w
+
+        """
+
+        variable = self.variable
+
+        def dv_dt(time, v):
+            # standard coeffs:
+            # return v - (v**3)/3 - self.previous_w + variable
+
+            # general:
+            val= (self.a_v*(v**3) + self.b_v*(v**2) + self.c_v*v + self.d_v
+                    + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
+            return val
+        def dw_dt(time, w):
+            # standard coeffs:
+            # return self.a*(self.previous_v + self.b - self.c*w)
+
+            # general:
+            return (self.a_w*self.previous_v + self.b_w*w + self.c_w)/self.time_constant_w
+
+        new_v = self._runge_kutta_4(previous_time=self.previous_t,
+                                    previous_value=self.previous_v,
+                                    slope=dv_dt,
+                                    time_step_size=self.time_step_size)*self.scale + self.offset
+
+        new_w = self._runge_kutta_4(previous_time=self.previous_t,
+                                    previous_value=self.previous_w,
+                                    slope=dw_dt,
+                                    time_step_size=self.time_step_size)*self.scale + self.offset
+
+        if not context or INITIALIZING not in context:
+            self.previous_v = new_v
+            self.previous_w = new_w
+            self.previous_t += self.time_step_size
+
+        return new_v, new_w
+
 class AccumulatorIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
@@ -4691,7 +4965,7 @@ class AccumulatorIntegrator(
                  # rate: parameter_spec = 1.0,
                  rate=None,
                  noise=0.0,
-                 increment = None,
+                 increment=None,
                  initializer=ClassDefaults.variable,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4702,15 +4976,15 @@ class AccumulatorIntegrator(
         params = self._assign_args_to_param_dicts(rate=rate,
                                                   initializer=initializer,
                                                   noise=noise,
-                                                  increment = increment,
+                                                  increment=increment,
                                                   params=params)
 
         super().__init__(
             # default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context)
 
         self.previous_value = self.initializer
         self.instance_defaults.variable = self.initializer
@@ -4846,14 +5120,13 @@ class AccumulatorIntegrator(
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
-
         # try:
         #     previous_value = params[INITIALIZER]
         # except (TypeError, KeyError):
 
         previous_value = np.atleast_2d(self.previous_value)
 
-        value = previous_value*rate + noise + increment
+        value = previous_value * rate + noise + increment
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
