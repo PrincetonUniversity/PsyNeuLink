@@ -4718,9 +4718,16 @@ class FHNIntegrator(
                  initial_v = 0.0,
                  time_step_size = 0.1,
                  t_0 = 0.0,
+                 v_a = -1/3,
+                 v_b = 0.0,
+                 v_c = 1.0,
+                 v_d=0.0,
+                 v_e=-1.0,
+                 v_f=1.0,
                  a = 0.08,
                  b = 0.7,
                  c =0.8,
+                 tau = 1.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4732,6 +4739,12 @@ class FHNIntegrator(
                                                   initial_w = initial_w,
                                                   time_step_size = time_step_size,
                                                   t_0 = t_0,
+                                                  v_a = v_a,
+                                                  v_b = v_b,
+                                                  v_c = v_c,
+                                                  v_d=v_d,
+                                                  v_e=v_e,
+                                                  v_f=v_f,
                                                   a = a,
                                                   b = b,
                                                   c = c,
@@ -4784,8 +4797,8 @@ class FHNIntegrator(
         variable = self.variable
 
         def dv_dt(time, v):
-            return v - (v**3)/3 - self.previous_w + variable
-
+            # return v - (v**3)/3 - self.previous_w + variable
+            return (self.v_a*v**3 + self.v_b*v**2 + self.v_c*v + self.v_d + self.v_e*self.previous_w + self.v_f*variable)/self.v_time_constant
         def dw_dt(time, w):
             return self.a*(self.previous_v + self.b - self.c*w)
 
