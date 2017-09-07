@@ -203,8 +203,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
         Class methods:
             None
@@ -241,14 +240,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
 
-    COMMENT:
-        [TBI]
-        time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
-            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-    COMMENT
-
-    name :  str : default ComparatorMechanism-<index>
+    name:  str : default ComparatorMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).

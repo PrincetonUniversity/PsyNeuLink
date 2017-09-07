@@ -61,7 +61,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     default_input_value=None,                               \
     size=None,                                              \
     function=Linear(slope = 1.0, intercept = 0.0), \
-    time_scale=TimeScale.TRIAL,                             \
     params=None,                                            \
     name=None,                                              \
     prefs=None)
@@ -86,10 +85,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         specifies the function used to integrate the input.  Must take a single numeric value, or a list or np.array
         of values, and return one of the same form.
 
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed on the `TIME_STEP` or `TRIAL` time scale.
-        This must be set to `TimeScale.TIME_STEP` for the :keyword:`rate` parameter to have an effect.
-
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
         the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
@@ -110,9 +105,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     ----------
     variable : value: default
         the input to Mechanism's ``function``.
-
-    time_scale :  TimeScale : defaultTimeScale.TRIAL
-        specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
 
     name : str : default CompositionInterfaceMechanism-<index>
         the name of the Mechanism.
