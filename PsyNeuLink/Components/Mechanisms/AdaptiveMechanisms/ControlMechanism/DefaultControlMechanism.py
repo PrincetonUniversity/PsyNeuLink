@@ -16,7 +16,7 @@ DefaultControlMechanism creates an `ControlSignal` for each `ControlProjection` 
 `defaultControlAllocation` =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
 parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
 by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism <ControlMechanism>` for additional
-details of how ControlMechanisms are created, executed and their attributes.
+details of how ControlMechanism are created, executed and their attributes.
 
 COMMENT:
    ADD LINK FOR defaultControlAllocation
@@ -37,7 +37,7 @@ import numpy as np
 import typecheck as tc
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism_Base
 from PsyNeuLink.Components.States.InputState import InputState
 
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
@@ -134,8 +134,8 @@ class DefaultControlMechanism(ControlMechanism_Base):
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 
-        Instantiate input_states attribute (in case they are referenced) and
-            assign any OutputStates that project to them to monitored_output_states
+        Instantiate input_states and monitored_output_states attributes (in case they are referenced)
+            and assign any OutputStates that project to the input_states to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
                               subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()

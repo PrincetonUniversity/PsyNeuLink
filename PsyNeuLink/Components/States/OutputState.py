@@ -609,7 +609,7 @@ class OutputState(State_Base):
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner,
                          variable=variable,
                          size=size,

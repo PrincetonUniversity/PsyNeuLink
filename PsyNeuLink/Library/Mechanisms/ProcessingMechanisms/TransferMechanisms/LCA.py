@@ -80,11 +80,13 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_avg, max_vs_next
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE, ENERGY, ENTROPY
+from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, \
+    VARIANCE, ENERGY, ENTROPY
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
+    RecurrentTransferMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 

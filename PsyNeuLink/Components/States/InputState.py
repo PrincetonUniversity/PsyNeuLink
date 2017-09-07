@@ -489,7 +489,7 @@ class InputState(State_Base):
 
         self.reference_value = reference_value
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of owner (to override assignment of componentName in super.__init__)
         super(InputState, self).__init__(owner,
                                          variable=variable,

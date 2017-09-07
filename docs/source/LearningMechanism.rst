@@ -1,6 +1,6 @@
 Learning Mechanism
 ==================
 
-.. automodule:: AdaptiveMechanisms.LearningMechanisms.LearningMechanism
+.. automodule:: LearningMechanism
    :members:
    :exclude-members: Linear, random

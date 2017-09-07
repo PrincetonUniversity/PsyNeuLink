@@ -101,7 +101,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
@@ -282,7 +282,7 @@ class ControlProjection(ModulatoryProjection_Base):
                     receiver is None or receiver.init_status is InitStatus.DEFERRED_INITIALIZATION):
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         # super(ControlSignal_Base, self).__init__(sender=sender,
         super(ControlProjection, self).__init__(sender=sender,
