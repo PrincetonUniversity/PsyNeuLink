@@ -4460,7 +4460,7 @@ class FHNIntegrator(
         a_w=1.0,                        \
         b_w=-0.8,                       \
         c_w=0.7,                        \
-        electrotonic_coupling=1.0,      \
+        mode=1.0,      \
         uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
         params=None,                    \
@@ -4522,7 +4522,7 @@ class FHNIntegrator(
     c_w : float : default 0.7,
         constant term in the dw/dt equation
 
-    electrotonic_coupling : float : default 1.0
+    mode : float : default 1.0
         coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
         (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
         activity) decreases
@@ -4610,7 +4610,7 @@ class FHNIntegrator(
     c_w : float : default 0.7,
         constant term in the dw/dt equation
 
-    electrotonic_coupling : float : default 1.0
+    mode : float : default 1.0
         coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
         (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
         activity) decreases
@@ -4665,7 +4665,7 @@ class FHNIntegrator(
                  b_w=-0.8,
                  c_w=0.7,
                  time_constant_w = 12.5,
-                 electrotonic_coupling = 1.0,
+                 mode = 1.0,
                  uncorrelated_activity = 0.0,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -4690,7 +4690,7 @@ class FHNIntegrator(
                                                   a_w=a_w,
                                                   b_w=b_w,
                                                   c_w=c_w,
-                                                  electrotonic_coupling=electrotonic_coupling,
+                                                  mode=mode,
                                                   uncorrelated_activity=uncorrelated_activity,
                                                   time_constant_w=time_constant_w,
                                                   params=params)
@@ -4724,7 +4724,7 @@ class FHNIntegrator(
 
             time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
 
-            time_constant_w * dw/dt = electrotonic_coupling * a_w * v + b_w * w + c_w + (1 - self.electrotonic_coupling) * self.uncorrelated_activity
+            time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
 
 
 
@@ -4753,8 +4753,8 @@ class FHNIntegrator(
             return val
         def dw_dt(time, w):
 
-            return (self.electrotonic_coupling*self.a_w*self.previous_v + self.b_w*w + self.c_w +
-                    (1-self.electrotonic_coupling)*self.uncorrelated_activity)/self.time_constant_w
+            return (self.mode*self.a_w*self.previous_v + self.b_w*w + self.c_w +
+                    (1-self.mode)*self.uncorrelated_activity)/self.time_constant_w
 
         new_v = self._runge_kutta_4(previous_time=self.previous_t,
                                     previous_value=self.previous_v,
