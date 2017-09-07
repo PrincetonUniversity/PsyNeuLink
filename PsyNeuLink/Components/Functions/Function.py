@@ -1610,8 +1610,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        exponents = self.exponents
         weights = self.weights
+        exponents = self.exponents
         operation = self.operation
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?

@@ -242,6 +242,7 @@ Class Reference
 import warnings
 
 import typecheck as tc
+import numpy as np
 import numbers
 
 from PsyNeuLink.Components.Component import InitStatus
@@ -261,6 +262,12 @@ ROLE = 'role'
 MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
 OUTCOME = 'outcome'
+
+# Indices for items in tuple format used for specifying monitored_values using weights and exponents
+OUTPUT_STATE_INDEX = 0
+WEIGHT_INDEX = 2
+EXPONENT_INDEX = 1
+
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
@@ -664,7 +671,7 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
         * string, or
         * MonitoredOutpuStatesOption value.
 
-    Called by self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states_for_system()
+    Called by self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_output_states()
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
@@ -678,42 +685,33 @@ def _parse_monitored_values_list(source, output_state_list, context):
     """
     
     # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
-    output_states = []
-    exponents = []
-    weights =[]
+    output_states = output_state_list
+    weights = np.ones((len(output_states),1))
+    exponents = np.ones_like(weights)
 
-    for item in output_state_list:
+    for i, item in enumerate(output_state_list):
 
         if isinstance(item, tuple):
             if len(item) != 3:
                 raise ObjectiveMechanismError("Tuple {} used for OutputState specification in {} "
                                      "has {} items;  it should be 3".
                                      format(item, source.name, len(item)))
-            if not isinstance(item[1], numbers.Number):
-                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for OutputState of {} "
+            if not isinstance(item[WEIGHT_INDEX], numbers.Number):
+                raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(item[1], source.name))
-            if not isinstance(item[2], numbers.Number):
-                raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for OutputState of {} "
+                                     format(item[WEIGHT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
+            if not isinstance(item[EXPONENT_INDEX], numbers.Number):
+                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(item[0], source.name))
-            output_state = item[0]
-            exponent = item[1]
-            weight = item[1]
-
-        else:
-            output_state = item
-            exponent = 1
-            weight = 1
+                                     format(item[EXPONENT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
+            output_states[i] = item[OUTPUT_STATE_INDEX]
+            weights[i] = item[WEIGHT_INDEX]
+            exponents[i] = item[EXPONENT_INDEX]
 
         # Validate by ObjectiveMechanism:
-        _validate_monitored_value(source, output_state, context=context)
+        _validate_monitored_value(source, output_states[i], context=context)
 
-        output_states.append(output_state)
-        exponents.append(exponent)
-        weights.append(weight)
-
-    return output_states, exponents, weights
+    return output_states, weights, exponents
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):

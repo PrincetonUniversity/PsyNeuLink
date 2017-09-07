@@ -1013,8 +1013,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 monitored_state_mech = projection.sender.owner
                 monitored_state_index = self.monitored_output_states.index(monitored_state)
 
-                weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
-                exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
+                weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
+                exponent = self.monitored_output_states_weights_and_exponents[monitored_state_index][1]
 
                 print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                        format(monitored_state_mech.name, monitored_state.name, weight, exponent))
