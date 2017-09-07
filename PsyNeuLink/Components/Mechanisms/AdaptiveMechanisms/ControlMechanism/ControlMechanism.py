@@ -963,7 +963,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         super()._instantiate_attributes_after_function(context=context)
 
-        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent:
+        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent and self.system is not None:
             if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
                 self._assign_as_controller(context=context)
             if not self.system.enable_controller:
