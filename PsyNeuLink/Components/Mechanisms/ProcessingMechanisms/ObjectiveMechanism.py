@@ -571,26 +571,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     for item in target_set[MONITORED_VALUES]:
                         _validate_monitored_value(self, item, context=context)
 
-                    # FIX: PRINT WARNING (IF VERBOSE) IF WEIGHTS or EXPONENTS IS SPECIFIED,
-                    # FIX:  INDICATING THAT IT WILL BE IGNORED;
-                    # FIX:  weights AND exponents ARE SPECIFIED IN TUPLES
-                    # FIX:  WEIGHTS and EXPONENTS ARE VALIDATED IN
-                    # FIX:           System.ControlMechanism_instantiate_monitored_output_states
-                    # # Validate WEIGHTS if it is specified
-                    # try:
-                    #     num_weights = len(target_set[FUNCTION_PARAMS][WEIGHTS])
-                    # except KeyError:
-                    #     # WEIGHTS not specified, so ignore
-                    #     pass
-                    # else:
-                    #     # Insure that number of weights specified in WEIGHTS
-                    #     #    equals the number of states instantiated from MONITOR_FOR_CONTROL
-                    #     num_monitored_states = len(target_set[MONITOR_FOR_CONTROL])
-                    #     if not num_weights != num_monitored_states:
-                    #         raise MechanismError("Number of entries ({0}) in WEIGHTS of kwFunctionParam for EVC "
-                    #                        "does not match the number of monitored states ({1})".
-                    #                        format(num_weights, num_monitored_states))
-
             except KeyError:
                 pass
 
@@ -687,7 +667,7 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption, dict)):
-        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be"
+        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be "
                              "an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
                              format(MONITORED_VALUES, objective_mech.name, state_spec))
 

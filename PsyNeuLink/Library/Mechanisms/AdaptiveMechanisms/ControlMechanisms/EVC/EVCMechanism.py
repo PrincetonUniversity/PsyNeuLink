@@ -89,9 +89,10 @@ ObjectiveMechanism
 
 Like any ControlMechanism, an EVCMechanism receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Structure>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputStatePrimary>` (see for additional details).  This is used by its `function <EVCMechanism>` to evaluate
-the performance of its `system <EVCMechanism.system>` when computing the `EVC <EVCMechanism_EVC>`.
-
+<InputStatePrimary>` (see for additional details).  By default, the EVCMechanism creates an ObjectiveMechanism
+that multiplies the `value <OutputState.value>`\\s of the OutputStates it monitors.  The result is used by its
+`function <EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
+<EVCMechanism_EVC>`.
 
 .. _EVCMechanism_Prediction_Mechanisms:
 
@@ -247,8 +248,8 @@ This procedure can be modified by specifying a custom function for any or all of
 
 .. _EVCMechanism_Examples:
 
-Examples
---------
+Example
+-------
 
 The following example implements a System with an EVCMechanism (and two processes not shown)::
 
@@ -264,10 +265,7 @@ computation will multiply the value of the primary OutputState of the Reward Mec
 *DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
 OutputState of the DDM Mechanism.
 
-COMMENT:
-ADD: This example specifies the EVCMechanism on its own, and then uses it for a System.
-COMMENT
-
+See `ControlMechanism <ControlMechanism_Examples>` for examples of how to specify ControlMechanisms on their own.
 
 .. _EVCMechanism_Class_Reference:
 
