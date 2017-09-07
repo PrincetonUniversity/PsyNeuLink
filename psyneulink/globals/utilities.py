@@ -1070,6 +1070,15 @@ def is_component(val):
     from psyneulink.components.component import Component
     return isinstance(val, Component)
 
+def is_instance_or_subclass(candidate, spec):
+    """
+    Returns
+    -------
+
+    True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
+    """
+    return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
+
 
 def make_readonly_property(val):
     """Return property that provides read-only access to its value
