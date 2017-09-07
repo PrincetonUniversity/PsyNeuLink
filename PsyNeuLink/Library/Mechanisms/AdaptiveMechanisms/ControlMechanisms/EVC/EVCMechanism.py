@@ -255,12 +255,12 @@ The following example implements a System with an EVCMechanism (and two processe
 
     mySystem = system(processes=[myRewardProcess, myDecisionProcess],
                       controller=EVCMechanism,
-                      monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, -1, 1)],
+                      monitor_for_control=[Reward, DDM_DECISION_VARIABLE,(RESPONSE_TIME, 1, -1)],
 
 It uses the System's `monitor_for_control` argument to assign three outputStates to be monitored.  The first one
 references the Reward Mechanism (not shown);  its `primary OutputState <OutputState_Primary>` will be used by default.
 The second and third use keywords that are the names of outputStates of a  `DDM` Mechanism (also not shown).
-The last one (RESPONSE_TIME) is assigned an exponent of -1 and weight of 1. As a result, each calculation of the EVC
+The last one (RESPONSE_TIME) is assigned a weight of 1 and an exponent of -1. As a result, each calculation of the EVC
 computation will multiply the value of the primary OutputState of the Reward Mechanism by the value of the
 *DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
 OutputState of the DDM Mechanism.
@@ -878,37 +878,50 @@ class EVCMechanism(ControlMechanism_Base):
         # If EVCMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
         if self.system:
-            self.monitored_output_states, weights, exponents = self.system._get_monitored_output_states(self,
-                                                                                                        context=context)
+            monitored_values_spec = self.system._get_monitored_output_states(self, context=context)
 
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         elif isinstance(self.objective_mechanism, list):
-            self.monitored_output_states, weights, exponents = _parse_monitored_values_list(self,
-                                                                                            self.objective_mechanism,
-                                                                                            context=context)
+            monitored_values_spec = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
+
         else:
-            self.monitored_output_states = None
-            weights = exponents = None
+            monitored_values_spec = None
+
+        if monitored_values_spec:
+            self.monitored_output_states, weights, exponents = monitored_values_spec
+        else:
+            self.monitored_output_states = weights = exponents = None
+
+        # CREATE
+
 
         # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
         self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
 
+        # # MODIFIED 9/7/17 OLD:
+        # # Create specification for ObjectiveMechanism InputStates corresponding to
+        # #    monitored_output_states and their exponents and weights
+        # monitoring_input_states = []
+        # for i, state in enumerate(self.monitored_output_states):
+        #     if self.system is not None:
+        #         self._validate_monitored_state_in_system(state)
+        #     monitoring_input_states.append({NAME: state.name,
+        #                                     WEIGHT: float(weights[i]),
+        #                                     EXPONENT: float(exponents[i])
+        #                                     })
+        #
+        # self.objective_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
+        #                                               input_states=monitoring_input_states,
+        #                                               function=LinearCombination(operation=PRODUCT),
+        #                                               name=self.name + ' Monitoring Mechanism')
+        # MODIFIED 9/7/17 NEW:
         # Create specification for ObjectiveMechanism InputStates corresponding to
         #    monitored_output_states and their exponents and weights
-        monitoring_input_states = []
-        for i, state in enumerate(self.monitored_output_states):
-            if self.system is not None:
-                self._validate_monitored_state_in_system(state)
-            monitoring_input_states.append({NAME: state.name,
-                                            WEIGHT: float(weights[i]),
-                                            EXPONENT: float(exponents[i])
-                                            })
-
-        self.objective_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
-                                                      input_states=monitoring_input_states,
+        self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_values_spec,
                                                       function=LinearCombination(operation=PRODUCT),
                                                       name=self.name + ' Monitoring Mechanism')
+        # MODIFIED 9/7/17 END
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))

@@ -285,8 +285,8 @@ OUTCOME = 'outcome'
 
 # Indices for items in tuple format used for specifying monitored_values using weights and exponents
 OUTPUT_STATE_INDEX = 0
-WEIGHT_INDEX = 2
-EXPONENT_INDEX = 1
+WEIGHT_INDEX = 1
+EXPONENT_INDEX = 2
 
 
 # This is a convenience class that provides list of standard_output_state names in IDE
@@ -698,7 +698,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         _instantiate_monitoring_projections(owner=self,
-                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in output_state_specs],
+                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in output_state_dicts],
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
