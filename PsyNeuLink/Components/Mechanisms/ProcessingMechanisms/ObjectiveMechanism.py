@@ -37,19 +37,28 @@ Creating an ObjectiveMechanism
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 AdaptiveMechanisms such as `LearningMechanism <LearningMechanism_Creation>` and
 `ControlMechanism <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
-constructor.  Its **monitored_values** argument is used to specify the OutputStates to be monitored.  Any of the forms
-used for `specifying OutputStates <OutputState_Specification>` can be used, as well as a value of
-MonitoredOutputStateOption.  When an ObjectiveMechanism is created, an InputState is created for each of the
+constructor.  Its **monitored_values** argument is used to `specify the OutputStates to be monitored
+<ObjectiveMechanism_Monitored_Values>.  When an ObjectiveMechanism is created, an InputState is created for each of the
 OutputStates specified in its **monitored_values** argument, and a `MappingProjection` is assigned from each of those
 to the corresponding InputState.  By default, the value of each InputState uses the format of its corresponding
 OutputState, and the MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument
-can be used to customize the InputStates, and/or to specify their names. Any of the forms used for
-`specifying InputStates <InputState_Specification>` can be used in the **input_states** argument, however the number
-of InputStates specified must equal the number of OutputStates specified in the **monitored_values** argument (see the
-`examples <ObjectiveMechanism_Examples>` below). The value of each must also be of the same type as the value of the
-corresponding OutputState, however their lengths can differ;  in that case, by default, the MappingProjection created
-uses a  `FULL_CONNECTIVITY` matrix, although this too can be customized using the *PROJECTION* entry of a
-`State specification dictionary <State_Specification>` for the InputState in the **input_states** argument.
+can be used to specify their names and/or customize them. Any of the forms used for `specifying InputStates
+<InputState_Specification>` can be used in the **input_states** argument, with certain constraints:
+
+  .. _ObjectiveMechanism_InputSatates::
+
+  * the number of InputStates specified in the **input_states** argument must equal the number of OutputStates specified
+    in the **monitored_values** argument (see the `examples <ObjectiveMechanism_Examples>` below);
+
+  * the value of each must also be of the same type as the value of the corresponding OutputState, however their
+    lengths can differ;  in that case, by default, the MappingProjection creates uses a  `FULL_CONNECTIVITY` matrix,
+    although this too can be customized using the *PROJECTION* entry of a `State specification dictionary
+    <State_Specification>` for the InputState in the **input_states** argument;
+
+  * a `weight and/or exponent <InputState_Weights_And_Exponents>` can be specified for each InputState (e.g., for use
+    by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;  however, these will be superseded by any
+    weights and/or exponents specified in the **monitored_values** argument (see
+    `ObjectiveMechanism_Monitored_Values` and `note <ObjectiveMechanism_Weights_And_Exponents>` below).
 
 
 .. _ObjectiveMechanism_Structure:
@@ -87,7 +96,7 @@ determined, no MappingProjection is assigned, and this must be done by some othe
 ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute that are not associated with
 an OutputState at the time the ObjectiveMechanism is executed are ignored.
 
-The specification of eacah item in the **monitored_values** argument can take any of the following forms:
+The specification of each item in the **monitored_values** argument can take any of the following forms:
 
   * **OutputState** -- a reference to the `OutputState <OutputState>` of a Mechanism.  This will create a
     `MappingProjection` from it to the corresponding InputState in `input_states <ObjectiveMechanism.input_states>`.
@@ -109,7 +118,7 @@ The specification of eacah item in the **monitored_values** argument can take an
 
   .. _ObjectiveMechanism_OutputState_Tuple:
 
-  * **MonitoredOutputState Tuple** -- a tuple can be used wherever an OutputState can be specified, to determine how
+  * **monitored_values tuple** -- a tuple can be used wherever an OutputState can be specified, to determine how
     its value is combined with others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>` (see
     `example <ObjectiveMechanism_OutputState_Tuple_Example>`). Each tuple must have the three following items in the
     order listed:
@@ -119,6 +128,15 @@ The specification of eacah item in the **monitored_values** argument can take an
         * a weight (int) - multiplies the value of the OutputState.
         ..
         * an exponent (int) - exponentiates the value of the OutputState.
+
+    .. _ObjectiveMechanism_Weights_And_Exponents:
+
+    .. note::
+       The weight and exponent specifications in a monitored_values tuple are used to specify the weights and
+       exponents applied to the corresponding InputStates of the ObjectiveMechanism;  therefore any values specified
+       in the monitored_value tuple precedence over any other weight and/or exponent specifications of the InputStates
+       for the ObjectiveMechanism (i.e., e.g., in the **weight** and **exponent** arguments of the constructor or
+       `state specification dictionary <InputState_Specification_Dictionary>` for the ObjectiveMechanism's InputStates.
 
   * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
     instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as
@@ -219,7 +237,7 @@ to multiply and divide quantities.
 .. ObjectiveMechanism_OutputState_Tuple_Example:
 
 As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
-the **monitored_values** argument, by placing them in a tuple with the OutputState (see `MonitoredOutputState Tuple
+the **monitored_values** argument, by placing them in a tuple with the OutputState (see `monitored_values tuple
 <ObjectiveMechanism_OutputState_Tuple>`).  The following example specifies the example same ObjectiveMechanism as the
 previous example::
 
@@ -521,7 +539,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return super()._validate_variable(variable=variable, context=context)
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate `role`, `monitored_values`, amd `input_states <ObjectiveMechanism.input_states>` arguments
+        """Validate **role**, **monitored_values**, amd **input_states** arguments
 
         """
 

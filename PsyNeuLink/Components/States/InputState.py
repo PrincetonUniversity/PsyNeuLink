@@ -74,11 +74,15 @@ if InputStates are specified in the parameter dictionary, any specified in the *
     to the number of items in the Mechanism's <variable <Mechanism_Base.variable>` attribute.
 
 InputStates can also be **added** to a Mechanism, using the Mechanism's `add_states` method.  However, this has
-consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possbily their relationship to the Mechanism's
+consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly their relationship to the Mechanism's
 `function <Mechanism_Base.function>` (these are discussed `below <InputStates_Mechanism_Variable_and_Function>`).
 If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
 with a numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list
 (that is, it will *not* replace ones that were already created).
+
+.. _InputState_Weights_And_Exponents:
+
+XXXXXWEIGHTS AND EXPONENTS
 
 Specifying an InputState can be done in any of the ways listed below.  To create multiple InputStates,
 their specifications can be included in a list, or in a dictionary in which the key for each entry is a
@@ -113,6 +117,8 @@ can be used to specify an InputState:
     COMMENT
     ..
 
+    .. _InputState_Specification_Dictionary:
+
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
       standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have a
@@ -120,6 +126,7 @@ can be used to specify an InputState:
       `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
       are either of those.  This can be used to specify one or more afferent `PathwayProjections <PathwayProjection>`
       to the InpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
+      XXXXXWEIGHTS AND EXPONENTS
 
     ..
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
