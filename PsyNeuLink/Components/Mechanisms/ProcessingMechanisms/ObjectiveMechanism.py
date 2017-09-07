@@ -219,12 +219,12 @@ to multiply and divide quantities.
 .. ObjectiveMechanism_OutputState_Tuple_Example:
 
 As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
-the **monitored_value** argument, by placing them in a tuple with the OutputState (see `MonitoredOutputState Tuple
+the **monitored_values** argument, by placing them in a tuple with the OutputState (see `MonitoredOutputState Tuple
 <ObjectiveMechanism_OutputState_Tuple>`).  The following example specifies the example same ObjectiveMechanism as the
 previous example::
 
     my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
-                                          monitored_values = [(my_action_select_mech, -1, 1), my_reward_mech])
+                                           monitored_values = [(my_action_select_mech, -1, 1), my_reward_mech])
 
 This specifies that ``my_action_select_mech`` should be assigned a weight of -1 and an exponent of 1 when it is
 submitted to the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  Notice that the exponent had to be
@@ -242,6 +242,7 @@ Class Reference
 import warnings
 
 import typecheck as tc
+import numbers
 
 from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
@@ -663,14 +664,56 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
         * string, or
         * MonitoredOutpuStatesOption value.
 
-    Called by both self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states()
+    Called by self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_states_for_system()
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
-    if not isinstance(state_spec, (str, OutputState, Mechanism, MonitoredOutputStatesOption, dict)):
-        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be "
-                             "an OutputState, Mechanism, or a MonitoredOutputStatesOption value".
+    if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
+        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be an OutputState, Mechanism, "
+                                      "(Mechanism, weight, exponent) tuple, OutputState specification dictionary, "
+                                      "or a MonitoredOutputStatesOption value".
                              format(MONITORED_VALUES, objective_mech.name, state_spec))
 
+def _parse_monitored_values_list(source, output_state_list, context):
+    """Parses tuples specified in output_state_list and returns separate lists for OutputStates, exponents, and weights
+    """
+    
+    # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
+    output_states = []
+    exponents = []
+    weights =[]
+
+    for item in output_state_list:
+
+        if isinstance(item, tuple):
+            if len(item) != 3:
+                raise ObjectiveMechanismError("Tuple {} used for OutputState specification in {} "
+                                     "has {} items;  it should be 3".
+                                     format(item, source.name, len(item)))
+            if not isinstance(item[1], numbers.Number):
+                raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for OutputState of {} "
+                                     "must be a number".
+                                     format(item[1], source.name))
+            if not isinstance(item[2], numbers.Number):
+                raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for OutputState of {} "
+                                     "must be a number".
+                                     format(item[0], source.name))
+            output_state = item[0]
+            exponent = item[1]
+            weight = item[1]
+
+        else:
+            output_state = item
+            exponent = 1
+            weight = 1
+
+        # Validate by ObjectiveMechanism:
+        _validate_monitored_value(source, output_state, context=context)
+
+        output_states.append(output_state)
+        exponents.append(exponent)
+        weights.append(weight)
+
+    return output_states, exponents, weights
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):

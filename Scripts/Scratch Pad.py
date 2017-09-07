@@ -712,12 +712,18 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 my_transfer_mech_1 = TransferMechanism()
 my_DDM = DDM()
 my_transfer_mech_2 = TransferMechanism(function=Logistic)
-my_control_mech = EVCMechanism(
-                         objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
-                                                                                  my_DDM.RESPONSE_TIME],
-                                                                function=LinearCombination(operation=SUM)),
-                         control_signals=[(THRESHOLD, DDM),
-                                          (GAIN, my_transfer_mech_2)])
+# my_control_mech = EVCMechanism(
+#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
+#                                                                                   my_DDM.output_states[
+#                                                                                       my_DDM.RESPONSE_TIME]],
+#                                                                 function=LinearCombination(operation=SUM)),
+#                          control_signals=[(THRESHOLD, my_DDM),
+#                                           (GAIN, my_transfer_mech_2)])
+my_control_mech = EVCMechanism(objective_mechanism=[(my_transfer_mech_1, 2, 1),
+                                                    my_DDM.output_states[my_DDM.RESPONSE_TIME]],
+                               function=LinearCombination(operation=SUM),
+control_signals=[(THRESHOLD, my_DDM),
+                 (GAIN, my_transfer_mech_2)])
 
 # endregion
 

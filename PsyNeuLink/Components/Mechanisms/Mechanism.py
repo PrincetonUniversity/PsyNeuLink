@@ -1545,7 +1545,6 @@ class Mechanism_Base(Mechanism):
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
-        _instantiate_input_states(owner=self, context=context)
 
     def _instantiate_parameter_states(self, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params

@@ -284,8 +284,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.Contro
     import ControlMechanism_Base, OBJECTIVE_MECHANISM, ALLOCATION_POLICY
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
-    ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+    import ObjectiveMechanism, _parse_monitored_values_list
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
@@ -730,7 +730,8 @@ class EVCMechanism(ControlMechanism_Base):
         """
         super()._instantiate_input_states(context=context)
 
-        self._instantiate_prediction_mechanisms(context=context)
+        if self.system is not None:
+            self._instantiate_prediction_mechanisms(context=context)
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_prediction_mechanisms(self, context=None):
@@ -848,7 +849,17 @@ class EVCMechanism(ControlMechanism_Base):
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
 
-        self._get_monitored_states(context=context)
+        # If EVCMechanism has already been assigned to a System
+        #    get OutputStates in System specified as MONITOR_FOR_CONTROL
+        if self.system:
+            self._get_monitored_states_for_system(context=context)
+
+        # Otherwise, if objective_mechanism argument was specifies as a list, get the OutputStates specified in it
+        elif isinstance(self.objective_mechanism, list):
+            self.monitored_output_states, weights, exponents = _parse_monitored_values_list(self.objective_mechanism)
+
+        else:
+            self.monitored_output_states = None
 
         monitoring_input_states = []
         for i, state in enumerate(self.monitored_output_states):
@@ -858,11 +869,10 @@ class EVCMechanism(ControlMechanism_Base):
                                             EXPONENT: float(self.monitor_for_control_weights_and_exponents[i][1])
                                             })
 
-        # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states
+        # Note: weights and exponents are assigned as parameters of outcome_function in _get_monitored_states_for_system
         self.objective_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
-                                                       # input_states=monitoring_input_states,
-                                                       function=self.outcome_function,
-                                                       name=self.name + ' Monitoring Mechanism')
+                                                      function=self.outcome_function,
+                                                      name=self.name + ' Monitoring Mechanism')
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
@@ -880,7 +890,7 @@ class EVCMechanism(ControlMechanism_Base):
         self.system.execution_list.append(self.objective_mechanism)
         self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
 
-    def _get_monitored_states(self, context=None):
+    def _get_monitored_states_for_system(self, context=None):
         """
         Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
             - if specification in output_state is None:
@@ -1006,7 +1016,7 @@ class EVCMechanism(ControlMechanism_Base):
 
             # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
-                mech_specs = mech.paramsCurrent[OBJECTIVE_MECHANISM]
+                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
@@ -1054,7 +1064,7 @@ class EVCMechanism(ControlMechanism_Base):
 
                 # Get MONITOR_FOR_CONTROL specification from OutputState
                 try:
-                    output_state_specs = output_state.paramsCurrent[OBJECTIVE_MECHANISM]
+                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
                     if output_state_specs is NotImplemented:
                         raise AttributeError
 
