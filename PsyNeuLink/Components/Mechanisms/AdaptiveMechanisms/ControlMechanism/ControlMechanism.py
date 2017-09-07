@@ -13,26 +13,45 @@ Overview
 --------
 
 A ControlMechanism is an `AdaptiveMechanism <AdaptiveMechanism>` that modifies the parameter(s) of one or more
-`Components <Component>`. Its `function <ControlMechanism_Base.function>` takes an evaluative signal (the
-output of an `ObjectiveMechanism`, listed in its `objective_mechanism <ControlMechanism_Base.objective_mechanism>`
-attribute) and uses that to  calculate an `allocation_policy <ControlMechanism_Base.allocation_policy>`:  a list of
-`allocation <ControlSignal.allocation>` values for each of its `ControlSignals <ControlSignal>`.  This is used by
-each ControlSignal to calculate its `intensity`, which is then conveyed by the ControlSignal's `ControlProjection(s)
-<ControlProjection>` to the `ParameterState(s) <ParameterState>` to which they project.  Each ParameterState then
-uses the value received by a ControlProjection to modify the value of the parameter for which it is responsible (see
-`ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  A ControlMechanism can
-regulate only the parameters of Components in the `System` for which it is the `controller
-<System_Execution_Control>`.  The OutputStates used to determine the ControlMechanism's `allocation_policy
-<ControlMechanism_Base.allocation_policy>` and the parameter it controls can be listed using its `show
-<ControlMechanism_Base.show>` method. The control Components of a System can be displayed using the System's
-`System_Base.show_graph` method with its **show_control** argument assigned as `True`.
-COMMENT: TBI
-The control Components of a System can be displayed using the System's
-`show_graph <System_Base.show_graph>` method with its **show_control** argument assigned as `True`.
+`Components <Component>`, in response to an evaluative signal received from an `ObjectiveMechanism`.  The
+ObjectiveMechanism monitors a specified set of OutputStates, and from these generates the evaluative signal that is
+used by the ControlMechanism's `function <ControlMechanism_Base.function>` to calculate an `allocation_policy
+<ControlMechanism_Base.allocation_policy>`: a list of `allocation <ControlSignal.allocation>` values for each of its
+`ControlSignals <ControlSignal>`.  Each ControlSignal uses its `allocation <ControlSignal.allocation>` to calculate its
+`intensity`, which is then conveyed by the ControlSignal's `ControlProjection(s) <ControlProjection>` to the
+`ParameterState(s) <ParameterState>` to which they project.  Each ParameterState then uses the value received by a
+ControlProjection to modify the value of the parameter for which it is responsible (see `ModulatorySignal_Modulation`
+for a more detailed description of how modulation operates).  A ControlMechanism can regulate only the parameters of
+Components in the `System` to which it belongs. The OutputStates used to determine the ControlMechanism's
+`allocation_policy <ControlMechanism_Base.allocation_policy>`, the `ObjectiveMechanism` used to evalute these, and the
+parameters controlled by the ControlMechanism can be listed using its `show <ControlMechanism_Base.show>` method.
+
+COMMENT:
+    ALTERNATE VERSION
+    and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
+    controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
+    controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
+    combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
+    uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
+    determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
+    ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used
+    to determine an EVCMechanism's `allocation_policy <EVCMechanism.allocation_policy>` and the parameters it
+    controls can be listed using its `show <EVCMechanism.show>` method.
 COMMENT
 
-The control components of a System are executed after all `ProcessingMechanisms <ProcessingMechanism>` and
-`learning components <LearningMechanism>` in that System have been executed (see `System Execution <System_Execution>`).
+.. _ControlMechanism_System_Controller:
+
+ControlMechanisms and a System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A ControlMechanism can be assigned to, and executed within a System just like any other Mechanism.  It can also be
+assigned as the `controller <System_Base.controller>` of a `System`, that has a special relation to the System:
+it is used to control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
+in that System.  A System can have only one ControlMechanism, that is executed after all of the other Components in the
+System have been executed, including any other ControlMechanisms (see `System Execution <System_Execution>`).  A
+System's `controller  <System_Base.controller>` and its associated Components can be displayed using the System's
+`System_Base.show_graph` method with its **show_control** argument assigned as `True`.
+
 
 .. _ControlMechanism_Creation:
 

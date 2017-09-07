@@ -13,24 +13,25 @@
 Overview
 --------
 
-An EVCMechanism is a `ControlMechanism <ControlMechanism>` that manages a "portfolio" of
-`ControlSignals <ControlSignal>` that regulate the performance of the System to which they belong. The
-EVCMechanism is one of the most powerful, but also one of the most complex components in PsyNeuLink.  It is
-designed to implement a form of the Expected Value of Control (EVC) Theory described in
-`Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful background concerning
-the purpose and structure of the EVCMechanism.
+An EVCMechanism is a `ControlMechanism <ControlMechanism>` that regulates it `ControlSignals <ControlSignal>` in order
+to optimize the performance of the System to which it belongs.  EVCMechanism is one of the most powerful, but also one
+of the most complex components in PsyNeuLink.  It is designed to implement a form of the Expected Value of Control (EVC)
+Theory described in `Shenhav et al. (2013) <https://www.ncbi.nlm.nih.gov/pubmed/23889930>`_, which provides useful
+background concerning the purpose and structure of the EVCMechanism.
 
-An EVCMechanism belongs to a `System` specified in its `system <EVCMechanism.system>` attribute,
-and has a `ControlSignal` for each parameter of the Components in the `system <EVCMechanism.system>` that it
-controls.  Each ControlSignal is associated with a `ControlProjection` that regulates the value of the parameter it
-controls, with the magnitude of that regulation determined by the ControlSignal's `intensity`.  A particular
-combination of ControlSignal `intensity` values is called an `allocation_policy`. When a `System` is executed that
-uses an EVCMechanism as its `controller <System_Base.controller>`, it concludes by executing the EVCMechanism, which
-determines its `allocation_policy` for the next `TRIAL`.  That, in turn, determines the `intensity` for each of the
-ControlSignals, and therefore the values of the parameters they control on the next `TRIAL`. The OutputStates used to
-determine an EVCMechanism's `allocation_policy <EVCMechanism.allocation_policy>` and the parameters it controls can
-be listed using its `show <EVCMechanism.show>` method.
+An EVCMechanism is similar to a standard `ControlMechanism`, with the following exceptions:
 
+  * it can only be assigned to a System as its `controller <System_Base.controller>`, and not in any other capacity
+    (see `ControlMechanism_System_Controller`);
+  ..
+  * it has several specialized functions that are used to search over the `values <ControlSignal.value>`\\s of its
+    its `ControlSignals <ControlSignal>`, and evaluate the performance of its `system <EVCMechanism.system>`;  by
+    default, it simulates its `system <EVCMechanism.system>` and evaluates its performance under all combinations of
+    ControlSignal values to find the one that optimizes the `Expected Value of Control <EVCMechanism_EVC>`, however
+    its functions can be customized or replaced to implement other optimization procedures.
+  ..
+  * it creates a specialized set of `prediction Mechanisms` EVCMechanism_Prediction_Mechanisms` that are used to
+    simulate the performnace of its `system <EVCMechanism.system>`.
 
 .. _EVCMechanism_EVC:
 
@@ -55,15 +56,40 @@ Creating an EVCMechanism
 An EVCMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`;  it is also
 created automatically when a `System` is created and the EVCMechanism class is specified in the **controller**
 argument of the System's constructor (see `System_Creation`).  The ObjectiveMechanism, the OutputStates it
-monitors and evaluates, and the parameters controlled by an EVCMechanism are specified in the standard way for a
+monitors and evaluates, and the parameters controlled by an EVCMechanism can be specified in the standard way for a
 ControlMechanism (see `ControlMechanism_ObjectiveMechanism` and `ControlMechanism_Control_Signals`, respectively).
-In addition, when an EVCMechanism is created, a `prediction Mechanism <EVCMechanism_Prediction_Mechanisms>` is
-created for each `ORIGIN` Mechanism in its `system <EVCMechanism.system>`, and assigned a MappingProjection from
-the `system <EVCMechanism.system>`.  The prediction Mechanisms are assigned to the EVCMechanism's
-`prediction_mechanisms` attribute.
+
+.. note::
+   Although an EVCMechanism can be created on its own, it can only be assigned to, and executed within a `System` as
+   the System's `controller <System_Base.controller>`.
+
+When an EVCMechanism is assigned to, or created by a System, it is assigned the OutputStates to be monitored and
+parameters to be controlled specified for that System (see `XXX`), and a `prediction Mechanism
+<EVCMechanism_Prediction_Mechanisms>` is created for each `ORIGIN` Mechanism in the `system <EVCMechanism.system>`.
+The prediction Mechanisms are assigned to the EVCMechanism's `prediction_mechanisms` attribute.
 
 An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
 those described above, or its `function <EVCMechanism.function>` as described under `EVC_Default_Configuration `below).
+
+The Compo
+
+
+-------------
+
+: all of the OutputStates specified to be
+monitored in the System's **monitor_for_control** argument are added to the list of the EVCMechanism's
+`monitored_output_states <EVCMechanism.monitored_output_states>` and its ObjectiveMechanism's `monitored_values
+<ObjectiveMechanism.monitored_values>`;
+
+
+ is assigned
+
+control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
+in that System.  A System can have only one ControlMechanism, that is executed after all of the other Components in the
+System have been executed, including any other ControlMechanisms (see `System Execution <System_Execution>`).  A
+System's `controller  <System_Base.controller>` and its associated Components can be displayed using the System's
+`System_Base.show_graph` method with its **show_control** argument assigned as `True`
+-------------
 
 .. _EVCMechanism_Structure:
 
@@ -90,7 +116,7 @@ ObjectiveMechanism
 Like any ControlMechanism, an EVCMechanism receives its input from the *OUTCOME* `OutputState
 <ObjectiveMechanism_Structure>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
 <InputStatePrimary>` (see for additional details).  By default, the EVCMechanism creates an ObjectiveMechanism
-that multiplies the `value <OutputState.value>`\\s of the OutputStates it monitors.  The result is used by its
+that takes the product of the `value <OutputState.value>`\\s of the OutputStates it monitors.  The result is used by its
 `function <EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
 <EVCMechanism_EVC>`.
 

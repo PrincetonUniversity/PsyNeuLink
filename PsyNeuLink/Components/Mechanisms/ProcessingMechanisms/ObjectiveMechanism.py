@@ -623,7 +623,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # PARSE monitored_values
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        output_state_specs, weights, exponents = _parse_monitored_values_list(self, self.monitored_values, context)
+        output_state_specs, mon_val_weights, mon_val_exponents = _parse_monitored_values_list(self,
+                                                                                              self.monitored_values,
+                                                                                              context)
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -678,10 +680,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for input_state_dict in input_state_dicts:
             constraint_value.append(input_state_dict[VARIABLE])
             params = input_state_dict[PARAMS] or {}
-            if weights[i] is not None:
-                params[WEIGHT] = weights[i]
-            if exponents[i] is not None:
-                params[EXPONENT] = exponents[i]
+            if mon_val_weights[i] is not None:
+                params[WEIGHT] = mon_val_weights[i]
+            if mon_val_exponents[i] is not None:
+                params[EXPONENT] = mon_val_exponents[i]
 
         self.instance_defaults.variable = constraint_value
         self._input_states = input_state_dicts
