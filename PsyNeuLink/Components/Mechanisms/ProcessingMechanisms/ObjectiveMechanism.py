@@ -604,7 +604,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     #                      ADDS an input_state FOR EACH ITEM IN monitored_values
     #                      (AKIN _instantiate_control_signal)
     def _instantiate_input_states(self, context=None):
-        """Instantiate input state for each value specified in `monitored_values` arg and instantiate self.instance_defaults.variable
+        """Instantiate input state for each OutputState specified in `monitored_values` arg, and instantiate
+        self.instance_defaults.variable
 
         Parse specifications for input_states, using monitored_values where relevant, and instantiate input_states.
         Re-specify corresponding items of variable to match the values of the InputStates in input_states.
@@ -616,48 +617,57 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         from PsyNeuLink.Components.States.State import _parse_state_spec
         from PsyNeuLink.Components.States.OutputState import OutputState
 
-        # Parse monitored_values
-        monitored_values = []
-        for value in self.monitored_values:
+        # PARSE monitored_values
+
+        # First parse for tuples to extract OutputStates, weights and exponents
+        output_state_specs, weights, exponents = _parse_monitored_values_list(self, monitored_values)
+
+        # Then, parse OutputState specifications
+        for value in output_state_specs:
             monitored_value_dict = {}
-            monitored_value = _parse_state_spec(owner=self,
+            output_state_spec = _parse_state_spec(owner=self,
                                                 state_type=OutputState,
                                                 state_spec=value)
-            if isinstance(monitored_value, dict):
-                monitored_value_dict = monitored_value
-            elif isinstance(monitored_value, State):
-                monitored_value_dict[NAME] = monitored_value.name
-                monitored_value_dict[VARIABLE] = monitored_value.instance_defaults.variable
-                monitored_value_dict[VALUE] = monitored_value.instance_defaults.variable
-                # monitored_value_dict[PARAMS] = monitored_value.params
+            if isinstance(output_state_spec, dict):
+                monitored_value_dict = output_state_spec
+            elif isinstance(output_state_spec, State):
+                monitored_value_dict[NAME] = output_state_spec.name
+                monitored_value_dict[VARIABLE] = output_state_spec.instance_defaults.variable
+                monitored_value_dict[VALUE] = output_state_spec.instance_defaults.variable
+                # monitored_value_dict[PARAMS] = output_state_spec.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
                                               "should have returned dict or State, but returned {} instead ({})".
                                               format(OUTPUT_STATE,
                                                      self.name,
-                                                     type(monitored_value).__name__,
-                                                     monitored_value))
+                                                     type(output_state_spec).__name__,
+                                                     output_state_spec))
             monitored_value_dict[OUTPUT_STATE]=value
             monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
-            monitored_values.append(monitored_value_dict)
+            output_state_specs.append(monitored_value_dict)
+
+        @@@@ NEED TO ASSSIGN WEIGHTS AND EXPONENTS TO INPUT_STATS FOR ANY SPECIFIED IN MONITORED_VALUES
+
+        # INSTANTIATE InputState FOR EACH OutputState
 
         # If input_states were not specified, assign value of monitored_valued for each
         #    (to invoke a default assignment for each input_state)
         if self.input_states is None:
-            self._input_states = [m[VALUE] for m in monitored_values]
+            self._input_states = [m[VALUE] for m in output_state_specs]
 
-        # Parse input_states into a state specification dict, passing monitored_values as defaults from monitored_value
-        for i, input_state, monitored_value in zip(range(len(self.input_states)),
+        # Parse input_states into a state specification dict,
+        #    passing output_state_specs as defaults from output_state_spec
+        for i, input_state, output_state_spec in zip(range(len(self.input_states)),
                                                    self.input_states,
-                                                   monitored_values):
+                                                   output_state_specs):
 
-            # Parse input_state to determine its specifications and assign values from monitored_values
-            #    to any missing specifications, including any projections requested.
+            # Parse input_state to determine its specifications and assign values from output_state_specs
+            #    to any missing specifications, including any projections requested and weights and exponents.
             self._input_states[i] = _parse_state_spec(self,
                                                       state_type=InputState,
                                                       state_spec=input_state,
-                                                      name=monitored_values[i][NAME],
-                                                      value=monitored_values[i][VALUE])
+                                                      name=output_state_specs[i][NAME],
+                                                      value=output_state_specs[i][VALUE])
 
         # TODO: stateful - what is this doing?
         constraint_value = []
@@ -674,7 +684,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         _instantiate_monitoring_projections(owner=self,
-                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in monitored_values],
+                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in output_state_specs],
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
