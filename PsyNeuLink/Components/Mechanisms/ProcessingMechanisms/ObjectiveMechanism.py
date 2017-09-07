@@ -38,27 +38,27 @@ ObjectiveMechanisms are often created automatically when other PsyNeuLink compon
 AdaptiveMechanisms such as `LearningMechanism <LearningMechanism_Creation>` and
 `ControlMechanism <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
 constructor.  Its **monitored_values** argument is used to `specify the OutputStates to be monitored
-<ObjectiveMechanism_Monitored_Values>.  When an ObjectiveMechanism is created, an InputState is created for each of the
+<ObjectiveMechanism_Monitored_Values>`.  When an ObjectiveMechanism is created, an InputState is created for each of the
 OutputStates specified in its **monitored_values** argument, and a `MappingProjection` is assigned from each of those
 to the corresponding InputState.  By default, the value of each InputState uses the format of its corresponding
 OutputState, and the MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument
 can be used to specify their names and/or customize them. Any of the forms used for `specifying InputStates
-<InputState_Specification>` can be used in the **input_states** argument, with certain constraints:
+<InputState_Specification>` can be used in the **input_states** argument, with the following constraints:
 
-  .. _ObjectiveMechanism_InputSatates::
+  .. _ObjectiveMechanism_InputStates::
 
   * the number of InputStates specified in the **input_states** argument must equal the number of OutputStates specified
     in the **monitored_values** argument (see the `examples <ObjectiveMechanism_Examples>` below);
-
+  ..
   * the value of each must also be of the same type as the value of the corresponding OutputState, however their
-    lengths can differ;  in that case, by default, the MappingProjection creates uses a  `FULL_CONNECTIVITY` matrix,
+    lengths can differ;  in that case, by default, the MappingProjection creates uses a `FULL_CONNECTIVITY_MATRIX`,
     although this too can be customized using the *PROJECTION* entry of a `State specification dictionary
     <State_Specification>` for the InputState in the **input_states** argument;
-
+  ..
   * a `weight and/or exponent <InputState_Weights_And_Exponents>` can be specified for each InputState (e.g., for use
     by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;  however, these will be superseded by any
-    weights and/or exponents specified in the **monitored_values** argument (see
-    `ObjectiveMechanism_Monitored_Values` and `note <ObjectiveMechanism_Weights_And_Exponents>` below).
+    weights and/or exponents specified in the **monitored_values** argument of the ObjectiveMechanism's constructor
+    (see `ObjectiveMechanism_Monitored_Values` and `note <ObjectiveMechanism_Weights_And_Exponents>` below).
 
 
 .. _ObjectiveMechanism_Structure:
@@ -124,19 +124,18 @@ The specification of each item in the **monitored_values** argument can take any
     order listed:
 
         * an OutputState or Mechanism, the name of one, or a specification dictionary for one;
-        ..
-        * a weight (int) - multiplies the value of the OutputState.
-        ..
-        * an exponent (int) - exponentiates the value of the OutputState.
+        |
+        * a weight -- must be an integer or a float; multiplies the value of the OutputState;
+        |
+        * an exponent -- must be an integer or float; exponentiates the value of the OutputState.
 
     .. _ObjectiveMechanism_Weights_And_Exponents:
 
     .. note::
        The weight and exponent specifications in a monitored_values tuple are used to specify the weights and
        exponents applied to the corresponding InputStates of the ObjectiveMechanism;  therefore any values specified
-       in the monitored_value tuple precedence over any other weight and/or exponent specifications of the InputStates
-       for the ObjectiveMechanism (i.e., e.g., in the **weight** and **exponent** arguments of the constructor or
-       `state specification dictionary <InputState_Specification_Dictionary>` for the ObjectiveMechanism's InputStates.
+       in the monitored_value tuple take precedence over any other weight and/or exponent specifications of the
+       InputStates for the ObjectiveMechanism (when it is constructed or assigned later).
 
   * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
     instantiated later (for example, for the TARGET input of a Composition).  If a string is specified, it is used as

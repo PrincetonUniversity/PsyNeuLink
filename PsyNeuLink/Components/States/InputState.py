@@ -56,7 +56,7 @@ and also to the first entry of the Mechanism's `input_states <Mechanism_Base.inp
 only) item of the Mechanism's `input_values <Mechanism_Base.input_values>` attribute, which is the first item of the
 Mechanism's `variable <Mechanism_Base.variable>` attribute.
 
-.. _InputState_Specification
+.. _InputState_Specification:
 
 InputState Specification
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,10 +79,6 @@ consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possib
 If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
 with a numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list
 (that is, it will *not* replace ones that were already created).
-
-.. _InputState_Weights_And_Exponents:
-
-XXXXXWEIGHTS AND EXPONENTS
 
 Specifying an InputState can be done in any of the ways listed below.  To create multiple InputStates,
 their specifications can be included in a list, or in a dictionary in which the key for each entry is a
@@ -121,12 +117,20 @@ can be used to specify an InputState:
 
     * A **State specification dictionary**.  This creates the specified InputState using the first item of the owner's
       `variable <Mechanism_Base.variable>` as the InputState's `variable <InputState.variable>`.  In addition to the
-      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have a
-      *PROJECTIONS* entry, the value of which can be a `Projection <Projection>`, a
-      `Projection specification dictionary <Projection_In_Context_Specification>`, or a list containing items that
-      are either of those.  This can be used to specify one or more afferent `PathwayProjections <PathwayProjection>`
-      to the InpuState, and/or `ModulatoryProjections <ModulatoryProjection>` for it to receive.
-      XXXXXWEIGHTS AND EXPONENTS
+      standard entries of a `State specification dictionary <State_Specification>`, the dictionary can have:
+
+      - a *PROJECTIONS* entry -- the value can be a `Projection <Projection>`, a `Projection specification dictionary
+        <Projection_In_Context_Specification>`, or a list containing items that are either of those.  This can be
+        used to specify one or more afferent `PathwayProjections <PathwayProjection>` to the InpuState, and/or
+        `ModulatoryProjections <ModulatoryProjection>` for it to receive.
+      |
+      - a *WEIGHT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
+        `weight <InputState.weight>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence over
+        any specification in the **weight** argument of the InputState's constructor.
+      |
+      - an *EXPONENT* entry -- the value must be an integer or float, and is assigned as the value of the InputState's
+        `exponent <InputState.exponent>` attribute  (see `InputState_Weights_And_Exponents`);  this takes precedence
+        over any specification in the **exponent** argument of the InputState's constructor.
 
     ..
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
@@ -221,6 +225,20 @@ under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals <Gati
 details). The GatingProjections received by an InputState are listed in its `mod_afferents <InputState.mod_afferents>`
 attribute.
 
+.. _InputState_Weights_And_Exponents:
+
+Weights and Exponents
+~~~~~~~~~~~~~~~~~~~~~
+
+Every InputState has a `weight <InputState.weight>`  and an `exponent <InputState.exponent>` attribute.  These can be
+used by the Mechanism to which it belongs when that combines the `value <InputState.value>`\\s of its States (e.g.,
+an ObjectiveMechanism uses the weights and exponents assigned to its InputStates to determine how the values it monitors
+are combined by its `function <ObjectiveMechanism>`).  The value of each must be an integer or float, and the default
+is 1 for both.
+
+Variable, Function and Value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Like all PsyNeuLink components, an InputState also has the three following core attributes:
 
 * `variable <InputState.variable>`:  this serves as a template for the `value <Projection.value>` of each Projection
@@ -307,6 +325,8 @@ class InputState(State_Base):
     function=LinearCombination(operation=SUM), \
     value=None,                                \
     projections=None,                          \
+    weight=None,                               \
+    exponent=None,                             \
     params=None,                               \
     name=None,                                 \
     prefs=None)
@@ -369,6 +389,12 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attributes, respectively (see `InputState_Projections` for additional
         details).
 
+    weight : int or float : default 1
+        specifies the value of the `weight <InputState.weight>` attribute of the InputState.
+
+    exponent : int or float : default 1
+        specifies the value of the `exponent <InputState.exponent>` attribute of the InputState.
+
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the InputState or its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -420,6 +446,12 @@ class InputState(State_Base):
         `mod_afferents <InputState.mod_afferents>` attribute).  The result (whether a value or an ndarray) is
         assigned to an item of the owner Mechanism's `variable <Mechanism_Base.variable>`.
 
+    weight : int or float
+        see `InputState_Weights_And_Exponents` for description.
+
+    exponent : int or float
+        see `InputState_Weights_And_Exponents` for description.
+
     name : str : default <State subclass>-<index>
         the name of the InputState.
         Specified in the **name** argument of the constructor for the OutputState.  If not is specified, a default is
@@ -468,9 +500,9 @@ class InputState(State_Base):
                  variable=None,
                  size=None,
                  function=LinearCombination(operation=SUM),
+                 projections=None,
                  weight=None,
                  exponent=None,
-                 projections=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
