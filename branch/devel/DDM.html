@@ -193,55 +193,115 @@
 <p>The DDM Mechanism implements the “Drift Diffusion Model” (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (<a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
-mode), or integrated numerically (<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">integration mode</span></a>).</p>
+forced choice (TAFC) decision making ([REF]).</p>
+<p>The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
+solutions and path integration (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> below for more about these options.)</p>
 </div>
 <div class="section" id="creating-a-ddm-mechanism">
 <span id="ddm-creation"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the <a class="reference internal" href="Mechanism.html#Mechanism.mechanism" title="Mechanism.mechanism"><code class="xref any py py-func docutils literal"><span class="pre">mechanism</span></code></a> command and
-specifying DDM as its <strong>mech_spec</strong> argument.  The analytic solution used <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a> is
-selected using the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> argument, which can be simply the name of a DDM function (first example
-below), or a call to the function with arguments specifying its parameters (second example below; see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a>
-for a description of DDM function parameters):</p>
+specifying DDM as its <strong>mech_spec</strong> argument.  The model implementation is selected using the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+argument. The function selection can be simply the name of a DDM function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">)</span>
-<span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>or a call to the function with arguments specifying its parameters:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="structure">
 <span id="ddm-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, the
-<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is assigned to the <strong>input</strong> specified by its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods, and that is used as the <strong>drift_rate</strong> for the process.  That parameter, along with all
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is assigned to the <strong>input</strong> specified by its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods, which represents the stimulus for the process.  That parameter, along with all
 of the others for the DDM, must be assigned as parameters of the DDM’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see examples under
-<a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a> below, and individual <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> for additional details).</p>
-<p>The decision process can be configured to operate in two different <a class="reference internal" href="#ddm-modes"><span class="std std-ref">modes</span></a>, as determined by the assignment
-made to its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. In the <code class="xref any docutils literal"><span class="pre">analytic</span> <span class="pre">mode</span></code> &lt;DDM_Analytic_Mode&gt;` it generates a single estimated for
-the process;  in the <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path integration mode</span></a>, it carries out step-wise integration of the Process
-(see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a> and <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
-<p>The <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the DDM Mechanism has six  items. The first two of these are always assigned, and represented
-by two <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> in the DDM’s output_states &lt;DDM.output_states&gt;` attribute: <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>. Other items of its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and
-corresponding OutputStates in its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute, may also be assigned, depending on the
-<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (and corresponding mode of operation) that has been specified, as described below. Unassigned
-items of the DDM’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute are given the value <code class="xref any docutils literal"><span class="pre">None</span></code>. The set of <code class="xref any docutils literal"><span class="pre">output_states</span></code> assigned can be customized by selecting ones from the DDM’s set of <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a>), and specifying these in the <strong>output_states</strong> argument of its constructor.</p>
-<div class="section" id="ddm-modes-of-operation">
-<span id="ddm-modes"></span><h3>DDM Modes of Operation<a class="headerlink" href="#ddm-modes-of-operation" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="analytic-mode">
-<span id="ddm-analytic-mode"></span><h4>Analytic Mode<a class="headerlink" href="#analytic-mode" title="Permalink to this headline">¶</a></h4>
-<p>This is used when one of the two <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> that calculate an analytic solution – <a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a>
-or <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a> – is specified as the Mechanism’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  It generates a
-single estimate of the outcome for the decision process (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for details).  In addition to
-<a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, both Functions return an accuracy
-value (represented in the <a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a> OutputState), and an error
-rate value (in the <a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a> OutputState;  the <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a> Function also returns expected values for mean correct response time (<a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a> and variance of correct response times (<a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a>.
-Examples for each, that illustrate all of their parameters, are shown below:</p>
+<a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> below, and individual <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> for additional details).</p>
+<p>The DDM Mechanism can generate two different types of results depending on which function is selected. When a
+function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
+When the path integration function is selected, the mechanism carries out step-wise integration of the process; each
+execution of the mechanism computes one step. (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> and <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
+<p>The <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
+are represented by the DDM Mechanism’s two default <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a>: <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>. The other <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> may be
+assigned depending on (1) whether the selected function produces those quantities and (2) customization.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="16%" />
+<col width="5%" />
+<col width="12%" />
+<col width="10%" />
+<col width="17%" />
+<col width="17%" />
+<col width="11%" />
+<col width="13%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td rowspan="2"><strong>Function</strong></td>
+<td rowspan="2"><strong>Type</strong></td>
+<td colspan="6"><strong>Output States</strong></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a></td>
+<td><a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a></td>
+<td><a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a></td>
+<td><a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a></td>
+<td><a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a></td>
+<td><a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a></td>
+<td>Analytic</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a></td>
+<td>Analytic</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="Function.html#driftdiffusionintegrator"><span class="std std-ref">DriftDiffusionIntegrator</span></a></td>
+<td>Path
+Integration</td>
+<td>X</td>
+<td>X</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<p>The set of <code class="xref any docutils literal"><span class="pre">output_states</span></code> assigned can be customized by selecting ones from the DDM’s set of
+<a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a>), and specifying these in the <strong>output_states</strong> argument of its
+constructor. Some <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a>, or elements of <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, represent slightly different quantities
+depending on the function in which they are computed. See <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a> for more
+details.</p>
+<div class="section" id="ddm-function-types">
+<span id="ddm-modes"></span><h3>DDM Function Types<a class="headerlink" href="#ddm-function-types" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="analytic-solutions">
+<span id="ddm-analytic-mode"></span><h4>Analytic Solutions<a class="headerlink" href="#analytic-solutions" title="Permalink to this headline">¶</a></h4>
+<p>The two Drift Diffusion Model <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> that calculate analytic solutions are <a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a>
+and <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a>. When one of these functions is specified as the DDM Mechanism’s
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, the mechanism generates a single estimate of the outcome for the decision process (see
+<a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for details).</p>
+<p>In addition to <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, both Functions
+return an accuracy value (represented in the <a class="reference internal" href="#ddm-probability-upper-threshold"><span class="std std-ref">PROBABILITY_UPPER_THRESHOLD</span></a>
+OutputState), and an error rate value (in the <a class="reference internal" href="#ddm-probability-lower-threshold"><span class="std std-ref">PROBABILITY_LOWER_THRESHOLD</span></a>
+OutputState;  the <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a> Function also returns expected values for mean correct response time
+(<a class="reference internal" href="#ddm-rt-correct-mean"><span class="std std-ref">RT_CORRECT_MEAN</span></a> and variance of correct response times (<a class="reference internal" href="#ddm-rt-correct-variance"><span class="std std-ref">RT_CORRECT_VARIANCE</span></a>.</p>
+<p>Examples for each, that illustrate all of their parameters, are shown below:</p>
 <p><a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a> Function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_BogaczEtAl</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">BogaczEtAl</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
                                             <span class="n">starting_point</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                                             <span class="n">threshold</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
                                             <span class="n">noise</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
                                             <span class="n">t0</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">),</span>
-                        <span class="n">time_scale</span><span class="o">=</span> <span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">,</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY_DDM_BogaczEtAl&#39;</span><span class="p">)</span>
+                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_DDM_BogaczEtAl&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a> Function:</p>
@@ -250,35 +310,37 @@ Examples for each, that illustrate all of their parameters, are shown below:</p>
                                                     <span class="n">threshold</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
                                                     <span class="n">noise</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span>
                                                     <span class="n">t0</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">),</span>
-                            <span class="n">time_scale</span><span class="o">=</span> <span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">,</span>
-                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY_DDM_NavarroAndFuss&#39;</span><span class="p">)</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_DDM_NavarroAndFuss&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="path-integration-mode">
-<span id="ddm-integration-mode"></span><h3>Path Integration Mode<a class="headerlink" href="#path-integration-mode" title="Permalink to this headline">¶</a></h3>
-<p>This is used when an <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function with an <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> of <em>DIFFUSION</em> is
-specified as the DDM’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  In this case, the DDM Mechanism uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a> to carry out numerical step-wise integration of the decision process
-(see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below).  In this mode, only the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and
-<a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> are returned by default.</p>
-<p><a class="reference internal" href="Function.html#integrator"><span class="std std-ref">Integrator</span></a> Function:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_TimeStep</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">initializer</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">),</span>
-                      <span class="n">time_scale</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TIME_STEP</span><span class="p">,</span>
-                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;My_DDM_TimeStep&#39;</span><span class="p">)</span>
+<div class="section" id="path-integration">
+<span id="ddm-integration-mode"></span><h4>Path Integration<a class="headerlink" href="#path-integration" title="Permalink to this headline">¶</a></h4>
+<p>The Drift Diffusion Model <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that calculates a path integration is <a class="reference internal" href="Function.html#driftdiffusionintegrator"><span class="std std-ref">DriftDiffusionIntegrator</span></a>. The DDM Mechanism uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a> to
+carry out numerical step-wise integration of the decision process (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below).  In this
+mode, only the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> are available.</p>
+<p><a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_DDM_path_integrator</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                                                        <span class="n">initializer</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+                                                        <span class="n">t0</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+                                                        <span class="n">rate</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">),</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_DDM_path_integrator&#39;</span><span class="p">)</span>
 </pre></div>
+</div>
 </div>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a DDM Mechanism is executed, it computes the decision process either <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytically</span></a>  or by
-<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> of its path.  The method used is determined by its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a>). The DDM’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> always returns values for the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, and assigns these as the first two items of its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, irrespective of its <a class="reference internal" href="#ddm-modes"><span class="std std-ref">mode</span></a> of operation. The mode of operation is determined by
-the Function assigned to its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute (see <a class="reference internal" href="#ddm-structure"><span class="std std-ref">Structure</span></a>). In the <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic mode</span></a> the same set of values is returned for every execution, that are determined entirely by the set of
-parameters passed to its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  generally, this corresponds to a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.  In the
-<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path intergration mode</span></a>, a single step of integration is conducted each time the Mechanism is
-executed; generally, this corresponds to a <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP" title="Scheduling.TimeScale.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> of execution.  In addition to <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, other values are returned by the different modes and
-functions (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a> and <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">Standard OutputStates</span></a>).</p>
+<a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> of its path.  The method used is determined by its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a>). The DDM’s <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> always returns values for the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, and assigns these as the first two items of its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute, irrespective of its function.</p>
+<p>When an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic</span></a> function is selected, the same set of values is returned for every execution.
+The returned values are determined entirely by the set of parameters passed to its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+<p>When the <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">path integration</span></a>, function is selected, a single step of integration is conducted each
+time the Mechanism is executed. The returned values accumulate on every execution.</p>
+<p>The analytic functions return a final positon and time of the model, along with other statistics, where as the path
+integration function returns intermediate position and time values. The two types of functions can be thought of as
+happening on different time scales: trial (analytic) and time step (path integration).</p>
 </div>
 <div class="section" id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -371,14 +433,14 @@ out <a class="reference internal" href="#ddm-integration-mode"><span class="std 
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.value" title="ModulatoryProjections.LearningProjection.LearningProjection.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
+<li><strong>default_variable</strong> (<a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.value" title="ObjectiveMechanism.ObjectiveMechanism.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.execute" title="Mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
 <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.run" title="Mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.variable" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints</em>) – specifies the <code class="xref any docutils literal"><span class="pre">default_variable</span></code> as array(s) of zeros if <strong>default_variable</strong> is not
 passed as an argument; if <strong>default_variable</strong> is specified, it takes precedence over the specification of
 <strong>size</strong>.</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default BogaczEtAl</em>) – specifies the function to use to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of
-execution (see <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a> for additional information).</li>
+execution (see <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> for additional information).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a dictionary that can be used to specify parameters of the Mechanism, parameters of its <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and/or  a custom function and its parameters (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> for specification of
 a params dict).</li>
 <li><strong>name</strong> (<em>str : default DDM-&lt;index&gt;</em>) – a string used for the name of the Mechanism.
@@ -404,8 +466,8 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <code class="descname">function</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>IntegratorFunction : default BogaczEtAl</em> – the function used to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of execution.
 If it is <a class="reference internal" href="Function.html#bogaczetal"><span class="std std-ref">BogaczEtAl</span></a> or <a class="reference internal" href="Function.html#navarroandfuss"><span class="std std-ref">NavarroAndFuss</span></a>, an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> is calculated (note:  the latter requires that the MatLab engine is installed); if it is
-an <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function with an <a class="reference internal" href="Function.html#Function.Integrator.integration_type" title="Function.Integrator.integration_type"><code class="xref any py py-attr docutils literal"><span class="pre">integration_type</span></code></a> of <em>DIFFUSION</em>,
-then <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> is carried out.  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a> and
+an <a class="reference internal" href="Function.html#Function.Integrator" title="Function.Integrator"><code class="xref any py py-class docutils literal"><span class="pre">Integrator</span></code></a> Function with an <code class="xref any docutils literal"><span class="pre">integration_type</span></code> of <em>DIFFUSION</em>,
+then <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> is carried out.  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> and
 <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> for additional information.</p>
 </dd></dl>
 
@@ -413,7 +475,7 @@ then <a class="reference internal" href="#ddm-integration-mode"><span class="std
 <dt id="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value">
 <code class="descname">value</code><a class="headerlink" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.value" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>2d np.array[array(float64),array(float64),array(float64),array(float64)]</em> – result of executing DDM <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  has six items, that are assigned based on the <a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  The first two items are always assigned the values of <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> (though their interpretation depends on the
-<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and corresponding <a class="reference internal" href="#ddm-modes"><span class="std std-ref">mode of</span></a> of operation).  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Modes of Operation</span></a>,
+<a class="reference internal" href="#Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function" title="Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and corresponding <a class="reference internal" href="#ddm-modes"><span class="std std-ref">mode of</span></a> of operation).  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a>,
 <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a>, and <a class="reference internal" href="#ddm-standard-outputstates"><span class="std std-ref">DDM Standard OutputStates</span></a> for additional information about
 other values that can be reported and their interpretation.</p>
 </dd></dl>

@@ -648,6 +648,8 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Function.html#Function.FHNIntegrator">FHNIntegrator (class in Function)</a>
+</li>
       <li><a href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX">FULL_CONNECTIVITY_MATRIX (Keywords.MatrixKeywords attribute)</a>
 </li>
       <li><a href="Component.html#Component.Component.function">function (Component.Component attribute)</a>
@@ -734,6 +736,8 @@
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.function">(Function.DriftDiffusionIntegrator method)</a>
 </li>
         <li><a href="Function.html#Function.Exponential.function">(Function.Exponential method)</a>
+</li>
+        <li><a href="Function.html#Function.FHNIntegrator.function">(Function.FHNIntegrator method)</a>
 </li>
         <li><a href="Function.html#Function.Linear.function">(Function.Linear method)</a>
 </li>
@@ -899,11 +903,7 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.initializer">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.initializer">(Function.Integrator attribute)</a>
-</li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.initializer">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
-</li>
-        <li><a href="Function.html#Function.SimpleIntegrator.initializer">(Function.SimpleIntegrator attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
 </li>
@@ -912,10 +912,10 @@
 </li>
       <li><a href="Process.html#Process.Process_Base.input">input (Process.Process_Base attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_source">input_source (LearningMechanism.LearningMechanism attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Mechanism.html#Mechanism.Mechanism_Base.input_state">input_state (Mechanism.Mechanism_Base attribute)</a>
 </li>
       <li><a href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_states">input_states (LearningMechanism.LearningMechanism attribute)</a>
@@ -940,9 +940,9 @@
 </li>
       <li><a href="Function.html#Function.LinearMatrix.instantiate_matrix">instantiate_matrix() (Function.LinearMatrix method)</a>
 </li>
-      <li><a href="Function.html#Function.Integrator.integration_type">integration_type (Function.Integrator attribute)</a>
-</li>
       <li><a href="Function.html#Function.Integrator">Integrator (class in Function)</a>
+</li>
+      <li><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.integrator_mode">integrator_mode (TransferMechanism.TransferMechanism attribute)</a>
 </li>
       <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism">IntegratorMechanism (class in IntegratorMechanism)</a>
 
@@ -1343,8 +1343,6 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.noise">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.noise">(Function.Integrator attribute)</a>
-</li>
         <li><a href="Function.html#Function.NavarroAndFuss.noise">(Function.NavarroAndFuss attribute)</a>
 </li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.noise">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
@@ -1478,6 +1476,8 @@
         <li><a href="OutputState.html#module-OutputState">(module)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.outputStates">outputStates (Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA attribute)</a>
 
       <ul>
@@ -1486,8 +1486,6 @@
         <li><a href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.outputStates">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Function.html#Function.ModulationParam.OVERRIDE">OVERRIDE (Function.ModulationParam attribute)</a>
 </li>
       <li><a href="Function.html#Function.AccumulatorIntegrator.owner">owner (Function.AccumulatorIntegrator attribute)</a>
@@ -1515,8 +1513,6 @@
 </li>
         <li><a href="Function.html#Function.GammaDist.owner">(Function.GammaDist attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.owner">(Function.Integrator attribute)</a>
-</li>
         <li><a href="Function.html#Function.Linear.owner">(Function.Linear attribute)</a>
 </li>
         <li><a href="Function.html#Function.LinearCombination.owner">(Function.LinearCombination attribute)</a>
@@ -1534,8 +1530,6 @@
         <li><a href="Function.html#Function.Reduce.owner">(Function.Reduce attribute)</a>
 </li>
         <li><a href="Function.html#Function.Reinforcement.owner">(Function.Reinforcement attribute)</a>
-</li>
-        <li><a href="Function.html#Function.SimpleIntegrator.owner">(Function.SimpleIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.SoftMax.owner">(Function.SoftMax attribute)</a>
 </li>
@@ -1659,8 +1653,6 @@
 </li>
         <li><a href="Function.html#Function.GammaDist.prefs">(Function.GammaDist attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.prefs">(Function.Integrator attribute)</a>
-</li>
         <li><a href="Function.html#Function.Linear.prefs">(Function.Linear attribute)</a>
 </li>
         <li><a href="Function.html#Function.LinearCombination.prefs">(Function.LinearCombination attribute)</a>
@@ -1678,8 +1670,6 @@
         <li><a href="Function.html#Function.Reduce.prefs">(Function.Reduce attribute)</a>
 </li>
         <li><a href="Function.html#Function.Reinforcement.prefs">(Function.Reinforcement attribute)</a>
-</li>
-        <li><a href="Function.html#Function.SimpleIntegrator.prefs">(Function.SimpleIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.SoftMax.prefs">(Function.SoftMax attribute)</a>
 </li>
@@ -1749,7 +1739,11 @@
 </li>
         <li><a href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.previous_input">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism attribute)</a>
 </li>
-        <li><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.previous_input">(TransferMechanism.TransferMechanism attribute)</a>
+      </ul></li>
+      <li><a href="Function.html#Function.DriftDiffusionIntegrator.previous_time">previous_time (Function.DriftDiffusionIntegrator attribute)</a>
+
+      <ul>
+        <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.previous_time">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
       </ul></li>
       <li><a href="Function.html#Function.AccumulatorIntegrator.previous_value">previous_value (Function.AccumulatorIntegrator attribute)</a>
@@ -1761,11 +1755,7 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.previous_value">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.previous_value">(Function.Integrator attribute)</a>
-</li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.previous_value">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
-</li>
-        <li><a href="Function.html#Function.SimpleIntegrator.previous_value">(Function.SimpleIntegrator attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
 </li>
@@ -1828,8 +1818,6 @@
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.rate">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.Exponential.rate">(Function.Exponential attribute)</a>
-</li>
-        <li><a href="Function.html#Function.Integrator.rate">(Function.Integrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.rate">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
@@ -2029,6 +2017,8 @@
       <li><a href="Function.html#Function.BogaczEtAl.t0">t0 (Function.BogaczEtAl attribute)</a>
 
       <ul>
+        <li><a href="Function.html#Function.DriftDiffusionIntegrator.t0">(Function.DriftDiffusionIntegrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.NavarroAndFuss.t0">(Function.NavarroAndFuss attribute)</a>
 </li>
       </ul></li>
@@ -2064,6 +2054,8 @@
       </ul></li>
       <li><a href="Log.html#Log.LogEntry.time">time (Log.LogEntry attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.time_constant">time_constant (Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA attribute)</a>
 
       <ul>
@@ -2074,22 +2066,8 @@
         <li><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.time_constant">(TransferMechanism.TransferMechanism attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.time_scale">time_scale (IntegratorMechanism.IntegratorMechanism attribute)</a>
-
-      <ul>
-        <li><a href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.time_scale">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA attribute)</a>
+      <li><a href="Mechanism.html#Mechanism.Mechanism_Base.time_scale">time_scale (Mechanism.Mechanism_Base attribute)</a>
 </li>
-        <li><a href="LCA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA.time_scale">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.LCA.LCA attribute)</a>
-</li>
-        <li><a href="RecurrentTransferMechanism.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism.time_scale">(Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism.RecurrentTransferMechanism attribute)</a>
-</li>
-        <li><a href="Mechanism.html#Mechanism.Mechanism_Base.time_scale">(Mechanism.Mechanism_Base attribute)</a>
-</li>
-        <li><a href="TransferMechanism.html#TransferMechanism.TransferMechanism.time_scale">(TransferMechanism.TransferMechanism attribute)</a>
-</li>
-      </ul></li>
       <li><a href="TimeScale.html#Scheduling.TimeScale.TimeScale.TIME_STEP">TIME_STEP (Scheduling.TimeScale.TimeScale attribute)</a>
 </li>
       <li><a href="Function.html#Function.DriftDiffusionIntegrator.time_step_size">time_step_size (Function.DriftDiffusionIntegrator attribute)</a>
@@ -2227,9 +2205,9 @@
 </li>
         <li><a href="Function.html#Function.Exponential.variable">(Function.Exponential attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Function_Base.variable">(Function.Function_Base attribute)</a>
+        <li><a href="Function.html#Function.FHNIntegrator.variable">(Function.FHNIntegrator attribute)</a>
 </li>
-        <li><a href="Function.html#Function.Integrator.variable">(Function.Integrator attribute)</a>
+        <li><a href="Function.html#Function.Function_Base.variable">(Function.Function_Base attribute)</a>
 </li>
         <li><a href="Function.html#Function.Linear.variable">(Function.Linear attribute)</a>
 </li>
