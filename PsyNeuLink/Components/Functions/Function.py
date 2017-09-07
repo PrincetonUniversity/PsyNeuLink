@@ -31,6 +31,7 @@ Integrator Functions:
   * `DriftDiffusionIntegrator`
   * `OrnsteinUhlenbeckIntegrator`
   * `AccumulatorIntegrator`
+  * `FHNIntegrator`
   * `BogaczEtAl`
   * `NavarroAndFuss`
 
@@ -3050,11 +3051,13 @@ class IntegratorFunction(Function_Base):
 # • can noise and initializer be an array?  If so, validated in validate_param?
 
 class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
-    """Function that accumulates over many executions by storing its value from the most recent execution and using this
-        to compute its new value
+    """
+
+    Function that accumulates over many executions by storing its value from the most recent execution and using this
+    to compute its new value.
 
     All TransferFunctions must have the attribute `previous_value`, which specifies the value of the function on the
-        previous execution, and the attribute `initializer`, which sets `previous_value` on the first execution
+    previous execution, and the attribute `initializer`, which sets `previous_value` on the first execution.
 
     """
 
@@ -4467,32 +4470,68 @@ class FHNIntegrator(
 
     .. _FHNIntegrator:
 
-    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration. The model is
-    defined by a system of differential equations: dv/dt and dw/dt, which are parameterized as follows:
-
-    time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
-
-    time_constant_w * dw/dt = a_w * v + b_w * w + c_w
+    Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
 
     Arguments
     ---------
 
     default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
+        specifies a template for the external stimulus
 
     initial_w : float, list or 1d np.array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.default_variable>` (see `initializer
-        <FHNIntegrator.initializer>` for details).
+        `default_variable <FHNIntegrator.default_variable>`
 
     initial_v : float, list or 1d np.array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FHNIntegrator.default_variable>` (see `initializer
-        <FHNIntegrator.initializer>` for details).
+        `default_variable <FHNIntegrator.default_variable>`
+
+    time_step_size : float : default 0.1
+        specifies the time step size of numerical integration
 
     t_0 : float : default 0.0
         specifies starting value for time
+
+    a_v : float : default -1/3
+        coefficient on the v^3 term of the dv/dt equation
+
+    b_v : float : default 0.0
+        coefficient on the v^2 term of the dv/dt equation
+
+    c_v : float : default 1.0
+        coefficient on the v term of the dv/dt equation
+
+    d_v : float : default 0.0
+        constant term in the dv/dt equation
+
+    e_v : float : default -1.0
+        coefficient on the w term in the dv/dt equation
+
+    f_v : float : default  1.0
+        coefficient on the external stimulus (`variable <FHNIntegrator.variable>`) term in the dv/dt equation
+
+    time_constant_v : float : default 1.0
+        scaling factor on the dv/dt equation
+
+    a_w : float : default 1.0,
+        coefficient on the v term of the dw/dt equation
+
+    b_w : float : default -0.8,
+        coefficient on the w term of the dv/dt equation
+
+    c_w : float : default 0.7,
+        constant term in the dw/dt equation
+
+    electrotonic_coupling : float : default 1.0
+        coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
+        (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
+        activity) decreases
+
+    uncorrelated_activity : float : default 0.0
+        constant term in the dw/dt equation
+
+    time_constant_w : float : default 12.5
+        scaling factor on the dv/dt equation
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -4505,6 +4544,7 @@ class FHNIntegrator(
     prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
         the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
 
 
     Attributes
@@ -4526,6 +4566,61 @@ class FHNIntegrator(
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
 
+    initial_w : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
+        `default_variable <FHNIntegrator.default_variable>`
+
+    initial_v : float, list or 1d np.array : default 0.0
+        specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
+        `default_variable <FHNIntegrator.default_variable>`
+
+    time_step_size : float : default 0.1
+        specifies the time step size of numerical integration
+
+    t_0 : float : default 0.0
+        specifies starting value for time
+
+    a_v : float : default -1/3
+        coefficient on the v^3 term of the dv/dt equation
+
+    b_v : float : default 0.0
+        coefficient on the v^2 term of the dv/dt equation
+
+    c_v : float : default 1.0
+        coefficient on the v term of the dv/dt equation
+
+    d_v : float : default 0.0
+        constant term in the dv/dt equation
+
+    e_v : float : default -1.0
+        coefficient on the w term in the dv/dt equation
+
+    f_v : float : default  1.0
+        coefficient on the external stimulus ('variable <FHNIntegrator.variable>`) term in the dv/dt equation
+
+    time_constant_v : float : default 1.0
+        scaling factor on the dv/dt equation
+
+    a_w : float : default 1.0,
+        coefficient on the v term of the dw/dt equation
+
+    b_w : float : default -0.8,
+        coefficient on the w term of the dv/dt equation
+
+    c_w : float : default 0.7,
+        constant term in the dw/dt equation
+
+    electrotonic_coupling : float : default 1.0
+        coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
+        (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
+        activity) decreases
+
+    uncorrelated_activity : float : default 0.0
+        constant term in the dw/dt equation
+
+    time_constant_w : float : default 12.5
+        scaling factor on the dv/dt equation
+
     prefs : PreferenceSet or specification dict : Projection.classPreferences
         the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
         if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
@@ -4546,9 +4641,9 @@ class FHNIntegrator(
         INCREMENT: None,
     })
 
-    # multiplicative param does not make sense in this case
-    multiplicative_param = RATE
-    additive_param = INCREMENT
+
+    multiplicative_param = SCALE
+    additive_param = OFFSET
 
     @tc.typecheck
     def __init__(self,
@@ -4623,12 +4718,15 @@ class FHNIntegrator(
                  time_scale=TimeScale.TRIAL,
                  context=None):
         """
-        Return: previous_v , previous_w at each time step, which represents the numerical integration of the follwing
-        system of differential equations:
+        Return: current v, current w
 
-        time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+        The model is defined by the following system of differential equations:
 
-        time_constant_w * dw/dt = a_w * v + b_w * w + c_w
+            time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+
+            time_constant_w * dw/dt = electrotonic_coupling * a_w * v + b_w * w + c_w + (1 - self.electrotonic_coupling) * self.uncorrelated_activity
+
+
 
 
         Arguments
@@ -4639,13 +4737,10 @@ class FHNIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
-
         Returns
         -------
 
-        previous_v , previous_w
+        current value of v , current value of w : float, list, or np.array
 
         """
 
