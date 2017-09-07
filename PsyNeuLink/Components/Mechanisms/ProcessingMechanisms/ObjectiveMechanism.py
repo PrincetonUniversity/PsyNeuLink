@@ -726,8 +726,11 @@ def _parse_monitored_values_list(source, output_state_list, context):
     """
     
     # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
+    # output_states = output_state_list
+    # weights = np.ones((len(output_states),1))
+    # exponents = np.ones_like(weights)
     output_states = output_state_list
-    weights = np.ones((len(output_states),1))
+    weights = np.ones(len(output_states))
     exponents = np.ones_like(weights)
 
     for i, item in enumerate(output_state_list):

@@ -878,22 +878,22 @@ class EVCMechanism(ControlMechanism_Base):
         # If EVCMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
         if self.system:
-            monitored_values_spec = self.system._get_monitored_output_states(self, context=context)
+            self.monitored_output_states, weights, exponents = self.system._get_monitored_output_states(self,
+                                                                                                        context=context)
 
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         elif isinstance(self.objective_mechanism, list):
-            monitored_values_spec = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
-
-        else:
-            monitored_values_spec = None
-
-        if monitored_values_spec:
-            self.monitored_output_states, weights, exponents = monitored_values_spec
+            self.monitored_output_states, weights, exponents =  _parse_monitored_values_list(self,
+                                                                                             self.objective_mechanism,
+                                                                                             context=context)
         else:
             self.monitored_output_states = weights = exponents = None
 
-        # CREATE
 
+        # List of OutputState tuples for **monitored_values** argument of ObjectiveMechanism
+        monitored_values_spec = []
+        for output_state, weight, exponent in  zip(self.monitored_output_states, weights, exponents):
+            monitored_values_spec.append((output_state, weight, exponent))
 
         # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)

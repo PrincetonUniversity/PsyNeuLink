@@ -2179,7 +2179,7 @@ class System_Base(System):
         #       if it is specified in the constructor for the Mechanism
 
         num_monitored_output_states = len(monitored_output_states)
-        weights = np.ones((num_monitored_output_states,1))
+        weights = np.ones(num_monitored_output_states)
         exponents = np.ones_like(weights)
 
         # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
