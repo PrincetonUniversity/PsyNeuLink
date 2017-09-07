@@ -269,12 +269,15 @@ When a DDM Mechanism is executed, it computes the decision process either `analy
 <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, and assigns these as the first two items of its `value
 <DDM.value>` attribute, irrespective of its function.
 
-When an `analytic <DDM_Analytic_Mode>` function is selected, the same set of values is returned for every execution,
-that are determined entirely by the set of parameters passed to its `function <DDM.function>`;  generally, this
-corresponds to a `TRIAL` of execution.
+When an `analytic <DDM_Analytic_Mode>` function is selected, the same set of values is returned for every execution.
+The returned values are determined entirely by the set of parameters passed to its `function <DDM.function>`.
 
 When the `path integration <DDM_Integration_Mode>`, function is selected, a single step of integration is conducted each
-time the Mechanism is executed; generally, this corresponds to a `TIME_STEP` of execution. 
+time the Mechanism is executed. The returned values accumulate on every execution.
+
+The analytic functions return a final positon and time of the model, along with other statistics, where as the path
+integration function returns intermediate position and time values. The two types of functions can be thought of as
+happening on different time scales: trial (analytic) and time step (path integration).
 
 .. _DDM_Class_Reference:
 
