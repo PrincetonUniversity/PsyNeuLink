@@ -269,7 +269,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, TIME_SCALE, OBJECTIVE_MECHANISM, \
+from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
                                         INPUT_STATES, PROJECTIONS, WEIGHT, EXPONENT, SENDER, \
                                         MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
                                         OUTPUT_STATE, LEARNING, CONTROL, kwPreferenceSetName
@@ -670,14 +670,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                      # self.input_states,
                                                      input_state_specs,
                                                      output_state_dicts):
-
             # Parse input_state to determine its specifications and assign values from output_state_specs
             #    to any missing specifications, including any projections requested and weights and exponents.
             input_state = _parse_state_spec(self,
                                             state_type=InputState,
                                             state_spec=input_state,
-                                            params={WEIGHT: weights[i],
-                                                    EXPONENT: exponents[i]},
                                             name=output_state_dict[NAME],
                                             value=output_state_dict[VALUE])
             input_states.append(input_state)
@@ -687,6 +684,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for input_state in input_states:
             constraint_value.append(input_state[VARIABLE])
         self.instance_defaults.variable = constraint_value
+
+
+            # params = input_state[PARAMS]
+            # if weights[i] is not None:
+            #     params[WEIGHT] = weights[i]
+            # if exponents[i] is not None:
+            #     params[EXPONENT] = exponents[i]
+
+
+
 
         self._input_states = input_states
         super()._instantiate_input_states(context=context)
@@ -730,8 +737,8 @@ def _parse_monitored_values_list(source, output_state_list, context):
     # weights = np.ones((len(output_states),1))
     # exponents = np.ones_like(weights)
     output_states = output_state_list
-    weights = np.ones(len(output_states))
-    exponents = np.ones_like(weights)
+    weights = np.array([None] * len(output_state_list))
+    exponents = weights.copy()
 
     for i, item in enumerate(output_state_list):
 
