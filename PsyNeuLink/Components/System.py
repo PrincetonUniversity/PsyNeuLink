@@ -886,52 +886,7 @@ class System_Base(System):
         self._execution_id = None
 
         # Get/assign controller
-
-        # Existing controller has been assigned
-        if isinstance(self.controller, ControlMechanism_Base):
-            if self.controller.system is None:
-                self.controller.system = self
-            elif not self.controller.system is self:
-                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
-                                  format(self.name, self.controller.name, self.controller.system.name))
-
-        # Instantiate controller from class specification
-        else:
-            self.controller = self.controller(system=self,
-                                              objective_mechanism=monitor_for_control,
-                                              control_signals=control_signals)
-
-        # Check whether controller has input, and if not then disable
-        # # MODIFIED 5/10/17 OLD:
-        # try:
-        #     has_input_states = bool(self.controller.input_states)
-        # except:
-        #     has_input_states = False
-        # MODIFIED 5/10/17 NEW:
-        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
-        # MODIFIED 5/10/17 END
-
-        if not has_input_states:
-            # If controller was enabled (and verbose is set), warn that it has been disabled
-            if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no input_states, so controller will be disabled".
-                      format(self.controller.name, self.name))
-            self.enable_controller = False
-
-
-        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
-        try:
-            # Get phaseSpec from controller
-            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-        except (AttributeError, TypeError):
-            # Controller phaseSpec not specified
-            try:
-                # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
-                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-            except:
-                # No System specification, so use System max as default
-                self.controller.phaseSpec = self._phaseSpecMax
+        self._instantiate_controller()
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1912,6 +1867,54 @@ class System_Base(System):
         """
         for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
+
+    def _instantiate_controller(self):
+
+        # Existing controller has been assigned
+        if isinstance(self.controller, ControlMechanism_Base):
+            if self.controller.system is None:
+                self.controller.system = self
+            elif not self.controller.system is self:
+                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
+                                  format(self.name, self.controller.name, self.controller.system.name))
+
+        # Instantiate controller from class specification
+        else:
+            self.controller = self.controller(system=self,
+                                              objective_mechanism=self.monitor_for_control,
+                                              control_signals=self.control_signals)
+
+        # Check whether controller has input, and if not then disable
+        # # MODIFIED 5/10/17 OLD:
+        # try:
+        #     has_input_states = bool(self.controller.input_states)
+        # except:
+        #     has_input_states = False
+        # MODIFIED 5/10/17 NEW:
+        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+        # MODIFIED 5/10/17 END
+
+        if not has_input_states:
+            # If controller was enabled (and verbose is set), warn that it has been disabled
+            if self.enable_controller and self.prefs.verbosePref:
+                print("{} for {} has no input_states, so controller will be disabled".
+                      format(self.controller.name, self.name))
+            self.enable_controller = False
+
+
+        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
+        try:
+            # Get phaseSpec from controller
+            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+        except (AttributeError, TypeError):
+            # Controller phaseSpec not specified
+            try:
+                # Assign System specification of Controller phaseSpec if provided
+                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
+                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+            except:
+                # No System specification, so use System max as default
+                self.controller.phaseSpec = self._phaseSpecMax
 
     def _get_monitored_output_states(self, controller, context=None):
         """
