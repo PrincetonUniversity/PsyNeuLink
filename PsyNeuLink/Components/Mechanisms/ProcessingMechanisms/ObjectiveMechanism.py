@@ -269,7 +269,10 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism i
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, standard_output_states
-from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, CONTROL, DEFAULT_MATRIX, FUNCTION, INPUT_STATES, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTPUT_STATE, PROJECTIONS, SENDER, TIME_SCALE, VALUE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, TIME_SCALE, OBJECTIVE_MECHANISM, \
+                                        INPUT_STATES, PROJECTIONS, WEIGHT, EXPONENT, SENDER, \
+                                        MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
+                                        OUTPUT_STATE, LEARNING, CONTROL, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -620,21 +623,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # PARSE monitored_values
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        output_state_specs, weights, exponents = _parse_monitored_values_list(self, monitored_values)
+        output_state_specs, weights, exponents = _parse_monitored_values_list(self, self.monitored_values, context)
 
         # Then, parse OutputState specifications
+        output_state_dicts = []
         for value in output_state_specs:
-            monitored_value_dict = {}
+            output_state_dict = {}
             output_state_spec = _parse_state_spec(owner=self,
-                                                state_type=OutputState,
-                                                state_spec=value)
+                                                  state_type=OutputState,
+                                                  state_spec=value)
             if isinstance(output_state_spec, dict):
-                monitored_value_dict = output_state_spec
+                output_state_dict = output_state_spec
             elif isinstance(output_state_spec, State):
-                monitored_value_dict[NAME] = output_state_spec.name
-                monitored_value_dict[VARIABLE] = output_state_spec.instance_defaults.variable
-                monitored_value_dict[VALUE] = output_state_spec.instance_defaults.variable
-                # monitored_value_dict[PARAMS] = output_state_spec.params
+                output_state_dict[NAME] = output_state_spec.name
+                output_state_dict[VARIABLE] = output_state_spec.instance_defaults.variable
+                output_state_dict[VALUE] = output_state_spec.instance_defaults.variable
+                # output_state_dict[PARAMS] = output_state_spec.params
             else:
                 raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
                                               "should have returned dict or State, but returned {} instead ({})".
@@ -642,39 +646,49 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                      self.name,
                                                      type(output_state_spec).__name__,
                                                      output_state_spec))
-            monitored_value_dict[OUTPUT_STATE]=value
-            monitored_value_dict[NAME] = monitored_value_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
-            output_state_specs.append(monitored_value_dict)
-
-        @@@@ NEED TO ASSSIGN WEIGHTS AND EXPONENTS TO INPUT_STATS FOR ANY SPECIFIED IN MONITORED_VALUES
+            output_state_dict[OUTPUT_STATE]=value
+            output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
+            output_state_dicts.append(output_state_dict)
 
         # INSTANTIATE InputState FOR EACH OutputState
 
+
+        # # MODIFIED 9/7/17 OLD:
         # If input_states were not specified, assign value of monitored_valued for each
         #    (to invoke a default assignment for each input_state)
-        if self.input_states is None:
-            self._input_states = [m[VALUE] for m in output_state_specs]
+        # if self.input_states is None:
+        #     self._input_states = [m[VALUE] for m in output_state_specs]
+        # MODIFIED 9/7/17 NEW:
+        # If **input_states** was specified in the constructor, use those specifications;
+        #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
+        input_state_specs = self.input_states or [m[VALUE] for m in output_state_dicts]
+        # MODIFIED 9/7/17 END
 
-        # Parse input_states into a state specification dict,
-        #    passing output_state_specs as defaults from output_state_spec
-        for i, input_state, output_state_spec in zip(range(len(self.input_states)),
-                                                   self.input_states,
-                                                   output_state_specs):
+        # Parse input_states into a state specification dict, passing output_state_specs as defaults
+        input_states = []
+        for i, input_state, output_state_dict in zip(range(len(input_state_specs)),
+                                                     # self.input_states,
+                                                     input_state_specs,
+                                                     output_state_dicts):
 
             # Parse input_state to determine its specifications and assign values from output_state_specs
             #    to any missing specifications, including any projections requested and weights and exponents.
-            self._input_states[i] = _parse_state_spec(self,
-                                                      state_type=InputState,
-                                                      state_spec=input_state,
-                                                      name=output_state_specs[i][NAME],
-                                                      value=output_state_specs[i][VALUE])
+            input_state = _parse_state_spec(self,
+                                            state_type=InputState,
+                                            state_spec=input_state,
+                                            params={WEIGHT: weights[i],
+                                                    EXPONENT: exponents[i]},
+                                            name=output_state_dict[NAME],
+                                            value=output_state_dict[VALUE])
+            input_states.append(input_state)
 
         # TODO: stateful - what is this doing?
         constraint_value = []
-        for input_state in self.input_states:
+        for input_state in input_states:
             constraint_value.append(input_state[VARIABLE])
         self.instance_defaults.variable = constraint_value
 
+        self._input_states = input_states
         super()._instantiate_input_states(context=context)
 
         # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
