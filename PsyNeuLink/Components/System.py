@@ -165,16 +165,30 @@ additional details).
 Control
 ~~~~~~~
 
-Every System is assigned a `ControlMechanism <ControlMechanism>` to its `controller <System_Base.controller>` attribute
-that can be used to control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function
-<Mechanism.function>`. If the `controller <System_Base.controller>` is not specified in the **controller** argument of
-the System's constructor, a `DefaultControlMechanism` is created and a `ControlSignal` and `ControlProjection` are
-assigned to it for each parameter of a `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` in the
-System that has been `specified for control <ControlMechanism_Control_Signals>`.  See `ControlMechanism
-<ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and `below
-<System_Execution_Control>` for a description of how it is engaged when a System is executed.  The control
-Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its
-**show_control** argument assigned as `True`.
+Every System is assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
+control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function  <Mechanism.function>`.
+Although any number of ControlMechanism can be assigned to and executed within a System, a System can have only one
+`controller <System_Base.controller>`, that is executed after all of the other Components in the System have been
+executed, including any other ControlMechanisms (see `System Execution <System_Execution>`). If the **controller**
+argument is not specified in System's constructor (or the `system` command), a `DefaultControlMechanism` is created
+and assigned as the `controller <System_Base.controller>` for the System.  When a ControlMechanism is assigned to or
+created by a System, it inherits specifications made for the System as follows:
+
+  * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
+    that may have already been specified for the ControlMechanism or its `objective_mechanism
+    <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
+    <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
+    <ObjectiveMechanism.monitored_values>` attribute);
+
+  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameters that has been
+    `specified for control <ControlMechanism_Control_Signals>` in the System;  these are added to any that the
+    ControlMechanism may already have (the full set are listed in its `control_signals
+    <ControlMechanism.control_signals>` attribute).
+
+See `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and
+`below <System_Execution_Control>` for a description of how it is engaged when a System is executed.
+The control Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>` method
+with its **show_control** argument assigned as `True`.
 
 .. _System_Learning:
 
@@ -274,17 +288,16 @@ format <Run_Targets_Function_Format>`, which generates a target for each executi
 Control
 ~~~~~~~
 
-The `ControlMechanism <ControlMechanism>` assigned as the System's `controller <System_Base.controller>` (see
-`System_Control`) uses an `ObjectiveMechanism`, specified in its `objective_mechanism
-<ControlMechanism.objective_mechanism>` attribute, to monitor the `OutputState(s) <OutputState>` listed in the System's
-`monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute (see
-`ObjectiveMechanism_Monitored_Values` for a description of how to specify which OutputStates are monitored).  The
-`controller <System_Base.controller>` is executed after both `processing <System_Execution_Processing>` and `learning
-<System_Execution_Learning>` have been executed for a `TRIAL`.  The `controller <System_Base.controller>`'s `function
-<ControlMechanism.function>` uses the information received from its `objective_mechanism
-<ControlMechanism.objective_mechanism>` to modulate the value of the parameters of Components in the System `specified
-for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL`. The control Components of
-a System can be displayed using the System's `show_graph`method with its **show_control** argument assigned `True`.
+The System's `controller <System_Base.controller>` is executed in the last phase of execution in a `TRIAL`, after all
+other Mechanisms in the System have executed.  Although a System may have more than one `ControlMechanism`, only one
+can be assigned as its `controller <System_Base.controller>`;  all other ControlMechanisms are executed during the
+`processing `System_Execution_Processing` phase of the `TRIAL` like any other Mechanism.  The `controller
+<System_Base.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
+the `OutputState(s) <OutputState>` of Mechanisms in the System; based on the information it receives from that
+`ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
+for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
+additional information about control). The control Components of a System can be displayed using the System's
+`show_graph`method with its **show_control** argument assigned `True`.
 
 
 COMMENT:

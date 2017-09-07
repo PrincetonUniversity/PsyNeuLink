@@ -64,32 +64,16 @@ ControlMechanism (see `ControlMechanism_ObjectiveMechanism` and `ControlMechanis
    the System's `controller <System_Base.controller>`.
 
 When an EVCMechanism is assigned to, or created by a System, it is assigned the OutputStates to be monitored and
-parameters to be controlled specified for that System (see `XXX`), and a `prediction Mechanism
+parameters to be controlled specified for that System (see `System_Control`), and a `prediction Mechanism
 <EVCMechanism_Prediction_Mechanisms>` is created for each `ORIGIN` Mechanism in the `system <EVCMechanism.system>`.
-The prediction Mechanisms are assigned to the EVCMechanism's `prediction_mechanisms` attribute.
+The prediction Mechanisms are assigned to the EVCMechanism's `prediction_mechanisms` attribute. The OutputStates used
+to determine an EVCMechanism’s allocation_policy and the parameters it controls can be listed using its show method.
+The EVCMechanism and the Components associated with it in its `system <EVCMechanism.system>` can be displayed using
+the System's `System_Base.show_graph` method with its **show_control** argument assigned as `True`
 
 An EVCMechanism that has been constructed automatically can be customized by assigning values to its attributes (e.g.,
 those described above, or its `function <EVCMechanism.function>` as described under `EVC_Default_Configuration `below).
 
-The Compo
-
-
--------------
-
-: all of the OutputStates specified to be
-monitored in the System's **monitor_for_control** argument are added to the list of the EVCMechanism's
-`monitored_output_states <EVCMechanism.monitored_output_states>` and its ObjectiveMechanism's `monitored_values
-<ObjectiveMechanism.monitored_values>`;
-
-
- is assigned
-
-control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
-in that System.  A System can have only one ControlMechanism, that is executed after all of the other Components in the
-System have been executed, including any other ControlMechanisms (see `System Execution <System_Execution>`).  A
-System's `controller  <System_Base.controller>` and its associated Components can be displayed using the System's
-`System_Base.show_graph` method with its **show_control** argument assigned as `True`
--------------
 
 .. _EVCMechanism_Structure:
 
@@ -247,13 +231,13 @@ ControlSignal's `allocation_samples <ControlSignal.allocation_samples>` attribut
 Execution
 ---------
 
-An EVCMechanism, like any `ControlMechanism <ControlMechanism>`, is always the last `Mechanism <Mechanism>` to be
-executed in a `TRIAL` for its `system <EVCMechanism.system>` (see `System Control <System_Execution_Control>` and
-`Execution <System_Execution>`). When an EVCMechanism is executed, it updates the value of its `prediction_mechanisms`
-and `objective_mechanism`, and then calls its `function <EVCMechanism.function>`, which determines and implements the
-`allocation_policy` for the next `TRIAL` of its `system <EVCMechanism.system>` \\s execution.  The default `function
-<EVCMechanism.function>` executes the following steps (described in greater detailed `above
-<EVC_Default_Configuration>`):
+An EVCMechanism must be the `controller <System_Base.controller>` of a System, and as a consequence it is always the
+last `Mechanism <Mechanism>` to be executed in a `TRIAL` for its `system <EVCMechanism.system>` (see `System Control
+<System_Execution_Control>` and `Execution <System_Execution>`). When an EVCMechanism is executed, it updates the
+value of its `prediction_mechanisms` and `objective_mechanism`, and then calls its `function <EVCMechanism.function>`,
+which determines and implements the `allocation_policy` for the next `TRIAL` of its `system <EVCMechanism.system>`
+\\s execution.  The default `function <EVCMechanism.function>` executes the following steps (described in greater
+detailed `above <EVC_Default_Configuration>`):
 
 * samples every allocation_policy (i.e., every combination of the `allocation` \\s specified for the EVCMechanism's
   ControlSignals specified by their `allocation_samples` attributes);  for each `allocation_policy`, it:
