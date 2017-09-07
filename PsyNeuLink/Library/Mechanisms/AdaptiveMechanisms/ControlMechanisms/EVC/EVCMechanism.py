@@ -853,6 +853,9 @@ class EVCMechanism(ControlMechanism_Base):
         # **CALL _parse_monitored_values_list FROM _get_monitored_output_states
         # **CALL _parse_monitored_values_list IN ObjectiveMechanism
         # **IMPLEMENT LOGIC BELOW
+        # **IMPLEMENT:  System_Base._instantiate_controller()
+        #               @property for System_Base.controller, WITH setter THAT CALLS _instantiate_controller
+        # setter
         # **MOVE _add_monitored_value() TO ObjectiveMechanism
         # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
         # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
