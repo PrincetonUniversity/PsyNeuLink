@@ -1297,6 +1297,8 @@ class LearningMechanism(AdaptiveMechanism_Base):
 
         :return: (2D np.array) self.learning_signal
         """
+
+        print("Runtime params:\n")
         print(runtime_params)
         # COMPUTE LEARNING SIGNAL (dE/dW):
         self.learning_signal, self.error_signal = self.function(variable=variable,

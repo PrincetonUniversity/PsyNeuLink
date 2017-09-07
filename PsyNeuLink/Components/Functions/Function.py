@@ -6608,7 +6608,8 @@ class Reinforcement(
             has a single non-zero entry in the same row and column as the one in
             `activation_output <Reinforcement.activation_output>` and `error_signal <Reinforcement.error_signal>`.
         """
-
+        print("variable:")
+        print(variable)
         self._check_args(variable=variable, params=params, context=context)
 
         output = self.activation_output
@@ -6640,6 +6641,11 @@ class Reinforcement(
         # # return:
         # # - weight_change_matrix and error_array
         # return list(self.return_val)
+        print("weight change matrix:")
+        print(weight_change_matrix)
+
+        print("error array:")
+        print(error_array)
         return [weight_change_matrix, error_array]
 
 
@@ -6998,11 +7004,11 @@ class TDLearning(LearningFunction):
     componentName = TDLEARNING_FUNCTION
 
     class ClassDefaults(LearningFunction.ClassDefaults):
-        variable = [[[0, 0], [0, 0]]]
+        variable = [[0], [0], [0]]
 
     default_learning_rate = 0.05
     default_discount_factor = 0.5
-    default_initial_weights = [[1, 1]]
+    default_initial_weights = [[1], [1], [1]]
     paramClassDefaults = Function_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         WEIGHTS: None,
@@ -7073,8 +7079,6 @@ class TDLearning(LearningFunction):
         except AttributeError:
             pass
 
-        q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
-
         if reward is None:
             try:
                 reward = params['reward']
@@ -7082,6 +7086,8 @@ class TDLearning(LearningFunction):
                 raise FunctionError("Reward matrix must be provided either as a"
                                     "keyword argument or via the params"
                                     "dictionary.")
+
+        q_matrix = np.zeros(np.shape(reward), dtype=np.int32)
 
         if not initial_weights:
             initial_weights = np.ones(len(reward))
@@ -7100,14 +7106,18 @@ class TDLearning(LearningFunction):
         params[CURRENT_STATE] = initial_state
         params[Q_MATRIX] = q_matrix
         self.q_matrix = q_matrix
+        # self.reward = reward
 
         print(np.size(q_matrix))
 
+        print("Calling super().__init()__")
         super().__init__(default_variable, params, context=context, owner=owner,
                          prefs=prefs)
 
         # populate Q-matrix
+        print("Completing initialization...")
         self._initialize_q_matrix(context)
+        print("_____________________________________________________________")
         # TODO: add paths keyword argument
         # look at where SoftMax is called
         # Look at RL
@@ -7121,9 +7131,13 @@ class TDLearning(LearningFunction):
                  params=None,
                  context=None):
         self._check_args(variable=variable, params=params, context=context)
+        print("variable:")
+        print(variable)
 
         if context and "INITIALIZING" in context:
-            return self.default_initial_weights
+            print("Initializing function...")
+            # return np.zeros(variable.shape), np.zeros(len(variable[0]))
+            return self.default_initial_weights, np.zeros(np.shape(self.default_initial_weights))
 
         weights = self.paramsCurrent[WEIGHTS]
         current_state = self.paramsCurrent[CURRENT_STATE]

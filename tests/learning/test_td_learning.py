@@ -132,13 +132,14 @@ def test_mechanism_integration():
               [None, 0, None, None, 0, 100]]
     reward = np.array(reward, dtype=float)
 
+    td_learning = TDLearning(reward=reward, discount_factor=0.8, goal_state=5)
+
     p = process(
         default_variable=[0, 0, 0],
         size=3,
         pathway=[input_layer, action_selection],
         learning=LearningProjection(
-            learning_function=TDLearning(reward=reward, discount_factor=0.8,
-                                         goal_state=5)),
+            learning_function=td_learning),
         target=0
     )
 
