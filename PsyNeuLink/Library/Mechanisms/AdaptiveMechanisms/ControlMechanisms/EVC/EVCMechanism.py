@@ -892,7 +892,7 @@ class EVCMechanism(ControlMechanism_Base):
         else:
             self.monitored_output_states = weights = exponents = None
 
-        # CREATE
+        # CREATEG
 
 
         # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
