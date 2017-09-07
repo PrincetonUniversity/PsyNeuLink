@@ -653,49 +653,39 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # INSTANTIATE InputState FOR EACH OutputState
 
 
-        # # MODIFIED 9/7/17 OLD:
-        # If input_states were not specified, assign value of monitored_valued for each
-        #    (to invoke a default assignment for each input_state)
-        # if self.input_states is None:
-        #     self._input_states = [m[VALUE] for m in output_state_specs]
-        # MODIFIED 9/7/17 NEW:
         # If **input_states** was specified in the constructor, use those specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
         input_state_specs = self.input_states or [m[VALUE] for m in output_state_dicts]
-        # MODIFIED 9/7/17 END
 
         # Parse input_states into a state specification dict, passing output_state_specs as defaults
-        input_states = []
+        input_state_dicts = []
         for i, input_state, output_state_dict in zip(range(len(input_state_specs)),
                                                      # self.input_states,
                                                      input_state_specs,
                                                      output_state_dicts):
             # Parse input_state to determine its specifications and assign values from output_state_specs
             #    to any missing specifications, including any projections requested and weights and exponents.
-            input_state = _parse_state_spec(self,
+            input_state_dict = _parse_state_spec(self,
                                             state_type=InputState,
                                             state_spec=input_state,
                                             name=output_state_dict[NAME],
                                             value=output_state_dict[VALUE])
-            input_states.append(input_state)
+            input_state_dicts.append(input_state_dict)
 
-        # TODO: stateful - what is this doing?
+        # Instantiate constraint on variable of each InputState from monitored_value spec
+        #    and assign weights and exponents if specified in monitored_value tuple
         constraint_value = []
-        for input_state in input_states:
-            constraint_value.append(input_state[VARIABLE])
+        for input_state_dict in input_state_dicts:
+            constraint_value.append(input_state_dict[VARIABLE])
+            params = input_state_dict[PARAMS] or {}
+            if weights[i] is not None:
+                params[WEIGHT] = weights[i]
+            if exponents[i] is not None:
+                params[EXPONENT] = exponents[i]
+
         self.instance_defaults.variable = constraint_value
+        self._input_states = input_state_dicts
 
-
-            # params = input_state[PARAMS]
-            # if weights[i] is not None:
-            #     params[WEIGHT] = weights[i]
-            # if exponents[i] is not None:
-            #     params[EXPONENT] = exponents[i]
-
-
-
-
-        self._input_states = input_states
         super()._instantiate_input_states(context=context)
 
         # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)

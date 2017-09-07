@@ -889,7 +889,6 @@ class EVCMechanism(ControlMechanism_Base):
         else:
             self.monitored_output_states = weights = exponents = None
 
-
         # List of OutputState tuples for **monitored_values** argument of ObjectiveMechanism
         monitored_values_spec = []
         for output_state, weight, exponent in  zip(self.monitored_output_states, weights, exponents):
@@ -899,23 +898,6 @@ class EVCMechanism(ControlMechanism_Base):
         #    (so that it is accessible to custom functions)
         self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
 
-        # # MODIFIED 9/7/17 OLD:
-        # # Create specification for ObjectiveMechanism InputStates corresponding to
-        # #    monitored_output_states and their exponents and weights
-        # monitoring_input_states = []
-        # for i, state in enumerate(self.monitored_output_states):
-        #     if self.system is not None:
-        #         self._validate_monitored_state_in_system(state)
-        #     monitoring_input_states.append({NAME: state.name,
-        #                                     WEIGHT: float(weights[i]),
-        #                                     EXPONENT: float(exponents[i])
-        #                                     })
-        #
-        # self.objective_mechanism = ObjectiveMechanism(monitored_values=self.monitored_output_states,
-        #                                               input_states=monitoring_input_states,
-        #                                               function=LinearCombination(operation=PRODUCT),
-        #                                               name=self.name + ' Monitoring Mechanism')
-        # MODIFIED 9/7/17 NEW:
         # Create specification for ObjectiveMechanism InputStates corresponding to
         #    monitored_output_states and their exponents and weights
         self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_values_spec,
