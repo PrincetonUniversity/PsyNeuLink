@@ -346,7 +346,7 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import ALLOCATION_SAMPLES, CLASS_DEFAULTS, FUNCTION, FUNCTION_PARAMS, INITIALIZING, INPUT_STATE_VARIABLES, NAME, OUTPUT_STATES, OWNER_VALUE, VARIABLE, kwPreferenceSetName
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
 from psyneulink.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.globals.utilities import is_numeric, object_has_single_value
+from psyneulink.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value
 
 __all__ = [
     'DDM', 'DDM_OUTPUT', 'DDM_standard_output_states', 'DDMError',
@@ -817,7 +817,10 @@ class DDM(ProcessingMechanism_Base):
                                   prefs=prefs,
                                   size=size,
                                   # context=context)
-                                  context=self)
+                                  context=self,
+                                  function=function,
+                                  )
+
         self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
@@ -924,7 +927,10 @@ class DDM(ProcessingMechanism_Base):
             if isinstance(fun, method_type):
                 fun = fun.__self__.__class__
 
-            if not fun in functions:
+            for function_type in functions:
+                if is_same_function_spec(fun, function_type):
+                    break
+            else:
                 function_names = [fun.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
@@ -963,11 +969,12 @@ class DDM(ProcessingMechanism_Base):
                 raise DDMError("PROGRAM ERROR: unrecognized specification for {} of {} ({})".
                                format(THRESHOLD, self.name, threshold))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Delete params not in use, call super.instantiate_execute_method
+        :param function:
         """
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _instantiate_plotting_functions(self, context=None):
         if "DriftDiffusionIntegrator" in str(self.function):

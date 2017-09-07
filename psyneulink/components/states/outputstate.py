@@ -448,7 +448,7 @@ COMMENT
     ...                                  pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
     ...                                  {pnl.NAME: 'DECISION ENTROPY',
     ...                                   pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
-    ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY).function }])
+    ...                                   pnl.FUNCTION: pnl.Stability(metric=pnl.ENTROPY) }])
 
 COMMENT:
    ADD VERSION IN WHICH INDEX IS SPECIFIED USING DDM_standard_output_states
@@ -470,7 +470,7 @@ the ``DECISION ENTROPY`` OutputState could be created as follows::
 
     >>> decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                 variable=(OWNER_VALUE, 2),
-    ...                                                 function=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                 function=pnl.Stability(metric=pnl.ENTROPY))
 
 and then assigned either as::
 
@@ -483,7 +483,7 @@ or::
 
     >>> another_decision_entropy_output_state = pnl.OutputState(name='DECISION ENTROPY',
     ...                                                variable=(OWNER_VALUE, 2),
-    ...                                                function=pnl.Stability(metric=pnl.ENTROPY).function)
+    ...                                                function=pnl.Stability(metric=pnl.ENTROPY))
     >>> my_mech2 = pnl.DDM(function=pnl.BogaczEtAl(),
     ...                    output_states=[pnl.DDM_OUTPUT.DECISION_VARIABLE,
     ...                                   pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD])
@@ -590,7 +590,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.components.component import Component
-from psyneulink.components.functions.function import Function, Linear, OneHot, function_type, method_type
+from psyneulink.components.functions.function import Function, OneHot, function_type, method_type
 from psyneulink.components.shellclasses import Mechanism
 from psyneulink.components.states.state import ADD_STATES, State_Base, _instantiate_state_list, state_type_keywords
 from psyneulink.globals.context import ContextFlags
@@ -872,7 +872,7 @@ class OutputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=Linear(),
+                 function=None,
                  projections=None,
                  params=None,
                  name=None,
@@ -965,7 +965,9 @@ class OutputState(State_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _parse_function_variable(self, variable):
         # variable is passed to OutputState by _instantiate_function for OutputState
@@ -1001,10 +1003,11 @@ class OutputState(State_Base):
         """
         return
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate default variable if it is None or numeric
+        :param function:
         """
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         # If variable has not been assigned, or it is numeric (in which case it can be assumed that
         #    the value was a reference_value generated during initialization/parsing and passed in the constructor
@@ -1632,6 +1635,8 @@ def _parse_output_state_function(owner, output_state_name, function, params_dict
     if it is and does, leave as is,
     otherwise, wrap in lambda function that provides first item of OutputState's value as the functions argument.
     """
+    if function is None:
+        function = OutputState.ClassDefaults.function
 
     if isinstance(function, (function_type, method_type)):
         return function

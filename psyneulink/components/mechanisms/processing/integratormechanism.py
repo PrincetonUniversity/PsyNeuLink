@@ -193,14 +193,12 @@ class IntegratorMechanism(ProcessingMechanism_Base):
     #     OUTPUT_STATES:[PREDICTION_MECHANISM_OUTPUT]
     # })
 
-    from psyneulink.components.functions.function import AdaptiveIntegrator
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
                  input_states:tc.optional(tc.any(list, dict))=None,
-                 function=AdaptiveIntegrator(rate=0.5),
+                 function=None,
                  output_states:tc.optional(tc.any(str, Iterable))=RESULTS,
                  params=None,
                  name=None,
@@ -226,7 +224,9 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self)
+                                                  context=self,
+                                                  function=function,
+                                                  )
 
         # IMPLEMENT: INITIALIZE LOG ENTRIES, NOW THAT ALL PARTS OF THE MECHANISM HAVE BEEN INSTANTIATED
 

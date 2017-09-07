@@ -749,12 +749,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # FIX: validate learning_function and learning_rate here (use Hebbian as template for learning_rate
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """ using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
         ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
         hetero were None in the initialization call.
+        :param function:
         """
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_states.key_values
         specified_matrix = get_matrix(self.params[MATRIX], self.size[0], self.size[0])

@@ -371,7 +371,6 @@ class GatingMechanism(AdaptiveMechanism_Base):
         # This must be a list, as there may be more than one (e.g., one per GATING_SIGNAL)
         variable = np.array(defaultGatingPolicy)
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({GATING_PROJECTIONS: None})
 
@@ -379,7 +378,7 @@ class GatingMechanism(AdaptiveMechanism_Base):
     def __init__(self,
                  default_gating_policy=None,
                  size=None,
-                 function=Linear(slope=1, intercept=0),
+                 function=None,
                  gating_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -400,7 +399,9 @@ class GatingMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=self,
+                         function=function,
+                         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate items in the GATING_SIGNALS param (**gating_signals** argument of constructor)

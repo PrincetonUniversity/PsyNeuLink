@@ -429,10 +429,12 @@ import math
 import numbers
 import re
 import warnings
+
 from collections import OrderedDict, namedtuple
 
 import numpy as np
 import typecheck as tc
+
 from toposort import toposort, toposort_flatten
 
 from psyneulink.components.component import Component
@@ -448,10 +450,7 @@ from psyneulink.components.shellclasses import Mechanism, Process_Base, System_B
 from psyneulink.components.states.inputstate import InputState
 from psyneulink.components.states.parameterstate import ParameterState
 from psyneulink.globals.context import ContextFlags
-from psyneulink.globals.keywords import ALL, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EXECUTING, FUNCTION, FUNCTIONS, INITIALIZE_CYCLE, \
-    INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, \
-    PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
+from psyneulink.globals.keywords import ALL, COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, EVC_SIMULATION, EXECUTING, FUNCTION, FUNCTIONS, INITIALIZED, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, ORIGIN, PROJECTIONS, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, VALUES, kwSeparator, kwSystemComponentCategory
 from psyneulink.globals.log import Log
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
@@ -839,7 +838,6 @@ class System(System_Base):
                                                   targets=targets,
                                                   params=params)
 
-        self.function = self.execute
         self.scheduler_processing = scheduler
         self.scheduler_learning = None
         self.termination_processing = None
@@ -908,16 +906,17 @@ class System(System_Base):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate processes and graph
 
         These calls must be made before _instantiate_function as the latter may be called during init for validation
+        :param function:
         """
         self._instantiate_processes(input=self.instance_defaults.variable, context=context)
         self._instantiate_graph(context=context)
         self._instantiate_learning_graph(context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Suppress validation of function
 
         This is necessary to:
@@ -931,12 +930,19 @@ class System(System_Base):
                 format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
             self.paramsCurrent[FUNCTION] = self.execute
 
-        # If validation pref is set, instantiate and execute the System
+    def _instantiate_value(self, context=None):
+        # If validation pref is set, execute the System
         if self.prefs.paramValidationPref:
-            super(System, self)._instantiate_function(context=context)
+            super()._instantiate_value(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            self.value = self.processes[-1].output_state.value
+            value = self.processes[-1].output_state.value
+            try:
+                # Could be mutable, so assign copy
+                self.instance_defaults.value = value.copy()
+            except AttributeError:
+                # Immutable, so just assign value
+                self.instance_defaults.value = value
 
     def _instantiate_processes(self, input=None, context=None):
 # FIX: ALLOW Projections (??ProjectionTiming TUPLES) TO BE INTERPOSED BETWEEN MECHANISMS IN PATHWAY
@@ -3202,6 +3208,10 @@ class System(System_Base):
         pass
 
     @property
+    def function(self):
+        return self.execute
+
+    @property
     def mechanisms(self):
         """List of all mechanisms in the system
 
@@ -3750,7 +3760,7 @@ class System(System_Base):
                                         # Create node for System "targets" input
                                         # Note: Mechanism.show_structure is not called for SystemInterfaceMechanism
                                         elif isinstance(smpl_or_trgt_src, System):
-                                            
+
                                             if smpl_or_trgt_src is active_item:
                                                 smpl_or_trgt_src_color = active_color
                                             else:

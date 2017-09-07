@@ -317,7 +317,9 @@ class ControlProjection(ModulatoryProjection_Base):
                                                 params=params,
                                                 name=name,
                                                 prefs=prefs,
-                                                context=self)
+                                                context=self,
+                                                function=function,
+                                                )
 
     def _instantiate_sender(self, sender, params=None, context=None):
 

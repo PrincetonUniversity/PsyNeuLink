@@ -445,6 +445,7 @@ import inspect
 import numbers
 import re
 import warnings
+
 from collections import UserList, namedtuple
 
 import numpy as np
@@ -845,7 +846,6 @@ class Process(Process_Base):
                                                   learning_rate=learning_rate,
                                                   target=target,
                                                   params=params)
-        self.function = self.execute
 
         register_category(entry=self,
                           base_class=Process,
@@ -892,19 +892,19 @@ class Process(Process_Base):
                     raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Call methods that must be run before function method is instantiated
 
         Need to do this before _instantiate_function as mechanisms in pathway must be instantiated
             in order to assign input Projection and self.outputState to first and last mechanisms, respectively
 
+        :param function:
         :param context:
         :return:
         """
         self._instantiate_pathway(context=context)
-        # super(Process, self)._instantiate_function(context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         """Override Function._instantiate_function:
 
         This is necessary to:
@@ -918,12 +918,6 @@ class Process(Process_Base):
             print("Process object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
                 format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
             self.paramsCurrent[FUNCTION] = self.execute
-        # If validation pref is set, instantiate and execute the Process
-        if self.prefs.paramValidationPref:
-            super(Process, self)._instantiate_function(context=context)
-        # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
-        else:
-            self.value = self.pathway[-1].output_state.value
 
 # DOCUMENTATION:
 
@@ -1024,6 +1018,20 @@ class Process(Process_Base):
         self._all_mechanisms = MechanismList(self, self._mechs)
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
+
+    def _instantiate_value(self, context=None):
+        # If validation pref is set, execute the Process
+        if self.prefs.paramValidationPref:
+            super()._instantiate_value(context=context)
+        # Otherwise, just set Process output info to the corresponding info for the last mechanism in the pathway
+        else:
+            value = self.pathway[-1].output_state.value
+            try:
+                # Could be mutable, so assign copy
+                self.instance_defaults.value = value.copy()
+            except AttributeError:
+                # Immutable, so just assign value
+                self.instance_defaults.value = value
 
     def _standardize_config_entries(self, pathway, context=None):
 
@@ -2477,7 +2485,9 @@ class Process(Process_Base):
 
         print ("\n---------------------------------------------------------")
 
-
+    @property
+    def function(self):
+        return self.execute
 
     @property
     def mechanisms(self):

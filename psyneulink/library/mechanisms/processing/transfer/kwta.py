@@ -542,9 +542,9 @@ class KWTA(RecurrentTransferMechanism):
         return self._kwta_scale(variable)
 
     # adds indexOfInhibitionInputState to the attributes of KWTA
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         # this index is saved so the KWTA mechanism knows which input state represents inhibition
         # (it will be wrong if the user deletes an input state: currently, deleting input states is not supported,

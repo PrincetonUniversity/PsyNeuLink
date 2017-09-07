@@ -46,7 +46,6 @@ Class Reference
 
 import typecheck as tc
 
-from psyneulink.components.functions.function import Linear
 from psyneulink.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
@@ -134,7 +133,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_input_value=None,
                  size=None,
-                 function = Linear(slope = 1, intercept=0.0),
+                 function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -151,7 +150,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                   params=params,
                                                   name=name,
                                                   prefs=prefs,
-                                                  context=self)
+                                                  context=self,
+                                                  function=function,
+                                                  )
 
 
 

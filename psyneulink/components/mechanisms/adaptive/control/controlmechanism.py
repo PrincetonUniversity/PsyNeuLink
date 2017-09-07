@@ -556,7 +556,6 @@ class ControlMechanism(AdaptiveMechanism_Base):
     class InstanceDefaults(AdaptiveMechanism_Base.InstanceDefaults, _DefaultsAliases):
         pass
 
-    from psyneulink.components.functions.function import Linear
     paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
         OBJECTIVE_MECHANISM: None,
@@ -568,7 +567,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
                  size=None,
                  system:tc.optional(System_Base)=None,
                  objective_mechanism=None,
-                 function = Linear(slope=1, intercept=0),
+                 function=None,
                  control_signals=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
@@ -590,7 +589,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                                                     params=params,
                                                     name=name,
                                                     prefs=prefs,
-                                                    context=self)
+                                                    context=self,
+                                                    function=function,
+                                                    )
 
         try:
             self.monitored_output_states

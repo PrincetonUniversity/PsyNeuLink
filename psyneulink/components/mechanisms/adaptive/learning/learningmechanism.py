@@ -904,7 +904,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
                  default_variable=None,
                  size=None,
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
-                 function:is_function_type=BackPropagation,
+                 function=None,
                  learning_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.ADDITIVE,
                  learning_rate:tc.optional(parameter_spec)=None,
@@ -941,7 +941,9 @@ class LearningMechanism(AdaptiveMechanism_Base):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=self)
+                         context=self,
+                         function=function,
+                         )
 
     def _parse_function_variable(self, variable):
         function_variable = np.zeros_like(
@@ -1039,16 +1041,17 @@ class LearningMechanism(AdaptiveMechanism_Base):
                 else:
                     pass
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiates MappingProjection(s) from error_sources (if specified) to LearningMechanism
 
         Also determines and assigns `error_matrices` from the `error_sources`, identified as the matrix for the
             Projection with which each error_source is associated.
+            :param function:
         """
         from psyneulink.components.mechanisms.adaptive.learning.learningauxiliary \
             import _instantiate_error_signal_projection
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         self.error_matrices = None
         if self.error_sources:

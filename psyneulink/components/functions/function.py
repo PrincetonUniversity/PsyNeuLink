@@ -398,7 +398,17 @@ def get_param_value_for_keyword(owner, keyword):
 
     """
     try:
-        return owner.paramsCurrent[FUNCTION].keyword(owner, keyword)
+        function_val = owner.params[FUNCTION]
+        if function_val is None:
+            # paramsCurrent will go directly to an attribute value first before
+            # returning what's actually in its dictionary, so fall back
+            try:
+                keyval = owner.params.data[FUNCTION].keyword(owner, keyword)
+            except KeyError:
+                keyval = None
+        else:
+            keyval = function_val.keyword(owner, keyword)
+        return keyval
     except FunctionError as e:
         # assert(False)
         # prefs is not always created when this is called, so check
@@ -607,7 +617,9 @@ class Function_Base(Function):
                  owner=None,
                  name=None,
                  prefs=None,
-                 context='Function_Base Init'):
+                 context='Function_Base Init',
+                 function=None,
+                 ):
         """Assign category-level preferences, register category, and call super.__init__
 
         Initialization arguments:
@@ -636,7 +648,9 @@ class Function_Base(Function):
                          param_defaults=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _parse_arg_generic(self, arg_val):
         if isinstance(arg_val, list):
@@ -1386,7 +1400,9 @@ class UserDefinedFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=custom_function,
+                         )
 
         self.functionOutputType = None
 
@@ -3731,7 +3747,7 @@ class SoftMax(NormalizingFunction):
                          prefs=prefs,
                          context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
 
         self.one_hot_function = None
         output_type = self.get_current_function_param(OUTPUT_TYPE)
@@ -3740,7 +3756,7 @@ class SoftMax(NormalizingFunction):
         if not output_type is ALL:
             self.one_hot_function = OneHot(mode=output_type).function
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function, function_params=function_params, context=context)
 
     def function(self,
                  variable=None,
@@ -4242,7 +4258,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                self.owner_name,
                                                MATRIX_KEYWORD_NAMES))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.instance_defaults.variable), 1)
             self.matrix = np.identity(variable_length)
@@ -4607,6 +4623,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         self.auto_dependent = True
 
+    def _validate(self):
+        self._validate_rate(self.instance_defaults.rate)
+        super()._validate()
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -4665,6 +4684,54 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
+
+    def _validate_rate(self, rate):
+        # kmantel: this duplicates much code in _validate_params above, but that calls _instantiate_defaults
+        # which I don't think is the right thing to do here, but if you don't call it in _validate_params
+        # then a lot of things don't get instantiated properly
+        if rate is not None:
+            if isinstance(rate, list):
+                rate = np.asarray(rate)
+
+            rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+            if isinstance(rate, np.ndarray):
+                # kmantel: current test_gating test depends on 2d rate
+                #   this should be looked at but for now this restriction is removed
+                # if rate.ndim > 1:
+                #     raise FunctionError(rate_type_msg.format(self.name, rate))
+                pass
+            elif not isinstance(rate, numbers.Number):
+                raise FunctionError(rate_type_msg.format(self.name, rate))
+
+            if isinstance(rate, np.ndarray) and not iscompatible(rate, self.instance_defaults.variable):
+                if len(rate) != 1 and len(rate) != np.array(self.instance_defaults.variable).size:
+                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                        self.instance_defaults.variable = np.zeros_like(np.array(rate))
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable,
+                            )
+                        self._instantiate_value()
+                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                    else:
+                        raise FunctionError(
+                            "The length of the array specified for the rate parameter of {} ({})"
+                            "must match the length of the default input ({}).".format(
+                                len(rate),
+                                # rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                # self.instance_defaults.variable,
+                            )
+                        )
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
@@ -5350,6 +5417,27 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
 
         self.auto_dependent = True
 
+    def _validate_rate(self, rate):
+        # unlike other Integrators, variable does not need to match rate
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_type_msg = 'The rate parameter of {0} must be a number or an array/list of at most 1d (you gave: {1})'
+        if isinstance(rate, np.ndarray):
+            # kmantel: current test_gating test depends on 2d rate
+            #   this should be looked at but for now this restriction is removed
+            # if rate.ndim > 1:
+            #     raise FunctionError(rate_type_msg.format(self.name, rate))
+            pass
+        elif not isinstance(rate, numbers.Number):
+            raise FunctionError(rate_type_msg.format(self.name, rate))
+
+        if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+            self.instance_defaults.variable = np.zeros_like(np.array(rate))
+            self._instantiate_value()
+            self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+
     def function(self,
                  variable=None,
                  params=None,
@@ -5602,23 +5690,35 @@ class AdaptiveIntegrator(
                                  context=context)
 
         if RATE in target_set:
-            if isinstance(target_set[RATE], (list, np.ndarray)):
-                for r in target_set[RATE]:
+            # cannot use _validate_rate here because it assumes it's being run after instantiation of the object
+            rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+            if isinstance(rate, np.ndarray) and rate.ndim > 0:
+                for r in rate:
                     if r < 0.0 or r > 1.0:
-                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
-                                            "between 0.0 and 1.0 because it is an AdaptiveIntegrator".
-                                            format(target_set[RATE], self.name))
+                        raise FunctionError(rate_value_msg.format(rate, self.name))
             else:
-                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
-                    raise FunctionError(
-                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
-                        "1.0 because it is an AdaptiveIntegrator".format(target_set[RATE], self.name))
+                if rate < 0.0 or rate > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
 
         if NOISE in target_set:
             self._validate_noise(target_set[NOISE])
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
+    def _validate_rate(self, rate):
+        super()._validate_rate(rate)
+
+        if isinstance(rate, list):
+            rate = np.asarray(rate)
+
+        rate_value_msg = "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and 1.0 because it is an AdaptiveIntegrator"
+        if isinstance(rate, np.ndarray) and rate.ndim > 0:
+            for r in rate:
+                if r < 0.0 or r > 1.0:
+                    raise FunctionError(rate_value_msg.format(rate, self.name))
+        else:
+            if rate < 0.0 or rate > 1.0:
+                raise FunctionError(rate_value_msg.format(rate, self.name))
 
     def function(self,
                  variable=None,
@@ -8148,7 +8248,7 @@ class NavarroAndFuss(IntegratorFunction):
                          prefs=prefs,
                          context=context)
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
         import os
         import sys
         try:
@@ -8166,7 +8266,7 @@ class NavarroAndFuss(IntegratorFunction):
         # MATLAB is very finnicky about the formatting here to actually add the path so be careful if you modify
         self.eng1 = matlab.engine.start_matlab("-r 'addpath(char(\"{0}\"))' -nojvm".format(ddm_functions_path))
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function=function, function_params=function_params, context=context)
 
     def function(self,
                  variable=None,
@@ -9092,13 +9192,14 @@ COMMENT
 
 
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate matrix
 
         Specified matrix is convolved with HOLLOW_MATRIX
             to eliminate the diagonal (self-connections) from the calculation.
         The `Distance` Function is used for all calculations except ENERGY (which is not really a distance metric).
         If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the Distance Function.
+        :param function:
 
         """
 

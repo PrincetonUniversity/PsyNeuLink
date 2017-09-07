@@ -727,6 +727,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             prefs=prefs,
             context=self,
             input_states=input_states,
+            function=function,
         )
 
     def _parse_arg_initial_value(self, initial_value):
@@ -862,7 +863,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         return param
 
-    def _instantiate_parameter_states(self, context=None):
+    def _instantiate_parameter_states(self, function=None, context=None):
 
         from psyneulink.components.functions.function import Logistic
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
@@ -871,11 +872,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 self.clip is None):
             self.clip = (0,1)
 
-        super()._instantiate_parameter_states(context=context)
+        super()._instantiate_parameter_states(function=function, context=context)
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
             self.initial_value = self.instance_defaults.variable

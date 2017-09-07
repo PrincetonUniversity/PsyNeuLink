@@ -725,7 +725,9 @@ class ControlSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
         # Default cost params
         if self.context.initialization_status != ContextFlags.DEFERRED_INIT:
@@ -834,9 +836,9 @@ class ControlSignal(ModulatorySignal):
                      not issubclass(cost_function, Function))):
                 raise ControlSignalError("{0} not a valid Function".format(cost_function))
 
-    def _instantiate_attributes_before_function(self, context=None):
+    def _instantiate_attributes_before_function(self, function=None, context=None):
 
-        super()._instantiate_attributes_before_function(context=context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
         # Instantiate cost functions (if necessary) and assign to attributes
         for cost_function_name in costFunctionNames:

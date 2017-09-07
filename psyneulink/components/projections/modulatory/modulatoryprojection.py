@@ -211,7 +211,9 @@ class ModulatoryProjection_Base(Projection_Base):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
 
         super().__init__(receiver=receiver,
                          sender=sender,
@@ -220,7 +222,9 @@ class ModulatoryProjection_Base(Projection_Base):
                          exponent=exponent,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
 

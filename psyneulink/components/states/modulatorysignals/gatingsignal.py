@@ -461,7 +461,9 @@ class GatingSignal(ModulatorySignal):
                          params=params,
                          name=name,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
     def _parse_state_specific_specs(self, owner, state_dict, state_specific_spec):
             """Get connections specified in a ParameterState specification tuple

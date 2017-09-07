@@ -594,7 +594,9 @@ class Projection_Base(Projection):
                  params=None,
                  name=None,
                  prefs=None,
-                 context=None):
+                 context=None,
+                 function=None,
+                 ):
         """Assign sender, receiver, and execute method and register Mechanism with ProjectionRegistry
 
         This is an abstract class, and can only be called from a subclass;
@@ -712,7 +714,9 @@ class Projection_Base(Projection):
                                               param_defaults=params,
                                               name=self.name,
                                               prefs=prefs,
-                                              context=context.__class__.__name__)
+                                              context=context.__class__.__name__,
+                                              function=function,
+                                              )
 
         self._assign_default_projection_name()
 
@@ -757,13 +761,13 @@ class Projection_Base(Projection):
                                   format(sender_string, self.name, sender,
                                          Mechanism.__name__, State.__name__))
 
-    def _instantiate_attributes_before_function(self, context=None):
-        self._instantiate_parameter_states(context=context)
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        self._instantiate_parameter_states(function=function, context=context)
 
-    def _instantiate_parameter_states(self, context=None):
+    def _instantiate_parameter_states(self, function=None, context=None):
 
         from psyneulink.components.states.parameterstate import _instantiate_parameter_states
-        _instantiate_parameter_states(owner=self, context=context)
+        _instantiate_parameter_states(owner=self, function=function, context=context)
 
     def _instantiate_sender(self, sender, context=None):
         """Assign self.sender to OutputState of sender and insure compatibility with self.instance_defaults.variable

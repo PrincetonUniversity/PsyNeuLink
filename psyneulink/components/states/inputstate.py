@@ -467,7 +467,7 @@ from psyneulink.globals.context import ContextFlags
 from psyneulink.globals.keywords import CLASS_DEFAULTS, COMMAND_LINE, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_STATE, INPUT_STATE_PARAMS, LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, OUTPUT_STATE, OUTPUT_STATES, PROCESS_INPUT_STATE, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, SUM, SYSTEM_INPUT_STATE, VARIABLE, WEIGHT
 from psyneulink.globals.preferences.componentpreferenceset import is_pref_set
 from psyneulink.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.globals.utilities import append_type_to_name, is_numeric, iscompatible
+from psyneulink.globals.utilities import append_type_to_name, is_instance_or_subclass, is_numeric, iscompatible
 
 __all__ = [
     'InputState', 'InputStateError', 'state_type_keywords',
@@ -704,7 +704,7 @@ class InputState(State_Base):
                  reference_value=None,
                  variable=None,
                  size=None,
-                 function=LinearCombination(operation=SUM),
+                 function=None,
                  projections=None,
                  weight=None,
                  exponent=None,
@@ -756,7 +756,9 @@ class InputState(State_Base):
                                          params=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context)
+                                         context=context,
+                                         function=function,
+                                         )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_state_name(context=context)
@@ -812,49 +814,17 @@ class InputState(State_Base):
             raise InputStateError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
                                   .format(name, self.componentName, self.owner.name, self.value, reference_value))
 
-    def _instantiate_function(self, context=None):
-        """Insure that function is LinearCombination and that output is compatible with owner.instance_defaults.variable
-
-        Insures that function:
-            - is LinearCombination (to aggregate Projection inputs)
-            - generates an output (assigned to self.value) that is compatible with the component of
-                owner.function's variable that corresponds to this InputState,
-                since the latter will be called with the value of this InputState;
-
-        Notes:
-        * Relevant item of owner.function's variable should have been provided
-            as reference_value arg in the call to InputState__init__()
-        * Insures that self.value has been assigned (by call to super()._validate_function)
-        * This method is called only if the parameterValidationPref is True
-
-        :param context:
-        :return:
-        """
-
-        super()._instantiate_function(context=context)
-
+    def _validate_function(self, function):
         # Insure that function is Function.LinearCombination
-        if not isinstance(self.function.__self__, (LinearCombination, Linear, Reduce)):
+        if not is_instance_or_subclass(function, (LinearCombination, Linear, Reduce)):
             raise StateError(
-                "{0} of {1} for {2} is {3}; it must be of LinearCombination "
-                "or Linear type".
-                format(FUNCTION,
-                       self.name,
-                       self.owner.name,
-                       self.function.__self__.componentName))
-
-        # Insure that self.value is compatible with self.reference_value
-        if self.reference_value is not None and not iscompatible(self.value,
-                                                                 self.reference_value):
-            raise InputStateError("Value ({}) of {} {} for {} is not "
-                                  "compatible with specified {} ({})".
-                                  format(self.value,
-                                         self.componentName,
-                                         self.name,
-                                         self.owner.name,
-                                         REFERENCE_VALUE,
-                                         self.reference_value))
-                                         # self.owner.variable))
+                "{0} of {1} for {2} is {3}; it must be of LinearCombination or Linear type".format(
+                    FUNCTION,
+                    self.name,
+                    self.owner.name,
+                    function.componentName
+                )
+            )
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of State's constructor

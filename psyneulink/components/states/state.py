@@ -1001,8 +1001,7 @@ class State_Base(State):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     requiredParamClassDefaultTypes = Component.requiredParamClassDefaultTypes.copy()
-    requiredParamClassDefaultTypes.update({FUNCTION_PARAMS : [dict],
-                                           PROJECTION_TYPE: [str, Projection]})   # Default projection type
+    requiredParamClassDefaultTypes.update({PROJECTION_TYPE: [str, Projection]})   # Default projection type
     paramClassDefaults = Component.paramClassDefaults.copy()
     paramClassDefaults.update({STATE_TYPE: None})
 
@@ -1016,6 +1015,7 @@ class State_Base(State):
                  name=None,
                  prefs=None,
                  context=None,
+                 function=None,
                  **kargs):
         """Initialize subclass that computes and represents the value of a particular State of a Mechanism
 
@@ -1130,7 +1130,9 @@ class State_Base(State):
                                          param_defaults=params,
                                          name=name,
                                          prefs=prefs,
-                                         context=context.__class__.__name__) # cxt-done cxt-pass
+                                         context=context.__class__.__name__,  # cxt-done cxt-pass
+                                         function=function,
+                                         )
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
@@ -1273,7 +1275,7 @@ class State_Base(State):
                                        target_set[PROJECTION_TYPE],
                                        self.owner.name))
 
-    def _instantiate_function(self, context=None):
+    def _instantiate_function(self, function, function_params=None, context=None):
 
         var_is_matrix = False
         # If variable is a 2d array or matrix (e.g., for the MATRIX ParameterState of a MappingProjection),
@@ -1288,8 +1290,8 @@ class State_Base(State):
         #         (that is handled by the individual State subclasses (e.g., ADD is enforced for MATRIX ParameterState)
         if (
             (
-                (inspect.isclass(self.function) and issubclass(self.function, LinearCombination))
-                or isinstance(self.function, LinearCombination)
+                (inspect.isclass(function) and issubclass(function, LinearCombination))
+                or isinstance(function, LinearCombination)
             )
             and (
                 isinstance(self.instance_defaults.variable, np.matrix)
@@ -1306,7 +1308,7 @@ class State_Base(State):
             self.instance_defaults.variable = [self.instance_defaults.variable]
             var_is_matrix = True
 
-        super()._instantiate_function(context=context)
+        super()._instantiate_function(function=function, function_params=function_params, context=context)
 
         # If it is a matrix, remove from list in which it was embedded after instantiating and evaluating function
         if var_is_matrix:

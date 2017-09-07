@@ -92,7 +92,9 @@ class EVCAuxiliaryFunction(Function_Base):
                          params=params,
                          owner=owner,
                          prefs=prefs,
-                         context=context)
+                         context=context,
+                         function=function,
+                         )
 
         self.functionOutputType = None
 
