@@ -4595,6 +4595,8 @@ class FHNIntegrator(
         a_w=1.0,                        \
         b_w=-0.8,                       \
         c_w=0.7,                        \
+        electrotonic_coupling=1.0,      \
+        uncorrelated_activity=0.0       \
         time_constant_w = 12.5,         \
         params=None,                    \
         owner=None,                     \
@@ -4706,6 +4708,8 @@ class FHNIntegrator(
                  b_w=-0.8,
                  c_w=0.7,
                  time_constant_w = 12.5,
+                 electrotonic_coupling = 1.0,
+                 uncorrelated_activity = 0.0,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4729,6 +4733,8 @@ class FHNIntegrator(
                                                   a_w=a_w,
                                                   b_w=b_w,
                                                   c_w=c_w,
+                                                  electrotonic_coupling=electrotonic_coupling,
+                                                  uncorrelated_activity=uncorrelated_activity,
                                                   time_constant_w=time_constant_w,
                                                   params=params)
 
@@ -4784,19 +4790,14 @@ class FHNIntegrator(
         variable = self.variable
 
         def dv_dt(time, v):
-            # standard coeffs:
-            # return v - (v**3)/3 - self.previous_w + variable
 
-            # general:
             val= (self.a_v*(v**3) + self.b_v*(v**2) + self.c_v*v + self.d_v
                     + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
             return val
         def dw_dt(time, w):
-            # standard coeffs:
-            # return self.a*(self.previous_v + self.b - self.c*w)
 
-            # general:
-            return (self.a_w*self.previous_v + self.b_w*w + self.c_w)/self.time_constant_w
+            return (self.electrotonic_coupling*self.a_w*self.previous_v + self.b_w*w + self.c_w +
+                    (1-self.electrotonic_coupling)*self.uncorrelated_activity)/self.time_constant_w
 
         new_v = self._runge_kutta_4(previous_time=self.previous_t,
                                     previous_value=self.previous_v,
