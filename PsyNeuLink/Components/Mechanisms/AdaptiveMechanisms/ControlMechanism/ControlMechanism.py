@@ -277,15 +277,18 @@ Class Reference
 ---------------
 
 """
+
 import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param
+from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+                                                           import ObjectiveMechanism, _parse_monitored_values_list
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
 from PsyNeuLink.Components.States.ModulatorySignals.ModulatorySignal import modulatory_signal_keywords
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -294,7 +297,8 @@ from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METHOD_ONLY, SYSTEM, MECHANISM, \
                                         PROJECTIONS, RECEIVER, SENDER, PARAMETER_STATE, OBJECTIVE_MECHANISM, \
-                                        REFERENCE_VALUE, MAKE_DEFAULT_CONTROLLER, CONTROLLED_PARAM, CONTROL_PROJECTION,\
+                                        PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
+                                        MAKE_DEFAULT_CONTROLLER, CONTROLLED_PARAM, CONTROL_PROJECTION,\
                                         CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -671,6 +675,102 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         raise ControlMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
                                           format(self.__class__.__name__,
                                                  self.__class__.__bases__[0].__name__))
+
+    # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+    def _instantiate_objective_mechanism(self, context=None):
+        """
+        Assign InputState to ControlMechanism for each OutputState to be monitored;
+            uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
+            For each item in self.monitored_output_states:
+            - if it is a OutputState, call _instantiate_monitoring_input_state()
+            - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
+                (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
+            - each InputState is assigned a name with the following format:
+                '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
+
+        Notes:
+        * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
+          Projection will be instantiated to a corresponding InputState of the ControlMechanism
+        * self.input_states is the usual ordered dict of states,
+            each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
+        """
+
+        # **MOVE THIS METHOD TO ControlMechanism
+        # **CALL _parse_monitored_values_list FROM _get_monitored_output_states
+        # **CALL _parse_monitored_values_list IN ObjectiveMechanism
+        # **IMPLEMENT LOGIC BELOW
+        # **IMPLEMENT:  System_Base._instantiate_controller()
+        #               @property for System_Base.controller, WITH setter THAT CALLS _instantiate_controller
+        # setter
+        # **MOVE _add_monitored_value() TO ObjectiveMechanism
+        # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
+        # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
+
+        # - IF ControlMechanism HAS ALREADY BEEN ASSIGNED TO A SYSTEM:
+        #      CALL _get_monitored_output_states() TO GET LIST OF OutputStates
+        #      IF objective_mechanism IS SPECIFIED AS A LIST:
+        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
+        #          ASSIGN TO objective_mechanism ATTRIBUTE
+        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
+        #          CALL _add_monitored_value() TO ADD monitored_output_states AND monitoring_input_states
+        #          ASSIGN TO objective_mechanism ATTRIBUTE
+        # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
+        #      IF objective_mechanism IS SPECIFIED AS A LIST:
+        #          CALL _parse_monitored_values_list() TO GET LIST OF OutputStates
+        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
+        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
+        #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
+
+        # If the ControlMechanism has already been assigned to a System
+        #    get OutputStates in System specified as MONITOR_FOR_CONTROL
+        if self.system:
+            self.monitored_output_states, weights, exponents = self.system._get_monitored_output_states(self,
+                                                                                                        context=context)
+
+        # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
+        elif isinstance(self.objective_mechanism, list):
+            self.monitored_output_states, weights, exponents =  _parse_monitored_values_list(self,
+                                                                                             self.objective_mechanism,
+                                                                                             context=context)
+        else:
+            self.monitored_output_states = weights = exponents = None
+
+        # List of OutputState tuples for **monitored_values** argument of ObjectiveMechanism
+        monitored_values_spec = []
+        for output_state, weight, exponent in  zip(self.monitored_output_states, weights, exponents):
+            monitored_values_spec.append((output_state, weight, exponent))
+
+        # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
+        #    (so that it is accessible to custom functions)
+        self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
+
+        # Create specification for ObjectiveMechanism InputStates corresponding to
+        #    monitored_output_states and their exponents and weights
+        self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_values_spec,
+                                                      function=LinearCombination(operation=PRODUCT),
+                                                      name=self.name + ' Monitoring Mechanism')
+        # MODIFIED 9/7/17 END
+
+        if self.prefs.verbosePref:
+            print ("{0} monitoring:".format(self.name))
+            for state in self.monitored_output_states:
+                weight = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][0]
+                exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
+                print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+
+        if self.system is not None:
+            name = self.system.name + ' outcome signal'
+        else:
+            name = self.objective_mechanism.name + ' outcome signal'
+        MappingProjection(sender=self.objective_mechanism,
+                          receiver=self,
+                          matrix=AUTO_ASSIGN_MATRIX,
+                          name=name
+                          )
+
+        if self.system is not None:
+            self.system.execution_list.append(self.objective_mechanism)
+            self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
 
     def _instantiate_output_states(self, context=None):
 
