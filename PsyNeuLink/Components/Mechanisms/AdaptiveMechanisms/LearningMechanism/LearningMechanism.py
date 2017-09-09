@@ -33,6 +33,7 @@ LearningMechanism are executed after all of the ProcessingMechanisms in a System
 and before any `ControlMechanism <ControlMechanism>` of the System have been executed (see `System Execution
 <System_Execution>`).
 
+
 .. _LearningMechanism_Creation:
 
 Creating a LearningMechanism
