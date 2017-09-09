@@ -515,7 +515,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if OBJECTIVE_MECHANISM in target_set and target_set[OBJECTIVE_MECHANISM] is not None:
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
-                for spec in target_set[OBJECTIVE_MECHANISM]:
+                output_state_list = target_set[OBJECTIVE_MECHANISM]
+                for spec in output_state_list:
                     if isinstance(spec, MonitoredOutputStatesOption):
                         continue
                     if isinstance(spec, tuple):
@@ -527,18 +528,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                     "Mechanisms and/or OutputStates to be monitored, but one"
                                                     "of the items ({}) is invalid".
                                                     format(OBJECTIVE_MECHANISM, self.name, spec))
-                    # If controller has been assigned to a System,
-                    #    check that all the items in monitor_for_control are in the same System
-                    # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
-                    #                       when the controller is assigned to a System [TBI]
-                    # FIX: MOVE THIS TO A METHOD ON SYSTEM, THAT CAN ALSO BE CALLED BY SETTER FOR CONTROLLER
+                    # If ControlMechanism has been assigned to a System,
+                    #    check that all the items in the list used to specify objective_mechanism are in the same System
                     if self.system:
-                        if not any((spec is mech.name or spec in mech.output_states.names)
-                                   for mech in self.system.mechanisms):
-                            raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
-                                                        "Mechanisms and/or OutputStates to be monitored, but one "
-                                                        "of them ({}) is in a different System".
-                                                        format(OBJECTIVE_MECHANISM, self.name, spec))
+                        self.system._validate_monitored_states([spec], context=context)
 
             elif not isinstance(target_set[OBJECTIVE_MECHANISM], ObjectiveMechanism):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"

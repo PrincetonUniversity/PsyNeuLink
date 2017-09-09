@@ -362,7 +362,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     input_states :  List[InputState, value, str or dict] or Dict[] : default None
         specifies the names and/or formats to use for the values of the InputStates that receive the input from the
-        OutputStates specified in the **monitored_values** argument; if specified, there must be one for each item
+        OutputStates specified in the monitored_values** argument; if specified, there must be one for each item
         specified in the **monitored_values** argument.
 
     COMMENT:

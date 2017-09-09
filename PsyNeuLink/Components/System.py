@@ -333,23 +333,18 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
+    import ControlMechanism_Base, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-# from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
-#                                         ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, \
-#                                         SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
-#                                         CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
-#                                         CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, LEARNING
-from PsyNeuLink.Globals.Keywords import SYSTEM, FUNCTION, EXECUTING, TIME_SCALE, \
-                             INITIALIZING, INITIAL_VALUES, DEFERRED_ASSIGNMENT, SYSTEM_INIT, CYCLE, COMPONENT_INIT, \
-                             ORIGIN, INTERNAL, INITIALIZE_CYCLE, SINGLETON, TERMINAL, \
-                             CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, EVC_SIMULATION, \
-                             MATRIX, IDENTITY_MATRIX, LEARNING, SAMPLE, TARGET, \
-                             kwSeparator, kwSystemComponentCategory
+from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
+                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, \
+                                        SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
+                                        CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
+                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, LEARNING
 
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -850,12 +845,12 @@ class System_Base(System):
                  prefs:is_pref_set=None,
                  context=None):
 
+        self.status = INITIALIZING
+
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
         # Defer assignment of self.controller by setter until the rest of the System has been instantiated
-        controller_buffer = controller
-        controller = DEFERRED_ASSIGNMENT
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
@@ -891,11 +886,12 @@ class System_Base(System):
                          prefs=prefs,
                          context=context)
 
+        self.status = INITIALIZED
         self._execution_id = None
 
         # Get/assign controller
         # self._instantiate_controller()
-        self.controller = controller_buffer
+        self.controller = self.controller
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1877,31 +1873,59 @@ class System_Base(System):
         for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
-    def _instantiate_controller(self):
+    def _instantiate_controller(self, value, context=None):
 
-        # Existing controller has been assigned
-        if isinstance(self.controller, ControlMechanism_Base):
-            if self.controller.system is None:
-                self.controller.system = self
-            elif not self.controller.system is self:
+       # Warn for request to assign the ControlMechanism already assigned
+        if value is self.controller and self.prefs.verbosePref:
+            warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
+                          format(value, CONTROLLER, self.name))
+            return
+
+        # An existing ControlMechanism is being assigned
+        if isinstance(value, ControlMechanism_Base):
+            # If it has NOT been assigned a System
+            if value.system is None:
+                # First, validate that all of its monitored_output_states are in the current System
+                self._validate_monitored_states(value.monitored_output_states)
+
+                # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
+                #    to the monitored_values of the ControlMechanism's objective_mechanism
+                #    and to the ControlMechanism's monitored_output_states attribute:
+                monitored_output_states = self._get_monitored_output_states(controller=value, context=context)
+                for output_state in monitored_output_states:
+                    xxx
+
+                # Then, assign it ControlSignals for any parameters in the current System specified for control
+                pass XXX
+
+                # Finally, assign assign the current System to the ControlMechanism's system attribute
+                value.system = self
+            # If it HAS been assigned a System, make sure it is the current one
+            if not value.system is self:
                 raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
                                   format(self.name, self.controller.name, self.controller.system.name))
 
+
         # Instantiate controller from class specification
+        elif inspect.isclass(value) and issubclass(value, ControlMechanism_Base):
+            value = value(system=self,
+                          objective_mechanism=self.monitor_for_control,
+                          control_signals=self.control_signals)
+
         else:
-            self.controller = self.controller(system=self,
-                                              objective_mechanism=self.monitor_for_control,
-                                              control_signals=self.control_signals)
+            raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
+                              format(CONTROLLER, self.name, value))
+
+        # Warn if current one is being replaced
+        if self.controller and self.prefs.verbosePref:
+            warnings.warn("The existing {} for {} ({}) is being replaced by {}".
+                          format(CONTROLLER, self.name, self.controller.name, value))
+
+        # Make assignment
+        self._controller = value
 
         # Check whether controller has input, and if not then disable
-        # # MODIFIED 5/10/17 OLD:
-        # try:
-        #     has_input_states = bool(self.controller.input_states)
-        # except:
-        #     has_input_states = False
-        # MODIFIED 5/10/17 NEW:
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
-        # MODIFIED 5/10/17 END
 
         if not has_input_states:
             # If controller was enabled (and verbose is set), warn that it has been disabled
@@ -1909,7 +1933,6 @@ class System_Base(System):
                 print("{} for {} has no input_states, so controller will be disabled".
                       format(self.controller.name, self.name))
             self.enable_controller = False
-
 
         # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
         try:
@@ -2202,6 +2225,16 @@ class System_Base(System):
                         exponents[i] = spec[EXPONENT_INDEX]
 
         return monitored_output_states, weights, exponents
+
+    def _validate_monitored_states(self, monitored_states, context=None):
+        for spec in monitored_states:
+            # if not any((spec is mech.name or spec in mech.output_states.names)
+            if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
+                       for mech in self.mechanisms):
+                raise SystemError("Specification of {} arg for {} appears to be a list of "
+                                            "Mechanisms and/or OutputStates to be monitored, but one "
+                                            "of them ({}) is in a different System".
+                                            format(OBJECTIVE_MECHANISM, self.name, spec))
 
     def initialize(self):
         """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
@@ -2771,7 +2804,6 @@ class System_Base(System):
         for process in self.processes:
             print ("\t\t{} [learning enabled: {}]".format(process.name, process._learning_enabled))
 
-
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
         # Sort for consistency of output
@@ -3015,74 +3047,12 @@ class System_Base(System):
 
     @controller.setter
     def controller(self, value):
-    # def _instantiate_controller(self):
 
-        if value is DEFERRED_ASSIGNMENT:
-            self._controller = DEFERRED_ASSIGNMENT
-
-        # Warn for request to assign the ControlMechanism already assigned
-        if value is self.controller and self.prefs.verbosePref:
-            warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
-                          format(value, CONTROLLER, self.name))
+        if self.status is INITIALIZING:
             return
 
-        # An existing ControlMechanism is being assigned
-        if isinstance(value, ControlMechanism_Base):
-            # If it has NOT been assigned a System, then assign the current one
-            if value.system is None:
-                value.system = self
-            # If it HAS been assigned a System, make sure it is the current one
-            if not value.system is self:
-                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
-                                  format(self.name, self.controller.name, self.controller.system.name))
-
-            # ASSIGN MONITORED_VALUES and CONTROL SIGNALS FROM SYSTEM TO EXISTING CONTROLMECHANISM
-            #    and check that all the items in monitor_for_control are in the same System
-            #    SEE ControlMechanism:
-            #         FIX: MOVE THIS TO A METHOD ON SYSTEM, THAT CAN ALSO BE CALLED BY SETTER FOR CONTROLLER
-
-        # Instantiate controller from class specification
-        elif inspect.isclass(value) and issubclass(value, ControlMechanism_Base):
-            value = value(system=self,
-                          objective_mechanism=self.monitor_for_control,
-                          control_signals=self.control_signals)
-
         else:
-            raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
-                              format(CONTROLLER, self.name, value))
-
-        # Warn if current one is being replaced
-        if self.controller and self.prefs.verbosePref:
-            warnings.warn("The existing {} for {} ({}) is being replaced by {}".
-                          format(CONTROLLER, self.name, self.controller.name, value))
-
-        # Make assignment
-        self._controller = value
-
-        # Check whether controller has input, and if not then disable
-        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
-
-        if not has_input_states:
-            # If controller was enabled (and verbose is set), warn that it has been disabled
-            if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no input_states, so controller will be disabled".
-                      format(self.controller.name, self.name))
-            self.enable_controller = False
-
-
-        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
-        try:
-            # Get phaseSpec from controller
-            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-        except (AttributeError, TypeError):
-            # Controller phaseSpec not specified
-            try:
-                # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
-                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-            except:
-                # No System specification, so use System max as default
-                self.controller.phaseSpec = self._phaseSpecMax
+            self._instantiate_controller(value, context='System.controller setter')
 
     def show_graph(self,
                    direction = 'BT',
