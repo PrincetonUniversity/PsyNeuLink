@@ -549,7 +549,7 @@ class System_Base(System):
     """
 
     System_Base(                                  \
-        default_variable=None,                 \
+        default_variable=None,                    \
         processes=None,                           \
         initial_values=None,                      \
         controller=SystemDefaultControlMechanism, \
@@ -561,22 +561,6 @@ class System_Base(System):
         params=None,                              \
         name=None,                                \
         prefs=None)
-
-    COMMENT:
-        VERSION WITH learning
-        System_Base(                              \
-        default_variable=None,                 \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=`None`,               \
-        learning=None,                            \
-        targets=None,                             \
-        params=None,                              \
-        name=None,                                \
-        prefs=None)
-    COMMENT
 
     Base class for System.
 
@@ -608,6 +592,7 @@ class System_Base(System):
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs execution_list
+        - _instantiate_controller(): instantiates ControlMechanism in **controller** argument or assigned to attribute
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by execution_list
@@ -899,7 +884,7 @@ class System_Base(System):
         self._execution_id = None
 
         # Get/assign controller
-        self._instantiate_controller()
+        # self._instantiate_controller()
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -3013,13 +2998,77 @@ class System_Base(System):
         """
         return self._phaseSpecMax + 1
 
-    # @property
-    # def execution_graph_mechs(self):
-    #     """Mechanisms whose mechs appear as keys in self.execution_graph
-    #
-    #     :rtype: list of Mechanism objects
-    #     """
-    #     return self.execution_graph
+    @property
+    def controller(self):
+        return self._controller
+
+    @controller.setter
+    def controller(self, value):
+    # def _instantiate_controller(self):
+
+        # Warn for request to assign the ControlMechanism already assigned
+        if value is self.controller and self.prefs.verbosePref:
+            warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
+                          format(value, CONTROLLER, self.name))
+            return
+
+        # An existing ControlMechanism is being assigned
+        if isinstance(value, ControlMechanism_Base):
+            # If it has NOT been assigned a System, then assign the current one
+            if value.system is None:
+                value.system = self
+            # If it HAS been assigned a System, make sure it is the current one
+            if not value.system is self:
+                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
+                                  format(self.name, self.controller.name, self.controller.system.name))
+
+            # ASSIGN MONITORED_VALUES and CONTROL SIGNALS FROM SYSTEM TO EXISTING CONTROLMECHANISM
+            #    and check that all the items in monitor_for_control are in the same System
+            #    SEE ControlMechanism:
+            #         FIX: MOVE THIS TO A METHOD ON SYSTEM, THAT CAN ALSO BE CALLED BY SETTER FOR CONTROLLER
+
+        # Instantiate controller from class specification
+        elif inspect.isclass(value) and issubclass(value, ControlMechanism_Base):
+            value = value(system=self,
+                          objective_mechanism=self.monitor_for_control,
+                          control_signals=self.control_signals)
+
+        else:
+            raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
+                              format(CONTROLLER, self.name, value))
+
+        # Warn if current one is being replaced
+        if self.controller and self.prefs.verbosePref:
+            warnings.warn("The existing {} for {} ({}) is being replaced by {}".
+                          format(CONTROLLER, self.name, self.controller.name, value))
+
+        # Make assignment
+        self._controller = value
+
+        # Check whether controller has input, and if not then disable
+        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+
+        if not has_input_states:
+            # If controller was enabled (and verbose is set), warn that it has been disabled
+            if self.enable_controller and self.prefs.verbosePref:
+                print("{} for {} has no input_states, so controller will be disabled".
+                      format(self.controller.name, self.name))
+            self.enable_controller = False
+
+
+        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
+        try:
+            # Get phaseSpec from controller
+            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+        except (AttributeError, TypeError):
+            # Controller phaseSpec not specified
+            try:
+                # Assign System specification of Controller phaseSpec if provided
+                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
+                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+            except:
+                # No System specification, so use System max as default
+                self.controller.phaseSpec = self._phaseSpecMax
 
     def show_graph(self,
                    direction = 'BT',

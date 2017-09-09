@@ -531,6 +531,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     #    check that all the items in monitor_for_control are in the same System
                     # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
                     #                       when the controller is assigned to a System [TBI]
+                    # FIX: MOVE THIS TO A METHOD ON SYSTEM, THAT CAN ALSO BE CALLED BY SETTER FOR CONTROLLER
                     if self.system:
                         if not any((spec is mech.name or spec in mech.output_states.names)
                                    for mech in self.system.mechanisms):
