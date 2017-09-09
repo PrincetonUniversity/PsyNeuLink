@@ -339,17 +339,23 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
-                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, \
-                                        SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
-                                        CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
-                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, LEARNING
+# from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
+#                                         ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, \
+#                                         SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
+#                                         CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
+#                                         CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, LEARNING
+from PsyNeuLink.Globals.Keywords import SYSTEM, FUNCTION, EXECUTING, TIME_SCALE, \
+                             INITIALIZING, INITIAL_VALUES, DEFERRED_ASSIGNMENT, SYSTEM_INIT, CYCLE, COMPONENT_INIT, \
+                             ORIGIN, INTERNAL, INITIALIZE_CYCLE, SINGLETON, TERMINAL, \
+                             CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, EVC_SIMULATION, \
+                             MATRIX, IDENTITY_MATRIX, LEARNING, SAMPLE, TARGET, \
+                             kwSeparator, kwSystemComponentCategory
+
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, \
-    iscompatible, \
-    parameter_spec
+    iscompatible, parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
@@ -847,6 +853,10 @@ class System_Base(System):
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
 
+        # Defer assignment of self.controller by setter until the rest of the System has been instantiated
+        controller_buffer = controller
+        controller = DEFERRED_ASSIGNMENT
+
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
                                                   initial_values=initial_values,
@@ -885,6 +895,7 @@ class System_Base(System):
 
         # Get/assign controller
         # self._instantiate_controller()
+        self.controller = controller_buffer
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -3005,6 +3016,9 @@ class System_Base(System):
     @controller.setter
     def controller(self, value):
     # def _instantiate_controller(self):
+
+        if value is DEFERRED_ASSIGNMENT:
+            self._controller = DEFERRED_ASSIGNMENT
 
         # Warn for request to assign the ControlMechanism already assigned
         if value is self.controller and self.prefs.verbosePref:
