@@ -535,7 +535,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                         if not any((spec is mech.name or spec in mech.output_states.names)
                                    for mech in self.system.mechanisms):
                             raise ControlMechanismError("Specification of {} arg for {} appears to be a list of "
-                                                        "Mechanisms and/or OutputStates to be monitored, but one"
+                                                        "Mechanisms and/or OutputStates to be monitored, but one "
                                                         "of them ({}) is in a different System".
                                                         format(OBJECTIVE_MECHANISM, self.name, spec))
 
@@ -545,8 +545,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                             format(OBJECTIVE_MECHANISM,
                                                    self.name, target_set[OBJECTIVE_MECHANISM],
                                                    ObjectiveMechanism.componentName))
-
-
 
         # FIX: REPLACE WITH CALL TO _parse_state_spec WITH APPROPRIATE PARAMETERS
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
@@ -766,6 +764,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.system is not None:
             self.system.execution_list.append(self.objective_mechanism)
             self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
+
+    def _instantiate_input_states(self, context=None):
+        super()._instantiate_input_states(context=context)
+        self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
 
@@ -1139,9 +1141,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         # Confirm it is a Mechanism in the system
         if not state_spec in self.system.mechanisms:
-            raise EVCError("Request for controller in {0} to monitor the OutputState(s) of "
-                                              "a Mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
+            raise ControlMechanismError("Request for controller in {0} to monitor the OutputState(s) of "
+                                        "a Mechanism ({1}) that is not in {2}".
+                                        format(self.system.name, state_spec.name, self.system.name))
 
         # Warn if it is not a terminalMechanism
         if not state_spec in self.system.terminal_mechanisms.mechanisms:

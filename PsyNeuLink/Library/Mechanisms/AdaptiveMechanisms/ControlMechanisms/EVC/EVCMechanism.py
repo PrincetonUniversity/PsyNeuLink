@@ -723,14 +723,11 @@ class EVCMechanism(ControlMechanism_Base):
                                            context=self)
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate InputState and MappingProjections for list of Mechanisms and/or States to be monitored
-
+        """Instantiate PredictionMechanisms
         """
-        super()._instantiate_input_states(context=context)
-
         if self.system is not None:
             self._instantiate_prediction_mechanisms(context=context)
-        self._instantiate_objective_mechanism(context=context)
+        super()._instantiate_input_states(context=context)
 
     def _instantiate_prediction_mechanisms(self, context=None):
         """Add prediction Mechanism and associated process for each `ORIGIN` (input) Mechanism in the System
