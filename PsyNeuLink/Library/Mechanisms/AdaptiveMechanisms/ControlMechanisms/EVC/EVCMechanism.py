@@ -936,29 +936,6 @@ class EVCMechanism(ControlMechanism_Base):
     #         self.system.execution_list.append(self.objective_mechanism)
     #         self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
 
-    def _validate_monitored_state_in_system(self, state_spec, context=None):
-        """Validate specified OutputState is for a Mechanism in the controller's System
-
-        Called by both self._instantiate_objective_mechanism() and self.add_monitored_value() (in ControlMechanism)
-        """
-
-        # Get OutputState's owner
-        from PsyNeuLink.Components.States.OutputState import OutputState
-        if isinstance(state_spec, OutputState):
-            state_spec = state_spec.owner
-
-        # Confirm it is a Mechanism in the system
-        if not state_spec in self.system.mechanisms:
-            raise EVCError("Request for controller in {0} to monitor the OutputState(s) of "
-                                              "a Mechanism ({1}) that is not in {2}".
-                                              format(self.system.name, state_spec.name, self.system.name))
-
-        # Warn if it is not a terminalMechanism
-        if not state_spec in self.system.terminal_mechanisms.mechanisms:
-            if self.prefs.verbosePref:
-                print("Request for controller in {0} to monitor the OutputState(s) of a Mechanism ({1}) that is not"
-                      " a TERMINAL Mechanism in {2}".format(self.system.name, state_spec.name, self.system.name))
-
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
@@ -1090,22 +1067,6 @@ class EVCMechanism(ControlMechanism_Base):
             # Assign value of predictionMechanism to the entry of predicted_input for the corresponding ORIGIN Mechanism
             self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].value
             # self.predicted_input[origin_mech] = self.origin_prediction_mechanisms[origin_mech].output_state.value
-
-    def add_monitored_values(self, states_spec, context=None):
-        """Validate and then instantiate outputStates to be monitored by EVC
-
-        Use by other objects to add a state or list of states to be monitored by EVC
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, each of its outputStates will be used
-        All of the outputStates specified must be for a Mechanism that is in self.System
-
-        Args:
-            states_spec (Mechanism, MechanimsOutputState or list of either or both:
-            context:
-        """
-        states_spec = list(states_spec)
-        self._validate_monitored_state_in_system(states_spec, context=context)
-        self._instantiate_monitored_output_states(states_spec, context=context)
 
     def run_simulation(self,
                        inputs,

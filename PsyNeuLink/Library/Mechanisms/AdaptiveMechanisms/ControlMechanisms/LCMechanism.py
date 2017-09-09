@@ -463,11 +463,6 @@ class LCMechanism(ControlMechanism_Base):
                                            "that does not have a {}.".
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
-    # def _instantiate_monitored_output_states(self, context=None):
-    #     raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
-    #                                       format(self.__class__.__name__,
-    #                                              self.__class__.__bases__[0].__name__))
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 

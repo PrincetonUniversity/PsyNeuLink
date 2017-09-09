@@ -591,7 +591,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     pass
                 # It is a MonitoredOutputStatesOption specification
                 elif isinstance(target_set[MONITORED_VALUES], MonitoredOutputStatesOption):
-                    # Put in a list (standard format for processing by _instantiate_monitored_output_states)
+                    # Put in a list (standard format for processing by _parse_monitored_values_list)
                     target_set[MONITORED_VALUES] = [target_set[MONITORED_VALUES]]
                 # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
                 else:
@@ -764,7 +764,6 @@ def _objective_mechanism_role(mech, role):
             return False
     else:
         return False
-
 
 # IMPLEMENTATION NOTE: THIS IS A PLACEMARKER FOR A METHOD TO BE IMPLEMENTED IN THE Composition CLASS
 #                      ??MAYBE INTEGRATE INTO State MODULE (IN _instantate_state)
