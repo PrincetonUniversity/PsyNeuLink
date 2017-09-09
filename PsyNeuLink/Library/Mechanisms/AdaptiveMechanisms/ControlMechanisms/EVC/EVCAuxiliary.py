@@ -91,25 +91,27 @@ class EVCAuxiliaryFunction(Function_Base):
 
         self.functionOutputType = None
 
+
 class ValueFunction(EVCAuxiliaryFunction):
     """Calculate the `EVC <EVCMechanism_EVC>` for a given performance outcome and set of costs.
 
     ValueFunction takes as its arguments an outcome (a value representing the performance of a `System`)
     and list of costs (each reflecting the `cost <ControlSignal.cost>` of a `ControlSignal` of the `controller
-    System_Base.controller` of that System) and returns an `expected value of control (EVC) <EVCMechanism_EVC>` based
+    System_Base.controller` of that System), and returns an `expected value of control (EVC) <EVCMechanism_EVC>` based
     on these (along with the outcome and aggregation of costs used to calculate the EVC).
 
     ValueFunction is the default for an EVCMechanism's `value_function <EVCMechanism.value_function>` attribute, and
     it is called by `ControlSignalGridSearch` (the EVCMechanism's default `function <EVCMechanism.function>`).
 
-    The ValueFunction's default `function <ValueFunction.function>` calculates the EVC using three `helper functions
-    <EVCMechanism_Auxiliary_Functions>`, specified in corresponding attributes of an `EVCMechanism`: `outcome_function
-    <EVCMechanism.outcome_function>`, `cost_function <EVCMechanism.cost_function>`, and
-    `combine_outcome_and_cost_function <EVCMechanism.combine_outcome_and_cost_function>`.
-    The calculation of EVC provided by ValueFunction can be modified by assigning custom functions to these
-    attributes, or by replacing the ValueFunction's `function <ValueFunction.function>` itself (in the EVCMechanism's
-    `value_function <EVCMechanism.value_function>` attribute). Replacement functions must use the same format (number
-    and type of items) for its arguments and return values (see `note <EVCMechanism_Calling_and_Assigning_Functions>`).
+    The ValueFunction's default `function <ValueFunction.function>` calculates the EVC using the result of the `function
+    <ObjectiveMechanism.function` of the EVCMechanism's `objective_mechanism <EVCMechanism.objective_mechanism>`, and
+    two auxiliary functions specified in corresponding attributes of the EVCMechanism: `cost_function
+    <EVCMechanism.cost_function>` and `combine_outcome_and_cost_function
+    <EVCMechanism.combine_outcome_and_cost_function>`. The calculation of the EVC
+    provided by ValueFunction can be modified by customizing or replacing any of these functions, or by replacing the
+    ValueFunction's `function <ValueFunction.function>` itself (in the EVCMechanism's `value_function
+    <EVCMechanism.value_function>` attribute). Replacement functions must use the same format (number and type of
+    items) for its arguments and return values (see `note <EVCMechanism_Calling_and_Assigning_Functions>`).
 
     """
 
@@ -198,40 +200,47 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
     given the `allocation_samples` specified for each of its ControlSignals (i.e., the `Cartesian product
     <https://en.wikipedia.org/wiki/Cartesian_product>`_ of the `allocation <ControlSignal.allocation>` values specified
     by the `allocation_samples` attribute of each ControlSignal).  The full set of allocation policies is stored in the
-    EVCMechanism's `control_signal_search_space` attribute.  The EVCMechanism's `run_simulation` method is then used to
-    simulate its `system <EVCMechanism.system>` under each `allocation_policy` in`control_signal_search_space`,
+    EVCMechanism's `control_signal_search_space` attribute.  The EVCMechanism's `run_simulation` method is used to
+    simulate its `system <EVCMechanism.system>` under each `allocation_policy` in `control_signal_search_space`,
     calculate the EVC for each of those policies, and return the policy with the greatest EVC. By default, only the
-    maximum EVC is saved and returned.  However, by setting the `save_all_values_and_policies` attribute to `True`,
-    each policy and its EVC can be saved for each simulation run (in the EVCMechanism's `EVC_policies` and `EVC_values`
-    attributes, respectively). The EVC is calculated for each policy by iterating over the following steps, involving
-    calls to four `auxiliary functions <EVCMechanism_Auxiliary_Functions>`:
+    maximum EVC is saved and returned.  However, setting the `save_all_values_and_policies` attribute to `True` saves
+    each policy and its EVC for each simulation run (in the EVCMechanism's `EVC_policies` and `EVC_values` attributes,
+    respectively). The EVC is calculated for each policy by iterating over the following steps:
 
     * Select an allocation_policy:
-        draw a successive item from `control_signal_search_space` in each iteration, and use it to assign
-        the `allocation` values to the ControlSignals for that simulation of the `system <EVCMechanism.system>`.
+        draw a successive item from `control_signal_search_space` in each iteration, and assign each of its values as
+        the `allocation` value for the corresponding ControlSignal for that simulation of the `system
+        <EVCMechanism.system>`.
 
     * Simulate performance:
-        execute the System under the selected `allocation_policy` using the EVCMechanism's `run_simulation` method,
-        and the `value <Mechanism_Base.value>` of its `prediction_mechanisms` (that use the history of previous trials
-        to generate to generate an average expected input value) as the input to the `system <EVCMechanism.system>`.
+        execute the `system <EVCMechanism.system>` under the selected `allocation_policy` using the EVCMechanism's
+        `run_simulation` method, and the `value <Mechanism_Base.value>`\\s of its `prediction_mechanisms` as the input
+        to the `system <EVCMechanism.system>`;  these use the history of previous trials to generate an average
+        expected input for each `ORIGIN` Mechanism of the `system <EVCMechanism.system>`.
 
     * Calculate the EVC:
-        call the EVCMechanism's `value_function <EVCMechanism_Value_Function>` that uses the values returned by three
-        other auxiliary functions to calculate the EVC for the current `allocation_policy`:  a) an `outcome
-        <EVCMechanism_Outcome_Function>` function, that evaluates the performance of the `system <EVCMechanism.system>`
-        under the current `allocation_policy` ; b) a `cost <EVCMechanism_Cost_Function>` function, that calculates the
-        cost for the `allocation_policy` based on the current `cost <ControlSignal.cost>` associated with each
-        ControlSignal; and c) a `combine <EVCMechanism_Combine_Function>` function that calculates the EVC by
-        subtracting the cost from the outcome (these functions are described in detail `below
-        <EVCMechanism_Auxiliary_Functions>`).
+        call the EVCMechanism's `value_function <EVCMechanism_Value_Function>` to calculate the EVC for the current
+        iteration, using three values (see `EVCMechanism_Functions` for additional details):
+
+        - the EVCMechanism's `input <EVC_Mechanism_Input>`, which is the result of its `objective_mechanism
+          <EVCMechanism.objective_mechanism>`'s `function <ObjectiveMechanism.function>`) and provides an evaluation
+          of the outcome of processing in the `system <EVCMechanism.system>` under the current `allocation_policy`;
+        |
+        - the result of the `cost <EVCMechanism_Cost_Function>` function, called by the `value_function
+          <EVCMechanism_Value_Function>`, that returns the cost for the `allocation_policy` based on
+          the current `cost <ControlSignal.cost>` associated with each of its ControlSignals;
+        |
+        - the result of the `combine <EVCMechanism_Combine_Function>` function, called by the `value_function
+          <EVCMechanism_Value_Function>`, that returns the EVC by subtracting the cost from the outcome
 
     * Save the values:
         if the `save_all_values_and_policies` attribute is `True`, save allocation policy in the EVCMechanism's
-        `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute; otherwise, retain only maximum
-        EVC value.
+        `EVC_policies` attribute, and its value is saved in the `EVC_values` attribute; otherwise, retain only
+        maximum EVC value.
 
-    The function returns the `allocation_policy` that yielded the maximum EVC. Its operation can be modified
-    by assigning custom functions to any or all of the `auxiliary functions <EVCMechanism_Auxiliary_Functions>`.
+    The ControlSignalGridSearch function returns the `allocation_policy` that yielded the maximum EVC.
+    Its operation can be modified by customizing or replacing any or all of the functions referred to above
+    (also see `EVCMechanism_Functions`).
 
     """
 
@@ -497,8 +506,9 @@ class ControlSignalGridSearch(EVCAuxiliaryFunction):
         return controller.allocation_policy
         #endregion
 
+
 def _compute_EVC(args):
-    """compute EVC for a specified allocation policy
+    """Compute EVC for a specified `allocation_policy <EVCMechanism.allocation_policy>`.
 
     IMPLEMENTATION NOTE:  implemented as a function so it can be used with multiprocessing Pool
 

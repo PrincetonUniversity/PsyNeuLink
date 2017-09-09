@@ -688,7 +688,6 @@ class EVCMechanism(ControlMechanism_Base):
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  function=ControlSignalGridSearch,
                  value_function=ValueFunction,
-                 outcome_function=LinearCombination(operation=PRODUCT),
                  cost_function=LinearCombination(operation=SUM,
                                                  context=componentType+COST_FUNCTION),
                  combine_outcome_and_cost_function=LinearCombination(operation=SUM,
@@ -699,11 +698,6 @@ class EVCMechanism(ControlMechanism_Base):
                  prefs:is_pref_set=None,
                  context=componentType+INITIALIZING):
 
-        # MODIFIED 9/5/17 OLD:
-        # # This is done here to hide it from IDE (where it would show if default assignment for arg in constructor)
-        # prediction_mechanism_params = prediction_mechanism_params or {MONITOR_FOR_CONTROL:None}
-        # MODIFIED 9/5/17 END
-
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(system=system,
                                                   prediction_mechanism_type=prediction_mechanism_type,
@@ -713,7 +707,6 @@ class EVCMechanism(ControlMechanism_Base):
                                                   modulation=modulation,
                                                   function=function,
                                                   value_function=value_function,
-                                                  outcome_function=outcome_function,
                                                   cost_function=cost_function,
                                                   combine_outcome_and_cost_function=combine_outcome_and_cost_function,
                                                   save_all_values_and_policies=save_all_values_and_policies,
@@ -728,11 +721,6 @@ class EVCMechanism(ControlMechanism_Base):
                                            name=name,
                                            prefs=prefs,
                                            context=self)
-
-    # TODO: delete this? seems pointless override
-    def _validate_params(self, request_set, target_set=None, context=None):
-
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
     def _instantiate_input_states(self, context=None):
         """Instantiate InputState and MappingProjections for list of Mechanisms and/or States to be monitored
@@ -839,103 +827,6 @@ class EVCMechanism(ControlMechanism_Base):
             # self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].input_value
             self.predicted_input[origin_mech] = self.system.processes[i].origin_mechanisms[0].instance_defaults.variable
 
-    # # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-    # # FIX: MOVE THIS TO ControlMechanism??
-    # def _instantiate_objective_mechanism(self, context=None):
-    #     """
-    #     Assign InputState to ControlMechanism for each OutputState to be monitored;
-    #         uses _instantiate_monitoring_input_state and _instantiate_control_mechanism_input_state to do so.
-    #         For each item in self.monitored_output_states:
-    #         - if it is a OutputState, call _instantiate_monitoring_input_state()
-    #         - if it is a Mechanism, call _instantiate_monitoring_input_state for relevant Mechanism.outputStates
-    #             (determined by whether it is a `TERMINAL` Mechanism and/or MonitoredOutputStatesOption specification)
-    #         - each InputState is assigned a name with the following format:
-    #             '<name of Mechanism that owns the monitoredOutputState>_<name of monitoredOutputState>_Monitor'
-    #
-    #     Notes:
-    #     * self.monitored_output_states is a list, each item of which is a Mechanism.output_state from which a
-    #       Projection will be instantiated to a corresponding InputState of the ControlMechanism
-    #     * self.input_states is the usual ordered dict of states,
-    #         each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
-    #     """
-    #
-    #     # **MOVE THIS METHOD TO ControlMechanism
-    #     # **CALL _parse_monitored_values_list FROM _get_monitored_output_states
-    #     # **CALL _parse_monitored_values_list IN ObjectiveMechanism
-    #     # **IMPLEMENT LOGIC BELOW
-    #     # **IMPLEMENT:  System_Base._instantiate_controller()
-    #     #               @property for System_Base.controller, WITH setter THAT CALLS _instantiate_controller
-    #     # setter
-    #     # **MOVE _add_monitored_value() TO ObjectiveMechanism
-    #     # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
-    #     # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
-    #
-    #     # - IF ControlMechanism HAS ALREADY BEEN ASSIGNED TO A SYSTEM:
-    #     #      CALL _get_monitored_output_states() TO GET LIST OF OutputStates
-    #     #      IF objective_mechanism IS SPECIFIED AS A LIST:
-    #     #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-    #     #          ASSIGN TO objective_mechanism ATTRIBUTE
-    #     #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-    #     #          CALL _add_monitored_value() TO ADD monitored_output_states AND monitoring_input_states
-    #     #          ASSIGN TO objective_mechanism ATTRIBUTE
-    #     # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
-    #     #      IF objective_mechanism IS SPECIFIED AS A LIST:
-    #     #          CALL _parse_monitored_values_list() TO GET LIST OF OutputStates
-    #     #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-    #     #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-    #     #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
-    #
-    #     # If EVCMechanism has already been assigned to a System
-    #     #    get OutputStates in System specified as MONITOR_FOR_CONTROL
-    #     if self.system:
-    #         self.monitored_output_states, weights, exponents = self.system._get_monitored_output_states(self,
-    #                                                                                                     context=context)
-    #
-    #     # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
-    #     elif isinstance(self.objective_mechanism, list):
-    #         self.monitored_output_states, weights, exponents =  _parse_monitored_values_list(self,
-    #                                                                                          self.objective_mechanism,
-    #                                                                                          context=context)
-    #     else:
-    #         self.monitored_output_states = weights = exponents = None
-    #
-    #     # List of OutputState tuples for **monitored_values** argument of ObjectiveMechanism
-    #     monitored_values_spec = []
-    #     for output_state, weight, exponent in  zip(self.monitored_output_states, weights, exponents):
-    #         monitored_values_spec.append((output_state, weight, exponent))
-    #
-    #     # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
-    #     #    (so that it is accessible to custom functions)
-    #     self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
-    #
-    #     # Create specification for ObjectiveMechanism InputStates corresponding to
-    #     #    monitored_output_states and their exponents and weights
-    #     self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_values_spec,
-    #                                                   function=LinearCombination(operation=PRODUCT),
-    #                                                   name=self.name + ' Monitoring Mechanism')
-    #     # MODIFIED 9/7/17 END
-    #
-    #     if self.prefs.verbosePref:
-    #         print ("{0} monitoring:".format(self.name))
-    #         for state in self.monitored_output_states:
-    #             weight = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][0]
-    #             exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
-    #             print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
-    #
-    #     if self.system is not None:
-    #         name = self.system.name + ' outcome signal'
-    #     else:
-    #         name = self.objective_mechanism.name + ' outcome signal'
-    #     MappingProjection(sender=self.objective_mechanism,
-    #                       receiver=self,
-    #                       matrix=AUTO_ASSIGN_MATRIX,
-    #                       name=name
-    #                       )
-    #
-    #     if self.system is not None:
-    #         self.system.execution_list.append(self.objective_mechanism)
-    #         self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
-
     def _instantiate_attributes_after_function(self, context=None):
 
         super()._instantiate_attributes_after_function(context=context)
@@ -943,32 +834,7 @@ class EVCMechanism(ControlMechanism_Base):
         if self.system is None or not self.system.enable_controller:
             return
 
-        outcome_Function = self.outcome_function
         cost_Function = self.cost_function
-
-        if isinstance(outcome_Function, Function):
-            # Insure that length of the weights and/or exponents arguments for the outcome_function
-            #    matches the number of monitored_output_states
-            num_monitored_output_states = len(self.monitored_output_states)
-            if outcome_Function.weights is not None:
-                num_outcome_weights = len(outcome_Function.weights)
-                if  num_outcome_weights != num_monitored_output_states:
-                    raise EVCError("The length of the weights argument {} for the {} of {} "
-                                   "must equal the number of its monitored_output_states {}".
-                                   format(num_outcome_weights,
-                                          outcome_Function,
-                                          self.name,
-                                          num_monitored_output_states))
-            if outcome_Function.exponents is not None:
-                num_outcome_exponents = len(outcome_Function.exponents)
-                if  num_outcome_exponents != num_monitored_output_states:
-                    raise EVCError("The length of the exponents argument {} for the {} of {} "
-                                   "must equal the number of its control signals {}".
-                                   format(num_outcome_exponents,
-                                          OUTCOME_FUNCTION,
-                                          self.name,
-                                          num_monitored_output_states))
-
         if isinstance(cost_Function, Function):
             # Insure that length of the weights and/or exponents arguments for the cost_function
             #    matches the number of control signals
@@ -1150,53 +1016,6 @@ class EVCMechanism(ControlMechanism_Base):
             self._value_function = ValueFunction()
         else:
             self._value_function = assignment
-
-    @property
-    def outcome_function(self):
-        # # MODIFIED 7/27/17 OLD:
-        # return self._outcome_function
-        # MODIFIED 7/27/17 NEW:
-        # Get outcome_function from objective_mechanism if it has the attribute
-        # # MODIFIED 9/5/17 OLD:
-        # if hasattr(self, OBJECTIVE_MECHANISM) and self.objective_mechanism:
-        # MODIFIED 9/5/17 NEW:
-        if hasattr(self, OBJECTIVE_MECHANISM) and isinstance(self.objective_mechanism, ObjectiveMechanism):
-        # MODIFIED 9/5/17 END
-            # # Check that outcome_function is same as function of objective_mechanism
-            # if not self._outcome_function == self.objective_mechanism.function_object:
-            #     raise EVCError("PROGRAM ERROR: outcome_function for {} ({}) is not same as "
-            #                    "objective_mechanism.function_object ({})".
-            #                    format(self.name, self._outcome_function, self.objective_mechanism.function_object))
-            return self.objective_mechanism.function_object
-        #     return self._outcome_function
-        # else:
-        return self._outcome_function
-        # MODIFIED 7/27/17 END
-
-    @outcome_function.setter
-    def outcome_function(self, value):
-        from PsyNeuLink.Components.Functions.Function import UserDefinedFunction
-        if isinstance(value, function_type):
-            udf = UserDefinedFunction(function=value)
-            self._outcome_function = udf
-        # elif inspect.isclass(value) and issubclass(value, Function):
-        #     self._outcome_function = UserDefinedFunction()
-        else:
-            self._outcome_function = value
-
-        # # MODIFIED 7/27/17 NEW:
-        # # Assign outcome_function to objective_mechanism
-        # if hasattr(self, OBJECTIVE_MECHANISM):
-        #     self.objective_mechanism.assign_params({FUNCTION:self.outcome_function})
-        # # MODIFIED 9/3/17 NEWER:
-        # # Assign outcome_function to objective_mechanism
-        # if self.objective_mechanism is not None:
-        #     self.objective_mechanism.assign_params({FUNCTION:self.outcome_function})
-        # MODIFIED 9/3/17 NEWEST:
-        # Assign outcome_function to objective_mechanism if the latter already exists
-        if isinstance(self.objective_mechanism, ObjectiveMechanism):
-            self.objective_mechanism.assign_params({FUNCTION:self.outcome_function})
-        # MODIFIED 7/27/17 END
 
     @property
     def cost_function(self):

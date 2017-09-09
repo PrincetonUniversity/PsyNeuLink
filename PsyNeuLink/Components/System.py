@@ -2188,9 +2188,6 @@ class System_Base(System):
 
         # ASSIGN EXPONENTS AND WEIGHTS TO OUTCOME_FUNCTION
 
-        # Note: these values will be superseded by any assigned as arguments to the outcome_function
-        #       if it is specified in the constructor for the Mechanism
-
         num_monitored_output_states = len(monitored_output_states)
         weights = np.ones(num_monitored_output_states)
         exponents = np.ones_like(weights)
@@ -2207,11 +2204,6 @@ class System_Base(System):
                         i = monitored_output_states.index(item)
                         weights[i] = spec[WEIGHT_INDEX]
                         exponents[i] = spec[EXPONENT_INDEX]
-
-        # Assign weights and exponents to corresponding attributes of default OUTCOME_FUNCTION
-        # Note: done here (rather than in call to outcome_function in value_function) for efficiency
-        controller.outcome_function.weights = weights
-        controller.outcome_function.exponents = exponents
 
         return monitored_output_states, weights, exponents
 
