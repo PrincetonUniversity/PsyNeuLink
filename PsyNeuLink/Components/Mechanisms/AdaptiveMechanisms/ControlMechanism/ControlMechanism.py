@@ -576,6 +576,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
 
+        # MODIFIED 9/10/17 NEW [STILL TODO]:
         # **MOVE THIS METHOD TO ControlMechanism
         # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
         # **CALL _parse_monitored_values_list IN ObjectiveMechanism
@@ -600,6 +601,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
         #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
+        # MODIFIED 9/10/17 END
 
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL

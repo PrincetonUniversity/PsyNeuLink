@@ -536,12 +536,10 @@ class LCMechanism(ControlMechanism_Base):
 
         # MODIFIED 9/3/17 END
 
-
-
         super()._instantiate_output_states(context=context)
 
     # def _instantiate_attributes_after_function(self, context=None):
-    #     """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
+    #     """Implement ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
     #
     #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
     #         that insures that any ControlSignals specified in control_signals arg are instantiated first

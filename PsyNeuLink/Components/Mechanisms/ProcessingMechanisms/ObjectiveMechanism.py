@@ -803,7 +803,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self.system._validate_monitored_states(monitored_values_spec, context=context)
         return self._instantiate_monitored_values(monitored_values_spec)
 
-def _validate_monitored_value(objective_mech, state_spec, context=None):
+def _validate_monitored_value(component, state_spec, context=None):
     """Validate specification for monitored_value arg
 
     Validate that each item of monitored_value arg is:
@@ -819,10 +819,10 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
-        raise ObjectiveMechanismError("Specification of {} arg for {} ({}) must be an OutputState, Mechanism, "
-                                      "(Mechanism, weight, exponent) tuple, OutputState specification dictionary, "
-                                      "or a MonitoredOutputStatesOption value".
-                             format(MONITORED_VALUES, objective_mech.name, state_spec))
+        raise ObjectiveMechanismError("Specification of OutputState to be monitored for {} ({}) must be an "
+                                      "OutputState, Mechanism, (Mechanism, weight, exponent) tuple, "
+                                      "OutputState specification dictionary, or a MonitoredOutputStatesOption value".
+                                      format(component.name, state_spec))
 
 def _parse_monitored_values_list(source, output_state_list, context):
     """Parses tuples specified in output_state_list and returns separate lists for OutputStates, exponents, and weights

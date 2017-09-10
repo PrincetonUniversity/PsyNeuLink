@@ -1893,14 +1893,14 @@ class System_Base(System):
                 # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
                 #    to the ControlMechanism
                 #    and to the ControlMechanism's monitored_output_states attribute:
-                output_states = self._get_monitored_output_states_for_system(controller=controller, context=context)
-                controller.add_monitored_output_states(output_states)
+                controller.add_monitored_output_states(
+                        self._get_monitored_output_states_for_system(controller=controller, context=context))
 
+                # MODIFIED 9/10/17 NEW: [STILL TO DO]
                 # Then, assign it ControlSignals for any parameters in the current System specified for control
-                # FIX: GET PARAMS SPECIFIED FOR CONTROL:
-                # FIX:       MOVE ControlMechanism._assign_as_controller TO SYSTEM AND CALL HERE
-                # FIX:       ASSIGN ANY CONTROL SIGNALS SPECIFIED IN **control_signals** ARG OF CONSTRUCTOR
-                pass
+                controller.add_monitored_output_states(
+                        self._get_control_signals_for_system(self.control_signals, context=context))
+                # MODIFIED 9/10/17 END
 
                 # Finally, assign assign the current System to the ControlMechanism's system attribute
                 controller.system = self
@@ -1916,8 +1916,12 @@ class System_Base(System):
             #    monitored_values to specify its objective_mechanism (as list of OutputStates to be monitored)
             #    ControlSignals returned by _get_system_control_signals()
             controller = control_mech_spec(system=self,
-                                        objective_mechanism=self.monitor_for_control,
-                                        control_signals=self._get_control_signals_for_system())
+                                           # objective_mechanism=self._get_monitored_output_states_for_system(
+                                           #                                                     controller=controller,
+                                           #                                                     context=context),
+                                           objective_mechanism=self.monitor_for_control,
+                                           control_signals=self._get_control_signals_for_system(self.control_signals,
+                                                                                                context=context))
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
@@ -1955,7 +1959,7 @@ class System_Base(System):
                 # No System specification, so use System max as default
                 self.controller.phaseSpec = self._phaseSpecMax
 
-    def _get_monitored_output_states_for_system(self, controller, context=None):
+    def _get_monitored_output_states_for_system(self, controller=None, context=None):
         """
         Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
             - if specification in output_state is None:
@@ -1987,17 +1991,28 @@ class System_Base(System):
 
         # PARSE SPECS
 
-        # Get controller's OBJECTIVE_MECHANISM specifications (optional, so need to try)
-        try:
-            # controller_specs = controller.paramsCurrent[OBJECTIVE_MECHANISM].copy() or []
-            controller_specs = controller.objective_mechanism.copy() or []
-        except KeyError:
+        # MODIFIED 9/10/17 NEW:
+        # Get OutputStates already being or specified to be monitored by controller
+        if controller is not None and not inspect.isclass(controller):
+            try:
+                # Get from monitored_output_states attribute if controller is already implemented
+                controller_specs = controller.monitored_output_states.copy() or []
+            except AttributeError:
+                # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
+                #    (i.e., the call to this method is part of its instantiation by a System)
+                #    so, get specification from the **object_mechanism** argument
+                if isinstance(controller.objective_mechanism, list):
+                    controller_specs = controller.objective_mechanism.copy() or []
+                elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
+                    controller_specs = controller.objective_mechanism.monitored_values
+        else:
             controller_specs = []
+        # MODIFIED 9/10/17 END
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
         system_specs = self.monitor_for_control.copy()
 
-        # If the controller has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
             if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
                 option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
@@ -2017,25 +2032,24 @@ class System_Base(System):
         for item in all_specs:
             # VALIDATE SPECIFICATION
             # Handle EVCMechanism's tuple format:
-            # MODIFIED 2/22/17: [DEPRECATED -- weights and exponents should be specified as params of the function]
             if isinstance(item, tuple):
                 if len(item) != 3:
-                    raise SystemError("Specification of tuple ({0}) in OBJECTIVE_MECHANISM for {1} "
-                                         "has {2} items;  it should be 3".
-                                         format(item, controller.name, len(item)))
-                if not isinstance(item[1], numbers.Number):
-                    raise SystemError("Specification of the exponent ({0}) for OBJECTIVE_MECHANISM of {1} "
-                                         "must be a number".
-                                         format(item[1], controller.name))
-                if not isinstance(item[2], numbers.Number):
-                    raise SystemError("Specification of the weight ({0}) for OBJECTIVE_MECHANISM of {1} "
-                                         "must be a number".
-                                         format(item[0], controller.name))
+                    raise SystemError("Tuple specification for OutputState to be monitored in {} ({}) "
+                                      "has {} items;  it should be 3".
+                                         format(self.name, item, len(item)))
+                if not isinstance(item[WEIGHT_INDEX], numbers.Number):
+                    raise SystemError("Entry for weight in tuple specification of OutputState "
+                                         "to be monitored in {}  (item {}: {}) must be a number".
+                                         format(WEIGHT_INDEX, item[WEIGHT_INDEX], self.name))
+                if not isinstance(item[EXPONENT_INDEX], numbers.Number):
+                    raise SystemError("Entry for weight in tuple specification of OutputState "
+                                         "to be monitored in {}  (item {}: {}) must be a number".
+                                         format(WEIGHT_INDEX, item[EXPONENT_INDEX], self.name))
                 # Set state_spec to the output_state item for validation below
                 item = item[0]
             # MODIFIED 2/22/17 END
             # Validate by ObjectiveMechanism:
-            _validate_monitored_value(controller, item, context=context)
+            _validate_monitored_value(self, item, context=context)
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
@@ -2050,8 +2064,9 @@ class System_Base(System):
         elif len(option_specs) == 1:
             ctlr_or_sys_option_spec = option_specs[0]
         else:
-            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
-                           format(controller.name, option_specs))
+            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified "
+                              "for OutputStates to be monitored in {}: {}".
+                           format(self.name, option_specs))
 
         # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
         # Assign outputStates to monitored_output_states
@@ -2254,7 +2269,7 @@ class System_Base(System):
                      parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
                      are completed in the call to _instantiate_control_signal() by the ControlMechanism.
         """
-        control_signal_specs = self.control_signals or []
+        control_signal_specs = control_signals or []
         for mech in self.mechanisms:
             for parameter_state in mech._parameter_states:
                 for projection in parameter_state.mod_afferents:
