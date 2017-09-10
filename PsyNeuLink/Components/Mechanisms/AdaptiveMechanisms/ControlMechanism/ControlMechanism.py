@@ -684,7 +684,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         """
 
         # **MOVE THIS METHOD TO ControlMechanism
-        # **CALL _parse_monitored_values_list FROM _get_monitored_output_states
+        # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
         # **CALL _parse_monitored_values_list IN ObjectiveMechanism
         # **IMPLEMENT LOGIC BELOW
         # **IMPLEMENT:  System_Base._instantiate_controller()
@@ -694,7 +694,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
 
         # - IF ControlMechanism HAS ALREADY BEEN ASSIGNED TO A SYSTEM:
-        #      CALL _get_monitored_output_states() TO GET LIST OF OutputStates
+        #      CALL _get_monitored_output_states_for_system() TO GET LIST OF OutputStates
         #      IF objective_mechanism IS SPECIFIED AS A LIST:
         #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
         #          ASSIGN TO objective_mechanism ATTRIBUTE
@@ -711,14 +711,13 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
         if self.system:
-            self.monitored_output_states, weights, exponents = self.system._get_monitored_output_states(self,
-                                                                                                        context=context)
+            self.monitored_output_states, weights, exponents = \
+                self.system._get_monitored_output_states_for_system(self, context=context)
 
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         elif isinstance(self.objective_mechanism, list):
-            self.monitored_output_states, weights, exponents =  _parse_monitored_values_list(self,
-                                                                                             self.objective_mechanism,
-                                                                                             context=context)
+            self.monitored_output_states, weights, exponents =  \
+                _parse_monitored_values_list(self, self.objective_mechanism, context=context)
         else:
             self.monitored_output_states = weights = exponents = None
 
@@ -1062,6 +1061,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         return control_signal
 
+    # MODIFIED 9/10/17 OLD:
     def _instantiate_attributes_after_function(self, context=None):
         """Implement ControlSignals specified in control_signals arg or locally in parameter specification(s)
 
@@ -1095,6 +1095,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                         control_signal_specs = projection.control_signal_params or {}
                         control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
                         self._instantiate_control_signal(control_signal_specs, context=context)
+    # MODIFIED 9/10/17 END
 
     def _execute(self,
                     variable=None,

@@ -662,12 +662,13 @@
 #    3) For system vs. process learning:
 #           Figure out why calling update_state for the matrix ParameterState works,
 #                      but executing the LearningProjection to it does not
-#    4) ObjectiveMechanisms:  MODIFY TO:
-#                                d) Revise EVCMechanism._get_monitored_output_states() to NOT direclty assign weights
-#                                           and exponents, but rather assign
-#                                    (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
-#                                f) parse MonitoredOUtputStates specification for monitored_values arg
-#                                g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
+#    4) ObjectiveMechanisms:
+#              MODIFY TO:
+#                    d) Revise EVCMechanism._get_monitored_output_states_for_system() to NOT direclty assign weights
+#                               and exponents, but rather assign
+#                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
+#                    f) parse MonitoredOUtputStates specification for monitored_values arg
+#                    g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
 #              Name input_states using input_state_names (or create them explicitly using the values of variable?)
 #              Instantiate the MappingProjection from its ObjectiveMechanism
@@ -2725,7 +2726,7 @@
 # FIX: OutputState:  value as arg and value as attribute are different and therefore confusing;
 #                    rename reference_value??
 # IMPLEMENT: full _instantiate_input_states capability per _instantiate_output_states (see ObjectiveMechanism):
-#                 ??include `senders` arg (and use version of _get_monitored_output_states in EVC)
+#                 ??include `senders` arg (and use version of _get_monitored_output_states_for_system() in EVC)
 # IMPLEMENT: OutputState.update: INCORPORATE paramModulationOperation HERE, AS PER PARAMETER STATE
 # IMPLEMENT: REPLACE INDEXING OF Mechanism.value by OUTPUTSTATES WITH NAMES OF ITEMS IN Mechanism.value
 # FIX: ``value`` should not be used as the name of the variable arg for states

@@ -332,7 +332,7 @@ import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
@@ -341,7 +341,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredO
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
-                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, \
+                                        MECHANISM, NAME, \
+                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
                                         SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
                                         CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
                                         CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, LEARNING
@@ -1872,26 +1873,28 @@ class System_Base(System):
         for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
-    def _instantiate_controller(self, control_mech, context=None):
+    def _instantiate_controller(self, control_mech_spec, context=None):
 
        # Warn for request to assign the ControlMechanism already assigned
-        if control_mech is self.controller and self.prefs.verbosePref:
+        if control_mech_spec is self.controller and self.prefs.verbosePref:
             warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
-                          format(control_mech, CONTROLLER, self.name))
+                          format(control_mech_spec, CONTROLLER, self.name))
             return
 
         # An existing ControlMechanism is being assigned
-        if isinstance(control_mech, ControlMechanism_Base):
+        if isinstance(control_mech_spec, ControlMechanism_Base):
+            controller = control_mech_spec
+
             # If it has NOT been assigned a System
-            if control_mech.system is None:
+            if controller.system is None:
                 # First, validate that all of its monitored_output_states are in the current System
-                self._validate_monitored_states(control_mech.monitored_output_states)
+                self._validate_monitored_states(controller.monitored_output_states)
 
                 # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
                 #    to the ControlMechanism
                 #    and to the ControlMechanism's monitored_output_states attribute:
-                output_states = self._get_monitored_output_states(controller=control_mech, context=context)
-                control_mech.add_monitored_output_states(output_states)
+                output_states = self._get_monitored_output_states_for_system(controller=controller, context=context)
+                controller.add_monitored_output_states(output_states)
 
                 # Then, assign it ControlSignals for any parameters in the current System specified for control
                 # FIX: GET PARAMS SPECIFIED FOR CONTROL:
@@ -1900,30 +1903,36 @@ class System_Base(System):
                 pass
 
                 # Finally, assign assign the current System to the ControlMechanism's system attribute
-                control_mech.system = self
+                controller.system = self
+
             # If it HAS been assigned a System, make sure it is the current one
-            if not control_mech.system is self:
+            if not controller.system is self:
                 raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
                                   format(self.name, self.controller.name, self.controller.system.name))
 
-        # Instantiate controller from class specification
-        elif inspect.isclass(control_mech) and issubclass(control_mech, ControlMechanism_Base):
-            control_mech = control_mech(system=self,
+        # A ControlMechanism class or subclass is being used to specify the controller
+        elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism_Base):
+            # Instantiate controller from class specification using:
+            #    monitored_values to specify its objective_mechanism (as list of OutputStates to be monitored)
+            #    ControlSignals returned by _get_system_control_signals()
+            # controller = control_mech_spec(system=self,
+            #                             objective_mechanism=self.monitor_for_control,
+            #                             control_signals=self._get_control_signals_for_system())
+            controller = control_mech_spec(system=self,
                                         objective_mechanism=self.monitor_for_control,
                                         control_signals=self.control_signals)
-                # FIX:       MOVE ControlMechanism._assign_as_controller TO SYSTEM AND CALL HERE
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
-                              format(CONTROLLER, self.name, control_mech))
+                              format(CONTROLLER, self.name, control_mech_spec))
 
         # Warn if current one is being replaced
         if self.controller and self.prefs.verbosePref:
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
-                          format(CONTROLLER, self.name, self.controller.name, control_mech))
+                          format(CONTROLLER, self.name, self.controller.name, controller.name))
 
         # Make assignment
-        self._controller = control_mech
+        self._controller = controller
 
         # Check whether controller has input, and if not then disable
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
@@ -1949,7 +1958,7 @@ class System_Base(System):
                 # No System specification, so use System max as default
                 self.controller.phaseSpec = self._phaseSpecMax
 
-    def _get_monitored_output_states(self, controller, context=None):
+    def _get_monitored_output_states_for_system(self, controller, context=None):
         """
         Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
             - if specification in output_state is None:
@@ -2236,6 +2245,32 @@ class System_Base(System):
                                             "Mechanisms and/or OutputStates to be monitored, but one "
                                             "of them ({}) is in a different System".
                                             format(OBJECTIVE_MECHANISM, self.name, spec))
+
+    def _get_control_signals_for_system(self, control_signals=None, context=None):
+        """Generate and return a list of control_signal_specs for System
+
+        Generate list from:
+           ControlSignal specifications passed in from the **control_signals** argument.
+           ParameterStates of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
+               Note: this includes any for which a ControlSignal rather than a ControlProjection
+                     was used to specify control for a parameter (e.g., in a 2-item tuple specification for the
+                     parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
+                     are completed in the call to _instantiate_control_signal() by the ControlMechanism.
+        """
+        control_signal_specs = self.control_signals or []
+        for mech in self.mechanisms:
+            for parameter_state in mech._parameter_states:
+                for projection in parameter_state.mod_afferents:
+                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
+                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        proj_control_signal_specs = projection.control_signal_params or {}
+                        proj_control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
+                        # proj_control_signal_specs.update({
+                        #     MECHANISM: mech,
+                        #     NAME: parameter_state.name,
+                        #     CONTROL_SIGNAL_SPECS: [projection]})
+                        control_signal_specs.append(proj_control_signal_specs)
+        return control_signal_specs
 
     def initialize(self):
         """Assign `initial_values <System_Base.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and

@@ -812,7 +812,10 @@ def _validate_monitored_value(objective_mech, state_spec, context=None):
         * string, or
         * MonitoredOutpuStatesOption value.
 
-    Called by self._validate_variable(), self.add_monitored_value(), and EVCMechanism._get_monitored_output_states()
+    Called by:
+        self._validate_variable()
+        self.add_monitored_value()
+        EVCMechanism._get_monitored_output_states_for_system()
     """
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
