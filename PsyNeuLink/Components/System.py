@@ -1915,12 +1915,9 @@ class System_Base(System):
             # Instantiate controller from class specification using:
             #    monitored_values to specify its objective_mechanism (as list of OutputStates to be monitored)
             #    ControlSignals returned by _get_system_control_signals()
-            # controller = control_mech_spec(system=self,
-            #                             objective_mechanism=self.monitor_for_control,
-            #                             control_signals=self._get_control_signals_for_system())
             controller = control_mech_spec(system=self,
                                         objective_mechanism=self.monitor_for_control,
-                                        control_signals=self.control_signals)
+                                        control_signals=self._get_control_signals_for_system())
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".

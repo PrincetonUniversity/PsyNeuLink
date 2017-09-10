@@ -1061,41 +1061,41 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         return control_signal
 
-    # MODIFIED 9/10/17 OLD:
-    def _instantiate_attributes_after_function(self, context=None):
-        """Implement ControlSignals specified in control_signals arg or locally in parameter specification(s)
-
-        Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
-            that insures that any ControlSignals specified in control_signals arg are instantiated first
-        Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
-            along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
-        """
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent and self.system is not None:
-            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
-                self._assign_as_controller(context=context)
-            if not self.system.enable_controller:
-                return
-
-    # FIX: MOVE TO SYSTEM:  SHOULD BE HANDLED IN INSTANTIATE_CONTROLLER
-    def _assign_as_controller(self, context=None):
-
-        # Check the ParameterStates of the System's Mechanisms for any ControlProjections with deferred_init()
-        # Note: this includes any ControlProjections created where a ControlSignal rather than a ControlProjection
-        #       was used to specify control for a parameter (e.g., in a 2-item tuple specification for the parameter);
-        #       the initialization of the ControlProjection and, if specified, the ControlSignal
-        #       are completed in the call to _instantiate_control_signal() below
-        for mech in self.system.mechanisms:
-            for parameter_state in mech._parameter_states:
-                for projection in parameter_state.mod_afferents:
-                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                        control_signal_specs = projection.control_signal_params or {}
-                        control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
-                        self._instantiate_control_signal(control_signal_specs, context=context)
-    # MODIFIED 9/10/17 END
+    # # MODIFIED 9/10/17 OLD:
+    # def _instantiate_attributes_after_function(self, context=None):
+    #     """Implement ControlSignals specified in control_signals arg or locally in parameter specification(s)
+    #
+    #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
+    #         that insures that any ControlSignals specified in control_signals arg are instantiated first
+    #     Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
+    #         along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
+    #     """
+    #
+    #     super()._instantiate_attributes_after_function(context=context)
+    #
+    #     if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent and self.system is not None:
+    #         if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
+    #             self._assign_as_controller(context=context)
+    #         if not self.system.enable_controller:
+    #             return
+    #
+    # # FIX: MOVE TO SYSTEM:  SHOULD BE HANDLED IN INSTANTIATE_CONTROLLER
+    # def _assign_as_controller(self, context=None):
+    #
+    #     # Check the ParameterStates of the System's Mechanisms for any ControlProjections with deferred_init()
+    #     # Note: this includes any ControlProjections created where a ControlSignal rather than a ControlProjection
+    #     #       was used to specify control for a parameter (e.g., in a 2-item tuple specification for the parameter);
+    #     #       the initialization of the ControlProjection and, if specified, the ControlSignal
+    #     #       are completed in the call to _instantiate_control_signal() below
+    #     for mech in self.system.mechanisms:
+    #         for parameter_state in mech._parameter_states:
+    #             for projection in parameter_state.mod_afferents:
+    #                 # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
+    #                 if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+    #                     control_signal_specs = projection.control_signal_params or {}
+    #                     control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
+    #                     self._instantiate_control_signal(control_signal_specs, context=context)
+    # # MODIFIED 9/10/17 END
 
     def _execute(self,
                     variable=None,
