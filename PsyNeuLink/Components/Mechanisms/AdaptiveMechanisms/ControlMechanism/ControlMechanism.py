@@ -300,7 +300,7 @@ from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METHOD_ONLY, SYSTEM, MECHANISM, \
                                         PROJECTIONS, RECEIVER, SENDER, PARAMETER_STATE, OBJECTIVE_MECHANISM, \
                                         PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
-                                        MAKE_DEFAULT_CONTROLLER, CONTROLLED_PARAM, CONTROL_PROJECTION,\
+                                        CONTROLLED_PARAM, CONTROL_PROJECTION,\
                                         CONTROL_PROJECTIONS, CONTROL_SIGNAL, CONTROL_SIGNALS, CONTROL_SIGNAL_SPECS
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -342,11 +342,16 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
                    it is flagged for deferred_init() in its __init__ method
-               When the next ControlMechanism is instantiated, if its params[MAKE_DEFAULT_CONTROLLER] == True
-                   its _assign_as_controller method is called in _instantiate_attributes_after_function;
-                   it then iterates through all of the ParameterStates of all of the Mechanisms in its System,
-                   identifies ones without a sender specified, calls its deferred_init() method,
-                   instantiates a ControlSignal for it, and assigns it as the ControlProjection's sender.
+               If ControlMechanism is instantiated or assigned as the controller for a System:
+                   the System calls its _get_monitored_output_states() method which returns all of the OutputStates
+                       within the System that have been specified to be MONITORED_FOR_CONTROL, and then assigns
+                       them (along with any specified in the **monitored_values** arg of the System's constructor)
+                       to the `objective_mechanism` argument of the ControlMechanism's constructor;
+                   the System calls its _get_control_signals_for_system() method which returns all of the parameters
+                       that have been specified for control within the System, assigns them a ControlSignal
+                       (with a ControlProjection to the ParameterState for the parameter), and assigns the
+                       ControlSignals (alogn with any specified in the **control_signals** argument of the System's
+                       constructor) to the **control_signals** argument of the ControlMechanism's constructor
 
             OBJECTIVE_MECHANISM param determines which States will be monitored.
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
@@ -687,7 +692,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             - ControlSignal object;
             - ControlProjection;
             - ParameterState;
-            - params dict, from _assign_as_controller(), containing a ControlProjection;
+            - params dict containing a ControlProjection;
             - tuple (param_name, Mechanism), from control_signals arg of constructor;
                     [NOTE: this is a convenience format;
                            it precludes specification of ControlSignal params (e.g., ALLOCATION_SAMPLES)]
@@ -726,111 +731,11 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         self._default_value = self.value
 
         # PARSE control_signal SPECIFICATION -----------------------------------------------------------------------
-
-        # MODIFIED 9/10/17 OLD:
-        # control_projection = None
-        # control_signal_params = None
-        #
-        # control_signal_spec = _parse_state_spec(owner=self, state_type=ControlSignal, state_spec=control_signal)
-        #
-        # # Specification is a ParameterState
-        # if isinstance(control_signal_spec, ParameterState):
-        #     mech = control_signal_spec.owner
-        #     param_name = control_signal_spec.name
-        #     parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
-        #
-        # # Specification was tuple or dict, now parsed into a dict
-        # elif isinstance(control_signal_spec, dict):
-        #     param_name = control_signal_spec[NAME]
-        #     control_signal_params = control_signal_spec[PARAMS]
-        #
-        #     # control_signal was a specification dict, with MECHANISM as an entry (and parameter as NAME)
-        #     if control_signal_params and MECHANISM in control_signal_params:
-        #         mech = control_signal_params[MECHANISM]
-        #         # Delete MECHANISM entry as it is not a parameter of ControlSignal
-        #         #     (which will balk at it in ControlSignal._validate_params)
-        #         del control_signal_params[MECHANISM]
-        #         parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
-        #
-        #     # Specification was originally a tuple, either in parameter specification or control_signal arg;
-        #     #    1st item was either assigned to the NAME entry of the control_signal_spec dict
-        #     #        (if tuple was a (param_name, Mechanism tuple) for control_signal arg;
-        #     #        or used as param value, if it was a parameter specification tuple
-        #     #    2nd item was placed in CONTROL_SIGNAL_PARAMS entry of params dict in control_signal_spec dict,
-        #     #        so parse:
-        #     # IMPLEMENTATION NOTE:
-        #     #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
-        #     #                         to pass specification from a parameter specification tuple
-        #     #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
-        #     #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg
-        #     #    Delete whichever one it was, as neither is a recognized ControlSignal param
-        #     #        (which will balk at it in ControlSignal._validate_params)
-        #     elif (control_signal_params and
-        #             any(kw in control_signal_spec[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
-        #         if CONTROL_SIGNAL_SPECS in control_signal_spec[PARAMS]:
-        #             spec = control_signal_params[CONTROL_SIGNAL_SPECS]
-        #             del control_signal_params[CONTROL_SIGNAL_SPECS]
-        #         elif PROJECTIONS in control_signal_spec[PARAMS]:
-        #             spec = control_signal_params[PROJECTIONS]
-        #             del control_signal_params[PROJECTIONS]
-        #
-        #         # ControlSignal
-        #         if isinstance(spec, ControlSignal):
-        #             control_signal_spec = spec
-        #
-        #         else:
-        #             # Mechanism
-        #             # IMPLEMENTATION NOTE: Mechanism was placed in list in PROJECTIONS entry by _parse_state_spec
-        #             if isinstance(spec, list) and isinstance(spec[0], Mechanism):
-        #                 mech = spec[0]
-        #                 parameter_state = _get_parameter_state(self, CONTROL_SIGNAL, param_name, mech)
-        #
-        #             # Projection (in a list)
-        #             elif isinstance(spec, list):
-        #                 control_projection = spec[0]
-        #                 if not isinstance(control_projection, ControlProjection):
-        #                     raise ControlMechanismError("PROGRAM ERROR: list in {} entry of params dict for {} of {} "
-        #                                                 "must contain a single ControlProjection".
-        #                                                 format(CONTROL_SIGNAL_SPECS, CONTROL_SIGNAL, self.name))
-        #                 if len(spec)>1:
-        #                     raise ControlMechanismError("PROGRAM ERROR: Multiple ControlProjections are not "
-        #                                                 "currently supported in specification of a ControlSignal")
-        #                 # Get receiver mech
-        #                 if control_projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-        #                     parameter_state = control_projection.init_args[RECEIVER]
-        #                     # ControlProjection was created in response to specification of ControlSignal
-        #                     #     (in a 2-item tuple where the parameter was specified),
-        #                     #     so get ControlSignal spec
-        #                     if SENDER in control_projection.init_args:
-        #                         control_signal_spec = control_projection.init_args[SENDER]
-        #                         if control_signal_spec and not isinstance(control_signal_spec, ControlSignal):
-        #                             raise ControlMechanismError("PROGRAM ERROR: "
-        #                                                         "Sender of {} for {} {} of {} is not a {}".
-        #                                                         format(CONTROL_PROJECTION,
-        #                                                                parameter_state.name,
-        #                                                                PARAMETER_STATE,
-        #                                                                parameter_state.owner.name,
-        #                                                                CONTROL_SIGNAL))
-        #                 else:
-        #                     parameter_state = control_projection.receiver
-        #                 param_name = parameter_state.name
-        #
-        #             else:
-        #                 raise ControlMechanismError("PROGRAM ERROR: failure to parse specification of {} for {}".
-        #                                             format(CONTROL_SIGNAL, self.name))
-        #     else:
-        #         raise ControlMechanismError("PROGRAM ERROR: No entry found in params dict with specification of "
-        #                                     "parameter Mechanism or ControlProjection for {} of {}".
-        #                                     format(CONTROL_SIGNAL, self.name))
-
-        # MODIFIED 9/10/17 NEW:
         control_signal_spec = _parse_control_signal_spec(owner=self, control_signal_spec=control_signal)
         param_name = control_signal_spec[NAME]
         control_signal_params = control_signal_spec[PARAMS]
         control_projection = control_signal_spec[CONTROL_PROJECTION]
         parameter_state = control_signal_spec[PARAMETER_STATE]
-        # MODIFIED 9/10/17 END
-
 
         default_name = param_name + '_' + ControlSignal.__name__
 
@@ -957,42 +862,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         self.control_signals = self.output_states
 
         return control_signal
-
-    # MODIFIED 9/10/17 OLD:
-    def _instantiate_attributes_after_function(self, context=None):
-        """Implement ControlSignals specified in control_signals arg or locally in parameter specification(s)
-
-        Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
-            that insures that any ControlSignals specified in control_signals arg are instantiated first
-        Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
-            along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
-        """
-
-        super()._instantiate_attributes_after_function(context=context)
-
-        if MAKE_DEFAULT_CONTROLLER in self.paramsCurrent and self.system is not None:
-            if self.paramsCurrent[MAKE_DEFAULT_CONTROLLER]:
-                self._assign_as_controller(context=context)
-            if not self.system.enable_controller:
-                return
-
-    # FIX: MOVE TO SYSTEM:  SHOULD BE HANDLED IN INSTANTIATE_CONTROLLER
-    def _assign_as_controller(self, context=None):
-
-        # Check the ParameterStates of the System's Mechanisms for any ControlProjections with deferred_init()
-        # Note: this includes any ControlProjections created where a ControlSignal rather than a ControlProjection
-        #       was used to specify control for a parameter (e.g., in a 2-item tuple specification for the parameter);
-        #       the initialization of the ControlProjection and, if specified, the ControlSignal
-        #       are completed in the call to _instantiate_control_signal() below
-        for mech in self.system.mechanisms:
-            for parameter_state in mech._parameter_states:
-                for projection in parameter_state.mod_afferents:
-                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
-                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
-                        control_signal_specs = projection.control_signal_params or {}
-                        control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
-                        self._instantiate_control_signal(control_signal_specs, context=context)
-    # MODIFIED 9/10/17 END
 
     def _execute(self,
                     variable=None,

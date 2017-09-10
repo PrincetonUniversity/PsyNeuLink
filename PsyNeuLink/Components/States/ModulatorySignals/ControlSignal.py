@@ -1249,7 +1249,7 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
                 any(kw in control_signal_dict[PARAMS] for kw in {CONTROL_SIGNAL_SPECS, PROJECTIONS})):
 
             # IMPLEMENTATION NOTE:
-            #    CONTROL_SIGNAL_SPECS is used by _assign_as_controller,
+            #    CONTROL_SIGNAL_SPECS is used by _parse_control_signal_spec,
             #                         to pass specification from a parameter specification tuple
             #    PROJECTIONS is used by _parse_state_spec to place the 2nd item of any tuple in params dict;
             #                      here, the tuple comes from a (param, Mechanism) specification in control_signal arg

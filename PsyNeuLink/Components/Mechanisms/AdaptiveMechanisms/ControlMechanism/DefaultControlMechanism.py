@@ -96,8 +96,7 @@ class DefaultControlMechanism(ControlMechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({# MAKE_DEFAULT_CONTROLLER:True  <- No need, it is the default by default
-                               FUNCTION:Linear,
+    paramClassDefaults.update({FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
                                OBJECTIVE_MECHANISM:None,
                                MODULATION:None,

@@ -447,12 +447,6 @@ class EVCMechanism(ControlMechanism_Base):
     Attributes
     ----------
 
-    COMMENT:
-        make_default_controller : bool : default True
-            if `True`, calls deferred_init() for each `ControlProjection` in its System without a sender,
-            creates a `ControlSignal` for it, and assigns itself as its sender.
-    COMMENT
-
     system : System
         the `System` for which EVCMechanism is the `controller <System_Base.controller>`.
 

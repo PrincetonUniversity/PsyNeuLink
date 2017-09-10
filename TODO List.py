@@ -2685,20 +2685,8 @@
 # FIX: self.variable:
 #      - MAKE SURE self.variable IS CONSISTENT WITH 2D np.array OF values FOR MONITOR_FOR_CONTROL
 #
-# DOCUMENT:  protocol for assigning DefaultControlMechanism
-#           Initial assignment is to SystemDefaultCcontroller
-#           When any other ControlMechanism is instantiated, if params[MAKE_DEFAULT_CONTROLLER] = True
-#                then the class's _assign_as_controller() method
-#                     is called in _instantiate_attributes_after_function
-# it moves all ControlProjections from DefaultController to itself
-#
 # FIX: IN ControlProjection._instantiate_sender:
 # FIX 6/28/16:  IF CLASS IS ControlMechanism SHOULD ONLY IMPLEMENT ONCE;  THEREAFTER, SHOULD USE EXISTING ONE
-#
-# FIX: ControlMechanism._assign_as_controller() IS NOT FULLY DELETING DefaultController.outputStates
-#
-# FIX: PROBLEM - ControlMechanism._assign_as_controller()
-# FIX:           NOT SETTING efferents IN NEW CONTROLLER (e.g., EVC)
 #
 # SOLUTIONS:
 # 1) CLEANER: use _instantiate_sender on ControlProjection to instantiate both outputState and projection

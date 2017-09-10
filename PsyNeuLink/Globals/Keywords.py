@@ -485,7 +485,6 @@ kwInitialPoint = 'initial_point'
 MODULATION = 'modulation'
 
 # ControlMechanism / EVCMechanism
-MAKE_DEFAULT_CONTROLLER = "make_default_controller"
 OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
