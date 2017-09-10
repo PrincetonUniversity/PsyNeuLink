@@ -617,6 +617,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if an OutputState has been specified.
         """
 
+        # FIX: EXTRACT PIECES NEEDED FOR add_monitored_values() AND MOVE TO _instantiate_monitored_values
+
         from PsyNeuLink.Components.States.State import _parse_state_spec
         from PsyNeuLink.Components.States.OutputState import OutputState
 
@@ -654,7 +656,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # INSTANTIATE InputState FOR EACH OutputState
 
-
         # If **input_states** was specified in the constructor, use those specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
         input_state_specs = self.input_states or [m[VALUE] for m in output_state_dicts]
@@ -690,7 +691,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_input_states(context=context)
 
-        # Get any projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
+        # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []
         for i, state in enumerate(self._input_states):
             input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
@@ -701,6 +702,26 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
+
+    def _instantiate_monitored_values(self, monitored_values_specs):
+        """Instantiate InputState and MappingProjection to it for each OutputState specified in monitored_values_specs
+        Used by _instantiate_input_states and _add_monitored_values
+        """
+        # GET FROM _instantiate_input_states
+        pass
+
+    # FIX: FROM ControlMechanism
+    def add_monitored_values(self, monitored_values_spec, context=None):
+        """Validate and then instantiate OutputStates to be monitored by ObjectiveMechanism
+
+        Use by other objects to add a state or list of states to be monitored by ObjectiveMechanism;
+        states_spec can be a Mechanism, OutputState or list of either or both
+        If item is a Mechanism, its primary OutputState is used
+        All of the OutputStates specified must be for a Mechanism that is in the same System as the ObjectiveMechanism
+        """
+        monitored_values_spec = list(monitored_values_spec)
+        self.system._validate_monitored_states(monitored_values_spec, context=context)
+        self._instantiate_monitored_values(monitored_values_spec)
 
 def _validate_monitored_value(objective_mech, state_spec, context=None):
     """Validate specification for monitored_value arg

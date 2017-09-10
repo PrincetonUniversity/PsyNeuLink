@@ -1888,15 +1888,16 @@ class System_Base(System):
                 # First, validate that all of its monitored_output_states are in the current System
                 self._validate_monitored_states(value.monitored_output_states)
 
-                # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
-                #    to the monitored_values of the ControlMechanism's objective_mechanism
-                #    and to the ControlMechanism's monitored_output_states attribute:
-                monitored_output_states = self._get_monitored_output_states(controller=value, context=context)
-                for output_state in monitored_output_states:
-                    xxx
-
-                # Then, assign it ControlSignals for any parameters in the current System specified for control
-                pass XXX
+                # TBI 9/9/17
+                # # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
+                # #    to the monitored_values of the ControlMechanism's objective_mechanism
+                # #    and to the ControlMechanism's monitored_output_states attribute:
+                # monitored_output_states = self._get_monitored_output_states(controller=value, context=context)
+                # for output_state in monitored_output_states:
+                #     xxx
+                #
+                # # Then, assign it ControlSignals for any parameters in the current System specified for control
+                # pass XXX
 
                 # Finally, assign assign the current System to the ControlMechanism's system attribute
                 value.system = self
