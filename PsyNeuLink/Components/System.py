@@ -845,12 +845,12 @@ class System_Base(System):
                  prefs:is_pref_set=None,
                  context=None):
 
+        # Required to defer assignment of self.controller by setter
+        #     until the rest of the System has been instantiated
         self.status = INITIALIZING
 
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
-
-        # Defer assignment of self.controller by setter until the rest of the System has been instantiated
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(processes=processes,
@@ -876,7 +876,6 @@ class System_Base(System):
                           context=context)
 
         if not context:
-            # context = INITIALIZING + self.name
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         super().__init__(default_variable=default_variable,
@@ -1909,9 +1908,9 @@ class System_Base(System):
 
         # Instantiate controller from class specification
         elif inspect.isclass(control_mech) and issubclass(control_mech, ControlMechanism_Base):
-            control_mech = ControlMechanism_Base(system=self,
-                                                 objective_mechanism=self.monitor_for_control,
-                                                 control_signals=self.control_signals)
+            control_mech = control_mech(system=self,
+                                        objective_mechanism=self.monitor_for_control,
+                                        control_signals=self.control_signals)
                 # FIX:       MOVE ControlMechanism._assign_as_controller TO SYSTEM AND CALL HERE
 
         else:
@@ -3048,13 +3047,13 @@ class System_Base(System):
         return self._controller
 
     @controller.setter
-    def controller(self, value):
+    def controller(self, control_mech_spec):
 
         if self.status is INITIALIZING:
             return
 
         else:
-            self._instantiate_controller(value, context='System.controller setter')
+            self._instantiate_controller(control_mech_spec, context='System.controller setter')
 
     def show_graph(self,
                    direction = 'BT',
