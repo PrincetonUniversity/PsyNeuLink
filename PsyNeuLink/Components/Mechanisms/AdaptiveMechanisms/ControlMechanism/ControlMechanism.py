@@ -1078,6 +1078,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             if not self.system.enable_controller:
                 return
 
+    # FIX: MOVE TO SYSTEM:  SHOULD BE HANDLED IN INSTANTIATE_CONTROLLER
     def _assign_as_controller(self, context=None):
 
         # Check the ParameterStates of the System's Mechanisms for any ControlProjections with deferred_init()
