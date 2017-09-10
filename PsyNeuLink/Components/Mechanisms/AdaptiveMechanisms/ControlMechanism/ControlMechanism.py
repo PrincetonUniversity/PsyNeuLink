@@ -474,7 +474,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(objective_mechanism=objective_mechanism,
+        params = self._assign_args_to_param_dicts(system=system,
+                                                  objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
                                                   # modulation=modulation,
@@ -1105,7 +1106,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         Must be overriden by subclass
         """
-        raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        # raise ControlMechanismError("{0} must implement execute() method".format(self.__class__.__name__))
+        return self.input_values or [defaultControlAllocation]
 
     def show(self):
         """Display the OutputStates monitored by ControlMechanism's `objective_mechanism
