@@ -1873,57 +1873,58 @@ class System_Base(System):
         for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
-    def _instantiate_controller(self, value, context=None):
+    def _instantiate_controller(self, control_mech, context=None):
 
        # Warn for request to assign the ControlMechanism already assigned
-        if value is self.controller and self.prefs.verbosePref:
+        if control_mech is self.controller and self.prefs.verbosePref:
             warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
-                          format(value, CONTROLLER, self.name))
+                          format(control_mech, CONTROLLER, self.name))
             return
 
         # An existing ControlMechanism is being assigned
-        if isinstance(value, ControlMechanism_Base):
+        if isinstance(control_mech, ControlMechanism_Base):
             # If it has NOT been assigned a System
-            if value.system is None:
+            if control_mech.system is None:
                 # First, validate that all of its monitored_output_states are in the current System
-                self._validate_monitored_states(value.monitored_output_states)
+                self._validate_monitored_states(control_mech.monitored_output_states)
 
-                # TBI 9/9/17
-                # # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
-                # #    to the monitored_values of the ControlMechanism's objective_mechanism
-                # #    and to the ControlMechanism's monitored_output_states attribute:
-                # monitored_output_states = self._get_monitored_output_states(controller=value, context=context)
-                # for output_state in monitored_output_states:
-                #     xxx
-                #
-                # # Then, assign it ControlSignals for any parameters in the current System specified for control
-                # pass XXX
+                # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
+                #    to the ControlMechanism
+                #    and to the ControlMechanism's monitored_output_states attribute:
+                output_states = self._get_monitored_output_states(controller=control_mech, context=context)
+                control_mech.add_monitored_output_states(output_states)
+
+                # Then, assign it ControlSignals for any parameters in the current System specified for control
+                # FIX: GET PARAMS SPECIFIED FOR CONTROL:
+                # FIX:       MOVE ControlMechanism._assign_as_controller TO SYSTEM AND CALL HERE
+                # FIX:       ASSIGN ANY CONTROL SIGNALS SPECIFIED IN **control_signals** ARG OF CONSTRUCTOR
+                pass
 
                 # Finally, assign assign the current System to the ControlMechanism's system attribute
-                value.system = self
+                control_mech.system = self
             # If it HAS been assigned a System, make sure it is the current one
-            if not value.system is self:
+            if not control_mech.system is self:
                 raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
                                   format(self.name, self.controller.name, self.controller.system.name))
 
-
         # Instantiate controller from class specification
-        elif inspect.isclass(value) and issubclass(value, ControlMechanism_Base):
-            value = value(system=self,
-                          objective_mechanism=self.monitor_for_control,
-                          control_signals=self.control_signals)
+        elif inspect.isclass(control_mech) and issubclass(control_mech, ControlMechanism_Base):
+            control_mech = ControlMechanism_Base(system=self,
+                                                 objective_mechanism=self.monitor_for_control,
+                                                 control_signals=self.control_signals)
+                # FIX:       MOVE ControlMechanism._assign_as_controller TO SYSTEM AND CALL HERE
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
-                              format(CONTROLLER, self.name, value))
+                              format(CONTROLLER, self.name, control_mech))
 
         # Warn if current one is being replaced
         if self.controller and self.prefs.verbosePref:
             warnings.warn("The existing {} for {} ({}) is being replaced by {}".
-                          format(CONTROLLER, self.name, self.controller.name, value))
+                          format(CONTROLLER, self.name, self.controller.name, control_mech))
 
         # Make assignment
-        self._controller = value
+        self._controller = control_mech
 
         # Check whether controller has input, and if not then disable
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
@@ -2201,7 +2202,7 @@ class System_Base(System):
                     elif option_spec is None:
                         continue
                     else:
-                        raise EVCError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
+                        raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
                                        format(output_state.name, mech.name))
 
@@ -2238,8 +2239,8 @@ class System_Base(System):
                                             format(OBJECTIVE_MECHANISM, self.name, spec))
 
     def initialize(self):
-        """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        `INITIALIZE_CYCLE` and contained in recurrent_init_mechanisms.
+        """Assign `initial_values <System_Base.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
+        contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE

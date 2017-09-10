@@ -689,7 +689,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # **IMPLEMENT:  System_Base._instantiate_controller()
         #               @property for System_Base.controller, WITH setter THAT CALLS _instantiate_controller
         # setter
-        # **MOVE _add_monitored_value() TO ObjectiveMechanism
         # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
         # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
 
@@ -1063,7 +1062,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         return control_signal
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
+        """Implement ControlSignals specified in control_signals arg or locally in parameter specification(s)
 
         Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
             that insures that any ControlSignals specified in control_signals arg are instantiated first
@@ -1137,3 +1136,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
         print ("\n---------------------------------------------------------")
+
+    def add_monitored_output_states(self, monitored_output_states, context=None):
+        output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
+        self.monitored_output_states.append(output_states)
