@@ -291,7 +291,7 @@ import typecheck as tc
 from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base, OBJECTIVE_MECHANISM, ALLOCATION_POLICY
+    import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -299,8 +299,7 @@ from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection impo
 from PsyNeuLink.Components.ShellClasses import Function
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, INITIALIZING, INIT_FUNCTION_METHOD_ONLY, \
-                                        PARAMETER_STATES, PRODUCT, SUM, EVC_MECHANISM, OBJECTIVE_MECHANISM, \
-                                        MAKE_DEFAULT_CONTROLLER, CONTROL, OUTCOME_FUNCTION, COST_FUNCTION, \
+                                        PARAMETER_STATES, SUM, EVC_MECHANISM, CONTROL, COST_FUNCTION, \
                                         PREDICTION_MECHANISM, PREDICTION_MECHANISM_PARAMS, PREDICTION_MECHANISM_TYPE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -309,39 +308,6 @@ from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCA
     ControlSignalGridSearch, \
     ValueFunction
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, Clock, TimeScale
-
-# Used for monitored_output_states_weights_and_exponents
-OBJECT_INDEX = 0
-WEIGHT_INDEX = 1
-EXPONENT_INDEX = 2
-
-# -------------------------------------------    KEY WORDS  -------------------------------------------------------
-
-# ControlSignal Costs
-INTENSITY_COST = 'INTENSITY COST'
-ADJUSTMENT_COST = 'ADJUSTMENT COST'
-DURATION_COST = 'DURATION COST'
-
-# ControlSignal Cost Function Names
-INTENSITY_COST_FUNCTION = 'intensity_cost_function'
-ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_function'
-DURATION_COST_FUNCTION = 'duration_cost_function'
-COST_COMBINATION_FUNCTION = 'cost_combination_function'
-costFunctionNames = [INTENSITY_COST_FUNCTION,
-                     ADJUSTMENT_COST_FUNCTION,
-                     DURATION_COST_FUNCTION,
-                     COST_COMBINATION_FUNCTION]
-
-# Attributes / KVO keypaths
-# kpLog = "Control Signal Log"
-kpAllocation = "Control Signal Allocation"
-kpIntensity = "Control Signal Intensity"
-kpCostRange = "Control Signal Cost Range"
-kpIntensityCost = "Control Signal Intensity Cost"
-kpAdjustmentCost = "Control Signal Adjustment Cost"
-kpDurationCost = "Control Signal duration_cost"
-kpCost = "Control Signal Cost"
-
 
 class EVCError(Exception):
     def __init__(self, error_value):
@@ -677,8 +643,7 @@ class EVCMechanism(ControlMechanism_Base):
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({MAKE_DEFAULT_CONTROLLER: True,
-                               PARAMETER_STATES: False})
+    paramClassDefaults.update({PARAMETER_STATES: False})
 
     @tc.typecheck
     def __init__(self,

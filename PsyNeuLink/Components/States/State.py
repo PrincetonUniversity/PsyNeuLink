@@ -2345,7 +2345,8 @@ def _parse_state_spec(owner,
                       # projections:tc.any(list, bool)=[],
                       # modulatory_projections:tc.any(list,bool)=[],
                       params=None,
-                      force_dict=False):
+                      force_dict=False,
+                      context=None):
 
     """Return either State object or State specification dict for state_spec
 
@@ -2430,7 +2431,7 @@ def _parse_state_spec(owner,
     if params:
         # If variable is specified in state_params, use that
         if VARIABLE in params and params[VARIABLE] is not None:
-            variable = self._update_variable(params[VARIABLE])
+            variable = owner._update_variable(params[VARIABLE])
 
     # Create default dict for return
     state_dict = {NAME: name,
@@ -2464,6 +2465,7 @@ def _parse_state_spec(owner,
     # Specification dict
     # - move any entries other than for standard args into dict in params entry
     elif isinstance(state_spec, dict):
+        state_spec=state_spec.copy()
         # Dict has a single entry in which the key is not a recognized keyword,
         #    so assume it is of the form {<STATE_NAME>:<STATE SPECIFICATION DICT>}:
         #    assign STATE_NAME as name, and return parsed SPECIFICATION_DICT
@@ -2500,9 +2502,7 @@ def _parse_state_spec(owner,
                          if not param_spec in STANDARD_ARGS]:
                 params = params or {}
                 params[spec] = state_spec[spec]
-                # MODIFIED 6/5/17 OLD: [REINSTATED, BUT CAUSING TROUBLE IN STROOP TEST SCRIPT]
                 del state_spec[spec]
-                # MODIFIED 6/5/17 END
             state_dict.update(state_spec)
             # state_dict = state_spec
             if params:

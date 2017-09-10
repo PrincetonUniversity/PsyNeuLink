@@ -2262,10 +2262,6 @@ class System_Base(System):
                     if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
                         proj_control_signal_specs = projection.control_signal_params or {}
                         proj_control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
-                        # proj_control_signal_specs.update({
-                        #     MECHANISM: mech,
-                        #     NAME: parameter_state.name,
-                        #     CONTROL_SIGNAL_SPECS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
 
