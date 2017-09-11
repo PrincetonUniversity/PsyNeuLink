@@ -802,7 +802,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         If item is a Mechanism, its primary OutputState is used.
         """
         monitored_values_spec = list(monitored_values_spec)
-        return self._instantiate_monitored_values(monitored_values_spec)
+        # return self._instantiate_monitored_values(monitored_values_spec)
+        return self._instantiate_input_states(monitored_values_spec)
 
 def _validate_monitored_value(component, state_spec, context=None):
     """Validate specification for monitored_value arg
