@@ -6712,8 +6712,8 @@ class BackPropagation(LearningFunction):
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
-        <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
+        `process <Process.learning_Rate>` and/or `system <System`function.learning_rate>` to which the function's
+        owner <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
         `default_learning_rate <BackPropagation.default_learning_rate>` is used.

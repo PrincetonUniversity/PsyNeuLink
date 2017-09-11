@@ -715,10 +715,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        monitored_values = _parse_monitored_values_list(self, self.monitored_values, context)
-        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
-        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values]
-        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
+        monitored_values_parsed = _parse_monitored_values_list(self, monitored_values, context)
+        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values_parsed]
+        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values_parsed]
+        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values_parsed]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -795,15 +795,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return output_states
 
     def add_monitored_values(self, monitored_values_spec, context=None):
-        """Validate and then instantiate OutputStates to be monitored by ObjectiveMechanism
+        """Instantiate OutputStates to be monitored by ObjectiveMechanism
 
-        Use by other objects to add a state or list of states to be monitored by ObjectiveMechanism;
-        states_spec can be a Mechanism, OutputState or list of either or both
-        If item is a Mechanism, its primary OutputState is used
-        All of the OutputStates specified must be for a Mechanism that is in the same System as the ObjectiveMechanism
+        Used by other objects to add a state or list of states to be monitored by ObjectiveMechanism.
+        monitored_values_spec can be a Mechanism, OutputState, monitored_value tuple, or list with any of these.
+        If item is a Mechanism, its primary OutputState is used.
         """
         monitored_values_spec = list(monitored_values_spec)
-        self.system._validate_monitored_states(monitored_values_spec, context=context)
         return self._instantiate_monitored_values(monitored_values_spec)
 
 def _validate_monitored_value(component, state_spec, context=None):

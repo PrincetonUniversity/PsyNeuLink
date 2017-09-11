@@ -44,13 +44,19 @@ COMMENT
 ControlMechanisms and a System
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be assigned to, and executed within a System just like any other Mechanism.  It can also be
-assigned as the `controller <System_Base.controller>` of a `System`, that has a special relation to the System:
-it is used to control any and all parameters that have been `specified for control <ControlMechanism_Control_Signals>`
-in that System.  A System can have only one ControlMechanism, that is executed after all of the other Components in the
-System have been executed, including any other ControlMechanisms (see `System Execution <System_Execution>`).  A
-System's `controller  <System_Base.controller>` and its associated Components can be displayed using the System's
-`System_Base.show_graph` method with its **show_control** argument assigned as `True`.
+A ControlMechanism can be assigned to and executed within one or more Systems (listed in its `systems
+<Mechanism_Base.systems>` attribute), just like any other Mechanism.  It also be assigned as the `controller
+<System_Base.controller>` of a `System`, that has a special relation to the System: it is used to control any and all
+parameters that have been `specified for control <ControlMechanism_Control_Signals>` in that System.  A
+ControlMechanism can be the `controller <System_Base.controller>` for only one System, and a System can have only one
+one `controller <System_Base.controller>`.  The System's `controller <System_Base.controller>` is executed after all
+of the other Components in the System have been executed, including any other ControlMechanisms that belong to it (see
+`System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System_Base.controller>`
+for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
+as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
+<ControlMechanism.assign_as_controller>` method. A System's `controller  <System_Base.controller>` and its associated
+Components can be displayed using the System's `System_Base.show_graph` method with its **show_control** argument
+assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -322,6 +328,7 @@ class ControlMechanismError(Exception):
 class ControlMechanism_Base(AdaptiveMechanism_Base):
     """
     ControlMechanism_Base(                         \
+        system=None                                \
         objective_mechanism=None,                  \
         function=Linear,                           \
         control_signals=None,                      \
@@ -356,7 +363,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
             OBJECTIVE_MECHANISM param determines which States will be monitored.
                 specifies the OutputStates of the terminal Mechanisms in the System to be monitored by ControlMechanism
-                this specification overrides any in System.params[], but can be overridden by Mechanism.params[]
+                this specification overrides any in System_Base.params[], but can be overridden by Mechanism.params[]
                 ?? if MonitoredOutputStates appears alone, it will be used to determine how States are assigned from
                     System.execution_graph by default
                 if MonitoredOutputStatesOption is used, it applies to any Mechanisms specified in the list for which
@@ -375,6 +382,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     Arguments
     ---------
+
+    system : System or bool : default None
+        specifies the `System` to which the ControlMechanism should be assigned as its `controller
+        <System_Base.controller>`.
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
@@ -410,6 +421,12 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     Attributes
     ----------
+
+    system : System
+        The `System` for which the ControlMechanism is a `controller <System_Base>`.  Note that this is distinct from
+        a Mechanism's `systems <Mechanism_Base.systems>` attribute, which lists all of the Systems to which a
+        `Mechanism` belongs -- a ControlMechanism can belong to but not be the `controller of a System
+        <ControlMechanism_System_Controller>`.
 
     objective_mechanism : ObjectiveMechanism
         Mechanism that monitors and evaluates the values specified in the ControlMechanism's **objective_mechanism**
@@ -471,7 +488,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 system=None,
+                 system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
@@ -914,5 +931,78 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         print ("\n---------------------------------------------------------")
 
     def add_monitored_output_states(self, monitored_output_states, context=None):
+        """Instantiate OutputStates to be monitored by ControlMechanism's objective_mechanism
+
+        monitored_output_states can be a Mechanism, OutputState, monitored_value tuple, or list with any of these.
+        If item is a Mechanism, its primary OutputState is used.
+        OutputStates must belong to Mechanisms in the same System as the ControlMechanism
+        """
         output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
+        self.system._validate_monitored_states(output_states, context=context)
         self.monitored_output_states.append(output_states)
+
+    @tc.typecheck
+    def assign_as_controller(self, system:System, context=None):
+        """Assign ControlMechanism as `controller <System_Base.controller>` for a `System`.
+
+        **system** must be a System for which the ControlMechanism should be assigned as the `controller
+        <System_Base.controller>`;  if the specified System already has a `controller <System_Base.controller>`,
+        it will be replaced by the current one;  if the current one is already the `controller <System_Base.controller>`
+        for another System, it will be disabled for that System.
+        COMMENT:
+            [TBI:
+            The ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`,
+            `monitored_output_states` and `control_signal <ControlMechanism.control_signals>` attributes will also be
+            updated to remove any assignments that are not part of the new System, and add any that are specified for
+            the new System.]
+        COMMENT
+
+        COMMENT:
+            IMPLEMENTATION NOTE:  This is handled as a method on ControlMechanism (rather than System) so that:
+
+                                  - [TBI: if necessary, it can detach itself from a System for which it is already the
+                                    `controller <System_Base.controller>`;]
+
+                                  - any class-specific actions that must be taken to instantiate the ControlMechanism
+                                    can be handled by subclasses of ControlMechanism (e.g., an EVCMechanism must
+                                    instantiate its Prediction Mechanisms). However, the actual assignment of the
+                                    ControlMechanism the System's `controller <System_Base.controller>` attribute must
+                                    be left to the System to avoid recursion, since it is a property, the setter of
+                                    which calls the current method.
+        COMMENT
+        """
+
+        # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
+        # DETACH AS CONTROLLER FOR ANY EXISTING SYSTEM (AND SET THAT ONE'S CONTROLLER ATTRIBUTE TO None)
+        # DELETE ALL EXISTING OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ASSIGNMENTS
+        # REINSTANTIATE ITS OWN OBJECTIVE_MECHANISM and CONTROL_SIGNAL ARGUMENT AND THOSE OF THE SYSTEM
+        # SUBCLASSES SHOULD ADD OVERRIDE FOR ANY CLASS-SPECIFIC ACTIONS (E.G., INSTANTIATING PREDICTION MECHANISMS)
+        # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SY        # Assign assign the current System to the ControlMechanisSTEM HANDLE THAT
+
+        # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
+        #    are in the new System
+        system._validate_monitored_states(self.monitored_output_states)
+        system._validate_control_signals(self.control_signals)
+
+        # Next, get any OutputStates specified in the **monitored_values** argument of the System's
+        #    constructor and/or in a MONITOR_FOR_CONTROL specification for individual OutputStates and/or Mechanisms,
+        #    and add them to the ControlMechanism's monitored_output_states attribute and to its
+        #    ObjectiveMechanisms monitored_values attribute
+        monitored_output_states = list(system._get_monitored_output_states_for_system(controller=self, context=context))
+        self.add_monitored_output_states(monitored_output_states)
+
+        # Then, assign it ControlSignals for any parameters in the current System specified for control
+        system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
+        for control_signal_spec in system_control_signals:
+            self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
+        # MODIFIED 9/10/17 END
+
+        # If it HAS been assigned a System, make sure it is the current one
+        if not self.system is system:
+            raise SystemError("The controller being assigned to {} ({}) already belongs to another System ({})".
+                              format(system.name, self.name, self.system.name))
+
+        # Assign assign the current System to the ControlMechanism's system attribute
+        #    (needed for it to validate and instantiate monitored_output_states and control_signals)
+        self.system = system
+

@@ -319,6 +319,7 @@ class EVCError(Exception):
 
 class EVCMechanism(ControlMechanism_Base):
     """EVCMechanism(                                                   \
+    system=True,                                                       \
     objective_mechanism=None,                                          \
     prediction_mechanism_type=IntegratorMechanism,                     \
     prediction_mechanism_params=None,                                  \

@@ -333,12 +333,13 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
+from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
 from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
                                         MECHANISM, NAME, \
@@ -650,7 +651,7 @@ class System_Base(System):
 
     targets : 2d nparray
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
+        the **targets** argument of System's `execute <System_Base.execute>` and `run <System_Base.run>` methods.
 
     graph : OrderedDict
         contains a graph of all of the Components in the System. Each entry specifies a set of <Receiver>: {sender,
@@ -719,14 +720,14 @@ class System_Base(System):
         `Mechanisms <Mechanism>`, listed in ``origin_mechanisms.data``.
 
         .. based on _origin_mechs
-           System.input contains the input to each `ORIGIN` Mechanism
+           System_Base.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
         all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
         <ProcessingMechanism>`), listed in ``terminalMechanisms.data``.
 
         .. based on _terminal_mechs
-           System.ouput contains the output of each TERMINAL Mechanism
+           System_Base.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
         `Mechanisms <Mechanism>` with recurrent `Projections <Projection>` that are candidates for `initialization
@@ -788,7 +789,7 @@ class System_Base(System):
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : System.classPreferences
+    prefs : PreferenceSet or specification dict : System_Base.classPreferences
         the `PreferenceSet` for System.
         Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
@@ -1861,7 +1862,7 @@ class System_Base(System):
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
-        """Assign outputStates for System (the values of which will comprise System.value)
+        """Assign outputStates for System (the values of which will comprise System_Base.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
@@ -1885,32 +1886,13 @@ class System_Base(System):
         if isinstance(control_mech_spec, ControlMechanism_Base):
             controller = control_mech_spec
 
-            # If it has NOT been assigned a System
-            if controller.system is None:
-                # First, validate that all of its monitored_output_states are in the current System
-                self._validate_monitored_states(controller.monitored_output_states)
+# FIX: EVEN IF THE CONTROLLER HAS BEEN ASSIGNED TO A SYSTEM, STILL NEED TO ADD MONITORED_OUTPUT_STATES AND
+# FIX:            CONTROL_SIGNALS FOR NEW SYSTEM
 
-                # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
-                #    to the ControlMechanism
-                #    and to the ControlMechanism's monitored_output_states attribute:
-                monitored_output_states = list(self._get_monitored_output_states_for_system(controller=controller,
-                                                                                            context=context))
-                controller.add_monitored_output_states(monitored_output_states)
+            # If it has NOT been assigned a System or already has another controller:
+            if controller.system is None or not controller.system is self:
 
-                # MODIFIED 9/10/17 NEW: [STILL TO DO]
-                # Then, assign it ControlSignals for any parameters in the current System specified for control
-                system_control_signals = self._get_control_signals_for_system(self.control_signals, context=context)
-                for control_signal_spec in system_control_signals:
-                    controller._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-                # MODIFIED 9/10/17 END
-
-                # Finally, assign assign the current System to the ControlMechanism's system attribute
-                controller.system = self
-
-            # If it HAS been assigned a System, make sure it is the current one
-            if not controller.system is self:
-                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
-                                  format(self.name, self.controller.name, self.controller.system.name))
+                controller.assign_as_controller(self, context=context)
 
         # A ControlMechanism class or subclass is being used to specify the controller
         elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism_Base):
@@ -1918,10 +1900,9 @@ class System_Base(System):
             #    monitored_values to specify its objective_mechanism (as list of OutputStates to be monitored)
             #    ControlSignals returned by _get_system_control_signals()
             controller = control_mech_spec(system=self,
-                                           # objective_mechanism=self._get_monitored_output_states_for_system(
-                                           #                                                     controller=controller,
-                                           #                                                     context=context),
-                                           objective_mechanism=self.monitor_for_control,
+                                           objective_mechanism=self._get_monitored_output_states_for_system(
+                                                                                                      context=context),
+                                           # objective_mechanism=self.monitor_for_control,
                                            control_signals=self._get_control_signals_for_system(self.control_signals,
                                                                                                 context=context))
 
@@ -2284,6 +2265,14 @@ class System_Base(System):
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
 
+    def _validate_control_signals(self, control_signals, context=None):
+        if control_signals:
+            for control_signal in control_signals:
+                for control_projection in control_signal.efferents:
+                    if not any(control_projection.receiver in mech._parameters_states for mech in self.mechanisms):
+                        raise SystemError("A parameter controlled by a ControlSignal of a controller "
+                                          "being assigned to {} is not in that System".format(self.name))
+
     def initialize(self):
         """Assign `initial_values <System_Base.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
@@ -2319,12 +2308,13 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and System.input);
+            - the input arg in System_Base.execute() or run() is provided as input to ORIGIN mechanisms (and
+              System_Base.input);
                 As with a process, `ORIGIN` Mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls Mechanism.execute() for each Mechanism in its execute_graph in sequence
-            - outputs of `TERMINAL` Mechanisms are assigned as System.ouputValue
-            - System.controller is executed after execution of all Mechanisms in the System
+            - outputs of `TERMINAL` Mechanisms are assigned as System_Base.ouputValue
+            - System_Base.controller is executed after execution of all Mechanisms in the System
             - notes:
                 * the same Mechanism can be listed more than once in a System, inducing recurrent processing
 
@@ -3113,7 +3103,7 @@ class System_Base(System):
         """Generate a display of the graph structure of mechanisms and projections in the system.
 
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
-        in the `System's graph <System.graph>` are displayed.  However, the **show_learning** and
+        in the `System's graph <System_Base.graph>` are displayed.  However, the **show_learning** and
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
         `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always
         displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless
@@ -3141,7 +3131,7 @@ class System_Base(System):
 
         control_color : keyword : default `blue`
             determines the color in which the learning components are displayed (note: if the System's
-            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `controller <System_Base.controller>`) is an `EVCMechanism`, then a link is shown in red from the
             `prediction Mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCMechanism
@@ -3301,8 +3291,8 @@ class SystemInputState(OutputState):
     <Process_Base.run>` methods.
 
     COMMENT:
-        Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
-        `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+        Each instance encodes a `target <System_Base.target>` to the system (also a 1d array in 2d array of
+        `targets <System_Base.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection

@@ -2304,11 +2304,11 @@ def _parse_state_type(owner, state_spec):
     # State specification dict
     if isinstance(state_spec, dict):
         if STATE_TYPE in state_spec:
-            if not inspect.isclass(STATE_TYPE) and issubclass(state_spec[STATE_TYPE], State):
+            if not inspect.isclass(state_spec[STATE_TYPE]) and issubclass(state_spec[STATE_TYPE], State):
                 raise StateError("STATE entry of state specification for {} ({})"
                                  "is not a State or type of State".
                                  format(owner.name, state_spec[STATE]))
-            return state_spec[STATE]
+            return state_spec[STATE_TYPE]
 
     # # Mechanism specification (State inferred from context)
     # if isinstance(state_spec, Mechanism):
