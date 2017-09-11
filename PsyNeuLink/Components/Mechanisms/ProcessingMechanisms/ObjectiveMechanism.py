@@ -625,14 +625,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # PARSE monitored_values
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        output_state_specs, mon_val_weights, mon_val_exponents = _parse_monitored_values_list(self,
-                                                                                              self.monitored_values,
-                                                                                              context)
+        monitored_values = _parse_monitored_values_list(self, self.monitored_values, context)
+        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
+        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values]
+        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
         for value in output_state_specs:
             output_state_dict = {}
+
             output_state_spec = _parse_state_spec(owner=self,
                                                   state_type=OutputState,
                                                   state_spec=value)
@@ -713,9 +715,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        output_state_specs, mon_val_weights, mon_val_exponents = _parse_monitored_values_list(self,
-                                                                                              monitored_values,
-                                                                                              context)
+        monitored_values = _parse_monitored_values_list(self, self.monitored_values, context)
+        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
+        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values]
+        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -825,7 +828,7 @@ def _validate_monitored_value(component, state_spec, context=None):
                                       format(component.name, state_spec))
 
 def _parse_monitored_values_list(source, output_state_list, context):
-    """Parses tuples specified in output_state_list and returns separate lists for OutputStates, exponents, and weights
+    """Parses tuples specified in output_state_list and returns list of tuples: [(OutputState, exponent, weight)...]
     """
     
     # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
@@ -843,11 +846,11 @@ def _parse_monitored_values_list(source, output_state_list, context):
                 raise ObjectiveMechanismError("Tuple {} used for OutputState specification in {} "
                                      "has {} items;  it should be 3".
                                      format(item, source.name, len(item)))
-            if not isinstance(item[WEIGHT_INDEX], numbers.Number):
+            if item[WEIGHT_INDEX] and not isinstance(item[WEIGHT_INDEX], numbers.Number):
                 raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
                                      format(item[WEIGHT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
-            if not isinstance(item[EXPONENT_INDEX], numbers.Number):
+            if item[EXPONENT_INDEX] and not isinstance(item[EXPONENT_INDEX], numbers.Number):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
                                      format(item[EXPONENT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
@@ -858,7 +861,7 @@ def _parse_monitored_values_list(source, output_state_list, context):
         # Validate by ObjectiveMechanism:
         _validate_monitored_value(source, output_states[i], context=context)
 
-    return output_states, weights, exponents
+    return list(zip(output_states, weights, exponents))
 
 def _objective_mechanism_role(mech, role):
     if isinstance(mech, ObjectiveMechanism):

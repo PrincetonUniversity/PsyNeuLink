@@ -117,7 +117,7 @@ specify an OutputState:
     * A **2-item tuple**.  The first item must be a value, and the second a `ModulatoryProjection
       <ModulatoryProjection>` specification. This creates a default OutputState using the first item as the
       OutputState's `variable <OutputState.variable>`, and assigns the OutputState as the `receiver
-      `ModualtoryProjection.receiver` of the type of ModulatoryProjection specified in the second item.
+      <ModualtoryProjection.receiver>` of the type of ModulatoryProjection specified in the second item.
 
     .. note::
        In all cases, the `variable <OutputState.variable>` of the OutputState must match (have the same number and

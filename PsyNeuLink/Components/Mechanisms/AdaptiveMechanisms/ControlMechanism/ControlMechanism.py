@@ -155,7 +155,7 @@ via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_St
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
 `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism are listed in the ControlMechanism's `monitored_output_states
-<ControlMechanism.monitored_output_states>` attribute, as well as in the ObjectiveMechanism's `monitored_values
+<ControlMechanism_Base.monitored_output_states>` attribute, as well as in the ObjectiveMechanism's `monitored_values
 <ObjectiveMechanism.monitored_values>` attribute (see `ControlMechanism_ObjectiveMechanism` for how the
 ObjectiveMechanism and the OutputStates it monitors are specified).  The OutputStates monitored by the
 ControlMechanism's `objective_mechanism <ControlMechanism_Base.objective_mechanism>` can be displayed using its `show
@@ -184,10 +184,10 @@ Output
 A ControlMechanism has a `ControlSignal` for each parameter specified in its `control_signals
 <ControlMechanism_Base.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
 corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
-ControlMechanism's `output_states <ControlMechanism.output_states>` attribute. The parameters modulated by a
+ControlMechanism's `output_states <ControlMechanism_Base.output_states>` attribute. The parameters modulated by a
 ControlMechanism's ControlSignals can be displayed using its `show <ControlMechanism_Base.show>` method. By default,
 each value of each `ControlSignal` is assigned the value of the corresponding item from the ControlMechanism's
-`allocation_policy <ControlMechanism.allocation_policy>`;  however, subtypes of ControlMechanism may assign values
+`allocation_policy <ControlMechanism_Base.allocation_policy>`;  however, subtypes of ControlMechanism may assign values
 differently.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
 its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's ControlProjection.   The `value <ControlProjection>` of the ControlProjection is used by the
@@ -220,7 +220,7 @@ that specifies the OutputStates monitored by the ObjectiveMechanism::
 This will create an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
 <Primary_OutputState>` of ``my_Transfer_mech`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 will multiply the former by 2 before adding ther values, and then pass the result as the input to the
-ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` will use this value to determine
+ControlMechanism.  The ControlMechanism's `function <ControlMechanism_Base.function>` will use this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of the
 ``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_2``.
 
@@ -287,7 +287,8 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                                                           import ObjectiveMechanism, _parse_monitored_values_list
+                                                           import ObjectiveMechanism, _parse_monitored_values_list, \
+                                                                  OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -603,23 +604,24 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         # MODIFIED 9/10/17 END
 
+        monitored_output_states = None
+
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
         if self.system:
-            self.monitored_output_states, weights, exponents = \
-                self.system._get_monitored_output_states_for_system(self, context=context)
+            monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
 
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         elif isinstance(self.objective_mechanism, list):
-            self.monitored_output_states, weights, exponents =  \
-                _parse_monitored_values_list(self, self.objective_mechanism, context=context)
+            monitored_output_states = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
+
+        if monitored_output_states is not None:
+            self.monitored_output_states = [s[OUTPUT_STATE_INDEX] for s in monitored_output_states]
+            weights = [w[WEIGHT_INDEX] for w in monitored_output_states]
+            exponents = [e[EXPONENT_INDEX] for e in monitored_output_states]
+
         else:
             self.monitored_output_states = weights = exponents = None
-
-        # List of OutputState tuples for **monitored_values** argument of ObjectiveMechanism
-        monitored_values_spec = []
-        for output_state, weight, exponent in  zip(self.monitored_output_states, weights, exponents):
-            monitored_values_spec.append((output_state, weight, exponent))
 
         # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
@@ -627,9 +629,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         # Create specification for ObjectiveMechanism InputStates corresponding to
         #    monitored_output_states and their exponents and weights
-        self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_values_spec,
+        self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_output_states,
                                                       function=LinearCombination(operation=PRODUCT),
-                                                      name=self.name + ' Monitoring Mechanism')
+                                                      name=self.name + '_Objective Mechanism')
         # MODIFIED 9/7/17 END
 
         if self.prefs.verbosePref:
@@ -639,6 +641,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
+        # MODIFIED 9/10/17 OLD: [STILL TODO: MOVE THIS TO SYSTEM]
         if self.system is not None:
             name = self.system.name + ' outcome signal'
         else:
@@ -652,6 +655,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.system is not None:
             self.system.execution_list.append(self.objective_mechanism)
             self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
+        # MODIFIED 9/10/17 END
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)

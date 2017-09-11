@@ -1893,13 +1893,15 @@ class System_Base(System):
                 # Next, assign any OutputStates specified as MONITOR_FOR_CONTROL in the current System
                 #    to the ControlMechanism
                 #    and to the ControlMechanism's monitored_output_states attribute:
-                controller.add_monitored_output_states(
-                        self._get_monitored_output_states_for_system(controller=controller, context=context))
+                monitored_output_states = list(self._get_monitored_output_states_for_system(controller=controller,
+                                                                                            context=context))
+                controller.add_monitored_output_states(monitored_output_states)
 
                 # MODIFIED 9/10/17 NEW: [STILL TO DO]
                 # Then, assign it ControlSignals for any parameters in the current System specified for control
-                controller.add_monitored_output_states(
-                        self._get_control_signals_for_system(self.control_signals, context=context))
+                system_control_signals = self._get_control_signals_for_system(self.control_signals, context=context)
+                for control_signal_spec in system_control_signals:
+                    controller._instantiate_control_signal(control_signal=control_signal_spec, context=context)
                 # MODIFIED 9/10/17 END
 
                 # Finally, assign assign the current System to the ControlMechanism's system attribute
@@ -1982,6 +1984,8 @@ class System_Base(System):
             will be instantiated to a corresponding InputState of the ControlMechanism
         * controller.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
+
+        Returns list of tuples, each of which is a monitored_value (OutputState, weight, exponent) tuple.
 
         """
 
@@ -2246,7 +2250,7 @@ class System_Base(System):
                         weights[i] = spec[WEIGHT_INDEX]
                         exponents[i] = spec[EXPONENT_INDEX]
 
-        return monitored_output_states, weights, exponents
+        return list(zip(monitored_output_states, weights, exponents))
 
     def _validate_monitored_states(self, monitored_states, context=None):
         for spec in monitored_states:
