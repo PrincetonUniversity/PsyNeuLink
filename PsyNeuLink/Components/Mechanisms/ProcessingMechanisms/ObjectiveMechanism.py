@@ -622,6 +622,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # FIX: EXTRACT PIECES NEEDED FOR add_monitored_values() AND MOVE TO _instantiate_monitored_values
 
+        # # MODIFIED 9/11/17 NEW:
+        # input_states = _instantiate_monitored_values(self.monitored_values, context)
+        # # MODIFIED 9/11/17 END
+
         # PARSE monitored_values
 
         # First parse for tuples to extract OutputStates, weights and exponents
@@ -634,7 +638,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         output_state_dicts = []
         for value in output_state_specs:
             output_state_dict = {}
-
             output_state_spec = _parse_state_spec(owner=self,
                                                   state_type=OutputState,
                                                   state_spec=value)
@@ -705,13 +708,28 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
 
+    def _instantiate_input_states_NEW(self, context=None):
+        """Instantiate InputState and MappingProjection to it for each OutputState specified in **monitored_values** arg
+
+        Instantiate self.instance_defaults.variable
+
+        Parse specifications for **input_states**, using **monitored_values** where relevant,
+        and instantiate input_states.
+
+        Re-specify corresponding items of variable to match the values of the InputStates in input_states.
+
+        Update self.input_state and self.input_states.
+
+        Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
+            if an OutputState has been specified.
+        """
+
     def _instantiate_monitored_values(self, monitored_values, projection_specs=None, context=None):
         """Instantiate InputState and MappingProjection to it for each OutputState specified in monitored_values_specs
 
         Used by _instantiate_input_states and _add_monitored_values;
         monitored_values argument can be any legal specification for **monitored_values** arg of constructor.
 
-        Returns list of OutputStates to be monitored.
         """
 
         # First parse for tuples to extract OutputStates, weights and exponents
@@ -744,9 +762,24 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_state_dict[OUTPUT_STATE]=value
             output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
 
-            # If OutputState is already being montiored, skip it
+            # If OutputState is already being monitored by this ObjectiveMechanism, skip it
             if output_state_dict[OUTPUT_STATE] in self.monitored_values:
-                continue
+                if any(any(projection.receiver is output_state_dict[OUTPUT_STATE]
+                       for projection in input_state.path_afferents)
+                    for input_state in self.input_states):
+                    continue
+
+
+                if any(any(proj.receiver.owner is mech
+                           for proj in state.efferents)
+                       for state in mech.output_states):
+                    for state in mech.output_states:
+                        for proj in state.efferents:
+                            if proj.receiver.owner is mech:
+                                pathway.append(proj)
+                                pathway.append(pathway[i])
+
+
 
             output_state_dicts.append(output_state_dict)
 
