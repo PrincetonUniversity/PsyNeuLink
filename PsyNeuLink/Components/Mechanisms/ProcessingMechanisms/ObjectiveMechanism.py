@@ -769,25 +769,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                     for input_state in self.input_states):
                     continue
 
-
-                if any(any(proj.receiver.owner is mech
-                           for proj in state.efferents)
-                       for state in mech.output_states):
-                    for state in mech.output_states:
-                        for proj in state.efferents:
-                            if proj.receiver.owner is mech:
-                                pathway.append(proj)
-                                pathway.append(pathway[i])
-
-
-
             output_state_dicts.append(output_state_dict)
 
         # INSTANTIATE InputState FOR EACH OutputState
 
         # If **input_states** was specified in the constructor, use those specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
-        input_state_specs = [m[VALUE] for m in output_state_dicts]
+        input_state_specs = [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
 
         # Parse input_states into a state specification dict, passing output_state_specs as defaults
         input_state_dicts = []
