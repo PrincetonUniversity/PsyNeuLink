@@ -290,6 +290,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
+from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
@@ -817,6 +818,11 @@ class EVCMechanism(ControlMechanism_Base):
                                           self.name,
                                           num_control_projections))
 
+    @tc.typecheck
+    def assign_as_controller(self, system:System, context=None):
+        super().assign_as_controller(system=system, context=context)
+        self._instantiate_prediction_mechanisms(context=context)
+
     def _execute(self,
                     variable=None,
                     runtime_params=None,
@@ -834,7 +840,8 @@ class EVCMechanism(ControlMechanism_Base):
         Return an allocation_policy
         """
 
-        self._update_predicted_input()
+        if not 'System.controller setter' in context:
+            self._update_predicted_input()
         # self.system._cache_state()
 
         # CONSTRUCT SEARCH SPACE

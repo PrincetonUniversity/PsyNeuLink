@@ -780,6 +780,8 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     IMPLEMENTATION NOTE:
         default(s) for self.paramsCurrent[OUTPUT_STATES] (self.value) are assigned here
         rather than in _validate_params, as it requires function to have been instantiated first
+
+    Returns list of instantiated OutputStates
     """
 
     constraint_value = []
@@ -878,6 +880,7 @@ def _instantiate_output_states(owner, output_states=None, context=None):
     else:
         owner._output_states = state_list
 
+    return state_list
 
 class StandardOutputStatesError(Exception):
     def __init__(self, error_value):

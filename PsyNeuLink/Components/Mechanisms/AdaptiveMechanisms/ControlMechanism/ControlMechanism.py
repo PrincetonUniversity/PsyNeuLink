@@ -762,9 +762,12 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         default_name = param_name + '_' + ControlSignal.__name__
 
-        # Get constraint for ControlSignal value
-        #    - get ControlMechanism's value
-        self._update_value(context=context)
+        # MODIFIED 9/11/17 OLD:
+        # # Get constraint for ControlSignal value
+        # #    - get ControlMechanism's value
+        # self._update_value(context=context)
+        # MODIFIED 9/11/17 END
+
         # - get OutputState's index
         try:
             output_state_index = len(self.output_states)
@@ -938,8 +941,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         OutputStates must belong to Mechanisms in the same System as the ControlMechanism
         """
         output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
-        self.system._validate_monitored_states(output_states, context=context)
-        self.monitored_output_states.append(output_states)
+        if self.system:
+            self.system._validate_monitored_states(output_states, context=context)
+        if output_states:
+            self.monitored_output_states.append(output_states)
 
     @tc.typecheck
     def assign_as_controller(self, system:System, context=None):
@@ -977,7 +982,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # DELETE ALL EXISTING OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ASSIGNMENTS
         # REINSTANTIATE ITS OWN OBJECTIVE_MECHANISM and CONTROL_SIGNAL ARGUMENT AND THOSE OF THE SYSTEM
         # SUBCLASSES SHOULD ADD OVERRIDE FOR ANY CLASS-SPECIFIC ACTIONS (E.G., INSTANTIATING PREDICTION MECHANISMS)
-        # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SY        # Assign assign the current System to the ControlMechanisSTEM HANDLE THAT
+        # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SYSTEM HANDLE THAT
+        # Assign the current System to the ControlMechanism
 
         # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
         #    are in the new System
@@ -998,7 +1004,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # MODIFIED 9/10/17 END
 
         # If it HAS been assigned a System, make sure it is the current one
-        if not self.system is system:
+        if self.system and not self.system is system:
             raise SystemError("The controller being assigned to {} ({}) already belongs to another System ({})".
                               format(system.name, self.name, self.system.name))
 

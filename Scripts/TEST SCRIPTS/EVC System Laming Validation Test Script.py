@@ -93,6 +93,17 @@ RewardProcess = process(
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
                   # controller=EVCMechanism,
+                  #
+                  # monitor_for_control=[
+                  #     Reward,
+                  #     Decision.PROBABILITY_UPPER_THRESHOLD,
+                  #     (Decision.RESPONSE_TIME, 1, -1)],
+
+                  controller=EVCMechanism(objective_mechanism=[
+                                                     Reward,
+                                                     Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                                                     (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)]),
+
 
                   # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
                   #     Reward,
@@ -102,16 +113,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   #                                              Decision.PROBABILITY_UPPER_THRESHOLD,
                   #                                              (Decision.RESPONSE_TIME, -1, 1)]),
 
-                  controller=EVCMechanism(objective_mechanism=[
-                                                     Reward,
-                                                     Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
-                                                     (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)]),
-
                   enable_controller=True,
-                  # monitor_for_control=[
-                  #     Reward,
-                  #     Decision.PROBABILITY_UPPER_THRESHOLD,
-                  #     (Decision.RESPONSE_TIME, 1, -1)],
 
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
 

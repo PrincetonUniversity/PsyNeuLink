@@ -661,6 +661,8 @@ def _instantiate_input_states(owner, input_states=None, context=None):
               into individual 1D arrays, one for each input state
 
     (See State._instantiate_state_list() for additional details)
+
+    Returns list of instantiated InputStates
     """
 
     # This allows method to be called by Mechanism.add_input_states() with set of user-specified input_states,
@@ -708,3 +710,5 @@ def _instantiate_input_states(owner, input_states=None, context=None):
                     owner.instance_defaults.variable,
                 )
             )
+
+    return state_list

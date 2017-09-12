@@ -1897,8 +1897,8 @@ class System_Base(System):
         # A ControlMechanism class or subclass is being used to specify the controller
         elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism_Base):
             # Instantiate controller from class specification using:
-            #    monitored_values to specify its objective_mechanism (as list of OutputStates to be monitored)
-            #    ControlSignals returned by _get_system_control_signals()
+            #   monitored_values for System to specify its objective_mechanism (as list of OutputStates to be monitored)
+            #   ControlSignals for System returned by _get_system_control_signals()
             controller = control_mech_spec(system=self,
                                            objective_mechanism=self._get_monitored_output_states_for_system(
                                                                                                       context=context),

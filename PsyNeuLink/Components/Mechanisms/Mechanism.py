@@ -2117,6 +2117,8 @@ class Mechanism_Base(Mechanism):
 
         input_states = []
         output_states = []
+        instantiated_input_states = None
+        instantiated_output_states = None
 
         for state in states:
             state_type = _parse_state_type(self, state)
@@ -2129,9 +2131,12 @@ class Mechanism_Base(Mechanism):
 
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
-            _instantiate_input_states(self, input_states, context=context)
+            instantiated_input_states = _instantiate_input_states(self, input_states, context=context)
         if output_states:
-            _instantiate_output_states(self, output_states, context=context)
+            instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
+
+        return {INPUT_STATES: instantiated_input_states,
+                OUTPUT_STATES: instantiated_output_states}
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent

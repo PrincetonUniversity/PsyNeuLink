@@ -631,8 +631,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # First parse for tuples to extract OutputStates, weights and exponents
         monitored_values = _parse_monitored_values_list(self, self.monitored_values, context)
         output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
-        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values]
-        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
+        monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values]
+        monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -686,15 +686,19 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for input_state_dict in input_state_dicts:
             constraint_value.append(input_state_dict[VARIABLE])
             params = input_state_dict[PARAMS] or {}
-            if mon_val_weights[i] is not None:
-                params[WEIGHT] = mon_val_weights[i]
-            if mon_val_exponents[i] is not None:
-                params[EXPONENT] = mon_val_exponents[i]
+            if monitored_value_weights[i] is not None:
+                params[WEIGHT] = monitored_value_weights[i]
+            if monitored_value_exponents[i] is not None:
+                params[EXPONENT] = monitored_value_exponents[i]
 
         self.instance_defaults.variable = constraint_value
         self._input_states = input_state_dicts
 
         super()._instantiate_input_states(context=context)
+
+        # Get OutputStates specified in monitored_values to self.monitored_values and assign to self.monitored_values
+        output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
+        self.monitored_values = output_states
 
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []
@@ -703,7 +707,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         _instantiate_monitoring_projections(owner=self,
-                                            sender_list=[mon_val[OUTPUT_STATE] for mon_val in output_state_dicts],
+                                            sender_list=output_states,
                                             receiver_list=self.input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
@@ -723,8 +727,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
             if an OutputState has been specified.
         """
+        self._instantiate_monitored_values(self.monitored_values, self.input_states, context=context)
+        super()._instantiate_input_states(context=context)
 
-    def _instantiate_monitored_values(self, monitored_values, projection_specs=None, context=None):
+
+    def _instantiate_monitored_values(self, monitored_values, input_states= None, projection_specs=None, context=None):
         """Instantiate InputState and MappingProjection to it for each OutputState specified in monitored_values_specs
 
         Used by _instantiate_input_states and _add_monitored_values;
@@ -735,8 +742,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # First parse for tuples to extract OutputStates, weights and exponents
         monitored_values_parsed = _parse_monitored_values_list(self, monitored_values, context)
         output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values_parsed]
-        mon_val_weights = [w[WEIGHT_INDEX] for w in monitored_values_parsed]
-        mon_val_exponents = [e[EXPONENT_INDEX] for e in monitored_values_parsed]
+        monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values_parsed]
+        monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values_parsed]
 
         # Then, parse OutputState specifications
         output_state_dicts = []
@@ -764,18 +771,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
             # If OutputState is already being monitored by this ObjectiveMechanism, skip it
             if output_state_dict[OUTPUT_STATE] in self.monitored_values:
-                if any(any(projection.receiver is output_state_dict[OUTPUT_STATE]
+                if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
                        for projection in input_state.path_afferents)
                     for input_state in self.input_states):
                     continue
 
             output_state_dicts.append(output_state_dict)
 
-        # INSTANTIATE InputState FOR EACH OutputState
+        # INSTANTIATE InputState for ObjectiveMechanism CORRESPONDING TO EACH OutputState specified in monitored_values
 
-        # If **input_states** was specified in the constructor, use those specifications;
+        # If input_states were provided use those for specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
-        input_state_specs = [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
+        if input_states and (len(input_states) != len(output_state_dicts)):
+            raise ObjectiveMechanismError("Number of InputStates specified ({}) must equal "
+                                          "the number of items specified for monitored_values".
+                                          format(len(input_states), len(output_state_dicts)))
+        input_state_specs = input_states or [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
 
         # Parse input_states into a state specification dict, passing output_state_specs as defaults
         input_state_dicts = []
@@ -797,23 +808,30 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         for input_state_dict in input_state_dicts:
             constraint_value.append(input_state_dict[VARIABLE])
             params = input_state_dict[PARAMS] or {}
-            if mon_val_weights[i] is not None:
-                params[WEIGHT] = mon_val_weights[i]
-            if mon_val_exponents[i] is not None:
-                params[EXPONENT] = mon_val_exponents[i]
+            if monitored_value_weights[i] is not None:
+                params[WEIGHT] = monitored_value_weights[i]
+            if monitored_value_exponents[i] is not None:
+                params[EXPONENT] = monitored_value_exponents[i]
 
-        self.add_states(input_state_dicts)
+        # self.instance_defaults.variable.extend(constraint_value)
+        states = self.add_states(input_state_dicts)
 
-        input_state_projection_specs = [AUTO_ASSIGN_MATRIX] * len(input_state_dicts)
+        instantiated_input_states = states[INPUT_STATES]
+        input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
+
         output_states = [mon_val[OUTPUT_STATE] for mon_val in output_state_dicts]
+        if output_states:
+            self.monitored_values.append(output_states)
+
 
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        _instantiate_monitoring_projections(owner=self,
-                                            sender_list=output_states,
-                                            receiver_list=input_state_dicts,
-                                            receiver_projection_specs=input_state_projection_specs,
-                                            context=context)
-        return output_states
+        if output_states:
+            _instantiate_monitoring_projections(owner=self,
+                                                sender_list=output_states,
+                                                receiver_list=instantiated_input_states,
+                                                receiver_projection_specs=input_state_projection_specs,
+                                                context=context)
+        return instantiated_input_states
 
     def add_monitored_values(self, monitored_values_spec, context=None):
         """Instantiate OutputStates to be monitored by ObjectiveMechanism
@@ -823,8 +841,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         If item is a Mechanism, its primary OutputState is used.
         """
         monitored_values_spec = list(monitored_values_spec)
-        # return self._instantiate_monitored_values(monitored_values_spec)
-        return self._instantiate_input_states(monitored_values_spec)
+        return self._instantiate_monitored_values(monitored_values_spec)
+        # return self._instantiate_input_states(monitored_values_spec)
 
 def _validate_monitored_value(component, state_spec, context=None):
     """Validate specification for monitored_value arg
@@ -852,31 +870,53 @@ def _parse_monitored_values_list(source, output_state_list, context):
     """
     
     # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
+    # Assign None as default for unspecified weights and exponents, so that specification of these for
+    #    InputStates can be used (see ObjectiveMechanism._instantiate_input_states)
+
     # output_states = output_state_list
     # weights = np.ones((len(output_states),1))
     # exponents = np.ones_like(weights)
-    output_states = output_state_list
-    weights = np.array([None] * len(output_state_list))
+    output_states = np.array([None] * len(output_state_list))
+    weights = output_states.copy()
     exponents = weights.copy()
 
     for i, item in enumerate(output_state_list):
 
-        if isinstance(item, tuple):
+        if isinstance(item, OutputState):
+            output_states[i] = item
+
+        elif isinstance(item, Mechanism):
+            output_states[i] = item.output_state
+
+        elif isinstance(item, tuple):
             if len(item) != 3:
                 raise ObjectiveMechanismError("Tuple {} used for OutputState specification in {} "
                                      "has {} items;  it should be 3".
                                      format(item, source.name, len(item)))
+
+            output_state_spec = item[OUTPUT_STATE_INDEX]
+            # If first item of tuple is a Mechanism, get its primary OutputState
+            if isinstance(output_state_spec, Mechanism):
+                output_state_spec = output_state_spec.output_state
+            # First item of tuple should now be an OutputState
+            if not isinstance(output_state_spec, OutputState):
+                raise ObjectiveMechanismError("First item of tuple for monitored_value of {} ({})  "
+                                              "must be an OutputState or a Mechanism".
+                                              format(source.name, item[OUTPUT_STATE_INDEX]))
+            output_states[i] = output_state_spec
+
             if item[WEIGHT_INDEX] and not isinstance(item[WEIGHT_INDEX], numbers.Number):
                 raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
                                      format(item[WEIGHT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
+            weights[i] = item[WEIGHT_INDEX]
+
             if item[EXPONENT_INDEX] and not isinstance(item[EXPONENT_INDEX], numbers.Number):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
                                      format(item[EXPONENT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
-            output_states[i] = item[OUTPUT_STATE_INDEX]
-            weights[i] = item[WEIGHT_INDEX]
             exponents[i] = item[EXPONENT_INDEX]
+
 
         # Validate by ObjectiveMechanism:
         _validate_monitored_value(source, output_states[i], context=context)
@@ -928,6 +968,7 @@ def _instantiate_monitoring_projections(owner,
                           "only the first ({}) will be used".
                           format(len(recvr_projs), receiver.name, owner.name))
         projection_spec = recvr_projs[0]
+
 
         # IMPLEMENTATION NOTE:  This may not handle situations properly in which the OutputState is specified
         #                           by a 2-item tuple (i.e., with a Projection specification as its second item)
