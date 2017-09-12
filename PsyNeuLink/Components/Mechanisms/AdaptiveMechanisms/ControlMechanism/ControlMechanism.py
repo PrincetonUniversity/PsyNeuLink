@@ -610,10 +610,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.system:
             monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
             if isinstance(self.objective_mechanism, ObjectiveMechanism):
-                # FIX: FINISH THIS
-                # OBJECTIVE_NMECHANISM MUST ALREADY EXIST, SO CALL _add_monitored_value() TO ADD
-                # monitored_output_states TO ITS LIST OF INPUT_STATES BEING MONITORED,
-                #  AND THEN ASSIGN TO objective_mechanism ATTRIBUTE
+                self.objective_mechanism.add_monitored_values(monitored_output_states)
+                # FIX: UPDATE .monitored_output_states
             else:
                 raise ControlMechanismError("PROGRAM ERROR:  {} being assigned as controller for {} should "
                                             "(but does not) already have an ObjectiveMechanism assigned to its "
