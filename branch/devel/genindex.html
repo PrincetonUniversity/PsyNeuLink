@@ -238,7 +238,7 @@
 </li>
       <li><a href="LCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.LCMechanism.LCMechanism.add_modulated_mechanisms">add_modulated_mechanisms() (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.LCMechanism.LCMechanism method)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.add_monitored_values">add_monitored_values() (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism method)</a>
+      <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.add_monitored_output_states">add_monitored_output_states() (ControlMechanism.ControlMechanism_Base method)</a>
 </li>
       <li><a href="Composition.html#Composition.Composition.add_projection">add_projection() (Composition.Composition method)</a>
 </li>
@@ -258,10 +258,10 @@
 </li>
       <li><a href="Condition.html#Scheduling.Condition.AfterNCallsCombined">AfterNCallsCombined (class in Scheduling.Condition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#Scheduling.Condition.AfterNPasses">AfterNPasses (class in Scheduling.Condition)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#Scheduling.Condition.AfterNTrials">AfterNTrials (class in Scheduling.Condition)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.AfterPass">AfterPass (class in Scheduling.Condition)</a>
@@ -295,6 +295,8 @@
       <li><a href="Function.html#Function.ArgumentTherapy">ArgumentTherapy (class in Function)</a>
 </li>
       <li><a href="Function.html#Function.ArgumentTherapy.Manner">ArgumentTherapy.Manner (class in Function)</a>
+</li>
+      <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.assign_as_controller">assign_as_controller() (ControlMechanism.ControlMechanism_Base method)</a>
 </li>
       <li><a href="ControlSignal.html#ModulatorySignals.ControlSignal.ControlSignal.assign_costs">assign_costs() (ModulatorySignals.ControlSignal.ControlSignal method)</a>
 </li>
@@ -636,6 +638,8 @@
 </li>
       <li><a href="Component.html#Component.ExecutionStatus">ExecutionStatus (class in Component)</a>
 </li>
+      <li><a href="InputState.html#InputState.InputState.exponent">exponent (InputState.InputState attribute)</a>
+</li>
       <li><a href="Function.html#Function.Exponential">Exponential (class in Function)</a>
 </li>
       <li><a href="Function.html#Function.ExponentialDist">ExponentialDist (class in Function)</a>
@@ -903,6 +907,8 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.initializer">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
+        <li><a href="Function.html#Function.Integrator.initializer">(Function.Integrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.initializer">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.initializer">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
@@ -939,6 +945,8 @@
       <li><a href="System.html#System.System_Base.inspect">inspect() (System.System_Base method)</a>
 </li>
       <li><a href="Function.html#Function.LinearMatrix.instantiate_matrix">instantiate_matrix() (Function.LinearMatrix method)</a>
+</li>
+      <li><a href="Function.html#Function.Integrator.integration_type">integration_type (Function.Integrator attribute)</a>
 </li>
       <li><a href="Function.html#Function.Integrator">Integrator (class in Function)</a>
 </li>
@@ -1124,8 +1132,6 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.make_default_controller">make_default_controller (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
-</li>
       <li><a href="OutputState.html#OutputState.make_readonly_property">make_readonly_property() (in module OutputState)</a>
 
       <ul>
@@ -1242,22 +1248,16 @@
 </li>
       <li><a href="ModulatorySignal.html#module-ModulatorySignals.ModulatorySignal">ModulatorySignals.ModulatorySignal (module)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitor_for_control_weights_and_exponents">monitor_for_control_weights_and_exponents (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
-</li>
       <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.monitored_output_states">monitored_output_states (ControlMechanism.ControlMechanism_Base attribute)</a>
 
       <ul>
         <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
 </li>
       </ul></li>
+      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitored_output_states_weights_and_exponents">monitored_output_states_weights_and_exponents (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+</li>
       <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_values">monitored_values (ObjectiveMechanism.ObjectiveMechanism attribute)</a>
 </li>
-      <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.monitoring_mechanism">monitoring_mechanism (ControlMechanism.ControlMechanism_Base attribute)</a>
-
-      <ul>
-        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.monitoring_mechanism">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
-</li>
-      </ul></li>
       <li><a href="Utilities.html#Utilities.multi_getattr">multi_getattr() (in module Utilities)</a>
 </li>
       <li><a href="Function.html#Function.ModulationParam.MULTIPLICATIVE">MULTIPLICATIVE (Function.ModulationParam attribute)</a>
@@ -1343,6 +1343,8 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.noise">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
+        <li><a href="Function.html#Function.Integrator.noise">(Function.Integrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.NavarroAndFuss.noise">(Function.NavarroAndFuss attribute)</a>
 </li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.noise">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
@@ -1382,6 +1384,12 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.objective_mechanism">objective_mechanism (ControlMechanism.ControlMechanism_Base attribute)</a>
+
+      <ul>
+        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+</li>
+      </ul></li>
       <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.OBJECTIVE_OUTPUT">OBJECTIVE_OUTPUT (class in ObjectiveMechanism)</a>
 </li>
       <li><a href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism">ObjectiveMechanism (class in ObjectiveMechanism)</a>
@@ -1415,8 +1423,6 @@
       <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.origin_prediction_mechanisms">origin_prediction_mechanisms (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
 </li>
       <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator">OrnsteinUhlenbeckIntegrator (class in Function)</a>
-</li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.outcome_function">outcome_function (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
 </li>
       <li><a href="Function.html#Function.SoftMax.output">output (Function.SoftMax attribute)</a>
 
@@ -1512,6 +1518,8 @@
         <li><a href="Function.html#Function.Function_Base.owner">(Function.Function_Base attribute)</a>
 </li>
         <li><a href="Function.html#Function.GammaDist.owner">(Function.GammaDist attribute)</a>
+</li>
+        <li><a href="Function.html#Function.Integrator.owner">(Function.Integrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.Linear.owner">(Function.Linear attribute)</a>
 </li>
@@ -1653,6 +1661,8 @@
 </li>
         <li><a href="Function.html#Function.GammaDist.prefs">(Function.GammaDist attribute)</a>
 </li>
+        <li><a href="Function.html#Function.Integrator.prefs">(Function.Integrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.Linear.prefs">(Function.Linear attribute)</a>
 </li>
         <li><a href="Function.html#Function.LinearCombination.prefs">(Function.LinearCombination attribute)</a>
@@ -1755,6 +1765,8 @@
 </li>
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.previous_value">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
+        <li><a href="Function.html#Function.Integrator.previous_value">(Function.Integrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.previous_value">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
         <li><a href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.previous_value">(IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator attribute)</a>
@@ -1818,6 +1830,8 @@
         <li><a href="Function.html#Function.DriftDiffusionIntegrator.rate">(Function.DriftDiffusionIntegrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.Exponential.rate">(Function.Exponential attribute)</a>
+</li>
+        <li><a href="Function.html#Function.Integrator.rate">(Function.Integrator attribute)</a>
 </li>
         <li><a href="Function.html#Function.OrnsteinUhlenbeckIntegrator.rate">(Function.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
@@ -1992,8 +2006,12 @@
 </li>
       <li><a href="Log.html#Log.Log.suspend_entries">suspend_entries() (Log.Log method)</a>
 </li>
-      <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.system">system (Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
+      <li><a href="ControlMechanism.html#ControlMechanism.ControlMechanism_Base.system">system (ControlMechanism.ControlMechanism_Base attribute)</a>
+
+      <ul>
+        <li><a href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.system">(Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism attribute)</a>
 </li>
+      </ul></li>
       <li><a href="System.html#module-System">System (module)</a>
 </li>
       <li><a href="System.html#System.system">system() (in module System)</a>
@@ -2209,6 +2227,8 @@
 </li>
         <li><a href="Function.html#Function.Function_Base.variable">(Function.Function_Base attribute)</a>
 </li>
+        <li><a href="Function.html#Function.Integrator.variable">(Function.Integrator attribute)</a>
+</li>
         <li><a href="Function.html#Function.Linear.variable">(Function.Linear attribute)</a>
 </li>
         <li><a href="Function.html#Function.LinearCombination.variable">(Function.LinearCombination attribute)</a>
@@ -2286,14 +2306,16 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Function.html#Function.WaldDist">WaldDist (class in Function)</a>
 </li>
+      <li><a href="InputState.html#InputState.InputState.weight">weight (InputState.InputState attribute)</a>
+</li>
       <li><a href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.weight_change_matrix">weight_change_matrix (ModulatoryProjections.LearningProjection.LearningProjection attribute)</a>
 </li>
       <li><a href="Function.html#Function.LinearCombination.weights">weights (Function.LinearCombination attribute)</a>
 </li>
-      <li><a href="Condition.html#Scheduling.Condition.WhenFinished">WhenFinished (class in Scheduling.Condition)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Condition.html#Scheduling.Condition.WhenFinished">WhenFinished (class in Scheduling.Condition)</a>
+</li>
       <li><a href="Condition.html#Scheduling.Condition.WhenFinishedAll">WhenFinishedAll (class in Scheduling.Condition)</a>
 </li>
       <li><a href="Condition.html#Scheduling.Condition.WhenFinishedAny">WhenFinishedAny (class in Scheduling.Condition)</a>

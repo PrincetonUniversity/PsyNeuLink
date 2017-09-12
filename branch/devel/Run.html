@@ -198,7 +198,7 @@ runs only a single execution of the object;</li>
 execution.  For a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, the scope of execution is simply the Mechanism itself.  For a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
 the scope of
 execution is all of the Mechanisms specified in its <a class="reference internal" href="Process.html#Process.Process_Base.pathway" title="Process.Process_Base.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.  For a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the scope of execution is
-all of the Mechanisms in the Processes specified in the System’s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">Processes</span></code></a> attribute.</p>
+all of the Mechanisms in the Processes specified in the System’s <a class="reference internal" href="System.html#System.System_Base.processes" title="System.System_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> attribute.</p>
 </div>
 <div class="section" id="timing">
 <span id="run-timing"></span><h3>Timing<a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h3>
@@ -291,7 +291,7 @@ be made about future inclusion of this format.</p>
 <p><em>(List[values] or ndarray)</em> – this uses a nested list or ndarray to fully specify the input for
 each <a class="reference internal" href="TimeScale.html#Scheduling.TimeScale.TimeScale.TRIAL" title="Scheduling.TimeScale.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence.  It is more complex than the <a class="reference internal" href="#run-inputs-mechanism-format"><span class="std std-ref">Mechanism format</span></a>,
 and for Systems requires that the inputs for each Mechanism be specified in the same order in which those Mechanisms
-appear in the System’s <a class="reference internal" href="System.html#System.System_Base.origin_mechanisms" title="System.System_Base.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_Mechanisms</span></code></a> attribute.  This is generally the
+appear in the System’s <a class="reference internal" href="System.html#System.System_Base.origin_mechanisms" title="System.System_Base.origin_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">origin_mechanisms</span></code></a> attribute.  This is generally the
 same order in which they are declared, and can be displayed using the System’s <a class="reference internal" href="System.html#System.System_Base.show" title="System.System_Base.show"><code class="xref any py py-meth docutils literal"><span class="pre">show</span></code></a>
 method). Although this format is more complex, it may be better suited to automated input generation, since it does
 not require that Mechanisms be referenced explicitly (though it is allowed). The following provides a description of

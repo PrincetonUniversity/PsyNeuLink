@@ -196,8 +196,8 @@ can also be assigned for execution (e.g., during <a class="reference internal" h
 for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler’s constructor using one the following:</p>
 <ul class="simple">
 <li>a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in the <strong>system</strong> argument - if a System is specified,
-the Scheduler is created using the Components in the System’s <code class="xref any docutils literal"><span class="pre">execution_list</span></code> and an order
-of execution specified by the dependencies among the Components in its <code class="xref any docutils literal"><span class="pre">execution_graph</span></code>.</li>
+the Scheduler is created using the Components in the System’s <a class="reference internal" href="System.html#System.System_Base.execution_list" title="System.System_Base.execution_list"><code class="xref any py py-attr docutils literal"><span class="pre">execution_list</span></code></a> and an
+order of execution specified by the dependencies among the Components in its <code class="xref any docutils literal"><span class="pre">execution_graph</span></code>.</li>
 <li>a <em>graph specification dictionary</em> in the <strong>graph</strong> argument -
 each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
 zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
@@ -208,8 +208,8 @@ used as the default order of executions, subject to any <a class="reference inte
 <p>If both a System and a graph are specified, the System takes precedence, and the graph is ignored.</p>
 <p>Conditions can be added to a Scheduler when it is created by specifying a <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet" title="Scheduling.Condition.ConditionSet"><code class="xref any py py-class docutils literal"><span class="pre">ConditionSet</span></code></a> (a set of
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>condition_set</strong> argument of its constructor.  Individual Conditions and/or
-ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition" title="Scheduling.Condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
-<a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition_set" title="Scheduling.Scheduler.Scheduler.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
+ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="#Scheduling.Scheduler.Scheduler.add_condition" title="Scheduling.Scheduler.Scheduler.add_condition"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition</span></code></a> and
+<a class="reference internal" href="Condition.html#Scheduling.Condition.ConditionSet.add_condition_set" title="Scheduling.Condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
 </div>
 <div class="section" id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
