@@ -44,10 +44,11 @@ def test_basic(func, variable, params, fail, expected, benchmark):
         return
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName;
+    f.function(variable)
     res = benchmark(f.function, variable)
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 1 if benchmark.disabled else benchmark.stats.stats.rounds
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    assert np.allclose(res, expected(f.initializer, variable, iterations + 1, **params))
 
 
 @pytest.mark.function
@@ -68,7 +69,8 @@ def test_llvm(func, variable, params, fail, expected, benchmark):
         benchmark(lambda _:0,0)
         pytest.skip("not implemented")
         return
+    f.bin_function(variable)
     res = benchmark(f.bin_function, variable)
     # This is rather hacky. it might break with pytest benchmark update
     iterations = 1 if benchmark.disabled else benchmark.stats.stats.rounds
-    assert np.allclose(res, expected(f.initializer, variable, iterations, **params))
+    assert np.allclose(res, expected(f.initializer, variable, iterations + 1, **params))
