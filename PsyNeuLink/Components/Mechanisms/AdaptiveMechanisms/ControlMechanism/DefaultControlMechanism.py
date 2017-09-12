@@ -16,7 +16,7 @@ DefaultControlMechanism creates an `ControlSignal` for each `ControlProjection` 
 `defaultControlAllocation` =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
 parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
 by manually changing the value of `defaultControlAllocation`.  See `ControlMechanism <ControlMechanism>` for additional
-details of how ControlMechanisms are created, executed and their attributes.
+details of how ControlMechanism are created, executed and their attributes.
 
 COMMENT:
    ADD LINK FOR defaultControlAllocation
@@ -38,6 +38,7 @@ import typecheck as tc
 import numpy as np
 
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.States.InputState import InputState
 
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
