@@ -92,7 +92,7 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
-                  # WORKS: [BUT WHY DOES IT ALLOW OUTPUTSTATES TO BE SPECIFIED JUST BY GENERIC NAME?
+                  # WORKS: [BUT WHY DOES IT ALLOW OUTPUTSTATES TO BE SPECIFIED JUST BY GENERIC NAME?]
                   controller=EVCMechanism,
                   monitor_for_control=[
                       Reward,
