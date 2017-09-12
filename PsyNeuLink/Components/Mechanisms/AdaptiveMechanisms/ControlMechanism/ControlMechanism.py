@@ -642,7 +642,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
         #    (so that it is accessible to custom functions)
-        self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
+        # self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
 
         # Create specification for ObjectiveMechanism InputStates corresponding to
         #    monitored_output_states and their exponents and weights
@@ -1011,4 +1011,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # Assign assign the current System to the ControlMechanism's system attribute
         #    (needed for it to validate and instantiate monitored_output_states and control_signals)
         self.system = system
+
+    @property
+    def monitored_output_states_weights_and_exponents(self):
+        return self.objective_mechanism.monitored_values_weights_and_exponents
+
+
 

@@ -815,16 +815,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # self.instance_defaults.variable.extend(constraint_value)
         states = self.add_states(input_state_dicts)
-
         instantiated_input_states = states[INPUT_STATES]
-        input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
 
         output_states = [mon_val[OUTPUT_STATE] for mon_val in output_state_dicts]
         if output_states:
             self.monitored_values.append(output_states)
 
-
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
         if output_states:
             _instantiate_monitoring_projections(owner=self,
                                                 sender_list=output_states,
@@ -843,6 +841,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         monitored_values_spec = list(monitored_values_spec)
         return self._instantiate_monitored_values(monitored_values_spec)
         # return self._instantiate_input_states(monitored_values_spec)
+
+    @property
+    def monitored_values_weights_and_exponents(self):
+        weights = [input_state.weight for input_state in self.input_states]
+        exponents = [input_state.exponent for input_state in self.input_states]
+        return [(w,e) for w, e in zip(weights,exponents)]
+
 
 def _validate_monitored_value(component, state_spec, context=None):
     """Validate specification for monitored_value arg
