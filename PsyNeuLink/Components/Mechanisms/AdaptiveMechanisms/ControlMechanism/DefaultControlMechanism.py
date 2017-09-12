@@ -143,8 +143,6 @@ class DefaultControlMechanism(ControlMechanism_Base):
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
 
-        self.monitored_output_states = []
-
         if not hasattr(self, INPUT_STATES):
             self._input_states = None
         elif self.input_states:

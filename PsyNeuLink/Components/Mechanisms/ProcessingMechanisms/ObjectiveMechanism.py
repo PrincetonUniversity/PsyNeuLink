@@ -913,8 +913,8 @@ def _validate_monitored_value(component, state_spec, context=None):
     from PsyNeuLink.Components.States.OutputState import OutputState
     if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
         raise ObjectiveMechanismError("Specification of OutputState to be monitored for {} ({}) must be an "
-                                      "OutputState, Mechanism, (Mechanism, weight, exponent) tuple, "
-                                      "OutputState specification dictionary, or a MonitoredOutputStatesOption value".
+                                      "OutputState, Mechanism, (Mechanism, weight, exponent) tuple, OutputState"
+                                      "name or specification dictionary, or a MonitoredOutputStatesOption value".
                                       format(component.name, state_spec))
 
 def _parse_monitored_values_list(source, output_state_list, context):
@@ -969,6 +969,8 @@ def _parse_monitored_values_list(source, output_state_list, context):
                                      format(item[EXPONENT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
             exponents[i] = item[EXPONENT_INDEX]
 
+        elif isinstance(item, str):
+            output_states[i] = item
 
         # Validate by ObjectiveMechanism:
         _validate_monitored_value(source, output_states[i], context=context)

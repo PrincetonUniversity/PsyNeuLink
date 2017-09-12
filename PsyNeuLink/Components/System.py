@@ -34,10 +34,10 @@ Overview
 A System is a `Composition <Composition>` that is a collection of `Processes <Process>` all of which are executed
 together. Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
 `Projections <Projection>` between Mechanisms in different Processes within the System are permitted, as are recurrent
-Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  Every
-System is associated with a `ControlMechanism <ControlMechanism>`, assigned to its `controller <System_Base.controller>`
-attribute, that can be used to control parameters of other `Mechanisms <Mechanism>` (or their `functions
-<Mechanism_Base.function>` in the System.
+Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  A System
+can also be assigned a `ControlMechanism <ControlMechanism>` as its `controller <System_Base.controller>`, that can be
+used to control parameters of other `Mechanisms <Mechanism>` (or their `functions <Mechanism_Base.function>` in the
+System.
 
 .. _System_Creation:
 
@@ -47,16 +47,17 @@ Creating a System
 Systems are created by calling the `system` command.  If no arguments are provided, a System with a single `Process`
 containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
 created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
-command, and listed in its `processes <System_Base.processes>` attribute.   Whenever a System is created, a
-`ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller <System_Base.controller>`.
-The `controller <System_Base.controller>` can be specified by assigning an existing ControlMechanism to the
-**controller** argument of the `system` command, or specifying a class of ControlMechanism; if none is specified,
-a `DefaultControlMechanism` is created.
+command, and listed in its `processes <System_Base.processes>` attribute.
 
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
    must be included in the **processes** argument of the `system` command.
+
+A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
+existing `ControlMechanism`, or a class of ControlMechanism in which case the ControlMechanism will be created.  In
+either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  See
+`System_Control` for additional information.
 
 
 .. _System_Structure:
@@ -165,14 +166,12 @@ additional details).
 Control
 ~~~~~~~
 
-Every System is assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
+A System can be assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
 control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function  <Mechanism.function>`.
 Although any number of ControlMechanism can be assigned to and executed within a System, a System can have only one
 `controller <System_Base.controller>`, that is executed after all of the other Components in the System have been
-executed, including any other ControlMechanisms (see `System Execution <System_Execution>`). If the **controller**
-argument is not specified in System's constructor (or the `system` command), a `DefaultControlMechanism` is created
-and assigned as the `controller <System_Base.controller>` for the System.  When a ControlMechanism is assigned to or
-created by a System, it inherits specifications made for the System as follows:
+executed, including any other ControlMechanisms (see `System Execution <System_Execution>`). When a ControlMechanism
+is assigned to or created by a System, it inherits specifications made for the System as follows:
 
   * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
     that may have already been specified for the ControlMechanism or its `objective_mechanism
@@ -413,7 +412,7 @@ def system(default_variable=None,
            processes:list=[],
            scheduler=None,
            initial_values:dict={},
-           controller=SystemDefaultControlMechanism,
+           controller=None,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            control_signals:tc.optional(list)=None,
@@ -430,7 +429,7 @@ def system(default_variable=None,
     processes=None,                           \
     scheduler=None,                           \
     initial_values=None,                      \
-    controller=SystemDefaultControlMechanism, \
+    controller=None,                          \
     enable_controller=:keyword:False,         \
     monitor_for_control=None,                 \
     control_signals=None,                     \
@@ -555,7 +554,7 @@ class System_Base(System):
         default_variable=None,                    \
         processes=None,                           \
         initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
+        controller=None,                          \
         enable_controller=:keyword:`False`,       \
         monitor_for_control=None,                 \
         control_signals=None,                     \
@@ -587,7 +586,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: SystemDefaultControlMechanism,
+                                CONTROLLER: None
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
@@ -834,7 +833,7 @@ class System_Base(System):
                  size=None,
                  processes=None,
                  initial_values=None,
-                 controller=SystemDefaultControlMechanism,
+                 controller=None,
                  enable_controller=False,
                  monitor_for_control=None,
                  control_signals=None,
@@ -918,11 +917,12 @@ class System_Base(System):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        controller = target_set[CONTROLLER]
-        if (not isinstance(controller, ControlMechanism_Base) and
-                not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
-            raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
-                              format(controller, self.name))
+        if CONTROLLER in target_set and target_set[CONTROLLER] is not None:
+            controller = target_set[CONTROLLER]
+            if (not isinstance(controller, ControlMechanism_Base) and
+                    not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
+                raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
+                                  format(controller, self.name))
 
         for process in target_set[PROCESSES]:
             if not isinstance(process, Process):
@@ -1876,6 +1876,9 @@ class System_Base(System):
 
     def _instantiate_controller(self, control_mech_spec, context=None):
 
+        if control_mech_spec is None:
+            return
+
        # Warn for request to assign the ControlMechanism already assigned
         if control_mech_spec is self.controller and self.prefs.verbosePref:
             warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
@@ -1891,7 +1894,6 @@ class System_Base(System):
 
             # If it has NOT been assigned a System or already has another controller:
             if controller.system is None or not controller.system is self:
-
                 controller.assign_as_controller(self, context=context)
 
         # A ControlMechanism class or subclass is being used to specify the controller
@@ -2353,11 +2355,12 @@ class System_Base(System):
             mech._execution_id = self._execution_id
         for learning_mech in self.learningexecution_list:
             learning_mech._execution_id = self._execution_id
-        self.controller._execution_id = self._execution_id
-        if self.enable_controller and self.controller.input_states:
-            for state in self.controller.input_states:
-                for projection in state.all_afferents:
-                    projection.sender.owner._execution_id = self._execution_id
+        if self.controller is not None:
+            self.controller._execution_id = self._execution_id
+            if self.enable_controller and self.controller.input_states:
+                for state in self.controller.input_states:
+                    for projection in state.all_afferents:
+                        projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
