@@ -595,40 +595,39 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         """
 
         # MODIFIED 9/10/17 NEW [STILL TODO]:
-        # **MOVE THIS METHOD TO ControlMechanism
         # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
-        # **CALL _parse_monitored_values_list IN ObjectiveMechanism
-        # **IMPLEMENT LOGIC BELOW
-        # **IMPLEMENT:  System_Base._instantiate_controller()
-        #               @property for System_Base.controller, WITH setter THAT CALLS _instantiate_controller
-        # setter
         # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
-        # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents
-
-        # - IF ControlMechanism HAS ALREADY BEEN ASSIGNED TO A SYSTEM:
-        #      CALL _get_monitored_output_states_for_system() TO GET LIST OF OutputStates
-        #      IF objective_mechanism IS SPECIFIED AS A LIST:
-        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-        #          ASSIGN TO objective_mechanism ATTRIBUTE
-        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-        #          CALL _add_monitored_value() TO ADD monitored_output_states AND monitoring_input_states
-        #          ASSIGN TO objective_mechanism ATTRIBUTE
-        # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
-        #      IF objective_mechanism IS SPECIFIED AS A LIST:
-        #          CALL _parse_monitored_values_list() TO GET LIST OF OutputStates
-        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
-        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
-        #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
+        # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents INTO SINGLE TUPLE
+        # **IMPLEMENT LOGIC BELOW
         # MODIFIED 9/10/17 END
 
         monitored_output_states = None
 
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
+        #        do this by calling _get_monitored_output_states_for_system, which also gets
+        #        any OutputStates already being monitored by the ControlMechanism
         if self.system:
             monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
+            if isinstance(self.objective_mechanism, ObjectiveMechanism):
+                # FIX: FINISH THIS
+                # OBJECTIVE_NMECHANISM MUST ALREADY EXIST, SO CALL _add_monitored_value() TO ADD
+                # monitored_output_states TO ITS LIST OF INPUT_STATES BEING MONITORED,
+                #  AND THEN ASSIGN TO objective_mechanism ATTRIBUTE
+            else:
+                raise ControlMechanismError("PROGRAM ERROR:  {} being assigned as controller for {} should "
+                                            "(but does not) already have an ObjectiveMechanism assigned to its "
+                                            "objective_mechanism attribute".
+                                            format(self.name, self.system.name))
 
+        # FIX: FINISH THIS
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
+        # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
+        #      IF objective_mechanism IS SPECIFIED AS A LIST:
+        #          CALL _parse_monitored_values_list() TO GET LIST OF OutputStates
+        #          CALL CONSTRUCTOR WITH monitored_output_states AND monitoring_input_states
+        #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
+        #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         elif isinstance(self.objective_mechanism, list):
             monitored_output_states = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
 
@@ -639,10 +638,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         else:
             self.monitored_output_states = weights = exponents = None
-
-        # Assign weights and exponents to monitored_output_states_weights_and_exponents attribute
-        #    (so that it is accessible to custom functions)
-        # self.monitored_output_states_weights_and_exponents = list(zip(weights, exponents))
 
         # Create specification for ObjectiveMechanism InputStates corresponding to
         #    monitored_output_states and their exponents and weights

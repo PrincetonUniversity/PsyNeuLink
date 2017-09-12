@@ -92,28 +92,28 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
-                  # WORKS:
+                  # # WORKS:
                   # controller=EVCMechanism,
                   # monitor_for_control=[
                   #     Reward,
                   #     Decision.PROBABILITY_UPPER_THRESHOLD,
                   #     (Decision.RESPONSE_TIME, 1, -1)],
 
-                  # WORKS:
-                  controller=EVCMechanism(objective_mechanism=[
-                                                     Reward,
-                                                     Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
-                                                     (Decision.output_states[Decision.RESPONSE_TIME], 1, -1)]),
+                  # # WORKS:
+                  # controller=EVCMechanism(objective_mechanism=[
+                  #                                    Reward,
+                  #                                    Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                  #                                    (Decision.output_states[Decision.RESPONSE_TIME], 1, -1)]),
 
                   # # DOESN'T WORK SINCE Decision.XXX IS A STRING, NOT AN OutState
                   # controller=EVCMechanism(objective_mechanism=[Reward,
                   #                                              Decision.PROBABILITY_UPPER_THRESHOLD,
                   #                                              (Decision.RESPONSE_TIME, -1, 1)]),
 
-                  # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
-                  #                                    Reward,
-                  #                                    Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
-                  #                                    (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])),
+                  controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
+                                                     Reward,
+                                                     Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                                                     (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])),
 
                   enable_controller=True,
 
