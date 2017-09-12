@@ -120,6 +120,7 @@ def _llvm_build():
         print(__target_machine.emit_assembly(__mod))
 
 _field_count = 0
+_struct_count = 0
 
 def _convert_llvm_ir_to_ctype(t):
     if type(t) is ir.VoidType:
@@ -145,7 +146,9 @@ def _convert_llvm_ir_to_ctype(t):
 
             field_list.append((uniq_name, _convert_llvm_ir_to_ctype(e)))
 
-        uniq_name = _module.get_unique_name("struct")
+        global _struct_count
+        uniq_name = "struct_" + str(_struct_count)
+        _struct_count += 1
         def __init__(self, *args, **kwargs):
             ctypes.Structure.__init__(self, *args, **kwargs)
 
