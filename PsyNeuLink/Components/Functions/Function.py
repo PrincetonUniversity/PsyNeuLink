@@ -25,6 +25,7 @@ TransferMechanism Functions:
   * `LinearMatrix`
 
 Integrator Functions:
+  * `Integrator`
   * `SimpleIntegrator`
   * `ConstantIntegrator`
   * `AdaptiveIntegrator`
@@ -1626,8 +1627,8 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         # Validate variable and assign to variable, and validate params
         variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
 
-        weights = self.weights
         exponents = self.exponents
+        weights = self.weights
         operation = self.operation
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -3068,12 +3069,108 @@ class IntegratorFunction(Function_Base):
 
 class Integrator(IntegratorFunction):  # --------------------------------------------------------------------------------
     """
+    Integrator(                 \
+        default_variable=None,  \
+        rate=1.0,               \
 
-    Function that accumulates over many executions by storing its value from the most recent execution and using this
-    to compute its new value.
+        noise=0.0,              \
+        time_step_size=1.0,     \
+        initializer,     \
+        params=None,            \
+        owner=None,             \
+        prefs=None,             \
+        )
 
-    All TransferFunctions must have the attribute `previous_value`, which specifies the value of the function on the
-    previous execution, and the attribute `initializer`, which sets `previous_value` on the first execution.
+    .. _Integrator:
+
+    Integrate current value of `variable <Integrator.variable>` with its prior value.
+
+    Arguments
+    ---------
+
+    default_variable : number, list or np.array : default ClassDefaults.variable
+        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+        integrated.
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the rate of integration.  If it is a list or array, it must be the same length as
+        `variable <Integrator.default_variable>` (see `rate <Integrator.rate>` for details).
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        specifies random value to be added in each call to `function <Integrator.function>`. (see
+        `noise <Integrator.noise>` for details).
+
+    time_step_size : float : default 0.0
+        determines the timing precision of the integration process when `integration_type <Integrator.integration_type>`
+        is set to DIFFUSION (see `time_step_size <Integrator.time_step_size>` for details.
+
+    initializer float, list or 1d np.array : default 0.0
+        specifies starting value for integration.  If it is a list or array, it must be the same length as
+        `default_variable <Integrator.default_variable>` (see `initializer <Integrator.initializer>` for details).
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value some portion of which (determined by `rate <Integrator.rate>`) that will be
+        added to the prior value;  if it is an array, each element is independently integrated.
+
+    integration_type : [**NEEDS TO BE SPECIFIED**] : default [**NEEDS TO BE SPECIFIED**]
+        [**NEEDS TO BE SPECIFIED**]
+
+    rate : float or 1d np.array
+        determines the rate of integration based on current and prior values.  If integration_type is set to ADAPTIVE,
+        all elements must be between 0 and 1 (0 = no change; 1 = instantaneous change). If it has a single element, it
+        applies to all elements of `variable <Integrator.variable>`;  if it has more than one element, each element
+        applies to the corresponding element of `variable <Integrator.variable>`.
+
+    noise : float, function, list, or 1d np.array
+        specifies random value to be added in each call to `function <Integrator.function>`.
+
+        If noise is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If noise is
+        specified as a single float or function, while `variable <Integrator.variable>` is a list or array,
+        noise will be applied to each variable element. In the case of a noise function, this means that the function
+        will be executed separately for each variable element.
+
+        Note that in the case of DIFFUSION, noise must be specified as a float (or list or array of floats) because this
+        value will be used to construct the standard DDM probability distribution. For all other types of integration,
+        in order to generate random noise, we recommend that you instead select a probability distribution function
+        (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
+        its distribution on each execution. If noise is specified as a float or as a function with a fixed output (or a
+        list or array of these), then the noise will simply be an offset that remains the same across all executions.
+
+    initializer : 1d np.array or list
+        determines the starting value for integration (i.e., the value to which
+        `previous_value <Integrator.previous_value>` is set.
+
+        If initializer is a list or array, it must be the same length as `variable <Integrator.default_variable>`. If
+        initializer is specified as a single float or function, while `variable <Integrator.variable>` is a list or
+        array, initializer will be applied to each variable element. In the case of an initializer function, this means
+        that the function will be executed separately for each variable element.
+
+    previous_value : 1d np.array : default ClassDefaults.variable
+        stores previous value with which `variable <Integrator.variable>` is integrated.
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
 
     """
 
@@ -6951,7 +7048,7 @@ class BackPropagation(LearningFunction):
 
     learning_rate : float
         the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
-        `process <Process.learning_Rate>` and/or `system <System_Base.learning_rate>` to which the function's  `owner
+        `process <Process.learning_Rate>` and/or `system <System.learning_rate>` to which the function's  `owner
         <BackPropagation.owner>` belongs.  If it is `None`, then the learning_rate specified for the process to
         which the `owner <BackPropagationowner>` belongs is used;  and, if that is `None`, then the learning_rate for
         the system to which it belongs is used. If all are `None`, then the
