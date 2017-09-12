@@ -641,4 +641,6 @@ SIMPLE = 'scaled'
 ADAPTIVE = 'adaptive'
 DIFFUSION = 'diffusion'
 
+NETWORK = 'network'
+
 #endregion

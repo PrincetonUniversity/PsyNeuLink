@@ -1058,6 +1058,8 @@ class Mechanism_Base(Mechanism):
         """
 
         # Forbid direct call to base class constructor
+        # this context stuff is confusing: when do I use super().__init__(context=self)
+        # and when do I use super().__init__(context=context)?
         if context is None or (not isinstance(context, type(self)) and not VALIDATE in context):
             # raise MechanismError("Direct call to abstract class Mechanism() is not allowed; "
                                  # "use mechanism() or one of the following subclasses: {0}".
