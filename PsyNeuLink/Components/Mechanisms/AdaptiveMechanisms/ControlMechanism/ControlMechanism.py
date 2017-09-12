@@ -106,7 +106,7 @@ When a ControlMechanism is created automatically as part of a `System <System_Cr
 
 In all cases, the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
 <ControlMechanism_Base.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
-ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Structure>` to the ControlMechanism's `primary
+ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's `primary
 InputState <InputState_Primary>`.
 
 
@@ -157,7 +157,7 @@ Input
 A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
 input to the ControlMechanism's `function <ControlMechanism_Base.function>`, that determines the ControlMechanism's
 `allocation_policy <ControlMechanism_Base.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
-via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Structure>` of an `ObjectiveMechanism`.
+via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
 `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism are listed in the ControlMechanism's `monitored_output_states
@@ -547,6 +547,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                         continue
                     if isinstance(spec, tuple):
                         spec = spec[0]
+                    if isinstance(spec, dict):
+                        spec = spec[MECHANISM]
                     if isinstance(spec, (OutputState, Mechanism_Base)):
                         spec = spec.name
                     if not isinstance(spec, str):

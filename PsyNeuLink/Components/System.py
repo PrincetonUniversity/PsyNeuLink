@@ -1902,12 +1902,9 @@ class System_Base(System):
             # Instantiate controller from class specification using:
             #   monitored_values for System to specify its objective_mechanism (as list of OutputStates to be monitored)
             #   ControlSignals for System returned by _get_system_control_signals()
-            controller = control_mech_spec(system=self,
-                                           objective_mechanism=self._get_monitored_output_states_for_system(
-                                                                                                      context=context),
-                                           # objective_mechanism=self.monitor_for_control,
-                                           control_signals=self._get_control_signals_for_system(self.control_signals,
-                                                                                                context=context))
+            controller = control_mech_spec(
+                          system=self,objective_mechanism=self._get_monitored_output_states_for_system(context=context),
+                          control_signals=self._get_control_signals_for_system(self.control_signals, context=context))
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
@@ -2057,7 +2054,7 @@ class System_Base(System):
                            format(self.name, option_specs))
 
         # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
-        # Assign outputStates to monitored_output_states
+        # Assign OutputStates to monitored_output_states
         monitored_output_states = []
 
         # Notes:
@@ -2076,8 +2073,6 @@ class System_Base(System):
             # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
             #     to assign outputStates to monitored_output_states
 
-            mech_specs = []
-            output_state_specs = []
             local_specs = controller_and_system_specs.copy()
             option_spec = ctlr_or_sys_option_spec
 
@@ -2126,9 +2121,8 @@ class System_Base(System):
                     raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
                                    format(mech.name, option_specs))
 
-            # PARSE OUTPUT STATE'S SPECS
+            # PARSE OutputState'S SPECS
 
-            # for output_state_name, output_state in list(mech.outputStates.items()):
             for output_state in mech.output_states:
 
                 # Get MONITOR_FOR_CONTROL specification from OutputState

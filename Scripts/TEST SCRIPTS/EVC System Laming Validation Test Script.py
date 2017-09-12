@@ -92,12 +92,12 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
-                  # WORKS: [BUT WHY DOES IT ALLOW OUTPUTSTATES TO BE SPECIFIED JUST BY GENERIC NAME?]
-                  controller=EVCMechanism,
-                  monitor_for_control=[
-                      Reward,
-                      Decision.PROBABILITY_UPPER_THRESHOLD,
-                      (Decision.RESPONSE_TIME, 1, -1)],
+                  # # WORKS: [BUT WHY DOES IT ALLOW OUTPUTSTATES TO BE SPECIFIED JUST BY GENERIC NAME?]
+                  # controller=EVCMechanism,
+                  # monitor_for_control=[
+                  #     Reward,
+                  #     Decision.PROBABILITY_UPPER_THRESHOLD,
+                  #     (Decision.RESPONSE_TIME, 1, -1)],
 
                   # # WORKS:
                   # controller=EVCMechanism(objective_mechanism=[
@@ -110,6 +110,15 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   #                                    Reward,
                   #                                    Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
                   #                                    (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])),
+
+                  # # WORKS:
+                  controller=EVCMechanism(objective_mechanism=[Reward,
+                                                               {MECHANISM: Decision,
+                                                                OUTPUT_STATE: Decision.PROBABILITY_UPPER_THRESHOLD},
+                                                               {MECHANISM: Decision,
+                                                                OUTPUT_STATE: Decision.RESPONSE_TIME,
+                                                                WEIGHT: 1,
+                                                                EXPONENT: -1}]),
 
                   # # DOESN'T WORK SINCE Decision.XXX IS A STRING, NOT AN OutState
                   # controller=EVCMechanism(objective_mechanism=[Reward,

@@ -98,7 +98,7 @@ ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
 Like any ControlMechanism, an EVCMechanism receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Structure>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
+<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
 <InputStatePrimary>` (see for additional details).  By default, the EVCMechanism creates an ObjectiveMechanism
 that takes the product of the `value <OutputState.value>`\\s of the OutputStates it monitors.  The result is used by its
 `function <EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
