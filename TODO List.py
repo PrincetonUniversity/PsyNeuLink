@@ -56,7 +56,7 @@
 
 # TASKS:
 #  0) IMPLEMENT: Composition
-#       Assign projections for ObjectiveMechanisms, LearningMechanisms, ControlMechanisms, etc.
+#       Assign projections for ObjectiveMechanisms, LearningMechanism, ControlMechanism, etc.
 #       Validate that all items are in the same Composition
 #       add_projection_to and add_projection_from methods
 #       methods in LearningAuxilliary
@@ -404,8 +404,8 @@
 #             Note: multiple GatingProjections can be assigned to the same GatingSignal to achieve "divergent gating"
 #                   (that is, gating of many states with a single value -- e.g., LC)
 # DOCUMENTATION: revise LearningMechanism docstring to include output_state attribute, and describe situation with
-#                    (multiple possible) LearningSignal entries, their relatioship to learing_signal attribute, and
-#                    the ERROR_SIGNAL OutputState.
+#                    (multiple possible) LearningSignal entries, their relatioship to learning_signal attribute, and
+#                    the OUTCOME OutputState.
 # DOCUMENTATION: add output_states to attribute in docstring for ControlMechanism and GatingMechanism
 # DOCUMENTATION: add section on LearningSignals to LearningMechanism docstring:
 #                   note that default (and most common case) is for a single LearningSignal
@@ -618,7 +618,7 @@
 #                  System
 # IMPLEMENT: runtime_params FOR learning mechanisms in system (CURRENTLY ONLY SUPPORTS learning_rate);
 #            NEED TO IMPLEMENT SOME WAY OF SPECIFYING A LearningMechanism IN A mech_tuple,
-#            (SINCE LearningMechanisms ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
+#            (SINCE LearningMechanism ARE NOT CURRENTLY SPECIFIABLE IN A PROCESS' pathway ATTRIBUTE)
 #            [OR DOCUMENT THAT THIS IS NOT SUPPORTED]
 
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --

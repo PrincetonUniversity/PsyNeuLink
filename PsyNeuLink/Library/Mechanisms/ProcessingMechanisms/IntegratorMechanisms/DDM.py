@@ -23,21 +23,25 @@ Overview
 The DDM Mechanism implements the "Drift Diffusion Model" (also know as the Diffusion Decision, Accumulation to Bound,
 Linear Integrator, and Wiener Process First Passage Time Model [REFS]). This corresponds to a continuous version of
 the sequential probability ratio test (SPRT [REF]), that is the statistically optimal procedure for two alternative
-forced choice (TAFC) decision making ([REF]).  It can be executed analytically using one of two solutions (`TRIAL`
-mode), or integrated numerically (`integration mode <DDM_Integration_Mode>`).
+forced choice (TAFC) decision making ([REF]).
+
+The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
+solutions and path integration (see `DDM_Modes` below for more about these options.)
 
 .. _DDM_Creation:
 
 Creating a DDM Mechanism
 -----------------------------
 A DDM Mechanism can be instantiated directly by calling its constructor, or by using the `mechanism` command and
-specifying DDM as its **mech_spec** argument.  The analytic solution used `analytic mode <DDM_Analytic_Mode>` is
-selected using the `function <DDM.function>` argument, which can be simply the name of a DDM function (first example
-below), or a call to the function with arguments specifying its parameters (second example below; see `DDM_Execution`
-for a description of DDM function parameters)::
+specifying DDM as its **mech_spec** argument.  The model implementation is selected using the `function <DDM.function>`
+argument. The function selection can be simply the name of a DDM function::
 
     my_DDM = DDM(function=BogaczEtAl)
+
+or a call to the function with arguments specifying its parameters::
+
     my_DDM = DDM(function=BogaczEtAl(drift_rate=0.2, threshold=1.0))
+
 
 COMMENT:
 .. _DDM_Input:
@@ -61,42 +65,61 @@ Structure
 
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism has a single `InputState`, the
 `value <DDM.value>` of which is assigned to the **input** specified by its `execute <Mechanism_Base.execute>` or `run
-<Mechanism_Base.run>` methods, and that is used as the **drift_rate** for the process.  That parameter, along with all
+<Mechanism_Base.run>` methods, which represents the stimulus for the process.  That parameter, along with all
 of the others for the DDM, must be assigned as parameters of the DDM's `function <DDM.function>` (see examples under
 `DDM_Modes` below, and individual `Functions <Function>` for additional details).
 
-The decision process can be configured to operate in two different `modes <DDM_modes>`, as determined by the assignment
-made to its `function <DDM.function>`. In the `analytic mode` <DDM_Analytic_Mode>` it generates a single estimated for
-the process;  in the `path integration mode <DDM_Integration_Mode>`, it carries out step-wise integration of the Process
-(see `DDM_Modes` and `DDM_Execution` for additional details).
+The DDM Mechanism can generate two different types of results depending on which function is selected. When a
+function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
+When the path integration function is selected, the mechanism carries out step-wise integration of the process; each
+execution of the mechanism computes one step. (see `DDM_Modes` and `DDM_Execution` for additional details).
 
-The `value <DDM.value>` of the DDM Mechanism has six  items. The first two of these are always assigned, and represented
-by two `OutputStates <OutputState>` in the DDM's output_states <DDM.output_states>` attribute: `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. Other items of its `value <DDM.value>`, and
-corresponding OutputStates in its `output_states <DDM.output_states>` attribute, may also be assigned, depending on the
-`function <DDM.function>` (and corresponding mode of operation) that has been specified, as described below. Unassigned
-items of the DDM's `value <DDM.value>` attribute are given the value `None`. The set of `output_states
-<DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of `Standard OutputStates
-<DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its constructor.
+The `value <DDM.value>` of the DDM Mechanism may have up to six items. The first two of these are always assigned, and
+are represented by the DDM Mechanism's two default `output_states <DDM.output_states>`: `DECISION_VARIABLE
+<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`. The other `output_states <DDM.output_states>` may be
+assigned depending on (1) whether the selected function produces those quantities and (2) customization.
+
++---------------------------------+-----------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|**Function**                     |**Type**   | **Output States**                                                                                                                                                    |
+|                                 |           +------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|                                 |           |`DECISION_VARIABLE      |`RESPONSE_TIME      |`PROBABILITY_UPPER_THRESHOLD      |`PROBABILITY_LOWER_THRESHOLD       |`RT_CORRECT_MEAN      |`RT_CORRECT_VARIANCE      |
+|                                 |           |<DDM_DECISION_VARIABLE>`|<DDM_RESPONSE_TIME>`|<DDM_PROBABILITY_UPPER_THRESHOLD>`|<DDM_PROBABILITY_LOWER_THRESHOLD>` |<DDM_RT_CORRECT_MEAN>`|<DDM_RT_CORRECT_VARIANCE>`|
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`BogaczEtAl <BogaczEtAl>`        |Analytic   |     X                  |   X                |     X                            |     X                             |                      |                          |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`NavarroAndFuss <NavarroAndFuss>`|Analytic   |     X                  |   X                |     X                            |     X                             |         X            |             X            |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+|`DriftDiffusionIntegrator        |Path       |                        |                    |                                  |                                   |                      |                          |
+|<DriftDiffusionIntegrator>`      |Integration|     X                  |   X                |                                  |                                   |                      |                          |
++---------------------------------+-----------+------------------------+--------------------+----------------------------------+-----------------------------------+----------------------+--------------------------+
+
+The set of `output_states <DDM_output_states>` assigned can be customized by selecting ones from the DDM's set of
+`Standard OutputStates <DDM_Standard_OutputStates>`), and specifying these in the **output_states** argument of its
+constructor. Some `OutputStates <OutputState>`, or elements of `value <DDM.value>`, represent slightly different quantities
+depending on the function in which they are computed. See `Standard OutputStates <DDM_Standard_OutputStates>` for more
+details.
 
 .. _DDM_Modes:
 
-DDM Modes of Operation
+DDM Function Types
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. _DDM_Analytic_Mode:
 
-Analytic Mode
-^^^^^^^^^^^^^
+Analytic Solutions
+^^^^^^^^^^^^^^^^^^
 
-This is used when one of the two `Functions <Function>` that calculate an analytic solution -- `BogaczEtAl <BogaczEtAl>`
-or `NavarroAndFuss <NavarroAndFuss>` -- is specified as the Mechanism's `function <DDM.function>`.  It generates a
-single estimate of the outcome for the decision process (see `DDM_Execution` for details).  In addition to
-`DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions return an accuracy
-value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>` OutputState), and an error
-rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>` OutputState;  the `NavarroAndFuss
-<NavarroAndFuss>` Function also returns expected values for mean correct response time (`RT_CORRECT_MEAN
-<DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+The two Drift Diffusion Model `Functions <Function>` that calculate analytic solutions are `BogaczEtAl <BogaczEtAl>`
+and `NavarroAndFuss <NavarroAndFuss>`. When one of these functions is specified as the DDM Mechanism's
+`function <DDM.function>`, the mechanism generates a single estimate of the outcome for the decision process (see
+`DDM_Execution` for details).
+
+In addition to `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, both Functions
+return an accuracy value (represented in the `PROBABILITY_UPPER_THRESHOLD <DDM_PROBABILITY_UPPER_THRESHOLD>`
+OutputState), and an error rate value (in the `PROBABILITY_LOWER_THRESHOLD <DDM_PROBABILITY_LOWER_THRESHOLD>`
+OutputState;  the `NavarroAndFuss <NavarroAndFuss>` Function also returns expected values for mean correct response time
+(`RT_CORRECT_MEAN <DDM_RT_CORRECT_MEAN>` and variance of correct response times (`RT_CORRECT_VARIANCE <DDM_RT_CORRECT_VARIANCE>`.
+
 Examples for each, that illustrate all of their parameters, are shown below:
 
 `BogaczEtAl <BogaczEtAl>` Function::
@@ -106,8 +129,7 @@ Examples for each, that illustrate all of their parameters, are shown below:
                                                 threshold=30.0,
                                                 noise=1.5,
                                                 t0 = 2.0),
-                            time_scale= TimeScale.TRIAL,
-                            name='MY_DDM_BogaczEtAl')
+                            name='my_DDM_BogaczEtAl')
 
 `NavarroAndFuss <NavarroAndFuss>` Function::
 
@@ -116,31 +138,25 @@ Examples for each, that illustrate all of their parameters, are shown below:
                                                         threshold=30.0,
                                                         noise=1.5,
                                                         t0 = 2.0),
-                                time_scale= TimeScale.TRIAL,
-                                name='MY_DDM_NavarroAndFuss')
+                                name='my_DDM_NavarroAndFuss')
 
 .. _DDM_Integration_Mode:
 
-Path Integration Mode
-~~~~~~~~~~~~~~~~~~~~~
+Path Integration
+^^^^^^^^^^^^^^^^
 
-COMMENT:
-   IS THIS MORE CORRECT FOR THE BELOW:
-        This is used when `DriftDiffusionIntegrator` is specified as the DDM's `function <DDM.function>`
-        attribute.
-COMMENT
-
-This is used when an `Integrator` Function with an `integration_type <Integrator.integration_type>` of *DIFFUSION* is
-specified as the DDM's `function <DDM.function>` attribute.  In this case, the DDM Mechanism uses the `Euler method
-<https://en.wikipedia.org/wiki/Euler_method>`_ to carry out numerical step-wise integration of the decision process
-(see `Execution <DDM_Execution>` below).  In this mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and
-`RESPONSE_TIME <DDM_RESPONSE_TIME>` are returned by default.
+The Drift Diffusion Model `Function <Function>` that calculates a path integration is `DriftDiffusionIntegrator
+<DriftDiffusionIntegrator>`. The DDM Mechanism uses the `Euler method <https://en.wikipedia.org/wiki/Euler_method>`_ to
+carry out numerical step-wise integration of the decision process (see `Execution <DDM_Execution>` below).  In this
+mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` are available.
 
 `Integrator <Integrator>` Function::
 
-    my_DDM_TimeStep = DDM(function=DriftDiffusionIntegrator(noise=0.5, initializer = 0.0),
-                          time_scale=TimeScale.TIME_STEP,
-                          name='My_DDM_TimeStep')
+    my_DDM_path_integrator = DDM(function=DriftDiffusionIntegrator(noise=0.5,
+                                                            initializer = 1.0,
+                                                            t0 = 2.0,
+                                                            rate = 3.0),
+                          name='my_DDM_path_integrator')
 
 COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
@@ -251,14 +267,17 @@ When a DDM Mechanism is executed, it computes the decision process either `analy
 `numerical step-wise integration <DDM_Integration_Mode>` of its path.  The method used is determined by its `function
 <DDM.function>` (see `DDM_Modes`). The DDM's `function <DDM.function>` always returns values for the `DECISION_VARIABLE
 <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, and assigns these as the first two items of its `value
-<DDM.value>` attribute, irrespective of its `mode <DDM_Modes>` of operation. The mode of operation is determined by
-the Function assigned to its `function <DDM.function>` attribute (see `DDM_Structure`). In the `analytic mode
-<DDM_Analytic_Mode>` the same set of values is returned for every execution, that are determined entirely by the set of
-parameters passed to its `function <DDM.function>`;  generally, this corresponds to a `TRIAL` of execution.  In the
-`path intergration mode <DDM_Integration_Mode>`, a single step of integration is conducted each time the Mechanism is
-executed; generally, this corresponds to a `TIME_STEP` of execution.  In addition to `DECISION_VARIABLE
-<DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`, other values are returned by the different modes and
-functions (see `DDM_Modes` and `Standard OutputStates  <DDM_Standard_OutputStates>`).
+<DDM.value>` attribute, irrespective of its function.
+
+When an `analytic <DDM_Analytic_Mode>` function is selected, the same set of values is returned for every execution.
+The returned values are determined entirely by the set of parameters passed to its `function <DDM.function>`.
+
+When the `path integration <DDM_Integration_Mode>`, function is selected, a single step of integration is conducted each
+time the Mechanism is executed. The returned values accumulate on every execution.
+
+The analytic functions return a final positon and time of the model, along with other statistics, where as the path
+integration function returns intermediate position and time values. The two types of functions can be thought of as
+happening on different time scales: trial (analytic) and time step (path integration).
 
 .. _DDM_Class_Reference:
 
@@ -429,20 +448,20 @@ class DDM(ProcessingMechanism_Base):
             DDM is a subclass Type of the Mechanism Category of the Component class
             It implements a Mechanism for several forms of the Drift Diffusion Model (DDM) for
                 two alternative forced choice (2AFC) decision making:
-                - Bogacz et al. (2006) analytic solution (TimeScale.TRIAL mode -- see kwBogaczEtAl option below):
+                - Bogacz et al. (2006) analytic solution:
                     generates error rate (ER) and decision time (DT);
                     ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-                - Navarro and Fuss (2009) analytic solution (TImeScale.TRIAL mode -- see kwNavarrosAndFuss:
+                - Navarro and Fuss (2009) analytic solution:
                     generates error rate (ER), decision time (DT) and their distributions;
                     ER is used to stochastically generate a decision outcome (+ or - valued) on every run
-                - stepwise integrator that simulates each step of the integration process (TimeScale.TIME_STEP mode)
+                - stepwise integrator that simulates each step of the integration process
         Class attributes
         ----------------
             + componentType (str): DDM
             + classPreference (PreferenceSet): DDM_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.TYPE
             + ClassDefaults.variable (value):  STARTING_POINT
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
+            + paramClassDefaults (dict): {
                                           kwDDM_AnalyticSolution: kwBogaczEtAl,
                                           FUNCTION_PARAMS: {DRIFT_RATE:<>
                                                                   STARTING_POINT:<>
@@ -481,14 +500,6 @@ class DDM(ProcessingMechanism_Base):
     function : IntegratorFunction : default BogaczEtAl
         specifies the function to use to `execute <DDM_Execution>` the decision process; determines the mode of
         execution (see `function <DDM.function>` and `DDM_Modes` for additional information).
-
-    COMMENT:
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the time_step or trial time scale.
-            This must be set to `TimeScale.TRIAL` to use one of the analytic solutions specified by
-            `function <DDM.function>`. This  must be set to `TimeScale.TIME_STEP` to numerically (path) integrate the
-            decision variable.
-    COMMENT
 
     params : Optional[Dict[param keyword, param value]]
         a dictionary that can be used to specify parameters of the Mechanism, parameters of its `function
@@ -550,11 +561,6 @@ class DDM(ProcessingMechanism_Base):
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
         **output_states** argument of the DDM's constructor (see `DDM Standard OutputStates
         <DDM_Standard_OutputStates>`).
-
-    COMMENT:
-        time_scale : TimeScale : default TimeScale.TRIAL
-            determines the `TimeScale` at which the decision process is executed.
-    COMMENT
 
     name : str : default DDM-<index>
         the name of the Mechanism.
@@ -660,7 +666,7 @@ class DDM(ProcessingMechanism_Base):
                                   size=size,
                                   # context=context)
                                   context=self)
-
+        self._instantiate_plotting_functions()
         # # TEST PRINT
         # print("\n{} user_params:".format(self.name))
         # for param in self.user_params.keys():
@@ -726,44 +732,6 @@ class DDM(ProcessingMechanism_Base):
             # number of seconds to wait before next point is plotted
             time.sleep(.1)
 
-
-        #
-        # import matplotlib.pyplot as plt
-        # plt.ion()
-        #
-        # # # Select a random seed to ensure that the test run will be the same as the real run
-        # seed_value = np.random.randint(0, 100)
-        # np.random.seed(seed_value)
-        # variable = stimulus
-        #
-        # result_check = 0
-        # time_check = 0
-        #
-        # while abs(result_check) < threshold:
-        #     time_check += 1
-        #     result_check = self.get_axes_function(variable, context='plot')
-        #
-        # # Re-set random seed for the real run
-        # np.random.seed(seed_value)
-        # axes = plt.gca()
-        # axes.set_xlim([0, time_check])
-        # axes.set_xlabel("Time Step", weight="heavy", size="large")
-        # axes.set_ylim([-1.25 * threshold, 1.25 * threshold])
-        # axes.set_ylabel("Position", weight="heavy", size="large")
-        # plt.axhline(y=threshold, linewidth=1, color='k', linestyle='dashed')
-        # plt.axhline(y=-threshold, linewidth=1, color='k', linestyle='dashed')
-        # plt.plot()
-        #
-        # result = 0
-        # time = 0
-        # while abs(result) < threshold:
-        #     time += 1
-        #     result = self.plot_function(variable, context='plot')
-        #     plt.plot(time, float(result), '-o', color='r', ms=2.5)
-        #     plt.pause(0.01)
-        #
-        # plt.pause(10000)
-
     # MODIFIED 11/21/16 NEW:
     def _validate_variable(self, variable, context=None):
         """Ensures that input to DDM is a single value.
@@ -791,32 +759,16 @@ class DDM(ProcessingMechanism_Base):
         if FUNCTION in target_set:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
-            function = target_set[FUNCTION]
-            if isinstance(function, method_type):
-                function = function.__self__.__class__
+            fun = target_set[FUNCTION]
+            if isinstance(fun, method_type):
+                fun = fun.__self__.__class__
 
-            if not function in functions:
-                function_names = [function.componentName for function in functions]
+            if not fun in functions:
+                function_names = [function.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
 
-            if self.timeScale == TimeScale.TRIAL:
-                if function == Integrator:
-                    raise DDMError("In TRIAL mode, the {} param of {} cannot be Integrator. Please choose an analytic "
-                                   "solution for the function param: BogaczEtAl or NavarroAndFuss.".
-                                   format(FUNCTION, self.name))
-            else:
-                if function != DriftDiffusionIntegrator:
-                    raise DDMError("In TIME_STEP mode, the {} param of {} "
-                                   "must be DriftDiffusionIntegrator.".
-                                   format(FUNCTION, self.name))
-                else:
-                    self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                        noise=self.function_params['noise'], context='plot').function
-                    self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
-                                                    noise=self.function_params['noise'], context='plot').function
-
-            if not isinstance(function, NavarroAndFuss) and OUTPUT_STATES in target_set:
+            if not isinstance(fun, NavarroAndFuss) and OUTPUT_STATES in target_set:
                 # OUTPUT_STATES is a list, so need to delete the first, so that the index doesn't go out of range
                 # if DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value in target_set[OUTPUT_STATES]:
                 #     del target_set[OUTPUT_STATES][DDM_OUTPUT_INDEX.RT_CORRECT_VARIANCE.value]
@@ -844,6 +796,16 @@ class DDM(ProcessingMechanism_Base):
 
         super()._instantiate_attributes_before_function(context=context)
 
+    def _instantiate_plotting_functions(self, context=None):
+        if "DriftDiffusionIntegrator" in str(self.function):
+            self.get_axes_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                              noise=self.function_params['noise'],
+                                                              context='plot').function
+            self.plot_function = DriftDiffusionIntegrator(rate=self.function_params['rate'],
+                                                          noise=self.function_params['noise'],
+                                                          context='plot').function
+
+
     def _execute(self,
                  variable=None,
                  runtime_params=None,
@@ -867,7 +829,6 @@ class DDM(ProcessingMechanism_Base):
             + kwDDM_Bias (float)
             + NON_DECISION_TIME (float)
             + NOISE (float)
-        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
         Returns the following values in self.value (2D np.array) and in
             the value of the corresponding outputState in the self.outputStates dict:
@@ -879,7 +840,6 @@ class DDM(ProcessingMechanism_Base):
         :param self:
         :param variable (float)
         :param params: (dict)
-        :param time_scale: (TimeScale)
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
@@ -892,7 +852,7 @@ class DDM(ProcessingMechanism_Base):
             variable = self._update_variable(self.instance_defaults.variable)
 
         # EXECUTE INTEGRATOR SOLUTION (TIME_STEP TIME SCALE) -----------------------------------------------------
-        if self.timeScale == TimeScale.TIME_STEP:
+        if isinstance(self.function.__self__, Integrator):
 
             result = self.function(variable, context=context)
             if INITIALIZING not in context:
@@ -901,11 +861,11 @@ class DDM(ProcessingMechanism_Base):
                 logger.info('{0} {1} has reached threshold {2}'.format(type(self).__name__, self.name, self.threshold))
                 self.is_finished = True
 
-            return np.array([result, [0.0], [0.0], [0.0]])
+            return np.array([result, self.function_object.previous_time])
 
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
-        elif self.timeScale == TimeScale.TRIAL:
+        else:
 
             result = self.function(variable=variable,
                                    params=runtime_params,
@@ -938,10 +898,6 @@ class DDM(ProcessingMechanism_Base):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
 
             return return_value
-
-        else:
-            raise MechanismError("PROGRAM ERROR: unrecognized or unspecified time_scale ({}) for DDM".
-                                 format(self.timeScale))
 
             # def _out_update(self, particle, drift, noise, time_step_size, decay):
             #     ''' Single update for OU (special case l=0 is DDM)'''

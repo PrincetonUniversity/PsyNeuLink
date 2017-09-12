@@ -47,9 +47,10 @@ MappingProjections are also generated automatically in the following circumstanc
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
   * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
-    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* ``, and from the `OutputStates <OutputState>`
-    listed in the ControlMechanism's `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
-    attribute) to the ObjectiveMechanism (as described above; an `IDENTITY_MATRIX` is used for all of these).
+    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
+    <OutputState>` listed in the ControlMechanism's `monitored_output_states
+    <ControlMechanism_Base.monitored_output_states>` attribute) to the ObjectiveMechanism (as described above; an
+    `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:
 
@@ -423,7 +424,7 @@ class MappingProjection(PathwayProjection_Base):
         if sender is None or receiver is None:
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
                                                 params=params,

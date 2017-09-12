@@ -13,8 +13,8 @@ Overview
 --------
 
 A ComparatorMechanism is a subclass of `ObjectiveMechanism` that receives two inputs (a sample and a target), compares
-them using its `function <ComparatorMechanism.function>`, and places the calculted discrepancy between the two in its
-*ERROR_SIGNAL* `output_state <ComparatorMechanism.output_state>`.
+them using its `function <ComparatorMechanism.function>`, and places the calculated discrepancy between the two in its
+*OUTCOME* `output_state <ComparatorMechanism.output_state>`.
 
 .. _ComparatorMechanism_Creation:
 
@@ -22,7 +22,7 @@ Creating a ComparatorMechanism
 ------------------------------
 
 ComparatorMechanisms are generally created automatically when other PsyNeuLink components are created (such as
-`LearningMechanisms <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
+`LearningMechanism <LearningMechanism_Creation>`.  A ComparatorMechanism can also be created directly by calling
 its constructor.  Its **sample** and **target** arguments are used to specify the OutputStates that provide the
 sample and target inputs, respectively (see `ObjectiveMechanism_Monitored_States` for details concerning their
 specification, which are special versions of an ObjectiveMechanism's **monitored_values** argument).  When the
@@ -64,7 +64,7 @@ target InputStates.  By default, it uses a `LinearCombination` function, assigni
 <LinearCombination.weight>` of *-1* and the target a `weight <LinearCombination.weight>` of *1*, so that the sample is
 subtracted from the target.  However, the `function <ComparatorMechanism.function>` can be customized, so long as it is
 replaced with one that takes two arrays with the same format as its inputs, and generates a similar array as its result.
-The result is assigned as the value of the Comparator Mechanism's *ERROR_SIGNAL* (`primary <OutputState_Primary>`)
+The result is assigned as the value of the Comparator Mechanism's *OUTCOME* (`primary <OutputState_Primary>`)
 OutputState.
 
 .. _ComparatorMechanism_Function:
@@ -74,7 +74,7 @@ Execution
 
 When an ComparatorMechanism is executed, it updates its input_states with the values of the OutputStates specified
 in its **sample** and **target** arguments, and then uses its `function <ComparatorMechanism.function>` to
-compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *ERROR_SIGNAL*
+compare these.  By default, the result is assigned as to the `value <ComparatorMechanism.value>` of its *OUTCOME*
 `output_state <ComparatorMechanism.output_state>`, and as the first item of the Mechanism's
 `output_values <ComparatorMechanism.output_values>` attribute.
 
@@ -129,14 +129,18 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ObjectiveMechanism import ERROR_SIGNAL, MONITORED_VALUES, ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+    import OUTCOME, MONITORED_VALUES, ObjectiveMechanism
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, TIME_SCALE, VARIABLE, kwPreferenceSetName
+from PsyNeuLink.Globals.Keywords import CALCULATE, COMPARATOR_MECHANISM, INPUT_STATES, NAME, SAMPLE, TARGET, \
+    TIME_SCALE, \
+    VARIABLE, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
-from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric
+from PsyNeuLink.Globals.Utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, \
+    kwCompatibilityNumeric
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 SSE = 'SSE'
@@ -178,7 +182,7 @@ class ComparatorMechanism(ObjectiveMechanism):
         target,                                         \
         input_states=[SAMPLE,TARGET]                    \
         function=LinearCombination(weights=[[-1],[1]],  \
-        input_states=[ERROR_SIGNAL]                     \
+        output_states=[OUTCOME]                         \
         params=None,                                    \
         name=None,                                      \
         prefs=None)
@@ -199,8 +203,7 @@ class ComparatorMechanism(ObjectiveMechanism):
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
         Class methods:
             None
@@ -216,40 +219,33 @@ class ComparatorMechanism(ObjectiveMechanism):
     sample : OutputState, Mechanism, value, or string
         specifies the value to compare with the `target` by the `function <ComparatorMechanism.function>`.
 
-    target:  OutputState, Mechanism, value, or string
+    target :  OutputState, Mechanism, value, or string
         specifies the value with which the `sample` is compared by the `function <ComparatorMechanism.function>`.
 
-    input_states:  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
+    input_states :  List[InputState, value, str or dict] or Dict[] : default [SAMPLE, TARGET]
         specifies the names and/or formats to use for the values of the sample and target InputStates;
         by default they are named *SAMPLE* and *TARGET*, and their formats are match the value of the OutputStates
         specified in the **sample** and **target** arguments, respectively (see `ComparatorMechanism_Structure`
         for additional details).
 
-    function:  Function, function or method : default Distance(metric=DIFFERENCE)
+    function :  Function, function or method : default Distance(metric=DIFFERENCE)
         specifies the `function <Comparator.function>` used to compare the `sample` with the `target`.
 
-    output_states:  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
         specifies the OutputStates for the Mechanism;
 
-    params:  Optional[Dict[param keyword, param value]]
+    params :  Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
-
-    COMMENT:
-        [TBI]
-        time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
-            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-    COMMENT
 
     name:  str : default ComparatorMechanism-<index>
         a string used for the name of the Mechanism.
         If not is specified, a default is assigned by `MechanismRegistry`
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs:  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
+    prefs :  Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
         the `PreferenceSet` for Mechanism.
         If it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
         (see :doc:`PreferenceSet <LINK>` for details).
@@ -283,14 +279,14 @@ class ComparatorMechanism(ObjectiveMechanism):
 
     output_state : OutputState
         contains the `primary <OutputState_Primary>` OutputState of the ComparatorMechanism; the default is
-        its *ERROR_SIGNAL* OutputState, the value of which is equal to the `value <ComparatorMechanism.value>`
+        its *OUTCOME* OutputState, the value of which is equal to the `value <ComparatorMechanism.value>`
         attribute of the ComparatorMechanism.
 
     output_states : ContentAddressableList[OutputState]
-        contains, by default, only the *ERROR_SIGNAL* (primary) OutputState of the ComparatorMechanism.
+        contains, by default, only the *OUTCOME* (primary) OutputState of the ComparatorMechanism.
 
     output_values : 2d np.array
-        contains one item that is the value of the *ERROR_SIGNAL* OutputState.
+        contains one item that is the value of the *OUTCOME* OutputState.
 
     name : str : default ComparatorMechanism-<index>
         the name of the Mechanism.
@@ -336,7 +332,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  target:tc.optional(tc.any(OutputState, Mechanism_Base, dict, is_numeric, str))=None,
                  input_states=[SAMPLE, TARGET],
                  function=LinearCombination(weights=[[-1], [1]]),
-                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL, MSE],
+                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME, MSE],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -357,8 +353,8 @@ class ComparatorMechanism(ObjectiveMechanism):
                                          value=None)
 
         # IMPLEMENTATION NOTE: The following prevents the default from being updated by subsequent assignment
-        #                     (in this case, to [ERROR_SIGNAL, {NAME= MSE}]), but fails to expose default in IDE
-        # output_states = output_states or [ERROR_SIGNAL, MSE]
+        #                     (in this case, to [OUTCOME, {NAME= MSE}]), but fails to expose default in IDE
+        # output_states = output_states or [OUTCOME, MSE]
 
         # Create a StandardOutputStates object from the list of stand_output_states specified for the class
         if not isinstance(self.standard_output_states, StandardOutputStates):

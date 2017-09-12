@@ -83,14 +83,18 @@ the following parameters (in addition to any specified for the `function <Transf
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the input before transforming it.
     ..
-    * `time_constant <TransferMechanism.time_constant>`: if the `time_scale <TransferMechanism.time_scale>` attribute
-      is `TimeScale.TIME_STEP`, the input is exponentially time-averaged before transforming it, using the value
-      of the `time_constant <TransferMechanism.time_constant>` attribute as the rate of integration (a higher value
-      specifies a faster rate); if `time_scale <TransferMechanism.time_scale>` is `TimeScale.TRIAL`,
-      `time_constant <TransferMechanism.time_constant>` is ignored.
-    ..
     * `range <TransferMechanism.range>`: caps all elements of the `function <TransferMechanism.function>` result by
       the lower and upper values specified by range.
+    ..
+    * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input will be time-averaged before
+      passing through the function of the mechanisms. When `integrator_mode <TransferMechanism.integrator_mode>` is set
+      to True, the TransferMechanism exponentially time-averages its input before transforming it.
+    ..
+    * `time_constant <TransferMechanism.time_constant>`: if the `integrator_mode <TransferMechanism.integrator_mode>`
+      attribute is set to True, the `time_constant <TransferMechanism.time_constant>` attribute is the rate of
+      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>` is
+      False, `time_constant <TransferMechanism.time_constant>` is ignored and time-averaging does not occur.
+
 
 
 .. _Transfer_OutputState:
@@ -194,8 +198,8 @@ class TransferMechanism(ProcessingMechanism_Base):
     initial_value=None,          \
     noise=0.0,                   \
     time_constant=1.0,           \
+    integrator_mode=False,       \
     range=(float:min, float:max),\
-    time_scale=TimeScale.TRIAL,  \
     params=None,                 \
     name=None,                   \
     prefs=None)
@@ -215,7 +219,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): Transfer_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Transfer_DEFAULT_BIAS
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL}
 
         Class methods
         -------------
@@ -246,8 +249,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         or a custom function.
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input (only relevant if
-        `time_constant <TransferMechanism.time_constant>` is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if `integrator_mode
+        <TransferMechanism.integrator_mode>` is True).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
@@ -256,11 +259,10 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`::
+        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+        set to True::
 
-         result = (time_constant * current input) +
-         (1-time_constant * result on previous time_step)
+         result = (time_constant * current input) + ((1-time_constant) * result on previous time_step)
 
     range : Optional[Tuple[float, float]]
         specifies the allowable range for the result of `function <TransferMechanism.function>`:
@@ -272,11 +274,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
-        parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
         a string used for the name of the Mechanism.
@@ -312,8 +309,8 @@ class TransferMechanism(ProcessingMechanism_Base):
        THE FOLLOWING IS THE CURRENT ASSIGNMENT
     COMMENT
     initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input
-        (only relevant if `time_constant <TransferMechanism.time_constant>` parameter is not 1.0).
+        specifies the starting value for time-averaged input (only relevant if `integrator_mode
+        <TransferMechanism.integrator_mode>` is True and `time_constant <TransferMechanism.time_constant>` is not 1.0).
         :py:data:`Transfer_DEFAULT_BIAS <LINK->SHOULD RESOLVE TO VALUE>`
 
     noise : float or function : default 0.0
@@ -322,19 +319,20 @@ class TransferMechanism(ProcessingMechanism_Base):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input
-        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+        the time constant for exponential time averaging of input when the Mechanism is executed with `integrator_mode`
+        set to True::
 
-          result = (time_constant * current input) + (1-time_constant * result on previous time_step)
+          result = (time_constant * current input) + ( (1-time_constant) * result on previous time_step)
+
+    integrator_mode : boolean : default False
+        when set to True, the Mechanism time averages its input according to an exponentially weighted moving average
+        (see `time_constant <TransferMechanisms.time_constant>`).
 
     range : Optional[Tuple[float, float]]
         determines the allowable range of the result: the first value specifies the minimum allowable value
         and the second the maximum allowable value;  any element of the result that exceeds minimum or maximum
         is set to the value of `range <TransferMechanism.range>` it exceeds.  If `function <TransferMechanism.function>`
         is `Logistic`, `range <TransferMechanism.range>` is set by default to (0,1).
-
-    previous_input : float
-        the value of the `variable <TransferMechanism.variable>` on the previous execution of the Mechanism.
 
     value : 2d np.array [array(float64)]
         result of executing `function <TransferMechanism.function>`.
@@ -360,9 +358,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         ones may be included, based on the specifications made in the
         **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
         <TransferMechanism_Standard_OutputStates>`).
-
-    time_scale :  TimeScale : default TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
         the name of the Mechanism.
@@ -406,6 +401,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  initial_value=None,
                  noise=0.0,
                  time_constant=1.0,
+                 integrator_mode=False,
                  range=None,
                  output_states:tc.optional(tc.any(list, dict))=[RESULT],
                  time_scale=TimeScale.TRIAL,
@@ -429,6 +425,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   output_states=output_states,
                                                   noise=noise,
                                                   time_constant=time_constant,
+                                                  integrator_mode=integrator_mode,
                                                   time_scale=time_scale,
                                                   range=range,
                                                   params=params)
@@ -503,7 +500,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate TIME_CONSTANT:
         if TIME_CONSTANT in target_set:
             time_constant = target_set[TIME_CONSTANT]
-            if not (isinstance(time_constant, float) and 0 <= time_constant <= 1):
+            if (not (isinstance(time_constant, float) and 0 <= time_constant <= 1)) and (time_constant != None):
                 raise TransferError("time_constant parameter ({}) for {} must be a float between 0 and 1".
                                     format(time_constant, self.name))
 
@@ -633,7 +630,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             + NOISE (float)
             + TIME_CONSTANT (float)
             + RANGE ([float, float])
-        - time_scale (TimeScale): specifies "temporal granularity" with which Mechanism is executed
         - context (str)
 
         Returns the following values in self.value (2D np.array) and in
@@ -645,7 +641,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         :param self:
         :param variable (float)
         :param params: (dict)
-        :param time_scale: (TimeScale)
         :param context: (str)
         :rtype self.outputState.value: (number)
         """
@@ -658,6 +653,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         time_scale = self.time_scale
+        integrator_mode = self.integrator_mode
 
         #region ASSIGN PARAMETER VALUES
 
@@ -673,7 +669,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
 
         # Update according to time-scale of integration
-        if time_scale is TimeScale.TIME_STEP:
+        if integrator_mode:
+        # if time_scale is TimeScale.TIME_STEP:
 
             if not self.integrator_function:
 
@@ -692,8 +689,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                               context=context
 
                                                              )
-
-        elif time_scale is TimeScale.TRIAL:
+        else:
+        # elif time_scale is TimeScale.TRIAL:
             noise = self._try_execute_param(self.noise, variable)
             # formerly: current_input = self.input_state.value + noise
             # (MODIFIED 7/13/17 CW) this if/else below is hacky: just allows a nicer error message
@@ -701,11 +698,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             if (np.array(noise) != 0).any():
                 current_input = variable[0] + noise
             else:
-                current_input = variable[0]
-        else:
-            raise MechanismError("time_scale not specified for {}".format(self.__class__.__name__))
 
-        self.previous_input = current_input
+                current_input = self.variable[0]
+
+        # self.previous_input = current_input
 
         # Apply TransferMechanism function
         output_vector = self.function(variable=current_input, params=runtime_params)
@@ -726,7 +722,10 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _report_mechanism_execution(self, input, params, output):
         """Override super to report previous_input rather than input, and selected params
         """
-        print_input = self.previous_input
+        # KAM Changed 8/29/17 print_input = self.previous_input --> print_input = input
+        # because self.previous_input is not a valid attrib of TransferMechanism
+
+        print_input = input
         print_params = params.copy()
         # Only report time_constant if in TIME_STEP mode
         if params['time_scale'] is TimeScale.TRIAL:

@@ -1,26 +1,20 @@
 import numpy as np
-from PsyNeuLink.Scheduling.condition import EveryNCalls, Any, AtPass, \
-    AfterNCalls, EveryNPasses
-
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-
-from PsyNeuLink import ModulationParam
-from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
-    BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanisms \
-    .GatingMechanism import \
-    GatingMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import DDM, \
-    NOISE, THRESHOLD, TimeScale
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
     .IntegratorMechanism import \
     IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
-    .ObjectiveMechanisms.ComparatorMechanism import \
-    ComparatorMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms \
     .RecurrentTransferMechanism import \
     RecurrentTransferMechanism
+from PsyNeuLink.Scheduling.condition import EveryNCalls, Any, AfterNCalls, EveryNPasses
+
+from PsyNeuLink import ModulationParam
+from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, \
+    BogaczEtAl, DriftDiffusionIntegrator, Linear, Logistic, PROB, SoftMax
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.GatingMechanism \
+    .GatingMechanism import \
+    GatingMechanism
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import \
+    ComparatorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
     import \
     MEAN, RESULT, TransferMechanism, VARIANCE, TRANSFER_OUTPUT
@@ -32,6 +26,9 @@ from PsyNeuLink.Components.States.ModulatorySignals import ControlSignal
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Globals.Keywords import ENABLED, GAIN, NAME, INDEX, CALCULATE, \
     INTERCEPT, MECHANISM, MODULATION, GATE
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, \
+    NOISE, THRESHOLD, TimeScale
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
 
 
 def intro():

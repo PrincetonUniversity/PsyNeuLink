@@ -1,3 +1,5 @@
+
+
 Adaptive Mechanisms
 ===================
 
@@ -7,9 +9,9 @@ Adaptive Mechanisms
    :maxdepth: 1
 
    LearningMechanism
-   ControlMechanisms <ControlMechanism>
+   ControlMechanism
    GatingMechanism
 
-.. automodule:: AdaptiveMechanisms.AdaptiveMechanism
+.. automodule:: AdaptiveMechanism
    :members:
    :exclude-members: Linear, random

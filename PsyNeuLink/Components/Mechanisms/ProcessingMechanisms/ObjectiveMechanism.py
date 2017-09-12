@@ -35,8 +35,8 @@ Creating an ObjectiveMechanism
 ------------------------------
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
-AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and
-`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
+AdaptiveMechanisms such as `LearningMechanism <LearningMechanism_Creation>` and
+`ControlMechanism <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
 constructor.  Its **monitored_values** argument is used to specify the OutputStates to be monitored.  Any of the forms
 used for `specifying OutputStates <OutputState_Specification>` can be used, as well as a value of
 MonitoredOutputStateOption.  When an ObjectiveMechanism is created, an InputState is created for each of the
@@ -64,7 +64,7 @@ the InputStates to which they project are listed in the ObjectiveMechanism's
 `input_states <ObjectiveMechanism.input_states>` attribute.  The ObjectiveMechanism's
 `function <ObjectiveMechanism.function>` uses these values to compute an
 `objective (or "loss") function <https://en.wikipedia.org/wiki/Loss_function>`_, that is assigned as the value of its
-*ERROR_SIGNAL* (`primary <OutputState_Primary>`) OutputState.  By default, it uses a `LinearCombination` function to
+*OUTCOME* (`primary <OutputState_Primary>`) OutputState.  By default, it uses a `LinearCombination` function to
 sum the values of its InputStates.  However, the `function <ComparatorMechanism.function>` can be customized to
 calculate other quantities (differences, ratios, etc. -- see
 `example <ObjectiveMechanism_Weights_and_Exponents_Example>` below). It can also be replaced with any Python function
@@ -260,7 +260,7 @@ from PsyNeuLink.Scheduling.TimeScale import TimeScale
 ROLE = 'role'
 MONITORED_VALUES = 'monitored_values'
 MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
-ERROR_SIGNAL = 'error_signal'
+OUTCOME = 'outcome'
 
 # This is a convenience class that provides list of standard_output_state names in IDE
 class OBJECTIVE_OUTPUT():
@@ -269,14 +269,14 @@ class OBJECTIVE_OUTPUT():
 
     `Standard OutputStates <OutputState_Standard>` for `ObjectiveMechanism`:
 
-    .. _OBJECTIVE_MECHANISM_ERROR_SIGNAL
+    .. _OBJECTIVE_MECHANISM_OUTCOME
 
-    *ERROR_SIGNAL* : 1d np.array
+    *OUTCOME* : 1d np.array
         the value of the objective or "loss" function computed based on the
         ObjectiveMechanism's `function <ObjectiveMechanism.function>`
 
     """
-    ERROR_SIGNAL=ERROR_SIGNAL
+    OUTCOME=OUTCOME
 
 
 class ObjectiveMechanismError(Exception):
@@ -293,7 +293,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         monitored_values,             \
         input_states=None,            \
         function=LinearCombination,   \
-        output_states=[ERROR_SIGNAL], \
+        output_states=[OUTCOME],      \
         params=None,                  \
         name=None,                    \
         prefs=None)
@@ -315,8 +315,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
         Class methods:
             None
@@ -350,7 +349,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         specifies the function used to evaluate the values listed in :keyword:`monitored_values`
         (see `function <LearningMechanism.function>` for details.
 
-    output_states :  List[OutputState, value, str or dict] or Dict[] : default [ERROR_SIGNAL]
+    output_states :  List[OutputState, value, str or dict] or Dict[] : default [OUTCOME]
         specifies the OutputStates for the Mechanism;
 
     role: Optional[LEARNING, CONTROL]
@@ -361,13 +360,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
-
-    COMMENT:
-        [TBI]
-        time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
-            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-    COMMENT
 
     name : str : default ObjectiveMechanism-<index>
         a string used for the name of the Mechanism.
@@ -411,14 +403,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     output_state : OutputState
         contains the `primary OutputState <OutputState_Primary>` of the ObjectiveMechanism; the default is
-        its *ERROR_SIGNAL* OutputState (see ObjectiveMechanism_Structure), the value of which is equal to the
+        its *OUTCOME* OutputState (see ObjectiveMechanism_Structure), the value of which is equal to the
         `value <ObjectiveMechanism.value>` attribute of the ObjectiveMechanism.
 
     output_states : ContentAddressableList[OutputState]
-        contains, by default, only the *ERROR_SIGNAL* (primary) OutputState of the ObjectiveMechanism.
+        contains, by default, only the *OUTCOME* (primary) OutputState of the ObjectiveMechanism.
 
     output_values : 2d np.array
-        contains one item that is the value of the *ERROR_SIGNAL* OutputState.
+        contains one item that is the value of the *OUTCOME* OutputState.
 
     name : str : default ObjectiveMechanism-<index>
         the name of the Mechanism.
@@ -463,7 +455,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitored_values:tc.any(list, dict),
                  input_states=None,
                  function=LinearCombination,
-                 output_states:tc.optional(tc.any(list, dict))=[ERROR_SIGNAL],
+                 output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

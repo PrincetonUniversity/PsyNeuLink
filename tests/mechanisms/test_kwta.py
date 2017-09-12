@@ -1,20 +1,14 @@
-import numpy as np
 import pytest
-import typecheck
 
 from PsyNeuLink.Components.Component import ComponentError
 from PsyNeuLink.Components.Functions.Function import Linear, Logistic
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.KWTA import KWTA, KWTAError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
 from PsyNeuLink.Components.Process import process
-from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from PsyNeuLink.Globals.Keywords import RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from PsyNeuLink.Globals.Run import RunError
 from PsyNeuLink.Globals.Utilities import *
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA import KWTA, KWTAError
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
@@ -72,7 +66,7 @@ class TestKWTAInputs:
             K = KWTA(
                 name='K',
                 default_variable=['a', 'b', 'c', 'd'],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
         assert("has non-numeric entries" in str(error_text.value))
 

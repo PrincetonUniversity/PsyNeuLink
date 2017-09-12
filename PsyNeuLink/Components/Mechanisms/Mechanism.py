@@ -42,14 +42,14 @@ types of Mechanisms in PsyNeuLink:
     * `AdaptiveMechanisms <AdaptiveMechanism>` monitor the output of one or more other Mechanisms, and use this
       to modulate the parameters of other Mechanisms or Projections.  There are three basic AdaptiveMechanisms:
 
-      * `LearningMechanisms <LearningMechanism>` - these receive training (target) values, and compare them with the
+      * `LearningMechanism <LearningMechanism>` - these receive training (target) values, and compare them with the
         output of a Mechanism to generate `LearningSignals <LearningSignal>` that are used to modify `MappingProjections
         <MappingProjection>` (see `learning <Process_Execution_Learning>`).
       |
-      * `ControlMechanisms <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
+      * `ControlMechanism <ControlMechanism>` - these evaluate the output of a specified set of Mechanisms, and
         generate `ControlSignals <ControlSignal>` used to modify the parameters of those or other Mechanisms.
       |
-      * `GatingMechanisms <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
+      * `GatingMechanism <GatingMechanism>` - these use their input(s) to determine whether and how to modify the
         `value <State_Base.value>` of the `InputState(s) <InputState>` and/or `OutputState(s) <OutputState>` of other
         Mechanisms.
       |
@@ -110,7 +110,7 @@ mentioned above, or using one of the following:
           specified in the `pathway <Process_Base.pathway>` attribute of a `Process`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
-    a `ComparatorMechanism` and `LearningMechanisms <LearningMechanism>` are created automatically when `learning is
+    a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
     <ControlMechanism>` are created when the `controller <System_Base.controller>` is specified for a `System`.
 

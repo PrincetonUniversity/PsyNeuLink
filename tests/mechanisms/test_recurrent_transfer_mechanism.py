@@ -1,17 +1,18 @@
-import numpy as np
 import pytest
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
+    RecurrentTransferError,  RecurrentTransferMechanism
 
-from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVCMechanism import EVCMechanism
-from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferError, RecurrentTransferMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
-from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Functions.Function import ConstantIntegrator, Exponential, ExponentialDist, FunctionError, \
+    Linear, Logistic, NormalDist, Reduce, Reinforcement, get_matrix
 from PsyNeuLink.Components.System import system
-from PsyNeuLink.Globals.Keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferError, TransferMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
+from PsyNeuLink.Globals.Keywords import RANDOM_CONNECTIVITY_MATRIX
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from PsyNeuLink.Globals.Utilities import *
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
+
 
 class TestRecurrentTransferMechanismInputs:
 
@@ -61,7 +62,7 @@ class TestRecurrentTransferMechanismInputs:
         R = RecurrentTransferMechanism(
             name='R',
             size=4,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([Linear().execute(), NormalDist().execute(), Exponential().execute(), ExponentialDist().execute()]).tolist()
         assert val == [[np.array([0.]), 0.4001572083672233, np.array([1.]), 0.7872011523172707]]
@@ -79,7 +80,7 @@ class TestRecurrentTransferMechanismInputs:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"]).tolist()
         assert "has non-numeric entries" in str(error_text.value)
@@ -89,7 +90,7 @@ class TestRecurrentTransferMechanismInputs:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=['a', 'b', 'c', 'd'],
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
         assert "has non-numeric entries" in str(error_text.value)
 
@@ -381,7 +382,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=NormalDist(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -393,7 +394,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=Reinforcement(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -405,7 +406,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=ConstantIntegrator(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -417,7 +418,7 @@ class TestRecurrentTransferMechanismFunction:
                 default_variable=[0, 0, 0, 0],
                 function=Reduce(),
                 time_constant=1.0,
-                time_scale=TimeScale.TIME_STEP
+                integrator_mode=True
             )
             R.execute([0, 0, 0, 0]).tolist()
         assert "must be a TRANSFER FUNCTION TYPE" in str(error_text.value)
@@ -430,7 +431,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             default_variable=[0, 0, 0, 0],
             function=Linear(),
             time_constant=0.8,
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.8, 0.8, 0.8, 0.8]]
@@ -444,7 +445,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[0.5, 0.5, 0.5, 0.5]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[0.9, 0.9, 0.9, 0.9]]
@@ -458,7 +459,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[1.8, 1.8, 1.8, 1.8]]),
-            time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([1, 1, 1, 1]).tolist()
         assert val == [[1.16, 1.16, 1.16, 1.16]]
@@ -474,7 +475,7 @@ class TestRecurrentTransferMechanismTimeConstant:
             function=Linear(),
             time_constant=0.8,
             initial_value=np.array([[-1, 1, -2, 2]]),
-         time_scale=TimeScale.TIME_STEP
+            integrator_mode=True
         )
         val = R.execute([3, 2,1, 0]).tolist()
         assert val == [[2.2,1.8, .40000000000000013, .3999999999999999]]

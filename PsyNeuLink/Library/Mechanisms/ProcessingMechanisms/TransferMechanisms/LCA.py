@@ -80,11 +80,13 @@ import numpy as np
 import typecheck as tc
 
 from PsyNeuLink.Components.Functions.Function import Logistic, max_vs_avg, max_vs_next
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.RecurrentTransferMechanism import RecurrentTransferMechanism
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
-from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, VARIANCE, ENERGY, ENTROPY
+from PsyNeuLink.Globals.Keywords import LCA, CALCULATE, INITIALIZING, MEAN, MEDIAN, NAME, RESULT, STANDARD_DEVIATION, \
+    VARIANCE, ENERGY, ENTROPY
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.RecurrentTransferMechanism import \
+    RecurrentTransferMechanism
 from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 
@@ -181,7 +183,6 @@ class LCA(RecurrentTransferMechanism):
         noise=0.0,                         \
         time_constant=1.0,                 \
         range=(float:min, float:max),      \
-        time_scale=TimeScale.TIME_STEP,    \
         params=None,                       \
         name=None,                         \
         prefs=None)
@@ -234,8 +235,8 @@ class LCA(RecurrentTransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`
+        the time constant for exponential time averaging of input when `integrator_mode <LCA.integrator_mode>` is set
+        to True::
 
         `result = (time_constant * current input) + (1-time_constant * result on previous time_step)`
 
@@ -249,11 +250,6 @@ class LCA(RecurrentTransferMechanism):
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <TransferMechanism.time_constant>`
-        parameter to have an effect.
 
     name : str : default TransferMechanism-<index>
         a string used for the name of the Mechanism.
@@ -308,8 +304,8 @@ class LCA(RecurrentTransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float
-        the time constant for exponential time averaging of input
-        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+        the time constant for exponential time averaging of input when `integrator_mode <LCA.integrator_mode>` is set
+        to True::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -361,9 +357,6 @@ class LCA(RecurrentTransferMechanism):
         * **entropy** of the result (if the ENTROPY OutputState is present);
         * **max_vs_next** of the result (:keyword:`value` of MAX_VS_NEXT OutputState);
         * **max_vs_avg** of the result (:keyword:`value` of MAX_VS_AVG OutputState).
-
-    time_scale :  TimeScale
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
 
     name : str : default TransferMechanism-<index>
         the name of the Mechanism.

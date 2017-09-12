@@ -56,30 +56,64 @@ DEPRECATED:
 ### DOCSTRING ORGANIZATION:
 
 #### Module docstring sections:
-- Overview
-- Creating an <X>
-- Structure
-     - subsections for major subcomponents
-- Execution
 
-#### Class docstring sections:
-- User-friendly list of constructor arguments with default values
-- One line summary description.
-- Several sentence / short paragraph description/overview.
-- Technical information (COMMENTED OUT), with headings:
-    - Description: technical description (including categor/type)
-    - Class Attributes: full list of any class-specific attributes
-    - Class Methods:  full list of any class-specific methods
-    - Registry
-- Arguments for constructor (appear as "Parameters" in html docs):
+  .. _<X>_Overview:
+
+  Overview 
+  --------
+  High level description of object and its relationship to others (including its super).
+  
+  .. _<X>_Creation:
+  
+  Creating a(n) <X>
+  -----------------
+  Description of use of constructor, context of creation, and/or conditions of automatic creation by other objects
+  
+  .. _<X>_Structure:
+
+  Structure
+  ---------
+  Explanation of all class-specific attributes; this should be the most elaborate explanation of each attribute, 
+  that is referenced by briefer descriptions of each in the Attributes section.
+       
+  .. _<X>_Execution:
+  
+  Execution
+  ---------
+  Details of how the object executes, including what its `function` does
+  
+  .. _<X>_Class_Reference:
+  
+  Class Reference
+  ---------------
+
+  
+#### Module / Class docstrings:
+  [COMMENTED OUT:
+      Technical information, with headings:
+        - Description: technical description (including categor/type)
+        - Class Attributes: full list of any class-specific attributes
+        - Class Methods:  full list of any class-specific methods
+        - Registry]\
+    
+  Arguments
+  ---------
+
+   for constructor (appear as "Parameters" in html docs):
     - same order as appear in constructor
     - last ones are always (in order): params, name, prefs  (with boilerplate descriptions)
     - brief description, with pointers to corresponding attribute for more detailed information.
-- Attributes:
-    - first line of each is: "attribute name : type : default <value>""
-    - full description of all externally-accessible attributes, including use and constraints on values;
-    - organized as close as possible to order of specification in constructor, instantiation, and/or execution;
-    - last two are always (in order) name and prefs (with boilerplate descriptions)
+  
+  Attributes
+  ----------
+  - first line of each is: "attribute name : type : default <value>""; all subsequent lines should be indented;
+  - include all externally-accessible attributes; 
+  - organize as close as possible to order of specification in constructor, instantiation, and/or execution;
+  - each should include a brief description of use and constraints on values, with reference to relevant subsection 
+    of Structure section for more complete description of class-specific attributes, or to the relevant super class of 
+    those attributes;  
+  - last two are always (in order) name and prefs (with boilerplate descriptions).
+
 - Commenting:
     - Sections of the docstring can be commented out by preceding the section with "COMMENT:" and ending it with 
     "COMMENT" (note the terminal colon in the first identifier and its absence in the second).

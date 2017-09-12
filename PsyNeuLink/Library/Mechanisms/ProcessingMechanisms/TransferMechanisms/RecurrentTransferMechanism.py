@@ -39,7 +39,7 @@ standard `TransferMechanism`.
 
 COMMENT:
 8/7/17 CW: In past versions, the first sentence of the paragraph above was: "A RecurrentTransferMechanism can be
-created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` function and specifying
+created directly by calling its constructor, or using the `mechanism() <Mechanism.mechanism>` command and specifying
 RECURRENT_TRANSFER_MECHANISM as its **mech_spec** argument".
 However, the latter method is no longer correct: it instead creates a DDM: the problem is line 590 in Mechanism.py,
 as MechanismRegistry is empty!
@@ -50,18 +50,16 @@ COMMENT
 Structure
 ---------
 
-The distinguishing feature of a RecurrentTransferMechanism is its `matrix <RecurrentTransferMechanism.matrix>`,
-`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` parameters, which
-specify a self-projecting `AutoAssociativeProjection`;  that is, one that projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.
-In all other respects the Mechanism is identical to a standard `TransferMechanism`.
-
-In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' parameter, that
-multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it is
-executed.  It also has two additional OutputStates:  an ENERGY OutputState and, if its
-`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an ENTROPY
-OutputState, that each report the respective values of the vector in it its
-`primary (RESULTS) OutputState <OutputState_Primary>`.
+The distinguishing feature of a RecurrentTransferMechanism is a self-projecting `AutoAssociativeProjection` -- that
+is, one that projects from the Mechanism's `primary OutputState <OutputState_Primary>` back to its `primary
+InputState <InputState_Primary>`.  This can be parametrized using its `matrix <RecurrentTransferMechanism.matrix>`,
+`auto <RecurrentTransferMechanism.auto>`, and `hetero <RecurrentTransferMechanism.hetero>` attributes.
+In addition, a RecurrentTransferMechanism also has a `decay` <RecurrentTransferMechanism.decay>' attribute, that
+multiplies its `previous_input <RecurrentTransferMechanism.previous_input>` value by the specified factor each time it
+is executed.  It also has two additional `OutputStates <OutputState>:  an *ENERGY* OutputState and, if its `function
+<RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
+OutputState.  Each of these report the respective values of the vector in it its `primary (*RESULTS*) OutputState
+<OutputState_Primary>`.  In all other respects the Mechanism is identical to a standard `TransferMechanism`.
 
 .. _Recurrent_Transfer_Execution:
 
@@ -103,14 +101,16 @@ import typecheck as tc
 from PsyNeuLink.Components.Functions.Function import Linear, Stability, get_matrix
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
-from PsyNeuLink.Components.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
-    get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Components.States.OutputState import PRIMARY_OUTPUT_STATE, StandardOutputStates
 from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state
-from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, VARIANCE
+from PsyNeuLink.Globals.Keywords import AUTO, ENERGY, ENTROPY, FULL_CONNECTIVITY_MATRIX, HETERO, INITIALIZING, MATRIX, \
+    MEAN, MEDIAN, NAME, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT, SET_ATTRIBUTE, STANDARD_DEVIATION, \
+    VARIANCE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric_or_none
+from PsyNeuLink.Library.Projections.PathwayProjections.AutoAssociativeProjection import AutoAssociativeProjection, \
+    get_auto_matrix, get_hetero_matrix
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
 
@@ -187,7 +187,6 @@ class RecurrentTransferMechanism(TransferMechanism):
     noise=0.0,                         \
     time_constant=1.0,                 \
     range=(float:min, float:max),      \
-    time_scale=TimeScale.TRIAL,        \
     params=None,                       \
     name=None,                         \
     prefs=None)
@@ -257,8 +256,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float : default 1.0
-        the time constant for exponential time averaging of input when the Mechanism is executed with `time_scale`
-        set to `TimeScale.TIME_STEP`::
+        the time constant for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
          result = (time_constant * current input) +
          (1-time_constant * result on previous time_step)
@@ -273,11 +272,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
         the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    time_scale :  TimeScale : TimeScale.TRIAL
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-        This must be set to `TimeScale.TIME_STEP` for the `time_constant <RecurrentTransferMechanism.time_constant>`
-        parameter to have an effect.
 
     name : str : default RecurrentTransferMechanism-<index>
         a string used for the name of the Mechanism.
@@ -326,8 +320,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if it is a function, it must return a scalar value.
 
     time_constant : float
-        the time constant for exponential time averaging of input
-        when the Mechanism is executed using the `TIME_STEP` `TimeScale`::
+        the time constant for exponential time averaging of input when `integrator_mode
+        <RecurrentTransferMechanism.integrator_mode>` is set to True::
 
           result = (time_constant * current input) + (1-time_constant * result on previous time_step)
 
@@ -374,9 +368,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         * **energy** of the result (``value`` of ENERGY outputState);
         * **entropy** of the result (if the ENTROPY outputState is present).
 
-    time_scale :  TimeScale
-        specifies whether the Mechanism is executed using the `TIME_STEP` or `TRIAL` `TimeScale`.
-
     name : str : default RecurrentTransferMechanism-<index>
         the name of the Mechanism.
         Specified in the **name** argument of the constructor for the Projection;
@@ -413,6 +404,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  decay: is_numeric_or_none=None,
                  noise: is_numeric_or_none=0.0,
                  time_constant: is_numeric_or_none=1.0,
+                 integrator_mode=False,
                  range=None,
                  input_states: tc.optional(tc.any(list, dict)) = None,
                  output_states: tc.optional(tc.any(list, dict))=None,
@@ -434,6 +426,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                   initial_value=initial_value,
                                                   matrix=matrix,
                                                   decay=decay,
+                                                  integrator_mode=integrator_mode,
                                                   output_states=output_states,
                                                   params=params,
                                                   noise=noise,
@@ -451,6 +444,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                          function=function,
                          initial_value=initial_value,
                          noise=noise,
+                         integrator_mode=integrator_mode,
                          time_constant=time_constant,
                          range=range,
                          output_states=output_states,
@@ -663,9 +657,11 @@ class RecurrentTransferMechanism(TransferMechanism):
                  context=None):
         """Implement decay
         """
-        if context is None or (INITIALIZING not in context):
-            if self.decay is not None and self.decay != 1.0:
-                self.previous_input = self.previous_input * float(self.decay)
+        # KAM commented out 8/29/17 because self.previous_input is not a valid attrib of this mechanism
+
+        # if context is None or (INITIALIZING not in context):
+        #     if self.decay is not None and self.decay != 1.0:
+        #         self.previous_input = self.previous_input * float(self.decay)
 
         return super()._execute(variable=variable,
                                 runtime_params=runtime_params,
