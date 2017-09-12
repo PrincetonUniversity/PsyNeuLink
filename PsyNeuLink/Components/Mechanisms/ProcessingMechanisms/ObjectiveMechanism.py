@@ -683,15 +683,22 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             input_state_dicts.append(input_state_dict)
 
         # Instantiate constraint on variable of each InputState from monitored_value spec
-        #    and assign weights and exponents if specified in monitored_value tuple
+        #    and assign weights and exponents (if specified in monitored_value tuple) to params dict for each InputState
         constraint_value = []
-        for input_state_dict in input_state_dicts:
+        for i, input_state_dict in enumerate(input_state_dicts):
             constraint_value.append(input_state_dict[VARIABLE])
-            params = input_state_dict[PARAMS] or {}
+            # params = input_state_dict[PARAMS] or {}
+            weight_and_exponent_params_dict = {}
             if monitored_value_weights[i] is not None:
-                params[WEIGHT] = monitored_value_weights[i]
+                # params[WEIGHT] = monitored_value_weights[i]
+                weight_and_exponent_params_dict[WEIGHT] = monitored_value_weights[i]
             if monitored_value_exponents[i] is not None:
-                params[EXPONENT] = monitored_value_exponents[i]
+                # params[EXPONENT] = monitored_value_exponents[i]
+                weight_and_exponent_params_dict[EXPONENT] = monitored_value_exponents[i]
+            if input_state_dict[PARAMS] is not None:
+                input_state_dict[PARAMS].update(weight_and_exponent_params_dict)
+            else:
+                input_state_dict[PARAMS] = weight_and_exponent_params_dict
 
         self.instance_defaults.variable = constraint_value
         self._input_states = input_state_dicts
@@ -871,15 +878,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     @property
     def monitored_values_weights_and_exponents(self):
-        if hasattr(self.function_object, WEIGHTS):
+        if hasattr(self.function_object, WEIGHTS) and self.function_object.weights is not None:
             weights = self.function_object.weights
         else:
             weights = [input_state.weight for input_state in self.input_states]
-        if hasattr(self.function_object, EXPONENTS):
+        if hasattr(self.function_object, EXPONENTS) and self.function_object.exponents is not None:
             exponents = self.function_object.exponents
         else:
             exponents = [input_state.exponent for input_state in self.input_states]
-
         return [(w,e) for w, e in zip(weights,exponents)]
 
     @monitored_values_weights_and_exponents.setter

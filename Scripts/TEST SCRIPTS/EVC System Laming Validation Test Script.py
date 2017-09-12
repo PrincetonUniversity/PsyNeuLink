@@ -103,7 +103,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   controller=EVCMechanism(objective_mechanism=[
                                                      Reward,
                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
-                                                     (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)]),
+                                                     (Decision.output_states[Decision.RESPONSE_TIME], 1, -1)]),
 
                   # # DOESN'T WORK SINCE Decision.XXX IS A STRING, NOT AN OutState
                   # controller=EVCMechanism(objective_mechanism=[Reward,
