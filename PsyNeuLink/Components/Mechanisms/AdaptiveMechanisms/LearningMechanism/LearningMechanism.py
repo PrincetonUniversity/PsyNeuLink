@@ -29,8 +29,8 @@ LearningMechanism can be used to train multiple MappingProjections, by assigning
 All of the MappingProjection(s) modified by a LearningMechanism must project from one `ProcessingMechanism
 <ProcessingMechanism>` to another in same `System` or `Process`. The learning components of a System can be displayed
 using the System's `show_graph <System_Base.show_graph>` method with its **show_learning** argument assigned `True`.
-LearningMechanism are executed after all of the ProcessingMechanisms in a System or Process have been executed,
-and before any `ControlMechanism <ControlMechanism>` of the System have been executed (see `System Execution
+LearningMechanisms are executed after all of the ProcessingMechanisms in a System or Process have been executed,
+and before any `ControlMechanisms <ControlMechanism>` of the System have been executed (see `System Execution
 <System_Execution>`).
 
 .. _LearningMechanism_Note
@@ -59,7 +59,7 @@ Creating a LearningMechanism
 ----------------------------
 
 A LearningMechanism can be created in any of the ways used to `create Mechanisms <Mechanism_Creation>`.
-More commonly, however, LearningMechanism are created automatically.
+More commonly, however, LearningMechanisms are created automatically.
 
 .. LearningMechanism_Automatic_Creation:
 
@@ -423,7 +423,7 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
        :alt: Schematic of Mechanisms and Projections involved in learning for a sequence of MappingProjections
        :scale: 50%
 
-       ComparaotrMechanism and LearningMechanism and associated Projections created for a sequence of two
+       ComparaotrMechanism and LearningMechanisms and associated Projections created for a sequence of two
        MappingProjections specified for learning.  Each Mechanism is labeled by its type (uppler line, in bold) and
        its designated status in the Process and/or System to which it belongs (lower line, capitalized).  Italicized
        label beside a component indicates the attribute of the LearningMechanism with which it is associated.
@@ -465,7 +465,7 @@ Mechanism), only one ComparatorMechanism will be created for it in the System.
 Execution
 ---------
 
-LearningMechanism are executed after all of the `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
+LearningMechanisms are executed after all of the `ProcessingMechanisms <ProcessingMechanism>` in the `Process` or
 `System` to which they belong have been executed.  When a LearningMechanism is executed, it uses the `value
 <InputState.value>` of its *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>` to calculate changes to
 the weights of the `matrix <MappingProjection.MappingProjection.matrix>` parameter of the `learned_projections`. Those
@@ -738,7 +738,7 @@ class LearningMechanism(AdaptiveMechanism_Base):
         the LearningMechanism's *ERROR_SIGNAL* `InputState <LearningMechanism_Input_Error_Signal>`;  for `multilayer
         learning <LearningMechanism_Multilayer_Learning>`, it is a modified version of the value received, that takes
         account of the contribution made by the learned_projection and its input to the error signal received. This
-        is assigned as the `value <OutputState.value>` of the LearningMechanism *ERROR_SIGNAL* `OutputState
+        is assigned as the `value <OutputState.value>` of the LearningMechanism's *ERROR_SIGNAL* `OutputState
         <LearningMechanism_Output_Error_Signal>`.
 
     learning_signal : number, ndarray or matrix

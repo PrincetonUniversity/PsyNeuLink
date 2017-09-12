@@ -582,7 +582,7 @@ class Projection_Base(Projection):
 # FIX:  ?LEAVE IT TO _validate_variable, SINCE SENDER MAY NOT YET HAVE BEEN INSTANTIATED
 # MODIFIED 6/12/16:  ADDED ASSIGNMENT ABOVE
 #                   (TO HANDLE INSTANTIATION OF DEFAULT ControlProjection SENDER -- BUT WHY ISN'T VALUE ESTABLISHED YET?
-        # Validate variable, function and params, and assign params to paramsInstanceDefaults
+        # Validate variable, function and params, and assign params to paramInstanceDefaults
         # Note: pass name of mechanism (to override assignment of componentName in super.__init__)
         super(Projection_Base, self).__init__(default_variable=variable,
                                               param_defaults=params,

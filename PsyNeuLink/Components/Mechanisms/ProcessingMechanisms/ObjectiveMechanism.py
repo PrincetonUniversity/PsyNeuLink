@@ -35,10 +35,11 @@ Creating an ObjectiveMechanism
 ------------------------------
 
 ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
-AdaptiveMechanisms such as `LearningMechanism <LearningMechanism_Creation>` and
-`ControlMechanism <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
-constructor.  Its **monitored_values** argument is used to `specify the OutputStates to be monitored
-<ObjectiveMechanism_Monitored_Values>`.  When an ObjectiveMechanism is created, an InputState is created for each of the
+AdaptiveMechanisms such as `LearningMechanisms <LearningMechanism_Creation>` and
+`ControlMechanisms <ControlMechanism_Creation>`.  An ObjectiveMechanism can also be created directly by calling its
+constructor.  Its **monitored_values** argument is used to specify the OutputStates to be monitored.  Any of the forms
+used for `specifying OutputStates <OutputState_Specification>` can be used, as well as a value of
+MonitoredOutputStateOption.  When an ObjectiveMechanism is created, an InputState is created for each of the
 OutputStates specified in its **monitored_values** argument, and a `MappingProjection` is assigned from each of those
 to the corresponding InputState.  By default, the value of each InputState uses the format of its corresponding
 OutputState, and the MappingProjection between them uses an `IDENTITY_MATRIX`.  However, the **input_states** argument
@@ -346,8 +347,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             + classPreference (PreferenceSet): Comparator_PreferenceSet, instantiated in __init__()
             + classPreferenceLevel (PreferenceLevel): PreferenceLevel.SUBTYPE
             + ClassDefaults.variable (value):  Comparator_DEFAULT_STARTING_POINT // QUESTION: What to change here
-            + paramClassDefaults (dict): {TIME_SCALE: TimeScale.TRIAL,
-                                          FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
+            + paramClassDefaults (dict): {FUNCTION_PARAMS:{COMPARISON_OPERATION: SUBTRACTION}}
 
         Class methods:
             None
@@ -392,13 +392,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
         the dictionary override any assigned to those parameters in arguments of the
         constructor.
-
-    COMMENT:
-        [TBI]
-        time_scale :  TimeScale : TimeScale.TRIAL
-            specifies whether the Mechanism is executed on the TIME_STEP or TRIAL time scale.
-            This must be set to :keyword:`TimeScale.TIME_STEP` for the ``rate`` parameter to have an effect.
-    COMMENT
 
     name : str : default ObjectiveMechanism-<index>
         a string used for the name of the Mechanism.
@@ -920,7 +913,7 @@ def _validate_monitored_value(component, state_spec, context=None):
 def _parse_monitored_values_list(source, output_state_list, context):
     """Parses tuples specified in output_state_list and returns list of tuples: [(OutputState, exponent, weight)...]
     """
-    
+
     # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
     # Assign None as default for unspecified weights and exponents, so that specification of these for
     #    InputStates can be used (see ObjectiveMechanism._instantiate_input_states)

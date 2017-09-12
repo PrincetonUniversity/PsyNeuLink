@@ -482,8 +482,9 @@ def system(default_variable=None,
         specifies whether the `controller` is executed during `System execution <System_Execution>`.
 
     monitor_for_control :  List[OutputState specification] : default None
-        specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by its
-        `controller` (see `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
+        specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
+        'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
+        `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
 
     COMMENT:
         learning : [LearningProjection specification]
@@ -641,8 +642,8 @@ class System_Base(System):
         `Processes <Process>` in the System.
 
     learning_rate : float : default None
-        determines the learning_rate for all `LearningMechanism <LearningMechanism>` in the System.  This overrides any
-        values set for the function of individual LearningMechanism or `LearningSignals <LearningSignal>`, and persists
+        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
         <System_Base.learning_rate> is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
@@ -701,7 +702,7 @@ class System_Base(System):
             Tuples for all TERMINAL Mechanisms in the System.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanism in the System.
+            Tuples for all LearningMechanisms in the System.
 
         .. _target_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
             Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the System that are a `TERMINAL`
@@ -709,7 +710,7 @@ class System_Base(System):
             being a target used in learning.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanism in the System (used for learning).
+            Tuples for all LearningMechanisms in the System (used for learning).
 
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
@@ -733,7 +734,7 @@ class System_Base(System):
         <System_Execution_Input_And_Initialization>`, listed in ``recurrent_init_mechanisms.data``.
 
     learning_mechanisms : MechanismList
-        all `LearningMechanism <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
+        all `LearningMechanisms <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
@@ -754,7 +755,7 @@ class System_Base(System):
             contains the `ControlMechanism <ControlMechanism>` that is the `controller <System_Base.controller>` of the
             System.
             COMMENT:
-                ??and any other `ControlMechanism <ControlMechanism>` in the System
+                ??and any other `ControlMechanisms <ControlMechanism>` in the System
                 (based on _control_mechs).
             COMMENT
 
@@ -2676,7 +2677,7 @@ class System_Base(System):
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the LearningMechanism of the System for each execution.
+            the target values for the LearningMechanisms of the System for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2931,7 +2932,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;
 
-            LEARNING_MECHANISMS: list of `LearningMechanism <LearningMechanism>`;
+            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`;
 
             TARGET: list of `TARGET` Mechanisms;
 
@@ -3328,5 +3329,3 @@ class SystemInputState(OutputState):
         self.efferents = []
         self.owner = owner
         self.value = variable
-
-

@@ -111,7 +111,7 @@ Allocation, Function and Intensity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
-which it belongs. Some ControlMechanism sample different allocation values for their ControlSignals to determine
+which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
 which to use (such as the `EVCMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
@@ -187,7 +187,7 @@ that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjection
 Each ParameterState uses that value to modify the value(s) of the parameter(s) that the ControlSignal controls. See
 `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
 `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
-by some ControlMechanism, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
+by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
 `allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
@@ -659,7 +659,7 @@ class ControlSignal(ModulatorySignal):
         # Consider adding self to owner.outputStates here (and removing from ControlProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputStates in ControlProjection._instantiate_sender),
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          variable=variable,

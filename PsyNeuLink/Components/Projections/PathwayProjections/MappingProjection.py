@@ -424,7 +424,7 @@ class MappingProjection(PathwayProjection_Base):
         if sender is None or receiver is None:
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+        # Validate sender (as variable) and params, and assign to variable and paramInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
                                                 params=params,
