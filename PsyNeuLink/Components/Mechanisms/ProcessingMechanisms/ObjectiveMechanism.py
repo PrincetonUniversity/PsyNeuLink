@@ -156,8 +156,10 @@ However, this can easily be configured to calculate differences, ratios, etc. (s
 `example <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  It can also be replaced with any
 `CombinationFunction`, or any python function that takes a 2d array with an arbitrary number of
 items or a number equal to the number of items in the ObjectiveMechanism's variable (and its number of
-input_states), and returns a 1d array.
-
+input_states), and returns a 1d array.  If it implements :keyword:`weight` and :keyword:`exponent` attributes,
+those will be assigned from `weight <InputState.weight>` and `exponent <InputState.exponent>` attributes of its
+`input_states <ObjectiveMechanism.input_states>` (listed in its `monitored_values_weights_and_exponents
+<ObjectiveMechanism.monitored_values_weights_and_exponents>` attribute);  otherwise, they will be ignored.
 
 .. _ObjectiveMechanism_Execution:
 
@@ -272,7 +274,7 @@ from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
 from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT_STATE, standard_output_states
 from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
-                                        INPUT_STATES, PROJECTIONS, WEIGHT, EXPONENT, SENDER, \
+                                        INPUT_STATES, PROJECTIONS, WEIGHT, WEIGHTS, EXPONENT, EXPONENTS, SENDER, \
                                         MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
                                         OUTPUT_STATE, LEARNING, CONTROL, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
@@ -842,11 +844,50 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return self._instantiate_monitored_values(monitored_values_spec)
         # return self._instantiate_input_states(monitored_values_spec)
 
-    @property
-    def monitored_values_weights_and_exponents(self):
+    def _instantiate_attributes_after_function(self, context=None):
+        """Assign InputState weights and exponents to ObjectiveMechanism's function
+        """
+        super()._instantiate_attributes_after_function(context=context)
+
         weights = [input_state.weight for input_state in self.input_states]
         exponents = [input_state.exponent for input_state in self.input_states]
+        self._instantiate_weights_and_exponents(weights, exponents, context=context)
+
+    def _instantiate_weights_and_exponents(self, weights, exponents, context=None):
+        """Assign weights and exponents to ObjectiveMechanism's function if it has those attributes
+
+        For each, only make assignment if one or more entries in it has been assigned a value
+        If any one value has been assigned, assign default value (1) to all other elements
+        """
+        DEFAULT_WEIGHT = 1
+        DEFAULT_EXPONENT = 1
+
+        if hasattr(self.function_object, WEIGHTS):
+            if any(weight is not None for weight in weights):
+                self.function_object.weights = [weight or DEFAULT_WEIGHT for weight in weights]
+        if hasattr(self.function_object, EXPONENTS):
+            if any(exponent is not None for exponent in exponents):
+                self.function_object.exponents = [exponent or DEFAULT_EXPONENT for exponent in exponents]
+
+    @property
+    def monitored_values_weights_and_exponents(self):
+        if hasattr(self.function_object, WEIGHTS):
+            weights = self.function_object.weights
+        else:
+            weights = [input_state.weight for input_state in self.input_states]
+        if hasattr(self.function_object, EXPONENTS):
+            exponents = self.function_object.exponents
+        else:
+            exponents = [input_state.exponent for input_state in self.input_states]
+
         return [(w,e) for w, e in zip(weights,exponents)]
+
+    @monitored_values_weights_and_exponents.setter
+    def monitored_values_weights_and_exponents(self, weights_and_exponents_tuples):
+
+        weights = [w[0] for w in weights_and_exponents_tuples]
+        exponents = [e[1] for e in weights_and_exponents_tuples]
+        self._instantiate_weights_and_exponents(weights, exponents)
 
 
 def _validate_monitored_value(component, state_spec, context=None):

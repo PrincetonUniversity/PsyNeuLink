@@ -92,7 +92,7 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
-                  # # WORKS:
+                  # WORKS:
                   # controller=EVCMechanism,
                   # monitor_for_control=[
                   #     Reward,

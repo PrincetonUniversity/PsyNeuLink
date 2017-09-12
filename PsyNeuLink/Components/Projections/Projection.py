@@ -717,23 +717,6 @@ class Projection_Base(Projection):
         from PsyNeuLink.Components.States.OutputState import OutputState
         from PsyNeuLink.Components.States.ParameterState import ParameterState
 
-        # # IMPLEMENTATION NOTE:  The following supported instantiation of a default sender type by a projection, for
-        # #                       projections that did not yet have their sender specified;  however, this should now
-        # #                       be covered by deferred_init(): sender is assigned in that call or by the time is made.
-        # # If sender is a class, instantiate it:
-        # # - assume it is a Mechanism or State (should have been validated in _validate_params)
-        # # - implement default sender of the corresponding type
-        # if inspect.isclass(self.sender):
-        #     if issubclass(self.sender, OutputState):
-        #         # MODIFIED 9/12/16 NEW:
-        #         # self.paramsCurrent['function_params']['matrix']
-        #         # FIX: ASSIGN REFERENCE VALUE HERE IF IT IS A MAPPING_PROJECTION??
-        #         # MODIFIED 9/12/16 END
-        #         self.sender = self.paramsCurrent[PROJECTION_SENDER](self.paramsCurrent[PROJECTION_SENDER_VALUE])
-        #     else:
-        #         raise ProjectionError("Sender ({0}) for {1} must be a OutputState".
-        #                               format(self.sender.__name__, self.name))
-
         # If sender is specified as a Mechanism (rather than a State),
         #     get relevant OutputState and assign it to self.sender
         # IMPLEMENTATION NOTE: Assume that sender should be the primary OutputState; if that is not the case,
