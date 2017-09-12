@@ -4310,7 +4310,10 @@ class AdaptiveIntegrator(
                          prefs=prefs,
                          context=context)
 
-        self.previous_value = self.initializer
+        if type(default_variable) is not type(self.initializer):
+            self.previous_value = np.full_like(default_variable, self.initializer)
+        else:
+            self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4382,6 +4385,120 @@ class AdaptiveIntegrator(
         # if INITIALIZER in target_set:
         #     self._validate_initializer(target_set[INITIALIZER])
 
+    def get_param_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            noise_ty = ir.ArrayType(ctx.float_ty, len(self.noise)) if hasattr(self.noise, "__len__") else ctx.float_ty
+            # rate, offset, noise
+            param_type = ir.LiteralStructType([ctx.float_ty, ctx.float_ty, noise_ty])
+        return param_type
+
+    def get_context_struct_type(self):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            previous_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            param_type = ir.LiteralStructType([previous_ty])
+        return param_type
+
+    def __gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        offset_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        rate = builder.load(rate_p)
+        offset = builder.load(offset_p)
+        if hasattr(self.noise, "__len__"):
+            noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2), index])
+        else:
+            noise_p = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+        noise = builder.load(noise_p)
+
+        prev_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        vi_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        vi_val = builder.load(vi_ptr)
+
+        rev_rate = builder.fsub(ctx.float_ty(1), rate)
+        old_val = builder.fmul(prev_val, rev_rate)
+        new_val = builder.fmul(vi_val, rate)
+
+        ret = builder.fadd(old_val, new_val)
+        ret = builder.fadd(ret, noise)
+        res = builder.fadd(ret, offset)
+
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+
+
+    def _gen_llvm_function(self):
+        func_name = None
+        llvm_func = None
+        with pnlvm.LLVMBuilderContext() as ctx:
+            func_name = ctx.module.get_unique_name("adaptiveintegrator")
+            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 self.get_context_struct_type().as_pointer(),
+                 vec_ty.as_pointer(), vec_ty.as_pointer()))
+            vector_length = ctx.int32_ty(self._variable_length)
+
+            llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
+            params, state, vi, vo = llvm_func.args
+            for p in vi, vo:
+                p.attributes.add('nonnull')
+                p.attributes.add('noalias')
+
+            # Create entry block
+            block = llvm_func.append_basic_block(name="entry")
+            builder = ir.IRBuilder(block)
+            vi = builder.gep(vi, [ctx.int32_ty(0)])
+            vo = builder.gep(vo, [ctx.int32_ty(0)])
+
+            kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params": params, "state":state}
+            inner = functools.partial(self.__gen_llvm_integrate, **kwargs)
+            builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "integrate")
+
+            builder.ret_void()
+        return func_name
+
+    def bin_function(self,
+                     variable=None,
+                     params=None,
+                     time_scale=TimeScale.TRIAL,
+                     context=None):
+
+        # TODO: port this to LLVM
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        rate = self.paramsCurrent[RATE]
+        offset = self.paramsCurrent[OFFSET]
+        # execute noise if it is a function
+        # TODO: port this to LLVM
+        noise = self._try_execute_param(self.noise, variable)
+        if hasattr(self.noise, "__len__"):
+            noise = tuple(noise)
+
+        previous_value = self.previous_value
+
+        bf = self._llvmBinFunction
+
+        ret = np.zeros(len(variable))
+        par_struct_ty, old_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
+
+        ct_param = par_struct_ty(rate, offset, noise)
+        ct_old = old_struct_ty(tuple(previous_value))
+        #This is bit hacky because numpy can't cast to arrays
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
+
+        bf(ct_param, ct_old, ct_vi, ct_vo)
+
+        # If this NOT an initialization run, update the old value
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        if not context or not INITIALIZING in context:
+            self.previous_value = ret
+
+        return ret
 
     def function(self,
                  variable=None,
