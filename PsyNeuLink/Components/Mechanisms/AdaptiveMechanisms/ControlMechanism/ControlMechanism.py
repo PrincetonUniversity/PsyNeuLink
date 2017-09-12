@@ -603,22 +603,15 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         monitored_output_states = None
 
+        # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_values attribute
+
         # If the ControlMechanism has already been assigned to a System
         #    get OutputStates in System specified as MONITOR_FOR_CONTROL
-        #        do this by calling _get_monitored_output_states_for_system, which also gets
-        #        any OutputStates already being monitored by the ControlMechanism
+        #        do this by calling _get_monitored_output_states_for_system(),
+        #        which also gets any OutputStates already being monitored by the ControlMechanism
         if self.system:
             monitored_output_states = self.system._get_monitored_output_states_for_system(self, context=context)
-            if isinstance(self.objective_mechanism, ObjectiveMechanism):
-                self.objective_mechanism.add_monitored_values(monitored_output_states)
-                # FIX: UPDATE .monitored_output_states
-            else:
-                raise ControlMechanismError("PROGRAM ERROR:  {} being assigned as controller for {} should "
-                                            "(but does not) already have an ObjectiveMechanism assigned to its "
-                                            "objective_mechanism attribute".
-                                            format(self.name, self.system.name))
 
-        # FIX: FINISH THIS
         # Otherwise, if objective_mechanism argument was specified as a list, get the OutputStates specified in it
         # - IF ControlMechanism HAS NOT ALREADY BEEN ASSIGNED TO A SYSTEM:
         #      IF objective_mechanism IS SPECIFIED AS A LIST:
@@ -629,20 +622,15 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         elif isinstance(self.objective_mechanism, list):
             monitored_output_states = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
 
-        if monitored_output_states is not None:
-            self.monitored_output_states = [s[OUTPUT_STATE_INDEX] for s in monitored_output_states]
-            weights = [w[WEIGHT_INDEX] for w in monitored_output_states]
-            exponents = [e[EXPONENT_INDEX] for e in monitored_output_states]
-
+        if isinstance(self.objective_mechanism, ObjectiveMechanism):
+            if monitored_output_states:
+                self.objective_mechanism.add_monitored_values(monitored_output_states)
         else:
-            self.monitored_output_states = weights = exponents = None
-
-        # Create specification for ObjectiveMechanism InputStates corresponding to
-        #    monitored_output_states and their exponents and weights
-        self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_output_states,
-                                                      function=LinearCombination(operation=PRODUCT),
-                                                      name=self.name + '_Objective Mechanism')
-        # MODIFIED 9/7/17 END
+            # Create specification for ObjectiveMechanism InputStates corresponding to
+            #    monitored_output_states and their exponents and weights
+            self.objective_mechanism = ObjectiveMechanism(monitored_values=monitored_output_states,
+                                                          function=LinearCombination(operation=PRODUCT),
+                                                          name=self.name + '_Objective Mechanism')
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
@@ -936,8 +924,11 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
         if self.system:
             self.system._validate_monitored_states(output_states, context=context)
-        if output_states:
-            self.monitored_output_states.append(output_states)
+
+        # MODIFIED 9/12/17 OLD:
+        # if output_states:
+        #     self.monitored_output_states.append(output_states)
+        # MODIFIED 9/12/17 END
 
     @tc.typecheck
     def assign_as_controller(self, system:System, context=None):
@@ -1004,6 +995,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # Assign assign the current System to the ControlMechanism's system attribute
         #    (needed for it to validate and instantiate monitored_output_states and control_signals)
         self.system = system
+
+    @property
+    def monitored_output_states(self):
+        return self.objective_mechanism.monitored_values
 
     @property
     def monitored_output_states_weights_and_exponents(self):
