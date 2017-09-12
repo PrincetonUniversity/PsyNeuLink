@@ -8,6 +8,7 @@ from PsyNeuLink.Globals.Keywords import *
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 
 random.seed(0)
 np.random.seed(0)
@@ -26,7 +27,7 @@ process_prefs = ComponentPreferenceSet(reportOutput_pref=PreferenceEntry(False,P
 Input = TransferMechanism(name='Input')
 
 Reward = TransferMechanism(name='Reward',
-                 # params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]}
+                           params={MONITOR_FOR_CONTROL:[PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)]},
                            output_states=[RESULT, MEAN, VARIANCE]
                   )
 
@@ -90,16 +91,36 @@ RewardProcess = process(
 
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+
+                  # WORKS: [BUT WHY DOES IT ALLOW OUTPUTSTATES TO BE SPECIFIED JUST BY GENERIC NAME?]
                   controller=EVCMechanism,
-                  # controller=EVCMechanism(monitor_for_control=[Reward,
+                  monitor_for_control=[
+                      Reward,
+                      Decision.PROBABILITY_UPPER_THRESHOLD,
+                      (Decision.RESPONSE_TIME, 1, -1)],
+
+                  # # WORKS:
+                  # controller=EVCMechanism(objective_mechanism=[
+                  #                                    Reward,
+                  #                                    Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                  #                                    (Decision.output_states[Decision.RESPONSE_TIME], 1, -1)]),
+
+                  # # WORKS:
+                  # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
+                  #                                    Reward,
+                  #                                    Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                  #                                    (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])),
+
+                  # # DOESN'T WORK SINCE Decision.XXX IS A STRING, NOT AN OutState
+                  # controller=EVCMechanism(objective_mechanism=[Reward,
                   #                                              Decision.PROBABILITY_UPPER_THRESHOLD,
-                  #                                              Decision.RESPONSE_TIME],
-                  #                         outcome_function=LinearCombination(exponents=[1, 1, -1])),
+                  #                                              (Decision.RESPONSE_TIME, -1, 1)]),
+
+
                   enable_controller=True,
-                  monitor_for_control=[Reward,
-                                       Decision.PROBABILITY_UPPER_THRESHOLD,
-                                       (Decision.RESPONSE_TIME, 1, -1)],
+
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
+
                   # monitor_for_control=[MonitoredOutputStatesOption.ALL_OUTPUT_STATES],
                   name='EVC Test System')
 

@@ -46,10 +46,10 @@ MappingProjections are also generated automatically in the following circumstanc
   * by a `LearningMechanism`, between it and the other components required to implement learning
     (see `LearningMechanism_Learning_Configurations` for details);
   ..
-  * by a `ControlMechanism <ControlMechanism>`, from the `ObjectiveMechanism` that `it creates
-    <ControlMechanism_Monitored_OutputStates>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
-    <OutputState>` listed in the ControlMechanism's `monitored_output_states
-    <ControlMechanism_Base.monitored_output_states>` attribute) to the ObjectiveMechanism (as described above; an
+  * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
+    creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
+    <OutputState>` listed in the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>`
+    attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
     `IDENTITY_MATRIX` is used for all of these).
 
 .. _Mapping_Matrix_Specification:

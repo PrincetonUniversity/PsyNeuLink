@@ -34,10 +34,10 @@ Overview
 A System is a `Composition <Composition>` that is a collection of `Processes <Process>` all of which are executed
 together. Executing a System executes all of the `Mechanisms <Mechanism>` in its Processes in a structured order.
 `Projections <Projection>` between Mechanisms in different Processes within the System are permitted, as are recurrent
-Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  Every
-System is associated with a `ControlMechanism <ControlMechanism>`, assigned to its `controller <System_Base.controller>`
-attribute, that can be used to control parameters of other `Mechanisms <Mechanism>` (or their `functions
-<Mechanism_Base.function>` in the System.
+Projections, but Projections from Mechanisms in other Systems are ignored (PsyNeuLink does not support ESP).  A System
+can also be assigned a `ControlMechanism <ControlMechanism>` as its `controller <System_Base.controller>`, that can be
+used to control parameters of other `Mechanisms <Mechanism>` (or their `functions <Mechanism_Base.function>` in the
+System.
 
 .. _System_Creation:
 
@@ -47,16 +47,17 @@ Creating a System
 Systems are created by calling the `system` command.  If no arguments are provided, a System with a single `Process`
 containing a single `default_mechanism <Mechanism_Base.default_mechanism>` is created.  More commonly, a System is
 created from one or more `Processes <Process>` that are specified in the **processes**  argument of the `system`
-command, and listed in its `processes <System_Base.processes>` attribute.   Whenever a System is created, a
-`ControlMechanism <ControlMechanism>` is created for it and assigned as its `controller <System_Base.controller>`.
-The `controller <System_Base.controller>` can be specified by assigning an existing ControlMechanism to the
-**controller** argument of the `system` command, or specifying a class of ControlMechanism; if none is specified,
-a `DefaultControlMechanism` is created.
+command, and listed in its `processes <System_Base.processes>` attribute.
 
 .. note::
    At present, only `Processes <Process>` can be assigned to a System; `Mechanisms <Mechanism>` cannot be assigned
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
    must be included in the **processes** argument of the `system` command.
+
+A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
+existing `ControlMechanism`, or a class of ControlMechanism in which case the ControlMechanism will be created.  In
+either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  See
+`System_Control` for additional information.
 
 
 .. _System_Structure:
@@ -165,16 +166,28 @@ additional details).
 Control
 ~~~~~~~
 
-Every System is assigned a `ControlMechanism <ControlMechanism>` to its `controller <System_Base.controller>` attribute
-that can be used to control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function
-<Mechanism.function>`. If the `controller <System_Base.controller>` is not specified in the **controller** argument of
-the System's constructor, a `DefaultControlMechanism` is created and a `ControlSignal` and `ControlProjection` are
-assigned to it for each parameter of a `Mechanism <Mechanism>` or its `function <Mechanism_Base.function>` in the
-System that has been `specified for control <ControlMechanism_Control_Signals>`.  See `ControlMechanism
-<ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and `below
-<System_Execution_Control>` for a description of how it is engaged when a System is executed.  The control
-Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>` method with its
-**show_control** argument assigned as `True`.
+A System can be assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
+control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function  <Mechanism.function>`.
+Although any number of ControlMechanism can be assigned to and executed within a System, a System can have only one
+`controller <System_Base.controller>`, that is executed after all of the other Components in the System have been
+executed, including any other ControlMechanisms (see `System Execution <System_Execution>`). When a ControlMechanism
+is assigned to or created by a System, it inherits specifications made for the System as follows:
+
+  * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
+    that may have already been specified for the ControlMechanism or its `objective_mechanism
+    <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
+    <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
+    <ObjectiveMechanism.monitored_values>` attribute);
+
+  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameters that has been
+    `specified for control <ControlMechanism_Control_Signals>` in the System;  these are added to any that the
+    ControlMechanism may already have (the full set are listed in its `control_signals
+    <ControlMechanism.control_signals>` attribute).
+
+See `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and
+`below <System_Execution_Control>` for a description of how it is engaged when a System is executed.
+The control Components of a System can be displayed using the System's `show_graph <System_Base.show_graph>` method
+with its **show_control** argument assigned as `True`.
 
 .. _System_Learning:
 
@@ -274,17 +287,16 @@ format <Run_Targets_Function_Format>`, which generates a target for each executi
 Control
 ~~~~~~~
 
-The `ControlMechanism <ControlMechanism>` assigned as the System's `controller <System_Base.controller>` (see
-`System_Control`) uses an `ObjectiveMechanism`, specified in its `monitoring_mechanism
-<ControlMechanism.monitoring_mechanism>` attribute, to monitor the `OutputState(s) <OutputState>` listed in the System's
-`monitored_output_states <ControlMechanism_Base.monitored_output_states>` attribute (see
-`ControlMechanism_Monitored_OutputStates` for a description of how to specify which OutputStates are monitored).  The
-`controller <System_Base.controller>` is executed after both `processing <System_Execution_Processing>` and `learning
-<System_Execution_Learning>` have been executed for a `TRIAL`.  The `controller <System_Base.controller>`'s `function
-<ControlMechanism.function>` uses the information received from its `monitoring_mechanism
-<ControlMechanism.monitoring_mechanism>` to modulate the value of the parameters of Components in the System `specified
-for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL`. The control Components of
-a System can be displayed using the System's `show_graph`method with its **show_control** argument assigned `True`.
+The System's `controller <System_Base.controller>` is executed in the last phase of execution in a `TRIAL`, after all
+other Mechanisms in the System have executed.  Although a System may have more than one `ControlMechanism`, only one
+can be assigned as its `controller <System_Base.controller>`;  all other ControlMechanisms are executed during the
+`processing `System_Execution_Processing` phase of the `TRIAL` like any other Mechanism.  The `controller
+<System_Base.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
+the `OutputState(s) <OutputState>` of Mechanisms in the System; based on the information it receives from that
+`ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
+for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
+additional information about control). The control Components of a System can be displayed using the System's
+`show_graph`method with its **show_control** argument assigned `True`.
 
 
 COMMENT:
@@ -319,23 +331,27 @@ import numpy as np
 import typecheck as tc
 from toposort import toposort, toposort_flatten
 
-from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
+from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
+    import ControlMechanism_Base, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
-from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
+from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import _parse_control_signal_spec
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process, System
-from PsyNeuLink.Globals.Keywords import COMPONENT_INIT, CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, CYCLE, \
-    EVC_SIMULATION, EXECUTING, FUNCTION, IDENTITY_MATRIX, INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, \
-    LEARNING, MATRIX, ORIGIN, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, TARGET, TERMINAL, TIME_SCALE, kwSeparator, \
-    kwSystemComponentCategory
+from PsyNeuLink.Globals.Keywords import SYSTEM, EXECUTING, FUNCTION, COMPONENT_INIT, SYSTEM_INIT, TIME_SCALE, \
+                                        MECHANISM, NAME, \
+                                        ORIGIN, INTERNAL, TERMINAL, TARGET, SINGLETON, CONTROL_SIGNAL_SPECS,\
+                                        SAMPLE, MATRIX, IDENTITY_MATRIX, kwSeparator, kwSystemComponentCategory, \
+                                        CONROLLER_PHASE_SPEC, CONTROL, CONTROLLER, MONITOR_FOR_CONTROL, EVC_SIMULATION,\
+                                        CYCLE, INITIALIZE_CYCLE, INITIALIZING, INITIALIZED, INITIAL_VALUES, LEARNING
+
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
 from PsyNeuLink.Globals.Utilities import ContentAddressableList, append_type_to_name, convert_to_np_array, \
-    iscompatible, \
-    parameter_spec
+    iscompatible, parameter_spec
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
@@ -385,7 +401,8 @@ class SystemError(Exception):
 # FIX:  ONCE IT IS IN THE GRAPH, IT IS NOT LONGER EASY TO DETERMINE WHICH IS WHICH IS WHICH (SINCE SETS ARE NOT ORDERED)
 
 from PsyNeuLink.Components import SystemDefaultControlMechanism
-from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism, OUTCOME
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+                  import ObjectiveMechanism, OUTCOME, OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
 from PsyNeuLink.Components.Process import process
 
 # System factory method:
@@ -395,7 +412,7 @@ def system(default_variable=None,
            processes:list=[],
            scheduler=None,
            initial_values:dict={},
-           controller=SystemDefaultControlMechanism,
+           controller=None,
            enable_controller:bool=False,
            monitor_for_control:list=[MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES],
            control_signals:tc.optional(list)=None,
@@ -412,7 +429,7 @@ def system(default_variable=None,
     processes=None,                           \
     scheduler=None,                           \
     initial_values=None,                      \
-    controller=SystemDefaultControlMechanism, \
+    controller=None,                          \
     enable_controller=:keyword:False,         \
     monitor_for_control=None,                 \
     control_signals=None,                     \
@@ -465,8 +482,9 @@ def system(default_variable=None,
         specifies whether the `controller` is executed during `System execution <System_Execution>`.
 
     monitor_for_control :  List[OutputState specification] : default None
-        specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by its
-        `controller` (see `ControlMechanism_Monitored_OutputStates` for specifying the `monitor_for_control` argument).
+        specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
+        'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
+        `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
 
     COMMENT:
         learning : [LearningProjection specification]
@@ -534,10 +552,10 @@ class System_Base(System):
     """
 
     System_Base(                                  \
-        default_variable=None,                 \
+        default_variable=None,                    \
         processes=None,                           \
         initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
+        controller=None,                          \
         enable_controller=:keyword:`False`,       \
         monitor_for_control=None,                 \
         control_signals=None,                     \
@@ -546,22 +564,6 @@ class System_Base(System):
         params=None,                              \
         name=None,                                \
         prefs=None)
-
-    COMMENT:
-        VERSION WITH learning
-        System_Base(                              \
-        default_variable=None,                 \
-        processes=None,                           \
-        initial_values=None,                      \
-        controller=SystemDefaultControlMechanism, \
-        enable_controller=:keyword:`False`,       \
-        monitor_for_control=`None`,               \
-        learning=None,                            \
-        targets=None,                             \
-        params=None,                              \
-        name=None,                                \
-        prefs=None)
-    COMMENT
 
     Base class for System.
 
@@ -585,7 +587,7 @@ class System_Base(System):
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + ClassDefaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
         + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: SystemDefaultControlMechanism,
+                                CONTROLLER: None
                                 TIME_SCALE: TimeScale.TRIAL}
        Class methods
        -------------
@@ -593,6 +595,7 @@ class System_Base(System):
         - _instantiate_attributes_before_function(context):  calls self._instantiate_graph
         - _instantiate_function(context): validates only if self.prefs.paramValidationPref is set
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs execution_list
+        - _instantiate_controller(): instantiates ControlMechanism in **controller** argument or assigned to attribute
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
         - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
         - execute(input, time_scale, context):  executes Mechanisms in order specified by execution_list
@@ -639,8 +642,8 @@ class System_Base(System):
         `Processes <Process>` in the System.
 
     learning_rate : float : default None
-        determines the learning_rate for all `LearningMechanism <LearningMechanism>` in the System.  This overrides any
-        values set for the function of individual LearningMechanism or `LearningSignals <LearningSignal>`, and persists
+        determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
+        values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
         <System_Base.learning_rate> is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
@@ -648,7 +651,7 @@ class System_Base(System):
 
     targets : 2d nparray
         used as template for the values of the System's `target_input_states`, and to represent the targets specified in
-        the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
+        the **targets** argument of System's `execute <System_Base.execute>` and `run <System_Base.run>` methods.
 
     graph : OrderedDict
         contains a graph of all of the Components in the System. Each entry specifies a set of <Receiver>: {sender,
@@ -699,7 +702,7 @@ class System_Base(System):
             Tuples for all TERMINAL Mechanisms in the System.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanism in the System.
+            Tuples for all LearningMechanisms in the System.
 
         .. _target_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
             Tuples for all TARGET `ObjectiveMechanisms <ObjectiveMechanism>`  in the System that are a `TERMINAL`
@@ -707,7 +710,7 @@ class System_Base(System):
             being a target used in learning.
 
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
-            Tuples for all LearningMechanism in the System (used for learning).
+            Tuples for all LearningMechanisms in the System (used for learning).
 
         .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
@@ -717,21 +720,21 @@ class System_Base(System):
         `Mechanisms <Mechanism>`, listed in ``origin_mechanisms.data``.
 
         .. based on _origin_mechs
-           System.input contains the input to each `ORIGIN` Mechanism
+           System_Base.input contains the input to each `ORIGIN` Mechanism
 
     terminalMechanisms : MechanismList
         all `TERMINAL` Mechanisms in the System (i.e., that don't project to any other `ProcessingMechanisms
         <ProcessingMechanism>`), listed in ``terminalMechanisms.data``.
 
         .. based on _terminal_mechs
-           System.ouput contains the output of each TERMINAL Mechanism
+           System_Base.ouput contains the output of each TERMINAL Mechanism
 
     recurrent_init_mechanisms : MechanismList
         `Mechanisms <Mechanism>` with recurrent `Projections <Projection>` that are candidates for `initialization
         <System_Execution_Input_And_Initialization>`, listed in ``recurrent_init_mechanisms.data``.
 
     learning_mechanisms : MechanismList
-        all `LearningMechanism <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
+        all `LearningMechanisms <LearningMechanism>` in the System, listed in ``learning_mechanisms.data``.
 
     target_mechanisms : MechanismList
         all `TARGET` Mechanisms in the System (used for `learning <System_Execution_Learning>`), listed in
@@ -752,7 +755,7 @@ class System_Base(System):
             contains the `ControlMechanism <ControlMechanism>` that is the `controller <System_Base.controller>` of the
             System.
             COMMENT:
-                ??and any other `ControlMechanism <ControlMechanism>` in the System
+                ??and any other `ControlMechanisms <ControlMechanism>` in the System
                 (based on _control_mechs).
             COMMENT
 
@@ -786,7 +789,7 @@ class System_Base(System):
         if not is specified, a default is assigned by SystemRegistry
         (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : System.classPreferences
+    prefs : PreferenceSet or specification dict : System_Base.classPreferences
         the `PreferenceSet` for System.
         Specified in the **prefs** argument of the constructor for the System;  if it is not specified, a default is
         assigned using `classPreferences` defined in __init__.py
@@ -831,7 +834,7 @@ class System_Base(System):
                  size=None,
                  processes=None,
                  initial_values=None,
-                 controller=SystemDefaultControlMechanism,
+                 controller=None,
                  enable_controller=False,
                  monitor_for_control=None,
                  control_signals=None,
@@ -843,6 +846,10 @@ class System_Base(System):
                  scheduler=None,
                  prefs:is_pref_set=None,
                  context=None):
+
+        # Required to defer assignment of self.controller by setter
+        #     until the rest of the System has been instantiated
+        self.status = INITIALIZING
 
         processes = processes or []
         monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
@@ -871,7 +878,6 @@ class System_Base(System):
                           context=context)
 
         if not context:
-            # context = INITIALIZING + self.name
             context = INITIALIZING + self.name + kwSeparator + SYSTEM_INIT
 
         super().__init__(default_variable=default_variable,
@@ -881,55 +887,12 @@ class System_Base(System):
                          prefs=prefs,
                          context=context)
 
+        self.status = INITIALIZED
         self._execution_id = None
 
         # Get/assign controller
-
-        # Existing controller has been assigned
-        if isinstance(self.controller, ControlMechanism_Base):
-            if self.controller.system is None:
-                self.controller.system = self
-            elif not self.controller.system is self:
-                raise SystemError("The controller assigned to {} ({}) already belongs to another System ({})".
-                                  format(self.name, self.controller.name, self.controller.system.name))
-
-        # Instantiate controller from class specification
-        else:
-            self.controller = self.controller(system=self,
-                                              monitor_for_control=monitor_for_control,
-                                              control_signals=control_signals)
-
-        # Check whether controller has input, and if not then disable
-        # # MODIFIED 5/10/17 OLD:
-        # try:
-        #     has_input_states = bool(self.controller.input_states)
-        # except:
-        #     has_input_states = False
-        # MODIFIED 5/10/17 NEW:
-        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
-        # MODIFIED 5/10/17 END
-
-        if not has_input_states:
-            # If controller was enabled (and verbose is set), warn that it has been disabled
-            if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no input_states, so controller will be disabled".
-                      format(self.controller.name, self.name))
-            self.enable_controller = False
-
-
-        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
-        try:
-            # Get phaseSpec from controller
-            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-        except (AttributeError, TypeError):
-            # Controller phaseSpec not specified
-            try:
-                # Assign System specification of Controller phaseSpec if provided
-                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
-                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
-            except:
-                # No System specification, so use System max as default
-                self.controller.phaseSpec = self._phaseSpecMax
+        # self._instantiate_controller()
+        self.controller = self.controller
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -955,11 +918,12 @@ class System_Base(System):
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        controller = target_set[CONTROLLER]
-        if (not isinstance(controller, ControlMechanism_Base) and
-                not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
-            raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
-                              format(controller, self.name))
+        if CONTROLLER in target_set and target_set[CONTROLLER] is not None:
+            controller = target_set[CONTROLLER]
+            if (not isinstance(controller, ControlMechanism_Base) and
+                    not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
+                raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
+                                  format(controller, self.name))
 
         for process in target_set[PROCESSES]:
             if not isinstance(process, Process):
@@ -1575,7 +1539,6 @@ class System_Base(System):
                     receiver=origin_mech,
                     name=self.name+' Input Projection to '+origin_mech.name)
 
-
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
         """
@@ -1900,7 +1863,7 @@ class System_Base(System):
                     name=self.name+' Input Projection to '+target_mech_TARGET_input_state.name)
 
     def _assign_output_states(self):
-        """Assign outputStates for System (the values of which will comprise System.value)
+        """Assign outputStates for System (the values of which will comprise System_Base.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
@@ -1912,9 +1875,410 @@ class System_Base(System):
         for mech in self.terminal_mechanisms.mechanisms:
             self.output_states[mech.name] = mech.output_states
 
+    def _instantiate_controller(self, control_mech_spec, context=None):
+
+        if control_mech_spec is None:
+            return
+
+       # Warn for request to assign the ControlMechanism already assigned
+        if control_mech_spec is self.controller and self.prefs.verbosePref:
+            warnings.warn("{} has already been assigned as the {} for {}; assignment ignored".
+                          format(control_mech_spec, CONTROLLER, self.name))
+            return
+
+        # An existing ControlMechanism is being assigned
+        if isinstance(control_mech_spec, ControlMechanism_Base):
+            controller = control_mech_spec
+
+# FIX: EVEN IF THE CONTROLLER HAS BEEN ASSIGNED TO A SYSTEM, STILL NEED TO ADD MONITORED_OUTPUT_STATES AND
+# FIX:            CONTROL_SIGNALS FOR NEW SYSTEM
+
+            # If it has NOT been assigned a System or already has another controller:
+            if controller.system is None or not controller.system is self:
+                controller.assign_as_controller(self, context=context)
+
+        # A ControlMechanism class or subclass is being used to specify the controller
+        elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism_Base):
+            # Instantiate controller from class specification using:
+            #   monitored_values for System to specify its objective_mechanism (as list of OutputStates to be monitored)
+            #   ControlSignals for System returned by _get_system_control_signals()
+            controller = control_mech_spec(system=self,
+                                           objective_mechanism=self._get_monitored_output_states_for_system(
+                                                                                                      context=context),
+                                           # objective_mechanism=self.monitor_for_control,
+                                           control_signals=self._get_control_signals_for_system(self.control_signals,
+                                                                                                context=context))
+
+        else:
+            raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
+                              format(CONTROLLER, self.name, control_mech_spec))
+
+        # Warn if current one is being replaced
+        if self.controller and self.prefs.verbosePref:
+            warnings.warn("The existing {} for {} ({}) is being replaced by {}".
+                          format(CONTROLLER, self.name, self.controller.name, controller.name))
+
+        # Make assignment
+        self._controller = controller
+
+        # Check whether controller has input, and if not then disable
+        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+
+        if not has_input_states:
+            # If controller was enabled (and verbose is set), warn that it has been disabled
+            if self.enable_controller and self.prefs.verbosePref:
+                print("{} for {} has no input_states, so controller will be disabled".
+                      format(self.controller.name, self.name))
+            self.enable_controller = False
+
+        # Compare _phaseSpecMax with controller's phaseSpec, and assign default if it is not specified
+        try:
+            # Get phaseSpec from controller
+            self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+        except (AttributeError, TypeError):
+            # Controller phaseSpec not specified
+            try:
+                # Assign System specification of Controller phaseSpec if provided
+                self.controller.phaseSpec = self.paramsCurrent[CONROLLER_PHASE_SPEC]
+                self._phaseSpecMax = max(self._phaseSpecMax, self.controller.phaseSpec)
+            except:
+                # No System specification, so use System max as default
+                self.controller.phaseSpec = self._phaseSpecMax
+
+    def _get_monitored_output_states_for_system(self, controller=None, context=None):
+        """
+        Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
+            - if specification in output_state is None:
+                 do NOT monitor this state (this overrides any other specifications)
+            - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+            - if a Mechanism is terminal and/or specified in the System or `controller <Systsem_Base.controller>`:
+                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
+                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
+            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+
+        Notes:
+        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
+            - it specifies options for assigning outputStates of terminal Mechanisms in the System
+                to controller.monitored_output_states;  the options are:
+                + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
+                  TERMINAL Mechanism
+                + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
+            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+        * controller.monitored_output_states is a list, each item of which is an OutputState from which a Projection
+            will be instantiated to a corresponding InputState of the ControlMechanism
+        * controller.input_states is the usual ordered dict of states,
+            each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
+
+        Returns list of tuples, each of which is a monitored_value (OutputState, weight, exponent) tuple.
+
+        """
+
+        from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
+        from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+            import _validate_monitored_value
+
+        # PARSE SPECS
+
+        # MODIFIED 9/10/17 NEW:
+        # Get OutputStates already being or specified to be monitored by controller
+        if controller is not None and not inspect.isclass(controller):
+            try:
+                # Get from monitored_output_states attribute if controller is already implemented
+                controller_specs = controller.monitored_output_states.copy() or []
+            except AttributeError:
+                # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
+                #    (i.e., the call to this method is part of its instantiation by a System)
+                #    so, get specification from the **object_mechanism** argument
+                if isinstance(controller.objective_mechanism, list):
+                    controller_specs = controller.objective_mechanism.copy() or []
+                elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
+                    controller_specs = controller.objective_mechanism.monitored_values
+        else:
+            controller_specs = []
+        # MODIFIED 9/10/17 END
+
+        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        system_specs = self.monitor_for_control.copy()
+
+        # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        if controller_specs:
+            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
+                option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
+                if option_item is not None:
+                    del system_specs[option_item]
+            for item in controller_specs:
+                if item in system_specs:
+                    del system_specs[system_specs.index(item)]
+
+        # Combine controller and system specs
+        # If there are none, assign PRIMARY_OUTPUT_STATES as default
+        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+
+        # Extract references to Mechanisms and/or OutputStates from any tuples
+        # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
+        all_specs_extracted_from_tuples = []
+        for item in all_specs:
+            # VALIDATE SPECIFICATION
+            # Handle EVCMechanism's tuple format:
+            if isinstance(item, tuple):
+                if len(item) != 3:
+                    raise SystemError("Tuple specification for OutputState to be monitored in {} ({}) "
+                                      "has {} items;  it should be 3".
+                                         format(self.name, item, len(item)))
+                if not isinstance(item[WEIGHT_INDEX], numbers.Number):
+                    raise SystemError("Entry for weight in tuple specification of OutputState "
+                                         "to be monitored in {}  (item {}: {}) must be a number".
+                                         format(WEIGHT_INDEX, item[WEIGHT_INDEX], self.name))
+                if not isinstance(item[EXPONENT_INDEX], numbers.Number):
+                    raise SystemError("Entry for weight in tuple specification of OutputState "
+                                         "to be monitored in {}  (item {}: {}) must be a number".
+                                         format(WEIGHT_INDEX, item[EXPONENT_INDEX], self.name))
+                # Set state_spec to the output_state item for validation below
+                item = item[0]
+            # MODIFIED 2/22/17 END
+            # Validate by ObjectiveMechanism:
+            _validate_monitored_value(self, item, context=context)
+            # Extract references from specification tuples
+            if isinstance(item, tuple):
+                all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
+            # Otherwise, add item as specified:
+            else:
+                all_specs_extracted_from_tuples.append(item)
+
+        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
+        option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
+        if not option_specs:
+            ctlr_or_sys_option_spec = None
+        elif len(option_specs) == 1:
+            ctlr_or_sys_option_spec = option_specs[0]
+        else:
+            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified "
+                              "for OutputStates to be monitored in {}: {}".
+                           format(self.name, option_specs))
+
+        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
+        # Assign outputStates to monitored_output_states
+        monitored_output_states = []
+
+        # Notes:
+        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
+        #     (for use in generating exponents and weights below)
+        # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
+        #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
+        controller_and_system_specs = all_specs_extracted_from_tuples.copy()
+
+        for mech in self.mechanisms:
+
+            # For each Mechanism:
+            # - add its specifications to all_specs (for use below in generating exponents and weights)
+            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
+            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
+            # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
+            #     to assign outputStates to monitored_output_states
+
+            mech_specs = []
+            output_state_specs = []
+            local_specs = controller_and_system_specs.copy()
+            option_spec = ctlr_or_sys_option_spec
+
+            # PARSE MECHANISM'S SPECS
+
+            # Get MONITOR_FOR_CONTROL specification from Mechanism
+            try:
+                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+
+                if mech_specs is NotImplemented:
+                    raise AttributeError
+
+                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
+                if mech_specs is None:
+                    raise ValueError
+
+            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
+            except (KeyError, AttributeError):
+                pass
+
+            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputStates
+            except ValueError:
+                continue
+
+            # Parse specs in Mechanism's MONITOR_FOR_CONTROL
+            else:
+
+                # Add mech_specs to all_specs
+                all_specs.extend(mech_specs)
+
+                # Extract refs from tuples and add to local_specs
+                for item in mech_specs:
+                    if isinstance(item, tuple):
+                        local_specs.append(item[OUTPUT_STATE_INDEX])
+                        continue
+                    local_specs.append(item)
+
+                # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
+                #    if there is one, use it in place of any specified for controller or system
+                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
+                if not option_specs:
+                    option_spec = ctlr_or_sys_option_spec
+                elif option_specs and len(option_specs) == 1:
+                    option_spec = option_specs[0]
+                else:
+                    raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
+                                   format(mech.name, option_specs))
+
+            # PARSE OUTPUT STATE'S SPECS
+
+            # for output_state_name, output_state in list(mech.outputStates.items()):
+            for output_state in mech.output_states:
+
+                # Get MONITOR_FOR_CONTROL specification from OutputState
+                try:
+                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
+                    if output_state_specs is NotImplemented:
+                        raise AttributeError
+
+                    # Setting MONITOR_FOR_CONTROL to None specifies OutputState should NOT be monitored
+                    if output_state_specs is None:
+                        raise ValueError
+
+                # OutputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
+                except (KeyError, AttributeError):
+                    pass
+
+                # OutputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
+                except ValueError:
+                    continue
+
+                # Parse specs in OutputState's MONITOR_FOR_CONTROL
+                else:
+
+                    # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
+                    #       as a specification for an OutputState
+
+                    # Add OutputState specs to all_specs and local_specs
+                    all_specs.extend(output_state_specs)
+
+                    # Extract refs from tuples and add to local_specs
+                    for item in output_state_specs:
+                        if isinstance(item, tuple):
+                            local_specs.append(item[OUTPUT_STATE_INDEX])
+                            continue
+                        local_specs.append(item)
+
+            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
+            for output_state in mech.output_states:
+                if (output_state in local_specs or output_state.name in local_specs):
+                    option_spec = None
+
+
+            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_states
+
+            for output_state in mech.output_states:
+
+                # If OutputState is named or referenced anywhere, include it
+                if (output_state in local_specs or output_state.name in local_specs):
+                    monitored_output_states.append(output_state)
+                    continue
+
+    # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
+    # THE LIST NOR IS IT A TERMINAL MECHANISM
+
+                # If:
+                #   Mechanism is named or referenced in any specification
+                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
+                #   or it is a terminal Mechanism
+                elif (mech.name in local_specs or mech in local_specs or
+                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
+                              mech in self.terminal_mechanisms.mechanisms):
+                    #
+                    if (not (mech.name in local_specs or mech in local_specs) and
+                            not mech in self.terminal_mechanisms.mechanisms):
+                        continue
+
+                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
+                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
+                        if output_state is mech.output_state:
+                            monitored_output_states.append(output_state)
+                            continue
+                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
+                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
+                        monitored_output_states.append(output_state)
+                    elif mech.name in local_specs or mech in local_specs:
+                        if output_state is mech.output_state:
+                            monitored_output_states.append(output_state)
+                            continue
+                    elif option_spec is None:
+                        continue
+                    else:
+                        raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
+                                       "{0} of {1}".
+                                       format(output_state.name, mech.name))
+
+
+        # ASSIGN EXPONENTS AND WEIGHTS TO OUTCOME_FUNCTION
+
+        num_monitored_output_states = len(monitored_output_states)
+        weights = np.ones(num_monitored_output_states)
+        exponents = np.ones_like(weights)
+
+        # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
+        for spec in all_specs:
+            if isinstance(spec, tuple):
+                object_spec = spec[OUTPUT_STATE_INDEX]
+                # For each OutputState in monitored_output_states
+                for item in monitored_output_states:
+                    # If either that OutputState or its owner is the object specified in the tuple
+                    if item is object_spec or item.name is object_spec or item.owner is object_spec:
+                        # Assign the weight and exponent specified in the tuple to that OutputState
+                        i = monitored_output_states.index(item)
+                        weights[i] = spec[WEIGHT_INDEX]
+                        exponents[i] = spec[EXPONENT_INDEX]
+
+        return list(zip(monitored_output_states, weights, exponents))
+
+    def _validate_monitored_states(self, monitored_states, context=None):
+        for spec in monitored_states:
+            # if not any((spec is mech.name or spec in mech.output_states.names)
+            if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
+                       for mech in self.mechanisms):
+                raise SystemError("Specification of {} arg for {} appears to be a list of "
+                                            "Mechanisms and/or OutputStates to be monitored, but one "
+                                            "of them ({}) is in a different System".
+                                            format(OBJECTIVE_MECHANISM, self.name, spec))
+
+    def _get_control_signals_for_system(self, control_signals=None, context=None):
+        """Generate and return a list of control_signal_specs for System
+
+        Generate list from:
+           ControlSignal specifications passed in from the **control_signals** argument.
+           ParameterStates of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
+               Note: this includes any for which a ControlSignal rather than a ControlProjection
+                     was used to specify control for a parameter (e.g., in a 2-item tuple specification for the
+                     parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
+                     are completed in the call to _instantiate_control_signal() by the ControlMechanism.
+        """
+        control_signal_specs = control_signals or []
+        for mech in self.mechanisms:
+            for parameter_state in mech._parameter_states:
+                for projection in parameter_state.mod_afferents:
+                    # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
+                    if projection.init_status is InitStatus.DEFERRED_INITIALIZATION:
+                        proj_control_signal_specs = projection.control_signal_params or {}
+                        proj_control_signal_specs.update({CONTROL_SIGNAL_SPECS: [projection]})
+                        control_signal_specs.append(proj_control_signal_specs)
+        return control_signal_specs
+
+    def _validate_control_signals(self, control_signals, context=None):
+        if control_signals:
+            for control_signal in control_signals:
+                for control_projection in control_signal.efferents:
+                    if not any(control_projection.receiver in mech._parameters_states for mech in self.mechanisms):
+                        raise SystemError("A parameter controlled by a ControlSignal of a controller "
+                                          "being assigned to {} is not in that System".format(self.name))
+
     def initialize(self):
-        """Assign :py:data:`initial_values <System_Base.initialize>` to mechanisms designated as \
-        `INITIALIZE_CYCLE` and contained in recurrent_init_mechanisms.
+        """Assign `initial_values <System_Base.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
+        contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
         # FIX: CHECK THAT ALL MECHANISMS ARE INITIALIZED FOR WHICH mech.system[SELF]==INITIALIZE
@@ -1947,12 +2311,13 @@ class System_Base(System):
         Execute controller after all mechanisms have been executed (after each numPhases)
 
         .. Execution:
-            - the input arg in System.execute() or run() is provided as input to ORIGIN mechanisms (and System.input);
+            - the input arg in System_Base.execute() or run() is provided as input to ORIGIN mechanisms (and
+              System_Base.input);
                 As with a process, `ORIGIN` Mechanisms will receive their input only once (first execution)
                     unless clamp_input (or SOFT_CLAMP or HARD_CLAMP) are specified, in which case they will continue to
             - execute() calls Mechanism.execute() for each Mechanism in its execute_graph in sequence
-            - outputs of `TERMINAL` Mechanisms are assigned as System.ouputValue
-            - System.controller is executed after execution of all Mechanisms in the System
+            - outputs of `TERMINAL` Mechanisms are assigned as System_Base.ouputValue
+            - System_Base.controller is executed after execution of all Mechanisms in the System
             - notes:
                 * the same Mechanism can be listed more than once in a System, inducing recurrent processing
 
@@ -1991,11 +2356,12 @@ class System_Base(System):
             mech._execution_id = self._execution_id
         for learning_mech in self.learningexecution_list:
             learning_mech._execution_id = self._execution_id
-        self.controller._execution_id = self._execution_id
-        if self.enable_controller and self.controller.input_states:
-            for state in self.controller.input_states:
-                for projection in state.all_afferents:
-                    projection.sender.owner._execution_id = self._execution_id
+        if self.controller is not None:
+            self.controller._execution_id = self._execution_id
+            if self.enable_controller and self.controller.input_states:
+                for state in self.controller.input_states:
+                    for projection in state.all_afferents:
+                        projection.sender.owner._execution_id = self._execution_id
 
         self._report_system_output = self.prefs.reportOutputPref and context and EXECUTING in context
         if self._report_system_output:
@@ -2311,7 +2677,7 @@ class System_Base(System):
             the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
         targets : List[input] or np.ndarray(input) : default `None`
-            the target values for the LearningMechanism of the System for each execution.
+            the target values for the LearningMechanisms of the System for each execution.
             The length (of the outermost level if a nested list, or lowest axis if an ndarray) must be equal to that
             of ``inputs``.
 
@@ -2480,7 +2846,6 @@ class System_Base(System):
         for process in self.processes:
             print ("\t\t{} [learning enabled: {}]".format(process.name, process._learning_enabled))
 
-
         # Print execution_sets (output of toposort)
         print ("\n\tExecution sets: ".format(self.name))
         # Sort for consistency of output
@@ -2567,7 +2932,7 @@ class System_Base(System):
 
             NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;
 
-            LEARNING_MECHANISMS: list of `LearningMechanism <LearningMechanism>`;
+            LEARNING_MECHANISMS: list of `LearningMechanisms <LearningMechanism>`;
 
             TARGET: list of `TARGET` Mechanisms;
 
@@ -2718,13 +3083,18 @@ class System_Base(System):
         """
         return self._phaseSpecMax + 1
 
-    # @property
-    # def execution_graph_mechs(self):
-    #     """Mechanisms whose mechs appear as keys in self.execution_graph
-    #
-    #     :rtype: list of Mechanism objects
-    #     """
-    #     return self.execution_graph
+    @property
+    def controller(self):
+        return self._controller
+
+    @controller.setter
+    def controller(self, control_mech_spec):
+
+        if self.status is INITIALIZING:
+            return
+
+        else:
+            self._instantiate_controller(control_mech_spec, context='System.controller setter')
 
     def show_graph(self,
                    direction = 'BT',
@@ -2737,7 +3107,7 @@ class System_Base(System):
         """Generate a display of the graph structure of mechanisms and projections in the system.
 
         By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
-        in the `System's graph <System.graph>` are displayed.  However, the **show_learning** and
+        in the `System's graph <System_Base.graph>` are displayed.  However, the **show_learning** and
         **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
         `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always
         displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless
@@ -2765,7 +3135,7 @@ class System_Base(System):
 
         control_color : keyword : default `blue`
             determines the color in which the learning components are displayed (note: if the System's
-            `controller <System.controller>`) is an `EVCMechanism`, then a link is shown in red from the
+            `controller <System_Base.controller>`) is an `EVCMechanism`, then a link is shown in red from the
             `prediction Mechanisms <EVCMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
             the prediction Mechanisms determine the input to the `ORIGIN` Mechanisms when the EVCMechanism
@@ -2925,8 +3295,8 @@ class SystemInputState(OutputState):
     <Process_Base.run>` methods.
 
     COMMENT:
-        Each instance encodes a `target <System.target>` to the system (also a 1d array in 2d array of
-        `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
+        Each instance encodes a `target <System_Base.target>` to the system (also a 1d array in 2d array of
+        `targets <System_Base.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
         Mechanism of the System.
 
         .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection

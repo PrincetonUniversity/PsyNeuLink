@@ -495,8 +495,8 @@ COMMENT:
 COMMENT
     ..
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
-      the `controller` for the System to which the Mechanism belongs (see :ref:`specifying monitored OutputStates
-      <ControlMechanism_Monitored_OutputStates>` for details of specification).
+      the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputStates
+      <ObjectiveMechanism_Monitored_Values>` for details of specification).
     ..
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
@@ -640,7 +640,7 @@ MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies outputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ControlMechanism_Monitored_OutputStates for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitored_Values` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()
@@ -1545,7 +1545,6 @@ class Mechanism_Base(Mechanism):
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
         _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
-        _instantiate_input_states(owner=self, context=context)
 
     def _instantiate_parameter_states(self, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
@@ -2118,6 +2117,8 @@ class Mechanism_Base(Mechanism):
 
         input_states = []
         output_states = []
+        instantiated_input_states = None
+        instantiated_output_states = None
 
         for state in states:
             state_type = _parse_state_type(self, state)
@@ -2130,9 +2131,12 @@ class Mechanism_Base(Mechanism):
 
         # _instantiate_state_list(self, input_states, InputState)
         if input_states:
-            _instantiate_input_states(self, input_states, context=context)
+            instantiated_input_states = _instantiate_input_states(self, input_states, context=context)
         if output_states:
-            _instantiate_output_states(self, output_states, context=context)
+            instantiated_output_states = _instantiate_output_states(self, output_states, context=context)
+
+        return {INPUT_STATES: instantiated_input_states,
+                OUTPUT_STATES: instantiated_output_states}
 
     def _get_mechanism_param_values(self):
         """Return dict with current value of each ParameterState in paramsCurrent

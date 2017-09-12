@@ -79,7 +79,7 @@ If the **monitor_for_control** argument is specified in the LCMechanism's constr
 `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
 `monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states
 <LCMechanism.monitored_output_states>` attribute). The UtilityIntegratorMechanism itself is assigned to the
-LCMechanism's `monitoring_mechanism <LCMechanism.monitoring_mechanism>` attribute).
+LCMechanism's `objective_mechanism <LCMechanism.objective_mechanism>` attribute).
 COMMENT
 
 .. _LCMechanism_Structure:
@@ -308,7 +308,7 @@ class LCMechanism(ControlMechanism_Base):
         determines the value for the mode parameter of the LCMechanism's `FitzHughNagumoIntegrator` function.
 
     COMMENT:
-        monitoring_mechanism : ObjectiveMechanism
+        objective_mechanism : ObjectiveMechanism
             Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
             argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
             `input_state <Mechanism_Base.input_state>`.
@@ -463,11 +463,6 @@ class LCMechanism(ControlMechanism_Base):
                                            "that does not have a {}.".
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
-    # def _instantiate_monitored_output_states(self, context=None):
-    #     raise LCMechanismError("{0} (subclass of {1}) must implement _instantiate_monitored_output_states".
-    #                                       format(self.__class__.__name__,
-    #                                              self.__class__.__bases__[0].__name__))
-
     def _instantiate_input_states(self, context=None):
         """Instantiate input_value attribute
 
@@ -475,7 +470,7 @@ class LCMechanism(ControlMechanism_Base):
             and assign any OutputStates that project to the input_states to monitored_output_states
 
         IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
-                              subclasses of ControlMechanism;  in the future, an _instantiate_monitoring_mechanism()
+                              subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
                               method should be implemented that also implements an _instantiate_monitored_output_states
                               method, and that can be used to add OutputStates/Mechanisms to be monitored.
         """
@@ -541,12 +536,10 @@ class LCMechanism(ControlMechanism_Base):
 
         # MODIFIED 9/3/17 END
 
-
-
         super()._instantiate_output_states(context=context)
 
     # def _instantiate_attributes_after_function(self, context=None):
-    #     """Implment ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
+    #     """Implement ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
     #
     #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
     #         that insures that any ControlSignals specified in control_signals arg are instantiated first
@@ -622,7 +615,7 @@ class LCMechanism(ControlMechanism_Base):
             del(self.modulated_mechanisms[index])
 
     def show(self):
-        """Display the `OutputStates <OutputState>` monitored by the LCMechanism's `monitoring_mechanism`
+        """Display the `OutputStates <OutputState>` monitored by the LCMechanism's `objective_mechanism`
         and the `multiplicative parameters <Function_Modulatory_Params>` modulated by the LCMechanism.
         """
 
@@ -630,17 +623,17 @@ class LCMechanism(ControlMechanism_Base):
 
         print ("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputStates:")
-        if self.monitoring_mechanism is None:
+        if self.objective_mechanism is None:
             print ("\t\tNone")
         else:
-            for state in self.monitoring_mechanism.input_states:
+            for state in self.objective_mechanism.input_states:
                 for projection in state.path_afferents:
                     monitored_state = projection.sender
                     monitored_state_mech = projection.sender.owner
                     monitored_state_index = self.monitored_output_states.index(monitored_state)
 
-                    weight = self.monitor_for_control_weights_and_exponents[monitored_state_index][0]
-                    exponent = self.monitor_for_control_weights_and_exponents[monitored_state_index][1]
+                    weight = self.monitored_output_states_weights_and_exponents[monitored_state_index][0]
+                    exponent = self.monitored_output_states_weights_and_exponents[monitored_state_index][1]
 
                     print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
                            format(monitored_state_mech.name, monitored_state.name, weight, exponent))

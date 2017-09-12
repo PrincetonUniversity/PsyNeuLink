@@ -5,6 +5,12 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Components.Functions.Function import Logistic, Linear, LinearCombination
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT
+from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -18,13 +24,6 @@ from PsyNeuLink.Components.Process import process
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
-
-class ScratchPadError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-#
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -671,43 +670,62 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # s.run(inputs)
 # #endregion
 
-#region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
-
-a = TransferMechanism(name='a', default_variable=[0, 0])
-b = TransferMechanism(name='b')
-c = TransferMechanism(name='c')
-d = TransferMechanism(name='d')
-
-p1 = process(pathway=[a,
-                      # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
-                      #                   name="MP-1"),
-                      b,
-                      c,
-                      # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
-                      #                   name="MP-2"),
-                      d],
-             # learning=LEARNING,
-             name='p1')
-
-# s = system(
-#     processes=[p1],
-#     name='Double Learning System',
-#     # initial_values={a: [1, 1]},
-# )
-
+# #region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
+#
+# a = TransferMechanism(name='a', default_variable=[0, 0])
+# b = TransferMechanism(name='b')
+# c = TransferMechanism(name='c')
+# d = TransferMechanism(name='d')
+#
+# p1 = process(pathway=[a,
+#                       # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING),
+#                       #                   name="MP-1"),
+#                       b,
+#                       c,
+#                       # MappingProjection(matrix=(RANDOM_CONNECTIVITY_MATRIX, LEARNING_PROJECTION),
+#                       #                   name="MP-2"),
+#                       d],
+#              # learning=LEARNING,
+#              name='p1')
+#
+# # s = system(
+# #     processes=[p1],
+# #     name='Double Learning System',
+# #     # initial_values={a: [1, 1]},
+# # )
+#
+# # inputs = {a: [2, 2]}
+# # s.run(inputs)
+# # s.show_graph(show_learning=True)
+#
 # inputs = {a: [2, 2]}
-# s.run(inputs)
-# s.show_graph(show_learning=True)
+# TEST = p1.execute(input=[2,2])
+# # p1.run(inputs)
+# TEST=True
+#
+# #endregion
 
-inputs = {a: [2, 2]}
-TEST = p1.execute(input=[2,2])
-# p1.run(inputs)
-TEST=True
+# #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
-#endregion
+my_transfer_mech_1 = TransferMechanism()
+my_DDM = DDM()
+my_transfer_mech_2 = TransferMechanism(function=Logistic)
+# my_control_mech = EVCMechanism(
+#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
+#                                                                                   my_DDM.output_states[
+#                                                                                       my_DDM.RESPONSE_TIME]],
+#                                                                 function=LinearCombination(operation=SUM)),
+#                          control_signals=[(THRESHOLD, my_DDM),
+#                                           (GAIN, my_transfer_mech_2)])
+my_control_mech = EVCMechanism(objective_mechanism=[(my_transfer_mech_1, 2, 1),
+                                                    my_DDM.output_states[my_DDM.RESPONSE_TIME]],
+                               function=LinearCombination(operation=SUM),
+control_signals=[(THRESHOLD, my_DDM),
+                 (GAIN, my_transfer_mech_2)])
 
-
+# endregion
 
 #region TEST INPUT FORMATS
 

@@ -178,7 +178,8 @@ SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"
-INITIALIZING = " INITIALIZING "  # Used as context for Log
+INITIALIZING = " INITIALIZING "  # Used as status and context for Log
+INITIALIZED = " INITIALIZED "  # Used as status
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = '| Assign' # Used in context for Log
@@ -331,7 +332,7 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # ObjectiveMechanisms:
-OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 
 # ProcessingMechanisms:
@@ -485,7 +486,7 @@ kwInitialPoint = 'initial_point'
 MODULATION = 'modulation'
 
 # ControlMechanism / EVCMechanism
-MAKE_DEFAULT_CONTROLLER = "make_default_controller"
+OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"
