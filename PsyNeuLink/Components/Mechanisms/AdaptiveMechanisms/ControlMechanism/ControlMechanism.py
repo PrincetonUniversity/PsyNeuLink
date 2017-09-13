@@ -305,8 +305,7 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                                                           import ObjectiveMechanism, _parse_monitored_values_list, \
-                                                                  OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
+                                                           import ObjectiveMechanism, _parse_monitored_values
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -571,7 +570,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                     # If ControlMechanism has been assigned to a System,
                     #    check that all the items in the list used to specify objective_mechanism are in the same System
                     if self.system:
-                        self.system._validate_monitored_states([spec], context=context)
+                        self.system._validate_monitored_state_in_system([spec], context=context)
 
             elif not isinstance(target_set[OBJECTIVE_MECHANISM], ObjectiveMechanism):
                 raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
@@ -634,7 +633,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         elif isinstance(self.objective_mechanism, list):
-            monitored_output_states = _parse_monitored_values_list(self, self.objective_mechanism, context=context)
+            monitored_output_states = _parse_monitored_values(source=self,
+                                                              output_state_list=self.objective_mechanism,
+                                                              context=context)
 
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
@@ -937,7 +938,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         """
         output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
         if self.system:
-            self.system._validate_monitored_states(output_states, context=context)
+            self.system._validate_monitored_state_in_system(output_states, context=context)
 
         # MODIFIED 9/12/17 OLD:
         # if output_states:
@@ -985,7 +986,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         # First, validate that all of the ControlMechanism's monitored_output_states and controlled parameters
         #    are in the new System
-        system._validate_monitored_states(self.monitored_output_states)
+        system._validate_monitored_state_in_system(self.monitored_output_states)
         system._validate_control_signals(self.control_signals)
 
         # Next, get any OutputStates specified in the **monitored_values** argument of the System's

@@ -2478,7 +2478,7 @@
 #                       (outputState or mech, MonitoredOutputStatesOptions, tuple(exp, weight))
 #     FIX: MAKE MONITOR_FOR_CONTROL A REQUIRED PARAM FOR System CLASS
 #          ALLOW IT TO BE:  MonitoredOutputStatesOption, Mechanism, OutputState or list containing any of those
-#     FIX: NEED TO SOMEHOW CALL _validate_monitored_state FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
+#     FIX: NEED TO SOMEHOW CALL _validate_monitored_state_in_system FOR MONITOR_FOR_CONTROL IN SYSTEM.params[]
 #     FIX: CALL _instantiate_monitored_output_states AFTER instantiate_prediction_mechanism (SO LATTER CAN BE MONITORED)
 #     FIX: QUESTION:  WHICH SHOULD HAVE PRECEDENCE FOR MONITOR_FOR_CONTROL default: System,Mechanism or ConrolMechanism?
 #     IMPLEMENT: EVCMechanism.MonitoredOutputStates (list of each Mechanism.outputState being monitored)
@@ -3325,7 +3325,7 @@
 #
 #     Validate ObjectiveMechanism.monitor argument:
 #         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_montiored_states) and
-#               monitor (in ObjectiveMechanism._validate_monitored_states) needs to be handled in a more principled way
+#               monitor (in ObjectiveMechanism._validate_monitored_state_in_system) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
 #     Make sure add_monitored_value works

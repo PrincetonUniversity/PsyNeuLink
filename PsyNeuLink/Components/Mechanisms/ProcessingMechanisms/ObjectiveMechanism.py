@@ -39,8 +39,8 @@ Monitored Values
 The **monitored_values** argument of the constructor specifies the OutputStates it monitors.  The assignment of the
 OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
 `ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System_Base.controller>`.  The **monitored_values** argument can be specified in any of the following
-ways:
+`controller <System_Base.controller>`.  The **monitored_values** argument can be specified as any one of a list of
+the following:
 
 COMMENT:
 Note that some forms of specification may
@@ -69,29 +69,6 @@ COMMENT
   ..
   * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used.
 
-  .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
-
-  * **OutputState specification dictionary** -- this the most flexible form of specification, that can be used
-    to specify an OutputState by its Mechanism and name, and/or its `weight <ObjectiveMechanism.weight>` and `exponent
-    `<ObjectiveMechanism.exponent>` attributes;  it can contain any of the following *KEY*:<value>
-    entries, but must include the *MECHANISM* entry:
-
-        * *MECHANISM*:<`Mechanism`>
-            if this is not accompanied by an *OUTPUT_STATE* entry, the Mechanism's `primary OutputState
-            <OutputState_Primary>` is used;
-
-        * *OUTPUT_STATE*:<`OutputState` or str>
-            if a string is used, it must be the name of an OutputState of the Mechanism specified in the
-            *MECHANISM* entry;
-
-        * *WEIGHT*:<number>
-            must be an integer or a float; multiplies the value of the OutputState before being combined with
-            others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
-
-        * *EXPONENT*:<number>
-            must be an integer or a float; exponentiates the value of the OutputState before being combined with
-            others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
-
   .. _ObjectiveMechanism_OutputState_Tuple:
 
   * **monitored_values tuple** -- this is a convenience notation that can be used to compactly specify a weight
@@ -109,10 +86,27 @@ COMMENT
     .. _ObjectiveMechanism_Weights_And_Exponents:
 
     .. note::
-       The weight and exponent specifications in a dictionary or tuple are used to specify the `weight
-       <InputState.weight>` and `exponent <InputState.exponents>` of the corresponding InputState of the
-       ObjectiveMechanism;  therefore, any values specified there take precedence over any other weight and/or exponent
-       specifications of the InputStates for the ObjectiveMechanism.
+       The weight and exponent specifications in a tuple are used to specify the `weight <InputState.weight>` and
+       `exponent <InputState.exponents>` of the corresponding InputState of the ObjectiveMechanism;  therefore,
+       any values specified there take precedence over any other weight and/or exponent specifications of the
+       InputStates for the ObjectiveMechanism.
+
+  .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
+
+  * **monitored_value specification dictionary** -- this the most flexible form of specification, that can be used
+    to specify an OutputState by its Mechanism and name, and/or its `weight <ObjectiveMechanism.weight>` and `exponent
+    `<ObjectiveMechanism.exponent>` attributes;  it can contain any of the following *KEY*:<value>
+    entries, but must include the *MECHANISM* entry:
+
+        * *MECHANISM*:<`Mechanism`>
+            if this is not accompanied by an *OUTPUT_STATE* entry, the Mechanism's `primary OutputState
+            <OutputState_Primary>` is used;
+
+        * *OUTPUT_STATES*:[str, OutputState, or monitored_values tuple>...]
+            if a string is used for an item, it must be the name of an OutputState of the Mechanism specified in the
+            *MECHANISM* entry;
+
+
 
 If an OutputState to be monitored is specified at the time the ObjectiveMechanism is created, or the specification
 can be resolved to an OutputState, a `MappingProjection` is automatically created from it to the corresponding
@@ -300,14 +294,18 @@ weight and exponent parameters.
 
 
 COMMENT:
-                  # # # WORKS:
-                  # controller=EVCMechanism(objective_mechanism=[Reward,
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: Decision.PROBABILITY_UPPER_THRESHOLD},
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: Decision.RESPONSE_TIME,
-                  #                                               WEIGHT: 1,
-                  #                                               EXPONENT: -1}]),
+
+The following example uses a dictionary to specify the **monitored_values** argument, allowing several OutputStates
+for the same Mechanism to be specified more easily, each by name rather than by full reference (which is required
+if they are specified on their own or in a tuple::
+
+    my_objective_mech = ObjectiveMechanism(monitored_values=[Reward,
+                                                            {MECHANISM: Decision,
+                                                             OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
+                                                                             (RESPONSE_TIME, 1, -1)]}])
+
+Note that the tuple format can still be used for each individual OutputState in the list assigned to the
+OUTPUT_STATES entry.
 COMMENT
 
 
@@ -321,7 +319,6 @@ Class Reference
 import warnings
 
 import typecheck as tc
-import numpy as np
 import numbers
 
 
@@ -336,7 +333,7 @@ from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT
 from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
                                         INPUT_STATES, PROJECTIONS, WEIGHT, WEIGHTS, EXPONENT, EXPONENTS, SENDER, \
                                         MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
-                                        OUTPUT_STATE, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
+                                        OUTPUT_STATE, OUTPUT_STATES, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -653,7 +650,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 else:
                     # Validate each item of MONITORED_VALUES
                     for item in target_set[MONITORED_VALUES]:
-                        _validate_monitored_value(self, item, context=context)
+                        _parse_monitored_values(source=self, output_state_list=item, context=context)
 
             except KeyError:
                 pass
@@ -683,7 +680,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # PARSE monitored_values
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        monitored_values = _parse_monitored_values_list(self, self.monitored_values, context)
+        monitored_values = _parse_monitored_values(source=self,
+                                                   output_state_list=self.monitored_values,
+                                                   context=context)
         output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
         monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values]
         monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
@@ -801,7 +800,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # First parse for tuples to extract OutputStates, weights and exponents
-        monitored_values_parsed = _parse_monitored_values_list(self, monitored_values, context)
+        monitored_values_parsed = _parse_monitored_values(source=self,
+                                                          output_state_list=monitored_values,
+                                                          context=context)
         output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values_parsed]
         monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values_parsed]
         monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values_parsed]
@@ -948,119 +949,159 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_weights_and_exponents(weights, exponents)
 
 
-def _validate_monitored_value(component, state_spec, context=None):
-    """Validate specification for monitored_value arg
+def _parse_monitored_values(source, output_state_list, mech=None, context=None):
+    """Parses specifications in list and returns list of tuples: [(OutputState, exponent, weight)...]
 
-    Validate that each item of monitored_value arg is:
-        * OutputState
-        * Mechanism,
-        * string, or
-        * MonitoredOutpuStatesOption value.
+    Serves the following purposes:
+
+        Validates that each item of monitored_value arg is:
+            * OutputState
+            * Mechanism,
+            * tuple: (OutputState/Mechanism, weight, exponent) tuple
+            * dictionary: {MECHANISM:<Mechanism>, <OUTPUT_STATES:[<legal monitored_value spec>, ...]}
+            * string
+            * MonitoredOutpuStatesOption value
+
+    Extract references to Mechanisms and/or OutputStates, exponents and weights from each tuple
+    and assign each to its own list
+    Assign None as default for unspecified weights and exponents, so that specification of these for
+       InputStates can be used (see ObjectiveMechanism._instantiate_input_states)
 
     Called by:
-        self._validate_variable()
-        self.add_monitored_value()
-        EVCMechanism._get_monitored_output_states_for_system()
-    """
-    from PsyNeuLink.Components.States.OutputState import OutputState
-    if not isinstance(state_spec, (str, OutputState, Mechanism, tuple, dict, MonitoredOutputStatesOption)):
+        self._validate_params()
+        self._instantiate_input_states()
+        self._instantiate_monitored_values()
+        ControlMechanism._instantiate_objective_mechanism()
+        System._get_monitored_output_states_for_system()
+
+        ERROR MESSAGE:
         raise ObjectiveMechanismError("Specification of OutputState to be monitored for {} ({}) must be an "
                                       "OutputState, the name or a specification dictionary for one, "
                                       "a Mechanism, a (Mechanism, weight, exponent) tuple, or a value of "
                                       "MonitoredOutputStatesOption".
                                       format(component.name, state_spec))
 
-def _parse_monitored_values_list(source, output_state_list, context):
-    """Parses tuples specified in output_state_list and returns list of tuples: [(OutputState, exponent, weight)...]
     """
 
-    # Extract references to Mechanisms and/or OutputStates, exponents and weights and assign each to its own list
-    # Assign None as default for unspecified weights and exponents, so that specification of these for
-    #    InputStates can be used (see ObjectiveMechanism._instantiate_input_states)
+    if not isinstance(output_state_list, list):
+        output_state_list = [output_state_list]
 
-    # output_states = output_state_list
-    # weights = np.ones((len(output_states),1))
-    # exponents = np.ones_like(weights)
-    output_states = np.array([None] * len(output_state_list))
-    weights = output_states.copy()
-    exponents = weights.copy()
+    # output_states = np.array([None] * len(output_state_list))
+    # weights = output_states.copy()
+    # exponents = weights.copy()
+    output_states = []
+    weights = []
+    exponents = []
+    DEFAULT_WEIGHT = None
+    DEFAULT_EXPONENT = None
 
-    for i, item in enumerate(output_state_list):
+    for item in output_state_list:
 
+        # Specification is an OutputState on its own, so use it and assign default weight and exponent
         if isinstance(item, OutputState):
-            output_states[i] = item
+            output_states.append(item)
+            weights.append(DEFAULT_WEIGHT)
+            exponents.append(DEFAULT_EXPONENT)
 
+        # Specification is a Mechanism, so use its primary OutputState and assign default weight and exponent
         elif isinstance(item, Mechanism):
-            output_states[i] = item.output_state
+            output_states.append(item.output_state)
+            weights.append(DEFAULT_WEIGHT)
+            exponents.append(DEFAULT_EXPONENT)
 
-        elif isinstance(item, dict):
-            if not MECHANISM in item:
-                raise ObjectiveMechanismError("OutputState specification dictionary used for monitored_value "
-                                              "specification in {} must have at least a MECHANISM entry ".
-                                              format(source.name))
-            output_states[i] = item[MECHANISM]
+        # Specification is a string so see if it is the name of an OutputState
+        elif isinstance(item, str):
+            if mech is not None:
+                # If mech was specified, interpret str as the name of one of its OutputStates
+                try:
+                    output_states.append(mech.output_states[item])
+                except KeyError:
+                    raise ObjectiveMechanismError("{} does not have an OutputState named {} "
+                                                  "(used to specify it in monitored_values for {})".
+                                                  format(mech.name, item, source.name))
+                except AttributeError:
+                    raise ObjectiveMechanismError("MECHANISM entry ({}) of monitored_values specification dictionary "
+                                                  "for {} does not appear to have an output_states attribute".
+                                                  format(mech.name, source.name))
+            else:
+                # Specification is an "unbound" string, so pass it along
+                #    (note:  strings can be used as "placemarkers" for InputStates that will be resolved later,
+                #            e.g., for TARGET InputState of a ComparatorMechanism)
+                output_states.append(item)
+            weights.append(DEFAULT_WEIGHT)
+            exponents.append(DEFAULT_EXPONENT)
 
-            if OUTPUT_STATE in item:
-                if not (item[OUTPUT_STATE] in item[MECHANISM].output_states or
-                                item[OUTPUT_STATE] in item[MECHANISM].output_states.names):
-                    raise ObjectiveMechanismError("Value of OUTPUT_STATE entry in OutputState specification dictionary "
-                                                  "for {} must be an OutputState of {} or the name of one".
-                                         format(source.name, item[MECHANISM].name))
-                if isinstance(item[OUTPUT_STATE], OutputState):
-                    output_states[i] = item[OUTPUT_STATE]
-                else:
-                    output_states[i] = item[MECHANISM].output_states[item[OUTPUT_STATE]]
-
-            if WEIGHT in item:
-                if not isinstance(item[WEIGHT], numbers.Number):
-                    raise ObjectiveMechanismError("Value of WEIGHT entry in OutputState specification dictionary for "
-                                                  "{} must be a number".
-                                         format(item[WEIGHT_INDEX], source.name))
-                weights[i] = item[WEIGHT]
-
-            if EXPONENT in item:
-                if not isinstance(item[EXPONENT], numbers.Number):
-                    raise ObjectiveMechanismError("Value of WEIGHT entry in OutputState specification dictionary for "
-                                                  "{} must be a number".
-                                         format(item[EXPONENT], source.name))
-                exponents[i] = item[EXPONENT]
-
+        # Specification is a tuple so parse
         elif isinstance(item, tuple):
+            #  Check that it has three items:  (monitored_value specification, weight, exponent)
             if len(item) != 3:
                 raise ObjectiveMechanismError("Tuple {} used for monitored_value specification in {} "
                                      "has {} items;  it should be 3".
                                      format(item, source.name, len(item)))
 
-            output_state_spec = item[OUTPUT_STATE_INDEX]
+            # Recursively call _parse_monitored_values to parse the first item of the tuple
+            # (index with 0 since parse returns a list, but should only be one item in it)
+            output_state_tuple = _parse_monitored_values(source,
+                                                         item[OUTPUT_STATE_INDEX],
+                                                         mech=mech, context=context)[0]
 
-            # If first item of tuple is a Mechanism, get its primary OutputState
-            if isinstance(output_state_spec, Mechanism):
-                output_state_spec = output_state_spec.output_state
+            # Use OutputState in tuple returned from parse
+            output_state = output_state_tuple[OUTPUT_STATE_INDEX]
+            if not isinstance(output_state, (OutputState, Mechanism)):
+                raise ObjectiveMechanismError("PROGRAM ERROR: parse_monitored_values() returned a tuple for {}"
+                                              "the first item of which ({}) is not an OutputState or Mechanism".
+                                              format(source.name, output_state))
+            output_states.append(output_state)
 
-            # First item of tuple should now be an OutputState
-            if not isinstance(output_state_spec, OutputState):
-                raise ObjectiveMechanismError("First item of tuple for monitored_value of {} ({})  "
-                                              "must be an OutputState or a Mechanism".
-                                              format(source.name, item[OUTPUT_STATE_INDEX]))
-            output_states[i] = output_state_spec
+            # Use weight and exponent if returned from parse;  otherwise use what was in item
+            weight = output_state_tuple[WEIGHT_INDEX] or item[WEIGHT_INDEX]
+            exponent = output_state_tuple[EXPONENT_INDEX] or item[EXPONENT_INDEX]
 
-            if item[WEIGHT_INDEX] and not isinstance(item[WEIGHT_INDEX], numbers.Number):
+            if weight and not isinstance(weight, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the weight ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(item[WEIGHT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
-            weights[i] = item[WEIGHT_INDEX]
+                                     format(weight, item[OUTPUT_STATE_INDEX].name, source.name))
+            weights.append(weight)
 
-            if item[EXPONENT_INDEX] and not isinstance(item[EXPONENT_INDEX], numbers.Number):
+            if exponent and not isinstance(exponent, numbers.Number):
                 raise ObjectiveMechanismError("Specification of the exponent ({}) in tuple for {} of {} "
                                      "must be a number".
-                                     format(item[EXPONENT_INDEX], item[OUTPUT_STATE_INDEX].name, source.name))
-            exponents[i] = item[EXPONENT_INDEX]
+                                     format(exponent, item[OUTPUT_STATE_INDEX].name, source.name))
+            exponents.append(exponent)
 
-        elif isinstance(item, str):
-            output_states[i] = item
+        # Specification is a dictionary, so parse
+        elif isinstance(item, dict):
+            if not MECHANISM in item:
+                raise ObjectiveMechanismError("Specification dictionary used for monitored_values in {} "
+                                              "is missing its MECHANISM entry".format(source.name))
+            mech = item[MECHANISM]
 
-        # Validate by ObjectiveMechanism:
-        _validate_monitored_value(source, output_states[i], context=context)
+            if OUTPUT_STATES in item:
+                # Get list of OutputState specifications and append to output_states by
+                #    recursively calling _parse_monitored_values to parse the list of OutputState entries
+                #    (index with 0 since parse returns a list, but should only be one item in it)
+                output_state_tuples = _parse_monitored_values(source=source,
+                                                              output_state_list=item[OUTPUT_STATES],
+                                                              mech=mech,
+                                                              context=context)
+                output_states.extend([output_state_tuple[OUTPUT_STATE_INDEX]
+                                      for output_state_tuple in output_state_tuples])
+                weights.extend([output_state_tuple[WEIGHT_INDEX]
+                                      for output_state_tuple in output_state_tuples])
+                exponents.extend([output_state_tuple[EXPONENT_INDEX]
+                                      for output_state_tuple in output_state_tuples])
+
+            else:
+                # MECHANISM was the only entry in the dict,
+                #     so use it as a specification for the primary OutputState of the Mechanism
+                output_states.append(mech.output_state)
+                weights.append(DEFAULT_WEIGHT)
+                exponents.append(DEFAULT_EXPONENT)
+
+    if not (len(output_states)==len(weights)==len(exponents)):
+        raise ObjectiveMechanismError("PROGRAM ERROR: The lengths of the lists of OutputStates ({}), weights ({}) and "
+                                      "exponents ({}) are not equal in the monitored_values specification for {}".
+                                      format(len(output_states), len(weights), len(exponents), source.name))
 
     return list(zip(output_states, weights, exponents))
 

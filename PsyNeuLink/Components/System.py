@@ -990,7 +990,8 @@ class System_Base(System):
         #           format(self.name, self.names.__str__().strip("[]")))
 
     def _validate_variable(self, variable, context=None):
-        """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: one 1D value for each input state
+        """Convert self.ClassDefaults.variable, self.instance_defaults.variable, and variable to 2D np.array: \
+        one 1D value for each input state
         """
         super(System_Base, self)._validate_variable(variable, context)
 
@@ -1562,12 +1563,13 @@ class System_Base(System):
             for input_state in mech.input_states:
                 orig_mech_input.append(input_state.value)
             self.instance_defaults.variable.append(orig_mech_input)
-        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)  # should add Utility to allow conversion to 3D array
+        self.instance_defaults.variable = convert_to_np_array(self.instance_defaults.variable, 2)
+        # should add Utility to allow conversion to 3D array
         # MODIFIED 2/8/17 END
-        # An example: when input state values are vectors, then self.instance_defaults.variable is a 3D array because an origin
-        # mechanism could have multiple input states if there is a recurrent input state. However, if input state values
-        # are all non-vector objects, such as strings, then self.instance_defaults.variable would be a 2D array. so we should
-        # convert that to a 3D array
+        # An example: when input state values are vectors, then self.instance_defaults.variable is a 3D array because
+        # an origin mechanism could have multiple input states if there is a recurrent input state. However,
+        # if input state values are all non-vector objects, such as strings, then self.instance_defaults.variable
+        # would be a 2D array. so we should convert that to a 3D array
         # MODIFIED 6/27/17 END
 
         # Instantiate StimulusInputStates
@@ -1601,12 +1603,13 @@ class System_Base(System):
             if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
                 continue
             # MODIFIED 6/27/17 NEW:
-            # added a for loop to iterate over origin_mech.input_states to allow for
-            # multiple input states in an origin mechanism (useful only if the origin mechanism is a KWTA)
-            # Check, for each ORIGIN mechanism, that the length of the corresponding item of self.instance_defaults.variable matches the
-            # length of the ORIGIN inputState's instance_defaults.variable attribute
+            # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
+            # origin mechanism (useful only if the origin mechanism is a KWTA) Check, for each ORIGIN mechanism,
+            # that the length of the corresponding item of self.instance_defaults.variable matches the length of the
+            #  ORIGIN inputState's instance_defaults.variable attribute
             for j in range(len(origin_mech.input_states)):
-                if len(self.instance_defaults.variable[i][j]) != len(origin_mech.input_states[j].instance_defaults.variable):
+                if len(self.instance_defaults.variable[i][j]) != \
+                        len(origin_mech.input_states[j].instance_defaults.variable):
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
@@ -1939,10 +1942,11 @@ class System_Base(System):
                                           len(target_mech_TARGET_input_state.instance_defaults.variable),
                                           target_mech.name))
 
-            system_target_input_state = SystemInputState(owner=self,
-                                                        variable=target_mech_TARGET_input_state.instance_defaults.variable,
-                                                        prefs=self.prefs,
-                                                        name="System Target {}".format(i))
+            system_target_input_state = SystemInputState(
+                                                   owner=self,
+                                                   variable=target_mech_TARGET_input_state.instance_defaults.variable,
+                                                   prefs=self.prefs,
+                                                   name="System Target {}".format(i))
             self.target_input_states.append(system_target_input_state)
 
             # Add MappingProjection from system_target_input_state to TARGET mechainsm's target inputState
@@ -2061,7 +2065,7 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-            import _validate_monitored_value
+            import _parse_monitored_values
 
         # PARSE SPECS
 
@@ -2089,7 +2093,7 @@ class System_Base(System):
         # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
         if controller_specs:
             if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
-                option_item = next((item for item in system_specs if isinstance(item, MonitoredOutputStatesOption)),None)
+                option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputStatesOption)),None)
                 if option_item is not None:
                     del system_specs[option_item]
             for item in controller_specs:
@@ -2121,12 +2125,14 @@ class System_Base(System):
                                          format(WEIGHT_INDEX, item[EXPONENT_INDEX], self.name))
                 # Set state_spec to the output_state item for validation below
                 item = item[0]
-            # MODIFIED 2/22/17 END
+
             # Validate by ObjectiveMechanism:
-            _validate_monitored_value(self, item, context=context)
+            _parse_monitored_values(source=self, output_state_list=item, context=context)
+
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
+
             # Otherwise, add item as specified:
             else:
                 all_specs_extracted_from_tuples.append(item)
@@ -2319,7 +2325,7 @@ class System_Base(System):
 
         return list(zip(monitored_output_states, weights, exponents))
 
-    def _validate_monitored_states(self, monitored_states, context=None):
+    def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:
             # if not any((spec is mech.name or spec in mech.output_states.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
@@ -2490,7 +2496,8 @@ class System_Base(System):
                     if system_input_state:
                         system_input_state.value = input[i][j]
                     else:
-                        logger.warning("Failed to find expected SystemInputState for {} at input state number ({}), ({})".
+                        logger.warning("Failed to find expected SystemInputState "
+                                       "for {} at input state number ({}), ({})".
                               format(origin_mech.name, j+1, origin_mech.input_states[j]))
                         # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
 
@@ -2555,9 +2562,11 @@ class System_Base(System):
     def _execute_processing(self, clock=CentralClock, context=None):
         # Execute each Mechanism in self.execution_list, in the order listed during its phase
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
-        # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update()) FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
+        # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
+        # FIX:    FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
         if self.scheduler_processing is None:
-            raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+            raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, '
+                              'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, self.termination_processing))
         for next_execution_set in self.scheduler_processing.run(termination_conds=self.termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
@@ -2633,7 +2642,8 @@ class System_Base(System):
 
         # NEXT, execute all components involved in learning
         if self.scheduler_learning is None:
-            raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, must be initialized before execution'.format(self.name))
+            raise SystemError('System.py:_execute_learning - {0}\'s scheduler is None, '
+                              'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
         for next_execution_set in self.scheduler_learning.run(termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
