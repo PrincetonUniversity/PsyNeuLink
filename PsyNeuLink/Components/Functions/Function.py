@@ -229,7 +229,9 @@ from PsyNeuLink.Globals.Keywords import ACCUMULATOR_INTEGRATOR_FUNCTION, \
     UNIFORM_DIST_FUNCTION, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, \
     WALD_DIST_FUNCTION, WEIGHTS, kwComponentCategory, kwPreferenceSetName, \
     TDLEARNING_FUNCTION, Q_MATRIX, CURRENT_STATE, GOAL_STATE, INITIAL_WEIGHTS, \
-    LEARNING_RATE, REWARD, DISCOUNT_FACTOR, INITIAL_ITERATIONS
+    LEARNING_RATE, REWARD, DISCOUNT_FACTOR, INITIAL_ITERATIONS, \
+    IDENTITY_TRANSFORM_FUNCTION, DEFAULT_MATRIX, TD_DELTA_FUNCTION, T, \
+    T_MINUS_ONE
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref, kpRuntimeParamStickyAssignmentPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Registry import register_category
@@ -1740,6 +1742,74 @@ class LinearCombination(CombinationFunction):  # -------------------------------
         self._scale = val
 
 
+class TDDeltaFunction(LinearCombination):
+    componentName = TD_DELTA_FUNCTION
+
+    class ClassDefaults(LinearCombination.ClassDefaults):
+        variable = [1, 1]
+
+    paramClassDefaults = LinearCombination.paramClassDefaults.copy()
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 weights: tc.optional(parameter_spec)=None,
+                 reward=None,
+                 scale=None,
+                 offset=None,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context=componentName + INITIALIZING):
+        params = self._assign_args_to_param_dicts(weights=weights,
+                                                  reward=reward,
+                                                  scale=scale,
+                                                  offset=offset,
+                                                  params=params)
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        variable = self._update_variable(self._check_args(variable=variable,
+                                                          params=params,
+                                                          context=context))
+        weights = self.weights
+
+        if self.offset is None:
+            offset = 0.0
+        else:
+            offset = self.offset
+
+        if self.scale is None:
+            scale = 1.0
+        else:
+            scale = 1.0
+
+        if params[REWARD] is None:
+            reward = params[REWARD]
+        else:
+            reward = 0.0
+
+        # Apply weights
+        if weights is not None:
+            variable = self._update_variable(variable * weights)
+
+        # TODO: implement scale and offset
+        result = (variable[T] + reward) - variable[T_MINUS_ONE]
+
+        return result
+
+
+
+
+
 
 # region ***********************************  TRANSFER FUNCTIONS  ***********************************************
 # endregion
@@ -2991,6 +3061,96 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True
 #     return False
+
+class IdentityTransform(TransferFunction):
+    """
+    IdentityTransform(     \
+        default_variable, \
+        matrix=None,      \
+        params=None,      \
+        owner=None,       \
+        name=None,        \
+        prefs=None,       \
+        )
+
+    .. _IdentityTransfer:
+
+    Matrix transform of variable:
+        `function <IdentityTransfer.function>` returns identity of `variable
+        <IdentityTransform.variable>`.
+
+        Used for MappingProjection when variable and matrix should be the same
+        size.
+
+    Arguments
+    ---------
+
+    variable: list or np.ndarray : default ClassDefaults.variable
+
+    matrix: list or np.ndarray : default IDENTITY_MATRIX
+
+    bounds: None
+
+    params: Optional[Dict[param keyword, param value]]
+
+    owner: Component
+
+    prefs: Optional[PreferenceSet or specification dict : Function.classPreferences]
+
+
+    """
+
+    componentName = IDENTITY_TRANSFORM_FUNCTION
+
+    bounds = None
+    multiplicative_param = None
+    additive_param = None
+
+    DEFAULT_FILLER_VALUE = 0
+
+    class ClassDefaults(TransferFunction.ClassDefaults):
+        variable = [0]
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    paramClassDefaults.update({
+        MATRIX: None
+    })
+
+    def __init__(self,
+                 default_variable=ClassDefaults.variable,
+                 matrix=None,
+                 params=None,
+                 owner=None,
+                 prefs=None,
+                 context=componentName + INITIALIZING):
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(matrix=matrix, params=params)
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        if default_variable is not self.ClassDefaults.variable and matrix is not None:
+            if np.shape(default_variable) != np.shape(matrix):
+                raise FunctionError("Variable and matrix must have the same size.")
+
+    def function(self, variable=None, params=None, context=None):
+        if params is None and variable is None:
+            return self.ClassDefaults.variable
+
+        if params[MATRIX] is not None and variable is None:
+            return params[MATRIX]
+
+        if variable is not None and params[MATRIX] is None:
+            return variable
+
+        if variable is not None and params[MATRIX] is not None:
+            if np.shape(variable) != np.shape(params[MATRIX]):
+                raise FunctionError("Variable and matrix must have the same shape.")
+            else:
+                return variable
 
 
 def get_matrix(specification, rows=1, cols=1, context=None):
@@ -7108,9 +7268,6 @@ class TDLearning(LearningFunction):
         self.q_matrix = q_matrix
         # self.reward = reward
 
-        print(np.size(q_matrix))
-
-        print("Calling super().__init()__")
         super().__init__(default_variable, params, context=context, owner=owner,
                          prefs=prefs)
 
@@ -7131,11 +7288,13 @@ class TDLearning(LearningFunction):
                  params=None,
                  context=None):
         self._check_args(variable=variable, params=params, context=context)
-        print("variable:")
-        print(variable)
 
         if context and "INITIALIZING" in context:
-            print("Initializing function...")
+            if variable is not None:
+                print("variable:")
+                print(variable)
+                return np.ones(len(variable[0])), np.zeros(len(variable[0]))
+
             # return np.zeros(variable.shape), np.zeros(len(variable[0]))
             return self.default_initial_weights, np.zeros(np.shape(self.default_initial_weights))
 

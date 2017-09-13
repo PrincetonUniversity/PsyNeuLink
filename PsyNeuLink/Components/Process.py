@@ -1819,6 +1819,7 @@ class Process_Base(Process):
                     seen.add(mech)
                 if mech.processes[self] in {ORIGIN, SINGLETON}:
                     self.instance_defaults.variable.extend(mech.instance_defaults.variable)
+        print("Instance defaults variable: {}".format(self.instance_defaults.variable))
         process_input = convert_to_np_array(self.instance_defaults.variable, 2)
 
         # Get number of Process inputs
@@ -1852,6 +1853,7 @@ class Process_Base(Process):
                 # Insure that each Process input value is compatible with corresponding variable of mechanism.input_state
                 # MODIFIED 4/3/17 NEW:
                 input_state_variable = mechanism.input_states[i].instance_defaults.variable
+                print("input state variable size: {}".format(np.shape(input_state_variable)))
                 # MODIFIED 4/3/17 END
                 if not iscompatible(process_input[i], input_state_variable):
                     raise ProcessError("Input value {0} ({1}) for {2} is not compatible with "

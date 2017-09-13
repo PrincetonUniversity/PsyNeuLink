@@ -145,7 +145,7 @@ allows a MappingProjection to be created before its `sender <MappingProjection.s
 specifying its **sender** or **receiver** arguments. However, for the MappingProjection to be operational,
 initialization must be completed by calling its `deferred_init` method.  This is not necessary if the MappingProjection
 is specified in the `pathway <Process_Base.pathway>` of `Process`, or anywhere else that its `sender
-<MappingProjection.sender>` and receiver <MappingProjection.receiver>` can be determined by context.
+<MappingProjection.sender>` and `receiver <MappingProjection.receiver>` can be determined by context.
 
 .. _Mapping_Structure:
 
@@ -387,6 +387,10 @@ class MappingProjection(PathwayProjection_Base):
     paramClassDefaults.update({FUNCTION: LinearMatrix,
                                PROJECTION_SENDER: OUTPUT_STATE, # Assigned to class ref in __init__.py module
                                PROJECTION_SENDER_VALUE: [1],
+                               # MATRIX: [[1], [1]]
+                               FUNCTION_PARAMS: {
+                                   MATRIX: [[1], [1]]
+                               }
                                })
     @tc.typecheck
     def __init__(self,
@@ -417,14 +421,17 @@ class MappingProjection(PathwayProjection_Base):
                 function_params={MATRIX: matrix},
                 params=params)
 
+
         self.learning_mechanism = None
         self.has_learning_projection = False
+
+        # print(self.params.items())
 
         # If sender or receiver has not been assigned, defer init to State.instantiate_projection_to_state()
         if sender is None or receiver is None:
             self.init_status = InitStatus.DEFERRED_INITIALIZATION
 
-        # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
+    # Validate sender (as variable) and params, and assign to variable and paramsInstanceDefaults
         super(MappingProjection, self).__init__(sender=sender,
                                                 receiver=receiver,
                                                 params=params,
@@ -432,7 +439,7 @@ class MappingProjection(PathwayProjection_Base):
                                                 prefs=prefs,
                                                 context=self)
 
-    # def _instantiate_sender(self, context=None):
+        # def _instantiate_sender(self, context=None):
             # # IMPLEMENT: HANDLE MULTIPLE SENDER -> RECEIVER MAPPINGS, EACH WITH ITS OWN MATRIX:
             # #            - kwMATRIX NEEDS TO BE A 3D np.array, EACH 3D ITEM OF WHICH IS A 2D WEIGHT MATRIX
             # #            - MAKE SURE len(self.sender.value) == len(self.receiver.input_states.items())
@@ -447,6 +454,8 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
+        # TODO: why is AccumulatorIntegrator hardcoded here?
+
         matrix = get_matrix(self._parameter_states[MATRIX].value)
         initial_rate = matrix * 0.0
 
@@ -599,9 +608,14 @@ class MappingProjection(PathwayProjection_Base):
         matrix = np.array(matrix)
 
         # FIX: Hack to prevent recursion in calls to setter and assign_params
-        self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
-
-        self.function_object.matrix = matrix
+        try:
+            self.function.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+            self.function.matrix = matrix
+            print("Set paramValidationPref!")
+        except AttributeError:
+            pass
+        # self.function.__self__.paramValidationPref = PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        # self.function_object.matrix = matrix
 
     @property
     def _matrix_spec(self):

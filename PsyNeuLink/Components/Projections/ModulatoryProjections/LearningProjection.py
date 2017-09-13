@@ -490,6 +490,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
         if not iscompatible(self.value, self.receiver.instance_defaults.variable):
+            print("Receiver name: {}".format(self.receiver.name))
             raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
                                           "the MappingProjection ({}) to which it is being assigned ({})".
                                           format(self.name,

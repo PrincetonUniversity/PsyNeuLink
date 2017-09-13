@@ -2,17 +2,18 @@ import pprint
 
 import numpy as np
 
-
-from PsyNeuLink import system, CentralClock
-from PsyNeuLink.Components.Process import process
-
+from PsyNeuLink import system
+from PsyNeuLink.Components.Functions.Function import TDLearning, \
+    TransferFunction, IdentityTransform
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism \
     import TransferMechanism
-
-from PsyNeuLink.Components.Functions.Function import TDLearning, SoftMax
-from PsyNeuLink.Components.Projections.ModulatoryProjections\
+from PsyNeuLink.Components.Process import process
+from PsyNeuLink.Components.Projections.ModulatoryProjections \
     .LearningProjection import LearningProjection
-from PsyNeuLink.Globals.Keywords import CURRENT_STATE, PROB
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection \
+    import MappingProjection
+from PsyNeuLink.Globals.Keywords import CURRENT_STATE, FUNCTION, MATRIX
+from PsyNeuLink.Scheduling.TimeScale import CentralClock
 
 
 def test_td_learning():
@@ -110,20 +111,6 @@ def test_q_matrix():
 
 
 def test_mechanism_integration():
-    input_layer = TransferMechanism(
-        default_variable=[0, 0, 0],
-        name='Input Layer'
-    )
-
-    action_selection = TransferMechanism(
-        default_variable=[0, 0, 0],
-        function=SoftMax(
-            output=PROB,
-            gain=1.0
-        ),
-        name='Action Selection'
-    )
-
     reward = [[None, None, None, None, 0, None],
               [None, None, None, 0, None, 100],
               [None, None, None, 0, None, None],
@@ -132,35 +119,58 @@ def test_mechanism_integration():
               [None, 0, None, None, 0, 100]]
     reward = np.array(reward, dtype=float)
 
+    print("Num dimensions: {}".format(reward.ndim))
+    print("Is reward instance of np.ndarray? {}".format(isinstance(reward, np.ndarray)))
+
+    input_layer = TransferMechanism(
+        default_variable=np.ones(reward.shape),
+        name='Input Layer'
+    )
+
+    action_selection = TransferMechanism(
+        default_variable=np.ones(reward.shape),
+        name='Action Selection'
+    )
+
+    identity_transform_func = IdentityTransform(
+        default_variable=np.ones(reward.shape), matrix=np.ones(reward.shape))
+
+    mapping_proj_params = {
+        FUNCTION: identity_transform_func
+    }
+
+    identity_mapping_projection = MappingProjection(sender=input_layer,
+                                                    receiver=action_selection,
+                                                    matrix=reward,
+                                                    params=mapping_proj_params)
+
     td_learning = TDLearning(reward=reward, discount_factor=0.8, goal_state=5)
 
     p = process(
-        default_variable=[0, 0, 0],
-        size=3,
-        pathway=[input_layer, action_selection],
+        default_variable=np.ones((6, 1, 6)),
+        pathway=[input_layer, identity_mapping_projection, action_selection],
         learning=LearningProjection(
-            learning_function=td_learning),
-        target=0
+            learning_function=td_learning)
     )
 
     def print_header():
-        print("\n\n**** TRIAL: {}".format(trial_num))
-        trial_num += 1
+        print("\n\n**** TRIAL: {}".format(CentralClock.trial))
 
     def show_weights():
         print("Reward prediction weights: {}".format(
             action_selection.input_states[0].path_afferents[0].matrix))
 
-    input_list = {input_layer: [[1, 1, 1]]}
+    input_list = {input_layer: np.ones((3, 6, 6))}
+
+
 
     s = system(
         processes=[p],
-        targets=[0]
     )
-
+    # size of inputs must = size of targets
     results = s.run(
+        input_list,
         num_trials=10,
-        inputs=input_list,
         targets=reward,
         call_before_trial=print_header,
         call_after_trial=show_weights

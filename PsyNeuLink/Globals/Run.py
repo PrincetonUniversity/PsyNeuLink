@@ -352,7 +352,7 @@ def run(object,
         reset_clock:bool=True,
         initialize:bool=False,
         initial_values:tc.optional(tc.any(list, dict, np.ndarray))=None,
-        targets:tc.optional(tc.any(list, dict, np.ndarray, function_type))=None,
+        targets=None,
         learning:tc.optional(bool)=None,
         call_before_trial:tc.optional(callable)=None,
         call_after_trial:tc.optional(callable)=None,
@@ -457,7 +457,7 @@ def run(object,
 
     inputs = _construct_stimulus_sets(object, inputs)
 
-    if targets:
+    if targets is not None:
         targets = _construct_stimulus_sets(object, targets, is_target=True)
 
     object_type = _get_object_type(object)
@@ -855,7 +855,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
 
     # Check that all of the stimuli in each list are compatible with the corresponding mechanism's variable
     for mech, stim_list in stimuli.items():
-
+        print("stimuli items: {}".format(stimuli.items()))
         # First entry in stimulus list is a single item (possibly an item in a simple list or 1D array)
         if not isinstance(stim_list[0], Iterable):
             # If mech.instance_defaults.variable is also of length 1
@@ -868,9 +868,8 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
                 # Assume that the list consists of a single stimulus, so wrap it in list
                 stimuli[mech] = [stim_list]
             else:
-                raise RunError("Stimuli for {} of {} are not properly formatted ({})".
-                                  # format(append_type_to_name(mech),object.name, stimuli[mech]))
-                                  format(mech.name, object.name, stimuli[mech]))
+                raise RunError("Stimuli for {} of {} are not properly formatted ({} should have size {})".
+                                  format(mech.name, object.name, stimuli[mech], np.size(mech.instance_defaults.variable)))
 
         for stim in stimuli[mech]:
             if not iscompatible(np.atleast_2d(stim), mech.instance_defaults.variable):
@@ -1038,8 +1037,9 @@ def _validate_inputs(object, inputs=None, is_target=False, num_phases=None, cont
                 raise RunError("PROGRAM ERROR: Unexpected shape of inputs: {}".format(inputs.shape))
 
         if inputs.ndim != expected_dim:
-            raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list".
-                              format(object.name, expected_dim))
+            print("Inputs: {}".format(inputs))
+            raise RunError("inputs arg in call to {}.run() must be a {}d np.array or comparable list (currently {}d)".
+                              format(object.name, expected_dim, inputs.ndim))
 
         if np.size(inputs,PROCESSES_DIM) != len(object.origin_mechanisms):
             raise RunError("The number of inputs for each execution ({}) in the call to {}.run() "

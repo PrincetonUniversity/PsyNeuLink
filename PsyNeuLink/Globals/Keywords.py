@@ -257,6 +257,9 @@ TIME_STEPS_DIM = 1
 PROCESSES_DIM = 2
 INPUTS_DIM = 3
 
+T = 0
+T_MINUS_ONE = 1
+
 COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_ASSIGNMENT = 'Deferred Assignment'
@@ -334,6 +337,7 @@ EVC_MECHANISM = "EVCMechanism"
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
+PREDICTION_ERROR_MECHANISM = "PredictionErrorMechanism"
 
 # ProcessingMechanisms:
 TRANSFER_MECHANISM = "TransferMechanism"
@@ -349,6 +353,7 @@ ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+TD_DELTA_FUNCTION = "TDDelta Function"
 LINEAR_FUNCTION = "Linear Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
@@ -362,6 +367,7 @@ ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU Integrator Function"
 LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+IDENTITY_TRANSFORM_FUNCTION = "IdentityTransform Function"
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 TDLEARNING_FUNCTION = 'TDLearning Function'
