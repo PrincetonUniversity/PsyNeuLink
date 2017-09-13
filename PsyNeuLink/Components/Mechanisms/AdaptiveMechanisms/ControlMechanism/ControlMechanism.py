@@ -89,7 +89,10 @@ can be specified in the **objective_mechanism** argument of its constructor, usi
 
   * an existing `ObjectiveMechanism`, or a constructor for one;  in this case the **monitored_values** argument of the
     ObjectiveMechanism's constructor is used to `specify the OutputStates` <ObjectiveMechanism_Monitored_Values>`
-    to be monitored and evaluated (see `ControlMechanism_Examples`);
+    to be monitored and evaluated (see `ControlMechanism_Examples`); note that, in this case, the default behavior
+    of the ObjectiveMechanism overrides any defaults that the ControlMechanism uses for its `objective_function
+    ControlMechanism.objective_function` attribute (see `note <EVCMechanism_Objective_Mechanism_Function_Note>`
+    in EVCMechanism for an example);
   ..
   * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Values>`;  in this case, a default
     ObjectiveMechanism is created, using the list of OutputState specifications as the **monitored_values**
@@ -207,61 +210,6 @@ ControlSignal's ControlProjection.   The `value <ControlProjection>` of the Cont
 description of how a ControlSignal modulates the value of a parameter it controls).
 
 
-.. _ControlMechanism_Examples:
-
-COMMENT:
-@@@@@@@@@@@ CHECK THAT THESE WORK!! -- IN PARTICULR, THE control_signal TUPLE SPECIFICATIONS
-COMMENT
-
-Examples
-~~~~~~~~
-
-The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
-that specifies the OutputStates monitored by the ObjectiveMechanism::
-
-    my_transfer_mech_1 = TransferMechanism()
-    my_DDM = DDM()
-    my_transfer_mech_2 = TransferMechanism(function=Logistic)
-    my_control_mech = ControlMechanism_Base(
-                             objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
-                                                                                      my_DDM.RESPONSE_TIME],
-                                                                    function=LinearCombination(operation=SUM)),
-                             control_signals=[(THRESHOLD, DDM),
-                                              (GAIN, my_transfer_mech_2)])
-
-This will create an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
-<Primary_OutputState>` of ``my_Transfer_mech`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
-will multiply the former by 2 before adding ther values, and then pass the result as the input to the
-ControlMechanism.  The ControlMechanism's `function <ControlMechanism_Base.function>` will use this value to determine
-the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of the
-``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_2``.
-
-The following specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly to the
-**objective_mechanism** argument::
-
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=[(my_transfer_mech_1, 2, 1),
-                                                 my_DDM.RESPONSE_TIME],
-                            control_signals:[(THRESHOLD, DDM),
-                                             (GAIN, my_transfer_mech_2)])
-
-Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
-the values of the monitored OutputStates will be added (the default) rather than multiplied.
-
-The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
-
-    my_obj_mech=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
-                                                     my_DDM.RESPONSE_TIME],
-                                   function=LinearCombination(LinearCombinationOperation.MULTIPLY)),
-
-    my_control_mech = ControlMechanism(
-                            objective_mechanism=my_obj_mech,
-                            control_signals:[(THRESHOLD, DDM),
-                                             (GAIN, my_transfer_mech_2)])
-
-Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function.
-
-
 .. _ControlMechanism_Execution:
 
 Execution
@@ -282,6 +230,64 @@ subsequent `TRIAL` of execution.
    executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
    ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
    to which it belongs has executed.
+
+
+.. _ControlMechanism_Examples:
+
+Examples
+~~~~~~~~
+
+The following example creates a ControlMechanism by specifying its **objective_mechanism** using a constructor
+that specifies the OutputStates to be monitored by its `objective_mechanism <ControlMechanism.objective_mechanism>`::
+
+    my_transfer_mech_A = TransferMechanism()
+    my_DDM = DDM()
+    my_transfer_mech_B = TransferMechanism(function=Logistic)
+
+    my_control_mech = ControlMechanism_Base(
+                         objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
+                                                                                  my_DDM.output_states[RESPONSE_TIME]],
+                                                                function=LinearCombination(operation=PRODUCT)),
+                         control_signals=[(THRESHOLD, my_DDM),
+                                          (GAIN, my_transfer_mech_B)])
+
+This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
+<Primary_OutputState>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
+ControlMechanism.  The ControlMechanism's `function <ControlMechanism_Base.function>` uses this value to determine
+the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
+``my_DDM`` and the  `gain <Logistic.gain>` parameter of the `Logistic` Function for ``my_transfer_mech_B``.
+
+The following example specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly
+to the **objective_mechanism** argument::
+
+    my_control_mech = ControlMechanism_Base(
+                            objective_mechanism=[(my_transfer_mech_A, 2, 1),
+                                                 my_DDM.output_states[RESPONSE_TIME]],
+                            control_signals=[(THRESHOLD, my_DDM),
+                                             (GAIN, my_transfer_mech_B)])
+
+Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism's function.  Therefore,
+the values of the monitored OutputStates will be added (the default) rather than multiplied.
+
+The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism::
+
+    my_obj_mech=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
+                                                     my_DDM.output_states[RESPONSE_TIME]],
+                                   function=LinearCombination(operation=PRODUCT))
+
+    my_control_mech = ControlMechanism_Base(
+                            objective_mechanism=my_obj_mech,
+                            control_signals=[(THRESHOLD, my_DDM),
+                                             (GAIN, my_transfer_mech_B)])
+
+Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
+as the OutputState that it monitors.
+
+See `System_Control_Examples` for examples of how a ControlMechanism, the OutputStates its
+`objective_mechanism <ControlSignal.objective_mechanism>`, and its `control_signals <ControlMechanism.control_signals>`
+can be specified for a System.
+
 
 .. _ControlMechanism_Class_Reference:
 

@@ -5,12 +5,15 @@
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import TransferMechanism
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DDM import *
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.LCA import LCA, LCA_OUTPUT
+
+from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic, Linear, LinearCombination
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT
-from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT, \
+    DECISION_VARIABLE,RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
+from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM, PRODUCT, CONTROL, IDENTITY_MATRIX, RESULT, MEAN, VARIANCE
 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
@@ -24,6 +27,8 @@ from PsyNeuLink.Components.Process import process
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
 # from PsyNeuLink.Components.States.ParameterState import ParameterState, PARAMETER_STATE_PARAMS
+from PsyNeuLink.Components.Functions.Function import BogaczEtAl
+
 
 class ScratchPadError(Exception):
     def __init__(self, error_value):
@@ -709,21 +714,73 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
-my_transfer_mech_1 = TransferMechanism()
-my_DDM = DDM()
-my_transfer_mech_2 = TransferMechanism(function=Logistic)
-# my_control_mech = EVCMechanism(
-#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_1, 2, 1),
+# my_transfer_mech_A = TransferMechanism()
+# my_DDM = DDM()
+# my_transfer_mech_B = TransferMechanism(function=Logistic)
+#
+# my_control_mech = ControlMechanism_Base(
+#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
 #                                                                                   my_DDM.output_states[
 #                                                                                       my_DDM.RESPONSE_TIME]],
 #                                                                 function=LinearCombination(operation=SUM)),
 #                          control_signals=[(THRESHOLD, my_DDM),
-#                                           (GAIN, my_transfer_mech_2)])
-my_control_mech = EVCMechanism(objective_mechanism=[(my_transfer_mech_1, 2, 1),
-                                                    my_DDM.output_states[my_DDM.RESPONSE_TIME]],
-                               function=LinearCombination(operation=SUM),
-control_signals=[(THRESHOLD, my_DDM),
-                 (GAIN, my_transfer_mech_2)])
+#                                           (GAIN, my_transfer_mech_B)])
+
+
+# my_control_mech = ControlMechanism_Base(objective_mechanism=[(my_transfer_mech_A, 2, 1),
+#                                                     my_DDM.output_states[my_DDM.RESPONSE_TIME]],
+#                                function=LinearCombination(operation=SUM),
+#                                control_signals=[(THRESHOLD, my_DDM),
+#                                                 (GAIN, my_transfer_mech_2)])
+
+# my_control_mech = ControlMechanism_Base(
+#                         objective_mechanism=[(my_transfer_mech_A, 2, 1),
+#                                              my_DDM.output_states[my_DDM.RESPONSE_TIME]],
+#                         control_signals=[(THRESHOLD, my_DDM),
+#                                          (GAIN, my_transfer_mech_B)])
+
+
+# my_obj_mech=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
+#                                                  my_DDM.output_states[my_DDM.RESPONSE_TIME]],
+#                                function=LinearCombination(operation=PRODUCT))
+#
+# my_control_mech = ControlMechanism_Base(
+#                         objective_mechanism=my_obj_mech,
+#                         control_signals=[(THRESHOLD, my_DDM),
+#                                          (GAIN, my_transfer_mech_B)])
+
+# Mechanisms:
+Input = TransferMechanism(name='Input')
+Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, CONTROL),
+                                   threshold=(1.0, CONTROL),
+                                   noise=0.5,
+                                   starting_point=0,
+                                   t0=0.45),
+               output_states=[DECISION_VARIABLE,
+                              RESPONSE_TIME,
+                              PROBABILITY_UPPER_THRESHOLD],
+               name='Decision')
+Reward = TransferMechanism(output_states=[RESULT, MEAN, VARIANCE],
+                           name='Reward')
+
+# Processes:
+TaskExecutionProcess = process(
+    default_variable=[0],
+    pathway=[Input, IDENTITY_MATRIX, Decision],
+    name = 'TaskExecutionProcess')
+RewardProcess = process(
+    default_variable=[0],
+    pathway=[Reward],
+    name = 'RewardProcess')
+
+# System:
+mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
+                  controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
+                                                     Reward,
+                                                     Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
+                                                     (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
+
+TEST = True
 
 # endregion
 
@@ -3084,6 +3141,3 @@ control_signals=[(THRESHOLD, my_DDM),
 # #end
 
 # exit()
-
-
-

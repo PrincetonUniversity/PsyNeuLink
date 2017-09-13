@@ -122,10 +122,10 @@ any values assigned to the ObjectiveMechanism's `monitored_values <ObjectiveMech
 that are not associated with an OutputState at the time the ObjectiveMechanism is executed are ignored.
 
 
-  .. _ObjectiveMechanism_InputStates::
+.. _ObjectiveMechanism_InputStates::
 
-  InputStates
-  ~~~~~~~~~~~
+InputStates
+~~~~~~~~~~~
 
 When an ObjectiveMechanism is created, an InputState is created for each of the
 OutputStates specified in its **monitored_values** argument, and a `MappingProjection` is assigned from each of those
@@ -138,7 +138,7 @@ including a list of strings (to be used as names for the InputStates), values (u
 or `State Specification Dictionaries <State_Specification>`, with the following constraints:
 
   * the number of InputStates specified in the **input_states** argument must equal the number of OutputStates specified
-    in the **monitored_values** argument (see the `examples <ObjectiveMechanism_Examples>` below);
+    in the **monitored_values** argument (see the `examples <ObjectiveMechanism_Monitored_Values_Examples>` below);
   ..
   * the `variable <InputState.variable>` of each must also be of the same type as the `value <OutputState.value>` of
     the corresponding OutputState, however their lengths can differ;  in that case, by default,
@@ -225,9 +225,9 @@ evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.val
 Examples
 --------
 
-.. _ObjectiveMechanism_Default_Input_Value_Example:
+.. _ObjectiveMechanism_Monitored_Values_Examples:
 
-*Formatting InputState values*
+*Specifying* **monitored_values**
 
 The use of default_variable to override a specification in `monitored_values` can be useful in some situations.
 For example, for `Reinforcement Learning <Reinforcement>`, an ObjectiveMechanism is used to monitor an action
@@ -267,12 +267,11 @@ this would have been more involved.  The next example describes a simple case of
 
 The simplest way to customize the `function <ObjectiveMechanism.function>` of an ObjectiveMechanism is to
 parameterize its default function (`LinearCombination`).  In the example below, the ObjectiveMechanism used in the
-`previous example <ObjectiveMechanism_Default_Input_Value_Example>` is further customized to subtract the value
-of the action selected from the value of the reward::
+previous example is further customized to subtract the value of the action selected from the value of the reward::
 
     my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
-                                          monitored_values = [my_action_select_mech, my_reward_mech],
-                                          function=LinearCombination(weights=[[-1], [1]]))
+                                           monitored_values = [my_action_select_mech, my_reward_mech],
+                                           function=LinearCombination(weights=[[-1], [1]]))
 
 This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
 with two values [-1] and [1] corresponding to the two items in `monitored_values` (and `default_variable`).  This
@@ -298,6 +297,19 @@ submitted to the ObjectiveMechanism's `function <ObjectiveMechanism.function>`. 
 included, even though it is the default value;  when a tuple is used, the weight and exponent values must both be
 specified.  Notice also that ``my_reward_mech`` does not use a tuple, so it will be assigned defaults for both the
 weight and exponent parameters.
+
+
+COMMENT:
+                  # # # WORKS:
+                  # controller=EVCMechanism(objective_mechanism=[Reward,
+                  #                                              {MECHANISM: Decision,
+                  #                                               OUTPUT_STATE: Decision.PROBABILITY_UPPER_THRESHOLD},
+                  #                                              {MECHANISM: Decision,
+                  #                                               OUTPUT_STATE: Decision.RESPONSE_TIME,
+                  #                                               WEIGHT: 1,
+                  #                                               EXPONENT: -1}]),
+COMMENT
+
 
 
 .. _ObjectiveMechanism_Class_Reference:
@@ -1011,7 +1023,7 @@ def _parse_monitored_values_list(source, output_state_list, context):
                     raise ObjectiveMechanismError("Value of WEIGHT entry in OutputState specification dictionary for "
                                                   "{} must be a number".
                                          format(item[EXPONENT], source.name))
-                weights[i] = item[EXPONENT]
+                exponents[i] = item[EXPONENT]
 
         elif isinstance(item, tuple):
             if len(item) != 3:
