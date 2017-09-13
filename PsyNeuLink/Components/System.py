@@ -54,11 +54,30 @@ command, and listed in its `processes <System_Base.processes>` attribute.
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
    must be included in the **processes** argument of the `system` command.
 
+.. _System_Control_Specification:
+
+Specifying a Control
+~~~~~~~~~~~~~~~~~~~~
+
 A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
 existing `ControlMechanism`, or a class of ControlMechanism in which case the ControlMechanism will be created.  In
-either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  See
-`System_Control` for additional information.
-
+either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  The
+System's **monitor_for_control** and **control_signal** arguments can be used to specify OutputStates of Mechanisms
+in the System that should be monitored by its `controller <System_Base.controller>`, and which parameters it should
+control.  The **monitor_for_control** argument can be specified in any of the ways used to specify the
+*monitored_values* argument of the constructor for an ObjectiveMechanism (see XXX);  in addition, as a convenience,
+OutputStates can be specified by their `name <OutputState.name>` in the **monitor_for_control** argument; when a
+`name <OutputState.name>` is used, any OutputState with that name, belonging to any Mechanism within the System, will
+be monitored.  The OutputStates specified in the **monitor_for_control** argument are added to any already specified
+for the ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` (the full set is listed in
+the ControlMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute,
+and its ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>` attribute).  In addition,
+the parameters of Components to be controlled in the System can be specified in the **control_signals** argument.
+These can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+*control_signals* argument of a ControlMechanism.  These are added to any `ControlSignals <ControlSignal>` that have
+been already specified for the `controller <System_Base.controller>` (listed in its `control_signals
+<ControlMechanism.control_signals>` attribute), and any parameters that have directly been
+`specified for control <ParameterState_Specification>` within the System.  See <System_Control> for additional details.
 
 .. _System_Structure:
 
@@ -174,15 +193,15 @@ executed, including any other ControlMechanisms (see `System Execution <System_E
 is assigned to or created by a System, it inherits specifications made for the System as follows:
 
   * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
-    that may have already been specified for the ControlMechanism or its `objective_mechanism
+    that may have already been specified for the ControlMechanism's `objective_mechanism
     <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
     <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute);
+    <ObjectiveMechanism.monitored_values>` attribute); see <System_Control_Specification> for additional details of how
+    to specify OutputStates to be monitored.
 
-  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameters that has been
-    `specified for control <ControlMechanism_Control_Signals>` in the System;  these are added to any that the
-    ControlMechanism may already have (the full set are listed in its `control_signals
-    <ControlMechanism.control_signals>` attribute).
+  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameter that has been
+    `specified for control <ParameterState_Specification>` in the System;  these are added to any that the
+    ControlMechanism may already have (listed in its `control_signals <ControlMechanism.control_signals>` attribute).
 
 See `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and
 `below <System_Execution_Control>` for a description of how it is engaged when a System is executed.
@@ -484,7 +503,8 @@ def system(default_variable=None,
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
         'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
-        `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
+        `System_Control_Specification` and `ObjectiveMechanism_Monitored_Values` for additional details of
+        how to specify the `monitor_for_control` argument).
 
     COMMENT:
         learning : [LearningProjection specification]

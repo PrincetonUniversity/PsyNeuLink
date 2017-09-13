@@ -101,13 +101,18 @@ any OutputStates to monitor; this must then be done explicitly after the Control
 When a ControlMechanism is created automatically as part of a `System <System_Creation>`:
 
   * a default ObjectiveMechanism is created for the ControlMechanism, using the list of `OutputStates
-    <OutputState>` specified in the System's `monitor_for_control <System_Base.monitor_for_control>` attribute as the
-    **monitored_values** argument for the ObjectiveMechanism's constructor.
+    <OutputState>` specified in the **monitor_for_control** argument of the System's contructor,
+    and any others within the System that have been specified to be monitored (using the MONITOR_FOR_CONTROL keyword),
+    as the **monitored_values** argument for the ObjectiveMechanism's constructor (see `System_Control_Specification`).
 
 In all cases, the ObjectiveMechanism is assigned to the ControlMechanism's `objective_mechanism
 <ControlMechanism_Base.objective_mechanism>` attribute, and a `MappingProjection` is created that projects from the
 ObjectiveMechanism's *OUTCOME* `OutputState <ObjectiveMechanism_Output>` to the ControlMechanism's `primary
 InputState <InputState_Primary>`.
+
+OutputStates to be monitored can be added to an existing ControlMechanism by using the `add_monitored_values
+<ObjectiveMechanism.add_monitored_values>` method of the ControlMechanism's `objective_mechanism
+<ControlMechanism.objective_mechanism>`.
 
 
 .. _ControlMechanism_Control_Signals:
@@ -135,7 +140,8 @@ one of two ways:
     `ControlSignal` in a `tuple specification for the parameter.
 
 When a ControlMechanism is created as part of a System, a `ControlSignal` is created and assigned to the
-ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control.
+ControlMechanism for every parameter of any `Component <Component>` in the System that has been specified for control
+using either of the methods above.
 
 Parameters to be controlled can be added to an existing ControlMechanism by using its `assign_params` method to
 add a `ControlSignal` for each additional parameter.
