@@ -114,11 +114,8 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # # # WORKS:
                   # controller=EVCMechanism(objective_mechanism=[Reward,
                   #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: PROBABILITY_UPPER_THRESHOLD},
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: RESPONSE_TIME,
-                  #                                               WEIGHT: 1,
-                  #                                               EXPONENT: -1}]),
+                  #                                               OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
+                  #                                                               (RESPONSE_TIME, 1, -1)]}]),
 
                   # # DOESN'T WORK SINCE Decision.XXX IS A STRING and name can't be resolved by ControlMechanism
                   # controller=EVCMechanism(objective_mechanism=[Reward,

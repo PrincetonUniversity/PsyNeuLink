@@ -2065,7 +2065,7 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-            import _validate_monitored_value, _parse_monitored_values_list
+            import _parse_monitored_values
 
         # PARSE SPECS
 
@@ -2127,14 +2127,12 @@ class System_Base(System):
                 item = item[0]
 
             # Validate by ObjectiveMechanism:
-            # # MODIFIED 9/13/17 OLD:
-            # _validate_monitored_value(self, item, context=context)
-            # MODIFIED 9/13/17 NEW:
-            _parse_monitored_values_list(self, item, context=context)
-            # MODIFIED 9/13/17 END
+            _parse_monitored_values(self, item, context=context)
+
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
+
             # Otherwise, add item as specified:
             else:
                 all_specs_extracted_from_tuples.append(item)
