@@ -305,8 +305,7 @@ from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modula
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-                                                           import ObjectiveMechanism, _parse_monitored_values, \
-                                                                  OUTPUT_STATE_INDEX, WEIGHT_INDEX, EXPONENT_INDEX
+                                                           import ObjectiveMechanism, _parse_monitored_values
 from PsyNeuLink.Components.Projections.Projection import _validate_receiver
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.ShellClasses import Mechanism, System
@@ -634,7 +633,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         #      IF objective_mechanism IS ALREADY AN INSTANTIATED ObjectiveMechanism:
         #          JUST ASSIGN TO objective_mechanism ATTRIBUTE
         elif isinstance(self.objective_mechanism, list):
-            monitored_output_states = _parse_monitored_values(self, self.objective_mechanism, context=context)
+            monitored_output_states = _parse_monitored_values(source=self,
+                                                              output_state_list=self.objective_mechanism,
+                                                              context=context)
 
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:

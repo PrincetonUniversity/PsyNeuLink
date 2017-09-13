@@ -2127,7 +2127,7 @@ class System_Base(System):
                 item = item[0]
 
             # Validate by ObjectiveMechanism:
-            _parse_monitored_values(self, item, context=context)
+            _parse_monitored_values(source=self, output_state_list=item, context=context)
 
             # Extract references from specification tuples
             if isinstance(item, tuple):
