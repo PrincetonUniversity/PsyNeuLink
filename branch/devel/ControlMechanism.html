@@ -236,7 +236,10 @@ can be specified in the <strong>objective_mechanism</strong> argument of its con
 <div><ul class="simple">
 <li>an existing <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, or a constructor for one;  in this case the <strong>monitored_values</strong> argument of the
 ObjectiveMechanism’s constructor is used to <code class="xref any docutils literal"><span class="pre">specify</span> <span class="pre">the</span> <span class="pre">OutputStates</span></code> &lt;ObjectiveMechanism_Monitored_Values&gt;`
-to be monitored and evaluated (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>);</li>
+to be monitored and evaluated (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>); note that, in this case, the default behavior
+of the ObjectiveMechanism overrides any defaults that the ControlMechanism uses for its <code class="xref any docutils literal"><span class="pre">objective_function</span>
+<span class="pre">ControlMechanism.objective_function</span></code> attribute (see <a class="reference internal" href="EVCMechanism.html#evcmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a>
+in EVCMechanism for an example);</li>
 </ul>
 <ul class="simple">
 <li>a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-values"><span class="std std-ref">OutputState specifications</span></a>;  in this case, a default
@@ -249,13 +252,15 @@ any OutputStates to monitor; this must then be done explicitly after the Control
 <p>When a ControlMechanism is created automatically as part of a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">System</span></a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li>a default ObjectiveMechanism is created for the ControlMechanism, using the list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the System’s <code class="xref any docutils literal"><span class="pre">monitor_for_control</span></code> attribute as the
-<strong>monitored_values</strong> argument for the ObjectiveMechanism’s constructor.</li>
+<li>a default ObjectiveMechanism is created for the ControlMechanism, using the list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong> argument of the System’s contructor,
+and any others within the System that have been specified to be monitored (using the MONITOR_FOR_CONTROL keyword),
+as the <strong>monitored_values</strong> argument for the ObjectiveMechanism’s constructor (see <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying a Control</span></a>).</li>
 </ul>
 </div></blockquote>
 <p>In all cases, the ObjectiveMechanism is assigned to the ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.objective_mechanism" title="ControlMechanism.ControlMechanism_Base.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute, and a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects from the
-ObjectiveMechanism’s <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-structure"><span class="std std-ref">OutputState</span></a> to the ControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary
+ObjectiveMechanism’s <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> to the ControlMechanism’s <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary
 InputState</span></a>.</p>
+<p>OutputStates to be monitored can be added to an existing ControlMechanism by using the <code class="xref any docutils literal"><span class="pre">add_monitored_values</span></code> method of the ControlMechanism’s <code class="xref any docutils literal"><span class="pre">objective_mechanism</span></code>.</p>
 </div>
 <div class="section" id="specifying-parameters-to-control">
 <span id="controlmechanism-control-signals"></span><h3>Specifying Parameters to Control<a class="headerlink" href="#specifying-parameters-to-control" title="Permalink to this headline">¶</a></h3>
@@ -275,7 +280,8 @@ one of two ways:</p>
 </ul>
 </div></blockquote>
 <p>When a ControlMechanism is created as part of a System, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created and assigned to the
-ControlMechanism for every parameter of any <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> in the System that has been specified for control.</p>
+ControlMechanism for every parameter of any <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> in the System that has been specified for control
+using either of the methods above.</p>
 <p>Parameters to be controlled can be added to an existing ControlMechanism by using its <a class="reference internal" href="Component.html#Component.Component.assign_params" title="Component.Component.assign_params"><code class="xref any py py-meth docutils literal"><span class="pre">assign_params</span></code></a> method to
 add a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each additional parameter.</p>
 <p>All of the ControlSignals for a ControlMechanism are listed in its <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.control_signals" title="ControlMechanism.ControlMechanism_Base.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> attribute, and all of its ControlProjections are listed in its
@@ -289,7 +295,7 @@ add a <a class="reference internal" href="ControlSignal.html"><span class="doc">
 <p>A ControlMechanism has a single <em>ERROR_SIGNAL</em> <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a>, the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is used as the
 input to the ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.function" title="ControlMechanism.ControlMechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, that determines the ControlMechanism’s
 <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.allocation_policy" title="ControlMechanism.ControlMechanism_Base.allocation_policy"><code class="xref any py py-attr docutils literal"><span class="pre">allocation_policy</span></code></a>. The <em>ERROR_SIGNAL</em> InputState receives its input
-via a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-structure"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
+via a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the <em>OUTCOME</em> <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-output"><span class="std std-ref">OutputState</span></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>.
 The Objective Mechanism is specified in the <strong>objective_mechanism</strong> argument of its constructor, and listed in its
 <a class="reference internal" href="EVCMechanism.html#Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism" title="Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism.EVCMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute.  The OutputStates monitored by the
 ObjectiveMechanism are listed in the ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.monitored_output_states" title="ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a> attribute, as well as in the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a> attribute (see <a class="reference internal" href="#controlmechanism-objectivemechanism"><span class="std std-ref">ObjectiveMechanism and Monitored OutputStates</span></a> for how the
@@ -317,48 +323,6 @@ its <a class="reference internal" href="ControlSignal.html#ModulatorySignals.Con
 ControlSignal’s ControlProjection.   The <a class="reference internal" href="ControlProjection.html"><span class="doc">value</span></a> of the ControlProjection is used by the
 <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> to which it projects to modify the value of the parameter (see <a class="reference internal" href="ControlSignal.html#controlsignal-modulation"><span class="std std-ref">Modulation</span></a> for
 description of how a ControlSignal modulates the value of a parameter it controls).</p>
-<p class="rubric" id="controlmechanism-examples">Examples</p>
-<p>The following example creates a ControlMechanism by specifying its <strong>objective_mechanism</strong> using a constructor
-that specifies the OutputStates monitored by the ObjectiveMechanism:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_transfer_mech_1</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
-<span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
-<span class="n">my_transfer_mech_2</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism_Base</span><span class="p">(</span>
-                         <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                                                                                  <span class="n">my_DDM</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span>
-                                                                <span class="n">function</span><span class="o">=</span><span class="n">LinearCombination</span><span class="p">(</span><span class="n">operation</span><span class="o">=</span><span class="n">SUM</span><span class="p">)),</span>
-                         <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">DDM</span><span class="p">),</span>
-                                          <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_2</span><span class="p">)])</span>
-</pre></div>
-</div>
-<p>This will create an ObjectiveMechanism for the ControlMechanism that monitors the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of <code class="docutils literal"><span class="pre">my_Transfer_mech</span></code> and the <em>RESPONSE_TIME</em> OutputState of <code class="docutils literal"><span class="pre">my_DDM</span></code>;  its function
-will multiply the former by 2 before adding ther values, and then pass the result as the input to the
-ControlMechanism.  The ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.function" title="ControlMechanism.ControlMechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> will use this value to determine
-the allocation for its ControlSignals, that control the value of the <code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter of the
-<code class="docutils literal"><span class="pre">my_DDM</span></code> and the  <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function for <code class="docutils literal"><span class="pre">my_transfer_mech_2</span></code>.</p>
-<p>The following specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly to the
-<strong>objective_mechanism</strong> argument:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span>
-                        <span class="n">objective_mechanism</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                                             <span class="n">my_DDM</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span>
-                        <span class="n">control_signals</span><span class="p">:[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">DDM</span><span class="p">),</span>
-                                         <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_2</span><span class="p">)])</span>
-</pre></div>
-</div>
-<p>Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism’s function.  Therefore,
-the values of the monitored OutputStates will be added (the default) rather than multiplied.</p>
-<p>The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_obj_mech</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-                                                 <span class="n">my_DDM</span><span class="o">.</span><span class="n">RESPONSE_TIME</span><span class="p">],</span>
-                               <span class="n">function</span><span class="o">=</span><span class="n">LinearCombination</span><span class="p">(</span><span class="n">LinearCombinationOperation</span><span class="o">.</span><span class="n">MULTIPLY</span><span class="p">)),</span>
-
-<span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span>
-                        <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">my_obj_mech</span><span class="p">,</span>
-                        <span class="n">control_signals</span><span class="p">:[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">DDM</span><span class="p">),</span>
-                                         <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_2</span><span class="p">)])</span>
-</pre></div>
-</div>
-<p>Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function.</p>
 </div>
 </div>
 <div class="section" id="execution">
@@ -377,6 +341,53 @@ executes (see <code class="xref any docutils literal"><span class="pre">Lazy</sp
 ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
 to which it belongs has executed.</p>
 </div>
+<p class="rubric" id="controlmechanism-examples">Examples</p>
+<p>The following example creates a ControlMechanism by specifying its <strong>objective_mechanism</strong> using a constructor
+that specifies the OutputStates to be monitored by its <code class="xref any docutils literal"><span class="pre">objective_mechanism</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_transfer_mech_A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">()</span>
+<span class="n">my_DDM</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">()</span>
+<span class="n">my_transfer_mech_B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+
+<span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism_Base</span><span class="p">(</span>
+                     <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_A</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                                                              <span class="n">my_DDM</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
+                                                            <span class="n">function</span><span class="o">=</span><span class="n">LinearCombination</span><span class="p">(</span><span class="n">operation</span><span class="o">=</span><span class="n">PRODUCT</span><span class="p">)),</span>
+                     <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">my_DDM</span><span class="p">),</span>
+                                      <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_B</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>This creates an ObjectiveMechanism for the ControlMechanism that monitors the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of <code class="docutils literal"><span class="pre">my_Transfer_mech_A</span></code> and the <em>RESPONSE_TIME</em> OutputState of <code class="docutils literal"><span class="pre">my_DDM</span></code>;  its function
+first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
+ControlMechanism.  The ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.function" title="ControlMechanism.ControlMechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses this value to determine
+the allocation for its ControlSignals, that control the value of the <code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter of
+<code class="docutils literal"><span class="pre">my_DDM</span></code> and the  <a class="reference internal" href="Function.html#Function.Logistic.gain" title="Function.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the <a class="reference internal" href="Function.html#Function.Logistic" title="Function.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function for <code class="docutils literal"><span class="pre">my_transfer_mech_B</span></code>.</p>
+<p>The following example specifies the same set of OutputStates for the ObjectiveMechanism, by assigning them directly
+to the <strong>objective_mechanism</strong> argument:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism_Base</span><span class="p">(</span>
+                        <span class="n">objective_mechanism</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_A</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                             <span class="n">my_DDM</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
+                        <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">my_DDM</span><span class="p">),</span>
+                                         <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_B</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Note that, while this form is more succinct, it precludes specifying the ObjectiveMechanism’s function.  Therefore,
+the values of the monitored OutputStates will be added (the default) rather than multiplied.</p>
+<p>The ObjectiveMechanism can also be created on its own, and then referenced in the constructor for the ControlMechanism:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_obj_mech</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span><span class="o">=</span><span class="p">[(</span><span class="n">my_transfer_mech_A</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                                                 <span class="n">my_DDM</span><span class="o">.</span><span class="n">output_states</span><span class="p">[</span><span class="n">RESPONSE_TIME</span><span class="p">]],</span>
+                               <span class="n">function</span><span class="o">=</span><span class="n">LinearCombination</span><span class="p">(</span><span class="n">operation</span><span class="o">=</span><span class="n">PRODUCT</span><span class="p">))</span>
+
+<span class="n">my_control_mech</span> <span class="o">=</span> <span class="n">ControlMechanism_Base</span><span class="p">(</span>
+                        <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">my_obj_mech</span><span class="p">,</span>
+                        <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">THRESHOLD</span><span class="p">,</span> <span class="n">my_DDM</span><span class="p">),</span>
+                                         <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_B</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Here, as in the first example, the constructor for the ObjectiveMechanism can be used to specify its function, as well
+as the OutputState that it monitors.</p>
+<p>See <a class="reference internal" href="System.html#system-control-examples"><span class="std std-ref">Specifying Control for a System</span></a> for examples of how a ControlMechanism, the OutputStates its
+<code class="xref any docutils literal"><span class="pre">objective_mechanism</span></code>, and its <code class="xref any docutils literal"><span class="pre">control_signals</span></code>
+can be specified for a System.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="controlmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
