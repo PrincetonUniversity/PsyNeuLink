@@ -69,13 +69,19 @@ COMMENT
   ..
   * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used.
 
+  * **string** -- this can be used as a "placemarker", to specify that an `InputState` be created for the
+    ObjectiveMechanism corresponding to an OutputState to be monitored that will be identified later.  The
+    string is used as the name of the InputState when it is created.
+
   .. _ObjectiveMechanism_OutputState_Tuple:
 
   * **monitored_values tuple** -- this is a convenience notation that can be used to compactly specify a weight
     and exponent for an OutputState' (see `example <ObjectiveMechanism_OutputState_Tuple_Example>`). Each tuple must
     have the three following items in the order listed:
 
-        * an OutputState or Mechanism;
+        * any of the specifications above -- if it is a string, the weight and exponent specified in the tuple
+          (see below) will be assigned along with the string as the name of the "placemarker" InputState when it is
+          created.
         |
         * a weight -- must be an integer or a float; multiplies the value of the OutputState before being combined with
           others by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`.
@@ -94,19 +100,19 @@ COMMENT
   .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
 
   * **monitored_value specification dictionary** -- this the most flexible form of specification, that can be used
-    to specify an OutputState by its Mechanism and name, and/or its `weight <ObjectiveMechanism.weight>` and `exponent
-    `<ObjectiveMechanism.exponent>` attributes;  it can contain any of the following *KEY*:<value>
-    entries, but must include the *MECHANISM* entry:
+    to specify one or more OutputStates of a Mechanism by their name
 
-        * *MECHANISM*:<`Mechanism`>
-            if this is not accompanied by an *OUTPUT_STATE* entry, the Mechanism's `primary OutputState
-            <OutputState_Primary>` is used;
+        * *MECHANISM*:`Mechanism`
+            this enty must be included in the dictionary;
 
-        * *OUTPUT_STATES*:[str, OutputState, or monitored_values tuple>...]
-            if a string is used for an item, it must be the name of an OutputState of the Mechanism specified in the
-            *MECHANISM* entry;
+        * *OUTPUT_STATES*:List[<str or any of the specifications above>...]
+            here, a string can be used anywhere an OutputState would have been specified as the name
+            of an OutputState belonging to the *MECHANISM* entry.
 
-
+        If the dictionary includes only the *MECHANISM* entry, then (as with a standalone Mechanism specification),
+        the Mechanism's `primary OutputState <OutputState_Primary>` is used.  If a string is used for any items
+        of the list in the *OUTPUT_STATES* entry, and it is not the name of the Mechanism in the *MECHANISM* entry,
+        it will be treated as an "unbound" string specification.
 
 If an OutputState to be monitored is specified at the time the ObjectiveMechanism is created, or the specification
 can be resolved to an OutputState, a `MappingProjection` is automatically created from it to the corresponding
@@ -293,8 +299,6 @@ specified.  Notice also that ``my_reward_mech`` does not use a tuple, so it will
 weight and exponent parameters.
 
 
-COMMENT:
-
 The following example uses a dictionary to specify the **monitored_values** argument, allowing several OutputStates
 for the same Mechanism to be specified more easily, each by name rather than by full reference (which is required
 if they are specified on their own or in a tuple::
@@ -304,9 +308,8 @@ if they are specified on their own or in a tuple::
                                                              OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
                                                                              (RESPONSE_TIME, 1, -1)]}])
 
-Note that the tuple format can still be used for each individual OutputState in the list assigned to the
-OUTPUT_STATES entry.
-COMMENT
+Note that, as shown in this example, the tuple format can still be used for each individual OutputState in the list
+assigned to the OUTPUT_STATES entry.
 
 
 
