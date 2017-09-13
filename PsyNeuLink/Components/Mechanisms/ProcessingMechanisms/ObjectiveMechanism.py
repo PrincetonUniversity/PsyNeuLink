@@ -327,9 +327,7 @@ Class Reference
 import warnings
 
 import typecheck as tc
-import numpy as np
 import numbers
-import collections
 
 
 from PsyNeuLink.Components.Component import InitStatus
@@ -343,7 +341,7 @@ from PsyNeuLink.Components.States.OutputState import OutputState, PRIMARY_OUTPUT
 from PsyNeuLink.Globals.Keywords import NAME, VARIABLE, FUNCTION, VALUE, PARAMS, TIME_SCALE, OBJECTIVE_MECHANISM, \
                                         INPUT_STATES, PROJECTIONS, WEIGHT, WEIGHTS, EXPONENT, EXPONENTS, SENDER, \
                                         MATRIX, DEFAULT_MATRIX, AUTO_ASSIGN_MATRIX, \
-                                        OUTPUT_STATES, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
+                                        OUTPUT_STATE, OUTPUT_STATES, LEARNING, CONTROL, MECHANISM, kwPreferenceSetName
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set, kpReportOutputPref
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceEntry, PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -955,7 +953,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         self._instantiate_weights_and_exponents(weights, exponents)
 
 
-def _parse_monitored_values(source, output_state_list, context):
+def _parse_monitored_values(source, output_state_list, mech=None, context=None):
     """Parses specifications in list and returns list of tuples: [(OutputState, exponent, weight)...]
 
     Serves the following purposes:
@@ -989,13 +987,15 @@ def _parse_monitored_values(source, output_state_list, context):
 
     """
 
-    if not isinstance(output_state_list, collections.Iterable):
+    if not isinstance(output_state_list, list):
         output_state_list = [output_state_list]
 
     # output_states = np.array([None] * len(output_state_list))
     # weights = output_states.copy()
     # exponents = weights.copy()
-    output_states = weights = exponents = []
+    output_states = []
+    weights = []
+    exponents = []
     DEFAULT_WEIGHT = None
     DEFAULT_EXPONENT = None
 
@@ -1018,35 +1018,43 @@ def _parse_monitored_values(source, output_state_list, context):
                 raise ObjectiveMechanismError("OutputState specification dictionary used for monitored_value "
                                               "specification in {} must have at least a MECHANISM entry ".
                                               format(source.name))
-            # If this is the only entry in the dict,
-            #     use it as a specification for the primary OutputState of the Mechanism
-            output_states[i] = item[MECHANISM]
-
             if OUTPUT_STATES in item:
                 # Get list of OutputState specifications and append to output_states
-                if not (item[OUTPUT_STATES] in item[MECHANISM].output_states or
-                                item[OUTPUT_STATES] in item[MECHANISM].output_states.names):
-                    raise ObjectiveMechanismError("Value of OUTPUT_STATE entry in OutputState specification dictionary "
-                                                  "for {} must be an OutputState of {} or the name of one".
-                                         format(source.name, item[MECHANISM].name))
-                if isinstance(item[OUTPUT_STATES], OutputState):
-                    output_states[i] = item[OUTPUT_STATES]
-                else:
-                    output_states[i] = item[MECHANISM].output_states[item[OUTPUT_STATES]]
+                # RECURSIVELY CALL _parse_monitored_values TO GET ITEMS FOR EACH ITEM IN THE ENTRY,
+                #                 USING MECHANISM ENTRY AS MECHANISM FOR THE OUTPUT_STATE ENTRIES
 
-            # if WEIGHT in item:
-            #     if not isinstance(item[WEIGHT], numbers.Number):
-            #         raise ObjectiveMechanismError("Value of WEIGHT entry in OutputState specification dictionary for "
-            #                                       "{} must be a number".
-            #                              format(item[WEIGHT_INDEX], source.name))
-            #     weights[i] = item[WEIGHT]
-            #
-            # if EXPONENT in item:
-            #     if not isinstance(item[EXPONENT], numbers.Number):
-            #         raise ObjectiveMechanismError("Value of WEIGHT entry in OutputState specification dictionary for "
-            #                                       "{} must be a number".
-            #                              format(item[EXPONENT], source.name))
-            #     exponents[i] = item[EXPONENT]
+                for output_state_spec in item[OUTPUT_STATES]:
+                    # List returned by _parse_monitored_values should have only one ite, so use get it
+                    output_state_tuple = _parse_monitored_values(source,
+                                                                 output_state_spec,
+                                                                 mech=item[MECHANISM],
+                                                                 context=context)[0]
+                    output_state = output_state_tuple[OUTPUT_STATE_INDEX]
+                    if isinstance(output_state, OutputState):
+                        output_state_list.append(output_state)
+                    elif isinstance(output_state, str) and output_state in mech.output_states:
+                        output_state_list.append(mech.output_states[output_state])
+                    else:
+                        raise
+                    weights.append(output_state_tuple[WEIGHT_INDEX])
+                    exponents.append(output_state_tuple[EXPONENT_INDEX])
+
+                # if not (item[OUTPUT_STATES] in item[MECHANISM].output_states or
+                #                 item[OUTPUT_STATES] in item[MECHANISM].output_states.names):
+                #     raise ObjectiveMechanismError("Value of OUTPUT_STATE entry in OutputState specification dictionary "
+                #                                   "for {} must be an OutputState of {} or the name of one".
+                #                          format(source.name, item[MECHANISM].name))
+                # if isinstance(item[OUTPUT_STATES], OutputState):
+                #     output_states[i] = item[OUTPUT_STATES]
+                # else:
+                #     output_states[i] = item[MECHANISM].output_states[item[OUTPUT_STATES]]
+
+            else:
+                # MECHANISM was the only entry in the dict,
+                #     so use it as a specification for the primary OutputState of the Mechanism
+                output_states.append(item[MECHANISM].output_state)
+                weights.append(DEFAULT_WEIGHT)
+                exponents.append(DEFAULT_EXPONENT)
 
         # Specification is a tuple, so check that it has three items:  (OutputState or Mechanism, weight, exponent)
         elif isinstance(item, tuple):
@@ -1062,7 +1070,7 @@ def _parse_monitored_values(source, output_state_list, context):
                 output_state_spec = output_state_spec.output_state
 
             # First item of tuple should now be an OutputState
-            if not isinstance(output_state_spec, OutputState):
+            if not isinstance(output_state_spec, OutputState) and mech is None:
                 raise ObjectiveMechanismError("First item of tuple for monitored_value of {} ({})  "
                                               "must be an OutputState or a Mechanism".
                                               format(source.name, item[OUTPUT_STATE_INDEX]))
