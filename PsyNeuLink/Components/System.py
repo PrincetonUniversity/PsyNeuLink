@@ -642,7 +642,7 @@ class System_Base(System):
         determines the learning_rate for all `LearningMechanism <LearningMechanism>` in the System.  This overrides any
         values set for the function of individual LearningMechanism or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
-        <System_Base.learning_rate> is determined by last value assigned to each LearningMechanism (either directly,
+        <System_Base.learning_rate>` is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
         `learning_rate <LearningMechanism.learning_rate>` was set).
 
