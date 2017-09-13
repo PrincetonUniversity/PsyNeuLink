@@ -54,11 +54,37 @@ command, and listed in its `processes <System_Base.processes>` attribute.
    directly to a System.  They must be assigned to the `pathway <Process_Pathway>` of a Process, and then that Process
    must be included in the **processes** argument of the `system` command.
 
+.. _System_Control_Specification:
+
+Specifying a Control
+~~~~~~~~~~~~~~~~~~~~
+
 A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
 existing `ControlMechanism`, or a class of ControlMechanism in which case the ControlMechanism will be created.  In
-either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  See
-`System_Control` for additional information.
+either case, the ControlMechanism is assigned to the System's `controller <System_Base.controller>` attribute.  The
+System's **monitor_for_control** and **control_signal** arguments can be used to specify OutputStates of Mechanisms
+in the System that should be monitored by its `controller <System_Base.controller>`, and which parameters it should
+control.
 
+The **monitor_for_control** argument can be specified in any of the ways used to specify the
+*monitored_values* argument of the constructor for an ObjectiveMechanism (see `ObjectiveMechanism_Monitored_Values`).
+In addition, as a convenience, OutputStates can be specified by their `name <OutputState.name>` in the
+**monitor_for_control** argument (see third example under `System_Control_Examples`).  When a `name <OutputState.name>`
+is used, any OutputState with that name, belonging to any Mechanism within the System, will be monitored. If a the
+OutputState of a particular Mechanism is desired, and it shares its name with ones in other Mechanisms, then it must
+be referenced explicitly (see other examples under `System_Control_Examples`).  The OutputStates specified in the
+**monitor_for_control** argument are added to any already specified for the ControlMechanism's `objective_mechanism
+<ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
+<EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
+<ObjectiveMechanism.monitored_values>` attribute).
+
+In addition, the **control_signals** argument can be use to specify the parameters of Components in the System that
+should be controlled. These can be specified in any of the ways used to `specify ControlSignals
+<ControlMechanism_Control_Signals>` in the *control_signals* argument of a ControlMechanism. These are added to any
+`ControlSignals <ControlSignal>` that have been already specified for the `controller <System_Base.controller>`
+(listed in its `control_signals <ControlMechanism.control_signals>` attribute), and any parameters that have directly
+been `specified for control <ParameterState_Specification>` within the System. See <System_Control> for additional
+details.
 
 .. _System_Structure:
 
@@ -174,15 +200,15 @@ executed, including any other ControlMechanisms (see `System Execution <System_E
 is assigned to or created by a System, it inherits specifications made for the System as follows:
 
   * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
-    that may have already been specified for the ControlMechanism or its `objective_mechanism
+    that may have already been specified for the ControlMechanism's `objective_mechanism
     <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
     <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute);
+    <ObjectiveMechanism.monitored_values>` attribute); see <System_Control_Specification> for additional details of how
+    to specify OutputStates to be monitored.
 
-  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameters that has been
-    `specified for control <ControlMechanism_Control_Signals>` in the System;  these are added to any that the
-    ControlMechanism may already have (the full set are listed in its `control_signals
-    <ControlMechanism.control_signals>` attribute).
+  * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameter that has been
+    `specified for control <ParameterState_Specification>` in the System;  these are added to any that the
+    ControlMechanism may already have (listed in its `control_signals <ControlMechanism.control_signals>` attribute).
 
 See `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation` for details of how control operates, and
 `below <System_Execution_Control>` for a description of how it is engaged when a System is executed.
@@ -299,9 +325,11 @@ additional information about control). The control Components of a System can be
 `show_graph`method with its **show_control** argument assigned `True`.
 
 
-COMMENT:
-   Examples
-   --------
+.. _System_Examples:
+
+Examples
+--------
+COMMENT
    XXX ADD EXAMPLES HERE FROM 'System Graph and Input Test Script'
    .. note::  All of the example Systems below use the following set of Mechanisms.  However, in practice, they must be
       created separately for each System;  using the same Mechanisms and Processes in multiple Systems can produce
@@ -311,6 +339,66 @@ COMMENT:
    system factory method:  instantiate System
    System_Base: class definition
 COMMENT
+
+.. _System_Control_Examples:
+
+Specifying Control for a System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following example specifies an `EVCMechanism` as the controller for a System with two `Processes <Process>`
+that include two `Mechanisms <Mechanism>` (not shown):
+
+    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+                       controller=EVCMechanism(objective_mechanism=
+                                                   ObjectiveMechanism(
+                                                       monitored_values=[
+                                                           Reward,
+                                                           Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
+                                                           (Decision.output_states[RESPONSE_TIME], -1, 1)]))
+                                                       function=LinearCombination(operation=PRODUCT))
+
+A constructor is used to specify the EVCMechanism that includes a constructor specifying its `objective_mechanism
+<ControlMechanism.objective_mechanism>`;  the **monitored_values** argument of the ObjectiveMechanism's constructor
+is used to specify that it should monitor the `primary OutputState <OutputState_Primary>` of the Reward Mechanism
+and the *PROBABILITY_UPPER_THRESHOLD* and *RESPONSE_TIME* and, specifying how it should combine them (see the `example
+<ControlMechanism_Examples>` under ControlMechanism for an explanation). Note that the **function** argument for the
+ObjectiveMechanism's constructor is also specified;  this is because an ObjectiveMechanism uses *SUM* as the default
+for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCMechanism
+requires *PRODUCT* -- in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
+OutputState of Decision (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
+a more complete explanation).  Note that both the EVCMechanism and/or the ObjectiveMechanism could have been
+constructed separately, and then referenced in the **controller** argument of ``my_system`` and **objective_mechanism**
+argument of the EVCMechanism, respectively.
+
+The same configuration can be specified in a more concise, though less "transparent" form, as follows::
+
+    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+                       controller=EVCMechanism(objective_mechanism=[
+                                                             Reward,
+                                                             Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
+                                                             (Decision.output_states[RESPONSE_TIME], -1, 1)])))
+
+Here, the constructor for the ObjectiveMechanism is elided, and the **objective_mechanism** argument for the
+EVCMechanism is specified as a list of OutputStates (see `ControlMechanism_ObjectiveMechanism`).
+
+The specification can be made even simpler, but with some additional considerations that must be kept in mind,
+as follows::
+
+    my_system = system(processes=[TaskExecutionProcess, RewardProcess],
+                       controller=EVCMechanism,
+                       monitor_for_control=[Reward,
+                                            PROBABILITY_UPPER_THRESHOLD,
+                                            RESPONSE_TIME, 1, -1)],
+
+Here, the *controller** for ``my_system`` is specified as the EVCMechanism, which will created a default EVCMechanism.
+The OutputStates to be monitored are specified in the **monitor_for_control** argument for ``my_system``.  Note that
+here they can be referenced simply by name; when ``my_system`` is created, it will search all of its
+Mechanisms for OutputStates with those names, and assign them to the `monitored_values <ObjectiveMechanism>`
+attribute of the EVCMechanism's `objective_mechanism <EVCMechanism.objective_mechanism>` (see
+`System_Control_Specification` for a more detailed explanation of how OutputStates are assigned to be monitored by a
+System's `controller <System_Base.controller>`).  While this form of the specification is much simpler,
+it less flexible (i.e., it can't be used to customize the ObjectiveMechanism used by the EVCMechanism or its
+`function <ObjectiveMechanism.function>`.
 
 .. _System_Class_Reference:
 
@@ -484,7 +572,8 @@ def system(default_variable=None,
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
         'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
-        `ObjectiveMechanism_Monitored_Values` for specifying the `monitor_for_control` argument).
+        `System_Control_Specification` and `ObjectiveMechanism_Monitored_Values` for additional details of
+        how to specify the `monitor_for_control` argument).
 
     COMMENT:
         learning : [LearningProjection specification]
@@ -1902,12 +1991,9 @@ class System_Base(System):
             # Instantiate controller from class specification using:
             #   monitored_values for System to specify its objective_mechanism (as list of OutputStates to be monitored)
             #   ControlSignals for System returned by _get_system_control_signals()
-            controller = control_mech_spec(system=self,
-                                           objective_mechanism=self._get_monitored_output_states_for_system(
-                                                                                                      context=context),
-                                           # objective_mechanism=self.monitor_for_control,
-                                           control_signals=self._get_control_signals_for_system(self.control_signals,
-                                                                                                context=context))
+            controller = control_mech_spec(
+                          system=self,objective_mechanism=self._get_monitored_output_states_for_system(context=context),
+                          control_signals=self._get_control_signals_for_system(self.control_signals, context=context))
 
         else:
             raise SystemError("Specification for {} of {} ({}) is not ControlMechanism".
@@ -2057,7 +2143,7 @@ class System_Base(System):
                            format(self.name, option_specs))
 
         # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
-        # Assign outputStates to monitored_output_states
+        # Assign OutputStates to monitored_output_states
         monitored_output_states = []
 
         # Notes:
@@ -2076,8 +2162,6 @@ class System_Base(System):
             # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
             #     to assign outputStates to monitored_output_states
 
-            mech_specs = []
-            output_state_specs = []
             local_specs = controller_and_system_specs.copy()
             option_spec = ctlr_or_sys_option_spec
 
@@ -2126,9 +2210,8 @@ class System_Base(System):
                     raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
                                    format(mech.name, option_specs))
 
-            # PARSE OUTPUT STATE'S SPECS
+            # PARSE OutputState'S SPECS
 
-            # for output_state_name, output_state in list(mech.outputStates.items()):
             for output_state in mech.output_states:
 
                 # Get MONITOR_FOR_CONTROL specification from OutputState

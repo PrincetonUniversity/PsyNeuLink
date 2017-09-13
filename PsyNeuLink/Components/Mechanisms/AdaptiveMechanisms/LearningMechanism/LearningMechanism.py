@@ -138,8 +138,9 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
 
 .. _LearningMechanism_Input_Error_Signal:
 
-* *ERROR_SIGNAL* - receives the `value <OutputState.value> from the *OUTCOME* OutputState of a `ComparatorMechanism` or
-  the *ERROR_SIGNAL* OutputState of another `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the
+* *ERROR_SIGNAL* - receives the `value <OutputState.value> from the *OUTCOME* `OutputState
+  <ComparatorMechanism_Structure> of a `ComparatorMechanism` or the *ERROR_SIGNAL* OutputState of another
+  `LearningMechanism <LearningMechanism_Output_Error_Signal>`. If the
   `primary_learned_projection` projects to the `TERMINAL` Mechanism of the Process or System being learned,
   or is not part of a `multilayer learning sequence <LearningMechanism_Multilayer_Learning>`,
   then the `error_signal` comes from a ComparatorMechanism. If the `primary_learned_projection` is part of a

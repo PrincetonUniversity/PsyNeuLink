@@ -98,11 +98,47 @@ ObjectiveMechanism
 ^^^^^^^^^^^^^^^^^^
 
 Like any ControlMechanism, an EVCMechanism receives its input from the *OUTCOME* `OutputState
-<ObjectiveMechanism_Structure>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
-<InputStatePrimary>` (see for additional details).  By default, the EVCMechanism creates an ObjectiveMechanism
-that takes the product of the `value <OutputState.value>`\\s of the OutputStates it monitors.  The result is used by its
-`function <EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
+<ObjectiveMechanism_Output>` of an `ObjectiveMechanism`, via a MappingProjection to its `primary InputState
+<InputStatePrimary>`.  The ObjectiveFunction is listed in the EVCMechanism's `objective_mechanism
+<EVCMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a `LinearCombination`
+function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*, which takes the product of
+the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its `monitored_values
+<ObjectiveMechanism.monitored_values>` attribute.  However, this can be customized in a variety of ways:
+
+    * by specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
+      (see `ObjectiveMechanism_Weights_and_Exponents_Example` for an example);
+    ..
+    * using a list to specify the OutputStates to be monitored  (and the `tuples format
+      <ObjectiveMechanism_OutputState_Tuple>` to specify weights and/or exponents for them) in the
+      **objective_mechanism** argument of the EVCMechanism's constructor;
+    ..
+    * using the  **monitored_values** argument of the `objective_mechanism <EVCMechanism.objective_mechanism>`'s
+      constructor;
+    ..
+    * specifying a different `ObjectiveMechanism` in the EVCMechanism's **objective_mechanism** argument of the
+      EVCMechanism's constructor. The result of the `objective_mechanism <EVCMechanism.objective_mechanism>`'s
+      `function <ObjectiveMechanism.function>` is used as the outcome in the calculations described below.  Note,
+      however
+
+    .. _EVCMechanism_Objective_Mechanism_Function_Note:
+
+    .. note::
+       If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
+       EVCMechanism's constructor, then the default values of its attributes override any used by the EVCMechanism
+       for its `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  In particular,
+       whereas an EVCMechanism uses the same default `function <ObjectiveMechanism.function>` as an
+       `ObjectiveMechanism` (`LinearCombination`), it uses *PRODUCT* rather than *SUM* as the default value of the
+       `operation <LinearCombination.operation>` attribute of the function.  As a consequence, if the constructor
+       for an ObjectiveMechanism is used to specify the EVCMechanism's **objective_mechanism** argument,
+       and the **operation** argument is not specified, *SUM* rather than *PRODUCT* will be used for the
+       ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  To restore *PRODUCT*, it must now be specified
+       explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st example
+       under `System_Control_Examples`).
+
+The result of the EVCMechanism's `objective_mechanism <EVCMechanism.objective_mechanism>` is used by its `function
+<EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
 <EVCMechanism_EVC>`.
+
 
 .. _EVCMechanism_Prediction_Mechanisms:
 
@@ -165,16 +201,11 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     <EVCMechanism.objective_mechanism>`, which is executed as part of the simulation of the System.  The `function
     <ObjectiveMechanism.function>` for a default ObjectiveMechanism is a `LinearCombination` Function that combines the
     `value <OutputState.value>`\\s of the OutputStates listed in the EVCMechanism's `monitored_output_states
-    <EVCMechanism.monitored_output_states>` attribute (and the `objective_mechanism <EVCMechanism.objective_mechanism>`'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
-    by taking their elementwise (Hadamard) product.  However, this behavior can be customized by specifying a different
-    `function <ObjectiveMechanism.function>` for the ObjectiveMechanism, and/or using a list to specify the
-    OutputStates to be monitored  (and the `tuples format <ObjectiveMechanism_OutputState_Tuple>` to specify weights
-    and/or exponents for them) in the **objective_mechanism** argument of the
-    EVCMechanism's constructor, or the  **monitored_values** argument of the `objective_mechanism
-    <EVCMechanism.objective_mechanism>`'s constructor. The result of the `objective_mechanism
-    <EVCMechanism.objective_mechanism>`'s `function <ObjectiveMechanism.function>` is used as the outcome in the
-    calculations described below.
-  |
+    <EVCMechanism.monitored_output_states>` attribute (and the `objective_mechanism
+    <EVCMechanism.objective_mechanism>`'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
+    by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety of ways,
+    as described `above EVCMechanism_ObjectiveMechanism`.
+
   * **Calculate EVC** - call the EVCMechanism's `value_function <EVCMechanism.value_function>` passing it the
     outcome (received from the `objective_mechanism`) and a list of the `costs <ControlSignal.cost>` \\s of its
     `ControlSignals <EVCMechanism_ControlSignals>`; the default `value_function <EVCMechanism.value_function>` calls
@@ -275,7 +306,10 @@ computation will multiply the value of the primary OutputState of the Reward Mec
 *DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
 OutputState of the DDM Mechanism.
 
-See `ControlMechanism <ControlMechanism_Examples>` for examples of how to specify ControlMechanisms on their own.
+See `ObjectiveMechanism <ObjectiveMechanism_Monitored_Values_Examples>` for additional examples of how to specify it's
+**monitored_values** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
+specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System_Base.controller>`
+of a System.
 
 .. _EVCMechanism_Class_Reference:
 
