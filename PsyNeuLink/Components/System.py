@@ -2061,7 +2061,7 @@ class System_Base(System):
 
         from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
         from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
-            import _validate_monitored_value
+            import _validate_monitored_value, _parse_monitored_values_list
 
         # PARSE SPECS
 
@@ -2121,9 +2121,13 @@ class System_Base(System):
                                          format(WEIGHT_INDEX, item[EXPONENT_INDEX], self.name))
                 # Set state_spec to the output_state item for validation below
                 item = item[0]
-            # MODIFIED 2/22/17 END
+
             # Validate by ObjectiveMechanism:
-            _validate_monitored_value(self, item, context=context)
+            # # MODIFIED 9/13/17 OLD:
+            # _validate_monitored_value(self, item, context=context)
+            # MODIFIED 9/13/17 NEW:
+            _parse_monitored_values_list(self, item, context=context)
+            # MODIFIED 9/13/17 END
             # Extract references from specification tuples
             if isinstance(item, tuple):
                 all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
@@ -2319,7 +2323,7 @@ class System_Base(System):
 
         return list(zip(monitored_output_states, weights, exponents))
 
-    def _validate_monitored_states(self, monitored_states, context=None):
+    def _validate_monitored_state_in_system(self, monitored_states, context=None):
         for spec in monitored_states:
             # if not any((spec is mech.name or spec in mech.output_states.names)
             if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)

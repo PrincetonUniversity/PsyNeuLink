@@ -300,14 +300,18 @@ weight and exponent parameters.
 
 
 COMMENT:
-                  # # # WORKS:
-                  # controller=EVCMechanism(objective_mechanism=[Reward,
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: Decision.PROBABILITY_UPPER_THRESHOLD},
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: Decision.RESPONSE_TIME,
-                  #                                               WEIGHT: 1,
-                  #                                               EXPONENT: -1}]),
+
+The following example uses a dictionary to specify the **monitored_values** argument, allowing several OutputStates
+for the same Mechanism to be specified more easily, each by name rather than by full reference (which is required
+if they are specified on their own or in a tuple::
+
+    my_objective_mech = ObjectiveMechanism(monitored_values=[Reward,
+                                                            {MECHANISM: Decision,
+                                                             OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
+                                                                             (RESPONSE_TIME, 1, -1)]}])
+
+Note that the tuple format can still be used for each individual OutputState in the list assigned to the
+OUTPUT_STATES entry.
 COMMENT
 
 
@@ -1059,8 +1063,11 @@ def _parse_monitored_values_list(source, output_state_list, context):
         elif isinstance(item, str):
             output_states[i] = item
 
+        # MODIFIED 9/13/17 OLD:
+        # FIX: REMOVED (PARSING SHOULD BE SUFFICIENT
         # Validate by ObjectiveMechanism:
         _validate_monitored_value(source, output_states[i], context=context)
+        # MODIFIED 9/13/17 END
 
     return list(zip(output_states, weights, exponents))
 
