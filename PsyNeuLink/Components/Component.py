@@ -870,6 +870,8 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
+        # self.init_status = InitStatus.INITIALIZED
+
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
@@ -2588,20 +2590,20 @@ class Component(object):
             s.append(len(v[i]))
         return np.array(s)
 
-    @property
-    def init_status(self):
-        try:
-            return self._init_status
-        except AttributeError:
-            return InitStatus.UNSET
-
-    @init_status.setter
-    def init_status(self, value):
-        if not isinstance(value, InitStatus):
-            raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
-                                 "a value ({}) other than one of InitStatus".format(self.name, value))
-        self._init_status = value
-
+    # @property
+    # def init_status(self):
+    #     try:
+    #         return self._init_status
+    #     except AttributeError:
+    #         return InitStatus.UNSET
+    #
+    # @init_status.setter
+    # def init_status(self, value):
+    #     if not isinstance(value, InitStatus):
+    #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
+    #                              "a value ({}) other than one of InitStatus".format(self.name, value))
+    #     self._init_status = value
+    #
     @property
     def prefs(self):
         # Whenever pref is accessed, use current owner as context (for level checking)
