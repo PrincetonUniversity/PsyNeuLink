@@ -69,9 +69,8 @@ COMMENT
   ..
   * **Mechanism** -- the Mechanism's `primary OutputState <OutputState_Primary>` is used.
 
-  * **string** -- this can be used as a "placemarker", to specify that an `InputState` be created for the
-    ObjectiveMechanism corresponding to an OutputState to be monitored that will be identified later.  The
-    string is used as the name of the InputState when it is created.
+  * **string** -- this can be used as a "placemarker", to specify that an `InputState` be created for an OutputState
+    to be monitored that will be identified later.  The string is used as the name of the InputState when it is created.
 
   .. _ObjectiveMechanism_OutputState_Tuple:
 
