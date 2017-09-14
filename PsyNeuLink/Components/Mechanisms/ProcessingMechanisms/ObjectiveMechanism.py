@@ -805,11 +805,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # MODIFIED 9/14/17 NEW:
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
-        _instantiate_monitoring_projections(owner=self,
-                                            sender_list=output_states,
-                                            receiver_list=instantiated_input_states,
-                                            receiver_projection_specs=input_state_projection_specs,
-                                            context=context)
+        if output_states:
+            _instantiate_monitoring_projections(owner=self,
+                                                sender_list=output_states,
+                                                receiver_list=instantiated_input_states,
+                                                receiver_projection_specs=input_state_projection_specs,
+                                                context=context)
         # MODIFIED 9/14/17 END
 
 
@@ -1113,9 +1114,12 @@ def _parse_monitored_values(source, output_state_list, mech=None, context=None):
             from PsyNeuLink.Components.System import System
             if isinstance(output_state, str):
                 if not isinstance(source, System):
-                    raise ObjectiveMechanismError("String used to specify OutputState (\'{}\') for monitored_values "
-                                                  "in {}; the name of an OutputState can only be used in "
-                                                  "the monitor_for_control argument of a System".
+                    raise ObjectiveMechanismError("A string was used to specify an OutputState (presumably its name: "
+                                                  "\'{}\') to be monitored by the ObjectiveMechanism for {}; the name "
+                                                  "of an OutputState can be used to specify it only in the "
+                                                  "\'monitor_for_control\' argument of a System, but NOT in the "
+                                                  "\'objective_mechanism\' argument of a ControlMechanism nor in the "
+                                                  "\'monitored_values\' argument of an ObjectiveMechanism".
                                                   format(output_state, source.name))
 
             elif not isinstance(output_state, (OutputState, Mechanism)):
