@@ -125,15 +125,15 @@ the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed 
     .. note::
        If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
        EVCMechanism's constructor, then the default values of its attributes override any used by the EVCMechanism
-       for its `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  In particular,
-       whereas an EVCMechanism uses the same default `function <ObjectiveMechanism.function>` as an
-       `ObjectiveMechanism` (`LinearCombination`), it uses *PRODUCT* rather than *SUM* as the default value of the
-       `operation <LinearCombination.operation>` attribute of the function.  As a consequence, if the constructor
-       for an ObjectiveMechanism is used to specify the EVCMechanism's **objective_mechanism** argument,
-       and the **operation** argument is not specified, *SUM* rather than *PRODUCT* will be used for the
-       ObjectiveMechanism's `function <ObjectiveMechanism.function>`.  To restore *PRODUCT*, it must now be specified
-       explicitly in the **operation** argument of the constructor for the ObjectiveMechanism (see 1st example
-       under `System_Control_Examples`).
+       for its `objective_mechanism <EVCMechanism.objective_mechanism>`.  In particular, whereas an EVCMechanism uses
+       the same default `function <ObjectiveMechanism.function>` as an `ObjectiveMechanism` (`LinearCombination`),
+       it uses *PRODUCT* rather than *SUM* as the default value of the `operation <LinearCombination.operation>`
+       attribute of the function.  As a consequence, if the constructor for an ObjectiveMechanism is used to specify
+       the EVCMechanism's **objective_mechanism** argument, and the **operation** argument is not specified,
+       *SUM* rather than *PRODUCT* will be used for the ObjectiveMechanism's `function
+       <ObjectiveMechanism.function>`.  To restore *PRODUCT*, it must now be specified explicitly in the
+       **operation** argument of the constructor for the ObjectiveMechanism (see 1st example under
+       `System_Control_Examples`).
 
 The result of the EVCMechanism's `objective_mechanism <EVCMechanism.objective_mechanism>` is used by its `function
 <EVCMechanism>` to evaluate the performance of its `system <EVCMechanism.system>` when computing the `EVC
