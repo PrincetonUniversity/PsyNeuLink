@@ -2602,7 +2602,6 @@ class Component(object):
                                  "a value ({}) other than one of InitStatus".format(self.name, value))
         self._init_status = value
 
-
     @property
     def prefs(self):
         # Whenever pref is accessed, use current owner as context (for level checking)
