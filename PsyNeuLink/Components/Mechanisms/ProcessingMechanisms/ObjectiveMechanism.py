@@ -856,12 +856,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_state_dict[OUTPUT_STATE]=value
             output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
 
-            # If OutputState is already being monitored by this ObjectiveMechanism, skip it
-            if output_state_dict[OUTPUT_STATE] in self.monitored_values:
-                if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
-                       for projection in input_state.path_afferents)
-                    for input_state in self.input_states):
-                    continue
+            # FIX: NEED TO DEAL WITH BETTER:  INITIAL FORM OF self.monitored_values THAT MAY HAVE OUTPUTSTATES
+            if self.input_states:
+                # If OutputState is already being monitored by this ObjectiveMechanism, skip it
+                if output_state_dict[OUTPUT_STATE] in self.monitored_values:
+                    if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
+                           for projection in input_state.path_afferents)
+                        for input_state in self.input_states):
+                        continue
 
             output_state_dicts.append(output_state_dict)
 

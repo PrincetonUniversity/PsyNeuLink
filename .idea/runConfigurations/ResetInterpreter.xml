@@ -1,18 +1,17 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="EVC System Test Script with Profiler" type="PythonConfigurationType" factoryName="Python" folderName="OTHER CONFIGS" singleton="true">
+  <configuration default="false" name="ResetInterpreter" type="PythonConfigurationType" factoryName="Python" singleton="true">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Scripts" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="PsyNeuLink (Dropbox)" />
-    <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" runner="coverage.py" sample_coverage="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/MISCELLANEOUS SCRIPTS/EVC System Test Script with Profiler.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Scripts/ResetInterpreter.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
