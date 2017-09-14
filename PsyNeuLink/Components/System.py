@@ -2069,7 +2069,6 @@ class System_Base(System):
 
         # PARSE SPECS
 
-        # MODIFIED 9/10/17 NEW:
         # Get OutputStates already being -- or specified to be -- monitored by controller
         if controller is not None and not inspect.isclass(controller):
             try:
@@ -2088,7 +2087,6 @@ class System_Base(System):
                     controller_specs = controller.objective_mechanism.monitored_values
         else:
             controller_specs = []
-        # MODIFIED 9/10/17 END
 
         # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
         system_specs = self.monitor_for_control.copy()

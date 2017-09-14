@@ -1111,6 +1111,15 @@ def _parse_monitored_values(source, output_state_list, mech=None, context=None):
                 weights.append(DEFAULT_WEIGHT)
                 exponents.append(DEFAULT_EXPONENT)
 
+        elif isinstance(item, MonitoredOutputStatesOption):
+            output_states.append(item)
+            weights.append(DEFAULT_WEIGHT)
+            exponents.append(DEFAULT_EXPONENT)
+
+        else:
+            raise ObjectiveMechanismError("Unrecognized specification for monitor_value ({}) in {}".
+                                          format(item, source.name))
+
     if not (len(output_states)==len(weights)==len(exponents)):
         raise ObjectiveMechanismError("PROGRAM ERROR: The lengths of the lists of OutputStates ({}), weights ({}) and "
                                       "exponents ({}) are not equal in the monitored_values specification for {}".
