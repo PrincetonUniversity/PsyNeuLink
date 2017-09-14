@@ -1782,6 +1782,7 @@ class TDDeltaFunction(LinearCombination):
                                                           context=context))
         weights = self.weights
 
+        # TODO: implement offset and scale
         if self.offset is None:
             offset = 0.0
         else:
