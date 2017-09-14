@@ -664,12 +664,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 pass
 
     def _instantiate_input_states(self, monitored_values_specs=None, context=None):
-        """Instantiate InputState and MappingProjection to it for each OutputState specified in **monitored_values** arg
+        """Instantiate InputState and MappingProjection to it for each OutputState specified in monitored_values_specs
 
-        Instantiate self.instance_defaults.variable
+        Instantiate or extend self.instance_defaults.variable
 
-        Parse specifications for **input_states**, using **monitored_values** where relevant,
-        and instantiate input_states.
+        Parse specifications for **input_states**, using **monitored_values** where relevant and instantiate
+        input_states.
 
         Re-specify corresponding items of variable to match the values of the InputStates in input_states.
 
@@ -802,25 +802,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # MODIFIED 9/14/17 END
 
 
-    def _instantiate_input_states_NEW(self, context=None):
-        """Instantiate InputState and MappingProjection to it for each OutputState specified in **monitored_values** arg
-
-        Instantiate self.instance_defaults.variable
-
-        Parse specifications for **input_states**, using **monitored_values** where relevant,
-        and instantiate input_states.
-
-        Re-specify corresponding items of variable to match the values of the InputStates in input_states.
-
-        Update self.input_state and self.input_states.
-
-        Call _instantiate_monitoring_projection() to instantiate MappingProjection to InputState
-            if an OutputState has been specified.
-        """
-        self._instantiate_monitored_values(self.monitored_values, self.input_states, context=context)
-        super()._instantiate_input_states(context=context)
-
-
     def _instantiate_monitored_values(self, monitored_values, input_states= None, projection_specs=None, context=None):
         """Parse monitored_value specs and instantiate monitored_values attribute
 
@@ -901,37 +882,37 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return input_state_dicts, output_state_dicts
         # MODIFIED 9/14/17 END
 
-        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-        # FIX: DIFF
-        # Instantiate constraint on variable of each InputState from monitored_value spec
-        #    and assign weights and exponents if specified in monitored_value tuple
-        constraint_value = []
-        for input_state_dict in input_state_dicts:
-            constraint_value.append(input_state_dict[VARIABLE])
-            params = input_state_dict[PARAMS] or {}
-            if monitored_value_weights[i] is not None:
-                params[WEIGHT] = monitored_value_weights[i]
-            if monitored_value_exponents[i] is not None:
-                params[EXPONENT] = monitored_value_exponents[i]
-
-        # self.instance_defaults.variable.extend(constraint_value)
-        states = self.add_states(input_state_dicts)
-        instantiated_input_states = states[INPUT_STATES]
-        # FIX: END DIFF
-
-        # FIX: DIFF
-        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-        input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
-        if output_states:
-            _instantiate_monitoring_projections(owner=self,
-                                                sender_list=output_states,
-                                                receiver_list=instantiated_input_states,
-                                                receiver_projection_specs=input_state_projection_specs,
-                                                context=context)
-
-        return instantiated_input_states
-        # FIX: END DIFF
+        # # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        #
+        # # FIX: DIFF
+        # # Instantiate constraint on variable of each InputState from monitored_value spec
+        # #    and assign weights and exponents if specified in monitored_value tuple
+        # constraint_value = []
+        # for input_state_dict in input_state_dicts:
+        #     constraint_value.append(input_state_dict[VARIABLE])
+        #     params = input_state_dict[PARAMS] or {}
+        #     if monitored_value_weights[i] is not None:
+        #         params[WEIGHT] = monitored_value_weights[i]
+        #     if monitored_value_exponents[i] is not None:
+        #         params[EXPONENT] = monitored_value_exponents[i]
+        #
+        # # self.instance_defaults.variable.extend(constraint_value)
+        # states = self.add_states(input_state_dicts)
+        # instantiated_input_states = states[INPUT_STATES]
+        # # FIX: END DIFF
+        #
+        # # FIX: DIFF
+        # # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
+        # if output_states:
+        #     _instantiate_monitoring_projections(owner=self,
+        #                                         sender_list=output_states,
+        #                                         receiver_list=instantiated_input_states,
+        #                                         receiver_projection_specs=input_state_projection_specs,
+        #                                         context=context)
+        #
+        # return instantiated_input_states
+        # # FIX: END DIFF
 
     def add_monitored_values(self, monitored_values_specs, context=None):
         """Instantiate OutputStates to be monitored by ObjectiveMechanism
