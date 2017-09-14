@@ -3227,7 +3227,7 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                 if len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
-                    # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       Integrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
@@ -3968,7 +3968,7 @@ class AdaptiveIntegrator(
                 if len(rate) != np.array(self.instance_defaults.variable).size:
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign ClassDefaults.variable accordingly
-                    # Note: this situation can arise when the rate is parameterized (e.g., as an array) in the
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
                     #       AdaptiveIntegrator's constructor, where that is used as a specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);

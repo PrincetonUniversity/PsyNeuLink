@@ -77,7 +77,7 @@ InputStates can also be **added** to a Mechanism, using the Mechanism's `add_sta
 consequences for the Mechanism's `variable <Mechanism_Base.variable>` and possibly their relationship to the Mechanism's
 `function <Mechanism_Base.function>` (these are discussed `below <InputStates_Mechanism_Variable_and_Function>`).
 If the name of an InputState added to a Mechanism is the same as one that already exists, its name will be suffixed
-with a numerical index (incremented for each OutputState with that name), and the OutputState will be added to the list
+with a numerical index (incremented for each InputState with that name), and the InputState will be added to the list
 (that is, it will *not* replace ones that were already created).
 
 Specifying an InputState can be done in any of the ways listed below.  To create multiple InputStates,

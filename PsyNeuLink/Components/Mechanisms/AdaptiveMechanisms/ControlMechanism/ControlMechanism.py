@@ -54,9 +54,9 @@ of the other Components in the System have been executed, including any other Co
 `System Execution <System_Execution>`).  A ControlMechanism can be assigned as the `controller <System_Base.controller>`
 for a System by specifying it in the **controller** argument of the System's constructor, or by specifying the System
 as the **system** argument of either the ControlMechanism's constructor or its `assign_as_controller
-<ControlMechanism.assign_as_controller>` method. A System's `controller  <System_Base.controller>` and its associated
-Components can be displayed using the System's `System_Base.show_graph` method with its **show_control** argument
-assigned as `True`.
+<ControlMechanism_Base.assign_as_controller>` method. A System's `controller  <System_Base.controller>` and its
+associated Components can be displayed using the System's `show_graph <System_Base.show_graph>` method with its
+**show_control** argument assigned as `True`.
 
 
 .. _ControlMechanism_Creation:
@@ -65,17 +65,17 @@ Creating a ControlMechanism
 ---------------------------
 
 A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a `System is created <System_Creation>`,
-and the ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's
-constructor (see `System_Creation`).
-# If the ControlMechanism is created explicitly (using its constructor), the
-# `ObjectiveMechanism` it uses to monitor and evaluate `OutputStates <OutputState>` is specified in the
-# **objective_mechanism** argument of its constructor, and the parameters it controls are specified in the
-# **control_signals** argument.  If the ControlMechanism is created automatically by a System, then the values to be
-# monitored and parameters to be controlled can be specified in the **monitor_for_control**
-# and **control_signals** argument of the System's constructor, respectively.  The `ControlSignals <ControlSignal>` and
-# `ControlProjections <ControlProjection>` needed to control the parameters specified in **control_signals** are
-# automatically created, as described below.
+A ControlMechanism is also created automatically whenever a `System is created <System_Creation>`, and the
+ControlMechanism class or one of its subtypes is specified in the **controller** argument of the System's constructor
+(see `System_Creation`).  If the ControlMechanism is created explicitly (using its constructor), the
+`ObjectiveMechanism` it uses to monitor and evaluate `OutputStates <OutputState>` is specified in the
+**objective_mechanism** argument of its constructor, and the parameters it controls are specified in the
+**control_signals** argument.  If the ControlMechanism is created automatically by a System, then the specification of
+OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components themselves
+(see `System_Control_Specification`).  In either case the Components needed to monitor the specified OutputStates (an
+`ObjectiveMechanism` and `Projections <Projection>` to it) and to control the specified parameters (`ControlSignals
+<ControlSignal>` and corresponding `ControlProjections <ControlProjection>`) are created automatically, as described
+below.
 
 .. _ControlMechanism_ObjectiveMechanism:
 
@@ -88,11 +88,12 @@ evaluate a set of `OutputStates <OutputState>` upon which it bases it `allocatio
 can be specified in the **objective_mechanism** argument of its constructor, using either of the following:
 
   * an existing `ObjectiveMechanism`, or a constructor for one;  in this case the **monitored_values** argument of the
-    ObjectiveMechanism's constructor is used to `specify the OutputStates` <ObjectiveMechanism_Monitored_Values>`
-    to be monitored and evaluated (see `ControlMechanism_Examples`); note that, in this case, the default behavior
-    of the ObjectiveMechanism overrides any defaults that the ControlMechanism uses for its `objective_function
-    ControlMechanism.objective_function` attribute (see `note <EVCMechanism_Objective_Mechanism_Function_Note>`
-    in EVCMechanism for an example);
+    ObjectiveMechanism's constructor is used to specify the OutputStates to be `monitored and evaluated
+    <ObjectiveMechanism_Monitored_Values>` (see `ControlMechanism_Examples`); note that, in this case, the default
+    values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
+    default `objective_mechanism <ControlMechanism_Base.objective_mechanism>`, including those of its `function
+    <ObjectiveMechanism.function>` (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
+    an example);
   ..
   * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Values>`;  in this case, a default
     ObjectiveMechanism is created, using the list of OutputState specifications as the **monitored_values**
@@ -449,6 +450,14 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         the ControlMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
         ControlMechanism's `variable <Mechanism_Base.variable>`.
 
+    monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
+        each tuple in the list contains the weight and exponent associated with a corresponding item of
+        `monitored_output_states <ControlMechanism_Base.monitored_output_states>`;  these are the same as those in
+        the `monitored_values_weights_and_exponents <ObjectiveMechanism.monitored_values_weights_and_exponents>`
+        attribute of the `objective_mechanism <ControlMechanism_Base.objective_mechanism>`, and are used by the
+        ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
+        output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
+
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
         **monitor_for_control** argument of the ControlMechanism's constructor are used to generate its
@@ -470,6 +479,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
+
+
 
     """
 
@@ -607,13 +618,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
 
-        # MODIFIED 9/10/17 NEW [STILL TODO]:
-        # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
-        # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
-        # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents INTO SINGLE TUPLE
-        # **IMPLEMENT LOGIC BELOW
-        # MODIFIED 9/10/17 END
-
         monitored_output_states = None
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_values attribute
@@ -654,21 +658,16 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
-        # MODIFIED 9/10/17 OLD: [STILL TODO: MOVE THIS TO SYSTEM]
+        # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
         if self.system is not None:
             name = self.system.name + ' outcome signal'
+        # Otherwise, name it based on the ObjectiveMechanism
         else:
             name = self.objective_mechanism.name + ' outcome signal'
         MappingProjection(sender=self.objective_mechanism,
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,
-                          name=name
-                          )
-
-        if self.system is not None:
-            self.system.execution_list.append(self.objective_mechanism)
-            self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
-        # MODIFIED 9/10/17 END
+                          name=name)
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
@@ -940,11 +939,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.system:
             self.system._validate_monitored_state_in_system(output_states, context=context)
 
-        # MODIFIED 9/12/17 OLD:
-        # if output_states:
-        #     self.monitored_output_states.append(output_states)
-        # MODIFIED 9/12/17 END
-
     @tc.typecheck
     def assign_as_controller(self, system:System, context=None):
         """Assign ControlMechanism as `controller <System_Base.controller>` for a `System`.
@@ -1000,7 +994,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
         for control_signal_spec in system_control_signals:
             self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-        # MODIFIED 9/10/17 END
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:
