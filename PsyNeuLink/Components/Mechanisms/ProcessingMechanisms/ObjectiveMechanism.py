@@ -1050,10 +1050,20 @@ def _parse_monitored_values(source, output_state_list, mech=None, context=None):
 
             # Use OutputState in tuple returned from parse
             output_state = output_state_tuple[OUTPUT_STATE_INDEX]
-            if not isinstance(output_state, (OutputState, Mechanism)):
-                raise ObjectiveMechanismError("PROGRAM ERROR: parse_monitored_values() returned a tuple for {}"
-                                              "the first item of which ({}) is not an OutputState or Mechanism".
-                                              format(source.name, output_state))
+
+            # If output_state is a string,
+            from PsyNeuLink.Components.System import System
+            if isinstance(output_state, str):
+                if not isinstance(source, System):
+                    raise ObjectiveMechanismError("String used to specify OutputState (\'{}\') for monitored_values "
+                                                  "in {}; the name of an OutputState can only be used in "
+                                                  "the monitor_for_control argument of a System".
+                                                  format(output_state, source.name))
+
+            elif not isinstance(output_state, (OutputState, Mechanism)):
+                raise ObjectiveMechanismError("PROGRAM ERROR: parse_monitored_values() returned a tuple for {}, "
+                                              "the first item of which ({}) is not an OutputState, the name of one, "
+                                              "or Mechanism".format(source.name, output_state))
             output_states.append(output_state)
 
             # Use weight and exponent if returned from parse;  otherwise use what was in item

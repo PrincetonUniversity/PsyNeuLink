@@ -609,9 +609,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         # MODIFIED 9/10/17 NEW [STILL TODO]:
         # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
-        # **SWAP ORDER OF exponents AND weights IN SCRIPTS AND EXAMPLES AND THEN IN WEIGHT_INDEX and EXPONENT_INDEX
         # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents INTO SINGLE TUPLE
-        # **IMPLEMENT LOGIC BELOW
         # MODIFIED 9/10/17 END
 
         monitored_output_states = None

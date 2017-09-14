@@ -2070,7 +2070,7 @@ class System_Base(System):
         # PARSE SPECS
 
         # MODIFIED 9/10/17 NEW:
-        # Get OutputStates already being or specified to be monitored by controller
+        # Get OutputStates already being -- or specified to be -- monitored by controller
         if controller is not None and not inspect.isclass(controller):
             try:
                 # Get from monitored_output_states attribute if controller is already implemented
@@ -2080,8 +2080,11 @@ class System_Base(System):
                 #    (i.e., the call to this method is part of its instantiation by a System)
                 #    so, get specification from the **object_mechanism** argument
                 if isinstance(controller.objective_mechanism, list):
+                    # **objective_mechanism** argument was specified as a list
                     controller_specs = controller.objective_mechanism.copy() or []
                 elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
+                    # **objective_mechanism** argument was specified as an ObjectiveMechanism, which has presumably
+                    # already been instantiated, so use its monitored_values attribute
                     controller_specs = controller.objective_mechanism.monitored_values
         else:
             controller_specs = []
@@ -2106,36 +2109,8 @@ class System_Base(System):
 
         # Extract references to Mechanisms and/or OutputStates from any tuples
         # Note: leave tuples in all_specs for use in generating weight and exponent arrays below
-        all_specs_extracted_from_tuples = []
-        for item in all_specs:
-            # VALIDATE SPECIFICATION
-            # Handle EVCMechanism's tuple format:
-            if isinstance(item, tuple):
-                if len(item) != 3:
-                    raise SystemError("Tuple specification for OutputState to be monitored in {} ({}) "
-                                      "has {} items;  it should be 3".
-                                         format(self.name, item, len(item)))
-                if not isinstance(item[WEIGHT_INDEX], numbers.Number):
-                    raise SystemError("Entry for weight in tuple specification of OutputState "
-                                         "to be monitored in {}  (item {}: {}) must be a number".
-                                         format(WEIGHT_INDEX, item[WEIGHT_INDEX], self.name))
-                if not isinstance(item[EXPONENT_INDEX], numbers.Number):
-                    raise SystemError("Entry for weight in tuple specification of OutputState "
-                                         "to be monitored in {}  (item {}: {}) must be a number".
-                                         format(WEIGHT_INDEX, item[EXPONENT_INDEX], self.name))
-                # Set state_spec to the output_state item for validation below
-                item = item[0]
-
-            # Validate by ObjectiveMechanism:
-            _parse_monitored_values(source=self, output_state_list=item, context=context)
-
-            # Extract references from specification tuples
-            if isinstance(item, tuple):
-                all_specs_extracted_from_tuples.append(item[OUTPUT_STATE_INDEX])
-
-            # Otherwise, add item as specified:
-            else:
-                all_specs_extracted_from_tuples.append(item)
+        all_specs = _parse_monitored_values(self, output_state_list=all_specs)
+        all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
 
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
@@ -2307,8 +2282,10 @@ class System_Base(System):
         # ASSIGN EXPONENTS AND WEIGHTS TO OUTCOME_FUNCTION
 
         num_monitored_output_states = len(monitored_output_states)
-        weights = np.ones(num_monitored_output_states)
-        exponents = np.ones_like(weights)
+        # weights = np.ones(num_monitored_output_states)
+        # exponents = np.ones_like(weights)
+        weights = [None] * num_monitored_output_states
+        exponents = [None] * num_monitored_output_states
 
         # Get and assign specification of weights and exponents for mechanisms or outputStates specified in tuples
         for spec in all_specs:
