@@ -40,6 +40,8 @@ Temporary Items
 .idea/**/misc.xml
 .idea/**/PsyNeuLink.iml
 .idea/dictionaries
+.idea/codeStyles
+.idea/other.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
