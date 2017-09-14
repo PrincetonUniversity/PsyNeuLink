@@ -1169,7 +1169,7 @@
 #                   be in EVC mechanism rather than ControlProjection?
 #                   EVCMechanism makes more sense theoretically
 #                      e.g., seems better to talk about the cost of a control signal, rather than ControlProjection
-#                   Projection is easier to manage (as it is its own object, can be parameterized, etc.)
+#                   Projection is easier to manage (as it is its own object, can be parameterzed, etc.)
 #                   Maybe they should be assigned to OutputStates of the EVCMechanism?
 #
 # QUESTION: DDM:

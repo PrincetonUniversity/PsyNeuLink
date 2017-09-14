@@ -56,8 +56,8 @@ command, and listed in its `processes <System_Base.processes>` attribute.
 
 .. _System_Control_Specification:
 
-Specifying a Control
-~~~~~~~~~~~~~~~~~~~~
+Specifying Control
+~~~~~~~~~~~~~~~~~~
 
 A controller can also be specified for the System, in the **controller** argument of the `system`.  This can be an
 existing `ControlMechanism`, or a class of ControlMechanism in which case the ControlMechanism will be created.  In
@@ -74,7 +74,7 @@ is used, any OutputState with that name, belonging to any Mechanism within the S
 OutputState of a particular Mechanism is desired, and it shares its name with ones in other Mechanisms, then it must
 be referenced explicitly (see other examples under `System_Control_Examples`).  The OutputStates specified in the
 **monitor_for_control** argument are added to any already specified for the ControlMechanism's `objective_mechanism
-<ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
+<ControlMechanism_Base.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
 <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
 <ObjectiveMechanism.monitored_values>` attribute).
 
@@ -82,9 +82,9 @@ In addition, the **control_signals** argument can be use to specify the paramete
 should be controlled. These can be specified in any of the ways used to `specify ControlSignals
 <ControlMechanism_Control_Signals>` in the *control_signals* argument of a ControlMechanism. These are added to any
 `ControlSignals <ControlSignal>` that have been already specified for the `controller <System_Base.controller>`
-(listed in its `control_signals <ControlMechanism.control_signals>` attribute), and any parameters that have directly
-been `specified for control <ParameterState_Specification>` within the System. See <System_Control> for additional
-details.
+(listed in its `control_signals <ControlMechanism_Base.control_signals>` attribute), and any parameters that have
+directly been `specified for control <ParameterState_Specification>` within the System. See `System_Control` for
+additional details.
 
 .. _System_Structure:
 
@@ -133,7 +133,7 @@ The `Mechanisms <Mechanism>` in a System are assigned designations based on the 
     `LEARNING`: monitors the value of another Mechanism for use in learning.
 
     `TARGET`: ComparatorMechanism that monitors a `TERMINAL` Mechanism of a Process and compares it to a corresponding
-    value provided in the `execute <System_Base.execute>` or `run <System_Base.run> method.
+    value provided in the `execute <System_Base.execute>` or `run <System_Base.run>` method.
 
     `INTERNAL`: ProcessingMechanism that does not fall into any of the categories above.
 
@@ -193,9 +193,9 @@ Control
 ~~~~~~~
 
 A System can be assigned a `ControlMechanism` as its `controller <System_Base.controller>`, that can be  used to
-control parameters of other `Mechanisms <Mechanism>` in the System and/or their `function  <Mechanism.function>`.
-Although any number of ControlMechanism can be assigned to and executed within a System, a System can have only one
-`controller <System_Base.controller>`, that is executed after all of the other Components in the System have been
+control parameters of other `Mechanisms <Mechanism>` in the System. Although any number of ControlMechanism can be
+assigned to and executed within a System, a System can have only one `controller <System_Base.controller>`,
+that is executed after all of the other Components in the System have been
 executed, including any other ControlMechanisms (see `System Execution <System_Execution>`). When a ControlMechanism
 is assigned to or created by a System, it inherits specifications made for the System as follows:
 
@@ -203,7 +203,7 @@ is assigned to or created by a System, it inherits specifications made for the S
     that may have already been specified for the ControlMechanism's `objective_mechanism
     <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
     <EVCMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute); see <System_Control_Specification> for additional details of how
+    <ObjectiveMechanism.monitored_values>` attribute); see `System_Control_Specification` for additional details of how
     to specify OutputStates to be monitored.
 
   * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameter that has been
@@ -571,7 +571,7 @@ def system(default_variable=None,
 
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
-        'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
+        'objective_mechanism <ControlMechanism_Base.objective_mechanism>` of its `controller` (see
         `System_Control_Specification` and `ObjectiveMechanism_Monitored_Values` for additional details of
         how to specify the `monitor_for_control` argument).
 
@@ -734,7 +734,7 @@ class System_Base(System):
         determines the learning_rate for all `LearningMechanisms <LearningMechanism>` in the System.  This overrides any
         values set for the function of individual LearningMechanisms or `LearningSignals <LearningSignal>`, and persists
         for all subsequent executions of the System.  If it is set to `None`, then the `learning_rate
-        <System_Base.learning_rate> is determined by last value assigned to each LearningMechanism (either directly,
+        <System_Base.learning_rate>` is determined by last value assigned to each LearningMechanism (either directly,
         or following the execution of any `Process` or System to which the LearningMechanism belongs and for which a
         `learning_rate <LearningMechanism.learning_rate>` was set).
 

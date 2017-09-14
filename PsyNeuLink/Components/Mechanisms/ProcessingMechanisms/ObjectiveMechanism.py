@@ -92,7 +92,7 @@ COMMENT
 
     .. note::
        The weight and exponent specifications in a tuple are used to specify the `weight <InputState.weight>` and
-       `exponent <InputState.exponents>` of the corresponding InputState of the ObjectiveMechanism;  therefore,
+       `exponent <InputState.exponent>` of the corresponding InputState of the ObjectiveMechanism;  therefore,
        any values specified there take precedence over any other weight and/or exponent specifications of the
        InputStates for the ObjectiveMechanism.
 
@@ -101,10 +101,10 @@ COMMENT
   * **monitored_value specification dictionary** -- this the most flexible form of specification, that can be used
     to specify one or more OutputStates of a Mechanism by their name
 
-        * *MECHANISM*:`Mechanism`
+        * *MECHANISM*:`Mechanism <Mechanism>`
             this enty must be included in the dictionary;
 
-        * *OUTPUT_STATES*:List[<str or any of the specifications above>...]
+        * *OUTPUT_STATES*:List[<str or any of the specifications above>, ...]
             here, a string can be used anywhere an OutputState would have been specified as the name
             of an OutputState belonging to the *MECHANISM* entry.
 
@@ -172,15 +172,16 @@ Input
 =An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
 **monitored_values** argument (see `ObjectiveMechanism_Monitored_Values`). Each InputState receives a
 `MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` to generate the value of its (*OUTCOME*) `OutputState
+`function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
 <ObjectiveMechanism.input_states>` attribute, and the OutputStates from which they receive projections are listed in
 the same order its `monitored_values  <ObjectiveMechanism.monitored_values>` attribute.  If any `weights and/or
 exponents are specified <ObjectiveMechanism_Monitored_Values>` for either the ObjectiveMechanism's `montiored_values
 <ObjectiveMechanism.montiored_values>` or `input_states` the former take precedence over the latter.  These are
 assigned to the weights and/or exponents attributes of the ObjectiveMechanism's `function <ObjectiveMechanism.function>`
-if it implements these attributes, and applied to the `value <InputState.value>` of the corresponding InputStates
-before they are combined by the `function <ObjectiveMechanism.function>`.
+if the function implements these attributes;  if so, the function applies the weights and/or exponents specified to the
+corresponding InputState `value <InputState.value>`\\s before it combining these to generate the ObjectiveMechanism's
+`output <ObjectiveMechanism_Output>`.
 
 .. _ObjectiveMechanism_Function:
 
@@ -238,25 +239,24 @@ ObjectiveMechanism requires that this be a single value, that it can compare wit
 This can be dealt with by using `default_variable` in the constructor of the ObjectiveMechanism, to force
 the InputState for the ObjectiveMechanism to have a single value, as in the example below::
 
-    my_action_select_mech = TransferMechanism(default_variable = [0,0,0],
-                                function=SoftMax(output=PROB))
+    my_action_select_mech = TransferMechanism(default_variable = [0,0,0], function=SoftMax(output=PROB))
 
     my_reward_mech = TransferMechanism(default_variable = [0])
 
     my_objective_mech = ObjectiveMechanism(monitored_values = [my_action_select_mech, my_reward_mech])
 
-Note that the OutputState for the `my_action_selection` and `my_reward_mech` are specified
-in `monitored_values`.  If that were the only specification, the InputState created for `my_action_select_mech`
+Note that the OutputState for the ``my_action_selection`` and ``my_reward_mech`` are specified
+in `monitored_values`.  If that were the only specification, the InputState created for ``my_action_select_mech``
 would be a vector of length 3.  This is overridden by specifying `default_variable` as an array with two
-single-value arrays (one corresponding to `my_action_select_mech` and the other to `my_reward_mech`).  This forces
-the InputState for `my_action_select_mech` to have only a single element which, in turn, will cause a
-MappingProjection to be created from  `my_action_select_mech` to the ObjectiveMechanism's InputState using a
+single-value arrays (one corresponding to ``my_action_select_mech`` and the other to ``my_reward_mech``).  This forces
+the InputState for ``my_action_select_mech`` to have only a single element which, in turn, will cause a
+MappingProjection to be created from  ``my_action_select_mech`` to the ObjectiveMechanism's InputState using a
 `FULL_CONNECTIVITY_MATRIX` (the one used for `AUTO_ASSIGN_MATRIX` when the sender and receiver have values of
 different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
-output of `my_action_select_mech`, and so the `FULL_CONNECTIVITY_MATRIX` will combine it with zeros (the other values
+output of ``my_action_select_mech``, and so the `FULL_CONNECTIVITY_MATRIX` will combine it with zeros (the other values
 in the vector), and so its value will be assigned as the value of the corresponding InputState in the
 ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism's
-`function <ObjectiveMechanism.function>` to convert the output of `my_action_select_mech` to a length 1 vector, though
+`function <ObjectiveMechanism.function>` to convert the output of ``my_action_select_mech`` to a length 1 vector, though
 this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>`, however more sophisticated ones are possible, just as the one just suggested.
 
@@ -265,7 +265,7 @@ this would have been more involved.  The next example describes a simple case of
 *Customizing the ObjectiveMechanism's function*
 
 The simplest way to customize the `function <ObjectiveMechanism.function>` of an ObjectiveMechanism is to
-parameterize its default function (`LinearCombination`).  In the example below, the ObjectiveMechanism used in the
+parametrize its default function (`LinearCombination`).  In the example below, the ObjectiveMechanism used in the
 previous example is further customized to subtract the value of the action selected from the value of the reward::
 
     my_objective_mech = ObjectiveMechanism(default_variable = [[0],[0]],
@@ -274,14 +274,14 @@ previous example is further customized to subtract the value of the action selec
 
 This is done by specifying the `weights <LinearCombination.weights>` parameter of the `LinearCombination` function,
 with two values [-1] and [1] corresponding to the two items in `monitored_values` (and `default_variable`).  This
-will multiply the value from `my_action_select_mech` by -1 before adding it to (and thus
-subtracting it from) the value of `my_reward_mech`.  Notice that the weight for ``my_reward_mech`` had to be specified,
-even though it is using the default value (1);  whenever a weight and/or exponent parameter is specified, there must
-be an entry for every item of the function's variable.  The `operation <LinearCombination.operation>`
-and `exponents <LinearCombination.exponents>` parameters of `LinearCombination` can be used similarly, and together,
-to multiply and divide quantities.
+will multiply the value from ``my_action_select_mech`` by -1 before adding it to (and thus subtracting it from) the
+value of ``my_reward_mech``.  Notice that the weight for ``my_reward_mech`` had to be specified, even though it is
+using the default value (1);  whenever a weight and/or exponent parameter is specified, there must be an entry for
+every item of the function's variable.  The `operation <LinearCombination.operation>` and `exponents
+<LinearCombination.exponents>` parameters of `LinearCombination` can be used similarly, and together, to multiply and
+divide quantities.
 
-.. ObjectiveMechanism_OutputState_Tuple_Example:
+.. _ObjectiveMechanism_OutputState_Tuple_Example:
 
 As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
 the **monitored_values** argument, by placing them in a tuple with the OutputState (see `monitored_values tuple
@@ -308,7 +308,7 @@ if they are specified on their own or in a tuple::
                                                                              (RESPONSE_TIME, 1, -1)]}])
 
 Note that, as shown in this example, the tuple format can still be used for each individual OutputState in the list
-assigned to the OUTPUT_STATES entry.
+assigned to the *OUTPUT_STATES* entry.
 
 
 
@@ -470,9 +470,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     COMMENT
 
     monitored_values : ContentAddressableList[OutputState]
-        determines  the values monitored, and evaluated by `function <ObjectiveMechanism>`.  Each item in the list
-        refers to an OutputState containing the value to be monitored, with a `MappingProjection` from it to the
+        determines  the values monitored, and evaluated by `function <ObjectiveMechanism.function>`.  Each item in the
+        list refers to an OutputState containing the value to be monitored, with a `MappingProjection` from it to the
         corresponding InputState listed in the `input_states <ComparatorMechanism.input_states>` attribute.
+
+    monitored_values_weights_and_exponents : List[Tuple(float, float)]
+        each tuple in the list contains the weight and exponent associated with each of the ObjectiveMechanism's
+        `input_states <ObjectiveMechanism.input_states;  these are used by its `function <ObjectiveMechanism.function>`
+        to parametrize the contribution that each of the values monitored by the ObjectiveMechanism makes to its
+        output (see `ObjectiveMechanism_Function`)
 
     input_states : ContentAddressableList[InputState]
         contains the InputStates of the ObjectiveMechanism, each of which receives a `MappingProjection` from the
