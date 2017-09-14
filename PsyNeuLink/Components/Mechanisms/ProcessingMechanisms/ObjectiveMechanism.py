@@ -737,9 +737,16 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         #     input_state_dicts.append(input_state_dict)
 
         # MODIFIED 9/11/17 NEW:
+        # If call is for initialization
+        if self.init_status is InitStatus.UNSET:
+            # Pass self.input_states (containing specs from **input_states** arg of constructor)
+            input_states = self.input_states
+        else:
+            # If initialized, don't pass self.input_states, as this is now a list of existing InputStates
+            input_states = None
         monitored_values = monitored_values_specs or self.monitored_values
         input_state_dicts, output_state_dicts = self._instantiate_monitored_values(monitored_values=monitored_values,
-                                                                                   input_states=self.input_states,
+                                                                                   input_states=input_states,
                                                                                    context=context)
 
         # MODIFIED 9/14/17 END
@@ -818,11 +825,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def _instantiate_monitored_values(self, monitored_values, input_states=None, context=None):
         """Parse monitored_value specs and instantiate monitored_values attribute
 
-        Used by _instantiate_input_states and _add_monitored_values;
-        monitored_values argument can be any legal specification for **monitored_values** arg of constructor.
+        Used by _instantiate_input_states and _add_monitored_values.
+        monitored_values argument:
+            list of any legal specification for **monitored_values** argument of the constructor;
+        input_states argument:
+            list of input_state specifications,
+            specified in the **input_states** arg of the constructor, and used for default values
+                not overridden by specifications monitored_values (e.g., weight and exponents)
 
-        Returns list of input_states to instantiate
-
+        Returns list of tuples, each of which is a pair of InputState and OutputState specification dictionaries;
+            input_state_dicts: specification for InputStates to be created
+            output_state_dicts:  OutputStates to be monitored by the InputStates
         """
 
         # First parse for tuples to extract OutputStates, weights and exponents

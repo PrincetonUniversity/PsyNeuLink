@@ -871,7 +871,7 @@ class Component(object):
         #    (e.g., instantiate_output_state in Mechanism)
         self._instantiate_attributes_after_function(context=context)
 
-        # self.init_status = InitStatus.INITIALIZED
+        self.init_status = InitStatus.INITIALIZED
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
