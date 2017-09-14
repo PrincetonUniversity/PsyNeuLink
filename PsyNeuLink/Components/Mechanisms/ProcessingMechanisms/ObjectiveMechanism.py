@@ -663,7 +663,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             except KeyError:
                 pass
 
-    def _instantiate_input_states(self, context=None):
+    def _instantiate_input_states(self, monitored_values_specs=None, context=None):
         """Instantiate InputState and MappingProjection to it for each OutputState specified in **monitored_values** arg
 
         Instantiate self.instance_defaults.variable
@@ -679,79 +679,80 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             if an OutputState has been specified.
         """
 
-        # FIX: EXTRACT PIECES NEEDED FOR add_monitored_values() AND MOVE TO _instantiate_monitored_values
-        # # MODIFIED 9/11/17 NEW:
-        # input_states = _instantiate_monitored_values(self.monitored_values, context)
-        # # MODIFIED 9/11/17 END
+        # MODIFIED 9/14/17 OLD:
+        # # PARSE monitored_values
+        #
+        # # First parse for tuples to extract OutputStates, weights and exponents
+        # monitored_values = _parse_monitored_values(source=self,
+        #                                            output_state_list=self.monitored_values,
+        #                                            context=context)
+        # output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
+        # monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values]
+        # monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
+        #
+        # # Then, parse OutputState specifications
+        # output_state_dicts = []
+        # for value in output_state_specs:
+        #     output_state_dict = {}
+        #     output_state_spec = _parse_state_spec(owner=self,
+        #                                           state_type=OutputState,
+        #                                           state_spec=value)
+        #     if isinstance(output_state_spec, dict):
+        #         output_state_dict = output_state_spec
+        #     elif isinstance(output_state_spec, State):
+        #         output_state_dict[NAME] = output_state_spec.name
+        #         output_state_dict[VARIABLE] = output_state_spec.instance_defaults.variable
+        #         output_state_dict[VALUE] = output_state_spec.instance_defaults.variable
+        #         # output_state_dict[PARAMS] = output_state_spec.params
+        #     else:
+        #         raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
+        #                                       "should have returned dict or State, but returned {} instead ({})".
+        #                                       format(OUTPUT_STATE,
+        #                                              self.name,
+        #                                              type(output_state_spec).__name__,
+        #                                              output_state_spec))
+        #     output_state_dict[OUTPUT_STATE]=value
+        #     output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
+        #     output_state_dicts.append(output_state_dict)
+        #
+        # # INSTANTIATE InputState FOR EACH OutputState
+        #
+        # # If **input_states** was specified in the constructor, use those specifications;
+        # #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
+        # input_state_specs = self.input_states or [m[VALUE] for m in output_state_dicts]
+        #
+        # # Parse input_states into a state specification dict, passing output_state_specs as defaults
+        # input_state_dicts = []
+        # for i, input_state, output_state_dict in zip(range(len(input_state_specs)),
+        #                                              # self.input_states,
+        #                                              input_state_specs,
+        #                                              output_state_dicts):
+        #     # Parse input_state to determine its specifications and assign values from output_state_specs
+        #     #    to any missing specifications, including any projections requested and weights and exponents.
+        #     input_state_dict = _parse_state_spec(self,
+        #                                     state_type=InputState,
+        #                                     state_spec=input_state,
+        #                                     name=output_state_dict[NAME],
+        #                                     value=output_state_dict[VALUE])
+        #     input_state_dicts.append(input_state_dict)
 
-        # PARSE monitored_values
+        # MODIFIED 9/11/17 NEW:
+        monitored_values = monitored_values_specs or self.monitored_values
+        input_state_dicts, output_state_dicts = self._instantiate_monitored_values(monitored_values, context)
 
-        # First parse for tuples to extract OutputStates, weights and exponents
-        monitored_values = _parse_monitored_values(source=self,
-                                                   output_state_list=self.monitored_values,
-                                                   context=context)
-        output_state_specs = [s[OUTPUT_STATE_INDEX] for s in monitored_values]
-        monitored_value_weights = [w[WEIGHT_INDEX] for w in monitored_values]
-        monitored_value_exponents = [e[EXPONENT_INDEX] for e in monitored_values]
+        # MODIFIED 9/14/17 END
 
-        # Then, parse OutputState specifications
-        output_state_dicts = []
-        for value in output_state_specs:
-            output_state_dict = {}
-            output_state_spec = _parse_state_spec(owner=self,
-                                                  state_type=OutputState,
-                                                  state_spec=value)
-            if isinstance(output_state_spec, dict):
-                output_state_dict = output_state_spec
-            elif isinstance(output_state_spec, State):
-                output_state_dict[NAME] = output_state_spec.name
-                output_state_dict[VARIABLE] = output_state_spec.instance_defaults.variable
-                output_state_dict[VALUE] = output_state_spec.instance_defaults.variable
-                # output_state_dict[PARAMS] = output_state_spec.params
-            else:
-                raise ObjectiveMechanismError("PROGRAM ERROR: call to State._parse_state_spec() for {} of {} "
-                                              "should have returned dict or State, but returned {} instead ({})".
-                                              format(OUTPUT_STATE,
-                                                     self.name,
-                                                     type(output_state_spec).__name__,
-                                                     output_state_spec))
-            output_state_dict[OUTPUT_STATE]=value
-            output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
-            output_state_dicts.append(output_state_dict)
 
-        # INSTANTIATE InputState FOR EACH OutputState
-
-        # If **input_states** was specified in the constructor, use those specifications;
-        #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
-        input_state_specs = self.input_states or [m[VALUE] for m in output_state_dicts]
-
-        # Parse input_states into a state specification dict, passing output_state_specs as defaults
-        input_state_dicts = []
-        for i, input_state, output_state_dict in zip(range(len(input_state_specs)),
-                                                     # self.input_states,
-                                                     input_state_specs,
-                                                     output_state_dicts):
-            # Parse input_state to determine its specifications and assign values from output_state_specs
-            #    to any missing specifications, including any projections requested and weights and exponents.
-            input_state_dict = _parse_state_spec(self,
-                                            state_type=InputState,
-                                            state_spec=input_state,
-                                            name=output_state_dict[NAME],
-                                            value=output_state_dict[VALUE])
-            input_state_dicts.append(input_state_dict)
-
+        # FIX: DIFF
         # Instantiate constraint on variable of each InputState from monitored_value spec
         #    and assign weights and exponents (if specified in monitored_value tuple) to params dict for each InputState
         constraint_value = []
         for i, input_state_dict in enumerate(input_state_dicts):
             constraint_value.append(input_state_dict[VARIABLE])
-            # params = input_state_dict[PARAMS] or {}
             weight_and_exponent_params_dict = {}
             if monitored_value_weights[i] is not None:
-                # params[WEIGHT] = monitored_value_weights[i]
                 weight_and_exponent_params_dict[WEIGHT] = monitored_value_weights[i]
             if monitored_value_exponents[i] is not None:
-                # params[EXPONENT] = monitored_value_exponents[i]
                 weight_and_exponent_params_dict[EXPONENT] = monitored_value_exponents[i]
             if input_state_dict[PARAMS] is not None:
                 input_state_dict[PARAMS].update(weight_and_exponent_params_dict)
@@ -759,25 +760,47 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                 input_state_dict[PARAMS] = weight_and_exponent_params_dict
 
         self.instance_defaults.variable = constraint_value
-        self._input_states = input_state_dicts
 
-        super()._instantiate_input_states(context=context)
+        # Instantiate InputStates corresponding to OutputStates specified in specified monitored_values
+        # MODIFIED 9/14/17 OLD:
+        # self._input_states = input_state_dicts
+        # instantiated_input_states = super()._instantiate_input_states(context=context)
+        # FIX: END DIFF
+        # MODIFIED 9/14/17 NEW:
+        instantiated_input_states = super()._instantiate_input_states(input_states=input_state_dicts, context=context)
+        # MODIFIED 9/14/17 END
 
-        # Get OutputStates specified in monitored_values to self.monitored_values and assign to self.monitored_values
-        output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
-        self.monitored_values = output_states
 
+        # # Get OutputStates specified in monitored_values to self.monitored_values and assign to self.monitored_values
+        # output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
+        # self.monitored_values = output_states
+
+        # FIX: DIFF  [ONLY DO THIS ON INITIALIZATION, OTHERWISE, self._input_states WILL HAVE ACTUAL STATES, NOT SPECS
+        # FIX:        ALSO, ONLY WANT TO GET THEM FOR NEWLY SPECIFIED STATES, NOT ANY THAT ALREADY EXIST
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
         input_state_projection_specs = []
         for i, state in enumerate(self._input_states):
             input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
+        # FIX: END DIFF
 
+        # # MODIFIED 9/14/17 OLD:
+        # # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        # _instantiate_monitoring_projections(owner=self,
+        #                                     sender_list=output_states,
+        #                                     receiver_list=self.input_states,
+        #                                     receiver_projection_specs=input_state_projection_specs,
+        #                                     context=context)
+
+        # MODIFIED 9/14/17 NEW:
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
+        output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
         _instantiate_monitoring_projections(owner=self,
                                             sender_list=output_states,
-                                            receiver_list=self.input_states,
+                                            receiver_list=instantiated_input_states,
                                             receiver_projection_specs=input_state_projection_specs,
                                             context=context)
+        # MODIFIED 9/14/17 END
+
 
     def _instantiate_input_states_NEW(self, context=None):
         """Instantiate InputState and MappingProjection to it for each OutputState specified in **monitored_values** arg
@@ -799,10 +822,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
 
     def _instantiate_monitored_values(self, monitored_values, input_states= None, projection_specs=None, context=None):
-        """Instantiate InputState and MappingProjection to it for each OutputState specified in monitored_values_specs
+        """Parse monitored_value specs and instantiate monitored_values attribute
 
         Used by _instantiate_input_states and _add_monitored_values;
         monitored_values argument can be any legal specification for **monitored_values** arg of constructor.
+
+        Returns list of input_states to instantiate
 
         """
 
@@ -851,10 +876,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # If input_states were provided use those for specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
-        if input_states and (len(input_states) != len(output_state_dicts)):
-            raise ObjectiveMechanismError("Number of InputStates specified ({}) must equal "
-                                          "the number of items specified for monitored_values".
-                                          format(len(input_states), len(output_state_dicts)))
+
         input_state_specs = input_states or [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
 
         # Parse input_states into a state specification dict, passing output_state_specs as defaults
@@ -871,6 +893,17 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                             value=output_state_dict[VALUE])
             input_state_dicts.append(input_state_dict)
 
+        output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
+        if output_states:
+            self.monitored_values.append(output_states)
+
+        # MODIFIED 9/14/17 NEW:
+        return input_state_dicts, output_state_dicts
+        # MODIFIED 9/14/17 END
+
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        # FIX: DIFF
         # Instantiate constraint on variable of each InputState from monitored_value spec
         #    and assign weights and exponents if specified in monitored_value tuple
         constraint_value = []
@@ -885,11 +918,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # self.instance_defaults.variable.extend(constraint_value)
         states = self.add_states(input_state_dicts)
         instantiated_input_states = states[INPUT_STATES]
+        # FIX: END DIFF
 
-        output_states = [mon_val[OUTPUT_STATE] for mon_val in output_state_dicts]
-        if output_states:
-            self.monitored_values.append(output_states)
-
+        # FIX: DIFF
         # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         input_state_projection_specs = [[AUTO_ASSIGN_MATRIX]] * len(input_state_dicts)
         if output_states:
@@ -898,29 +929,37 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                 receiver_list=instantiated_input_states,
                                                 receiver_projection_specs=input_state_projection_specs,
                                                 context=context)
-        return instantiated_input_states
 
-    def add_monitored_values(self, monitored_values_spec, context=None):
+        return instantiated_input_states
+        # FIX: END DIFF
+
+    def add_monitored_values(self, monitored_values_specs, context=None):
         """Instantiate OutputStates to be monitored by ObjectiveMechanism
 
         Used by other objects to add a state or list of states to be monitored by ObjectiveMechanism.
         monitored_values_spec can be a Mechanism, OutputState, monitored_value tuple, or list with any of these.
         If item is a Mechanism, its primary OutputState is used.
         """
-        monitored_values_spec = list(monitored_values_spec)
-        return self._instantiate_monitored_values(monitored_values_spec)
+        monitored_values_spec = list(monitored_values_specs)
+
+        # # MODIFIED 9/14/17 OLD:
+        # return self._instantiate_monitored_values(monitored_values_spec)
+        # # MODIFIED 9/14/17 NEW:
+        # FIX: NEEDS TO RETURN output_states (?IN ADDITION TO input_states) SO THAT IF CALLED BY ControlMechanism THAT
+        # FIX:  BELONGS TO A SYSTEM, THE ControlMechanism CAN CALL System._validate_monitored_state_in_system
+        # FIX:  ON THE output_states ADDED
+        #       TO
+        return self._instantiate_input_states(monitored_values_specs=monitored_values_specs, context=context)
+        # MODIFIED 9/14/17 END
         # return self._instantiate_input_states(monitored_values_spec)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Assign InputState weights and exponents to ObjectiveMechanism's function
         """
         super()._instantiate_attributes_after_function(context=context)
+        self._instantiate_function_weights_and_exponents(context=context)
 
-        weights = [input_state.weight for input_state in self.input_states]
-        exponents = [input_state.exponent for input_state in self.input_states]
-        self._instantiate_weights_and_exponents(weights, exponents, context=context)
-
-    def _instantiate_weights_and_exponents(self, weights, exponents, context=None):
+    def _instantiate_function_weights_and_exponents(self, context=None):
         """Assign weights and exponents to ObjectiveMechanism's function if it has those attributes
 
         For each, only make assignment if one or more entries in it has been assigned a value
@@ -928,6 +967,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
         DEFAULT_WEIGHT = 1
         DEFAULT_EXPONENT = 1
+
+        weights = [input_state.weight for input_state in self.input_states]
+        exponents = [input_state.exponent for input_state in self.input_states]
 
         if hasattr(self.function_object, WEIGHTS):
             if any(weight is not None for weight in weights):

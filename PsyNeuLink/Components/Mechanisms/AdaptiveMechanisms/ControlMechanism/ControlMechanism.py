@@ -643,7 +643,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
-                self.objective_mechanism.add_monitored_values(monitored_output_states)
+                self.objective_mechanism.add_monitored_values(monitored_values_specs=monitored_output_states,
+                                                              context=context)
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
@@ -935,7 +936,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         If item is a Mechanism, its primary OutputState is used.
         OutputStates must belong to Mechanisms in the same System as the ControlMechanism
         """
-        output_states = self.objective_mechanism.add_monitored_values(monitored_output_states, context=context)
+        output_states = self.objective_mechanism.add_monitored_values(monitored_values_specs=monitored_output_states,
+                                                                      context=context)
         if self.system:
             self.system._validate_monitored_state_in_system(output_states, context=context)
 
