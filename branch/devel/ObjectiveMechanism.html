@@ -214,14 +214,18 @@ the following:</p>
 </ul>
 <ul class="simple">
 <li><strong>Mechanism</strong> – the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.</li>
+<li><strong>string</strong> – this can be used as a “placemarker”, to specify that an <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> be created for an OutputState
+to be monitored that will be identified later.  The string is used as the name of the InputState when it is created.</li>
 </ul>
 <ul id="objectivemechanism-outputstate-tuple">
 <li><p class="first"><strong>monitored_values tuple</strong> – this is a convenience notation that can be used to compactly specify a weight
-and exponent for an OutputState’ (see <code class="xref any docutils literal"><span class="pre">example</span></code>). Each tuple must
+and exponent for an OutputState’ (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple-example"><span class="std std-ref">example</span></a>). Each tuple must
 have the three following items in the order listed:</p>
 <blockquote>
 <div><ul class="simple">
-<li>an OutputState or Mechanism;</li>
+<li>any of the specifications above – if it is a string, the weight and exponent specified in the tuple
+(see below) will be assigned along with the string as the name of the “placemarker” InputState when it is
+created.</li>
 </ul>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -241,7 +245,7 @@ with others by the ObjectiveMechanism’s <a class="reference internal" href="#O
 <div class="admonition note" id="objectivemechanism-weights-and-exponents">
 <p class="first admonition-title">Note</p>
 <p class="last">The weight and exponent specifications in a tuple are used to specify the <a class="reference internal" href="InputState.html#InputState.InputState.weight" title="InputState.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and
-<code class="xref any docutils literal"><span class="pre">exponent</span></code> of the corresponding InputState of the ObjectiveMechanism;  therefore,
+<a class="reference internal" href="InputState.html#InputState.InputState.exponent" title="InputState.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> of the corresponding InputState of the ObjectiveMechanism;  therefore,
 any values specified there take precedence over any other weight and/or exponent specifications of the
 InputStates for the ObjectiveMechanism.</p>
 </div>
@@ -249,23 +253,25 @@ InputStates for the ObjectiveMechanism.</p>
 </ul>
 <ul id="objectivemechanism-outputstate-specification-dictionary">
 <li><p class="first"><strong>monitored_value specification dictionary</strong> – this the most flexible form of specification, that can be used
-to specify an OutputState by its Mechanism and name, and/or its <code class="xref any docutils literal"><span class="pre">weight</span></code> and <code class="xref any docutils literal"><span class="pre">exponent</span>
-<span class="pre">`</span></code> attributes;  it can contain any of the following <em>KEY</em>:&lt;value&gt;
-entries, but must include the <em>MECHANISM</em> entry:</p>
+to specify one or more OutputStates of a Mechanism by their name</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="first docutils">
-<dt><em>MECHANISM</em>:&lt;<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>&gt;</dt>
-<dd>if this is not accompanied by an <em>OUTPUT_STATE</em> entry, the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used;</dd>
+<dt><em>MECHANISM</em>:<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a></dt>
+<dd>this enty must be included in the dictionary;</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
-<dt><em>OUTPUT_STATES</em>:[str, OutputState, or monitored_values tuple&gt;…]</dt>
-<dd>if a string is used for an item, it must be the name of an OutputState of the Mechanism specified in the
-<em>MECHANISM</em> entry;</dd>
+<dt><em>OUTPUT_STATES</em>:List[&lt;str or any of the specifications above&gt;, …]</dt>
+<dd>here, a string can be used anywhere an OutputState would have been specified as the name
+of an OutputState belonging to the <em>MECHANISM</em> entry.</dd>
 </dl>
 </li>
 </ul>
+<p>If the dictionary includes only the <em>MECHANISM</em> entry, then (as with a standalone Mechanism specification),
+the Mechanism’s <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> is used.  If a string is used for any items
+of the list in the <em>OUTPUT_STATES</em> entry, and it is not the name of the Mechanism in the <em>MECHANISM</em> entry,
+it will be treated as an “unbound” string specification.</p>
 </div></blockquote>
 </li>
 </ul>
@@ -316,12 +322,13 @@ weights and/or exponents specified in the <strong>monitored_values</strong> argu
 <p>=An ObjectiveMechanism has one <a class="reference internal" href="InputState.html"><span class="doc">InputState</span></a> for each of the OutputStates specified in its
 <strong>monitored_values</strong> argument (see <a class="reference internal" href="#objectivemechanism-monitored-values"><span class="std std-ref">Monitored Values</span></a>). Each InputState receives a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the corresponding OutputState, the values of which are used by the ObjectiveMechanism’s
-<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the value of its (<em>OUTCOME</em>) <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.  The InputStates are listed in the ObjectiveMechanism’s <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.input_states" title="ObjectiveMechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute, and the OutputStates from which they receive projections are listed in
+<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to generate the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputState</span></a>.  The InputStates are listed in the ObjectiveMechanism’s <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.input_states" title="ObjectiveMechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute, and the OutputStates from which they receive projections are listed in
 the same order its <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a> attribute.  If any <a class="reference internal" href="#objectivemechanism-monitored-values"><span class="std std-ref">weights and/or
-exponents are specified</span></a> for either the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">montiored_values</span></code> or <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.input_states" title="LearningMechanism.LearningMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> the former take precedence over the latter.  These are
+exponents are specified</span></a> for either the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">montiored_values</span></code> or <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.input_states" title="Mechanism.Mechanism_Base.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> the former take precedence over the latter.  These are
 assigned to the weights and/or exponents attributes of the ObjectiveMechanism’s <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-if it implements these attributes, and applied to the <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding InputStates
-before they are combined by the <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
+if the function implements these attributes;  if so, the function applies the weights and/or exponents specified to the
+corresponding InputState <a class="reference internal" href="InputState.html#InputState.InputState.value" title="InputState.InputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>s before it combining these to generate the ObjectiveMechanism’s
+<a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">output</span></a>.</p>
 </div>
 <div class="section" id="function">
 <span id="objectivemechanism-function"></span><h3>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
@@ -334,7 +341,7 @@ also be replaced with any <code class="xref any docutils literal"><span class="p
 number of items in axis 0 equal to the number of the ObjectiveMechanism’s InputStates), and generates a 1d array as
 its result. If it implements <code class="xref std std-keyword docutils literal"><span class="pre">weight</span></code> and/or <code class="xref std std-keyword docutils literal"><span class="pre">exponent</span></code> attributes,
 those are assigned from <a class="reference internal" href="InputState.html#InputState.InputState.weight" title="InputState.InputState.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="InputState.html#InputState.InputState.exponent" title="InputState.InputState.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attributes of its
-<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.input_states" title="ObjectiveMechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> (listed in its <code class="xref any docutils literal"><span class="pre">monitored_values_weights_and_exponents</span></code> attribute);  otherwise, they are ignored.</p>
+<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.input_states" title="ObjectiveMechanism.ObjectiveMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> (listed in its <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values_weights_and_exponents</span></code></a> attribute);  otherwise, they are ignored.</p>
 </div>
 <div class="section" id="output">
 <span id="objectivemechanism-output"></span><h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
@@ -359,31 +366,30 @@ by default the InputState of the ObjectiveMechanism created to monitor it will a
 ObjectiveMechanism requires that this be a single value, that it can compare with the value of the reward Mechanism.
 This can be dealt with by using <a class="reference internal" href="Function.html#Function.Reduce.default_variable" title="Function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> in the constructor of the ObjectiveMechanism, to force
 the InputState for the ObjectiveMechanism to have a single value, as in the example below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_action_select_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
-                            <span class="n">function</span><span class="o">=</span><span class="n">SoftMax</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">PROB</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_action_select_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">function</span><span class="o">=</span><span class="n">SoftMax</span><span class="p">(</span><span class="n">output</span><span class="o">=</span><span class="n">PROB</span><span class="p">))</span>
 
 <span class="n">my_reward_mech</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
 <span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">my_action_select_mech</span><span class="p">,</span> <span class="n">my_reward_mech</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Note that the OutputState for the <code class="xref any docutils literal"><span class="pre">my_action_selection</span></code> and <code class="xref any docutils literal"><span class="pre">my_reward_mech</span></code> are specified
-in <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a>.  If that were the only specification, the InputState created for <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code>
+<p>Note that the OutputState for the <code class="docutils literal"><span class="pre">my_action_selection</span></code> and <code class="docutils literal"><span class="pre">my_reward_mech</span></code> are specified
+in <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a>.  If that were the only specification, the InputState created for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>
 would be a vector of length 3.  This is overridden by specifying <a class="reference internal" href="Function.html#Function.Reduce.default_variable" title="Function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a> as an array with two
-single-value arrays (one corresponding to <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code> and the other to <code class="xref any docutils literal"><span class="pre">my_reward_mech</span></code>).  This forces
-the InputState for <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code> to have only a single element which, in turn, will cause a
-MappingProjection to be created from  <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code> to the ObjectiveMechanism’s InputState using a
+single-value arrays (one corresponding to <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> and the other to <code class="docutils literal"><span class="pre">my_reward_mech</span></code>).  This forces
+the InputState for <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to have only a single element which, in turn, will cause a
+MappingProjection to be created from  <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to the ObjectiveMechanism’s InputState using a
 <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> (the one used for <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="Keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a> when the sender and receiver have values of
 different lengths).  This produces the desired effect, since the action selected is the only non-zero value in the
-output of <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code>, and so the <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> will combine it with zeros (the other values
+output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code>, and so the <a class="reference internal" href="Keywords.html#Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> will combine it with zeros (the other values
 in the vector), and so its value will be assigned as the value of the corresponding InputState in the
 ObjectiveMechanism.  Another option would have been to customize the ObjectiveMechanism’s
-<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to convert the output of <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code> to a length 1 vector, though
+<a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to convert the output of <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> to a length 1 vector, though
 this would have been more involved.  The next example describes a simple case of customizing the ObjectiveMechanism’s
 <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, however more sophisticated ones are possible, just as the one just suggested.</p>
 <p id="objectivemechanism-weights-and-exponents-example"><em>Customizing the ObjectiveMechanism’s function</em></p>
 <p>The simplest way to customize the <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an ObjectiveMechanism is to
-parameterize its default function (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  In the example below, the ObjectiveMechanism used in the
+parametrize its default function (<a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>).  In the example below, the ObjectiveMechanism used in the
 previous example is further customized to subtract the value of the action selected from the value of the reward:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
                                        <span class="n">monitored_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">my_action_select_mech</span><span class="p">,</span> <span class="n">my_reward_mech</span><span class="p">],</span>
@@ -392,13 +398,12 @@ previous example is further customized to subtract the value of the action selec
 </div>
 <p>This is done by specifying the <a class="reference internal" href="Function.html#Function.LinearCombination.weights" title="Function.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> parameter of the <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function,
 with two values [-1] and [1] corresponding to the two items in <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a> (and <a class="reference internal" href="Function.html#Function.Reduce.default_variable" title="Function.Reduce.default_variable"><code class="xref any py py-attr docutils literal"><span class="pre">default_variable</span></code></a>).  This
-will multiply the value from <code class="xref any docutils literal"><span class="pre">my_action_select_mech</span></code> by -1 before adding it to (and thus
-subtracting it from) the value of <code class="xref any docutils literal"><span class="pre">my_reward_mech</span></code>.  Notice that the weight for <code class="docutils literal"><span class="pre">my_reward_mech</span></code> had to be specified,
-even though it is using the default value (1);  whenever a weight and/or exponent parameter is specified, there must
-be an entry for every item of the function’s variable.  The <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>
-and <a class="reference internal" href="Function.html#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> parameters of <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> can be used similarly, and together,
-to multiply and divide quantities.</p>
-<p>As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
+will multiply the value from <code class="docutils literal"><span class="pre">my_action_select_mech</span></code> by -1 before adding it to (and thus subtracting it from) the
+value of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>.  Notice that the weight for <code class="docutils literal"><span class="pre">my_reward_mech</span></code> had to be specified, even though it is
+using the default value (1);  whenever a weight and/or exponent parameter is specified, there must be an entry for
+every item of the function’s variable.  The <a class="reference internal" href="Function.html#Function.LinearCombination.operation" title="Function.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a> and <a class="reference internal" href="Function.html#Function.LinearCombination.exponents" title="Function.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> parameters of <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> can be used similarly, and together, to multiply and
+divide quantities.</p>
+<p id="objectivemechanism-outputstate-tuple-example">As a conveninence notation, weights and exponents can be included with the specification of the OutputState itself, in
 the <strong>monitored_values</strong> argument, by placing them in a tuple with the OutputState (see <a class="reference internal" href="#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_values tuple</span></a>).  The following example specifies the example same ObjectiveMechanism as the
 previous example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
@@ -410,6 +415,17 @@ submitted to the ObjectiveMechanism’s <a class="reference internal" href="#Obj
 included, even though it is the default value;  when a tuple is used, the weight and exponent values must both be
 specified.  Notice also that <code class="docutils literal"><span class="pre">my_reward_mech</span></code> does not use a tuple, so it will be assigned defaults for both the
 weight and exponent parameters.</p>
+<p>The following example uses a dictionary to specify the <strong>monitored_values</strong> argument, allowing several OutputStates
+for the same Mechanism to be specified more easily, each by name rather than by full reference (which is required
+if they are specified on their own or in a tuple:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitored_values</span><span class="o">=</span><span class="p">[</span><span class="n">Reward</span><span class="p">,</span>
+                                                        <span class="p">{</span><span class="n">MECHANISM</span><span class="p">:</span> <span class="n">Decision</span><span class="p">,</span>
+                                                         <span class="n">OUTPUT_STATES</span><span class="p">:</span> <span class="p">[</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span>
+                                                                         <span class="p">(</span><span class="n">RESPONSE_TIME</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)]}])</span>
+</pre></div>
+</div>
+<p>Note that, as shown in this example, the tuple format can still be used for each individual OutputState in the list
+assigned to the <em>OUTPUT_STATES</em> entry.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="objectivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -434,14 +450,14 @@ of one or more <a class="reference internal" href="OutputState.html"><span class
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitored_values</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>string</em><em>, </em><a class="reference internal" href="Component.html#Component.Component.value" title="Component.Component.value"><em>value</em></a><em>, </em><em>dict</em><em>, </em><em>MonitoredOutputStateOption</em><em>] or </em><em>Dict</em><em>[</em><em>]</em>) – specifies the values that will will be monitored, and evaluated by the <a class="reference internal" href="#"><span class="doc">function</span></a>
+<li><strong>monitored_values</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>, </em><em>string</em><em>, </em><a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.value" title="ModulatoryProjections.LearningProjection.LearningProjection.value"><em>value</em></a><em>, </em><em>dict</em><em>, </em><em>MonitoredOutputStateOption</em><em>] or </em><em>Dict</em><em>[</em><em>]</em>) – specifies the values that will will be monitored, and evaluated by the <a class="reference internal" href="#"><span class="doc">function</span></a>
 (see <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values</span></code></a> for details of specification).</li>
-<li><strong>input_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="Component.html#Component.Component.value" title="Component.Component.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default None</em>) – specifies the names and/or formats to use for the values of the InputStates that receive the input from the
+<li><strong>input_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em>, </em><a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.value" title="ModulatoryProjections.LearningProjection.LearningProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default None</em>) – specifies the names and/or formats to use for the values of the InputStates that receive the input from the
 OutputStates specified in the monitored_values** argument; if specified, there must be one for each item
 specified in the <strong>monitored_values</strong> argument.</li>
-<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="Function.html#Function.Function_Base.function" title="Function.Function_Base.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_values</span></code>
+<li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><em>ObjectiveFunction</em><em>, </em><a class="reference internal" href="ModulatorySignal.html#ModulatorySignals.ModulatorySignal.ModulatorySignal.function" title="ModulatorySignals.ModulatorySignal.ModulatorySignal.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <code class="xref std std-keyword docutils literal"><span class="pre">monitored_values</span></code>
 (see <a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.function" title="LearningMechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details.</li>
-<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="Component.html#Component.Component.value" title="Component.Component.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
+<li><strong>output_states</strong> (<em>List</em><em>[</em><a class="reference internal" href="OutputState.html#module-OutputState" title="OutputState"><em>OutputState</em></a><em>, </em><a class="reference internal" href="LearningProjection.html#ModulatoryProjections.LearningProjection.LearningProjection.value" title="ModulatoryProjections.LearningProjection.LearningProjection.value"><em>value</em></a><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>Dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputStates for the Mechanism;</li>
 <li><strong>role</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="Keywords.html#Keywords.MechanismRoles.LEARNING" title="Keywords.MechanismRoles.LEARNING"><em>LEARNING</em></a><em>, </em><em>CONTROL</em><em>]</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.role" title="ObjectiveMechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal"><span class="pre">role</span></code></a> for details).</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Mechanism, its function, and/or a custom function and its parameters. Values specified for parameters in
@@ -461,9 +477,18 @@ If it is not specified, a default is assigned using <code class="xref any docuti
 <dl class="attribute">
 <dt id="ObjectiveMechanism.ObjectiveMechanism.monitored_values">
 <code class="descname">monitored_values</code><a class="headerlink" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>ContentAddressableList[OutputState]</em> – determines  the values monitored, and evaluated by <a class="reference internal" href="#"><span class="doc">function</span></a>.  Each item in the list
-refers to an OutputState containing the value to be monitored, with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from it to the
+<dd><p><em>ContentAddressableList[OutputState]</em> – determines  the values monitored, and evaluated by <a class="reference internal" href="#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each item in the
+list refers to an OutputState containing the value to be monitored, with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from it to the
 corresponding InputState listed in the <a class="reference internal" href="ComparatorMechanism.html#Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states" title="Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms.ComparatorMechanism.ComparatorMechanism.input_states"><code class="xref any py py-attr docutils literal"><span class="pre">input_states</span></code></a> attribute.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents">
+<code class="descname">monitored_values_weights_and_exponents</code><a class="headerlink" href="#ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with each of the ObjectiveMechanism’s
+<code class="xref any docutils literal"><span class="pre">input_states</span></code>
+to parametrize the contribution that each of the values monitored by the ObjectiveMechanism makes to its
+output (see <a class="reference internal" href="#objectivemechanism-function"><span class="std std-ref">Function</span></a>)</p>
 </dd></dl>
 
 <dl class="attribute">

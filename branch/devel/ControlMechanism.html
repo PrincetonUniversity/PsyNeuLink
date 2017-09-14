@@ -208,25 +208,24 @@ one <a class="reference internal" href="System.html#System.System_Base.controlle
 of the other Components in the System have been executed, including any other ControlMechanisms that belong to it (see
 <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">System Execution</span></a>).  A ControlMechanism can be assigned as the <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>
 for a System by specifying it in the <strong>controller</strong> argument of the System’s constructor, or by specifying the System
-as the <strong>system</strong> argument of either the ControlMechanism’s constructor or its <code class="xref any docutils literal"><span class="pre">assign_as_controller</span></code> method. A System’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and its associated
-Components can be displayed using the System’s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">System_Base.show_graph</span></code></a> method with its <strong>show_control</strong> argument
-assigned as <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
+as the <strong>system</strong> argument of either the ControlMechanism’s constructor or its <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.assign_as_controller" title="ControlMechanism.ControlMechanism_Base.assign_as_controller"><code class="xref any py py-meth docutils literal"><span class="pre">assign_as_controller</span></code></a> method. A System’s <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and its
+associated Components can be displayed using the System’s <a class="reference internal" href="System.html#System.System_Base.show_graph" title="System.System_Base.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with its
+<strong>show_control</strong> argument assigned as <code class="xref any docutils literal"><span class="pre">True</span></code>.</p>
 </div>
 </div>
 <div class="section" id="creating-a-controlmechanism">
 <span id="controlmechanism-creation"></span><h2>Creating a ControlMechanism<a class="headerlink" href="#creating-a-controlmechanism" title="Permalink to this headline">¶</a></h2>
 <p>A ControlMechanism can be created using the standard Python method of calling the constructor for the desired type.
-A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">System is created</span></a>,
-and the ControlMechanism class or one of its subtypes is specified in the <strong>controller</strong> argument of the System’s
-constructor (see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>).
-# If the ControlMechanism is created explicitly (using its constructor), the
-# <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> it uses to monitor and evaluate <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> is specified in the
-# <strong>objective_mechanism</strong> argument of its constructor, and the parameters it controls are specified in the
-# <strong>control_signals</strong> argument.  If the ControlMechanism is created automatically by a System, then the values to be
-# monitored and parameters to be controlled can be specified in the <strong>monitor_for_control</strong>
-# and <strong>control_signals</strong> argument of the System’s constructor, respectively.  The <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and
-# <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> needed to control the parameters specified in <strong>control_signals</strong> are
-# automatically created, as described below.</p>
+A ControlMechanism is also created automatically whenever a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">System is created</span></a>, and the
+ControlMechanism class or one of its subtypes is specified in the <strong>controller</strong> argument of the System’s constructor
+(see <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">Creating a System</span></a>).  If the ControlMechanism is created explicitly (using its constructor), the
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> it uses to monitor and evaluate <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> is specified in the
+<strong>objective_mechanism</strong> argument of its constructor, and the parameters it controls are specified in the
+<strong>control_signals</strong> argument.  If the ControlMechanism is created automatically by a System, then the specification of
+OutputStates to be monitored and parameters to be controlled are made on the System and/or the Components themselves
+(see <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying Control</span></a>).  In either case the Components needed to monitor the specified OutputStates (an
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to it) and to control the specified parameters (<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and corresponding <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>) are created automatically, as described
+below.</p>
 <div class="section" id="objectivemechanism-and-monitored-outputstates">
 <span id="controlmechanism-objectivemechanism"></span><h3>ObjectiveMechanism and Monitored OutputStates<a class="headerlink" href="#objectivemechanism-and-monitored-outputstates" title="Permalink to this headline">¶</a></h3>
 <p>When a ControlMechanism is created, it is associated with an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that is used to monitor and
@@ -235,11 +234,10 @@ can be specified in the <strong>objective_mechanism</strong> argument of its con
 <blockquote>
 <div><ul class="simple">
 <li>an existing <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, or a constructor for one;  in this case the <strong>monitored_values</strong> argument of the
-ObjectiveMechanism’s constructor is used to <code class="xref any docutils literal"><span class="pre">specify</span> <span class="pre">the</span> <span class="pre">OutputStates</span></code> &lt;ObjectiveMechanism_Monitored_Values&gt;`
-to be monitored and evaluated (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>); note that, in this case, the default behavior
-of the ObjectiveMechanism overrides any defaults that the ControlMechanism uses for its <code class="xref any docutils literal"><span class="pre">objective_function</span>
-<span class="pre">ControlMechanism.objective_function</span></code> attribute (see <a class="reference internal" href="EVCMechanism.html#evcmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a>
-in EVCMechanism for an example);</li>
+ObjectiveMechanism’s constructor is used to specify the OutputStates to be <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-values"><span class="std std-ref">monitored and evaluated</span></a> (see <a class="reference internal" href="#controlmechanism-examples"><span class="std std-ref">Examples</span></a>); note that, in this case, the default
+values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
+default <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.objective_mechanism" title="ControlMechanism.ControlMechanism_Base.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, including those of its <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="EVCMechanism.html#evcmechanism-objective-mechanism-function-note"><span class="std std-ref">note</span></a> in EVCMechanism for
+an example);</li>
 </ul>
 <ul class="simple">
 <li>a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-values"><span class="std std-ref">OutputState specifications</span></a>;  in this case, a default
@@ -254,7 +252,7 @@ any OutputStates to monitor; this must then be done explicitly after the Control
 <div><ul class="simple">
 <li>a default ObjectiveMechanism is created for the ControlMechanism, using the list of <a class="reference internal" href="OutputState.html"><span class="doc">OutputStates</span></a> specified in the <strong>monitor_for_control</strong> argument of the System’s contructor,
 and any others within the System that have been specified to be monitored (using the MONITOR_FOR_CONTROL keyword),
-as the <strong>monitored_values</strong> argument for the ObjectiveMechanism’s constructor (see <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying a Control</span></a>).</li>
+as the <strong>monitored_values</strong> argument for the ObjectiveMechanism’s constructor (see <a class="reference internal" href="System.html#system-control-specification"><span class="std std-ref">Specifying Control</span></a>).</li>
 </ul>
 </div></blockquote>
 <p>In all cases, the ObjectiveMechanism is assigned to the ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.objective_mechanism" title="ControlMechanism.ControlMechanism_Base.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> attribute, and a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created that projects from the
@@ -446,6 +444,17 @@ argument, and transmits the result to the ControlMechanism’s <em>ERROR_SIGNAL<
 <dd><p><em>List[OutputState]</em> – each item is an <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> specified in the <strong>objective_mechanism</strong> argument of
 the ControlMechanism’s constructor, the <a class="reference internal" href="OutputState.html#OutputState.OutputState.value" title="OutputState.OutputState.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> s of which serve as the items of the
 ControlMechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.variable" title="Mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="ControlMechanism.ControlMechanism_Base.monitored_output_states_weights_and_exponents">
+<code class="descname">monitored_output_states_weights_and_exponents</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.monitored_output_states_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>List[Tuple(float, float)]</em> – each tuple in the list contains the weight and exponent associated with a corresponding item of
+<a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.monitored_output_states" title="ControlMechanism.ControlMechanism_Base.monitored_output_states"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_output_states</span></code></a>;  these are the same as those in
+the <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents" title="ObjectiveMechanism.ObjectiveMechanism.monitored_values_weights_and_exponents"><code class="xref any py py-attr docutils literal"><span class="pre">monitored_values_weights_and_exponents</span></code></a>
+attribute of the <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.objective_mechanism" title="ControlMechanism.ControlMechanism_Base.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>, and are used by the
+ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#ObjectiveMechanism.ObjectiveMechanism.function" title="ObjectiveMechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to parametrize the contribution made to its
+output by each of the values that it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-function"><span class="std std-ref">ObjectiveMechanism Function</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
