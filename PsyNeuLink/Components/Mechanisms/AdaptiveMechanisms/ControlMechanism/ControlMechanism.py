@@ -607,11 +607,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             each of which receives a Projection from a corresponding OutputState in self.monitored_output_states
         """
 
-        # MODIFIED 9/10/17 NEW [STILL TODO]:
-        # **CALL _parse_monitored_values_list FROM _get_monitored_output_states_for_system
-        # **COMBINE monitored_output_states and monitored_output_states_weights_and_exponents INTO SINGLE TUPLE
-        # MODIFIED 9/10/17 END
-
         monitored_output_states = None
 
         # GET OutputStates to Monitor (to specify as or add to ObjectiveMechanism's monitored_values attribute
@@ -652,21 +647,16 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
-        # MODIFIED 9/10/17 OLD: [STILL TODO: MOVE THIS TO SYSTEM]
+        # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
         if self.system is not None:
             name = self.system.name + ' outcome signal'
+        # Otherwise, name it based on the ObjectiveMechanism
         else:
             name = self.objective_mechanism.name + ' outcome signal'
         MappingProjection(sender=self.objective_mechanism,
                           receiver=self,
                           matrix=AUTO_ASSIGN_MATRIX,
-                          name=name
-                          )
-
-        if self.system is not None:
-            self.system.execution_list.append(self.objective_mechanism)
-            self.system.execution_graph[self.objective_mechanism] = set(self.system.execution_list[:-1])
-        # MODIFIED 9/10/17 END
+                          name=name)
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
@@ -938,11 +928,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.system:
             self.system._validate_monitored_state_in_system(output_states, context=context)
 
-        # MODIFIED 9/12/17 OLD:
-        # if output_states:
-        #     self.monitored_output_states.append(output_states)
-        # MODIFIED 9/12/17 END
-
     @tc.typecheck
     def assign_as_controller(self, system:System, context=None):
         """Assign ControlMechanism as `controller <System_Base.controller>` for a `System`.
@@ -998,7 +983,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         system_control_signals = system._get_control_signals_for_system(system.control_signals, context=context)
         for control_signal_spec in system_control_signals:
             self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-        # MODIFIED 9/10/17 END
 
         # If it HAS been assigned a System, make sure it is the current one
         if self.system and not self.system is system:

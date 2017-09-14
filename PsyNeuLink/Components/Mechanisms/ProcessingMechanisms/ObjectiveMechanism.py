@@ -675,7 +675,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         """
 
         # FIX: EXTRACT PIECES NEEDED FOR add_monitored_values() AND MOVE TO _instantiate_monitored_values
-
         # # MODIFIED 9/11/17 NEW:
         # input_states = _instantiate_monitored_values(self.monitored_values, context)
         # # MODIFIED 9/11/17 END

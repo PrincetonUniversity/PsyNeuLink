@@ -1096,12 +1096,10 @@ class System_Base(System):
         input_index = input_index_curr = 0
         for i in range(len(processes_spec)):
 
-            # MODIFIED 2/8/17 NEW:
             # Get list of origin mechanisms for processes that have already been converted
             #   (for use below in assigning input)
             orig_mechs_already_processed = list(p[0].origin_mechanisms[0] for
                                                 p in processes_spec if isinstance(p,ProcessTuple))
-            # MODIFIED 2/8/17 END
 
             # Entry is not a tuple
             #    presumably it is a process spec, so enter it as first item of ProcessTuple
@@ -1126,7 +1124,6 @@ class System_Base(System):
                 if processes_spec[i].process._isControllerProcess:
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, None)
                 else:
-                    # MODIFIED 2/8/17 NEW:
                     # Replace input item in tuple with one from command line
                     # Note:  check if origin mechanism for current process is same as any previous one;
                     #        if it is, use that one (and don't increment index for input
@@ -1137,7 +1134,6 @@ class System_Base(System):
                         input_index += 1
                     processes_spec[i] = ProcessTuple(processes_spec[i].process, input[input_index_curr])
                     input_index_curr = input_index
-                    # MODIFIED 2/8/17 END
 
             # Validate input
             if (processes_spec[i].input is not None and
@@ -1157,15 +1153,6 @@ class System_Base(System):
             if isinstance(process, Process):
                 if process_input is not None:
                     process._instantiate_defaults(variable=process_input, context=context)
-                # If learning_rate is specified for system but not for process, then apply to process
-                # # MODIFIED 3/21/17 OLD:
-                # if self.learning_rate and not process.learning_rate:
-                    # # FIX:  assign_params WANTS TO CREATE A ParamaterState ON process FOR learning_rate
-                    # process.assign_params(request_set={LEARNING_RATE:self.learning_rate})
-                # # MODIFIED 3/21/17 NEW:[learning_rate SHOULD BE NOT BE RE-ASSIGNED FOR PROCESS, BUT RATHER ON EXECUTE]
-                # if self.learning_rate is not None and process.learning_rate is None:
-                #     process.learning_rate = self.learning_rate
-                # # MODIFIED 3/21/17 END
 
             # Otherwise, instantiate Process
             else:
@@ -1458,20 +1445,6 @@ class System_Base(System):
 
             build_dependency_sets_by_traversing_projections(first_mech)
 
-        # # MODIFIED 4/1/17 NEW:
-        # # HACK TO LABEL TERMINAL MECHS -- SHOULD HAVE BEEN HANDLED ABOVE
-        # # LABELS ANY MECH AS A TARGET THAT PROJECTS TO AN ObjectiveMechanism WITH LEARNING AS ITS role
-        # for mech in self.mechanisms:
-        #     for output_state in mech.outputStates.values():
-        #         for projection in output_state.efferents:
-        #             receiver = projection.receiver.owner
-        #             if isinstance(receiver, ObjectiveMechanism) and receiver.role == LEARNING:
-        #                 mech.systems[self] = TERMINAL
-        #                 break
-        #         if mech.systems[self] == TERMINAL:
-        #             break
-        # # MODIFIED 4/1/17 END
-
         # Print graph
         if self.verbosePref:
             warnings.warn("In the System graph for \'{}\':".format(self.name))
@@ -1545,12 +1518,7 @@ class System_Base(System):
                                   format(self.name))
 
         # Create instance of sequential (execution) list:
-        # MODIFIED 10/31/16 OLD:
-        # self.execution_list = toposort_flatten(self.execution_graph, sort=False)
-        # MODIFIED 10/31/16 NEW:
-        temp = toposort_flatten(self.execution_graph, sort=False)
         self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
-        # MODIFIED 10/31/16 END
 
         # MODIFIED 6/27/17 NEW: (CW)
         # changed "orig_mech_input.extend(input_state.value)" to "orig_mech_input.append(input_state.value)"
@@ -2011,6 +1979,10 @@ class System_Base(System):
         # Make assignment
         self._controller = controller
 
+        # Add controller's ObjectiveMechanism to the System's execution_list and execution_graph
+        self.execution_list.append(self.controller.objective_mechanism)
+        self.execution_graph[self.controller.objective_mechanism] = set(self.execution_list[:-1])
+
         # Check whether controller has input, and if not then disable
         has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
 
@@ -2110,13 +2082,8 @@ class System_Base(System):
         all_specs = _parse_monitored_values(self, output_state_list=all_specs)
         all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
 
-        # Extract MonitoredOutputStatesOptions values from tuples (put there by _parse_monitored_values)
-        for i, item in enumerate(all_specs):
-            if isinstance(item[OUTPUT_STATE_INDEX], MonitoredOutputStatesOption):
-                all_specs[i] = item[OUTPUT_STATE_INDEX]
-
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
-        option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
+        option_specs = [item for item in all_specs[OUTPUT_STATE_INDEX] if isinstance(item, MonitoredOutputStatesOption)]
         if not option_specs:
             ctlr_or_sys_option_spec = None
         elif len(option_specs) == 1:
@@ -3137,11 +3104,6 @@ class System_Base(System):
 
         """
         return self._allMechanisms.mechanisms
-
-    # # MODIFIED 11/1/16 NEW:
-    # @property
-    # def processes(self):
-    #     return sorted(self._processList.processes)
 
     @property
     def numPhases(self):
