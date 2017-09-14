@@ -739,7 +739,8 @@ class Component(object):
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
         self.execution_status = ExecutionStatus.INITIALIZING
-        self.init_status = InitStatus.INITIALIZING
+        self.init_status = InitStatus.UNSET
+        # self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
         defaults.update(param_defaults)
@@ -2603,7 +2604,7 @@ class Component(object):
     #         raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
     #                              "a value ({}) other than one of InitStatus".format(self.name, value))
     #     self._init_status = value
-    #
+
     @property
     def prefs(self):
         # Whenever pref is accessed, use current owner as context (for level checking)

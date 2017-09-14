@@ -113,7 +113,7 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                                                      Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
                                                      (Decision.output_states[RESPONSE_TIME], 1, -1)]),
 
-                  # # # WORKS??
+                  # # WORKS??
                   # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
                   #                                    Reward,
                   #                                    Decision.output_states[PROBABILITY_UPPER_THRESHOLD],

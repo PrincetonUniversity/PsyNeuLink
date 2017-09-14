@@ -789,9 +789,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # FIX: DIFF  [ONLY DO THIS ON INITIALIZATION, OTHERWISE, self._input_states WILL HAVE ACTUAL STATES, NOT SPECS
         # FIX:        ALSO, ONLY WANT TO GET THEM FOR NEWLY SPECIFIED STATES, NOT ANY THAT ALREADY EXIST
         # Get any Projections specified in input_states arg, else set to default (AUTO_ASSIGN_MATRIX)
-        input_state_projection_specs = []
-        for i, state in enumerate(self._input_states):
-            input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
+        if self.init_status is InitStatus.UNSET:
+            input_state_projection_specs = []
+            for i, state in enumerate(self._input_states):
+                input_state_projection_specs.append(state.params[PROJECTIONS] or [AUTO_ASSIGN_MATRIX])
         # FIX: END DIFF
 
         # # MODIFIED 9/14/17 OLD:
@@ -861,7 +862,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             #    - by definition it should not yet be monitoring any OutputStates
             #    - nevertheless, self.monitored_values (from the **monitored_values** argument,
             #      may be populated by specifications, some of which might be actual OutputStates
-            if self.init_status is InitStatus.INITIALIZED:
+            if not self.init_status is InitStatus.UNSET:
             # if self.input_states:
                 if output_state_dict[OUTPUT_STATE] in self.monitored_values:
                     if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
