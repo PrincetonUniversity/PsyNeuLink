@@ -879,7 +879,7 @@ class ArgumentTherapy(Function_Base):
         therapeutic response : boolean
 
         """
-        variable = self._update_variable(self._update_variable(self._check_args(variable, params, context)))
+        variable = self._update_variable(self._check_args(variable, params, context))
 
         # Compute the function
         statement = variable
