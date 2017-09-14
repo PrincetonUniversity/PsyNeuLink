@@ -2110,6 +2110,11 @@ class System_Base(System):
         all_specs = _parse_monitored_values(self, output_state_list=all_specs)
         all_specs_extracted_from_tuples = [spec[OUTPUT_STATE_INDEX] for spec in all_specs]
 
+        # Extract MonitoredOutputStatesOptions values from tuples (put there by _parse_monitored_values)
+        for i, item in enumerate(all_specs):
+            if isinstance(item[OUTPUT_STATE_INDEX], MonitoredOutputStatesOption):
+                all_specs[i] = item[OUTPUT_STATE_INDEX]
+
         # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs if isinstance(item, MonitoredOutputStatesOption)]
         if not option_specs:
