@@ -856,9 +856,13 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             output_state_dict[OUTPUT_STATE]=value
             output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
 
-            # FIX: NEED TO DEAL WITH BETTER:  INITIAL FORM OF self.monitored_values THAT MAY HAVE OUTPUTSTATES
-            if self.input_states:
-                # If OutputState is already being monitored by this ObjectiveMechanism, skip it
+            # If OutputState is already being monitored by this ObjectiveMechanism, don't include
+            # But skip this step if this call is during initialization of the ObjectiveMechanism, because:
+            #    - by definition it should not yet be monitoring any OutputStates
+            #    - nevertheless, self.monitored_values (from the **monitored_values** argument,
+            #      may be populated by specifications, some of which might be actual OutputStates
+            if self.init_status is InitStatus.INITIALIZED:
+            # if self.input_states:
                 if output_state_dict[OUTPUT_STATE] in self.monitored_values:
                     if any(any(projection.sender is output_state_dict[OUTPUT_STATE]
                            for projection in input_state.path_afferents)

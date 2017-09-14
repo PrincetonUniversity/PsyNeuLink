@@ -739,7 +739,7 @@ class Component(object):
         #         return
         context = context + INITIALIZING + ": " + COMPONENT_INIT
         self.execution_status = ExecutionStatus.INITIALIZING
-        self.init_status = InitStatus.UNSET
+        self.init_status = InitStatus.INITIALIZING
 
         defaults = self.ClassDefaults.values().copy()
         defaults.update(param_defaults)
@@ -2587,6 +2587,21 @@ class Component(object):
         for i in range(len(v)):
             s.append(len(v[i]))
         return np.array(s)
+
+    @property
+    def init_status(self):
+        try:
+            return self._init_status
+        except AttributeError:
+            return InitStatus.UNSET
+
+    @init_status.setter
+    def init_status(self, value):
+        if not isinstance(value, InitStatus):
+            raise ComponentError("PROGRAM ERROR:  Attempt to assign \'init_status\' attribute of {} "
+                                 "a value ({}) other than one of InitStatus".format(self.name, value))
+        self._init_status = value
+
 
     @property
     def prefs(self):
