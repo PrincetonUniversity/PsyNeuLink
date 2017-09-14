@@ -738,28 +738,39 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # MODIFIED 9/11/17 NEW:
         monitored_values = monitored_values_specs or self.monitored_values
-        input_state_dicts, output_state_dicts = self._instantiate_monitored_values(monitored_values, context)
+        input_state_dicts, output_state_dicts = self._instantiate_monitored_values(monitored_values=monitored_values,
+                                                                                   input_states=self.input_states,
+                                                                                   context=context)
 
         # MODIFIED 9/14/17 END
 
 
-        # FIX: DIFF
-        # Instantiate constraint on variable of each InputState from monitored_value spec
-        #    and assign weights and exponents (if specified in monitored_value tuple) to params dict for each InputState
-        constraint_value = []
-        for i, input_state_dict in enumerate(input_state_dicts):
-            constraint_value.append(input_state_dict[VARIABLE])
-            weight_and_exponent_params_dict = {}
-            if monitored_value_weights[i] is not None:
-                weight_and_exponent_params_dict[WEIGHT] = monitored_value_weights[i]
-            if monitored_value_exponents[i] is not None:
-                weight_and_exponent_params_dict[EXPONENT] = monitored_value_exponents[i]
-            if input_state_dict[PARAMS] is not None:
-                input_state_dict[PARAMS].update(weight_and_exponent_params_dict)
-            else:
-                input_state_dict[PARAMS] = weight_and_exponent_params_dict
+        # # MODIFIED 9/14/17 OLD:
+        # # FIX: DIFF
+        # # For each InputState specified by monitored_values:
+        # #    - instantiate constraint on variable of each InputState from monitored_value spec
+        # #    - assign weights and exponents (if specified in monitored_value tuple) to params dict
+        # constraint_value = []
+        # for i, input_state_dict in enumerate(input_state_dicts):
+        #     constraint_value.append(input_state_dict[VARIABLE])
+        #     weight_and_exponent_params_dict = {}
+        #     if monitored_value_weights[i] is not None:
+        #         weight_and_exponent_params_dict[WEIGHT] = monitored_value_weights[i]
+        #     if monitored_value_exponents[i] is not None:
+        #         weight_and_exponent_params_dict[EXPONENT] = monitored_value_exponents[i]
+        #     if input_state_dict[PARAMS] is not None:
+        #         input_state_dict[PARAMS].update(weight_and_exponent_params_dict)
+        #     else:
+        #         input_state_dict[PARAMS] = weight_and_exponent_params_dict
 
-        self.instance_defaults.variable = constraint_value
+        # MODIFIED 9/14/17 NEW:
+        # For each InputState specified by monitored_values, add an item to self.variable
+        #    - get specified constraint on variable and add item to self.variable
+        self.instance_defaults.variable = self.instance_defaults.variable or []
+        for i, input_state_dict in enumerate(input_state_dicts):
+            self.instance_defaults.variable.append(input_state_dict[VARIABLE])
+
+        # MODIFIED 9/14/17 END
 
         # Instantiate InputStates corresponding to OutputStates specified in specified monitored_values
         # MODIFIED 9/14/17 OLD:
@@ -802,7 +813,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # MODIFIED 9/14/17 END
 
 
-    def _instantiate_monitored_values(self, monitored_values, input_states= None, projection_specs=None, context=None):
+    def _instantiate_monitored_values(self, monitored_values, input_states=None, context=None):
         """Parse monitored_value specs and instantiate monitored_values attribute
 
         Used by _instantiate_input_states and _add_monitored_values;
@@ -857,7 +868,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
         # If input_states were provided use those for specifications;
         #    otherwise use value of monitored_valued for each (to invoke a default assignment for each input_state)
-
         input_state_specs = input_states or [output_state_dict[VALUE] for output_state_dict in output_state_dicts]
 
         # Parse input_states into a state specification dict, passing output_state_specs as defaults
@@ -868,15 +878,36 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             # Parse input_state to determine its specifications and assign values from output_state_specs
             #    to any missing specifications, including any projections requested and weights and exponents.
             input_state_dict = _parse_state_spec(self,
-                                            state_type=InputState,
-                                            state_spec=input_state,
-                                            name=output_state_dict[NAME],
-                                            value=output_state_dict[VALUE])
+                                                 state_type=InputState,
+                                                 state_spec=input_state,
+                                                 name=output_state_dict[NAME],
+                                                 value=output_state_dict[VALUE])
             input_state_dicts.append(input_state_dict)
+
+        # For each InputState specified by monitored_values:
+        #    - assign weights and exponents (if specified in monitored_value to params dict
+        #      (otherwise, don't include param
+        for i, input_state_dict in enumerate(input_state_dicts):
+            weight_and_exponent_params_dict = {}
+            if monitored_value_weights[i] is not None:
+                weight_and_exponent_params_dict[WEIGHT] = monitored_value_weights[i]
+            if monitored_value_exponents[i] is not None:
+                weight_and_exponent_params_dict[EXPONENT] = monitored_value_exponents[i]
+            # If the input_state_dict already had a PARAMS entry, add WEIGHT and EXPONENT ENTRIES to it
+            if input_state_dict[PARAMS] is not None:
+                input_state_dict[PARAMS].update(weight_and_exponent_params_dict)
+            # Otherwise, if any weights and/or exponents were specified, assign dict with them to PARAMS entry
+            elif weight_and_exponent_params_dict:
+                input_state_dict[PARAMS] = weight_and_exponent_params_dict
+
 
         output_states = [monitored_value[OUTPUT_STATE] for monitored_value in output_state_dicts]
         if output_states:
-            self.monitored_values.append(output_states)
+            if self.monitored_values and not isinstance(self.monitored_values[0], OutputState):
+                # this is the initialziation pass -- vs. and addition of monitored_value(s) -- so assign
+                self.monitored_values = output_states
+            else:
+                self.monitored_values.append(output_states)
 
         # MODIFIED 9/14/17 NEW:
         return input_state_dicts, output_state_dicts
