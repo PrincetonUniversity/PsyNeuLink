@@ -5329,21 +5329,35 @@ class UtilityIntegrator(
     Arguments
     ---------
 
-    default_variable : number, list or np.array : default ClassDefaults.variable
-        specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-        integrated.
-
     rate : float, list or 1d np.array : default 1.0
-        specifies the smoothing factor of the EWMA.  If it is a list or array, it must be the same length as
-        `variable <UtilityIntegrator.default_variable>` (see `rate <UtilityIntegrator.rate>` for details).
+        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
-        specifies random value to be added in each call to `function <UtilityIntegrator.function>`. (see
-        `noise <UtilityIntegrator.noise>` for details).
+        TBI?
 
-    initializer float, list or 1d np.array : default 0.0
-        specifies starting value for integration.  If it is a list or array, it must be the same length as
-        `default_variable <UtilityIntegrator.default_variable>` (see `initializer <UtilityIntegrator.initializer>` for details).
+    initial_short_term_utility : float : default 0.0
+        specifies starting value for integration of short_term_utility
+
+    initial_long_term_utility : float : default 0.0
+        specifies starting value for integration of long_term_utility
+
+    short_term_gain : float : default 1.0
+        specifies gain for logistic function applied to short_term_utility
+
+    long_term_gain : float : default 1.0
+        specifies gain for logistic function applied to long_term_utility
+
+    short_term_bias : float : default 0.0
+        specifies bias for logistic function applied to short_term_utility
+
+    long_term_bias : float : default 0.0
+        specifies bias for logistic function applied to long_term_utility
+
+    short_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to short_term_utility
+
+    long_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to long_term_utility
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5362,42 +5376,45 @@ class UtilityIntegrator(
     ----------
 
     variable : number or np.array
-        current input value some portion of which (determined by `rate <UtilityIntegrator.rate>`) will be
-        added to the prior value;  if it is an array, each element is independently integrated.
+        current input value used in both the short term and long term EWMA computations
 
-    rate : float or 1d np.array
-        determines the smoothing factor of the EWMA. All rate elements must be between 0 and 1 (rate = 0 --> no change,
-        `variable <UtilityUtilityIntegrator.variable>` is ignored; rate = 1 -->
-        `previous_value <UtilityIntegrator.previous_value>` is ignored).
+    rate : float, list or 1d np.array : default 1.0
+        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
 
-        If rate is a float, it is applied to all elements of `variable <UtilityUtilityIntegrator.variable>` (and
-        `previous_value <UtilityIntegrator.previous_value>`); if it has more than one element, each element is applied
-        to the corresponding element of `variable <UtilityUtilityIntegrator.variable>` (and
-        `previous_value <UtilityIntegrator.previous_value>`).
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        TBI?
 
-    noise : float, function, list, or 1d np.array
-        specifies random value to be added in each call to `function <UtilityIntegrator.function>`.
+    initial_short_term_utility : float : default 0.0
+        specifies starting value for integration of short_term_utility
 
-        If noise is a list or array, it must be the same length as `variable <UtilityIntegrator.default_variable>`.
+    initial_long_term_utility : float : default 0.0
+        specifies starting value for integration of long_term_utility
 
-        If noise is specified as a single float or function, while `variable <UtilityIntegrator.variable>` is a list or array,
-        noise will be applied to each variable element. In the case of a noise function, this means that the function
-        will be executed separately for each variable element.
+    short_term_gain : float : default 1.0
+        specifies gain for logistic function applied to short_term_utility
 
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value from
-            its distribution on each execution. If noise is specified as a float or as a function with a fixed output, then
-            the noise will simply be an offset that remains the same across all executions.
+    long_term_gain : float : default 1.0
+        specifies gain for logistic function applied to long_term_utility
 
-    initializer : float, 1d np.array or list
-        determines the starting value for time-averaging (i.e., the value to which
-        `previous_value <UtilityIntegrator.previous_value>` is originally set).
+    short_term_bias : float : default 0.0
+        specifies bias for logistic function applied to short_term_utility
 
-        If initializer is a list or array, it must be the same length as `variable <UtilityIntegrator.default_variable>`.
+    long_term_bias : float : default 0.0
+        specifies bias for logistic function applied to long_term_utility
 
-    previous_value : 1d np.array : default ClassDefaults.variable
-        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated.
+    short_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to short_term_utility
+
+    long_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to long_term_utility
+
+    previous_short_term_utility : 1d np.array
+        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        short term parameters
+
+    previous_long_term_utility : 1d np.array
+        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        long term parameters
 
     owner : Mechanism
         `component <Component>` to which the Function has been assigned.
