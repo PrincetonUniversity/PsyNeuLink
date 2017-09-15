@@ -42,6 +42,7 @@ Temporary Items
 .idea/dictionaries
 .idea/codeStyles
 .idea/other.xml
+.idea/codeStyleSettings.xml
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
