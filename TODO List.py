@@ -509,7 +509,6 @@
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections
 #                - should parallel implementation of input_states and monitored_output_states in ObjectiveMechanism
-# SEARCH & REPLACE: monitored_output_states -> monitor_values
 # IMPLEMENT: modulation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
 #                 parameter of ModulatoryFunctions
