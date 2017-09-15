@@ -33,8 +33,8 @@ using the corresponding arguments of its construtor as described below.
 
 .. _ObjectiveMechanism_Monitored_output_states:
 
-Monitored Values
-~~~~~~~~~~~~~~~~
+Monitored OutputStates
+~~~~~~~~~~~~~~~~~~~~~~
 
 The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
 the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
@@ -646,7 +646,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                          self.name,
                                                          target_set[INPUT_STATES]))
 
-        #region VALIDATE MONITORED VALUES
+        #region VALIDATE MONITORED OutputStates
         # FIX: IS THE FOLLOWING STILL TRUE:
         # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
         #       as it can reference entries in that param
