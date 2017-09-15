@@ -5284,7 +5284,353 @@ class AccumulatorIntegrator(
             self.previous_value = value
         return value
 
+class UtilityIntegrator(
+    Integrator):  # --------------------------------------------------------------------------------
+    """
+    UtilityIntegrator(                 \
+        default_variable=None,          \
+        rate=1.0,                       \
+        noise=0.0,                      \
+        scale: parameter_spec = 1.0,    \
+        offset: parameter_spec = 0.0,   \
+        initializer,                    \
+        initial_short_term_utility = 0.0,\
+        initial_long_term_utility = 0.0,\
+        short_term_gain = 1.0,          \
+        long_term_gain =1.0,            \
+        short_term_bias = 0.0,          \
+        long_term_bias=0.0,             \
+        short_term_rate=1.0,            \
+        long_term_rate=1.0,             \
+        params=None,                    \
+        owner=None,                     \
+        prefs=None,                     \
+        )
 
+    .. _UtilityIntegrator:
+
+    Computes an exponentially weighted moving average on the variable using two sets of parameters:
+
+    short_term_utility = (1 - `short_term_rate <UtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
+    <UtilityIntegrator.previous_short_term_utility>` + `short_term_rate <UtilityIntegrator.short_term_rate>` *
+    `variable <UtilityIntegrator.variable>`
+
+    long_term_utility = (1 - `long_term_rate <UtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
+    <UtilityIntegrator.previous_long_term_utility>` + `long_term_rate <UtilityIntegrator.long_term_rate>` *
+    `variable <UtilityIntegrator.variable>`
+
+    then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
+
+    Finally, computes a single value which combines the two values according to:
+
+    value = (1 - `rate <UtilityIntegrator.rate>`) * logistic(long_term_utility) + `rate <UtilityIntegrator.rate>` *
+    logistic(short_term_utility)
+
+    Arguments
+    ---------
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        TBI?
+
+    initial_short_term_utility : float : default 0.0
+        specifies starting value for integration of short_term_utility
+
+    initial_long_term_utility : float : default 0.0
+        specifies starting value for integration of long_term_utility
+
+    short_term_gain : float : default 1.0
+        specifies gain for logistic function applied to short_term_utility
+
+    long_term_gain : float : default 1.0
+        specifies gain for logistic function applied to long_term_utility
+
+    short_term_bias : float : default 0.0
+        specifies bias for logistic function applied to short_term_utility
+
+    long_term_bias : float : default 0.0
+        specifies bias for logistic function applied to long_term_utility
+
+    short_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to short_term_utility
+
+    long_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to long_term_utility
+
+    params : Optional[Dict[param keyword, param value]]
+        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : Optional[PreferenceSet or specification dict : Function.classPreferences]
+        the `PreferenceSet` for the Function. If it is not specified, a default is assigned using `classPreferences`
+        defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : number or np.array
+        current input value used in both the short term and long term EWMA computations
+
+    rate : float, list or 1d np.array : default 1.0
+        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
+
+    noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
+        TBI?
+
+    initial_short_term_utility : float : default 0.0
+        specifies starting value for integration of short_term_utility
+
+    initial_long_term_utility : float : default 0.0
+        specifies starting value for integration of long_term_utility
+
+    short_term_gain : float : default 1.0
+        specifies gain for logistic function applied to short_term_utility
+
+    long_term_gain : float : default 1.0
+        specifies gain for logistic function applied to long_term_utility
+
+    short_term_bias : float : default 0.0
+        specifies bias for logistic function applied to short_term_utility
+
+    long_term_bias : float : default 0.0
+        specifies bias for logistic function applied to long_term_utility
+
+    short_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to short_term_utility
+
+    long_term_rate : float : default 1.0
+        specifies smooth factor of EWMA filter applied to long_term_utility
+
+    previous_short_term_utility : 1d np.array
+        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        short term parameters
+
+    previous_long_term_utility : 1d np.array
+        stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
+        long term parameters
+
+    owner : Mechanism
+        `component <Component>` to which the Function has been assigned.
+
+    prefs : PreferenceSet or specification dict : Projection.classPreferences
+        the `PreferenceSet` for function. Specified in the **prefs** argument of the constructor for the function;
+        if it is not specified, a default is assigned using `classPreferences` defined in __init__.py
+        (see :doc:`PreferenceSet <LINK>` for details).
+
+    """
+
+    componentName = ADAPTIVE_INTEGRATOR_FUNCTION
+
+    class ClassDefaults(Integrator.ClassDefaults):
+        variable = [[0]]
+
+    multiplicative_param = RATE
+    additive_param = OFFSET
+
+    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+    # paramClassDefaults.update({INITIALIZER: ClassDefaults.variable})
+    paramClassDefaults.update({
+        NOISE: None,
+        RATE: None
+    })
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: parameter_spec = 1.0,
+                 noise=0.0,
+                 offset=0.0,
+                 initializer=ClassDefaults.variable,
+                 initial_short_term_utility = 0.0,
+                 initial_long_term_utility = 0.0,
+                 short_term_gain = 1.0,
+                 long_term_gain =1.0,
+                 short_term_bias = 0.0,
+                 long_term_bias=0.0,
+                 short_term_rate=1.0,
+                 long_term_rate=1.0,
+                 params: tc.optional(dict) = None,
+                 owner=None,
+                 prefs: is_pref_set = None,
+                 context="UtilityIntegrator Init"):
+
+        # Assign args to params and functionParams dicts
+        params = self._assign_args_to_param_dicts(rate=rate,
+                                                  initializer=initializer,
+                                                  noise=noise,
+                                                  offset=offset,
+                                                  initial_short_term_utility=initial_short_term_utility,
+                                                  initial_long_term_utility=initial_long_term_utility,
+                                                  short_term_gain=short_term_gain,
+                                                  long_term_gain=long_term_gain,
+                                                  short_term_bias=short_term_bias,
+                                                  long_term_bias=long_term_bias,
+                                                  short_term_rate=short_term_rate,
+                                                  long_term_rate=long_term_rate,
+                                                  params=params)
+
+        self.previous_long_term_utility = self.initial_long_term_utility
+        self.previous_short_term_utility = self.initial_short_term_utility
+
+        super().__init__(default_variable=default_variable,
+                         params=params,
+                         owner=owner,
+                         prefs=prefs,
+                         context=context)
+
+        self.auto_dependent = True
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # Handle list or array for rate specification
+        if RATE in request_set:
+            rate = request_set[RATE]
+            if isinstance(rate, (list, np.ndarray)):
+                if len(rate) != np.array(self.instance_defaults.variable).size:
+                    # If the variable was not specified, then reformat it to match rate specification
+                    #    and assign ClassDefaults.variable accordingly
+                    # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
+                    #       UtilityIntegrator's constructor, where that is used as a specification for a function parameter
+                    #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
+                    #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
+                    #       in that case, the Integrator gets instantiated using its ClassDefaults.variable ([[0]]) before
+                    #       the object itself, thus does not see the array specification for the input.
+                    if self._variable_not_specified:
+                        self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
+                        if self.verbosePref:
+                            warnings.warn(
+                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                                "must match the length ({}) of the default input ({});  "
+                                "the default input has been updated to match".format(
+                                    len(rate),
+                                    rate,
+                                    self.name,
+                                    np.array(self.instance_defaults.variable).size
+                                ),
+                                self.instance_defaults.variable
+                            )
+                    else:
+                        raise FunctionError(
+                            "The length ({}) of the array specified for the rate parameter ({}) of {} "
+                            "must match the length ({}) of the default input ({})".format(
+                                len(rate),
+                                rate,
+                                self.name,
+                                np.array(self.instance_defaults.variable).size,
+                                self.instance_defaults.variable,
+                            )
+                        )
+                        # OLD:
+                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
+
+                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
+                        # to have a rate parameter of type ndarray/list
+
+        super()._validate_params(request_set=request_set,
+                                 target_set=target_set,
+                                 context=context)
+
+        if RATE in target_set:
+            if isinstance(target_set[RATE], (list, np.ndarray)):
+                for r in target_set[RATE]:
+                    if r < 0.0 or r > 1.0:
+                        raise FunctionError("The rate parameter ({}) (or all of its elements) of {} must be "
+                                            "between 0.0 and 1.0 when integration_type is set to ADAPTIVE.".
+                                            format(target_set[RATE], self.name))
+            else:
+                if target_set[RATE] < 0.0 or target_set[RATE] > 1.0:
+                    raise FunctionError(
+                        "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
+                        "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
+
+        if NOISE in target_set:
+            self._validate_noise(target_set[NOISE], self.instance_defaults.variable)
+            # if INITIALIZER in target_set:
+            #     self._validate_initializer(target_set[INITIALIZER])
+
+    def _EWMAFilter(self, a, rate, b):
+
+        return (1 - rate) * a + rate * b
+
+    def _take_logisitc(self, variable, gain, bias):
+
+        try:
+            return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
+        except (Warning):
+            # handle RuntimeWarning: overflow in exp
+            return_val = 0
+
+        return return_val
+
+    def function(self,
+                 variable=None,
+                 params=None,
+                 time_scale=TimeScale.TRIAL,
+                 context=None):
+        """
+        Return: some fraction of `variable <UtilityIntegrator.variable>` combined with some fraction of `previous_value
+        <UtilityIntegrator.previous_value>`.
+
+        Arguments
+        ---------
+
+        variable : number, list or np.array : default ClassDefaults.variable
+           a single value or array of values to be integrated.
+
+        params : Optional[Dict[param keyword, param value]]
+            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        time_scale :  TimeScale : default TimeScale.TRIAL
+            specifies whether the function is executed on the time_step or trial time scale.
+
+        Returns
+        -------
+
+        updated value of integral : 2d np.array
+
+        """
+        variable = self._update_variable(self._check_args(variable=variable, params=params, context=context))
+
+        rate = np.array(self.paramsCurrent[RATE]).astype(float)
+        offset = self.paramsCurrent[OFFSET]
+        # execute noise if it is a function
+        noise = self._try_execute_param(self.noise, variable)
+
+        new_value = variable
+
+        long_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_long_term_utility,
+                                                                            self.long_term_rate,
+                                                                            variable),
+                                                gain = self.long_term_gain,
+                                                bias = self.long_term_bias)
+
+        short_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_short_term_utility,
+                                                                             self.short_term_rate,
+                                                                             variable),
+                                                 gain=self.short_term_gain,
+                                                 bias=self.short_term_bias)
+
+        value = self._EWMAFilter(long_term_utility, rate, short_term_utility)
+
+        adjusted_value = value + offset
+        # If this NOT an initialization run, update the old utility values
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+
+        if not context or not INITIALIZING in context:
+            self.previous_long_term_utility = long_term_utility
+            self.previous_short_term_utility = short_term_utility
+
+        return adjusted_value
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
