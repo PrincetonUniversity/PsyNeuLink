@@ -272,7 +272,7 @@ class LCMechanismError(Exception):
 class LCMechanism(ControlMechanism_Base):
     """
     LCMechanism(                               \
-    monitor_for_control=None,                  \
+    input_states=None,                         \
     mode=0.0,                                  \
     modulated_mechanisms=None,                 \
     params=None,                               \
@@ -285,17 +285,19 @@ class LCMechanism(ControlMechanism_Base):
     Arguments
     ---------
 
-    input_states :  List[OutputState, Mechanism] : default None
+    input_states :  List[`OutputState`, `Mechanism`] : default None
         specifies the OutputStates from which the LCMechanism should receive its `input <LCMechanism_Input>`;  if a
         Mechanism is specified, its `primary OutputState <OutputState_Primary>` is used. A `MappingProjection` is
         generated from each OutputState specified to a corresponding InputState created for the LCMechanism.
 
-    mode : float or List[List[`OutputState`, `Mechanism`, str, value, dict]]: default 0.0
+    mode : float or List[List[monitored_output_states specification]: default 0.0
         specifies the default value for the `mode <FHNIntegrator.mode>` parameter of the LCMechanism's `function
-        <LCMechanism.function>`, or a list of OutputStates to be monitored, the values of which are used to set the
-        `mode <FHNIntegrator.mode>` parameter.
+        <LCMechanism.function>`, or a list of OutputStates to be monitored, the values of which are used to regulate
+        the value of the `mode <FHNIntegrator.mode>` parameter.  It can be specified using any of the forms used to
+        `specify the <ObjectiveMechanism_Monitored_output_states>` **monitored_output_states** `argument
+        <ObjectiveMechanism_Monitored_output_states>` of an ObjectiveMechanism.
 
-    modulated_mechanisms : List[Mechanism] or *ALL*
+    modulated_mechanisms : List[`Mechanism`] or *ALL*
         specifies the Mechanisms to be modulated by the LCMechanism. If it is a list, every item must be a Mechanism
         with a `function <Mechanism_Base.function>` that implements a `multiplicative parameter
         <Function_Modulatory_Params>`;  alternatively the keyword *ALL* can be used to specify all of the
@@ -322,31 +324,39 @@ class LCMechanism(ControlMechanism_Base):
     Attributes
     ----------
 
-    input_states : ContentAddressableList[InputState]
-        a list of the LCMechanism's `InputStates <Mechanism_InputStates>`, each of which receives a `MappingProjection`
-        from an `OutputState` specified in the **input_states** argument of the LCMechanism's constructor. The sum of
-        their `value <InputState.value>`\\s is used as the `variable <FHNIntegrator.variable>` for the LCMechanism's
-        `function <LCMechanism.function>`.
+    input_states : ContentAddressableList[`InputState`]
+        a list of the LCMechanism's `InputStates <Mechanism_InputStates>` that determine its `input
+        <LCMechanism_Input>`;  each receives a `MappingProjection` from an `OutputState` specified in the
+        **input_states** argument of the LCMechanism's constructor. The sum of their `value <InputState.value>`\\s is
+        used as the `variable <FHNIntegrator.variable>` for the LCMechanism's `function <LCMechanism.function>`.
 
     mode : float : default 0.0
         determines the value for the `mode <FHNIntegrator.mode>` parameter of the LCMechanism's
-        `FHNIntegrator` function.
+        `FHNIntegrator` function (see `LCMechanism_Modes_Of_Operation` for additional details).
 
-    COMMENT:
-        objective_mechanism : ObjectiveMechanism
-            Mechanism that monitors and evaluates the values specified in the LCMechanism's **monitor_for_control**
-            argument, and transmits the result to the LCMechanism's *ERROR_SIGNAL*
-            `input_state <Mechanism_Base.input_state>`.
+    controller : None or LCController
+        lists the ControlMechanism used to regulate the value of the LCMechanism's `mode <LCMechanism.mode>` attribute.
+        It receives its input from the LCMechanism's `objective_mechanism`, and sends a `ControlProjection` to its
+        `primary InputState <InputState_Primary>`.
 
-        monitored_output_states : List[OutputState]
-            each item is an `OutputState` of a `Mechanism <Mechanism>` specified in the **monitor_for_control** argument
-            of the LCMechanism's constructor, the `value <OutputState.value>` \\s of which serve as the items of the
-            LCMechanism's `variable <Mechanism_Base.variable>`.
-    COMMENT
+    objective_mechanism : None or `ObjectiveMechanism`
+        lists the Mechanism used to monitor and evaluate any OutputStates specified in the **mode** argument of the
+        LCMechanism's constructor, the `value <OutputState.value>`\\s of which are used by its `controller
+        <LCMechanism.controller>` to regulate the value of its `mode <LCMechanism.mode>` attribute.  It is the same
+        as the `controller <LCMechanism.controller>`\\s `objective_mechanism <LCController.objective_mechanism>`
+        attribute.
+
+    monitored_output_states : None or List[`OutputState`]
+        lists the `OutputStates <OutputState>` specified in the **mode** argument of the LCMechanism's constructor,
+        and monitored by its `objective_mechanism <LCMechanism.objective_mechanism>`; their `value
+        <OutputState.value>`\\s are used by the LCMechanism's `controller <LCMechanism.controller>` to regulate
+        the value of its `mode <LCMechanism.mode>` attribute.  It is the same as the :keyword:`monitored_output_states`
+        attributes of the `controller <LCMechanism.controller>` and `objective_mechanism
+        <LCMechanism.objective_mechanism>`.
 
     function : `FitzHughNagumoIntegrator`
         takes the LCMechanism's `input <LCMechanism_Input>` and generates its response <LCMechanism_Output>` under
-        the influence of its `mode <LCMechanism.mode>` parameter.
+        the influence of its `mode <LCMechanism.mode>` attribute (see `LCMechanism_Function` for additional details).
 
     COMMENT:
     VERSIONS FOR SINGLE ControlSignal
@@ -362,17 +372,17 @@ class LCMechanism(ControlMechanism_Base):
             <LCMechanism.modulated_mechanisms>` attribute.
     COMMENT
 
-    control_signals : List[ControlSignal]
+    control_signals : List[`ControlSignal`]
         contains a ControlSignal for each Mechanism listed in the LCMechanism's `modulated_mechanisms
         <LCMechanism.modulated_mechanisms>` attribute; each ControlSignal sends a `ControlProjections` to the
         `ParameterState` for the `multiplicative parameter <Function_Modulatory_Params>` of the `function
         <Mechanism_Base.function>corresponding Mechanism.
 
-    control_projections : List[ControlProjection]
+    control_projections : List[`ControlProjection`]
         list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
         in `control_signals <LC_Mechanism.control_signals>`.
 
-    modulated_mechanisms : List[Mechanism]
+    modulated_mechanisms : List[`Mechanism`]
         list of Mechanisms modulated by the LCMechanism.
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE

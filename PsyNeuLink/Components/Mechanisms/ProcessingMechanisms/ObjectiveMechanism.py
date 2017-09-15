@@ -98,8 +98,8 @@ COMMENT
 
   .. _ObjectiveMechanism_OutputState_Specification_Dictionary:
 
-  * **monitored_value specification dictionary** -- this the most flexible form of specification, that can be used
-    to specify one or more OutputStates of a Mechanism by their name
+  * **monitored_output_states specification dictionary** -- this the most flexible form of specification, that can be
+    used to specify one or more OutputStates of a Mechanism by their name
 
         * *MECHANISM*:`Mechanism <Mechanism>`
             this enty must be included in the dictionary;
