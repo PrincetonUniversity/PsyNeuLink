@@ -77,7 +77,7 @@ If the **monitor_for_control** argument is specified in the LCMechanism's constr
 `UtilityIntegratorMechanism` that is used to monitor and evaluate the `value <OutputState.value>` of the `OutputStates
 <OutputState>` specified.  The **monitor_for_control** argument must be a list, each item of which must refer to a
 `Mechanism <Mechanism>` or the `OutputState` of one.  These are assigned to the UtilityIntegratorMechanism's
-`monitored_values <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states
+`monitored_output_states <UtilityIntegratorMechanism>` attribute (and the LCMechanism's `monitored_output_states
 <LCMechanism.monitored_output_states>` attribute). The UtilityIntegratorMechanism itself is assigned to the
 LCMechanism's `objective_mechanism <LCMechanism.objective_mechanism>` attribute).
 COMMENT
@@ -110,15 +110,15 @@ COMMENT:
 If the **monitor_for_control** argument of the LCMechanism's constructor is specified, the following
 Components are also automatically created and assigned to the LCMechanism when it is created:
 
-XXX ASSIGN CONTROLLER:  USES THE monitored_values ATTRIBUTE OF ITS CONTROLLER,
+XXX ASSIGN CONTROLLER:  USES THE monitored_output_states ATTRIBUTE OF ITS CONTROLLER,
         AS WELL AS ANY SPECIFIED IN monitor_for_control
-XXX ASSIGN monitor_for_control:  THESE ARE ADDED TO ITS CONTROLLER'S monitored_values LIST;
+XXX ASSIGN monitor_for_control:  THESE ARE ADDED TO ITS CONTROLLER'S monitored_output_states LIST;
                                  IF NO CONTROLLER IS SPECIFIED, ONE IS CREATED
 
 * a `UtilityIntegratorMechanism` -- this monitors the `value <OutputState.value>` of each of the `OutputStates
   <OutputState>` specified in the **monitor_for_control** argument of the LCMechanism's constructor;  these are
   listed in the LCMechanism's `monitored_output_states <LCMechanism.monitored_output_states>` attribute, and the
-  `monitored_values <UtilityIntegratorMechanism.monitored_values>` attribute of the UtilityIntegratorMechanism.  They
+  `monitored_output_states <UtilityIntegratorMechanism.monitored_output_states>` attribute of the UtilityIntegratorMechanism.  They
   are evaluated by the UtilityIntegratorMechanism's `function <UtilityIntegratorMechanism.function>`;  the result is
   assigned as the `value <OutputState.value>` of the UtilityIntegratorMechanism's *UTILITY_SIGNAL* `OutputState
   <UtilityIntegratorMechanism_Structure>` and (by way of a `MappingProjection` -- see below) to the LCMechanism's *MODE*

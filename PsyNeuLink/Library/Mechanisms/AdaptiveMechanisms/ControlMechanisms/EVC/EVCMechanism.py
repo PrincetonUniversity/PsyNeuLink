@@ -102,8 +102,8 @@ Like any ControlMechanism, an EVCMechanism receives its input from the *OUTCOME*
 <InputStatePrimary>`.  The ObjectiveFunction is listed in the EVCMechanism's `objective_mechanism
 <EVCMechanism.objective_mechanism>` attribute.  By default, the ObjectiveMechanism's function is a `LinearCombination`
 function with its `operation <LinearCombination.operation>` attribute assigned as *PRODUCT*, which takes the product of
-the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its `monitored_values
-<ObjectiveMechanism.monitored_values>` attribute.  However, this can be customized in a variety of ways:
+the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed in its `monitored_output_states
+<ObjectiveMechanism.monitored_output_states>` attribute.  However, this can be customized in a variety of ways:
 
     * by specifying a different `function <ObjectiveMechanism.function>` for the ObjectiveMechanism
       (see `ObjectiveMechanism_Weights_and_Exponents_Example` for an example);
@@ -112,7 +112,7 @@ the `value <OutputState.value>`\\s of the OutputStates that it monitors (listed 
       <ObjectiveMechanism_OutputState_Tuple>` to specify weights and/or exponents for them) in the
       **objective_mechanism** argument of the EVCMechanism's constructor;
     ..
-    * using the  **monitored_values** argument of the `objective_mechanism <EVCMechanism.objective_mechanism>`'s
+    * using the  **monitored_output_states** argument of the `objective_mechanism <EVCMechanism.objective_mechanism>`'s
       constructor;
     ..
     * specifying a different `ObjectiveMechanism` in the EVCMechanism's **objective_mechanism** argument of the
@@ -202,7 +202,7 @@ are determined by its `allocation_samples` attribute.  For each `allocation_poli
     <ObjectiveMechanism.function>` for a default ObjectiveMechanism is a `LinearCombination` Function that combines the
     `value <OutputState.value>`\\s of the OutputStates listed in the EVCMechanism's `monitored_output_states
     <EVCMechanism.monitored_output_states>` attribute (and the `objective_mechanism
-    <EVCMechanism.objective_mechanism>`'s `monitored_values <ObjectiveMechanism.monitored_values>` attribute)
+    <EVCMechanism.objective_mechanism>`'s `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute)
     by taking their elementwise (Hadamard) product.  However, this behavior can be customized in a variety of ways,
     as described `above EVCMechanism_ObjectiveMechanism`.
 
@@ -306,8 +306,8 @@ computation will multiply the value of the primary OutputState of the Reward Mec
 *DDM_DECISION_VARIABLE* OutputState of the DDM Mechanism, and then divide that by the value of the *RESPONSE_TIME*
 OutputState of the DDM Mechanism.
 
-See `ObjectiveMechanism <ObjectiveMechanism_Monitored_Values_Examples>` for additional examples of how to specify it's
-**monitored_values** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
+See `ObjectiveMechanism <ObjectiveMechanism_Monitored_output_states_Examples>` for additional examples of how to specify it's
+**monitored_output_states** argument, `ControlMechanism <ControlMechanism_Examples>` for additional examples of how to
 specify ControlMechanisms, and `System <System_Examples>` for how to specify the `controller <System_Base.controller>`
 of a System.
 
@@ -428,7 +428,7 @@ class EVCMechanism(ControlMechanism_Base):
     np.array]] : \
     default MonitoredOutputStatesOptions.PRIMARY_OUTPUT_STATES
         specifies either an `ObjectiveMechanism` to use for the EVCMechanism or a list of the OutputStates it should
-        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Values>` is used,
+        monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_output_states>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     prediction_mechanism_type : CombinationFunction: default IntegratorMechanism
@@ -514,17 +514,17 @@ class EVCMechanism(ControlMechanism_Base):
     objective_mechanism : ObjectiveMechanism
         the 'ObjectiveMechanism' used by the EVCMechanism to evaluate the performance of its `system
         <EVCMechanism.system>`.  If a list of OutputStates is specified in the **objective_mechanism** argument of the
-        EVCMechanism's constructor, they are assigned as the `monitored_values <ObjectiveMechanism.monitored_values>`
+        EVCMechanism's constructor, they are assigned as the `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
         attribute for the `objective_mechanism <EVCMechanism.objective_mechanism>`.
 
     monitored_output_states : List[OutputState]
         list of the OutputStates monitored by `objective_mechanism <EVCMechanism.objective_mechanism>` (and listed in
-        its `monitored_values <ObjectiveMechanism.monitored_values>` attribute), and used to evaluate the
+        its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to evaluate the
         performance of the EVCMechanism's `system <EVCMechanism.system>`.
 
     COMMENT:
     [TBI]
-        monitored_values : 3D np.array
+        monitored_output_states : 3D np.array
             an array of values of the outputStates in `monitored_output_states` (equivalent to the values of
             the EVCMechanism's `input_states <EVCMechanism.input_states>`).
     COMMENT

@@ -496,7 +496,7 @@ COMMENT
     ..
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputStates is monitored by
       the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputStates
-      <ObjectiveMechanism_Monitored_Values>` for details of specification).
+      <ObjectiveMechanism_Monitored_output_states>` for details of specification).
     ..
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputStates is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
@@ -640,7 +640,7 @@ MechanismRegistry = {}
 
 class MonitoredOutputStatesOption(AutoNumber):
     """Specifies outputStates to be monitored by a `ControlMechanism <ControlMechanism>`
-    (see `ObjectiveMechanism_Monitored_Values` for a more complete description of their meanings."""
+    (see `ObjectiveMechanism_Monitored_output_states` for a more complete description of their meanings."""
     ONLY_SPECIFIED_OUTPUT_STATES = ()
     """Only monitor explicitly specified Outputstates."""
     PRIMARY_OUTPUT_STATES = ()
@@ -1537,14 +1537,25 @@ class Mechanism_Base(Mechanism):
         self._instantiate_output_states(context=context)
         super()._instantiate_attributes_after_function(context=context)
 
-    def _instantiate_input_states(self, context=None):
+    # MODIFIED 9/14/17 OLD:
+    # def _instantiate_input_states(self, context=None):
+    #     """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
+    #
+    #     This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
+    #         or process InputStates before and/or after call to _instantiate_input_states
+    #     """
+    #     from PsyNeuLink.Components.States.InputState import _instantiate_input_states
+    #     _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
+    # MODIFIED 9/14/17 NEW:
+    def _instantiate_input_states(self, input_states=None, context=None):
         """Call State._instantiate_input_states to instantiate orderedDict of InputState(s)
 
         This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_states
             or process InputStates before and/or after call to _instantiate_input_states
         """
         from PsyNeuLink.Components.States.InputState import _instantiate_input_states
-        _instantiate_input_states(owner=self, input_states=self.input_states, context=context)
+        return _instantiate_input_states(owner=self, input_states=input_states or self.input_states, context=context)
+    # MODIFIED 9/14/17 END
 
     def _instantiate_parameter_states(self, context=None):
         """Call State._instantiate_parameter_states to instantiate a ParameterState for each parameter in user_params
