@@ -1802,7 +1802,6 @@ class TDDeltaFunction(LinearCombination):
         if weights is not None:
             variable = self._update_variable(variable * weights)
 
-        # TODO: implement scale and offset
         result = (variable[T] + reward) - variable[T_MINUS_ONE]
 
         return result
@@ -3063,95 +3062,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #         return True
 #     return False
 
-class IdentityTransform(TransferFunction):
-    """
-    IdentityTransform(     \
-        default_variable, \
-        matrix=None,      \
-        params=None,      \
-        owner=None,       \
-        name=None,        \
-        prefs=None,       \
-        )
-
-    .. _IdentityTransfer:
-
-    Matrix transform of variable:
-        `function <IdentityTransfer.function>` returns identity of `variable
-        <IdentityTransform.variable>`.
-
-        Used for MappingProjection when variable and matrix should be the same
-        size.
-
-    Arguments
-    ---------
-
-    variable: list or np.ndarray : default ClassDefaults.variable
-
-    matrix: list or np.ndarray : default IDENTITY_MATRIX
-
-    bounds: None
-
-    params: Optional[Dict[param keyword, param value]]
-
-    owner: Component
-
-    prefs: Optional[PreferenceSet or specification dict : Function.classPreferences]
-
-
-    """
-
-    componentName = IDENTITY_TRANSFORM_FUNCTION
-
-    bounds = None
-    multiplicative_param = None
-    additive_param = None
-
-    DEFAULT_FILLER_VALUE = 0
-
-    class ClassDefaults(TransferFunction.ClassDefaults):
-        variable = [0]
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        MATRIX: None
-    })
-
-    def __init__(self,
-                 default_variable=ClassDefaults.variable,
-                 matrix=None,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=componentName + INITIALIZING):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix, params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-        if default_variable is not self.ClassDefaults.variable and matrix is not None:
-            if np.shape(default_variable) != np.shape(matrix):
-                raise FunctionError("Variable and matrix must have the same size.")
-
-    def function(self, variable=None, params=None, context=None):
-        if params is None and variable is None:
-            return self.ClassDefaults.variable
-
-        if params[MATRIX] is not None and variable is None:
-            return params[MATRIX]
-
-        if variable is not None and params[MATRIX] is None:
-            return variable
-
-        if variable is not None and params[MATRIX] is not None:
-            if np.shape(variable) != np.shape(params[MATRIX]):
-                raise FunctionError("Variable and matrix must have the same shape.")
-            else:
-                return variable
 
 
 def get_matrix(specification, rows=1, cols=1, context=None):
