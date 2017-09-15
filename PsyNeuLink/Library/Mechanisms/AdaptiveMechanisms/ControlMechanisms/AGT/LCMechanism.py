@@ -112,7 +112,7 @@ An LCMechanism uses the `FHNIntegrator` as its `LCMechanism.function`; this impl
 <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron, but in this
 case the population activity of the LC (see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_).
 The `FNH` Function takes the `input <LCMechanism_Input>` to the LCMechanism as its `variable <FHN.variable>`,
-and uses the LCMechanism's `mode <LCMechanism.mode>` attribute as its `mode <FHN.mode>` attribute.
+and uses the LCMechanism's `mode <LCMechanism.mode>` attribute as its `mode <FHN.mode>` parameter.
 
 .. _LCMechanism_Modes_Of_Operation:
 
@@ -419,9 +419,7 @@ class LCMechanism(ControlMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 monitor_for_control:tc.optional(list)=None,
+                 input_states:tc.optional(list)=None,
                  mode:tc.optional(float)=0.0,
                  modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -431,13 +429,12 @@ class LCMechanism(ControlMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(mode=mode,
+        params = self._assign_args_to_param_dicts(input_states=input_states,
+                                                  mode=mode,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         monitor_for_control=monitor_for_control,
+        super().__init__(input_states=input_states,
                          modulation=modulation,
                          params=params,
                          name=name,
