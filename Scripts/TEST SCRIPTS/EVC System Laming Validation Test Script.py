@@ -92,12 +92,12 @@ RewardProcess = process(
 # System:
 mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
 
-                  # # WORKS:
-                  # controller=EVCMechanism,
-                  # monitor_for_control=[
-                  #     Reward,
-                  #     PROBABILITY_UPPER_THRESHOLD,
-                  #     (RESPONSE_TIME, 1, -1)],
+                  # WORKS:
+                  controller=EVCMechanism,
+                  monitor_for_control=[
+                      Reward,
+                      PROBABILITY_UPPER_THRESHOLD,
+                      (RESPONSE_TIME, 1, -1)],
 
                   # # WORKS:
                   # controller=EVCMechanism,
