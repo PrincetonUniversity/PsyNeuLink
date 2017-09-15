@@ -5294,6 +5294,14 @@ class UtilityIntegrator(
         scale: parameter_spec = 1.0,    \
         offset: parameter_spec = 0.0,   \
         initializer,                    \
+        initial_short_term_utility = 0.0,\
+        initial_long_term_utility = 0.0,\
+        short_term_gain = 1.0,          \
+        long_term_gain =1.0,            \
+        short_term_bias = 0.0,          \
+        long_term_bias=0.0,             \
+        short_term_rate=1.0,            \
+        long_term_rate=1.0,             \
         params=None,                    \
         owner=None,                     \
         prefs=None,                     \
@@ -5301,11 +5309,22 @@ class UtilityIntegrator(
 
     .. _UtilityIntegrator:
 
-    Computes an exponentially weighted moving average.
+    Computes an exponentially weighted moving average on the variable using two sets of parameters:
 
-    (1 - `rate <UtilityIntegrator.rate>`) * `previous_value <UtilityIntegrator.previous_value>` + `rate <UtilityIntegrator.rate>` *
-    `variable <UtilityIntegrator.variable>` + `noise <UtilityIntegrator.noise>`
+    short_term_utility = (1 - `short_term_rate <UtilityIntegrator.short_term_rate>`) * `previous_short_term_utility
+    <UtilityIntegrator.previous_short_term_utility>` + `short_term_rate <UtilityIntegrator.short_term_rate>` *
+    `variable <UtilityIntegrator.variable>`
 
+    long_term_utility = (1 - `long_term_rate <UtilityIntegrator.long_term_rate>`) * `previous_long_term_utility
+    <UtilityIntegrator.previous_long_term_utility>` + `long_term_rate <UtilityIntegrator.long_term_rate>` *
+    `variable <UtilityIntegrator.variable>`
+
+    then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.
+
+    Finally, computes a single value which combines the two values according to:
+
+    value = (1 - `rate <UtilityIntegrator.rate>`) * logistic(long_term_utility) + `rate <UtilityIntegrator.rate>` *
+    logistic(short_term_utility)
 
     Arguments
     ---------
@@ -5440,14 +5459,14 @@ class UtilityIntegrator(
                                                   long_term_rate=long_term_rate,
                                                   params=params)
 
+        self.previous_long_term_utility = self.initial_long_term_utility
+        self.previous_short_term_utility = self.initial_short_term_utility
+
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
                          prefs=prefs,
                          context=context)
-
-        self.previous_long_term_utility = self.initial_long_term_utility
-        self.previous_short_term_utility = self.initial_short_term_utility
 
         self.auto_dependent = True
 
