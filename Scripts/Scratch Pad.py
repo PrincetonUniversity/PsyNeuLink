@@ -719,7 +719,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # my_transfer_mech_B = TransferMechanism(function=Logistic)
 #
 # my_control_mech = ControlMechanism_Base(
-#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
+#                          objective_mechanism=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
 #                                                                                   my_DDM.output_states[
 #                                                                                       my_DDM.RESPONSE_TIME]],
 #                                                                 function=LinearCombination(operation=SUM)),
@@ -740,7 +740,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #                                          (GAIN, my_transfer_mech_B)])
 
 
-# my_obj_mech=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
+# my_obj_mech=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
 #                                                  my_DDM.output_states[my_DDM.RESPONSE_TIME]],
 #                                function=LinearCombination(operation=PRODUCT))
 #
@@ -775,7 +775,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # # System:
 # mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-#                   controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
+#                   controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
 #                                                      Reward,
 #                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
 #                                                      (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
@@ -2702,8 +2702,8 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 # print("TEST parse_monitored_value")
 #
-# def _parse_monitored_value(owner, monitored_values):
-#     """Parse specifications contained in monitored_values list or dict,
+# def _parse_monitored_value(owner, monitored_output_states):
+#     """Parse specifications contained in monitored_output_states list or dict,
 #
 #     Can take either a list or dict of specifications.
 #     If it is a list, each item must be one of the following:
@@ -2716,7 +2716,7 @@ assert sched.consideration_queue == expected_consideration_queue
 #     If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
 #         specification, and the value of which can be any of the above.
 #
-#     Return a list of specification dicts, one for each item of monitored_values
+#     Return a list of specification dicts, one for each item of monitored_output_states
 #     """
 #
 #
@@ -2790,36 +2790,36 @@ assert sched.consideration_queue == expected_consideration_queue
 #         else:
 #             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
 #                                           "OutputState, Mechanism, value or string".
-#                                           format(MONITORED_VALUES, owner.name, spec))
+#                                           format(MONITORED_OUTPUT_STATES, owner.name, spec))
 #
 #         return name, value, call_for_projection
 #
 #     # If it is a dict, convert to list by:
 #     #    - assigning the key of each entry to a NAME entry of the dict
 #     #    - placing the value in a VALUE entry of the dict
-#     if isinstance(monitored_values, dict):
-#         monitored_values_list = []
-#         for name, spec in monitored_values.items():
-#             monitored_values_list.append({NAME: name, VALUE: spec})
-#         monitored_values = monitored_values_list
+#     if isinstance(monitored_output_states, dict):
+#         monitored_output_states_list = []
+#         for name, spec in monitored_output_states.items():
+#             monitored_output_states_list.append({NAME: name, VALUE: spec})
+#         monitored_output_states = monitored_output_states_list
 #
-#     if isinstance(monitored_values, list):
+#     if isinstance(monitored_output_states, list):
 #
-#         for i, monitored_value in enumerate(monitored_values):
+#         for i, monitored_value in enumerate(monitored_output_states):
 #             name, value, call_for_projection = parse_spec(monitored_value)
-#             monitored_values[i] = {NAME: name,
+#             monitored_output_states[i] = {NAME: name,
 #                                    VALUE: value,
 #                                    PROJECTION: call_for_projection}
 #
 #     else:
 #         raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
-#                                       format(MONITORED_VALUES, owner.name, monitored_values))
+#                                       format(MONITORED_OUTPUT_STATES, owner.name, monitored_output_states))
 #
-#     return monitored_values
+#     return monitored_output_states
 #
 #
 #
-#     # def add_monitored_values(self, states_spec, context=None):
+#     # def add_monitored_output_states(self, states_spec, context=None):
 #     #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 #     #
 #     #     Use by other objects to add a state or list of states to be monitored by EVC

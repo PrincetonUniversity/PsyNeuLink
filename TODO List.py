@@ -193,7 +193,7 @@
 
 # DOCUMENTATION: can suppress variable that is an arg for a construcutor in a parent class from
 #                   having to be an arg in the constructor of a subclass by putting it in paramClassDefaults
-#                   for the subclass (e.g.:  MONITORED_VALUES for ComparatorMechanism)
+#                   for the subclass (e.g.:  MONITORED_OUTPUT_STATES for ComparatorMechanism)
 
 # DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
 
@@ -224,7 +224,7 @@
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: base_value -> base_value
 # SEARCH & REPLACE: Modulation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
-# SEARCH & REPLACE: monitored_values -> monitor_values
+# SEARCH & REPLACE: monitored_output_states -> monitor_values
 
 # FIX State:
 #         Consolidate _instantiate_state_lists into _instantiate_state,
@@ -241,7 +241,7 @@
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
 # IMPLEMENT: Override input_states and output_states properties with assignments to:
-#                monitored_values (for input_states of ObjectiveMechanism)
+#                monitored_output_states (for input_states of ObjectiveMechanism)
 #                control_signals (for output_states of ControlMechanism)
 #                gating_signals (for output_states of GatingMechanism)
 # IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
@@ -508,8 +508,8 @@
 # IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections
-#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
-# SEARCH & REPLACE: monitored_values -> monitor_values
+#                - should parallel implementation of input_states and monitored_output_states in ObjectiveMechanism
+# SEARCH & REPLACE: monitored_output_states -> monitor_values
 # IMPLEMENT: modulation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
 #                 parameter of ModulatoryFunctions
@@ -624,7 +624,7 @@
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
-# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_OUTPUT_STATES specification of ObjectiveMechanism
 #
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
@@ -666,8 +666,8 @@
 #              MODIFY TO:
 #                    d) Revise EVCMechanism._get_monitored_output_states_for_system() to NOT direclty assign weights
 #                               and exponents, but rather assign
-#                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
-#                    f) parse MonitoredOUtputStates specification for monitored_values arg
+#                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_output_states)
+#                    f) parse MonitoredOUtputStates specification for monitored_output_states arg
 #                    g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
 #              Name input_states using input_state_names (or create them explicitly using the values of variable?)

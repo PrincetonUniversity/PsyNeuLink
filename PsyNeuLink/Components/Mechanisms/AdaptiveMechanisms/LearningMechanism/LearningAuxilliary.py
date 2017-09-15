@@ -23,7 +23,7 @@ COMMENT:
           • Convert ProcessInputState and SystemInputState into Mechanisms with LinearFunction IDENTITY_FUNCTION
           • Use only one ObjectiveMechanism for all levels with the following args:
                 default_variable[[ACTIVITY][ERROR]]
-                monitored_values: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
+                monitored_output_states: [[error_mech.OutputState][error_mech.objective_mechanism.OutputState]]
                 names: [[ACTIVITY][ERROR]]
                 function:  ErrorDerivative(variable, derivative)
                                variable[0] = activity
@@ -464,7 +464,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Instantiate ObjectiveMechanism
             # Notes:
             # * MappingProjections for ObjectiveMechanism's input_states will be assigned in its own call to Composition
-            # * Need to specify both default_variable and monitored_values since they may not be the same
+            # * Need to specify both default_variable and monitored_output_states since they may not be the same
             #    sizes (e.g., for RL the monitored_value for the sample may be a vector, but its input_value must be scalar)
             # SAMPLE inputState for ObjectiveMechanism should come from activation_mech_output
             # TARGET inputState for ObjectiveMechanism should be specified by string (TARGET),
@@ -495,7 +495,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
             # # FOR TESTING: ALTERNATIVE to Direct call to ObjectiveMechanism
             # #              (should produce identical result to use of ComparatorMechanism above)
-            # objective_mechanism = ObjectiveMechanism(monitored_values=[lc.activation_mech_output,
+            # objective_mechanism = ObjectiveMechanism(monitored_output_states=[lc.activation_mech_output,
             #                                                            TARGET],
             #                                          input_states=[{SAMPLE:sample_input},
             #                                                        {TARGET:target_input}],
