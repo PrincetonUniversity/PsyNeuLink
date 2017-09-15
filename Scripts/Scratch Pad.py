@@ -2695,14 +2695,14 @@ assert sched.consideration_queue == expected_consideration_queue
 
 #endregion
 
-# region TEST parse_monitored_value @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST parse_monitored_output_state @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
 # from PsyNeuLink.Components.States.OutputState import OutputState
 #
-# print("TEST parse_monitored_value")
+# print("TEST parse_monitored_output_state")
 #
-# def _parse_monitored_value(owner, monitored_output_states):
+# def _parse_monitored_output_state(owner, monitored_output_states):
 #     """Parse specifications contained in monitored_output_states list or dict,
 #
 #     Can take either a list or dict of specifications.
@@ -2736,7 +2736,7 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 #         # # If spec is a MonitoredOutputStatesOption:
 #         # # FIX: NOT SURE WHAT TO DO HERE YET
-#         # elif isinstance(montiored_value, MonitoredOutputStatesOption):
+#         # elif isinstance(monitored_value, MonitoredOutputStatesOption):
 #         #     value = ???
 #         #     call_for_projection = True
 #
@@ -2747,7 +2747,7 @@ assert sched.consideration_queue == expected_consideration_queue
 #         # str:
 #         elif isinstance(spec, str):
 #             name = spec
-#             value = DEFAULT_MONITORED_VALUE
+#             value = DEFAULT_MONITORED_OUTPUT_STATE
 #             call_for_projection = False
 #
 #         # value:
@@ -2805,8 +2805,8 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 #     if isinstance(monitored_output_states, list):
 #
-#         for i, monitored_value in enumerate(monitored_output_states):
-#             name, value, call_for_projection = parse_spec(monitored_value)
+#         for i, monitored_output_state in enumerate(monitored_output_states):
+#             name, value, call_for_projection = parse_spec(monitored_output_state)
 #             monitored_output_states[i] = {NAME: name,
 #                                    VALUE: value,
 #                                    PROJECTION: call_for_projection}
@@ -2831,13 +2831,13 @@ assert sched.consideration_queue == expected_consideration_queue
 #     #         context:
 #     #     """
 #     #     states_spec = list(states_spec)
-#     #     validate_monitored_value(self, states_spec, context=context)
+#     #     validate_monitored_output_state(self, states_spec, context=context)
 #     #     self._instantiate_monitored_output_states(states_spec, context=context)
 #
 # class SCRATCH_PAD():
 #     name = 'SCRATCH_PAD'
 #
-# print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
+# print(_parse_monitored_output_state(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
 
 #endregion
 

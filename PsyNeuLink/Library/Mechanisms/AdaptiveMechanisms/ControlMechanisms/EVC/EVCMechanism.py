@@ -392,7 +392,7 @@ class EVCMechanism(ControlMechanism_Base):
         # TBI: - CONTROL_PROJECTIONS:
         #         list of projections to add (and for which outputStates should be added)
 
-        # - input_states: one for each performance/environment variable monitiored
+        # - input_states: one for each performance/environment variable monitored
 
         ControlProjection Specification:
         #    - wherever a ControlProjection is specified, using kwEVC instead of CONTROL_PROJECTION

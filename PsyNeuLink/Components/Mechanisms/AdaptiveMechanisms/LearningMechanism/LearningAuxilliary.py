@@ -465,7 +465,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             # Notes:
             # * MappingProjections for ObjectiveMechanism's input_states will be assigned in its own call to Composition
             # * Need to specify both default_variable and monitored_output_states since they may not be the same
-            #    sizes (e.g., for RL the monitored_value for the sample may be a vector, but its input_value must be scalar)
+            #    sizes (e.g., for RL the monitored_output_state for the sample may be a vector, but its input_value must be scalar)
             # SAMPLE inputState for ObjectiveMechanism should come from activation_mech_output
             # TARGET inputState for ObjectiveMechanism should be specified by string (TARGET),
             #     so that it is left free to later be assigned a projection from ProcessInputState and/or SystemInputState

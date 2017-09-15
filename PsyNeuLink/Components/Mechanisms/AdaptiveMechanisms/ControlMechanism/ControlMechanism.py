@@ -452,10 +452,11 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding item of
         `monitored_output_states <ControlMechanism_Base.monitored_output_states>`;  these are the same as those in
-        the `monitored_output_states_weights_and_exponents <ObjectiveMechanism.monitored_output_states_weights_and_exponents>`
-        attribute of the `objective_mechanism <ControlMechanism_Base.objective_mechanism>`, and are used by the
-        ObjectiveMechanism's `function <ObjectiveMechanism.function>` to parametrize the contribution made to its
-        output by each of the values that it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
+        the `monitored_output_states_weights_and_exponents
+        <ObjectiveMechanism.monitored_output_states_weights_and_exponents>` attribute of the `objective_mechanism
+        <ControlMechanism_Base.objective_mechanism>`, and are used by the ObjectiveMechanism's `function
+        <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
+        it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputState.value>` \\s of the `OutputStates <OutputState>` specified in the
@@ -642,7 +643,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         if isinstance(self.objective_mechanism, ObjectiveMechanism):
             if monitored_output_states:
-                self.objective_mechanism.add_monitored_output_states(monitored_output_states_specs=monitored_output_states,
+                self.objective_mechanism.add_monitored_output_states(
+                                                              monitored_output_states_specs=monitored_output_states,
                                                               context=context)
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
@@ -654,8 +656,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
-                weight = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][0]
-                exponent = self.monitored_output_states_weights_and_exponents[self.monitored_output_states.index(state)][1]
+                weight = self.monitored_output_states_weights_and_exponents[
+                                                                self.monitored_output_states.index(state)][0]
+                exponent = self.monitored_output_states_weights_and_exponents[
+                                                                self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
 
         # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
@@ -931,12 +935,13 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     def add_monitored_output_states(self, monitored_output_states, context=None):
         """Instantiate OutputStates to be monitored by ControlMechanism's objective_mechanism
 
-        monitored_output_states can be a Mechanism, OutputState, monitored_value tuple, or list with any of these.
+        monitored_output_states can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these
         If item is a Mechanism, its primary OutputState is used.
         OutputStates must belong to Mechanisms in the same System as the ControlMechanism
         """
-        output_states = self.objective_mechanism.add_monitored_output_states(monitored_output_states_specs=monitored_output_states,
-                                                                      context=context)
+        output_states = self.objective_mechanism.add_monitored_output_states(
+                                                                 monitored_output_states_specs=monitored_output_states,
+                                                                 context=context)
         if self.system:
             self.system._validate_monitored_state_in_system(output_states, context=context)
 

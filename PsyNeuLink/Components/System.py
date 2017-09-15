@@ -2047,7 +2047,7 @@ class System_Base(System):
         * controller.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
 
-        Returns list of tuples, each of which is a monitored_value (OutputState, weight, exponent) tuple.
+        Returns list of tuples, each of which is a monitored_output_state (OutputState, weight, exponent) tuple.
 
         """
 
