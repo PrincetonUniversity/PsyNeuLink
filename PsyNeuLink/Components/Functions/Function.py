@@ -4777,10 +4777,11 @@ class FHNIntegrator(
                  a_w=1.0,
                  b_w=-0.8,
                  c_w=0.7,
-                 time_constant_w = 12.5,
-                 mode = 1.0,
-                 uncorrelated_activity = 0.0,
-                 params: tc.optional(dict) = None,
+                 threshold=-1.0,
+                 time_constant_w=12.5,
+                 mode=1.0,
+                 uncorrelated_activity=0.0,
+                 params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context="FHNIntegrator Init"):
@@ -4803,6 +4804,7 @@ class FHNIntegrator(
                                                   a_w=a_w,
                                                   b_w=b_w,
                                                   c_w=c_w,
+                                                  threshold=threshold,
                                                   mode=mode,
                                                   uncorrelated_activity=uncorrelated_activity,
                                                   time_constant_w=time_constant_w,
@@ -4835,7 +4837,8 @@ class FHNIntegrator(
 
         The model is defined by the following system of differential equations:
 
-            time_constant_v * dv/dt = a_v * v^3 + b_v * v^2 + c_v*v^2 + d_v + e_v * w + f_v * I_ext
+            time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
+            w + f_v * I_ext
 
             time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
 
@@ -4861,7 +4864,7 @@ class FHNIntegrator(
 
         def dv_dt(time, v):
 
-            val= (self.a_v*(v**3) + self.b_v*(v**2) + self.c_v*v + self.d_v
+            val= (self.a_v*(v**3) + (1+self.threshold)*self.b_v*(v**2) + (-self.threshold)*self.c_v*v + self.d_v
                     + self.e_v*self.previous_w + self.f_v*variable)/self.time_constant_v
             return val
         def dw_dt(time, w):
