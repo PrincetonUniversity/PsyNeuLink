@@ -344,7 +344,7 @@ from PsyNeuLink.Scheduling.TimeScale import TimeScale
 
 ROLE = 'role'
 MONITORED_OUTPUT_STATES = 'monitored_output_states'
-MONITORED_VALUE_NAME_SUFFIX = '_Monitor'
+MONITORED_OUTPUT_STATE_NAME_SUFFIX = '_Monitor'
 OUTCOME = 'outcome'
 
 # Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
@@ -769,7 +769,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                      type(output_state_spec).__name__,
                                                      output_state_spec))
             output_state_dict[OUTPUT_STATE]=value
-            output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_VALUE_NAME_SUFFIX
+            output_state_dict[NAME] = output_state_dict[NAME] + MONITORED_OUTPUT_STATE_NAME_SUFFIX
 
             # Ignore any OutputStates from which an InputState of the ObjectiveMechanism already receives a Projection.
             # However, skip this step if this call is during initialization of the ObjectiveMechanism, because:

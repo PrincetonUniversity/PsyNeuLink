@@ -2724,13 +2724,13 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 #         # OutputState:
 #         if isinstance(spec, OutputState):
-#             name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             name = spec.owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
 #             value = spec.value
 #             call_for_projection = True
 #
 #         # Mechanism:
 #         elif isinstance(spec, Mechanism_Base):
-#             name = spec.name + MONITORED_VALUE_NAME_SUFFIX
+#             name = spec.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
 #             value = spec.output_state.value
 #             call_for_projection = True
 #
@@ -2752,13 +2752,13 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 #         # value:
 #         elif is_value_spec(spec):
-#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             name = owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
 #             value = spec
 #             call_for_projection = False
 #
 #         elif isinstance(spec, tuple):
 #             # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
+#             name = owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
 #             value = spec[0]
 #             call_for_projection = spec[1]
 #
