@@ -83,11 +83,11 @@ arguments of the `system` command, as described below.
     (see examples under `System_Control_Examples`).
 
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
-    single item in the list specifying the **monitor_for_control** argument.  These specifications apply to all of the
-    Mechanisms in the System except its `controller <System_Base.controller>` and any `LearningMechanisms
-    <LearningMechanism>`. The value of *PRIMARY_OUTPUT_STATES* specifies that the `primary OutputState
-    <OutputState_Primary>` of every Mechanism be monitored, whereas *ALL_OUTPUT_STATES* specifies that *every*
-    OutputState of every Mechanism be monitored.
+    single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
+    the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
+    except its `controller <System_Base.controller>` and `LearningMechanisms <LearningMechanism>`. The
+    *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
+    monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
 
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
