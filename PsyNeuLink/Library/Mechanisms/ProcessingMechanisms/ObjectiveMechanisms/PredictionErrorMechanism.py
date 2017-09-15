@@ -11,7 +11,7 @@ from PsyNeuLink.Globals.Keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, \
     TARGET
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Utilities import is_numeric
-from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms\
+from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.ObjectiveMechanisms \
     .ComparatorMechanism import ComparatorMechanism, MSE
 
 
