@@ -418,7 +418,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    monitored_values : List[OutputState, Mechanism, string, value, dict, MonitoredOutputStateOption] or Dict[]
+    monitored_values : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict[]
         specifies the values that will will be monitored, and evaluated by the `function <ObjectiveMechanism>`
         (see `monitored_values` for details of specification).
 
@@ -666,6 +666,9 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def _instantiate_input_states(self, monitored_values_specs=None, context=None):
         """Instantiate InputStates for each OutputState specified in monitored_values_specs
 
+        Called by _add_monitored_values as well as during initialization
+            (so must distinguish between initialization and adding to instantiated input_states)
+
         Parse specifications for **input_states**, using **monitored_values** where relevant and instantiate
         input_states.
 
@@ -718,7 +721,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def _instantiate_monitored_values(self, monitored_values, input_states=None, context=None):
         """Parse monitored_value specs and instantiate monitored_values attribute
 
-        Used by _instantiate_input_states and _add_monitored_values.
+        Used by _instantiate_input_states and _add_monitored_values
+            (so must distinguish between initialization and adding to instantiated input_states)
         monitored_values argument:
             list of any legal specification for **monitored_values** argument of the constructor;
         input_states argument:

@@ -9,6 +9,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 
 random.seed(0)
 np.random.seed(0)
@@ -64,6 +65,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                output_states=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD],
+               # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]},
                prefs = DDM_prefs,
                name='Decision')
 
@@ -95,9 +97,14 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # WORKS:
                   controller=EVCMechanism,
                   monitor_for_control=[
-                      Reward,
-                      PROBABILITY_UPPER_THRESHOLD,
-                      (RESPONSE_TIME, 1, -1)],
+                      # MonitoredOutputStatesOption.ALL_OUTPUT_STATES,
+                      # MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES,
+                      # Reward,
+                      # PROBABILITY_UPPER_THRESHOLD,
+                      # (RESPONSE_TIME, 1, -1),
+                      # MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES
+                      MonitoredOutputStatesOption.ALL_OUTPUT_STATES
+                  ],
 
                   # # WORKS:
                   # controller=EVCMechanism,

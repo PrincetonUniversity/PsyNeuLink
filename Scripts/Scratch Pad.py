@@ -2736,7 +2736,7 @@ assert sched.consideration_queue == expected_consideration_queue
 #
 #         # # If spec is a MonitoredOutputStatesOption:
 #         # # FIX: NOT SURE WHAT TO DO HERE YET
-#         # elif isinstance(montiored_value, MonitoredOutputStateOption):
+#         # elif isinstance(montiored_value, MonitoredOutputStatesOption):
 #         #     value = ???
 #         #     call_for_projection = True
 #
