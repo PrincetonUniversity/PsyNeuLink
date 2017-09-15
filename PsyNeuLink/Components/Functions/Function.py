@@ -4585,6 +4585,75 @@ class FHNIntegrator(
 
     Implements the Fitzhugh-Nagumo model using the 4th order Runge Kutta method of numerical integration.
 
+    In order to support several common representations of the model, the FHNIntegrator includes many parameters, some of
+    which would not be sensible to use in combination.
+
+    The most general form of the FHNIntegrator function, with all of its arguments, is:
+
+        time_constant_v * dv/dt = a_v * v^3 + (1 + threshold) * b_v * v^2 + (- threshold) * c_v * v^2 + d_v + e_v *
+        w + f_v * I_ext
+
+        time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
+
+    The three formulations that the FHNIntegrator was designed to allow are:
+
+    **Fitzhugh-Nagumo Model**
+
+            dv/dt = v - (v^3)/3 -w + I_ext
+
+            T*dw/dt = v + a - b*w
+
+        where dw/dt often has the following parameters:
+
+            dw/dt = 0.08(v + 0.7 - 0.8*w)
+
+        The FHNIntegrator's default parameter values map the above equations and parameters onto the PsyNeuLink
+        implementation.
+
+
+    **Modified FHN Model**
+
+            dv/dt = v*(a-v)(v-1) -w + I_ext
+
+            dw/dt = b*v - c*w
+
+        In order to reproduce the modified FHN model, the FHNIntegrator's parameters must be set as follows:
+
+            a --> `threshold <FHNIntegrator.threshold>`
+
+            time_constant_w = mode = time_constant_v = a_v = b_v = f_v = 1.0
+
+            c_v = e_v = -1.0
+
+            uncorrelated_activity = d_v = 0.0;
+
+
+        `Mahbub Khan (2013) <http://pcwww.liv.ac.uk/~bnvasiev/Past%20students/Mahbub_549.pdf>`_ provides a nice summary
+        of why this formulation is useful.
+
+
+    `Gilzenrat (2002) <http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub>`_ **Implementation
+    of the Modified FHN Model**
+
+            time_constant_v * dv/dt = v*(a-v)(v-1) -w + b*I_ext
+
+            time_constant_w * dw/dt = c*v + (1-c)*d - w
+
+        In order to reproduce the Gilzenrat formulation, the FHNIntegrator's parameters must be set as follows:
+
+            a --> `threshold <FHNIntegrator.threshold>`
+
+            b --> negative `e_v <FHNIntegrator.e_v>`
+
+            c --> `mode <FHNIntegrator.mode>`
+
+            d --> `uncorrelated_activity <FHNIntegrator.uncorrelated_activity>`
+
+            a_v = b_v = f_v = 1.0 ; c_v = -1.0 ; d_v = 0.0;
+
+
+
+
     Arguments
     ---------
 
@@ -4723,6 +4792,22 @@ class FHNIntegrator(
     c_w : float : default 0.7,
         constant term in the dw/dt equation
 
+    threshold : float : default -1.0
+        coefficient which scales both the v^2 [ (1+threshold)*v^2 ] and v [ (-threshold)*v ] terms in the dv/dt equation
+
+        under a specific formulation of the FHN equations, the threshold parameter behaves as a "threshold of excitation
+        ", and has the following relationship with variable (the external stimulus):
+
+            - when the external stimulus is below the threshold of excitation, the system is either in a stable state,
+            or will emit a single excitation spike, then reach a stable state. The behavior varies depending on the
+            magnitude of the difference between the threshold and the stimulus.
+
+            - when the external stimulus is equal to or above the threshold of excitation, the system is
+            unstable, and will emit many excitation spikes
+
+            - when the external stimulus is too far above the threshold of excitation, the system will emit some
+            excitation spikes before reaching a stable state.
+
     mode : float : default 1.0
         coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
         (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
@@ -4841,8 +4926,6 @@ class FHNIntegrator(
             w + f_v * I_ext
 
             time_constant_w * dw/dt = mode * a_w * v + b_w * w + c_w + (1 - self.mode) * self.uncorrelated_activity
-
-
 
 
         Arguments
