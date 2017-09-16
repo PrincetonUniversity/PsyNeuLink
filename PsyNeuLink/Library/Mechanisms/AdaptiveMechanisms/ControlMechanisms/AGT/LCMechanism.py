@@ -10,52 +10,52 @@
 
 """
 
-.. note::
-   **THIS MECHANISM IS ONLY PARTIALLY IMPLEMENTED.**
-
-   IT CAN MODULATE MECHANISMS, BUT:
-
-   - IT DOES NOT YET AUTOMATICALLY GENERATE A `LCController` OR `UtilityIntegrator` AS ITS OBJECTIVE MECHANISM
-   ..
-   - IT DOES NOT YET IMPLEMENT THe `FHNIntegrator` (FitzHugh-Nagumo) FUNCTION AND ASSOCIATED `mode` PARAMETER
-
-
 Overview
 --------
 
 An LCMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
 It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that,
-together with a `UtilityIntegrator` Mechanism, implement a form of the `Adaptive Gain Theory
-<http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
-(LC-NE) system.  The LCMechanism uses an `FHNIntegrator` Function to generate its output, under the
-influence of a `mode <LCMechanisms.mode>` parameter that regulates its functioning between its `"tonic" and "phasic"
-modes of operation <LCMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCMechanism can be listed using
+by default, uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCMechanisms.mode>`
+parameter that regulates its functioning between `"tonic" and "phasic" modes of operation
+<LCMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCMechanism can be listed using
 its `show <LCMechanism.show>` method.
+COMMENT:
+The LCMechanism is used by the `AGTComposition` to implement a form of the
+`Adaptive Gain Theory  <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus
+coeruleus-norepinephrine (LC-NE) system.
+COMMENT
 
 .. _LCMechanism_Creation:
 
 Creating an LCMechanism
 -----------------------
 
-An LCMechanism is generally created using its constructor.  Unlike a standard `ControlMechanism`, an LCMechanism is
-does not take its input from an `ObjectiveMechanism`.  Rather the `inputs <LCMechanism_Input>` that drive
-its response are specified in its **input_states** argument, as a list of `Mechanisms <Mechanism>` and/or `OutputStates
-<OutputState>`.  The `Mechanisms <Mechanism>` the LCMechanism controls are specified in the **modulated_mechanisms**
+An LCMechanism can be created in any of the ways that a `ControlMechanism <ControlMechanism_Creation>` is created.
+Like all ControlMechanisms, it receives its `input <LCMechanism_Input>` from an ObjectiveMechanism specified in the
+**objective_mechanism** argument of the LCMechanism's constructor in one of two ways:  by specifying an existing
+ObjectiveMechanism, or the OutputStates from which it should receive its input(s) (see
+`ControlMechanism_ObjectiveMechanism` for details).  These inputs, transformed by the ObjectiveMechanism, drive
+the LCMechanism's `phasic response <LCMechanism_Modes_Of_Operation>`.  By default, the LCMechanism creates an
+ObjectiveMechanism with InputStates that are constrained to be scalar values, and that generates the
+logistically-transformed sum of these values as its output (see `LCMechanism_ObjectiveMechanism`). However, this can be
+customized by specifying an ObjectiveMechanism in the **object_mechanism** argument, and a custom function in the
+ObjectiveMechanism's **function** argument, so long as the function generates a scalar as its result (see XXX for an
+example [XXXGET FROM EVCMechanism).  The OutputStates used to drive the LCMechanism's response can be specified either
+directly in the **objective_mechanism** argument of its constructor (if the LCMechanism's default ObjectiveMechanism
+is to be used), or in the **monitored_output_states** argument of the constructor for a custom ObjectiveMechanism if
+that is used.  The `Mechanisms <Mechanism>` the LCMechanism controls are specified in the **modulated_mechanisms**
 argument of its constructor (see `LCMechanism_Modulate`).  It's **mode** argument is used to specify either a default
 value for its `mode <LCMechanism.mode>` attribute, or another `ControlMechanism` used to control it.
 
-COMMENT:
-.. note::
-   Unlike a standard `ControlMechanism`, an LCMechanism does not have an **objective_mechanism** argument in its
-   constructor;  as noted above, its inputs are specified in its **input_states** argument.  However, if a list of
-   OutputStates to monitor are specified in its **mode** argument, then a `ControlMechanism` and associated
-   `ObjectiveMechanism` are created to monitor the `value <OutputState.value>` of the specified OutputStates and
-   regulate the LCMechanism's `mode <LCMechanism.mode>` attribute.  In that case, the ObjectiveMechanism` is assigned
-   as the LCMechanism's `objective_mechanism <LCMechanism.objective_mechanism>` attribute (see
-   `LCMechanism_Monitored_OutputStates` and `LCMechanism_Modes_Of_Operation`), and the ControlMechanism as its
-   `controller <LCMechanism.controller>` attribute.
-COMMENT
+.. _LCMechanism_ObjectiveMechanism
+
+   By default, the ObjectiveMechanism is assigned a CombineMeans Function that takes the mean of the `value
+   <InputState.value>` received from each OutputState specified in **monitored_output_states** (i.e., of each of its
+   `input_states <ObjectiveMechanism.input_states>`) and sums these; the result is provided as the input to the LCMechanism.
+   The contribution of each monitored_output_state can be weighted and/or exponentitaed in the standard way for the
+       monitored_output_states/input_states of an ObjectiveMechanism
+
 
 .. _LCMechanism_Modulate:
 
@@ -112,6 +112,8 @@ from an OutputStates with a `value <OutputState.value>` that is an array of grea
 
 Function
 ~~~~~~~~
+
+XXX ADD MENTION OF allocation_policy HERE
 
 An LCMechanism uses the `FHNIntegrator` as its `function <LCMechanism.function`; this implements a `FitzHugh-Nagumo
 model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
