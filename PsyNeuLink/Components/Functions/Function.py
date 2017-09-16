@@ -4652,8 +4652,6 @@ class FHNIntegrator(
             a_v = b_v = f_v = 1.0 ; c_v = -1.0 ; d_v = 0.0;
 
 
-
-
     Arguments
     ---------
 
@@ -4704,6 +4702,9 @@ class FHNIntegrator(
     c_w : float : default 0.7,
         constant term in the dw/dt equation
 
+    threshold : float : default -1.0
+        specifies a value of the input below which the LC will tend not to respond and above which it will
+
     mode : float : default 1.0
         coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term
         (representing the input from the LC) increases when the uncorrelated_activity term (representing baseline
@@ -4728,13 +4729,11 @@ class FHNIntegrator(
         defined in __init__.py (see :doc:`PreferenceSet <LINK>` for details).
 
 
-
     Attributes
     ----------
 
     variable : number or np.array
         External stimulus
-
 
     previous_v : 1d np.array : default ClassDefaults.variable
         stores accumulated value of v during integration
@@ -4783,30 +4782,29 @@ class FHNIntegrator(
     time_constant_v : float : default 1.0
         scaling factor on the dv/dt equation
 
-    a_w : float : default 1.0,
+    a_w : float : default 1.0
         coefficient on the v term of the dw/dt equation
 
-    b_w : float : default -0.8,
+    b_w : float : default -0.8
         coefficient on the w term of the dv/dt equation
 
-    c_w : float : default 0.7,
+    c_w : float : default 0.7
         constant term in the dw/dt equation
 
     threshold : float : default -1.0
-        coefficient which scales both the v^2 [ (1+threshold)*v^2 ] and v [ (-threshold)*v ] terms in the dv/dt equation
-
-        under a specific formulation of the FHN equations, the threshold parameter behaves as a "threshold of excitation
-        ", and has the following relationship with variable (the external stimulus):
+        coefficient that scales both the v^2 [ (1+threshold)*v^2 ] and v [ (-threshold)*v ] terms in the dv/dt equation
+        under a specific formulation of the FHN equations, the threshold parameter behaves as a "threshold of
+        excitation", and has the following relationship with variable (the external stimulus):
 
             - when the external stimulus is below the threshold of excitation, the system is either in a stable state,
-            or will emit a single excitation spike, then reach a stable state. The behavior varies depending on the
-            magnitude of the difference between the threshold and the stimulus.
+              or will emit a single excitation spike, then reach a stable state. The behavior varies depending on the
+              magnitude of the difference between the threshold and the stimulus.
 
             - when the external stimulus is equal to or above the threshold of excitation, the system is
-            unstable, and will emit many excitation spikes
+              unstable, and will emit many excitation spikes
 
             - when the external stimulus is too far above the threshold of excitation, the system will emit some
-            excitation spikes before reaching a stable state.
+              excitation spikes before reaching a stable state.
 
     mode : float : default 1.0
         coefficient which simulates electrotonic coupling by scaling the values of dw/dt such that the v term

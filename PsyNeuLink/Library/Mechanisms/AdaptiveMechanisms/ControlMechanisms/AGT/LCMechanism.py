@@ -38,13 +38,14 @@ its `show <LCMechanism.show>` method.
 Creating an LCMechanism
 -----------------------
 
-An LCMechanism is generally created using its constructor.  The `inputs <LCMechanism_Input>` that drive its response
-can be specified in its **input_states** argument, as a list of `Mechanisms <Mechanism>` and/or `OutputStates
-<OutputState>` that should project to the LCMechanism.  The `Mechanisms <Mechanism>` it controls are specified in the
-**modulated_mechanisms** argument of its constructor (see `LCMechanism_Modulate`).  It's **mode** argument is used to
-specify either a default value for its `mode <LCMechanism.mode>` attribute, or another `ControlMechanism` used to
-control it.
+An LCMechanism is generally created using its constructor.  Unlike a standard `ControlMechanism`, an LCMechanism is
+does not take its input from an `ObjectiveMechanism`.  Rather the `inputs <LCMechanism_Input>` that drive
+its response are specified in its **input_states** argument, as a list of `Mechanisms <Mechanism>` and/or `OutputStates
+<OutputState>`.  The `Mechanisms <Mechanism>` the LCMechanism controls are specified in the **modulated_mechanisms**
+argument of its constructor (see `LCMechanism_Modulate`).  It's **mode** argument is used to specify either a default
+value for its `mode <LCMechanism.mode>` attribute, or another `ControlMechanism` used to control it.
 
+COMMENT:
 .. note::
    Unlike a standard `ControlMechanism`, an LCMechanism does not have an **objective_mechanism** argument in its
    constructor;  as noted above, its inputs are specified in its **input_states** argument.  However, if a list of
@@ -54,6 +55,7 @@ control it.
    as the LCMechanism's `objective_mechanism <LCMechanism.objective_mechanism>` attribute (see
    `LCMechanism_Monitored_OutputStates` and `LCMechanism_Modes_Of_Operation`), and the ControlMechanism as its
    `controller <LCMechanism.controller>` attribute.
+COMMENT
 
 .. _LCMechanism_Modulate:
 
@@ -99,20 +101,24 @@ Structure
 Input
 ~~~~~
 
-An LCMechanism has a single (primary) `InputState <InputState_Primary>` that receives projections from any Mechanisms
-specified in the **input_states** argument of the LCMechanism's constructor;  its `value <InputState.value>` is used as
-the input to the LCMechanism's `function <LCMechanism.function>`.
+An LCMechanism has a single (primary) `InputState <InputState_Primary>` that receives Projections from any Mechanisms
+specified in the **input_states** argument of the LCMechanism's constructor;  its `value <InputState.value>` is a
+scalar, so the `matrix <MappingProjection.matrix>` parameter for any MappingProjection to the LCMechanism's InputState
+from an OutputStates with a `value <OutputState.value>` that is an array of greater than length 1 is assigned a
+`FULL_CONNECTIVITY_MATRIX`.  The `value <InputState.value>` of the LCMechanism's InputState is used as the `variable
+<FHNIntegrator.variable>` for the LCMechanism's `function <LCMechanism.function>`.
 
 .. _LCMechanism_Function:
 
 Function
 ~~~~~~~~
 
-An LCMechanism uses the `FHNIntegrator` as its `LCMechanism.function`; this implements a `FitzHugh-Nagumo model
-<https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron, but in this
-case the population activity of the LC (see `Gilzenrat et al., <2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_).
-The `FNH` Function takes the `input <LCMechanism_Input>` to the LCMechanism as its `variable <FHN.variable>`,
-and uses the LCMechanism's `mode <LCMechanism.mode>` attribute as its `mode <FHN.mode>` parameter.
+An LCMechanism uses the `FHNIntegrator` as its `function <LCMechanism.function`; this implements a `FitzHugh-Nagumo
+model <https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model>`_ often used to describe the spiking of a neuron,
+but in this case the population activity of the LC (see `Gilzenrat et al.,
+<2002https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_). The `FHNIntegrator` Function takes the `input
+<LCMechanism_Input>` to the LCMechanism as its `variable <FHNIntegrator.variable>`, and uses the LCMechanism's `mode
+<LCMechanism.mode>` attribute as the value of its `mode <FHNIntegrator.mode>` parameter.
 
 .. _LCMechanism_Modes_Of_Operation:
 
@@ -126,7 +132,7 @@ of operation <https://www.ncbi.nlm.nih.gov/pubmed/8027789>`_:
     of the Mechanisms that the LCMechanism controls to their inputs.
 
   * in the *phasic mode* (high value of `mode <LCMechanism.mode>`), when the `input to the LC <LC_Input>` is low,
-    its `output <LC_Ouput>` is even lower than when it is in the tonic regime, and thus the response of the
+    its `output <LC_Output>` is even lower than when it is in the tonic regime, and thus the response of the
     Mechanisms it controls to their outputs is even more blunted.  However, when the LCMechanism's input rises above
     a certain value (determined by the `threshold <LCMechanism.threshold>` parameter), its output rises sharply,
     producing a much sharper response of the Mechanisms it controls to their inputs.
@@ -246,23 +252,29 @@ Class Reference
 
 """
 import typecheck as tc
+import warnings
 
-from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM
+from PsyNeuLink.Components.Functions.Function \
+    import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM, UtilityIntegrator, FHNIntegrator
+from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
+    import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
     import ControlMechanism_Base, ALLOCATION_POLICY
+from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.Functions.Function import Integrator
-from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
 from PsyNeuLink.Globals.Keywords import FUNCTION, ALL, INIT__EXECUTE__METHOD_ONLY, INPUT_STATES, \
-                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS
+                                        CONTROL_PROJECTIONS, CONTROL_SIGNALS, FULL_CONNECTIVITY_MATRIX
 
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Scheduling.TimeScale import CentralClock, TimeScale
 
+MODE = 'mode'
 MODULATED_MECHANISMS = 'modulated_mechanisms'
 CONTROL_SIGNAL_NAME = 'LCMechanism_ControlSignal'
 
@@ -412,7 +424,7 @@ class LCMechanism(ControlMechanism_Base):
 
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION:Integrator,
+    paramClassDefaults.update({FUNCTION:FHNIntegrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
                                })
@@ -453,74 +465,85 @@ class LCMechanism(ControlMechanism_Base):
                                  target_set=target_set,
                                  context=context)
 
-        # if MONITOR_FOR_CONTROL in target_set:
-        #     for spec in target_set[MONITOR_FOR_CONTROL]:
-        #         if isinstance(spec, MonitoredOutputStatesOption):
-        #             continue
-        #         if isinstance(spec, tuple):
-        #             spec = spec[0]
-        #         if isinstance(spec, (OutputState, Mechanism_Base)):
-        #             spec = spec.name
-        #         if not isinstance(spec, str):
-        #             raise LCMechanismError("Invalid specification in {} arg for {} ({})".
-        #                                         format(MONITOR_FOR_CONTROL, self.name, spec))
-        #         # If controller has been assigned to a System,
-        #         #    check that all the items in monitor_for_control are in the same System
-        #         # IMPLEMENTATION NOTE:  If self.system is None, onus is on doing the validation
-        #         #                       when the controller is assigned to a System [TBI]
-        #         if self.system:
-        #             if not any((spec is mech.name or spec in mech.output_states.names)
-        #                        for mech in self.system.mechanisms):
-        #                 raise LCMechanismError("Specification in {} arg for {} ({}) must be a "
-        #                                             "Mechanism or an OutputState of one in {}".
-        #                                             format(MONITOR_FOR_CONTROL, self.name, spec, self.system.name))
+        if INPUT_STATES in target_set and target_set[INPUT_STATES]:
+            # **input_states** arg should be a list of OutputStates or Mechanisms to project to LCMechanism
+            for output_state_spec in target_set[INPUT_STATES]:
+                if not isinstance(output_state_spec, (OutputState, Mechanism)):
+                    raise LCMechanismError("An item in the \'input_state\' argument for {} ({}) "
+                                           "is not an OutputState or Mechanism".format(self.name, output_state_spec))
+
+        if MODE in target_set and target_set[MODE] is not None:
+            mode = target_set[MODE]
+            if isinstance(mode, (float, int, LCController)):
+                pass
+            elif isinstance(mode, list):
+                _parse_monitored_output_states(self, mode)
+                pass
+            else:
+                raise LCMechanismError("Unrecognized specification ({}) in the \'mode\' argument for {}".
+                                       .format(mode, self.name))
 
         if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
-
-            from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-
             spec = target_set[MODULATED_MECHANISMS]
 
             if isinstance (spec, str):
                 if not spec == ALL:
                     raise LCMechanismError("A string other than the keyword \'ALL\' was specified for the {} argument "
                                            "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
-
             if not isinstance(spec, list):
                 spec = [spec]
-
             for mech in spec:
                 if not isinstance(mech, Mechanism):
                     raise LCMechanismError("The specification of the {} argument for {} contained an item ({})"
                                            "that is not a Mechanism.".format(MODULATED_MECHANISMS, self.name, mech))
-
                 if not hasattr(mech.function_object, MULTIPLICATIVE_PARAM):
                     raise LCMechanismError("The specification of the {} argument for {} contained a Mechanism ({})"
                                            "that does not have a {}.".
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
     def _instantiate_input_states(self, context=None):
-        """Instantiate input_value attribute
-
-        Instantiate input_states and monitored_output_states attributes (in case they are referenced)
-            and assign any OutputStates that project to the input_states to monitored_output_states
-
-        IMPLEMENTATION NOTE:  At present, these are dummy assignments, simply to satisfy the requirements for
-                              subclasses of ControlMechanism;  in the future, an _instantiate_objective_mechanism()
-                              method should be implemented that also implements an _instantiate_monitored_output_states
-                              method, and that can be used to add OutputStates/Mechanisms to be monitored.
+        """Instantiate MappingProjections from OutputStates or Mechanisms specified in input_states arg
         """
+        # First, convert any Mechanism specifications to their primary OutputState
+        for output_state_spec in self.input_states:
+            if isinstance(output_state_spec, Mechanism):
+                output_state_spec = output_state_spec.output_state
+            # Make sure there is not already a projection from the specified OutputState to the LCMechanism
+            if any(projection.receiver.owner is self for projection in output_state_spec.efferents):
+                if self.verbosePref:
+                    warnings.warn("OutputState specified in \'input_states\' arg ({}) already projects to {}".
+                                  format(output_state_spec.name, self.name))
+                continue
+            MappingProjection(sender=output_state_spec,
+                              receiver=self.input_state,
+                              matrix=FULL_CONNECTIVITY_MATRIX)
 
-        self.monitored_output_states = []
+    def _instantiate_attributes_after_function(self, context=None):
+        if not isinstance(self.mode, (int, float)):
+            self._instantiate_controller(context=context)
 
-        if not hasattr(self, INPUT_STATES):
-            self._input_states = None
-        elif self.input_states:
-            for input_state in self.input_states:
-                for projection in input_state.path_afferents:
-                    self.monitored_output_states.append(projection.sender)
+    def _instantiate_controller(self, context=None):
 
+        mode_parameter_state = self._parameter_states[MODE]
 
+        # mode was specified as an existing ControlMechanism
+        if isinstance(self.mode, ControlMechanism_Base):
+            # INSTANTIATE ControlSignal and ControlProjection to ParameterState for mode
+            controller = self.mode
+            if not any(projection.sender.owner is controller
+                       for projection in mode_parameter_state.mod_afferents):
+                control_signal = controller._instantiate_control_signal(mode_parameter_state)
+                ControlProjection(sender=control_signal,
+                                  receiver=mode_parameter_state)
+
+        # mode was specified as a monitored_output_states list
+        elif isinstance(self.mode, list):
+            ControlMechanism_Base(objective_mechanism=ObjectiveMechanism(monitored_output_states=self.mode,
+                                                                         function=UtilityIntegrator,
+                                                                         control_signals=[mode_parameter_state]))
+        else:
+            raise LCMechanismError("PROGRAM ERROR: unrecognized mode specification for {} ({}) that passed validation".
+                                   format(self.name, self.mode))
 
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
@@ -574,17 +597,6 @@ class LCMechanism(ControlMechanism_Base):
 
         super()._instantiate_output_states(context=context)
 
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     """Implement ControlSignals specified in control_signals arg or "locally" in parameter specification(s)
-    #
-    #     Calls super's instantiate_attributes_after_function, which calls _instantiate_output_states;
-    #         that insures that any ControlSignals specified in control_signals arg are instantiated first
-    #     Then calls _assign_as_controller to instantiate any ControlProjections/ControlSignals specified
-    #         along with parameter specification(s) (i.e., as part of a (<param value>, ControlProjection) tuple
-    #     """
-    #
-    #     super()._instantiate_attributes_after_function(context=context)
-    #
     def _execute(self,
                     variable=None,
                     runtime_params=None,
@@ -593,7 +605,7 @@ class LCMechanism(ControlMechanism_Base):
                     context=None):
         """Updates LCMechanism's ControlSignal based on input and mode parameter value
         """
-        return self.function()
+        return self.function(varaible=self.variable, mode=self.mode)
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):
