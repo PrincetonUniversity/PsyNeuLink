@@ -34,6 +34,7 @@ Integrator Functions:
   * `OrnsteinUhlenbeckIntegrator`
   * `AccumulatorIntegrator`
   * `FHNIntegrator`
+  * `UtilityIntegrator`
   * `BogaczEtAl`
   * `NavarroAndFuss`
 

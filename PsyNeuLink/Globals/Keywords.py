@@ -359,6 +359,7 @@ SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
+UTILITY_INTEGRATOR_FUNCTION = "UtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"

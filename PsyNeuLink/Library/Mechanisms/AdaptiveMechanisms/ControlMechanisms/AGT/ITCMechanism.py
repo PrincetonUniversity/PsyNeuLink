@@ -14,7 +14,7 @@ Overview
 --------
 
 An ITCMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `UtilityIntegrator`
-Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>.  When used with an `LCMechanism`
+Function to regulate its `allocation_policy <ControlMechanism_Base.allocation_policy>`.  When used with an `LCMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the 
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus 
 coeruleus-norepinephrine (LC-NE) system.
@@ -82,7 +82,7 @@ corresponding parameter. ControlSignals are a type of `OutputState`, and so they
 ITCMechanism's `output_states <ITCMechanism_Base.output_states>` attribute. The parameters modulated by an
 ITCMechanism's ControlSignals can be displayed using its `show <ITCMechanism_Base.show>` method. By default,
 all of its ControlSignals are assigned the result of the ITCMechanism's `function <ITCMechanism.function>`, which is
-the `input <ITCMechanism_Input>` it receives from its `objective_mechanism `ITCMechanism.objective_mechanism>`.
+the `input <ITCMechanism_Input>` it receives from its `objective_mechanism <ITCMechanism.objective_mechanism>`.
 above).  The `allocation <ControlSignal.allocation>` is used by the ControlSignal(s) to determine
 their `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
 ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
