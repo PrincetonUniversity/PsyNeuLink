@@ -2616,7 +2616,7 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
     # MODIFIED 9/17/17 NEW:
     if not (_is_projection_spec(state_spec[1]) or
                 # IMPLEMENTATION NOTE: Mechanism or State allowed as 2nd item of tuple or
-                #                      Mechanism as 1st item and string (parameter name) as 2nd
+                #                      Mechanism as 2st item and string (parameter name) as 1st
                 #                      to accommodate specification of param for ControlSignal
                 isinstance(state_spec[1], (Mechanism, State))
                            or (isinstance(state_spec[0], Mechanism) and

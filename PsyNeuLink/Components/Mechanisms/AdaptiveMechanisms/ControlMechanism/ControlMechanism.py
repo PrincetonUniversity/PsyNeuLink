@@ -598,8 +598,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
                 raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
                                             format(CONTROL_SIGNAL, self.name))
-            # for spec in target_set[CONTROL_SIGNALS]:
-            #    _parse_control_signal_spec(self, spec, context=context)
+            # _parse_control_signal_spec(self, target_set[CONTROL_SIGNALS], context=context)
 
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
