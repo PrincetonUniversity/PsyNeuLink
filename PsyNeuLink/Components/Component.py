@@ -1065,24 +1065,17 @@ class Component(object):
     def _assign_args_to_param_dicts(self, **kwargs):
         """Assign args passed in __init__() to params
 
-        Get args and their corresponding values from call to self.__init__()
+        Get args and their corresponding values in call to constructor
         - get default values for all args and assign to class.paramClassDefaults if they have not already been
         - assign arg values to local copy of params dict
         - override those with any values specified in params dict passed as "params" arg
         """
 
-        # Get args in call to __init__ and create access to default values
-        sig = inspect.signature(self.__init__)
-
-        # # MODIFIED 9/17/17 OLD:
-        # default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
-
-        # MODIFIED 9/17/17 NEW:
+        # Get args in call to constructor and create dictionary of their default values (for use below)
         # Create dictionary of default values for args
         defaults_dict = {}
-        for arg_name, arg in sig.parameters.items():
+        for arg_name, arg in inspect.signature(self.__init__).parameters.items():
             defaults_dict[arg_name] = arg.default
-        # default = lambda val : defaults_dict[val]
         def default(val):
             try:
                 return defaults_dict[val]
@@ -1092,7 +1085,6 @@ class Component(object):
                                      format(val,
                                             self.__class__.__name__,
                                             self.__class__.__bases__[0].__name__))
-        # MODIFIED 9/17/17 END
 
         def parse_arg(arg):
             # Resolve the string value of any args that use keywords as their name
