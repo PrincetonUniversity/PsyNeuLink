@@ -522,7 +522,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                   objective_mechanism=objective_mechanism,
                                                   function=function,
                                                   control_signals=control_signals,
-                                                  # modulation=modulation,
+                                                  modulation=modulation,
                                                   params=params)
 
         super(ControlMechanism_Base, self).__init__(variable=default_variable,

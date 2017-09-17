@@ -122,6 +122,7 @@ import warnings
 
 from PsyNeuLink.Components.Functions.Function \
     import ModulationParam, _is_modulation_param, UtilityIntegrator
+from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
@@ -148,19 +149,26 @@ class ITCMechanismError(Exception):
 
 class ITCMechanism(ControlMechanism_Base):
     """
-    ITCMechanism(                              \
-    monitored_output_states=None,              \
-    function=Linear,                           \
-    control_signals=None,                      \
-    params=None,                               \
-    name=None,                                 \
-    prefs=None)
+    ITCMechanism(                       \
+        system=None,                    \
+        monitored_output_states=None,   \
+        function=Linear,                \
+        control_signals=None,           \
+        params=None,                    \
+        name=None,                      \
+        prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
     <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
 
     Arguments
     ---------
+
+    system : System : default None
+        specifies the `System` for which the ITCMechanism should serve as a `controller <System_Base.controller>`;
+        the ITCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specified in its **control_signals** argument.
 
     monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict
         specifies the OutputStates to be monitored by the `objective_mechanism <ITCMechanism.objective_mechanism>`
@@ -194,6 +202,12 @@ class ITCMechanism(ControlMechanism_Base):
 
     Attributes
     ----------
+
+    system : System
+        the `System` for which ITCMechanism is the `controller <System_Base.controller>`;
+        the ITCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
@@ -241,7 +255,7 @@ class ITCMechanism(ControlMechanism_Base):
         unless they are `individually specified <ControlSignal_Specification>`.
    """
 
-    componentType = "ITCMechanism"
+    componentName = "ITCMechanism"
 
     initMethod = INIT__EXECUTE__METHOD_ONLY
 
@@ -259,12 +273,13 @@ class ITCMechanism(ControlMechanism_Base):
     from PsyNeuLink.Components.Functions.Function import Linear
     paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,
-                               CONTROL_PROJECTIONS: None,
+                               CONTROL_PROJECTIONS: None
                                })
 
     @tc.typecheck
     def __init__(self,
-                 monitored_output_states:tc.any(list, dict),
+                 system:tc.optional(System)=None,
+                 monitored_output_states=None,
                  function = Linear(slope=1, intercept=0),
                  control_signals:tc.optional(list) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -274,12 +289,12 @@ class ITCMechanism(ControlMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
-                                                  function=function,
+        params = self._assign_args_to_param_dicts(function=function,
                                                   control_signals=control_signals,
                                                   params=params)
 
-        super().__init__(objective_mechanism=ObjectiveMechanism(monitored_output_states=monitored_output_states,
+        super().__init__(system=system,
+                         objective_mechanism=ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                                 function=UtilityIntegrator),
                          control_signals=control_signals,
                          modulation=modulation,
@@ -333,7 +348,10 @@ class ITCMechanism(ControlMechanism_Base):
                     context=None):
         """Updates ITCMechanism's ControlSignal based on input and mode parameter value
         """
-        return self.function(varaible=self.variable)
+        return self.function(variable=variable,
+                             params=runtime_params,
+                             time_scale=time_scale,
+                             context=context)
 
     def show(self):
         """Display the `OutputStates <OutputState>` monitored by the ITCMechanism's `objective_mechanism`

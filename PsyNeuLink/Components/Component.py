@@ -1074,7 +1074,25 @@ class Component(object):
         # Get args in call to __init__ and create access to default values
         sig = inspect.signature(self.__init__)
 
-        default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
+        # # MODIFIED 9/17/17 OLD:
+        # default = lambda val : list(sig.parameters.values())[list(sig.parameters.keys()).index(val)].default
+
+        # MODIFIED 9/17/17 NEW:
+        # Create dictionary of default values for args
+        defaults_dict = {}
+        for arg_name, arg in sig.parameters.items():
+            defaults_dict[arg_name] = arg.default
+        # default = lambda val : defaults_dict[val]
+        def default(val):
+            try:
+                return defaults_dict[val]
+            except KeyError:
+                raise ComponentError("PROGRAM ERROR: \'{}\' not declared in {}.__init__() "
+                                     "but expected by its parent class ({}).".
+                                     format(val,
+                                            self.__class__.__name__,
+                                            self.__class__.__bases__[0].__name__))
+        # MODIFIED 9/17/17 END
 
         def parse_arg(arg):
             # Resolve the string value of any args that use keywords as their name

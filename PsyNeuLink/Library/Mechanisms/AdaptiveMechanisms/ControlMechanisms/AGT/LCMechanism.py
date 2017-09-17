@@ -327,6 +327,7 @@ import warnings
 
 from PsyNeuLink.Components.Functions.Function \
     import ModulationParam, _is_modulation_param, MULTIPLICATIVE_PARAM, UtilityIntegrator, FHNIntegrator
+from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
@@ -356,18 +357,25 @@ class LCMechanismError(Exception):
 
 class LCMechanism(ControlMechanism_Base):
     """
-    LCMechanism(                               \
-    objective_mechanism=None,                  \
-    modulated_mechanisms=None,                 \
-    params=None,                               \
-    name=None,                                 \
-    prefs=None)
+    LCMechanism(                                   \
+        system=None,                               \
+        objective_mechanism=None,                  \
+        modulated_mechanisms=None,                 \
+        params=None,                               \
+        name=None,                                 \
+        prefs=None)
 
     Subclass of `ControlMechanism <AdaptiveMechanism>` that modulates the `multiplicative_param
     <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>`.
 
     Arguments
     ---------
+
+    system : System : default None
+        specifies the `System` for which the LCMechanism should serve as a `controller <System_Base.controller>`;
+        the LCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
     np.array]] : \
@@ -412,24 +420,13 @@ class LCMechanism(ControlMechanism_Base):
     Attributes
     ----------
 
-    input_states : ContentAddressableList[`InputState`]
-        a list of the LCMechanism's `InputStates <Mechanism_InputStates>` that determine its `input
-        <LCMechanism_Input>`;  each receives a `MappingProjection` from an `OutputState` specified in the
-        **input_states** argument of the LCMechanism's constructor. The sum of their `value <InputState.value>`\\s is
-        used as the `variable <FHNIntegrator.variable>` for the LCMechanism's `function <LCMechanism.function>`.
+    system : System
+        the `System` for which LCMechanism is the `controller <System_Base.controller>`;
+        the LCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specified in its **control_signals** argument.
 
-    COMMENT:
-        mode : float : default 0.0
-            determines the value for the `mode <FHNIntegrator.mode>` parameter of the LCMechanism's
-            `FHNIntegrator` function (see `LCMechanism_Modes_Of_Operation` for additional details).
-
-        controller : None or LCController
-            lists the ControlMechanism used to regulate the value of the LCMechanism's `mode <FHNIntegrator.mode>`
-            attribute. It receives its input from the LCMechanism's `objective_mechanism`, and sends a
-            `ControlProjection` to its `primary InputState <InputState_Primary>`.
-    COMMENT
-
-    objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
+   objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
         the 'ObjectiveMechanism' used by the LCMechanism to aggregate the `value <OutputState.value>`\\s of the
         OutputStates used to drive its `phasic response <LCMechanism_Modes_Of_Operation>`.
 
@@ -525,6 +522,7 @@ class LCMechanism(ControlMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
+                 system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
@@ -534,12 +532,14 @@ class LCMechanism(ControlMechanism_Base):
                  context=None):
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
-        params = self._assign_args_to_param_dicts(objective_mechanism=objective_mechanism,
+        params = self._assign_args_to_param_dicts(system=system,
+                                                  objective_mechanism=objective_mechanism,
                                                   modulated_mechanisms=modulated_mechanisms,
                                                   modulation=modulation,
                                                   params=params)
 
-        super().__init__(objective_mechanism=objective_mechanism,
+        super().__init__(system=system,
+                         objective_mechanism=objective_mechanism,
                          modulation=modulation,
                          params=params,
                          name=name,

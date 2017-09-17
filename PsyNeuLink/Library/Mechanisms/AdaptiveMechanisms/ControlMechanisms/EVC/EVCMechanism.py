@@ -483,7 +483,10 @@ class EVCMechanism(ControlMechanism_Base):
     ----------
 
     system : System
-        the `System` for which EVCMechanism is the `controller <System_Base.controller>`.
+        the `System` for which EVCMechanism is the `controller <System_Base.controller>`;
+        the EVCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
+        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        specified in its **control_signals** argument.
 
     prediction_mechanisms : List[ProcessingMechanism]
         list of `predictions mechanisms <EVCMechanism_Prediction_Mechanisms>` generated for the EVCMechanism's
@@ -676,7 +679,7 @@ class EVCMechanism(ControlMechanism_Base):
 
     @tc.typecheck
     def __init__(self,
-                 system=None,
+                 system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  prediction_mechanism_type=IntegratorMechanism.IntegratorMechanism,
                  prediction_mechanism_params:tc.optional(dict)=None,
@@ -710,10 +713,11 @@ class EVCMechanism(ControlMechanism_Base):
 
         super(EVCMechanism, self).__init__(# default_variable=default_variable,
                                            # size=size,
+                                           system=system,
                                            objective_mechanism=objective_mechanism,
                                            function=function,
                                            control_signals=control_signals,
-                                           # modulation=modulation,
+                                           modulation=modulation,
                                            params=params,
                                            name=name,
                                            prefs=prefs,

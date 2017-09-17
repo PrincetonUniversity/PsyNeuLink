@@ -552,7 +552,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     # FIX:  TYPECHECK MONITOR TO LIST OR ZIP OBJECT
     @tc.typecheck
     def __init__(self,
-                 monitored_output_states:tc.any(list, dict),
+                 monitored_output_states,
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
@@ -890,7 +890,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         weights = [w[0] for w in weights_and_exponents_tuples]
         exponents = [e[1] for e in weights_and_exponents_tuples]
         self._instantiate_weights_and_exponents(weights, exponents)
-
 
 def _parse_monitored_output_states(source, output_state_list, mech=None, context=None):
     """Parses specifications in list and returns list of tuples: [(OutputState, exponent, weight)...]
