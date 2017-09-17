@@ -518,6 +518,7 @@ class LCMechanism(ControlMechanism_Base):
 
         super().__init__(system=system,
                          objective_mechanism=objective_mechanism,
+                         function=FHNIntegrator,
                          modulation=modulation,
                          params=params,
                          name=name,
@@ -626,6 +627,7 @@ class LCMechanism(ControlMechanism_Base):
                     if isinstance(mech, ProcessingMechanism_Base) and hasattr(mech.function, MULTIPLICATIVE_PARAM):
                             self.modulated_mechanisms.append(mech)
 
+
         # # MODIFIED 9/3/17 OLD [ASSIGN ALL ControlProjections TO A SINGLE ControlSignal]
         # # Get the ParameterState for the multiplicative_param of each Mechanism in self.modulated_mechanisms
         # multiplicative_params = []
@@ -637,14 +639,15 @@ class LCMechanism(ControlMechanism_Base):
 
         # MODIFIED 9/3/17 NEW [ASSIGN EACH ControlProjection TO A DIFFERENT ControlSignal]
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        multiplicative_param_names = []
-        for mech in self.modulated_mechanisms:
-            multiplicative_param_names.append(mech.function_object.multiplicative_param)
-
-        # Create specification for **control_signals** argument of ControlSignal constructor
         self.control_signals = []
-        for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
-            self.control_signals.append((mult_param_name, mech))
+        if self.modulated_mechanisms:
+            multiplicative_param_names = []
+            for mech in self.modulated_mechanisms:
+                multiplicative_param_names.append(mech.function_object.multiplicative_param)
+
+            # Create specification for **control_signals** argument of ControlSignal constructor
+            for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
+                self.control_signals.append((mult_param_name, mech))
 
         # MODIFIED 9/3/17 END
 
@@ -658,7 +661,10 @@ class LCMechanism(ControlMechanism_Base):
                     context=None):
         """Updates LCMechanism's ControlSignal based on input and mode parameter value
         """
-        return self.function(varaible=self.variable, mode=self.mode)
+        return self.function(variable=variable,
+                             params=runtime_params,
+                             time_scale=time_scale,
+                             context=context)
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

@@ -8,6 +8,11 @@ from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.ITCM
 from PsyNeuLink.Components.Functions.Function import FHNIntegrator, UtilityIntegrator
 
 my_mech = TransferMechanism()
-my_ITC = ITCMechanism(monitored_output_states=my_mech)
-my_LC = LCMechanism(function=(FHNIntegrator(mode=my_ITC)),
-                    objective_mechanism=[my_mech])
+
+# my_ITC = ITCMechanism(monitored_output_states=my_mech,)
+# my_LC = LCMechanism(function=(FHNIntegrator(mode=(1.0, my_ITC))),
+#                     objective_mechanism=[my_mech])
+
+my_LC = LCMechanism(objective_mechanism=[my_mech])
+my_ITC = ITCMechanism(monitored_output_states=my_mech,
+                      control_signals=[(FHNIntegrator.MODE, my_LC)])

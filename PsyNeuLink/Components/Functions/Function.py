@@ -3448,8 +3448,9 @@ def get_matrix(specification, rows=1, cols=1, context=None):
     if type(specification) == str:
         try:
             return np.array(np.matrix(specification))
-        except ValueError:
+        except (ValueError, NameError):
             # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
+            #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
             pass
 
     # Specification not recognized
@@ -5225,6 +5226,8 @@ class FHNIntegrator(
         (see :doc:`PreferenceSet <LINK>` for details).
 
     """
+
+    MODE = 'mode'
 
     componentName = FHN_INTEGRATOR_FUNCTION
 

@@ -510,7 +510,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                  system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  function = Linear(slope=1, intercept=0),
-                 control_signals:tc.optional(list) = None,
+                 # control_signals:tc.optional(list) = None,
+                 control_signals=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -597,8 +598,8 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
                 raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
                                             format(CONTROL_SIGNAL, self.name))
-            for spec in target_set[CONTROL_SIGNALS]:
-               _parse_control_signal_spec(self, spec, context=context)
+            # for spec in target_set[CONTROL_SIGNALS]:
+            #    _parse_control_signal_spec(self, spec, context=context)
 
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
