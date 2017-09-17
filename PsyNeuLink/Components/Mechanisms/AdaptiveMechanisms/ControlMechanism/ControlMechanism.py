@@ -89,13 +89,13 @@ can be specified in the **objective_mechanism** argument of its constructor, usi
 
   * an existing `ObjectiveMechanism`, or a constructor for one;  in this case the **monitored_output_states** argument
     of the ObjectiveMechanism's constructor is used to specify the OutputStates to be `monitored and evaluated
-    <ObjectiveMechanism_Monitored_output_states>` (see `ControlMechanism_Examples`); note that, in this case, the
+    <ObjectiveMechanism_Monitored_Output_States>` (see `ControlMechanism_Examples`); note that, in this case, the
     default values for the attributes of the ObjectiveMechanism override any that ControlMechanism uses for its
     default `objective_mechanism <ControlMechanism_Base.objective_mechanism>`, including those of its `function
     <ObjectiveMechanism.function>` (see `note <EVCMechanism_Objective_Mechanism_Function_Note>` in EVCMechanism for
     an example);
   ..
-  * a list of `OutputState specifications <ObjectiveMechanism_Monitored_output_states>`;  in this case, a default
+  * a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>`;  in this case, a default
     ObjectiveMechanism is created, using the list of OutputState specifications as the **monitored_output_states**
     argument of the ObjectiveMechanism's constructor.
 
@@ -186,8 +186,8 @@ Function
 
 A ControlMechanism's `function <ControlMechanism_Base.function>` uses the `value <InputState.value>` of its
 *ERROR_SIGNAL* `InputState` to generate an `allocation_policy <ControlMechanism_Base.allocation_policy>`.  By
-default, the `allocation_policy <ControlMechanism_Base.allocation_policy>` is assigned as the `value
-<ControlSignal.value>` of the corresponding `ControlSignal` in `control_signals
+default, each item of the `allocation_policy <ControlMechanism_Base.allocation_policy>` is assigned as the
+`allocation <ControlSignal.allocation>` of the corresponding `ControlSignal` in `control_signals
 <ControlMechanism_Base.control_signals>`;  however, subtypes of ControlMechanism may assign values differently
 (for example, an `LCMechanism` assigns a single value to all of its ControlSignals).
 
@@ -204,11 +204,11 @@ ControlMechanism's `output_states <ControlMechanism_Base.output_states>` attribu
 ControlMechanism's ControlSignals can be displayed using its `show <ControlMechanism_Base.show>` method. By default,
 each value of each `ControlSignal` is assigned the value of the corresponding item from the ControlMechanism's
 `allocation_policy <ControlMechanism_Base.allocation_policy>`;  however, subtypes of ControlMechanism may assign values
-differently.  The `allocation <ControlSignal.allocation>` is used by a ControlSignal to determine
+differently.  The `allocation <ControlSignal.allocation>` is used by each ControlSignal to determine
 its `intensity <ControlSignal.intensity>`, which is then assigned as the `value <ControlProjection.value>` of the
-ControlSignal's ControlProjection.   The `value <ControlProjection>` of the ControlProjection is used by the
-`ParameterState` to which it projects to modify the value of the parameter (see `ControlSignal_Modulation` for
-description of how a ControlSignal modulates the value of a parameter it controls).
+ControlSignal's `ControlProjection`.   The `value <ControlProjection.value>` of the ControlProjection is used by the
+`ParameterState` to which it projects to modify the value of the parameter it controls (see
+`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter).
 
 
 .. _ControlMechanism_Execution:
@@ -398,7 +398,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
     objective_mechanism : ObjectiveMechanism or List[OutputState specification] : default None
         specifies either an `ObjectiveMechanism` to use for the ControlMechanism, or a list of the OutputStates it
-        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_output_states>` is used,
+        should monitor; if a list of `OutputState specifications <ObjectiveMechanism_Monitored_Output_States>` is used,
         a default ObjectiveMechanism is created and the list is passed to its **monitored_output_states** argument.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
@@ -438,9 +438,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         <ControlMechanism_System_Controller>`.
 
     objective_mechanism : ObjectiveMechanism
-        Mechanism that monitors and evaluates the values specified in the ControlMechanism's **objective_mechanism**
-        argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL* `input_state
-        <Mechanism_Base.input_state>`.
+        `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
+        **objective_mechanism** argument, and transmits the result to the ControlMechanism's *ERROR_SIGNAL*
+        `input_state <Mechanism_Base.input_state>`.
 
     monitored_output_states : List[OutputState]
         each item is an `OutputState` monitored by the ObjectiveMechanism listed in the ControlMechanism's
@@ -479,9 +479,6 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     modulation : ModulationParam
         the default form of modulation used by the ControlMechanism's `ControlSignals <GatingSignal>`,
         unless they are `individually specified <ControlSignal_Specification>`.
-
-
-
     """
 
     componentType = "ControlMechanism"
@@ -565,6 +562,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
                 output_state_list = target_set[OBJECTIVE_MECHANISM]
                 for spec in output_state_list:
+                    # MODIFIED 9/16/17 OLD:
                     if isinstance(spec, MonitoredOutputStatesOption):
                         continue
                     if isinstance(spec, tuple):
@@ -578,6 +576,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
                                                     "Mechanisms and/or OutputStates to be monitored, but one"
                                                     "of the items ({}) is invalid".
                                                     format(OBJECTIVE_MECHANISM, self.name, spec))
+                    # # MODIFIED 9/16/17 NEW:
+                    # _parse_monitored_output_states(source=self, output_state_list=spec, context=context)
+                    # MODIFIED 9/16/17 END
+
                     # If ControlMechanism has been assigned to a System,
                     #    check that all the items in the list used to specify objective_mechanism are in the same System
                     if self.system:

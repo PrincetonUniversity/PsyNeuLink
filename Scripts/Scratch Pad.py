@@ -18,11 +18,14 @@ from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM, PRODUCT, CONTROL, 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
 
-
 # FUNCTIONS:
+from PsyNeuLink.Components.Functions.Function import CombineMeans
+
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
+
+
 # PROJECTIONS:
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
@@ -781,104 +784,8 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #                                                      (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
 #
 # TEST = True
-
-
-
-
-
-
-
-from PsyNeuLink.Scheduling.Scheduler import Scheduler
-from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
-
-Color_Input = TransferMechanism(name='Color Input', function=Linear(slope=0.2995))
-Word_Input = TransferMechanism(name='Word Input', function=Linear(slope=0.2995))
-
-# Processing Mechanisms (Control)
-Color_Hidden = TransferMechanism(
-    name='Colors Hidden',
-    function=Logistic(gain=(1.0, ControlProjection)),
-)
-Word_Hidden = TransferMechanism(
-    name='Words Hidden',
-    function=Logistic(gain=(1.0, ControlProjection)),
-)
-Output = TransferMechanism(
-    name='Output',
-    function=Logistic(gain=(1.0, ControlProjection)),
-)
-
-# Decision Mechanisms
-Decision = DDM(
-    function=BogaczEtAl(
-        drift_rate=(1.0),
-        threshold=(0.1654),
-        noise=(0.5),
-        starting_point=(0),
-        t0=0.25,
-    ),
-    name='Decision',
-)
-# Outcome Mechanisms:
-Reward = TransferMechanism(name='Reward')
-
-# Processes:
-ColorNamingProcess = process(
-    default_variable=[0],
-    pathway=[Color_Input, Color_Hidden, Output, Decision],
-    name='Color Naming Process',
-)
-
-WordReadingProcess = process(
-    default_variable=[0],
-    pathway=[Word_Input, Word_Hidden, Output, Decision],
-    name='Word Reading Process',
-)
-
-RewardProcess = process(
-    default_variable=[0],
-    pathway=[Reward],
-    name='RewardProcess',
-)
-
-# System:
-mySystem = system(
-    processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-    controller=EVCMechanism,
-    enable_controller=True,
-    # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
-    name='EVC Gratton System',
-)
-
-sched = Scheduler(system=mySystem)
-
-integrator_ColorInputPrediction = mySystem.execution_list[7]
-integrator_RewardPrediction = mySystem.execution_list[8]
-integrator_WordInputPrediction = mySystem.execution_list[9]
-objective_EVC_mech = mySystem.execution_list[10]
-
-expected_consideration_queue = [
-    {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
-    {Color_Hidden, Word_Hidden},
-    {Output},
-    {Decision},
-    {objective_EVC_mech},
-]
-
-assert sched.consideration_queue == expected_consideration_queue
-
-
-
-
-
-
-
-
-
-
-
-
 # endregion
+
 
 #region TEST INPUT FORMATS
 
@@ -1927,6 +1834,25 @@ assert sched.consideration_queue == expected_consideration_queue
 # print (z.execute([x]))
 #
 # #endregion
+
+#region TEST COMBINE_MEANS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+import numpy as np
+from PsyNeuLink.Globals.Utilities import is_numeric
+print("TEST COMBINE_MEANS")
+
+
+x = np.array([[10, 20], [10, 20]])
+# y = np.array([[10, 'a'], ['a']])
+# z = np.array([[10, 'a'], [10]])
+# print(is_numeric(x))
+# print(is_numeric(y))
+# print(is_numeric(z))
+
+z = CombineMeans(x, context='TEST')
+print (z.execute(x))
+
+#endregion
+
 
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 

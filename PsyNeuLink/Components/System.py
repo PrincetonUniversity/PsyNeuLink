@@ -73,7 +73,7 @@ arguments of the `system` command, as described below.
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `system` command using
   any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism (see
-  `ObjectiveMechanism_Monitored_output_states`).  In addition, the **monitor_for_control** argument supports two other forms
+  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two other forms
   of specification:
 
   * **string** -- must be the name <OutputState.name>` of an `OuputState` of a `Mechanism` in the System (see third
@@ -588,7 +588,7 @@ def system(default_variable=None,
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
         'objective_mechanism <ControlMechanism_Base.objective_mechanism>` of its `controller` (see
-        `System_Control_Specification` and `ObjectiveMechanism_Monitored_output_states` for additional details of
+        `System_Control_Specification` and `ObjectiveMechanism_Monitored_Output_States` for additional details of
         how to specify the `monitor_for_control` argument).
 
     COMMENT:

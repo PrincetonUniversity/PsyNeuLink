@@ -31,7 +31,7 @@ constructor.  The two primary attributes used to define an ObjectiveMechanism ar
 <ObjectiveMechanism.monitored_output_states>` and `input_states <ObjectiveMechanism.input_states>` attributes, specified
 using the corresponding arguments of its construtor as described below.
 
-.. _ObjectiveMechanism_Monitored_output_states:
+.. _ObjectiveMechanism_Monitored_Output_States:
 
 Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -39,8 +39,8 @@ Monitored OutputStates
 The **monitored_output_states** argument of the constructor specifies the OutputStates it monitors.  The assignment of
 the OutputStates to be monitored can also be passed from the **objective_mechanism** argument of the constructor for a
 `ControlMechanism`, or the **monitor_for_control** argument of a `System` for which the ControlMechanism is a
-`controller <System_Base.controller>`.  The **monitored_output_states** argument can be specified as any one of a list
-of the following:
+`controller <System_Base.controller>`.  The **monitored_output_states** argument can be specified using a  list
+containing any of the following:
 
 COMMENT:
 Note that some forms of specification may
@@ -138,7 +138,7 @@ or `State Specification Dictionaries <State_Specification>`, with the following 
 
   * the number of InputStates specified in the **input_states** argument must equal the number of OutputStates specified
     in the **monitored_output_states** argument (see the `examples
-    <ObjectiveMechanism_Monitored_output_states_Examples>` below);
+    <ObjectiveMechanism_Monitored_Output_States_Examples>` below);
   ..
   * the `variable <InputState.variable>` of each must also be of the same type as the `value <OutputState.value>` of
     the corresponding OutputState, however their lengths can differ;  in that case, by default,
@@ -149,7 +149,7 @@ or `State Specification Dictionaries <State_Specification>`, with the following 
   * a `weight and/or exponent <InputState_Weights_And_Exponents>` can be specified for each InputState (e.g., for use
     by the ObjectiveMechanism's `function <ObjectiveMechanism.function>`;  however, these are superseded by any weights
     and/or exponents specified in the **monitored_output_states** argument of the ObjectiveMechanism's constructor
-    (see `ObjectiveMechanism_Monitored_output_states` and `note <ObjectiveMechanism_Weights_And_Exponents>` above).
+    (see `ObjectiveMechanism_Monitored_Output_States` and `note <ObjectiveMechanism_Weights_And_Exponents>` above).
 
 COMMENT:
   * **string**, **value** or **dict** -- these can be used as placemarkers for a state to be monitored, that will be
@@ -171,13 +171,13 @@ Input
 ~~~~~
 
 =An ObjectiveMechanism has one `InputState <InputState>` for each of the OutputStates specified in its
-**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_output_states`). Each InputState receives a
+**monitored_output_states** argument (see `ObjectiveMechanism_Monitored_Output_States`). Each InputState receives a
 `MappingProjection` from the corresponding OutputState, the values of which are used by the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>` to generate the value of its *OUTCOME* `OutputState
 <ObjectiveMechanism_Output>`.  The InputStates are listed in the ObjectiveMechanism's `input_states
 <ObjectiveMechanism.input_states>` attribute, and the OutputStates from which they receive projections are listed in
 the same order its `monitored_output_states  <ObjectiveMechanism.monitored_output_states>` attribute.  If any `weights
-and/or exponents are specified <ObjectiveMechanism_Monitored_output_states>` for either the ObjectiveMechanism's
+and/or exponents are specified <ObjectiveMechanism_Monitored_Output_States>` for either the ObjectiveMechanism's
 `monitored_output_states <ObjectiveMechanism.monitored_output_states>` or its `input_states`, the former take
 precedence over the latter.  These are assigned to the weights and/or exponents attributes of the ObjectiveMechanism's
 `function <ObjectiveMechanism.function>` if the function implements these attributes;  if so, the function applies the
@@ -226,7 +226,7 @@ evaluate these.  The result is assigned as to its `value <ObjectiveMechanism.val
 Examples
 --------
 
-.. _ObjectiveMechanism_Monitored_output_states_Examples:
+.. _ObjectiveMechanism_Monitored_Output_States_Examples:
 
 *Specifying* **monitored_output_states**
 
@@ -381,7 +381,7 @@ class ObjectiveMechanismError(Exception):
 class ObjectiveMechanism(ProcessingMechanism_Base):
     """
     ObjectiveMechanism(               \
-        monitored_output_states,             \
+        monitored_output_states,      \
         input_states=None,            \
         function=LinearCombination,   \
         output_states=[OUTCOME],      \

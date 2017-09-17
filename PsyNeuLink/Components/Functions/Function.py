@@ -1937,8 +1937,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         """Insure that all items of variable are numeric
         """
         variable = self._update_variable(super()._validate_variable(variable=variable, context=context))
-        if any(not is_numeric(item) for item in variable):
-            raise FunctionError("All items of the variable for {} must be numberic".format(self.componentName))
+        # if any(not is_numeric(item) for item in variable):
+        #     raise FunctionError("All items of the variable for {} must be numeric".format(self.componentName))
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -2073,10 +2073,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         # IMPLEMENTATION NOTE: CONFIRM: SHOULD NEVER OCCUR, AS _validate_variable NOW ENFORCES 2D np.ndarray
         # If variable is 0D or 1D:
-        if np_array_less_than_2d(variable):
-            return (variable * scale) + offset
+        # if np_array_less_than_2d(variable):
+        #     return (variable * scale) + offset
 
-        XXX
+        means = np.array([[None]]*len(variable))
+        for i, item in enumerate(variable):
+            means[i] = np.mean(item)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -2084,50 +2086,21 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             # Avoid divide by zero warning:
             #    make sure there are no zeros for an element that is assigned a negative exponent
             if INITIALIZING in context and any(not any(i) and j < 0 for i, j in zip(variable, exponents)):
-                variable = self._update_variable(np.ones_like(variable))
+                means = np.ones_like(means)
             else:
-                variable = self._update_variable(variable ** exponents)
+                means = means ** exponents
 
         # Apply weights if they were specified
         if weights is not None:
-            variable = self._update_variable(variable * weights)
+            means = means * weights
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
         if (operation is SUM):
-            if isinstance(scale, numbers.Number):
-                # Scalar scale and offset
-                if isinstance(offset, numbers.Number):
-                    result = np.sum(variable, axis=0) * scale + offset
-                # Scalar scale and Hadamard offset
-                else:
-                    result = np.sum(np.append([variable * scale], [offset], axis=0), axis=0)
-            else:
-                # Hadamard scale, scalar offset
-                if isinstance(offset, numbers.Number):
-                    result = np.product([np.sum([variable], axis=0), scale], axis=0)
-                # Hadamard scale and offset
-                else:
-                    hadamard_product = np.product([np.sum([variable], axis=0), scale], axis=0)
-                    result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
+            result = np.sum(means, axis=0) * scale + offset
 
         elif (operation is PRODUCT):
-            product = np.product(variable, axis=0)
-            if isinstance(scale, numbers.Number):
-                # Scalar scale and offset
-                if isinstance(offset, numbers.Number):
-                    result = product * scale + offset
-                # Scalar scale and Hadamard offset
-                else:
-                    result = np.sum(np.append([product], [offset], axis=0), axis=0) + offset
-            else:
-                # Hadamard scale, scalar offset
-                if isinstance(offset, numbers.Number):
-                    result = np.product(np.append([product], [scale], axis=0), axis=0) + offset
-                # Hadamard scale and offset
-                else:
-                    hadamard_product = np.product(np.append([product], [scale], axis=0), axis=0)
-                    result = np.sum(np.append([hadamard_product], [offset], axis=0), axis=0)
+            result = np.product(means, axis=0) * scale + offset
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
