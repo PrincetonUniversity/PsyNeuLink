@@ -1,6 +1,6 @@
 LCMechanism
 ===========
 
-.. automodule:: Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.LCMechanism
+.. automodule:: Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.AGT.LCMechanism
    :members:
    :exclude-members: random, LinearCombination, Linear

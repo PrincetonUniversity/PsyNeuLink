@@ -73,7 +73,7 @@ arguments of the `system` command, as described below.
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `system` command using
   any of the ways used to specify the *monitored_output_states* argument of the constructor for an ObjectiveMechanism (see
-  `ObjectiveMechanism_Monitored_output_states`).  In addition, the **monitor_for_control** argument supports two other forms
+  `ObjectiveMechanism_Monitored_Output_States`).  In addition, the **monitor_for_control** argument supports two other forms
   of specification:
 
   * **string** -- must be the name <OutputState.name>` of an `OuputState` of a `Mechanism` in the System (see third
@@ -83,11 +83,11 @@ arguments of the `system` command, as described below.
     (see examples under `System_Control_Examples`).
 
   * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
-    single item in the list specifying the **monitor_for_control** argument.  These specifications apply to all of the
-    Mechanisms in the System except its `controller <System_Base.controller>` and any `LearningMechanisms
-    <LearningMechanism>`. The value of *PRIMARY_OUTPUT_STATES* specifies that the `primary OutputState
-    <OutputState_Primary>` of every Mechanism be monitored, whereas *ALL_OUTPUT_STATES* specifies that *every*
-    OutputState of every Mechanism be monitored.
+    single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
+    the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
+    except its `controller <System_Base.controller>` and `LearningMechanisms <LearningMechanism>`. The
+    *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
+    monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
 
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
@@ -588,7 +588,7 @@ def system(default_variable=None,
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
         'objective_mechanism <ControlMechanism_Base.objective_mechanism>` of its `controller` (see
-        `System_Control_Specification` and `ObjectiveMechanism_Monitored_output_states` for additional details of
+        `System_Control_Specification` and `ObjectiveMechanism_Monitored_Output_States` for additional details of
         how to specify the `monitor_for_control` argument).
 
     COMMENT:
@@ -2047,7 +2047,7 @@ class System_Base(System):
         * controller.input_states is the usual ordered dict of states,
             each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
 
-        Returns list of tuples, each of which is a monitored_value (OutputState, weight, exponent) tuple.
+        Returns list of tuples, each of which is a monitored_output_state (OutputState, weight, exponent) tuple.
 
         """
 

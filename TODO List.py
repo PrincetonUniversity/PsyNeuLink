@@ -301,7 +301,7 @@
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args
 #                (??standard way of overriding paramClassDefault or need to implement in assign_args_to_dicts)?
 
-#          See ObjectiveMechanism._instantiate_input_state_for_monitored_value for parse of input_state specification
+#          See ObjectiveMechanism._instantiate_input_state_for_monitored_output_state for parse of input_state specification
 
 # DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
 #          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
@@ -629,7 +629,7 @@
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
 #
 # CONFIRM (IN ObjectiveMechanism):
-#         elif isinstance(monitored_value, InputState): [~616]
+#         elif isinstance(monitored_output_state, InputState): [~616]
 #         if isinstance(state_spec, dict): [~753]
 #         if isinstance(state_spec, MonitoredOutputStatesOption): [~759]
 
@@ -3323,11 +3323,11 @@
 #region ObjectiveMechanism -----------------------------------------------------------------------------------
 #
 #     Validate ObjectiveMechanism.monitor argument:
-#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_montiored_states) and
+#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_monitored_states) and
 #               monitor (in ObjectiveMechanism._validate_monitored_state_in_system) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
-#     Make sure add_monitored_value works
+#     Make sure add_monitored_output_state works
 #     Allow input_states to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
@@ -3353,7 +3353,7 @@
 #     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.objective_mechanism
 #     Allow it to take objective_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_value works:
-#           Needs to call ObjectiveMechanism.add_monitored_value
+#     Make sure add_monitored_output_state works:
+#           Needs to call ObjectiveMechanism.add_monitored_output_state
 #           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
