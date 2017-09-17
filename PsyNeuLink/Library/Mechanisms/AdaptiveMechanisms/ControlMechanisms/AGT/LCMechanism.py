@@ -413,19 +413,20 @@ class LCMechanism(ControlMechanism_Base):
     Attributes
     ----------
 
-    system : `System`
+    system : System
         the `System` for which LCMechanism is the `controller <System_Base.controller>`;
         the LCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
         argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
-    objective_mechanism : `ObjectiveMechanism` : ObjectiveMechanism(function=CombinedMeans))
+    objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
         the 'ObjectiveMechanism' used by the LCMechanism to aggregate the `value <OutputState.value>`\\s of the
         OutputStates used to drive its `phasic response <LCMechanism_Modes_Of_Operation>`.
 
-    monitored_output_states : List[`OutputState`]
-        list of the OutputStates that project to `objective_mechanism <EVCMechanism.objective_mechanism>` (and listed in
-        its `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute), and used to drive the
+    monitored_output_states : List[OutputState]
+        list of the `OutputStates <OutputState>` that project to `objective_mechanism
+        <EVCMechanism.objective_mechanism>` (and listed in its `monitored_output_states
+        <ObjectiveMechanism.monitored_output_states>` attribute), and used to drive the
         LCMechanism's `phasic response <LCMechanism_Modes_Of_Operation>`.
 
     monitored_output_states_weights_and_exponents : List[Tuple(float, float)]
@@ -437,9 +438,10 @@ class LCMechanism(ControlMechanism_Base):
         <ObjectiveMechanism.function>` to parametrize the contribution made to its output by each of the values that
         it monitors (see `ObjectiveMechanism Function <ObjectiveMechanism_Function>`).
 
-    function : `FitzHughNagumoIntegrator`
+    function : FHNIntegrator
         takes the LCMechanism's `input <LCMechanism_Input>` and generates its response <LCMechanism_Output>` under
-        the influence of its `mode <FHNIntegrator.mode>` attribute (see `LCMechanism_Function` for additional details).
+        the influence of the `FHNIntegrator` Function's `mode <FHNIntegrator.mode>` attribute
+        (see `LCMechanism_Function` for additional details).
 
     COMMENT:
     VERSIONS FOR SINGLE ControlSignal
@@ -455,22 +457,22 @@ class LCMechanism(ControlMechanism_Base):
             <LCMechanism.modulated_mechanisms>` attribute.
     COMMENT
 
-    control_signals : List[`ControlSignal`]
-        contains a ControlSignal for each Mechanism listed in the LCMechanism's `modulated_mechanisms
+    control_signals : List[ControlSignal]
+        contains a `ControlSignal` for each Mechanism listed in the LCMechanism's `modulated_mechanisms
         <LCMechanism.modulated_mechanisms>` attribute; each ControlSignal sends a `ControlProjections` to the
         `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the `function
         <Mechanism_Base.function>corresponding Mechanism.
 
-    control_projections : List[`ControlProjection`]
+    control_projections : List[ControlProjection]
         list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
         in `control_signals <LC_Mechanism.control_signals>`.
 
-    modulated_mechanisms : List[`Mechanism`]
-        list of Mechanisms modulated by the LCMechanism.
+    modulated_mechanisms : List[Mechanism]
+        list of `Mechanisms <Mechanism>` modulated by the LCMechanism.
 
-    modulation : `ModulationParam` : default ModulationParam.MULTIPLICATIVE
-        the default form of modulation used by the LCMechanism's `ControlProjections`,
-        unless they are `individually specified <ControlSignal_Specification>`.
+    modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
+        the default value of `ModulationParam` that specifies the form of modulation used by the LCMechanism's
+        `ControlProjections <ControlProjection>` unless they are `individually specified <ControlSignal_Specification>`.
 
     """
 
