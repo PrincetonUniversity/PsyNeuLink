@@ -618,8 +618,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             raise ObjectiveMechanismError("\'role\'arg ({}) of {} must be either \'LEARNING\' or \'CONTROL\'".
                                           format(target_set[ROLE], self.name))
 
-        if (INPUT_STATES in target_set and
-                    target_set[INPUT_STATES] is not None and
+        if (INPUT_STATES in target_set and target_set[INPUT_STATES] is not None and
                 not all(input_state is None for input_state in target_set[INPUT_STATES])):
             if MONITORED_OUTPUT_STATES in target_set:
                 monitored_output_states = target_set[MONITORED_OUTPUT_STATES]
@@ -646,26 +645,11 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                                                          self.name,
                                                          target_set[INPUT_STATES]))
 
-        #region VALIDATE MONITORED OutputStates
-        # FIX: IS THE FOLLOWING STILL TRUE:
-        # Note: this must be validated after OUTPUT_STATES (and therefore call to super._validate_params)
-        #       as it can reference entries in that param
-        if MONITORED_OUTPUT_STATES in target_set:
-            try:
-                if not target_set[MONITORED_OUTPUT_STATES] or target_set[MONITORED_OUTPUT_STATES] is NotImplemented:
-                    pass
-                # It is a MonitoredOutputStatesOption specification
-                elif isinstance(target_set[MONITORED_OUTPUT_STATES], MonitoredOutputStatesOption):
-                    # Put in a list (standard format for processing by _parse_monitored_output_states_list)
-                    target_set[MONITORED_OUTPUT_STATES] = [target_set[MONITORED_OUTPUT_STATES]]
-                # It is NOT a MonitoredOutputStatesOption specification, so assume it is a list of Mechanisms or States
-                else:
-                    # Validate each item of MONITORED_OUTPUT_STATES
-                    for item in target_set[MONITORED_OUTPUT_STATES]:
-                        _parse_monitored_output_states(source=self, output_state_list=item, context=context)
+        if MONITORED_OUTPUT_STATES in target_set and target_set[MONITORED_OUTPUT_STATES] is not None:
+            _parse_monitored_output_states(source=self,
+                                           output_state_list=target_set[MONITORED_OUTPUT_STATES],
+                                           context=context)
 
-            except KeyError:
-                pass
 
     def _instantiate_input_states(self, monitored_output_states_specs=None, context=None):
         """Instantiate InputStates for each OutputState specified in monitored_output_states_specs
