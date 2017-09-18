@@ -717,17 +717,25 @@ class TestFHN:
 
 class TestUtilityIntegrator:
 
-    def test_utility_integrator(self):
+    def test_utility_integrator_default(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
 
         U = IntegratorMechanism(
             name = "UtilityIntegrator",
             function=UtilityIntegrator(
-
             )
+
         )
 
-        U.execute([1])
-
+        print(U.execute([1]))
+        print(U.execute([1]))
+        print(U.execute([1]))
+        print(U.execute([1]))
+        print(U.execute([1]))
 
 
     # def test_FHN_gilzenrat(self):

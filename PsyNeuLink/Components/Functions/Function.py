@@ -5863,8 +5863,8 @@ class UtilityIntegrator(
                  long_term_gain =1.0,
                  short_term_bias = 0.0,
                  long_term_bias=0.0,
-                 short_term_rate=1.0,
-                 long_term_rate=1.0,
+                 short_term_rate=0.1,
+                 long_term_rate=0.9,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -6014,21 +6014,27 @@ class UtilityIntegrator(
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
-        new_value = variable
+        # long term params applied to variable
+        long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
+                                            self.long_term_rate,
+                                            variable)
+        long_term_utility_logistic = self._logistic(variable=long_term_utility,
+                                                    gain=self.long_term_gain,
+                                                    bias=self.long_term_bias
+                                                    )
 
-        long_term_utility = self._logistic(variable = self._EWMA_filter(self.previous_long_term_utility,
-                                                                            self.long_term_rate,
-                                                                            variable),
-                                                gain = self.long_term_gain,
-                                                bias = self.long_term_bias)
+        # short term params applied to variable
+        short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
+                                            self.short_term_rate,
+                                            variable)
+        short_term_utility_logistic=self._logistic(variable=short_term_utility,
+                                                    gain=self.short_term_gain,
+                                                    bias=self.short_term_bias
+                                                    )
 
-        short_term_utility = self._logistic(variable = self._EWMA_filter(self.previous_short_term_utility,
-                                                                             self.short_term_rate,
-                                                                             variable),
-                                                 gain=self.short_term_gain,
-                                                 bias=self.short_term_bias)
+        # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
+        value = [1-short_term_utility_logistic]*long_term_utility_logistic
 
-        value = self._EWMA_filter(long_term_utility, rate, short_term_utility)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old utility values
