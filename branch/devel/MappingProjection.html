@@ -95,22 +95,23 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink</a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndSampler.html">Basics and Sampler</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Component.html">Components</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Component.html">Components</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Projection.html">Projections</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjection.html">PathwayProjections</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">MappingProjection</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjections</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="State.html">States</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Function.html">Functions</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Composition.html">Compositions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="Mechanisms.html">Mechanisms</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="Projections.html">Projections</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="PathwayProjections.html">PathwayProjections</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="#">MappingProjection</a></li>
-<li class="toctree-l4"><a class="reference internal" href="AutoAssociativeProjection.html">AutoAssociativeProjection</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="ModulatoryProjections.html">ModulatoryProjections</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 </ul>
 
             
@@ -370,7 +371,7 @@ the context in which the Projection is used, or its initialization will be <a cl
 <li><strong>receiver</strong> (<em>Optional</em><em>[</em><a class="reference internal" href="InputState.html#module-InputState" title="InputState"><em>InputState</em></a><em> or </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>]</em>) – specifies the destination of the Projection’s output.  If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="InputState.html#inputstate-primary"><span class="std std-ref">primary InputState</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="Projection.html#mappingprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="LearningMechanism.html#LearningMechanism.LearningMechanism.function" title="LearningMechanism.LearningMechanism.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
+<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – the matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> (default: <a class="reference internal" href="Function.html#Function.LinearCombination" title="Function.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to transform the
 value of the <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.sender" title="PathwayProjections.MappingProjection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> into a form suitable for the <a class="reference internal" href="InputState.html#InputState.InputState.variable" title="InputState.InputState.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 of its <a class="reference internal" href="#PathwayProjections.MappingProjection.MappingProjection.receiver" title="PathwayProjections.MappingProjection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
