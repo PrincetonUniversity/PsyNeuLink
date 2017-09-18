@@ -506,7 +506,7 @@ assigned as attributes of the UserDefinedFunction object or its owner, nor to it
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>function</strong> (<a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
+<li><strong>function</strong> (<a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies function to “wrap.” It can be any function, take any arguments (including standard ones,
 such as <code class="xref std std-keyword docutils literal"><span class="pre">params</span></code> and <code class="xref std std-keyword docutils literal"><span class="pre">context</span></code>) and return any value(s), so long as these are consistent
 with the context in which the UserDefinedFunction will be used.</li>
 <li><strong>variable</strong> (<em>value : default ClassDefaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="#"><span class="doc">function</span></a>.</li>
@@ -793,7 +793,7 @@ arguments of the constructor.</li>
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">TransferFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner</em>, <em>prefs</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.TransferFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function that transforms variable but maintains its shape</p>
 <p>All TransferFunctions must have the following attributes:</p>
-<p><a class="reference internal" href="#Function.Exponential.bounds" title="Function.Exponential.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
+<p><a class="reference internal" href="#Function.Linear.bounds" title="Function.Linear.bounds"><code class="xref any py py-attr docutils literal"><span class="pre">bounds</span></code></a> – specifies the lower and upper limits of the result;  if there are none, the attribute is set to
 <code class="xref any docutils literal"><span class="pre">None</span></code>;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
 respectively, with <code class="xref any docutils literal"><span class="pre">None</span></code> as the entry for no bound.</p>
 <p><code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code> – each of these is assigned the name of one of the function’s
@@ -1265,7 +1265,7 @@ value with respect to the others (calculated as above). If OUTPUT_TYPE is PROB, 
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>variable</strong> (<em>list</em><em> or </em><em>1d np.array : default ClassDefaults.variable</em>) – specifies a template for the value to be transformed; length must equal the number of rows of <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
-<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+<li><strong>matrix</strong> (<em>number</em><em>, </em><em>list</em><em>, </em><em>1d</em><em> or </em><em>2d np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a><em>, or </em><em>matrix keyword : default IDENTITY_MATRIX</em>) – specifies matrix used to transform <a class="reference internal" href="#Function.LinearMatrix.variable" title="Function.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#Function.LinearMatrix.matrix" title="Function.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> for specification details).</li>
 <li><strong>bounds</strong> (<em>None</em>) – </li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -1372,7 +1372,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="Function.Integrator">
-<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x1055b5268&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x106dda320&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1055b7e18&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">Function.</code><code class="descname">Integrator</code><span class="sig-paren">(</span><em>default_variable=None, rate: &lt;function parameter_spec at 0x1056bf268&gt; = 1.0, noise=0.0, initializer=[[0]], params: &lt;typecheck.framework.optional object at 0x106b75d30&gt; = None, owner=None, prefs: &lt;function is_pref_set at 0x1056c1e18&gt; = None, context='Integrator Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.Integrator" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Integrator(                         default_variable=None,          rate=1.0,</dt>
 <dd>noise=0.0,                      time_step_size=1.0,             initializer,             params=None,                    owner=None,                     prefs=None,                     )</dd>
@@ -2532,8 +2532,7 @@ arguments of the constructor.</li>
 <a class="reference internal" href="#Function.UtilityIntegrator.variable" title="Function.UtilityIntegrator.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
 <p>then takes the logistic of each utility value, using the corresponding (short term and long term) gain and bias.</p>
 <p>Finally, computes a single value which combines the two values according to:</p>
-<p>value = (1 - <a class="reference internal" href="#Function.UtilityIntegrator.rate" title="Function.UtilityIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a>) * logistic(long_term_utility) + <a class="reference internal" href="#Function.UtilityIntegrator.rate" title="Function.UtilityIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> *
-logistic(short_term_utility)</p>
+<p>value = [1-short_term_utility_logistic]*long_term_utility_logistic</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2547,8 +2546,8 @@ logistic(short_term_utility)</p>
 <li><strong>long_term_gain</strong> (<em>float : default 1.0</em>) – specifies gain for logistic function applied to long_term_utility</li>
 <li><strong>short_term_bias</strong> (<em>float : default 0.0</em>) – specifies bias for logistic function applied to short_term_utility</li>
 <li><strong>long_term_bias</strong> (<em>float : default 0.0</em>) – specifies bias for logistic function applied to long_term_utility</li>
-<li><strong>short_term_rate</strong> (<em>float : default 1.0</em>) – specifies smooth factor of EWMA filter applied to short_term_utility</li>
-<li><strong>long_term_rate</strong> (<em>float : default 1.0</em>) – specifies smooth factor of EWMA filter applied to long_term_utility</li>
+<li><strong>short_term_rate</strong> (<em>float : default 1.0</em>) – specifies smoothing factor of EWMA filter applied to short_term_utility</li>
+<li><strong>long_term_rate</strong> (<em>float : default 1.0</em>) – specifies smoothing factor of EWMA filter applied to long_term_utility</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
@@ -2564,12 +2563,6 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dt id="Function.UtilityIntegrator.variable">
 <code class="descname">variable</code><a class="headerlink" href="#Function.UtilityIntegrator.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>number or np.array</em> – current input value used in both the short term and long term EWMA computations</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="Function.UtilityIntegrator.rate">
-<code class="descname">rate</code><a class="headerlink" href="#Function.UtilityIntegrator.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, list or 1d np.array : default 1.0</em> – specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2617,13 +2610,13 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <dl class="attribute">
 <dt id="Function.UtilityIntegrator.short_term_rate">
 <code class="descname">short_term_rate</code><a class="headerlink" href="#Function.UtilityIntegrator.short_term_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default 1.0</em> – specifies smooth factor of EWMA filter applied to short_term_utility</p>
+<dd><p><em>float : default 1.0</em> – specifies smoothing factor of EWMA filter applied to short_term_utility</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="Function.UtilityIntegrator.long_term_rate">
 <code class="descname">long_term_rate</code><a class="headerlink" href="#Function.UtilityIntegrator.long_term_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float : default 1.0</em> – specifies smooth factor of EWMA filter applied to long_term_utility</p>
+<dd><p><em>float : default 1.0</em> – specifies smoothing factor of EWMA filter applied to long_term_utility</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -2667,7 +2660,6 @@ if it is not specified, a default is assigned using <code class="xref any docuti
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</li>
-<li><strong>time_scale</strong> (<em>TimeScale : default TimeScale.TRIAL</em>) – specifies whether the function is executed on the time_step or trial time scale.</li>
 </ul>
 </td>
 </tr>
@@ -3269,7 +3261,7 @@ is normalized by the number of elements in the <a class="reference internal" hre
 <li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function keyword</em><em>, or </em><em>MappingProjection : default HOLLOW_MATRIX</em>) – specifies the matrix of recurrent weights;  must be a square matrix with the same width as the
 length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>metric</strong> (<em>ENERGY</em><em>, </em><em>ENTROPY</em><em> or </em><em>keyword in DISTANCE_METRICS : Default ENERGY</em>) – specifies the metric used to compute stability.</li>
-<li><strong>transfer_fct</strong> (<a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>transfer_fct</strong> (<a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a><em> or </em><em>method : Default None</em>) – specifies the function used to transform output of weight <a class="reference internal" href="#Function.Stability.matrix" title="Function.Stability.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
 <li><strong>normalize</strong> (<em>bool : Default False</em>) – specifies whether to normalize the stability value by the length of <a class="reference internal" href="#Function.Stability.variable" title="Function.Stability.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -3444,7 +3436,7 @@ defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> 
 <em class="property">class </em><code class="descclassname">Function.</code><code class="descname">LearningFunction</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context='Function_Base Init'</em><span class="sig-paren">)</span><a class="headerlink" href="#Function.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="#"><span class="doc">Functions</span></a> used for learning.</p>
 <p>All LearningFunctions take three input values (specified in each of the three required items of the
-<a class="reference internal" href="#Function.Exponential.variable" title="Function.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
+<a class="reference internal" href="#Function.Linear.variable" title="Function.Linear.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument), and return two output values.</p>
 <dl class="docutils">
 <dt>Input values:</dt>
 <dd><ul class="first last simple">
@@ -3616,9 +3608,9 @@ arguments of the constructor.</li>
 <a class="reference internal" href="#Function.BackPropagation.activation_input" title="Function.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d np.array),
 <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d np.array).</li>
-<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
+<li><strong>activation_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#Function.BackPropagation.activation_output" title="Function.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>.</li>
-<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="IntegratorMechanism.html#IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function" title="IntegratorMechanism.IntegratorMechanism.AdaptiveIntegrator.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
+<li><strong>error_derivative</strong> (<a class="reference internal" href="#module-Function" title="Function"><em>Function</em></a><em> or </em><a class="reference internal" href="KWTA.html#Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function" title="Library.Mechanisms.ProcessingMechanisms.TransferMechanisms.KWTA.KWTA.function"><em>function</em></a>) – specifies the derivative for the function of the Mechanism that is the receiver of the
 <a class="reference internal" href="#Function.BackPropagation.error_matrix" title="Function.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>.</li>
 <li><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d np.array</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#module-PathwayProjections.MappingProjection" title="PathwayProjections.MappingProjection"><em>MappingProjection</em></a>) – matrix, the output of which is used to calculate the <a class="reference internal" href="#Function.BackPropagation.error_signal" title="Function.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a>.
 If it is specified as a ParameterState it must be one for the <a class="reference internal" href="MappingProjection.html#PathwayProjections.MappingProjection.MappingProjection.matrix" title="PathwayProjections.MappingProjection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
