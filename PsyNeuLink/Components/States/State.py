@@ -2510,14 +2510,17 @@ def _parse_state_spec(owner,
                     state_dict[PARAMS] = {}
                 state_dict[PARAMS].update(params)
 
-    # # 2-item tuple (spec, projection)
-    # 2-item tuple (spec, Component)
+    # 2-item tuple;  could be:
+    #    (spec, Projection)
+    #    (Mechanism, ControlSignal spec)
     elif isinstance(state_spec, tuple):
         _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
         # Put projection spec from second item of tuple in params
         params = params or {}
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
         params.update({PROJECTIONS:[state_spec[1]]})
+
+        # FIX: 9/17/17 NEED TO HANDLE (Mechanism, ParamName string) for state_type = ControlSignal
 
         # Parse state_spec in first item of tuple (without params)
         state_dict = _parse_state_spec(owner=owner,
@@ -2607,8 +2610,19 @@ def _is_legal_state_spec_tuple(owner, state_spec, state_type_name=None):
     if len(state_spec) != 2:
         raise StateError("Tuple provided as state_spec for {} of {} ({}) must have exactly two items".
                          format(state_type_name, owner.name, state_spec))
-    # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accomodate specification of param for ControlSignal
-    if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
+    # MODIFIED 9/17/17 OLD:
+    # # IMPLEMENTATION NOTE: Mechanism allowed in tuple to accommodate specification of param for ControlSignal
+    # if not (_is_projection_spec(state_spec[1]) or isinstance(state_spec[1], (Mechanism, State))):
+    # MODIFIED 9/17/17 NEW:
+    if not (_is_projection_spec(state_spec[1]) or
+                # IMPLEMENTATION NOTE: Mechanism or State allowed as 2nd item of tuple or
+                #                      Mechanism as 2st item and string (parameter name) as 1st
+                #                      to accommodate specification of param for ControlSignal
+                isinstance(state_spec[1], (Mechanism, State))
+                           or (isinstance(state_spec[0], Mechanism) and
+                                       state_spec[1] in state_spec[0]._parameter_states)):
+    # MODIFIED 9/17/17 END
+
         raise StateError("2nd item of tuple in state_spec for {} of {} ({}) must be a specification "
                          "for a Mechanism, State, or Projection".
                          format(state_type_name, owner.__class__.__name__, state_spec[1]))
