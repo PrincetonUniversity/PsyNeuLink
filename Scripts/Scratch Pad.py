@@ -915,6 +915,35 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 #endregion
 
+#region TEST UtilityIntegrator FUNCTION @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+from PsyNeuLink.Components.Functions.Function import UtilityIntegrator
+print("TEST UtilityIntegrator FUNCTION")
+
+x = UtilityIntegrator()
+print (x.execute([[1]]*10))
+
+#endregion
+
+#region TEST COMBINE_MEANS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# import numpy as np
+# from PsyNeuLink.Globals.Utilities import is_numeric
+# print("TEST CombineMeans Function")
+#
+#
+# x = np.array([[10, 20], [10, 20]])
+# # y = np.array([[10, 'a'], ['a']])
+# # z = np.array([[10, 'a'], [10]])
+# # print(is_numeric(x))
+# # print(is_numeric(y))
+# # print(is_numeric(z))
+#
+# z = CombineMeans(x, context='TEST')
+# print (z.execute(x))
+#
+#endregion
+
 #region TEST RL @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Functions.Function import *
@@ -1834,25 +1863,6 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # print (z.execute([x]))
 #
 # #endregion
-
-#region TEST COMBINE_MEANS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# import numpy as np
-# from PsyNeuLink.Globals.Utilities import is_numeric
-# print("TEST COMBINE_MEANS")
-#
-#
-# x = np.array([[10, 20], [10, 20]])
-# # y = np.array([[10, 'a'], ['a']])
-# # z = np.array([[10, 'a'], [10]])
-# # print(is_numeric(x))
-# # print(is_numeric(y))
-# # print(is_numeric(z))
-#
-# z = CombineMeans(x, context='TEST')
-# print (z.execute(x))
-#
-#endregion
-
 
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
