@@ -18,14 +18,11 @@ from PsyNeuLink.Globals.Keywords import GAIN, THRESHOLD, SUM, PRODUCT, CONTROL, 
 # COMPOSITIONS:
 from PsyNeuLink.Components.Process import process
 
-# FUNCTIONS:
-from PsyNeuLink.Components.Functions.Function import CombineMeans
 
+# FUNCTIONS:
 # STATES:
 # from PsyNeuLink.Components.States.OutputState import OutputState
 # from PsyNeuLink.Globals.Keywords import PARAMETER_STATE_PARAMS
-
-
 # PROJECTIONS:
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControldProjection
@@ -37,8 +34,7 @@ class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-
+# ----------------------------------------------- EXAMPLES ----------------------------------------------------------
 
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
@@ -678,7 +674,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # s.run(inputs)
 # #endregion
 
-# #region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
 #
 # a = TransferMechanism(name='a', default_variable=[0, 0])
@@ -714,7 +710,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # #endregion
 
-# #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
 # my_transfer_mech_A = TransferMechanism()
@@ -722,7 +718,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # my_transfer_mech_B = TransferMechanism(function=Logistic)
 #
 # my_control_mech = ControlMechanism_Base(
-#                          objective_mechanism=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+#                          objective_mechanism=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
 #                                                                                   my_DDM.output_states[
 #                                                                                       my_DDM.RESPONSE_TIME]],
 #                                                                 function=LinearCombination(operation=SUM)),
@@ -743,7 +739,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #                                          (GAIN, my_transfer_mech_B)])
 
 
-# my_obj_mech=ObjectiveMechanism(monitored_output_states=[(my_transfer_mech_A, 2, 1),
+# my_obj_mech=ObjectiveMechanism(monitored_values=[(my_transfer_mech_A, 2, 1),
 #                                                  my_DDM.output_states[my_DDM.RESPONSE_TIME]],
 #                                function=LinearCombination(operation=PRODUCT))
 #
@@ -778,13 +774,109 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # # System:
 # mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-#                   controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
+#                   controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
 #                                                      Reward,
 #                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
 #                                                      (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
 #
 # TEST = True
+
+
+from PsyNeuLink.Scheduling.Scheduler import Scheduler
+from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
+
+Color_Input = TransferMechanism(name='Color Input', function=Linear(slope=0.2995))
+Word_Input = TransferMechanism(name='Word Input', function=Linear(slope=0.2995))
+
+# Processing Mechanisms (Control)
+Color_Hidden = TransferMechanism(
+    name='Colors Hidden',
+    function=Logistic(gain=(1.0, ControlProjection)),
+)
+Word_Hidden = TransferMechanism(
+    name='Words Hidden',
+    function=Logistic(gain=(1.0, ControlProjection)),
+)
+Output = TransferMechanism(
+    name='Output',
+    function=Logistic(gain=(1.0, ControlProjection)),
+)
+
+# Decision Mechanisms
+Decision = DDM(
+    function=BogaczEtAl(
+        drift_rate=(1.0),
+        threshold=(0.1654),
+        noise=(0.5),
+        starting_point=(0),
+        t0=0.25,
+    ),
+    name='Decision',
+)
+# Outcome Mechanisms:
+Reward = TransferMechanism(name='Reward')
+
+# Processes:
+ColorNamingProcess = process(
+    default_variable=[0],
+    pathway=[Color_Input, Color_Hidden, Output, Decision],
+    name='Color Naming Process',
+)
+
+WordReadingProcess = process(
+    default_variable=[0],
+    pathway=[Word_Input, Word_Hidden, Output, Decision],
+    name='Word Reading Process',
+)
+
+RewardProcess = process(
+    default_variable=[0],
+    pathway=[Reward],
+    name='RewardProcess',
+)
+
+# System:
+mySystem = system(
+    processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
+    controller=EVCMechanism,
+    enable_controller=True,
+    # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
+    name='EVC Gratton System',
+)
+
+sched = Scheduler(system=mySystem)
+
+integrator_ColorInputPrediction = mySystem.execution_list[7]
+integrator_RewardPrediction = mySystem.execution_list[8]
+integrator_WordInputPrediction = mySystem.execution_list[9]
+objective_EVC_mech = mySystem.execution_list[10]
+
+expected_consideration_queue = [
+    {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
+    {Color_Hidden, Word_Hidden},
+    {Output},
+    {Decision},
+    {objective_EVC_mech},
+]
+
+assert sched.consideration_queue == expected_consideration_queue
+
 # endregion
+
+
+# ----------------------------------------------- FUNCTIONS ----------------------------------------------------------
+
+#region TEST Function show_params() METHOD
+
+from PsyNeuLink.Components.Functions.Function import UtilityIntegrator
+print("TEST Function show_params() METHOD")
+
+x = UtilityIntegrator()
+print (x.execute([[1]]*10))
+
+#endregion
+
+#endregion
 
 
 #region TEST INPUT FORMATS
@@ -1835,25 +1927,6 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # #endregion
 
-#region TEST COMBINE_MEANS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# import numpy as np
-# from PsyNeuLink.Globals.Utilities import is_numeric
-# print("TEST COMBINE_MEANS")
-#
-#
-# x = np.array([[10, 20], [10, 20]])
-# # y = np.array([[10, 'a'], ['a']])
-# # z = np.array([[10, 'a'], [10]])
-# # print(is_numeric(x))
-# # print(is_numeric(y))
-# # print(is_numeric(z))
-#
-# z = CombineMeans(x, context='TEST')
-# print (z.execute(x))
-#
-#endregion
-
-
 #region TEST iscompatible @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # a = 1
@@ -2621,15 +2694,15 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 #endregion
 
-# region TEST parse_monitored_output_state @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+# region TEST parse_monitored_value @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import *
 # from PsyNeuLink.Components.States.OutputState import OutputState
 #
-# print("TEST parse_monitored_output_state")
+# print("TEST parse_monitored_value")
 #
-# def _parse_monitored_output_state(owner, monitored_output_states):
-#     """Parse specifications contained in monitored_output_states list or dict,
+# def _parse_monitored_value(owner, monitored_values):
+#     """Parse specifications contained in monitored_values list or dict,
 #
 #     Can take either a list or dict of specifications.
 #     If it is a list, each item must be one of the following:
@@ -2642,7 +2715,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #     If it is a dict, each item must be an entry, the key of which must be a string that is used as a name
 #         specification, and the value of which can be any of the above.
 #
-#     Return a list of specification dicts, one for each item of monitored_output_states
+#     Return a list of specification dicts, one for each item of monitored_values
 #     """
 #
 #
@@ -2650,19 +2723,19 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 #         # OutputState:
 #         if isinstance(spec, OutputState):
-#             name = spec.owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
+#             name = spec.owner.name + MONITORED_VALUE_NAME_SUFFIX
 #             value = spec.value
 #             call_for_projection = True
 #
 #         # Mechanism:
 #         elif isinstance(spec, Mechanism_Base):
-#             name = spec.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
+#             name = spec.name + MONITORED_VALUE_NAME_SUFFIX
 #             value = spec.output_state.value
 #             call_for_projection = True
 #
 #         # # If spec is a MonitoredOutputStatesOption:
 #         # # FIX: NOT SURE WHAT TO DO HERE YET
-#         # elif isinstance(monitored_value, MonitoredOutputStatesOption):
+#         # elif isinstance(montiored_value, MonitoredOutputStateOption):
 #         #     value = ???
 #         #     call_for_projection = True
 #
@@ -2673,18 +2746,18 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #         # str:
 #         elif isinstance(spec, str):
 #             name = spec
-#             value = DEFAULT_MONITORED_OUTPUT_STATE
+#             value = DEFAULT_MONITORED_VALUE
 #             call_for_projection = False
 #
 #         # value:
 #         elif is_value_spec(spec):
-#             name = owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
 #             value = spec
 #             call_for_projection = False
 #
 #         elif isinstance(spec, tuple):
 #             # FIX: REPLACE CALL TO parse_spec WITH CALL TO _parse_state_spec
-#             name = owner.name + MONITORED_OUTPUT_STATE_NAME_SUFFIX
+#             name = owner.name + MONITORED_VALUE_NAME_SUFFIX
 #             value = spec[0]
 #             call_for_projection = spec[1]
 #
@@ -2716,36 +2789,36 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #         else:
 #             raise ObjectiveMechanismError("Specification for {} arg of {} ({}) must be an "
 #                                           "OutputState, Mechanism, value or string".
-#                                           format(MONITORED_OUTPUT_STATES, owner.name, spec))
+#                                           format(MONITORED_VALUES, owner.name, spec))
 #
 #         return name, value, call_for_projection
 #
 #     # If it is a dict, convert to list by:
 #     #    - assigning the key of each entry to a NAME entry of the dict
 #     #    - placing the value in a VALUE entry of the dict
-#     if isinstance(monitored_output_states, dict):
-#         monitored_output_states_list = []
-#         for name, spec in monitored_output_states.items():
-#             monitored_output_states_list.append({NAME: name, VALUE: spec})
-#         monitored_output_states = monitored_output_states_list
+#     if isinstance(monitored_values, dict):
+#         monitored_values_list = []
+#         for name, spec in monitored_values.items():
+#             monitored_values_list.append({NAME: name, VALUE: spec})
+#         monitored_values = monitored_values_list
 #
-#     if isinstance(monitored_output_states, list):
+#     if isinstance(monitored_values, list):
 #
-#         for i, monitored_output_state in enumerate(monitored_output_states):
-#             name, value, call_for_projection = parse_spec(monitored_output_state)
-#             monitored_output_states[i] = {NAME: name,
+#         for i, monitored_value in enumerate(monitored_values):
+#             name, value, call_for_projection = parse_spec(monitored_value)
+#             monitored_values[i] = {NAME: name,
 #                                    VALUE: value,
 #                                    PROJECTION: call_for_projection}
 #
 #     else:
 #         raise ObjectiveMechanismError("{} arg for {} ({} )must be a list or dict".
-#                                       format(MONITORED_OUTPUT_STATES, owner.name, monitored_output_states))
+#                                       format(MONITORED_VALUES, owner.name, monitored_values))
 #
-#     return monitored_output_states
+#     return monitored_values
 #
 #
 #
-#     # def add_monitored_output_states(self, states_spec, context=None):
+#     # def add_monitored_values(self, states_spec, context=None):
 #     #     """Validate specification and then add inputState to ObjectiveFunction + MappingProjection to it from state
 #     #
 #     #     Use by other objects to add a state or list of states to be monitored by EVC
@@ -2757,13 +2830,13 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #     #         context:
 #     #     """
 #     #     states_spec = list(states_spec)
-#     #     validate_monitored_output_state(self, states_spec, context=context)
+#     #     validate_monitored_value(self, states_spec, context=context)
 #     #     self._instantiate_monitored_output_states(states_spec, context=context)
 #
 # class SCRATCH_PAD():
 #     name = 'SCRATCH_PAD'
 #
-# print(_parse_monitored_output_state(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
+# print(_parse_monitored_value(SCRATCH_PAD, {'TEST_STATE_NAME':{VALUE: (32, 'Projection')}}))
 
 #endregion
 
