@@ -5314,7 +5314,6 @@ class FHNIntegrator(
             prefs=prefs,
             context=context)
 
-        self.variable = self.default_variable
         self.auto_dependent = True
 
 
@@ -5351,8 +5350,6 @@ class FHNIntegrator(
         current value of v , current value of w : float, list, or np.array
 
         """
-
-        variable = self.variable
 
         def dv_dt(time, v):
 
