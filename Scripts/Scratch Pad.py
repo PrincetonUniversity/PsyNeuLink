@@ -34,8 +34,7 @@ class ScratchPadError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
 
-# ----------------------------------------------- PsyNeuLink -----------------------------------------------------------
-
+# ----------------------------------------------- EXAMPLES ----------------------------------------------------------
 
 #region USER GUIDE
 # from PsyNeuLink.Components.Process import process, Process_Base
@@ -675,7 +674,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # s.run(inputs)
 # #endregion
 
-# #region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST MULTIPLE LEARNING SEQUENCES IN A PROCESS")
 #
 # a = TransferMechanism(name='a', default_variable=[0, 0])
@@ -711,7 +710,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # #endregion
 
-# #region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#region TEST ControlMechanism and ObjectiveMechanism EXAMPLES @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # print("TEST ControlMechanism and ObjectiveMechanism EXAMPLES")
 
 # my_transfer_mech_A = TransferMechanism()
@@ -781,11 +780,6 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #                                                      (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
 #
 # TEST = True
-
-
-
-
-
 
 
 from PsyNeuLink.Scheduling.Scheduler import Scheduler
@@ -867,18 +861,17 @@ expected_consideration_queue = [
 
 assert sched.consideration_queue == expected_consideration_queue
 
-
-
-
-
-
-
-
-
-
-
-
 # endregion
+
+
+# ----------------------------------------------- FUNCTIONS ----------------------------------------------------------
+
+#region TEST Function show_params() METHOD
+
+print("TEST Function show_params() METHOD")
+
+#endregion
+
 
 #region TEST INPUT FORMATS
 

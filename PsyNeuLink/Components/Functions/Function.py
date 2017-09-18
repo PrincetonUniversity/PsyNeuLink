@@ -659,6 +659,9 @@ class Function_Base(Function):
                 format(self.__class__.__name__))
         self._functionOutputType = value
 
+    def show_params(self):
+        for param_name, param_value in self.user_params.items():
+            print("{}: {}", param_name, param_value)
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
