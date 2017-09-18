@@ -175,12 +175,12 @@ def mechanisms():
     # FIXME: PROGRAM ERROR: call to State._parse_state_spec() for OutputState
     #  of ObjectiveMechanism should have returned dict or State, but returned
     #  str instead
-    # my_objective_mech = ObjectiveMechanism(monitored_values=[
+    # my_objective_mech = ObjectiveMechanism(monitored_output_states=[
     #     my_action_select_mech,
     #     my_reward_mech])
 
     # my_objective_mech = ObjectiveMechanism(
-    #     monitored_values=[my_action_select_mech, my_reward_mech],
+    #     monitored_output_states=[my_action_select_mech, my_reward_mech],
     #     function=LinearCombination(weights=[[-1], [1]]))
     # endregion
 

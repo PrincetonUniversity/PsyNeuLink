@@ -44,7 +44,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
-  * a **tuple**, with the name of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
+  * a **tuple**, with the name of the parameter as its 1st item and the *Mechanism* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
@@ -1310,7 +1310,7 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
                                                 format(CONTROL_SIGNAL, owner.name))
         else:
             raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                        "parameter Mechanism or ControlProjection for {} of {}".
+                                        "parameter's Mechanism or ControlProjection for {} of {}".
                                         format(CONTROL_SIGNAL, owner.name))
 
         if isinstance(control_signal_spec, ControlSignal):

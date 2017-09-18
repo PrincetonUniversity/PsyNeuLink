@@ -4,7 +4,7 @@ import pytest
 from PsyNeuLink.Components.Functions.Function import AccumulatorIntegrator, ConstantIntegrator, NormalDist, \
     SimpleIntegrator, FHNIntegrator
 from PsyNeuLink.Components.Functions.Function import AdaptiveIntegrator, DriftDiffusionIntegrator, \
-    OrnsteinUhlenbeckIntegrator
+    OrnsteinUhlenbeckIntegrator, UtilityIntegrator
 from PsyNeuLink.Components.Functions.Function import FunctionError
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismError
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.IntegratorMechanism \
@@ -714,6 +714,21 @@ class TestFHN:
                                                      1.2070585850028435, 1.4068978270680454, 1.5629844531368104,
                                                      1.6793901854329185, 1.7583410650743645, 1.7981128658110572,
                                                      1.7817328532815251])
+
+class TestUtilityIntegrator:
+
+    def test_utility_integrator(self):
+
+        U = IntegratorMechanism(
+            name = "UtilityIntegrator",
+            function=UtilityIntegrator(
+
+            )
+        )
+
+        U.execute([1])
+
+
 
     # def test_FHN_gilzenrat(self):
     #
