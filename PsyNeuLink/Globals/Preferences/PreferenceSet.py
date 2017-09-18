@@ -222,19 +222,6 @@ class PreferenceSet(object):
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
         # FIX: INTEGRATE WITH NAME FROM kwPreferenceSetName ENTRY IN DICT BELOW - 5/30/16
 
-        # # MODIFIED 9/10/16 OLD:
-        # if name is NotImplemented:
-        #     # Assign name of preference set class as base of name
-        #     self.name = self.__class__.__name__
-        #     # If it belongs to a class, append name of owner's class to name
-        #     if inspect.isclass(owner):
-        #          self.name = self.name + 'DefaultsFor' + owner.__name__
-        #     # Otherwise, it belongs to an object, so append name of the owner object's class to name
-        #     else:
-        #          self.name = self.name + 'Defaultsfor' + owner.__class__.__name__
-        # else:
-        #     self.name = name
-        # MODIFIED 9/10/16 NEW:
         if not name:
             # Assign name of preference set class as base of name
             name = self.__class__.__name__
@@ -244,7 +231,6 @@ class PreferenceSet(object):
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
                  name = name + 'Defaultsfor' + owner.__class__.__name__
-        # MODIFIED 9/10/16 END
         #endregion
 
         #region REGISTER

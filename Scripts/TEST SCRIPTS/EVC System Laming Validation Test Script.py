@@ -9,6 +9,7 @@ from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import *
 from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import *
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.Mechanism import MonitoredOutputStatesOption
 
 random.seed(0)
 np.random.seed(0)
@@ -64,6 +65,7 @@ Decision = DDM(function=BogaczEtAl(drift_rate=(1.0, ControlProjection(function=L
                output_states=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD],
+               # params={MONITOR_FOR_CONTROL:[MonitoredOutputStatesOption.ALL_OUTPUT_STATES]},
                prefs = DDM_prefs,
                name='Decision')
 
@@ -95,9 +97,22 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   # WORKS:
                   controller=EVCMechanism,
                   monitor_for_control=[
-                      Reward,
-                      PROBABILITY_UPPER_THRESHOLD,
-                      (RESPONSE_TIME, 1, -1)],
+                      # MonitoredOutputStatesOption.ALL_OUTPUT_STATES,
+                      # MonitoredOutputStatesOption.ONLY_SPECIFIED_OUTPUT_STATES,
+                      # Reward,
+                      # PROBABILITY_UPPER_THRESHOLD,
+                      # (RESPONSE_TIME, 1, -1),
+                      # MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES
+                      MonitoredOutputStatesOption.ALL_OUTPUT_STATES
+                  ],
+
+                  # # WORKS:
+                  # controller=EVCMechanism,
+                  # monitor_for_control=[
+                  #     Reward,
+                  #     {MECHANISM: Decision,
+                  #      OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
+                  #                      (RESPONSE_TIME, 1, -1)]}],
 
                   # # # WORKS:
                   # controller=EVCMechanism(objective_mechanism=[
@@ -105,25 +120,23 @@ mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
                   #                                    Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
                   #                                    (Decision.output_states[RESPONSE_TIME], 1, -1)]),
 
-                  # # # WORKS:
-                  # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_values=[
+                  # # WORKS
+                  # controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
                   #                                    Reward,
                   #                                    Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
                   #                                    (Decision.output_states[RESPONSE_TIME], -1, 1)])),
 
-                  # # # WORKS:
+                  # # WORKS:
                   # controller=EVCMechanism(objective_mechanism=[Reward,
                   #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: PROBABILITY_UPPER_THRESHOLD},
-                  #                                              {MECHANISM: Decision,
-                  #                                               OUTPUT_STATE: RESPONSE_TIME,
-                  #                                               WEIGHT: 1,
-                  #                                               EXPONENT: -1}]),
+                  #                                               OUTPUT_STATES: [PROBABILITY_UPPER_THRESHOLD,
+                  #                                                               (RESPONSE_TIME, 1, -1)]}]),
 
                   # # DOESN'T WORK SINCE Decision.XXX IS A STRING and name can't be resolved by ControlMechanism
                   # controller=EVCMechanism(objective_mechanism=[Reward,
                   #                                              PROBABILITY_UPPER_THRESHOLD,
                   #                                              (RESPONSE_TIME, -1, 1)]),
+
                   enable_controller=True,
 
                   # monitor_for_control=[Input, PROBABILITY_UPPER_THRESHOLD,(RESPONSE_TIME, -1, 1)],
