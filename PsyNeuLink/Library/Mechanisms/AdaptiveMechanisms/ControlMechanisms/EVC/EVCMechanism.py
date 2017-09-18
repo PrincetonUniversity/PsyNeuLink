@@ -325,7 +325,7 @@ from PsyNeuLink.Components.Component import function_type
 from PsyNeuLink.Components.Functions.Function import ModulationParam, _is_modulation_param, LinearCombination
 from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base
+    import ControlMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms import IntegratorMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
@@ -351,7 +351,7 @@ class EVCError(Exception):
         return repr(self.error_value)
 
 
-class EVCMechanism(ControlMechanism_Base):
+class EVCMechanism(ControlMechanism):
     """EVCMechanism(                                                   \
     system=True,                                                       \
     objective_mechanism=None,                                          \
@@ -671,13 +671,13 @@ class EVCMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+    class ClassDefaults(ControlMechanism.ClassDefaults):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({PARAMETER_STATES: False})
 
     @tc.typecheck

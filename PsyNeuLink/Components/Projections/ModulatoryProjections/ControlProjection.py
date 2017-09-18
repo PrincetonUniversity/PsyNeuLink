@@ -101,7 +101,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, parameter_keywords
 from PsyNeuLink.Components.Functions.Function import Linear
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ModulatoryProjection import ModulatoryProjection_Base
 from PsyNeuLink.Components.Projections.Projection import ProjectionError, Projection_Base, projection_keywords
 from PsyNeuLink.Components.ShellClasses import Mechanism, Process
@@ -159,7 +159,7 @@ class ControlProjection(ModulatoryProjection_Base):
             + paramClassDefaults:
                 FUNCTION:Linear,
                 FUNCTION_PARAMS:{SLOPE: 1, INTERCEPT: 0},  # Note: this implements identity function
-                PROJECTION_SENDER: ControlMechanism_Base
+                PROJECTION_SENDER: ControlMechanism
                 PROJECTION_SENDER_VALUE: [defaultControlAllocation],
                 CONTROL_SIGNAL_COST_OPTIONS:ControlSignalCosts.DEFAULTS,
                 ALLOCATION_SAMPLES: DEFAULT_ALLOCATION_SAMPLES,
@@ -258,7 +258,7 @@ class ControlProjection(ModulatoryProjection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({
-        PROJECTION_SENDER: ControlMechanism_Base,
+        PROJECTION_SENDER: ControlMechanism,
         PROJECTION_SENDER_VALUE: defaultControlAllocation})
 
     @tc.typecheck
@@ -321,7 +321,7 @@ class ControlProjection(ModulatoryProjection_Base):
         # If sender is specified as a Mechanism, validate that it is a ControlMechanism
         if isinstance(self.sender, Mechanism):
             # If sender is a ControlMechanism, call it to instantiate its ControlSignal projection
-            if not isinstance(self.sender, ControlMechanism_Base):
+            if not isinstance(self.sender, ControlMechanism):
                 raise ControlProjectionError("Mechanism specified as sender for {} ({}) must be a "
                                                   "ControlMechanism (but it is a {})".
                                     format(self.name, self.sender.name, self.sender.__class__.__name__))
