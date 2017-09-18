@@ -359,7 +359,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def initial_short_term_utility(self):
-        return self._objective_mechanism.function_object.initial_short_term_utility
+        return self._objective_mechanism.function_object._initial_short_term_utility
 
     @initial_short_term_utility.setter
     def initial_short_term_utility(self, value):
@@ -367,7 +367,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def initial_long_term_utility(self):
-        return self._objective_mechanism.function_object.initial_long_term_utility
+        return self._objective_mechanism.function_object._initial_long_term_utility
 
     @initial_long_term_utility.setter
     def initial_long_term_utility(self, value):
@@ -375,7 +375,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def short_term_gain(self):
-        return self._objective_mechanism.function_object.short_term_gain
+        return self._objective_mechanism.function_object._short_term_gain
 
     @short_term_gain.setter
     def short_term_gain(self, value):
@@ -383,15 +383,15 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def long_term_gain(self):
-        return self._objective_mechanism.function_object.long_term_gain
+        return self._objective_mechanism.function_object._long_term_gain
 
     @long_term_gain.setter
     def long_term_gain(self, value):
         self._objective_mechanism.function_object.long_term_gain = value
 
     @property
-    def    short_term_bias(self):
-        return self._objective_mechanism.function_object.short_term_bias
+    def short_term_bias(self):
+        return self._objective_mechanism.function_object._short_term_bias
 
     @short_term_bias.setter
     def short_term_bias(self, value):
@@ -399,7 +399,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def    long_term_bias(self):
-        return self._objective_mechanism.function_object.long_term_bias
+        return self._objective_mechanism.function_object._long_term_bias
 
     @long_term_bias.setter
     def long_term_bias(self, value):
@@ -407,7 +407,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def    short_term_rate(self):
-        return self._objective_mechanism.function_object.short_term_rate
+        return self._objective_mechanism.function_object._short_term_rate
 
     @short_term_rate.setter
     def short_term_rate(self, value):
@@ -415,7 +415,7 @@ class ITCMechanism(ControlMechanism):
 
     @property
     def    long_term_rate(self):
-        return self._objective_mechanism.function_object.long_term_rate
+        return self._objective_mechanism.function_object._long_term_rate
 
     @long_term_rate.setter
     def long_term_rate(self, value):

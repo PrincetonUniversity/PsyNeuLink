@@ -22,6 +22,8 @@ my_main_process = process(pathway=[my_mech_1])
 my_LC_process = process(pathway=[my_LC])
 my_system = system(processes=[my_main_process, my_LC_process])
 my_system.show()
+# my_system.show_graph()
+
 inputs={my_mech_1:[0]}
 print(my_system.run(inputs=inputs))
 
