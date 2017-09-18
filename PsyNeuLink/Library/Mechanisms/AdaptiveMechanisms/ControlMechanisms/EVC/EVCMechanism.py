@@ -652,8 +652,9 @@ class EVCMechanism(ControlMechanism_Base):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCMechanism.system>`.  Each sends a `ControlProjection` to the `ParameterState` for the
-        parameter it controls (same as the EVCMechanism's `output_states <Mechanism_Base.output_states>` attribute).
+        from its `system <EVCMechanism.system>` (same as the EVCMechanism's `output_states
+        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
+        parameter it controls
 
 
     """

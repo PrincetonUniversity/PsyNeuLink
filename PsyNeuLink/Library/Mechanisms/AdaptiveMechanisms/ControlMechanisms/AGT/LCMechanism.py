@@ -458,13 +458,11 @@ class LCMechanism(ControlMechanism_Base):
     COMMENT
 
     control_signals : List[ControlSignal]
-        list of the `ControlSignal` for each Mechanism listed in the LCMechanism's `modulated_mechanisms
-        <LCMechanism.modulated_mechanisms>` attribute; each ControlSignal sends a `ControlProjections` to the
-        `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the `function
-        <Mechanism_Base.function>corresponding Mechanism (same as the LCMechanism's `output_states
-        <Mechanism_Base.output_states>` attribute).
-
-
+        list of the `ControlSignals <ControlSIgnal>` for each Mechanism listed in the LCMechanism's
+        `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute  (same as the LCMechanism's `output_states
+        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjections` to the `ParameterState` for the
+        `multiplicative_param <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>corresponding
+        Mechanism.
 
     control_projections : List[ControlProjection]
         list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
