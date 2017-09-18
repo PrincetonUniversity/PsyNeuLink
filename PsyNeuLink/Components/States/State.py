@@ -2512,7 +2512,7 @@ def _parse_state_spec(owner,
 
     # 2-item tuple;  could be:
     #    (spec, Projection)
-    #    (Mechanism, ControlSignal spec)
+    #    (param_name, Mechanism)
     elif isinstance(state_spec, tuple):
         _is_legal_state_spec_tuple(owner, state_spec, state_type_name)
         # Put projection spec from second item of tuple in params
@@ -2520,7 +2520,7 @@ def _parse_state_spec(owner,
         # FIX 5/23/17: NEED TO HANDLE NON-MODULATORY PROJECTION SPECS
         params.update({PROJECTIONS:[state_spec[1]]})
 
-        # FIX: 9/17/17 NEED TO HANDLE (Mechanism, ParamName string) for state_type = ControlSignal
+        # FIX: 9/17/17 NEED TO HANDLE (ParamName string, Mechanism) for state_type = ControlSignal
 
         # Parse state_spec in first item of tuple (without params)
         state_dict = _parse_state_spec(owner=owner,

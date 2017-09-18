@@ -181,7 +181,7 @@ class ITCMechanism(ControlMechanism_Base):
 
     control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the ITCMechanism; a `ControlSignal` is created for each
-        (see `ControlMechanism_Control_Signals` for details of specification).
+        (see `ControlSignal_Specification` for details of specification).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -243,8 +243,8 @@ class ITCMechanism(ControlMechanism_Base):
         is the same as its `value <Mechanism_Base.value>` attribute).
 
     control_signals : List[ControlSignal]
-        list of `ControlSignals <ControlSignals>` for the ITCMechanism, each of which sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
+        list of the `ControlSignals <ControlSignals>` for the ITCMechanism, each of which sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls (same as ITCMechanism's
         `output_states <Mechanism_Base.output_states>` attribute).
 
     control_projections : List[ControlProjection]
