@@ -5964,7 +5964,7 @@ class UtilityIntegrator(
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
 
-    def _EWMAFilter(self, a, rate, b):
+    def _EWMA_filter(self, a, rate, b):
 
         return (1 - rate) * a + rate * b
 
@@ -6016,19 +6016,19 @@ class UtilityIntegrator(
 
         new_value = variable
 
-        long_term_utility = self._logistic(variable = self._EWMAFilter(self.previous_long_term_utility,
+        long_term_utility = self._logistic(variable = self._EWMA_filter(self.previous_long_term_utility,
                                                                             self.long_term_rate,
                                                                             variable),
                                                 gain = self.long_term_gain,
                                                 bias = self.long_term_bias)
 
-        short_term_utility = self._logistic(variable = self._EWMAFilter(self.previous_short_term_utility,
+        short_term_utility = self._logistic(variable = self._EWMA_filter(self.previous_short_term_utility,
                                                                              self.short_term_rate,
                                                                              variable),
                                                  gain=self.short_term_gain,
                                                  bias=self.short_term_bias)
 
-        value = self._EWMAFilter(long_term_utility, rate, short_term_utility)
+        value = self._EWMA_filter(long_term_utility, rate, short_term_utility)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old utility values
