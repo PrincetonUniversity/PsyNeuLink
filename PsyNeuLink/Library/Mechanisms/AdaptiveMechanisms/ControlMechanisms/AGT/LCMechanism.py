@@ -502,7 +502,8 @@ class LCMechanism(ControlMechanism_Base):
     def __init__(self,
                  system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 modulated_mechanisms=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -636,19 +637,18 @@ class LCMechanism(ControlMechanism_Base):
         #
         # # Create specification for **control_signals** argument of ControlSignal constructor
         # self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
-
         # MODIFIED 9/3/17 NEW [ASSIGN EACH ControlProjection TO A DIFFERENT ControlSignal]
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        self.control_signals = []
+        self._control_signals = []
         if self.modulated_mechanisms:
+            # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
+            if not isinstance(self.modulated_mechanisms, list):
+                self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 multiplicative_param_names.append(mech.function_object.multiplicative_param)
-
-            # Create specification for **control_signals** argument of ControlSignal constructor
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
-                self.control_signals.append((mult_param_name, mech))
-
+                self._control_signals.append((mult_param_name, mech))
         # MODIFIED 9/3/17 END
 
         super()._instantiate_output_states(context=context)

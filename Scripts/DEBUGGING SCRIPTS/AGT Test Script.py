@@ -16,7 +16,7 @@ my_mech_1 = TransferMechanism()
 my_LC = LCMechanism(objective_mechanism=[my_mech_1],
                     modulated_mechanisms=[my_mech_1])
 my_ITC = ITCMechanism(monitored_output_states=my_mech_1,
-                      control_signals=[(FHNIntegrator.MODE, my_LC)])
+                      control_signals=[(FHNIntegrator.MODE,my_LC)])
 
 my_main_process = process(pathway=[my_mech_1])
 my_LC_process = process(pathway=[my_LC])

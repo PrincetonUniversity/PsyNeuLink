@@ -651,7 +651,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
-            self.objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
+            self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                           function=LinearCombination(operation=PRODUCT),
                                                           name=self.name + '_Objective Mechanism')
 
@@ -886,7 +886,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         control_signal.index = output_state_index
 
         # (Re-)assign control_signals attribute to output_states
-        self.control_signals = self.output_states
+        self._control_signals = self.output_states
 
         return control_signal
 
