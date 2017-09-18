@@ -920,10 +920,20 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Functions.Function import UtilityIntegrator
 print("TEST UtilityIntegrator FUNCTION")
 
-x = UtilityIntegrator(long_term_rate=.8, short_term_rate=.2)
-x.long_term_rate = .8
+x = UtilityIntegrator(initial_long_term_utility=0.1,
+                      long_term_rate=.1,
+                      short_term_rate=.6,
+                      initial_short_term_utility=0.1)
+x.operation='s*l'
 x.show_params()
-print (x.execute([[1]]*10))
+
+# for i in range(20):
+#     print(x.execute(0))
+for i in range(3):
+    print("input:", 0.1, "; result:", x.execute(0.1))
+print ("SWITCH")
+for i in range(100):
+    print("input:", 1, "; result:", x.execute(1))
 
 #endregion
 

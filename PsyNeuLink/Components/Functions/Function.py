@@ -5696,24 +5696,24 @@ class AccumulatorIntegrator(
 class UtilityIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    UtilityIntegrator(                 \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        initial_short_term_utility = 0.0,\
-        initial_long_term_utility = 0.0,\
-        short_term_gain = 1.0,          \
-        long_term_gain =1.0,            \
-        short_term_bias = 0.0,          \
-        long_term_bias=0.0,             \
-        short_term_rate=1.0,            \
-        long_term_rate=1.0,             \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    UtilityIntegrator(                    \
+        default_variable=None,            \
+        rate=1.0,                         \
+        noise=0.0,                        \
+        scale: parameter_spec = 1.0,      \
+        offset: parameter_spec = 0.0,     \
+        initializer,                      \
+        initial_short_term_utility = 0.0, \
+        initial_long_term_utility = 0.0,  \
+        short_term_gain = 1.0,            \
+        long_term_gain =1.0,              \
+        short_term_bias = 0.0,            \
+        long_term_bias=0.0,               \
+        short_term_rate=1.0,              \
+        long_term_rate=1.0,               \
+        params=None,                      \
+        owner=None,                       \
+        prefs=None,                       \
         )
 
     .. _UtilityIntegrator:
@@ -5962,6 +5962,11 @@ class UtilityIntegrator(
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
 
+        if OPERATION in target_set:
+            if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
+                raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
+                                    format(OPERATION, self.name, {'s*l', 's+l', 's-l', 'l-s'}))
+
     def _EWMA_filter(self, a, rate, b):
 
         return (1 - rate) * a + rate * b
@@ -6038,8 +6043,9 @@ class UtilityIntegrator(
         elif self.operation =="s+l":
             # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
             value = (1 - short_term_utility_logistic) + long_term_utility_logistic
-
-
+        elif self.operation =="l-s":
+            # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
+            value = long_term_utility_logistic - (1-short_term_utility_logistic)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old utility values

@@ -421,6 +421,15 @@ class ITCMechanism(ControlMechanism):
     def long_term_rate(self, value):
         self._objective_mechanism.function_object.long_term_rate = value
 
+    @property
+    def operation(self):
+        return self._objective_mechanism.function_object._operation
+
+    @operation.setter
+    def operation(self, value):
+        self._objective_mechanism.function_object.operation = value
+
+
 
     def show(self):
         """Display the `OutputStates <OutputState>` monitored by the ITCMechanism's `objective_mechanism`
