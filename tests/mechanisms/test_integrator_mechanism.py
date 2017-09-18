@@ -735,22 +735,135 @@ class TestUtilityIntegrator:
         short_term_util = []
         long_term_util = []
         for i in range(50):
-            engagement.append(U.execute([1])[0][0][0])
-            short_term_util.append(U.function_object.previous_short_term_utility[0][0])
-            long_term_util.append(U.function_object.previous_long_term_utility[0][0])
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
 
+    def test_utility_integrator_short_minus_long(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
+
+        U = IntegratorMechanism(
+            name = "UtilityIntegrator",
+            function=UtilityIntegrator(
+                operation="s-l"
+            )
+
+        )
+
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
+
+    def test_utility_integrator_short_plus_long(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
+
+        U = IntegratorMechanism(
+            name = "UtilityIntegrator",
+            function=UtilityIntegrator(
+                operation="s+l"
+            )
+
+        )
+
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0])
+            short_term_util.append(U.function_object.short_term_utility_logistic[0])
+            long_term_util.append(U.function_object.long_term_utility_logistic[0])
+        print("engagement = ", engagement)
+        print("short_term_util = ", short_term_util)
+        print("long_term_util = ", long_term_util)
+
+    # def test_plot_utility_integrator(self):
         # from matplotlib import pyplot as plt
         # from mpl_toolkits.mplot3d import Axes3D
         # from matplotlib import cm
         # import numpy as np
         # fig = plt.figure()
         # ax = fig.gca(projection='3d')
-        # short_term_util, long_term_util = np.meshgrid(short_term_util, long_term_util)
-        # surf = ax.plot_surface(short_term_util, long_term_util, engagement,
-        #                        cmap=cm.coolwarm,
+        #
+        # def logistic(variable):
+        #
+        #     try:
+        #         return_val = 1 / (1 + np.exp(-variable))
+        #     except (Warning):
+        #         # handle RuntimeWarning: overflow in exp
+        #         return_val = 0
+        #
+        #     return return_val
+        #
+        # short = np.linspace(0, 1, 20)
+        # long = np.linspace(0, 1, 20)
+        # short_grid, long_grid = np.meshgrid(short, long, sparse=True)
+        #
+        # short_logistic = logistic(short)
+        # long_logistic = logistic(long)
+        # short_grid_logistic, long_grid_logistic = np.meshgrid(short_grid, long_grid, sparse=True)
+        #
+        # z = (1-short_grid_logistic)*long_grid_logistic
+        # surf = ax.plot_surface(short_grid_logistic, long_grid_logistic, z,
+        #                        cmap=cm.gray,
         #                        linewidth=0,
-        #                        antialiased=False)
-        # fig.colorbar(surf, shrink=0.5, aspect=5)
+        #                        # antialiased=False,
+        #
+        #                        )
+        # # fig.colorbar(surf, shrink=0.5, aspect=5)
+        # plt.show()
+
+        # def logistic(x):
+        #
+        #     try:
+        #         return_val = 1 / (1 + np.exp(-x))
+        #     except (Warning):
+        #         # handle RuntimeWarning: overflow in exp
+        #         return_val = 0
+        #
+        #     return return_val
+        #
+        # def combine(s, l):
+        #     return (1-s)*l
+        #
+        # import numpy as np
+        # from mpl_toolkits.mplot3d import Axes3D
+        # import matplotlib.pyplot as plt
+        # import random
+        #
+        #
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # s = l = np.arange(0, 1.0, 0.05)
+        # s = list(map(logistic, s))
+        # l = list(map(logistic, l))
+        # S, L = np.meshgrid(s, l)
+        # zs = np.array([combine(s, l) for s, l in zip(np.ravel(S), np.ravel(L))])
+        # Z = zs.reshape(S.shape)
+        #
+        # ax.plot_surface(S, L, Z)
+        #
+        # ax.set_xlabel('short term')
+        # ax.set_ylabel('long term')
+        # ax.set_zlabel('engagement')
+        #
         # plt.show()
 
 
