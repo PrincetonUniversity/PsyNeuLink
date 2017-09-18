@@ -268,12 +268,12 @@ assigned for each parameter controlled by a ControlMechanism, and a <a class="re
 ControlSignal to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the corresponding parameter to be controlled.</p>
 <p>The parameters to be controlled by a ControlMechanism can be specified where it is created.</p>
 <p>If it is created explicitly, the parameters to be  controlled can be specified in the <strong>control_signals</strong> argument of
-its constructor.  The argument must be a list, each item of which is <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">ControlSignal specification</span></a>.</p>
+its constructor.  The argument must be a <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">specification for one more ControlSignals</span></a>.</p>
 <p>If the ControlMechanism is created as part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, the parameters to be controlled by it can be specified in
 one of two ways:</p>
 <blockquote>
 <div><ul class="simple">
-<li>in the <strong>control_signals</strong> argument of the System’s constructor, using a list of <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">ControlSignal specifications</span></a>;</li>
+<li>in the <strong>control_signals</strong> argument of the System’s constructor, using one or more <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">ControlSignal specifications</span></a>;</li>
 <li>where the <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter is specified</span></a>, by including a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> or
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> in a <a href="#id1"><span class="problematic" id="id2">`</span></a>tuple specification for the parameter.</li>
 </ul>
@@ -408,8 +408,8 @@ of one or more <a class="reference internal" href="Component.html"><span class="
 should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitored-output-states"><span class="std std-ref">OutputState specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitored_output_states</strong> argument.</li>
 <li><strong>function</strong> (<em>TransferFunction : default Linear</em><em>(</em><em>slope=1</em><em>, </em><em>intercept=0</em><em>)</em>) – specifies function used to combine values of monitored OutputStates.</li>
-<li><strong>control_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="ParameterState.html#module-ParameterState" title="ParameterState"><em>ParameterState</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Mechanism.html#module-Mechanism" title="Mechanism"><em>Mechanism</em></a><em>] or </em><em>dict</em><em>]</em>) – specifies the parameters to be controlled by the ControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
-(see <a class="reference internal" href="#ControlMechanism.ControlMechanism_Base.control_signals" title="ControlMechanism.ControlMechanism_Base.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a> for details).</li>
+<li><strong>control_signals</strong> (<em>ControlSignal specification</em><em> or </em><em>List</em><em>[</em><em>ControlSignal specification</em><em>, </em><em>..</em><em>]</em>) – specifies the parameters to be controlled by the ControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
+(see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
 <li><strong>modulation</strong> (<em>ModulationParam : ModulationParam.MULTIPLICATIVE</em>) – specifies the default form of modulation used by the ControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>,
 unless they are <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">individually specified</span></a>.</li>
 <li><strong>params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>]</em><em>]</em>) – a <a class="reference internal" href="ParameterState.html#parameterstate-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters
@@ -481,9 +481,10 @@ ControlMechanism’s <a class="reference internal" href="Mechanism.html#Mechanis
 <dl class="attribute">
 <dt id="ControlMechanism.ControlMechanism_Base.control_signals">
 <code class="descname">control_signals</code><a class="headerlink" href="#ControlMechanism.ControlMechanism_Base.control_signals" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>List[ControlSignal]</em> – list of <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> for the ControlMechanism, each of which sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
-to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls (same as ControlMechanism’s
-<a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute).</p>
+<dd><p><em>List[ControlSignal]</em> – list of the <code class="xref any docutils literal"><span class="pre">ControlSignals</span></code> for the ControlMechanism, including any inherited from a
+<code class="xref any docutils literal"><span class="pre">system</span></code> for which it is a <a class="reference internal" href="System.html#System.System_Base.controller" title="System.System_Base.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (same as
+ControlMechanism’s <a class="reference internal" href="Mechanism.html#Mechanism.Mechanism_Base.output_states" title="Mechanism.Mechanism_Base.output_states"><code class="xref any py py-attr docutils literal"><span class="pre">output_states</span></code></a> attribute); each sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>
+to the <a class="reference internal" href="ParameterState.html"><span class="doc">ParameterState</span></a> for the parameter it controls</p>
 </dd></dl>
 
 <dl class="attribute">
