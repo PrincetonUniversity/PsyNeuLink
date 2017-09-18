@@ -5732,8 +5732,7 @@ class UtilityIntegrator(
 
     Finally, computes a single value which combines the two values according to:
 
-    value = (1 - `rate <UtilityIntegrator.rate>`) * logistic(long_term_utility) + `rate <UtilityIntegrator.rate>` *
-    logistic(short_term_utility)
+    value = [1-short_term_utility_logistic]*long_term_utility_logistic
 
     Arguments
     ---------
@@ -5763,10 +5762,10 @@ class UtilityIntegrator(
         specifies bias for logistic function applied to long_term_utility
 
     short_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to short_term_utility
+        specifies smoothing factor of EWMA filter applied to short_term_utility
 
     long_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to long_term_utility
+        specifies smoothing factor of EWMA filter applied to long_term_utility
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5786,9 +5785,6 @@ class UtilityIntegrator(
 
     variable : number or np.array
         current input value used in both the short term and long term EWMA computations
-
-    rate : float, list or 1d np.array : default 1.0
-        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         TBI?
@@ -5812,10 +5808,10 @@ class UtilityIntegrator(
         specifies bias for logistic function applied to long_term_utility
 
     short_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to short_term_utility
+        specifies smoothing factor of EWMA filter applied to short_term_utility
 
     long_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to long_term_utility
+        specifies smoothing factor of EWMA filter applied to long_term_utility
 
     previous_short_term_utility : 1d np.array
         stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
@@ -5863,8 +5859,8 @@ class UtilityIntegrator(
                  long_term_gain =1.0,
                  short_term_bias = 0.0,
                  long_term_bias=0.0,
-                 short_term_rate=0.1,
-                 long_term_rate=0.9,
+                 short_term_rate=0.9,
+                 long_term_rate=0.1,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5997,9 +5993,6 @@ class UtilityIntegrator(
             a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
-
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
 
         Returns
         -------
