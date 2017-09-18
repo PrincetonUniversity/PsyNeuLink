@@ -38,8 +38,8 @@ MappingProjections are also generated automatically in the following circumstanc
     have a Projection assigned between them (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>`
     specification, which determines the appropriate matrix by context);
   ..
-  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_values
-    <ObjectiveMechanism.monitored_values>` attribute to the corresponding `InputState` of the ObjectiveMechanism
+  * by an `ObjectiveMechanism`, from each `OutputState` listed in its `monitored_output_states
+    <ObjectiveMechanism.monitored_output_states>` attribute to the corresponding `InputState` of the ObjectiveMechanism
     (`AUTO_ASSIGN_MATRIX` is used as the `matrix <MappingProjection.matrix>` specification, which determines the
     appropriate matrix by context);
   ..
@@ -48,7 +48,7 @@ MappingProjections are also generated automatically in the following circumstanc
   ..
   * by a `ControlMechanism <ControlMechanism>`, from the *OUTCOME* `OutputState of the `ObjectiveMechanism` that `it
     creates <ControlMechanism_ObjectiveMechanism>` to its *ERROR_SIGNAL* `InputState`, and from the `OutputStates
-    <OutputState>` listed in the ObjectiveMechanism's `monitored_values <ObjectiveMechanism.monitored_values>`
+    <OutputState>` listed in the ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
     attribute to the ObjectiveMechanism's `primary InputState <InputState_Primary>` (as described above; an
     `IDENTITY_MATRIX` is used for all of these).
 

@@ -44,7 +44,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 
   * a **ParameterState** of the Mechanism to which the parameter belongs;
   ..
-  * a **tuple**, with the name of the parameter as its 1st item. and the *Mechanism* to which it belongs as the 2nd;
+  * a **tuple**, with the name of the parameter as its 1st item and the *Mechanism* to which it belongs as the 2nd;
     note that this is a convenience format, which is simpler to use than a specification dictionary (see below),
     but precludes specification of any `parameters <ControlSignal_Structure>` for the ControlSignal.
   ..
@@ -100,7 +100,7 @@ A ControlSignal has a `modulation <GatingSignal.modulation>` attribute that dete
 specified and used to modulate the `value <State_Base.value>` of a State). The `modulation <ControlSignal.modulation>`
 attribute can be specified in the **modulation** argument of the constructor for a ControlSignal, or in a specification
 dictionary as described `above <ControlSignal_Specification>`. The value must be a value of `ModulationParam`;  if it
-is not specified, its default is the value of the `modulation <ControlMechanism_Base.modulation>` attribute of the
+is not specified, its default is the value of the `modulation <ControlMechanism.modulation>` attribute of the
 ControlMechanism to which the ControlSignal belongs (which is the same for all of the ControlSignals belonging to that
 ControlMechanism).  The value of the `modulation <ControlSignal.modulation>` attribute of a ControlSignal is used by
 all of the `ControlProjections <ControlProjection>` that project from that ControlSignal.
@@ -188,7 +188,7 @@ Each ParameterState uses that value to modify the value(s) of the parameter(s) t
 `ModulatorySignal_Modulation` for a more detailed description of how modulation operates).  The ControlSignal's
 `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost` attribute. That is used
 by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to evaluate an
-`allocation_policy <ControlMechanism_Base.allocation_policy>`, and adjust the ControlSignal's `allocation
+`allocation_policy <ControlMechanism.allocation_policy>`, and adjust the ControlSignal's `allocation
 <ControlSignal.allocation>` for the next `TRIAL`.
 
 .. note::
@@ -470,7 +470,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : default range(0.1, 1, 0.1)
         specifies the values used by `ControlSignal's `ControlSignal.owner` to determine its
-        `allocation_policy <ControlMechanism_Base.allocation_policy>` (see `ControlSignal_Execution`).
+        `allocation_policy <ControlMechanism.allocation_policy>` (see `ControlSignal_Execution`).
 
     modulation : ModulationParam : default ModulationParam.MULTIPLICATIVE
         specifies the way in which the `value <ControlSignal.value>` the ControlSignal is used to modify the value of
@@ -516,7 +516,7 @@ class ControlSignal(ModulatorySignal):
 
     allocation_samples : list : DEFAULT_SAMPLE_VALUES
         set of values to sample by the ControlSignal's `owner <ControlSignal.owner>` to determine its
-        `allocation_policy <ControlMechanism_Base.allocation_policy>`.
+        `allocation_policy <ControlMechanism.allocation_policy>`.
 
     function : TransferFunction :  default Linear(slope=1, intercept=0)
         converts `allocation` into the ControlSignal's `intensity`.  The default is the identity function, which
@@ -1310,7 +1310,7 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
                                                 format(CONTROL_SIGNAL, owner.name))
         else:
             raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                        "parameter Mechanism or ControlProjection for {} of {}".
+                                        "parameter's Mechanism or ControlProjection for {} of {}".
                                         format(CONTROL_SIGNAL, owner.name))
 
         if isinstance(control_signal_spec, ControlSignal):

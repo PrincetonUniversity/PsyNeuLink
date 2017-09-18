@@ -193,7 +193,7 @@
 
 # DOCUMENTATION: can suppress variable that is an arg for a construcutor in a parent class from
 #                   having to be an arg in the constructor of a subclass by putting it in paramClassDefaults
-#                   for the subclass (e.g.:  MONITORED_VALUES for ComparatorMechanism)
+#                   for the subclass (e.g.:  MONITORED_OUTPUT_STATES for ComparatorMechanism)
 
 # DOCUMENTATION: TABLE SOMEWHERE OF ALL SPECIFICATION DICIONARIES AND THEIR ENTRIES
 
@@ -224,7 +224,7 @@
 # SEARCH & REPLACE: allocation_policy -> control_policy (AND ALL VARIANTS THEREOF)
 # SEARCH & REPLACE: base_value -> base_value
 # SEARCH & REPLACE: Modulation.ADD -> ADDITIVE, and MULTIPLY -> MULTIPLICATIVE
-# SEARCH & REPLACE: monitored_values -> monitor_values
+# SEARCH & REPLACE: monitored_output_states -> monitor_values
 
 # FIX State:
 #         Consolidate _instantiate_state_lists into _instantiate_state,
@@ -241,7 +241,7 @@
 # FIX: FINISH input/output refactoring: ----------------------------------------------------------------------------
 #
 # IMPLEMENT: Override input_states and output_states properties with assignments to:
-#                monitored_values (for input_states of ObjectiveMechanism)
+#                monitored_output_states (for input_states of ObjectiveMechanism)
 #                control_signals (for output_states of ControlMechanism)
 #                gating_signals (for output_states of GatingMechanism)
 # IMPLEMENT:  **gating** arg for GatingMechanism (comparable to **control** arg for ControlMechanism)
@@ -301,7 +301,7 @@
 #          c) Subclass implements default set in module, and uses those as defaults for constructor args
 #                (??standard way of overriding paramClassDefault or need to implement in assign_args_to_dicts)?
 
-#          See ObjectiveMechanism._instantiate_input_state_for_monitored_value for parse of input_state specification
+#          See ObjectiveMechanism._instantiate_input_state_for_monitored_output_state for parse of input_state specification
 
 # DECIDE WHETHER OR NOT input_states AND output_states SHOULD BE properties (at bottom of assign_args_to_params):
 #          IF SO, make sure paramClassDefaults ones get done if input_states/output_states aren't args or are None
@@ -448,9 +448,9 @@
 
 # FIX: WHEN ControlMechanism IS ASSIGNED TO SYSTEM,
 #      VALIDATE THAT ALL ITEMS LISTED IN monitor_for_control ATTTRIB ARE IN THE SAME SYSTEM AS THE ControlMechanism.
-#               (SEE ControlMechanism_Base._validate_params LINE 316)
+#               (SEE ControlMechanism._validate_params LINE 316)
 #               AND THAT ITEMS LISTED IN control_signals ATTRIB ARE THE SAME SYSTEM AS THE ControlMechanism
-#               (SEE ControlMechanism_Base._validate_params LINE 419)
+#               (SEE ControlMechanism._validate_params LINE 419)
 #      (SINCE COULDN'T DO IT IN _validate_params AS EVC WAS NOT YET IN SYSTEM)
 
 # FIX: UPDATE WITH MODULATION_MODS
@@ -508,8 +508,7 @@
 # IMPLEMENT: Support for multiple GatingProjections from a single GatingSignal
 # IMPLEMENT: Abstract modulatory projection in AdaptiveMechanism
 #                - using _instantiate_output_states and _instantiate_projections
-#                - should parallel implementation of input_states and monitored_values in ObjectiveMechanism
-# SEARCH & REPLACE: monitored_values -> monitor_values
+#                - should parallel implementation of input_states and monitored_output_states in ObjectiveMechanism
 # IMPLEMENT: modulation FOR ModulatoryProjections
 #            function_type or method_type SPECIFICATION IN ADDITION TO Modulation FOR modulation
 #                 parameter of ModulatoryFunctions
@@ -624,13 +623,13 @@
 # IMPLEMENT:  MONITORED_OUTPUT_STATES param for Mechanism --
 #                  make this a general form of MONITOR_FOR_CONTROL, that can be used by ObjectiveMechanism
 #             [SEE `monitoring_status` in ObjectiveMechanism]
-# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_VALUES specification of ObjectiveMechanism
+# IMPLEMENT: MonitoredOutputStatesOption in string for MONITORED_OUTPUT_STATES specification of ObjectiveMechanism
 #
 # DOCUMENTATION:
 #    search for "specification dictionary" and replace with: `specification dictionary <Mechanism_Creation>`
 #
 # CONFIRM (IN ObjectiveMechanism):
-#         elif isinstance(monitored_value, InputState): [~616]
+#         elif isinstance(monitored_output_state, InputState): [~616]
 #         if isinstance(state_spec, dict): [~753]
 #         if isinstance(state_spec, MonitoredOutputStatesOption): [~759]
 
@@ -666,8 +665,8 @@
 #              MODIFY TO:
 #                    d) Revise EVCMechanism._get_monitored_output_states_for_system() to NOT direclty assign weights
 #                               and exponents, but rather assign
-#                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_values)
-#                    f) parse MonitoredOUtputStates specification for monitored_values arg
+#                        (see RE-WRITE TO INDICATE:  (SEE ATTRIBUTE DESCRIPTION FOR monitored_output_states)
+#                    f) parse MonitoredOUtputStates specification for monitored_output_states arg
 #                    g) Fix EVC use of ObjectiveMechanism (needs to now call for Mapping Projection
 #     4.5): LearningMechanism:
 #              Name input_states using input_state_names (or create them explicitly using the values of variable?)
@@ -3324,11 +3323,11 @@
 #region ObjectiveMechanism -----------------------------------------------------------------------------------
 #
 #     Validate ObjectiveMechanism.monitor argument:
-#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_montiored_states) and
+#         Note: parsing/validation of monitored_output_states (in EVCMechanism._get_monitored_states) and
 #               monitor (in ObjectiveMechanism._validate_monitored_state_in_system) needs to be handled in a more principled way
 #               either in their _validate_params method, or in class function
 #
-#     Make sure add_monitored_value works
+#     Make sure add_monitored_output_state works
 #     Allow input_states to be named (so they can be used as ComparatorMechanism)
 #     Move it to ProcessingMechanism
 #  Replace ComparatorMechanmism with ObjectiveMechanism
@@ -3354,7 +3353,7 @@
 #     Validate that EVCMechanism.input_state matches outputState from EVCMechanism.objective_mechanism
 #     Allow it to take objective_mechanism as an argument
 #           (in which case it must be validated, but then don't bother to instantiate ObjectiveMechanism)
-#     Make sure add_monitored_value works:
-#           Needs to call ObjectiveMechanism.add_monitored_value
+#     Make sure add_monitored_output_state works:
+#           Needs to call ObjectiveMechanism.add_monitored_output_state
 #           Needs to update self.system.graph to include ObjectiveMechanism:
 #endregion
