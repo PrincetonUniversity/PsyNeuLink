@@ -37,7 +37,7 @@ import numpy as np
 import typecheck as tc
 import numpy as np
 
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanismError, ControlMechanism
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.States.InputState import InputState
 
@@ -55,7 +55,7 @@ class DefaultControlMechanismError(Exception):
         self.error_value = error_value
 
 
-class DefaultControlMechanism(ControlMechanism_Base):
+class DefaultControlMechanism(ControlMechanism):
     """Subclass of `ControlMechanism <ControlMechanism>` that implements a DefaultControlMechanism.
 
     COMMENT:
@@ -90,12 +90,12 @@ class DefaultControlMechanism(ControlMechanism_Base):
     #     kwPreferenceSetName: 'DefaultControlMechanismCustomClassPreferences',
     #     kp<pref>: <setting>...}
 
-    class ClassDefaults(ControlMechanism_Base.ClassDefaults):
+    class ClassDefaults(ControlMechanism.ClassDefaults):
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:Linear,
                                FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0},
                                OBJECTIVE_MECHANISM:None,

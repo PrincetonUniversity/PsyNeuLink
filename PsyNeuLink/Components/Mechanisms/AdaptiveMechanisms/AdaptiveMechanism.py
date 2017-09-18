@@ -27,7 +27,7 @@ this need not be the case. There are three types of AdaptiveMechanism:
 ..
 * `ControlMechanism <ControlMechanism>`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
-    `allocation_policy <ControlMechanism_Base.allocation_policy>`, each item of which is assigned to one of its
+    `allocation_policy <ControlMechanism.allocation_policy>`, each item of which is assigned to one of its
     `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
     that is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter of a Component.
 ..

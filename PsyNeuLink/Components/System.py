@@ -64,7 +64,7 @@ existing `ControlMechanism`, a constructor for one, or a class of ControlMechani
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
 the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
 <ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
-<ControlMechanism_Base.objective_mechanism>` and `control_signals <ControlMechanism_Base.control_signals>`
+<ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `system` command, as described below.
 
@@ -91,7 +91,7 @@ arguments of the `system` command, as described below.
 
   The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
   The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
-  ControlMechanism's `objective_mechanism <ControlMechanism_Base.objective_mechanism>`, and the full set is listed in
+  ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
   the ControlMechanism's `monitored_output_states <EVCMechanism.monitored_output_states>` attribute, and its
   ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute).
 
@@ -99,7 +99,7 @@ arguments of the `system` command, as described below.
   can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System_Base.controller>` (listed in its `control_signals
-  <ControlMechanism_Base.control_signals>` attribute), and any parameters that have directly been `specified for
+  <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
   control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
 
 .. _System_Structure:
@@ -438,7 +438,7 @@ from toposort import toposort, toposort_flatten
 from PsyNeuLink.Components.Component import Component, ExecutionStatus, function_type, InitStatus
 from PsyNeuLink.Components.Process import ProcessList, ProcessTuple
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base, OBJECTIVE_MECHANISM
+    import ControlMechanism, OBJECTIVE_MECHANISM
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.LearningMechanism \
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, MonitoredOutputStatesOption
@@ -587,7 +587,7 @@ def system(default_variable=None,
 
     monitor_for_control :  List[OutputState specification] : default None
         specifies the `OutputStates <OutputState>` of Mechanisms in the System to be monitored by the
-        'objective_mechanism <ControlMechanism_Base.objective_mechanism>` of its `controller` (see
+        'objective_mechanism <ControlMechanism.objective_mechanism>` of its `controller` (see
         `System_Control_Specification` and `ObjectiveMechanism_Monitored_Output_States` for additional details of
         how to specify the `monitor_for_control` argument).
 
@@ -1026,8 +1026,8 @@ class System_Base(System):
 
         if CONTROLLER in target_set and target_set[CONTROLLER] is not None:
             controller = target_set[CONTROLLER]
-            if (not isinstance(controller, ControlMechanism_Base) and
-                    not (inspect.isclass(controller) and issubclass(controller, ControlMechanism_Base))):
+            if (not isinstance(controller, ControlMechanism) and
+                    not (inspect.isclass(controller) and issubclass(controller, ControlMechanism))):
                 raise SystemError("{} (controller arg for \'{}\') is not a ControllerMechanism or subclass of one".
                                   format(controller, self.name))
 
@@ -1274,7 +1274,7 @@ class System_Base(System):
 
         def is_monitoring_mech(mech):
             if ((isinstance(mech, ObjectiveMechanism) and mech._role) or
-                    isinstance(mech, (LearningMechanism, ControlMechanism_Base))):
+                    isinstance(mech, (LearningMechanism, ControlMechanism))):
                 return True
             else:
                 return False
@@ -1315,14 +1315,14 @@ class System_Base(System):
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (
                 # It is not a ControlMechanism
-                not (isinstance(sender_mech, ControlMechanism_Base) or
+                not (isinstance(sender_mech, ControlMechanism) or
                     # It is not an ObjectiveMechanism used for Learning or Control
                     (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
                         # All of its projections
                         all(
                             all(
                                 # are to ControlMechanism(s)...
-                                isinstance(projection.receiver.owner, (ControlMechanism_Base, LearningMechanism)) or
+                                isinstance(projection.receiver.owner, (ControlMechanism, LearningMechanism)) or
                                  # are to ObjectiveMechanism(s) used for Learning or Control...
                                  (isinstance(projection.receiver.owner, ObjectiveMechanism) and
                                              projection.receiver.owner._role in (LEARNING, CONTROL)) or
@@ -1513,7 +1513,7 @@ class System_Base(System):
                     self.recurrent_init_mechs.append(object_item)
                     break
 
-            if isinstance(object_item, ControlMechanism_Base):
+            if isinstance(object_item, ControlMechanism):
                 if not object_item in self._control_object_item:
                     self._control_object_item.append(object_item)
 
@@ -1964,7 +1964,7 @@ class System_Base(System):
             return
 
         # An existing ControlMechanism is being assigned
-        if isinstance(control_mech_spec, ControlMechanism_Base):
+        if isinstance(control_mech_spec, ControlMechanism):
             controller = control_mech_spec
 
 # FIX: EVEN IF THE CONTROLLER HAS BEEN ASSIGNED TO A SYSTEM, STILL NEED TO ADD MONITORED_OUTPUT_STATES AND
@@ -1975,7 +1975,7 @@ class System_Base(System):
                 controller.assign_as_controller(self, context=context)
 
         # A ControlMechanism class or subclass is being used to specify the controller
-        elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism_Base):
+        elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism):
             # Instantiate controller from class specification using:
             #   monitored_output_states for System to specify its objective_mechanism (as list of OutputStates to be monitored)
             #   ControlSignals for System returned by _get_system_control_signals()

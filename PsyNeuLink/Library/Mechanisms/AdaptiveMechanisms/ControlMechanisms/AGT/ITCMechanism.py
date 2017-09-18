@@ -14,7 +14,7 @@ Overview
 --------
 
 An ITCMechanism is a `ControlMechanism <ControlMechanism>` that uses an ObjectiveMechanism with a `UtilityIntegrator`
-Function to regulate its `allocation_policy <ControlMechanism_Base.allocation_policy>`.  When used with an `LCMechanism`
+Function to regulate its `allocation_policy <ControlMechanism.allocation_policy>`.  When used with an `LCMechanism`
 to regulate the `mode <FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the 
 `Adaptive Gain Theory <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus 
 coeruleus-norepinephrine (LC-NE) system.
@@ -68,7 +68,7 @@ Function
 
 An ITCMechanism uses the default function for a `ControlMechanism` (a default `Linear` Function), that simply passes
 its input to its output.  Thus, it is the output of the ITCMechanism's `objective_mechanism
-<ITCMechanism.objective_mechanism>` that determines its `allocation_policy <ControlMechanism_Base.allocation_policy>`
+<ITCMechanism.objective_mechanism>` that determines its `allocation_policy <ControlMechanism.allocation_policy>`
 and the `allocation <ControlSignal.allocation>` of its `ControlSignal(s) <ControlSignal>`.
 
 .. _ITCMechanism_Output:
@@ -77,7 +77,7 @@ Output
 ~~~~~~
 
 An ITCMechanism has a `ControlSignal` for each parameter specified in its `control_signals
-<ControlMechanism_Base.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
+<ControlMechanism.control_signals>` attribute, that sends a `ControlProjection` to the `ParameterState` for the
 corresponding parameter. ControlSignals are a type of `OutputState`, and so they are also listed in the
 ITCMechanism's `output_states <ITCMechanism_Base.output_states>` attribute. The parameters modulated by an
 ITCMechanism's ControlSignals can be displayed using its `show <ITCMechanism_Base.show>` method. By default,
@@ -126,7 +126,7 @@ from PsyNeuLink.Components.System import System
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
-from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
@@ -147,7 +147,7 @@ class ITCMechanismError(Exception):
         self.error_value = error_value
 
 
-class ITCMechanism(ControlMechanism_Base):
+class ITCMechanism(ControlMechanism):
     """
     ITCMechanism(                       \
         system=None,                    \
@@ -272,7 +272,7 @@ class ITCMechanism(ControlMechanism_Base):
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None
                                })
@@ -356,6 +356,71 @@ class ITCMechanism(ControlMechanism_Base):
                              params=runtime_params,
                              time_scale=time_scale,
                              context=context)
+
+    @property
+    def initial_short_term_utility(self):
+        return self._objective_mechanism.function_object.initial_short_term_utility
+
+    @initial_short_term_utility.setter
+    def initial_short_term_utility(self, value):
+        self._objective_mechanism.function_object.initial_short_term_utility = value
+
+    @property
+    def initial_long_term_utility(self):
+        return self._objective_mechanism.function_object.initial_long_term_utility
+
+    @initial_long_term_utility.setter
+    def initial_long_term_utility(self, value):
+        self._objective_mechanism.function_object.initial_long_term_utility = value
+
+    @property
+    def short_term_gain(self):
+        return self._objective_mechanism.function_object.short_term_gain
+
+    @short_term_gain.setter
+    def short_term_gain(self, value):
+        self._objective_mechanism.function_object.short_term_gain = value
+
+    @property
+    def long_term_gain(self):
+        return self._objective_mechanism.function_object.long_term_gain
+
+    @long_term_gain.setter
+    def long_term_gain(self, value):
+        self._objective_mechanism.function_object.long_term_gain = value
+
+    @property
+    def    short_term_bias(self):
+        return self._objective_mechanism.function_object.short_term_bias
+
+    @short_term_bias.setter
+    def short_term_bias(self, value):
+        self._objective_mechanism.function_object.short_term_bias = value
+
+    @property
+    def    long_term_bias(self):
+        return self._objective_mechanism.function_object.long_term_bias
+
+    @long_term_bias.setter
+    def long_term_bias(self, value):
+        self._objective_mechanism.function_object.long_term_bias = value
+
+    @property
+    def    short_term_rate(self):
+        return self._objective_mechanism.function_object.short_term_rate
+
+    @short_term_rate.setter
+    def short_term_rate(self, value):
+        self._objective_mechanism.function_object.short_term_rate = value
+
+    @property
+    def    long_term_rate(self):
+        return self._objective_mechanism.function_object.long_term_rate
+
+    @long_term_rate.setter
+    def long_term_rate(self, value):
+        self._objective_mechanism.function_object.long_term_rate = value
+
 
     def show(self):
         """Display the `OutputStates <OutputState>` monitored by the ITCMechanism's `objective_mechanism`

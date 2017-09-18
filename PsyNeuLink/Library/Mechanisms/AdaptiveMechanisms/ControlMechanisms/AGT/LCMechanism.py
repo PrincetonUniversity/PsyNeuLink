@@ -82,10 +82,10 @@ An LCMechanism has a single (primary) `InputState <InputState_Primary>` that rec
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
 `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute) are also listed in the `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
+attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
 OutputStates it monitors are specified).  The OutputStates monitored by the ControlMechanism's `objective_mechanism
-<ControlMechanism_Base.objective_mechanism>` can be displayed using its `show <ControlMechanism_Base.show>` method.
+<ControlMechanism.objective_mechanism>` can be displayed using its `show <ControlMechanism.show>` method.
 The ObjectiveMechanism's `function <ObjectiveMechanism>` evaluates the specified OutputStates, and the result is
 conveyed as the input to the ControlMechanism.
 
@@ -108,16 +108,16 @@ from an OutputStates with a `value <OutputState.value>` that is an array of grea
 
 FROM CONTROL_MECHANISM:
 A ControlMechanism has a single *ERROR_SIGNAL* `InputState`, the `value <InputState.value>` of which is used as the
-input to the ControlMechanism's `function <ControlMechanism_Base.function>`, that determines the ControlMechanism's
-`allocation_policy <ControlMechanism_Base.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
+input to the ControlMechanism's `function <ControlMechanism.function>`, that determines the ControlMechanism's
+`allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
 via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
 `objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
-attribute) are also listed in the `monitored_output_states <ControlMechanism_Base.monitored_output_states>`
+attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
 OutputStates it monitors are specified).  The OutputStates monitored by the ControlMechanism's `objective_mechanism
-<ControlMechanism_Base.objective_mechanism>` can be displayed using its `show <ControlMechanism_Base.show>` method.
+<ControlMechanism.objective_mechanism>` can be displayed using its `show <ControlMechanism.show>` method.
 The ObjectiveMechanism's `function <ObjectiveMechanism>` evaluates the specified OutputStates, and the result is
 conveyed as the input to the ControlMechanism.
 
@@ -334,7 +334,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism \
     import ObjectiveMechanism, _parse_monitored_output_states
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base, ALLOCATION_POLICY
+    import ControlMechanism, ALLOCATION_POLICY
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 from PsyNeuLink.Components.States.OutputState import OutputState
@@ -357,7 +357,7 @@ class LCMechanismError(Exception):
         self.error_value = error_value
 
 
-class LCMechanism(ControlMechanism_Base):
+class LCMechanism(ControlMechanism):
     """
     LCMechanism(                    \
         system=None,                \
@@ -493,7 +493,7 @@ class LCMechanism(ControlMechanism_Base):
         variable = defaultControlAllocation
 
     from PsyNeuLink.Components.Functions.Function import Linear
-    paramClassDefaults = ControlMechanism_Base.paramClassDefaults.copy()
+    paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
     paramClassDefaults.update({FUNCTION:FHNIntegrator,
                                CONTROL_SIGNALS: None,
                                CONTROL_PROJECTIONS: None,
