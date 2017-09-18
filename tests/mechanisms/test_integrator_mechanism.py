@@ -717,17 +717,41 @@ class TestFHN:
 
 class TestUtilityIntegrator:
 
-    def test_utility_integrator(self):
+    def test_utility_integrator_default(self):
+        # default params:
+        # initial_short_term_utility = 0.0
+        # initial_long_term_utility = 0.0
+        # short_term_rate = 1.0
+        # long_term_rate = 1.0
 
         U = IntegratorMechanism(
             name = "UtilityIntegrator",
             function=UtilityIntegrator(
-
             )
+
         )
 
-        U.execute([1])
+        engagement = []
+        short_term_util = []
+        long_term_util = []
+        for i in range(50):
+            engagement.append(U.execute([1])[0][0][0])
+            short_term_util.append(U.function_object.previous_short_term_utility[0][0])
+            long_term_util.append(U.function_object.previous_long_term_utility[0][0])
 
+        # from matplotlib import pyplot as plt
+        # from mpl_toolkits.mplot3d import Axes3D
+        # from matplotlib import cm
+        # import numpy as np
+        # fig = plt.figure()
+        # ax = fig.gca(projection='3d')
+        # short_term_util, long_term_util = np.meshgrid(short_term_util, long_term_util)
+        # surf = ax.plot_surface(short_term_util, long_term_util, engagement,
+        #                        cmap=cm.coolwarm,
+        #                        linewidth=0,
+        #                        antialiased=False)
+        # fig.colorbar(surf, shrink=0.5, aspect=5)
+        # plt.show()
 
 
     # def test_FHN_gilzenrat(self):
