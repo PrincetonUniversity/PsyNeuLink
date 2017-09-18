@@ -5968,7 +5968,7 @@ class UtilityIntegrator(
 
         return (1 - rate) * a + rate * b
 
-    def _take_logisitc(self, variable, gain, bias):
+    def _logistic(self, variable, gain, bias):
 
         try:
             return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
@@ -6016,13 +6016,13 @@ class UtilityIntegrator(
 
         new_value = variable
 
-        long_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_long_term_utility,
+        long_term_utility = self._logistic(variable = self._EWMAFilter(self.previous_long_term_utility,
                                                                             self.long_term_rate,
                                                                             variable),
                                                 gain = self.long_term_gain,
                                                 bias = self.long_term_bias)
 
-        short_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_short_term_utility,
+        short_term_utility = self._logistic(variable = self._EWMAFilter(self.previous_short_term_utility,
                                                                              self.short_term_rate,
                                                                              variable),
                                                  gain=self.short_term_gain,
