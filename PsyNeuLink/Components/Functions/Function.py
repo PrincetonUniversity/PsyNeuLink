@@ -5853,14 +5853,15 @@ class UtilityIntegrator(
                  noise=0.0,
                  offset=0.0,
                  initializer=ClassDefaults.variable,
-                 initial_short_term_utility = 0.0,
-                 initial_long_term_utility = 0.0,
-                 short_term_gain = 1.0,
-                 long_term_gain =1.0,
-                 short_term_bias = 0.0,
+                 initial_short_term_utility=0.0,
+                 initial_long_term_utility=0.0,
+                 short_term_gain=1.0,
+                 long_term_gain=1.0,
+                 short_term_bias=0.0,
                  long_term_bias=0.0,
                  short_term_rate=0.9,
                  long_term_rate=0.1,
+                 operation="s*l",
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5879,6 +5880,7 @@ class UtilityIntegrator(
                                                   long_term_bias=long_term_bias,
                                                   short_term_rate=short_term_rate,
                                                   long_term_rate=long_term_rate,
+                                                  operation=operation,
                                                   params=params)
 
         self.previous_long_term_utility = self.initial_long_term_utility
@@ -6015,6 +6017,7 @@ class UtilityIntegrator(
                                                     gain=self.long_term_gain,
                                                     bias=self.long_term_bias
                                                     )
+        self.long_term_utility_logistic = long_term_utility_logistic
 
         # short term params applied to variable
         short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
@@ -6024,9 +6027,18 @@ class UtilityIntegrator(
                                                     gain=self.short_term_gain,
                                                     bias=self.short_term_bias
                                                     )
+        self.short_term_utility_logistic = short_term_utility_logistic
 
-        # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
-        value = [1-short_term_utility_logistic]*long_term_utility_logistic
+        if self.operation == "s*l":
+            # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
+            value = (1-short_term_utility_logistic)*long_term_utility_logistic
+        elif self.operation =="s-l":
+            # Engagement in current task = [1—logistic(short term utility)] - [logistic{long - term utility}]
+            value = (1-short_term_utility_logistic) - long_term_utility_logistic
+        elif self.operation =="s+l":
+            # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
+            value = (1 - short_term_utility_logistic) + long_term_utility_logistic
+
 
 
         adjusted_value = value + offset
