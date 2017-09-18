@@ -204,7 +204,8 @@ from numpy import abs, exp, tanh
 
 from PsyNeuLink.Components.Component import Component, ComponentError, function_type, method_type, parameter_keywords
 from PsyNeuLink.Components.ShellClasses import Function
-from PsyNeuLink.Globals.Keywords import FHN_INTEGRATOR_FUNCTION, ACCUMULATOR_INTEGRATOR_FUNCTION, \
+from PsyNeuLink.Globals.Keywords import FHN_INTEGRATOR_FUNCTION, UTILITY_INTEGRATOR_FUNCTION, \
+    ACCUMULATOR_INTEGRATOR_FUNCTION, \
     ADAPTIVE_INTEGRATOR_FUNCTION, ALL, ANGLE, COMBINE_MEANS_FUNCTION, \
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, AUTO_DEPENDENT, BACKPROPAGATION_FUNCTION, BETA, BIAS, \
     COMBINATION_FUNCTION_TYPE, CONSTANT_INTEGRATOR_FUNCTION, CORRELATION, CROSS_ENTROPY, \
@@ -663,8 +664,10 @@ class Function_Base(Function):
         self._functionOutputType = value
 
     def show_params(self):
-        for param_name, param_value in self.user_params.items():
-            print("{}: {}", param_name, param_value)
+        print("\nParams for {} ({}):".format(self.name, self.componentName))
+        for param_name, param_value in sorted(self.user_params.items()):
+            print("\t{}: {}".format(param_name, param_value))
+        print('')
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************
 
@@ -5832,7 +5835,7 @@ class UtilityIntegrator(
 
     """
 
-    componentName = ADAPTIVE_INTEGRATOR_FUNCTION
+    componentName = UTILITY_INTEGRATOR_FUNCTION
 
     class ClassDefaults(Integrator.ClassDefaults):
         variable = [[0]]

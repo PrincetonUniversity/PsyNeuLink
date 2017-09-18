@@ -305,6 +305,8 @@ class ITCMechanism(ControlMechanism_Base):
                          prefs=prefs,
                          context=self)
 
+        self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
+
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
 

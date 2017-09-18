@@ -660,7 +660,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
             #    monitored_output_states and their exponents and weights
             self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                           function=LinearCombination(operation=PRODUCT),
-                                                          name=self.name + '_Objective Mechanism')
+                                                          name=self.name + '_ObjectiveMechanism')
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
