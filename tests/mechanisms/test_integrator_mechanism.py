@@ -692,8 +692,8 @@ class TestFHN:
         stimulus = 1.0
         for i in range(10):
             for j in range(10):
-                new_v = F.execute(stimulus)[0][0]
-                new_w = F.execute(stimulus)[1][0]
+                new_v = F.execute(stimulus)[0][0][0]
+                new_w = F.execute(stimulus)[1][0][0]
                 # ** uncomment the lines below if you want to view the plot:
                 # plot_v_list.append(new_v)
                 # plot_w_list.append(new_w)
