@@ -868,7 +868,13 @@ assert sched.consideration_queue == expected_consideration_queue
 
 #region TEST Function show_params() METHOD
 
+from PsyNeuLink.Components.Functions.Function import UtilityIntegrator
 print("TEST Function show_params() METHOD")
+
+x = UtilityIntegrator()
+print (x.execute([[1]]*10))
+
+#endregion
 
 #endregion
 
