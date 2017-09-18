@@ -459,9 +459,9 @@ class EVCMechanism(ControlMechanism_Base):
     save_all_values_and_policies : bool : default False
         specifes whether to save every `allocation_policy` tested in `EVC_policies` and their values in `EVC_values`.
 
-    control_signals : List[Attribute of Mechanism or its function, ParameterState, or tuple[str, Mechanism]
+    control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the EVCMechanism
-        (see `control_signals <EVCMechanism.control_signals>` for details).
+        (see `ControlSignal_Specification` for details of specification).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for the
@@ -652,7 +652,10 @@ class EVCMechanism(ControlMechanism_Base):
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the EVCMechanism's `ControlSignals <EVCMechanism_ControlSignals>`, including any that it inherited
-        from its `system <EVCMechanism.system>`.
+        from its `system <EVCMechanism.system>` (same as the EVCMechanism's `output_states
+        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection` to the `ParameterState` for the
+        parameter it controls
+
 
     """
 

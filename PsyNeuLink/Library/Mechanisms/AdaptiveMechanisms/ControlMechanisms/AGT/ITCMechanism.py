@@ -181,7 +181,7 @@ class ITCMechanism(ControlMechanism_Base):
 
     control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
         specifies the parameters to be controlled by the ITCMechanism; a `ControlSignal` is created for each
-        (see `ControlMechanism_Control_Signals` for details of specification).
+        (see `ControlSignal_Specification` for details of specification).
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters
@@ -243,9 +243,10 @@ class ITCMechanism(ControlMechanism_Base):
         is the same as its `value <Mechanism_Base.value>` attribute).
 
     control_signals : List[ControlSignal]
-        list of `ControlSignals <ControlSignals>` for the ITCMechanism, each of which sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
-        `output_states <Mechanism_Base.output_states>` attribute).
+        list of the ITCMechanism's `ControlSignals <ControlSignals>` , including any inherited from a `system
+        <ControlMechanism.system>` for which it is a `controller <System_Base.controller>` (same as
+        ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -303,6 +304,8 @@ class ITCMechanism(ControlMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

@@ -458,10 +458,11 @@ class LCMechanism(ControlMechanism_Base):
     COMMENT
 
     control_signals : List[ControlSignal]
-        contains a `ControlSignal` for each Mechanism listed in the LCMechanism's `modulated_mechanisms
-        <LCMechanism.modulated_mechanisms>` attribute; each ControlSignal sends a `ControlProjections` to the
-        `ParameterState` for the `multiplicative_param <Function_Modulatory_Params>` of the `function
-        <Mechanism_Base.function>corresponding Mechanism.
+        list of the `ControlSignals <ControlSIgnal>` for each Mechanism listed in the LCMechanism's
+        `modulated_mechanisms <LCMechanism.modulated_mechanisms>` attribute  (same as the LCMechanism's `output_states
+        <Mechanism_Base.output_states>` attribute); each sends a `ControlProjections` to the `ParameterState` for the
+        `multiplicative_param <Function_Modulatory_Params>` of the `function <Mechanism_Base.function>corresponding
+        Mechanism.
 
     control_projections : List[ControlProjection]
         list of all of the `ControlProjections <ControlProjection>` sent by the `ControlSignals <ControlSignal>` listed
@@ -502,7 +503,8 @@ class LCMechanism(ControlMechanism_Base):
     def __init__(self,
                  system:tc.optional(System)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
-                 modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 modulated_mechanisms=None,
                  modulation:tc.optional(_is_modulation_param)=ModulationParam.MULTIPLICATIVE,
                  params=None,
                  name=None,
@@ -546,6 +548,7 @@ class LCMechanism(ControlMechanism_Base):
                                            "the constructor for {}".format(MODULATED_MECHANISMS, self.name))
             if not isinstance(spec, list):
                 spec = [spec]
+
             for mech in spec:
                 if not isinstance(mech, Mechanism):
                     raise LCMechanismError("The specification of the {} argument for {} contained an item ({})"
@@ -555,50 +558,6 @@ class LCMechanism(ControlMechanism_Base):
                                            "that does not have a {}.".
                                            format(MODULATED_MECHANISMS, self.name, mech, MULTIPLICATIVE_PARAM))
 
-    # def _instantiate_input_states(self, context=None):
-    #     """Instantiate MappingProjections from OutputStates or Mechanisms specified in input_states arg
-    #     """
-    #     # First, convert any Mechanism specifications to their primary OutputState
-    #     for output_state_spec in self.input_states:
-    #         if isinstance(output_state_spec, Mechanism):
-    #             output_state_spec = output_state_spec.output_state
-    #         # Make sure there is not already a projection from the specified OutputState to the LCMechanism
-    #         if any(projection.receiver.owner is self for projection in output_state_spec.efferents):
-    #             if self.verbosePref:
-    #                 warnings.warn("OutputState specified in \'input_states\' arg ({}) already projects to {}".
-    #                               format(output_state_spec.name, self.name))
-    #             continue
-    #         MappingProjection(sender=output_state_spec,
-    #                           receiver=self.input_state,
-    #                           matrix=FULL_CONNECTIVITY_MATRIX)
-
-    # def _instantiate_attributes_after_function(self, context=None):
-    #     if not isinstance(self.mode, (int, float)):
-    #         self._instantiate_controller(context=context)
-    #
-    # def _instantiate_controller(self, context=None):
-    #
-    #     mode_parameter_state = self._parameter_states[MODE]
-    #
-    #     # mode was specified as an existing ControlMechanism
-    #     if isinstance(self.mode, ControlMechanism_Base):
-    #         # INSTANTIATE ControlSignal and ControlProjection to ParameterState for mode
-    #         controller = self.mode
-    #         if not any(projection.sender.owner is controller
-    #                    for projection in mode_parameter_state.mod_afferents):
-    #             control_signal = controller._instantiate_control_signal(mode_parameter_state)
-    #             ControlProjection(sender=control_signal,
-    #                               receiver=mode_parameter_state)
-    #
-    #     # mode was specified as a monitored_output_states list
-    #     elif isinstance(self.mode, list):
-    #         ControlMechanism_Base(objective_mechanism=ObjectiveMechanism(monitored_output_states=self.mode,
-    #                                                                      function=UtilityIntegrator,
-    #                                                                      control_signals=[mode_parameter_state]))
-    #     else:
-    #         raise LCMechanismError("PROGRAM ERROR: unrecognized mode specification for {} ({}) that passed validation".
-    #                                format(self.name, self.mode))
-    #
     def _instantiate_output_states(self, context=None):
         """Instantiate ControlSignal and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
@@ -636,19 +595,18 @@ class LCMechanism(ControlMechanism_Base):
         #
         # # Create specification for **control_signals** argument of ControlSignal constructor
         # self.control_signals = [{CONTROL_SIGNAL_NAME:multiplicative_params}]
-
         # MODIFIED 9/3/17 NEW [ASSIGN EACH ControlProjection TO A DIFFERENT ControlSignal]
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        self.control_signals = []
+        self._control_signals = []
         if self.modulated_mechanisms:
+            # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
+            if not isinstance(self.modulated_mechanisms, list):
+                self._modulated_mechanisms = [self.modulated_mechanisms]
             multiplicative_param_names = []
             for mech in self.modulated_mechanisms:
                 multiplicative_param_names.append(mech.function_object.multiplicative_param)
-
-            # Create specification for **control_signals** argument of ControlSignal constructor
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
-                self.control_signals.append((mult_param_name, mech))
-
+                self._control_signals.append((mult_param_name, mech))
         # MODIFIED 9/3/17 END
 
         super()._instantiate_output_states(context=context)

@@ -131,13 +131,12 @@ ControlSignal to the `ParameterState` for the corresponding parameter to be cont
 The parameters to be controlled by a ControlMechanism can be specified where it is created.
 
 If it is created explicitly, the parameters to be  controlled can be specified in the **control_signals** argument of
-its constructor.  The argument must be a list, each item of which is `ControlSignal specification
-<ControlSignal_Specification>`.
+its constructor.  The argument must be a `specification for one more ControlSignals <ControlSignal_Specification>`.
 
 If the ControlMechanism is created as part of a `System`, the parameters to be controlled by it can be specified in
 one of two ways:
 
-  * in the **control_signals** argument of the System's constructor, using a list of `ControlSignal specifications
+  * in the **control_signals** argument of the System's constructor, using one or more `ControlSignal specifications
     <ControlSignal_Specification>`;
 
   * where the `parameter is specified <ParameterState_Specification>`, by including a `ControlProjection` or
@@ -404,9 +403,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputStates.
 
-    control_signals : List[ParameterState, tuple[str, Mechanism] or dict]
+    control_signals : ControlSignal specification or List[ControlSignal specification, ...]
         specifies the parameters to be controlled by the ControlMechanism; a `ControlSignal` is created for each
-        (see `control_signals <ControlMechanism_Base.control_signals>` for details).
+        (see `ControlSignal_Specification` for details of specification).
 
     modulation : ModulationParam : ModulationParam.MULTIPLICATIVE
         specifies the default form of modulation used by the ControlMechanism's `ControlSignals <ControlSignal>`,
@@ -469,9 +468,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         ControlMechanism's `value <Mechanism_Base.value>` attribute).
 
     control_signals : List[ControlSignal]
-        list of `ControlSignals <ControlSignals>` for the ControlMechanism, each of which sends a `ControlProjection`
-        to the `ParameterState` for the parameter it controls (same as ControlMechanism's
-        `output_states <Mechanism_Base.output_states>` attribute).
+        list of the `ControlSignals <ControlSignals>` for the ControlMechanism, including any inherited from a
+        `system <ControlMechanism.system>` for which it is a `controller <System_Base.controller>` (same as
+        ControlMechanism's `output_states <Mechanism_Base.output_states>` attribute); each sends a `ControlProjection`
+        to the `ParameterState` for the parameter it controls
 
     control_projections : List[ControlProjection]
         list of `ControlProjections <ControlProjection>`, one for each `ControlSignal` in `control_signals`.
@@ -595,10 +595,17 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
 
         if CONTROL_SIGNALS in target_set and target_set[CONTROL_SIGNALS]:
             from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
-            if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
-                raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
-                                            format(CONTROL_SIGNAL, self.name))
+            # # MODIFIED 9/17/17 OLD:
+            # if not isinstance(target_set[CONTROL_SIGNALS], (list, UserList)):
+            #     raise ControlMechanismError("{} arg of {} must be list or ContentAddressableList".
+            #                                 format(CONTROL_SIGNAL, self.name))
+            # MODIFIED 9/17/17 NEW:
+            if not isinstance(target_set[CONTROL_SIGNALS], list):
+                target_set[CONTROL_SIGNALS] = [target_set[CONTROL_SIGNALS]]
             # _parse_control_signal_spec(self, target_set[CONTROL_SIGNALS], context=context)
+            for control_signal in target_set[CONTROL_SIGNALS]:
+                _parse_control_signal_spec(self, control_signal, context=context)
+            # MODIFIED 9/17/17 END
 
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -651,9 +658,9 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         else:
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
-            self.objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
+            self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                           function=LinearCombination(operation=PRODUCT),
-                                                          name=self.name + '_Objective Mechanism')
+                                                          name=self.name + '_ObjectiveMechanism')
 
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
@@ -875,10 +882,10 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         # UPDATE output_states AND control_projections -------------------------------------------------------------
 
         try:
-            self.output_states[control_signal.name] = control_signal
+            self._output_states[control_signal.name] = control_signal
         except (AttributeError, TypeError):
             from PsyNeuLink.Components.States.State import State_Base
-            self.output_states = ContentAddressableList(component_type=State_Base,
+            self._output_states = ContentAddressableList(component_type=State_Base,
                                                         list=[control_signal],
                                                         name = self.name+'.output_states')
 
@@ -886,7 +893,7 @@ class ControlMechanism_Base(AdaptiveMechanism_Base):
         control_signal.index = output_state_index
 
         # (Re-)assign control_signals attribute to output_states
-        self.control_signals = self.output_states
+        self._control_signals = self.output_states
 
         return control_signal
 

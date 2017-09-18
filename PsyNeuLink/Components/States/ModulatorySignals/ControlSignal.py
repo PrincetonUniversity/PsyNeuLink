@@ -1310,7 +1310,7 @@ def _parse_control_signal_spec(owner, control_signal_spec, context=None):
                                                 format(CONTROL_SIGNAL, owner.name))
         else:
             raise ControlSignalError("PROGRAM ERROR: No entry found in params dict with specification of "
-                                        "parameter Mechanism or ControlProjection for {} of {}".
+                                        "parameter's Mechanism or ControlProjection for {} of {}".
                                         format(CONTROL_SIGNAL, owner.name))
 
         if isinstance(control_signal_spec, ControlSignal):
