@@ -5314,7 +5314,6 @@ class FHNIntegrator(
             prefs=prefs,
             context=context)
 
-        self.variable = self.default_variable
         self.auto_dependent = True
 
 
@@ -5351,8 +5350,6 @@ class FHNIntegrator(
         current value of v , current value of w : float, list, or np.array
 
         """
-
-        variable = self.variable
 
         def dv_dt(time, v):
 
@@ -5696,24 +5693,24 @@ class AccumulatorIntegrator(
 class UtilityIntegrator(
     Integrator):  # --------------------------------------------------------------------------------
     """
-    UtilityIntegrator(                 \
-        default_variable=None,          \
-        rate=1.0,                       \
-        noise=0.0,                      \
-        scale: parameter_spec = 1.0,    \
-        offset: parameter_spec = 0.0,   \
-        initializer,                    \
-        initial_short_term_utility = 0.0,\
-        initial_long_term_utility = 0.0,\
-        short_term_gain = 1.0,          \
-        long_term_gain =1.0,            \
-        short_term_bias = 0.0,          \
-        long_term_bias=0.0,             \
-        short_term_rate=1.0,            \
-        long_term_rate=1.0,             \
-        params=None,                    \
-        owner=None,                     \
-        prefs=None,                     \
+    UtilityIntegrator(                    \
+        default_variable=None,            \
+        rate=1.0,                         \
+        noise=0.0,                        \
+        scale: parameter_spec = 1.0,      \
+        offset: parameter_spec = 0.0,     \
+        initializer,                      \
+        initial_short_term_utility = 0.0, \
+        initial_long_term_utility = 0.0,  \
+        short_term_gain = 1.0,            \
+        long_term_gain =1.0,              \
+        short_term_bias = 0.0,            \
+        long_term_bias=0.0,               \
+        short_term_rate=1.0,              \
+        long_term_rate=1.0,               \
+        params=None,                      \
+        owner=None,                       \
+        prefs=None,                       \
         )
 
     .. _UtilityIntegrator:
@@ -5732,8 +5729,7 @@ class UtilityIntegrator(
 
     Finally, computes a single value which combines the two values according to:
 
-    value = (1 - `rate <UtilityIntegrator.rate>`) * logistic(long_term_utility) + `rate <UtilityIntegrator.rate>` *
-    logistic(short_term_utility)
+    value = [1-short_term_utility_logistic]*long_term_utility_logistic
 
     Arguments
     ---------
@@ -5763,10 +5759,10 @@ class UtilityIntegrator(
         specifies bias for logistic function applied to long_term_utility
 
     short_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to short_term_utility
+        specifies smoothing factor of EWMA filter applied to short_term_utility
 
     long_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to long_term_utility
+        specifies smoothing factor of EWMA filter applied to long_term_utility
 
     params : Optional[Dict[param keyword, param value]]
         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
@@ -5786,9 +5782,6 @@ class UtilityIntegrator(
 
     variable : number or np.array
         current input value used in both the short term and long term EWMA computations
-
-    rate : float, list or 1d np.array : default 1.0
-        specifies the overall smoothing factor of the EWMA used to combine the long term and short term utility values
 
     noise : float, PsyNeuLink Function, list or 1d np.array : default 0.0
         TBI?
@@ -5812,10 +5805,10 @@ class UtilityIntegrator(
         specifies bias for logistic function applied to long_term_utility
 
     short_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to short_term_utility
+        specifies smoothing factor of EWMA filter applied to short_term_utility
 
     long_term_rate : float : default 1.0
-        specifies smooth factor of EWMA filter applied to long_term_utility
+        specifies smoothing factor of EWMA filter applied to long_term_utility
 
     previous_short_term_utility : 1d np.array
         stores previous value with which `variable <UtilityIntegrator.variable>` is integrated using the EWMA filter and
@@ -5857,14 +5850,15 @@ class UtilityIntegrator(
                  noise=0.0,
                  offset=0.0,
                  initializer=ClassDefaults.variable,
-                 initial_short_term_utility = 0.0,
-                 initial_long_term_utility = 0.0,
-                 short_term_gain = 1.0,
-                 long_term_gain =1.0,
-                 short_term_bias = 0.0,
+                 initial_short_term_utility=0.0,
+                 initial_long_term_utility=0.0,
+                 short_term_gain=1.0,
+                 long_term_gain=1.0,
+                 short_term_bias=0.0,
                  long_term_bias=0.0,
-                 short_term_rate=1.0,
-                 long_term_rate=1.0,
+                 short_term_rate=0.9,
+                 long_term_rate=0.1,
+                 operation="s*l",
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5883,6 +5877,7 @@ class UtilityIntegrator(
                                                   long_term_bias=long_term_bias,
                                                   short_term_rate=short_term_rate,
                                                   long_term_rate=long_term_rate,
+                                                  operation=operation,
                                                   params=params)
 
         self.previous_long_term_utility = self.initial_long_term_utility
@@ -5964,11 +5959,16 @@ class UtilityIntegrator(
             # if INITIALIZER in target_set:
             #     self._validate_initializer(target_set[INITIALIZER])
 
-    def _EWMAFilter(self, a, rate, b):
+        if OPERATION in target_set:
+            if not target_set[OPERATION] in {'s*l', 's+l', 's-l', 'l-s'}:
+                raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
+                                    format(OPERATION, self.name, {'s*l', 's+l', 's-l', 'l-s'}))
+
+    def _EWMA_filter(self, a, rate, b):
 
         return (1 - rate) * a + rate * b
 
-    def _take_logisitc(self, variable, gain, bias):
+    def _logistic(self, variable, gain, bias):
 
         try:
             return_val = 1 / (1 + np.exp(-(gain * variable) + bias))
@@ -5998,9 +5998,6 @@ class UtilityIntegrator(
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
-        time_scale :  TimeScale : default TimeScale.TRIAL
-            specifies whether the function is executed on the time_step or trial time scale.
-
         Returns
         -------
 
@@ -6014,21 +6011,38 @@ class UtilityIntegrator(
         # execute noise if it is a function
         noise = self._try_execute_param(self.noise, variable)
 
-        new_value = variable
+        # long term params applied to variable
+        long_term_utility = self._EWMA_filter(self.previous_long_term_utility,
+                                            self.long_term_rate,
+                                            variable)
+        long_term_utility_logistic = self._logistic(variable=long_term_utility,
+                                                    gain=self.long_term_gain,
+                                                    bias=self.long_term_bias
+                                                    )
+        self.long_term_utility_logistic = long_term_utility_logistic
 
-        long_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_long_term_utility,
-                                                                            self.long_term_rate,
-                                                                            variable),
-                                                gain = self.long_term_gain,
-                                                bias = self.long_term_bias)
+        # short term params applied to variable
+        short_term_utility=self._EWMA_filter(self.previous_short_term_utility,
+                                            self.short_term_rate,
+                                            variable)
+        short_term_utility_logistic=self._logistic(variable=short_term_utility,
+                                                    gain=self.short_term_gain,
+                                                    bias=self.short_term_bias
+                                                    )
+        self.short_term_utility_logistic = short_term_utility_logistic
 
-        short_term_utility = self._take_logisitc(variable = self._EWMAFilter(self.previous_short_term_utility,
-                                                                             self.short_term_rate,
-                                                                             variable),
-                                                 gain=self.short_term_gain,
-                                                 bias=self.short_term_bias)
-
-        value = self._EWMAFilter(long_term_utility, rate, short_term_utility)
+        if self.operation == "s*l":
+            # Engagement in current task = [1—logistic(short term utility)]*[logistic{long - term utility}]
+            value = (1-short_term_utility_logistic)*long_term_utility_logistic
+        elif self.operation =="s-l":
+            # Engagement in current task = [1—logistic(short term utility)] - [logistic{long - term utility}]
+            value = (1-short_term_utility_logistic) - long_term_utility_logistic
+        elif self.operation =="s+l":
+            # Engagement in current task = [1—logistic(short term utility)] + [logistic{long - term utility}]
+            value = (1 - short_term_utility_logistic) + long_term_utility_logistic
+        elif self.operation =="l-s":
+            # Engagement in current task = [logistic{long - term utility}] - [1—logistic(short term utility)]
+            value = long_term_utility_logistic - (1-short_term_utility_logistic)
 
         adjusted_value = value + offset
         # If this NOT an initialization run, update the old utility values
