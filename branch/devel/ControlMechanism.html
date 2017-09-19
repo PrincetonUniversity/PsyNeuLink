@@ -358,7 +358,7 @@ that specifies the OutputStates to be monitored by its <a class="reference inter
                                       <span class="p">(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">my_transfer_mech_B</span><span class="p">)])</span>
 </pre></div>
 </div>
-<p>This creates an ObjectiveMechanism for the ControlMechanism that monitors the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputState</span></code> of <code class="docutils literal"><span class="pre">my_Transfer_mech_A</span></code> and the <em>RESPONSE_TIME</em> OutputState of <code class="docutils literal"><span class="pre">my_DDM</span></code>;  its function
+<p>This creates an ObjectiveMechanism for the ControlMechanism that monitors the <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary OutputState</span></a> of <code class="docutils literal"><span class="pre">my_Transfer_mech_A</span></code> and the <em>RESPONSE_TIME</em> OutputState of <code class="docutils literal"><span class="pre">my_DDM</span></code>;  its function
 first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism.function" title="ControlMechanism.ControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses this value to determine
 the allocation for its ControlSignals, that control the value of the <code class="xref any docutils literal"><span class="pre">threshold</span></code> parameter of
@@ -509,10 +509,10 @@ unless they are <a class="reference internal" href="ControlSignal.html#controlsi
 <dl class="method">
 <dt id="ControlMechanism.ControlMechanism.add_monitored_output_states">
 <code class="descname">add_monitored_output_states</code><span class="sig-paren">(</span><em>monitored_output_states</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ControlMechanism.ControlMechanism.add_monitored_output_states" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate OutputStates to be monitored by ControlMechanism’s objective_mechanism</p>
-<p>monitored_output_states can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these
-If item is a Mechanism, its primary OutputState is used.
-OutputStates must belong to Mechanisms in the same System as the ControlMechanism</p>
+<dd><p>Instantiate OutputStates to be monitored by ControlMechanism’s <a class="reference internal" href="#ControlMechanism.ControlMechanism.objective_mechanism" title="ControlMechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
+<p><strong>monitored_output_states</strong> can be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="OutputState.html"><span class="doc">OutputState</span></a>, <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-outputstate-tuple"><span class="std std-ref">monitored_output_states tuple</span></a>, or list with any of these. If item is a Mechanism, its <a class="reference internal" href="OutputState.html#outputstate-primary"><span class="std std-ref">primary
+OutputState</span></a> is used. OutputStates must belong to Mechanisms in the same <a class="reference internal" href="System.html"><span class="doc">System</span></a> as
+the ControlMechanism.</p>
 </dd></dl>
 
 <dl class="method">
