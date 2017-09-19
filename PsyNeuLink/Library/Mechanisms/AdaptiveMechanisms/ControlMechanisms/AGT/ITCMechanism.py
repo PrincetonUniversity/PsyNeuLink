@@ -130,8 +130,8 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.Contro
 from PsyNeuLink.Components.States.OutputState import OutputState
 from PsyNeuLink.Components.ShellClasses import Mechanism
 from PsyNeuLink.Globals.Defaults import defaultControlAllocation
-from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM,\
-                                        OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS
+from PsyNeuLink.Globals.Keywords import INIT__EXECUTE__METHOD_ONLY, MECHANISM, \
+                                        OBJECTIVE_MECHANISM, CONTROL_PROJECTIONS, CONTROL_SIGNALS, CONTROL
 
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
@@ -306,6 +306,7 @@ class ITCMechanism(ControlMechanism):
                          context=self)
 
         self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
+        self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

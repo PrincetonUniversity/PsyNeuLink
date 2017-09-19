@@ -1282,12 +1282,47 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
-            # If sender is an ObjectiveMechanism being used for learning or control,
-            #     or a LearningMechanism or a ControlMechanism,
-            # Assign as LEARNING and move on
+            # DEAL WITH LEARNING AND CONTROL MECHANISMS -----------------------------------------------------------
+
+            # # MODIFIED 9/18/17 OLD:
+            # # If sender is an ObjectiveMechanism being used for learning or control,
+            # #     or a LearningMechanism or a ControlMechanism,
+            # # Assign as LEARNING and move on
+            # if is_monitoring_mech(sender_mech):
+            #     sender_mech.systems[self] = LEARNING
+            # MODIFIED 9/18/17 NEW:
+            # Label Mechanisms used for Learning and System's controller, then return
+            #    (i.e., don't include their dependents in the System execution_graph;
+            #     they will be added to the System's learning_graph or run as the controller)
+            #    EXCEPT ObjectiveMechanisms used for control but not the System's controller
             if is_monitoring_mech(sender_mech):
-                sender_mech.systems[self] = LEARNING
-                return
+                # LearningMechanisms or ObjectiveMechanism used for learning:  label as LEARNING and return
+                if (isinstance(sender_mech, LearningMechanism) or
+                        (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
+                    sender_mech.systems[self] = LEARNING
+                    return
+                # System's controller or ObjectiveMechanism that projects *only* to it:  label as CONTROL and return
+                # IMPLEMENTATION NOTE:  This the permits an ObjectiveMechanism to project to other Mechanisms
+                #                       that can be included in the System's execution_graph
+                elif (sender_mech is self.controller or
+                          (isinstance(sender_mech, ObjectiveMechanism) and
+                               all(
+                                   all(projection.receiver.owner is self.controller
+                                       # FIX: GO THROUGH ALL OUTPUTSTATES
+                                       for projection in output_state.efferents)
+                                   for output_state in sender_mech.output_states))):
+                    sender_mech.systems[self] = CONTROL
+                    return
+                # If sender is a ControlMechanism that is not the controller for the System,
+                #    assign its dependency to its ObjectiveMechanism and label as INTERNAL
+                elif isinstance(sender_mech, ControlMechanism):
+                    sender_mech.systems[self] = INTERNAL
+                    # FIX:  ALLOW TO CONTINUE FROM ControlMechanism TO RECIPIENT OF ITS ControlProjections?
+                    # FIX:  I.E., **DON'T** RETURN
+            # MODIFIED 9/18/17 END
+
+
+            # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
@@ -1306,28 +1341,40 @@ class System_Base(System):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
+            # ASSIGN TERMINAL MECHANISM(S) -----------------------------------------------------------------------
+
             # Assign as TERMINAL (or SINGLETON) if it:
-            #    - is not an Objective Mechanism used for Learning or Control and
             #    - it is not a ControlMechanism and
+            #    - it is not an Objective Mechanism used for Learning or Control and
             #    - it has no outgoing projections or
             #          only ones to ObjectiveMechanism(s) used for Learning or Control
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (
-                # It is not a ControlMechanism
+
+                # # MODIFIED 9/18/17 OLD:
+                # # It is not a ControlMechanism
+                # not (isinstance(sender_mech, ControlMechanism) or
+                # MODIFIED 9/18/17 NEW:
+                # It is not the controller for the System
+                # not (sender_mech is self.controller or
                 not (isinstance(sender_mech, ControlMechanism) or
-                    # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
+                # MODIFIED 9/18/17 END
+                # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism or ObjectiveMechanism for one
+                    # It is not an ObjectiveMechanism used for Learning or for the controller of the System
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL)))
+
+                    and
                         # All of its projections
                         all(
                             all(
                                 # are to ControlMechanism(s)...
-                                isinstance(projection.receiver.owner, (ControlMechanism, LearningMechanism)) or
-                                 # are to ObjectiveMechanism(s) used for Learning or Control...
-                                 (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
+                                isinstance(projection.receiver.owner, (ControlMechanism, LearningMechanism))
+                                    # or to ObjectiveMechanism(s) used for Learning or Control...
+                                    or (isinstance(projection.receiver.owner, ObjectiveMechanism)
+                                        and projection.receiver.owner._role in (LEARNING, CONTROL))
                                 # or are to itself!
-                                 projection.receiver.owner is sender_mech
+                                or projection.receiver.owner is sender_mech
                             for projection in output_state.efferents)
                         for output_state in sender_mech.output_states)):
                 try:
@@ -1337,7 +1384,33 @@ class System_Base(System):
                         sender_mech.systems[self] = TERMINAL
                 except KeyError:
                     sender_mech.systems[self] = TERMINAL
-                return
+                # MODIFIED 9/19/17 OLD:
+                # return
+                # MODIFIED 9/19/17 NEW:
+                # If sender_mech has projections to ControlMechanism and/or Objective Mechanisms used for control
+                #    that are NOT the System's controller, then continue to track those projections
+                #    for dependents to add to the execution_graph;
+                if any(
+                        any(
+                            # Projection to a ControlMechanism that is not the System's controller
+                                    (isinstance(projection.receiver.owner, ControlMechanism)
+                                     and not projection.receiver.owner is self.controller)
+                            # or Projection to an ObjectiveMechanism that is not for the System's controller
+                            or (isinstance(projection.receiver.owner, ObjectiveMechanism)
+                                and projection.receiver.owner._role is CONTROL
+                                and (self.controller is None or (self.controller is not None
+                                and not projection.receiver.owner is self.controller.objective_mechanism)))
+                                    for projection in output_state.efferents)
+                        for output_state in sender_mech.output_states):
+                    pass
+
+                # Otherwise, don't track any of the TERMINAL Mechanism's projections
+                else:
+                    return
+                # MODIFIED 9/19/17 END
+
+
+            # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
             for output_state in sender_mech.output_states:
 
@@ -1348,9 +1421,19 @@ class System_Base(System):
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
                     # MODIFIED 7/28/17 CW: added a check for auto-recurrent projections (i.e. receiver is sender_mech)
-                    if not receiver or is_monitoring_mech(receiver) or (receiver is sender_mech):
+                    if not receiver or (receiver is sender_mech):
                         continue
-
+                    if is_monitoring_mech(receiver):
+                        # # MODIFIED 9/18/19 OLD:
+                        # continue
+                        # MODIFIED 9/18/19 NEW:
+                        # Don't include receiver if it is the controller for the System,
+                        if (receiver is self.controller
+                            or isinstance(receiver, LearningMechanism)
+                            or self.controller is not None and isinstance(receiver, self.controller.objective_mechanism)
+                            or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
+                            continue
+                        # MODIFIED 9/18/19 END
                     try:
                         self.graph[receiver].add(sender_mech)
                     except KeyError:
@@ -1520,7 +1603,7 @@ class System_Base(System):
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
         self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
-        self.control_Mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
+        self.control_mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
         try:
@@ -3229,7 +3312,7 @@ class System_Base(System):
         # loop through receivers
         for rcvr in rcvrs:
             rcvr_name = rcvr.name
-            rcvr_shape = rcvr.instance_defaults.variable.shape[1]
+            # rcvr_shape = rcvr.instance_defaults.variable.shape[1]
             rcvr_label = rcvr_name
 
 
@@ -3237,7 +3320,7 @@ class System_Base(System):
             sndrs = system_graph[rcvr]
             for sndr in sndrs:
                 sndr_name = sndr.name
-                sndr_shape = sndr.instance_defaults.variable.shape[1]
+                # sndr_shape = sndr.instance_defaults.variable.shape[1]
                 sndr_label = sndr_name
 
                 # find edge name
@@ -3294,6 +3377,11 @@ class System_Base(System):
         # add control graph if show_control
         if show_control:
             controller = self.controller
+
+            if controller is None:
+                print ("\nWARNING: {} has not been assigned a \'controller\', so \'show_control\' option "
+                       "can't be used in its show_graph() method\n".format(self.name))
+                return
 
             connector = controller.input_state.path_afferents[0]
             objmech = connector.sender.owner
