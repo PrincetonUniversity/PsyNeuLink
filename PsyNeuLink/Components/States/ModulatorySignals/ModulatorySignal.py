@@ -150,6 +150,8 @@ ModulatorySignal. If it is not specified when a ModulatorySignal is created, it 
    |                    |                       |                                      | (`increment`)               |
    +--------------------+-----------------------+--------------------------------------+-----------------------------+
 
+.. _ModulatorySignal_Detail_Figure:
+
 **Detailed View of Modulation**
 
 .. figure:: _static/Modulation_Detail_fig.svg

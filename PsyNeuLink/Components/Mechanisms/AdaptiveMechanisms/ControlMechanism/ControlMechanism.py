@@ -252,7 +252,7 @@ that specifies the OutputStates to be monitored by its `objective_mechanism <Con
                                           (GAIN, my_transfer_mech_B)])
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
-<Primary_OutputState>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+<OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
@@ -942,11 +942,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         print ("\n---------------------------------------------------------")
 
     def add_monitored_output_states(self, monitored_output_states, context=None):
-        """Instantiate OutputStates to be monitored by ControlMechanism's objective_mechanism
+        """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
 
-        monitored_output_states can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these
-        If item is a Mechanism, its primary OutputState is used.
-        OutputStates must belong to Mechanisms in the same System as the ControlMechanism
+        **monitored_output_states** can be a `Mechanism`, `OutputState`, `monitored_output_states tuple
+        <ObjectiveMechanism_OutputState_Tuple>`, or list with any of these. If item is a Mechanism, its `primary
+        OutputState <OutputState_Primary>` is used. OutputStates must belong to Mechanisms in the same `System` as
+        the ControlMechanism.
         """
         output_states = self.objective_mechanism.add_monitored_output_states(
                                                                  monitored_output_states_specs=monitored_output_states,

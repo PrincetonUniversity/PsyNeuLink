@@ -818,11 +818,12 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         return input_state_dicts, output_state_dicts
 
     def add_monitored_output_states(self, monitored_output_states_specs, context=None):
-        """Instantiate OutputStates to be monitored by ObjectiveMechanism
+        """Instantiate `OutputStates <OutputState>` to be monitored by the ObjectiveMechanism.
 
-        Used by other objects to add a state or list of states to be monitored by ObjectiveMechanism.
-        monitored_output_states_spec can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these.
-        If item is a Mechanism, its primary OutputState is used.
+        Used by other Components to add a `State` or list of States to be monitored by the ObjectiveMechanism.
+        The **monitored_output_states_spec** can be a `Mechanism`, `OutputState`, `monitored_output_states tuple
+        <ObjectiveMechanism_OutputState_Tuple>`, or list with any of these.  If item is a Mechanism, its `primary
+        OutputState <OutputState_Primary>` is used.
         """
         monitored_output_states_specs = list(monitored_output_states_specs)
 
