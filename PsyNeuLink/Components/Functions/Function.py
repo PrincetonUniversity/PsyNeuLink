@@ -2667,8 +2667,8 @@ class SoftMax(TransferFunction):
 
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, vo, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
-        ptri = builder.gep(vi, [index])
-        ptro = builder.gep(vo, [index])
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
@@ -2691,13 +2691,13 @@ class SoftMax(TransferFunction):
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
         output_type = self.params[OUTPUT_TYPE]
-        ptro = builder.gep(vo, [index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         if output_type in (MAX_VAL, MAX_INDICATOR):
             builder.store(ctx.float_ty(0), ptro)
             return
 
-        ptri = builder.gep(vi, [index])
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         orig_val = builder.load(ptri)
         val = builder.fmul(orig_val, gain)
@@ -2712,12 +2712,14 @@ class SoftMax(TransferFunction):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("softmax")
             struct_param_ty = self.get_param_struct_type()
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(), (
+                self.get_param_struct_type().as_pointer(),
+                vec_ty.as_pointer(), vec_ty.as_pointer()))
             vector_length = ctx.int32_ty(self._variable_length)
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
-            for a in vi, vo:
+            for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
 
@@ -2730,7 +2732,8 @@ class SoftMax(TransferFunction):
             max_ptr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty(float('-inf')), max_ptr)
             max_ind_ptr = builder.alloca(ctx.int32_ty)
-            gain = builder.extract_value(params, 0)
+            gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            gain = builder.load(gain_ptr)
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "max_ptr": max_ptr, "gain":gain, "max_ind_ptr":max_ind_ptr, "exp_sum_ptr":exp_sum_ptr}
             inner = functools.partial(self.__gen_llvm_exp_sum_max, **kwargs)
@@ -2740,14 +2743,14 @@ class SoftMax(TransferFunction):
             output_type = self.params[OUTPUT_TYPE]
             exp_sum = builder.load(exp_sum_ptr)
             index = builder.load(max_ind_ptr)
-            ptro = builder.gep(vo, [index])
+            ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
             if output_type == ALL:
                 kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "gain":gain, "exp_sum":exp_sum}
                 inner = functools.partial(self.__gen_llvm_exp_div, **kwargs)
                 builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exp_div")
             elif output_type == MAX_VAL:
-                ptri = builder.gep(vi, [index])
+                ptri = builder.gep(vi, [ctx.int32_ty(0), index])
                 exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
                 orig_val = builder.load(ptri)
                 val = builder.fmul(orig_val, gain)
@@ -2774,11 +2777,11 @@ class SoftMax(TransferFunction):
 
         ret = np.zeros(len(variable))
         gain = self.params[GAIN]
-        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(gain)
-        ct_vi = variable.ctypes.data_as(vi_ty)
-        ct_vo = ret.ctypes.data_as(vo_ty)
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
         bf(ct_param, ct_vi, ct_vo)
 
