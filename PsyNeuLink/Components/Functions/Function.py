@@ -2423,10 +2423,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
 
     def __gen_llvm_logistic(self, builder, index, ctx, vi, vo, params):
-        ptri = builder.gep(vi, [index])
-        ptro = builder.gep(vo, [index])
-        gain = builder.extract_value(params, 0)
-        bias = builder.extract_value(params, 1)
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        gain_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        bias_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        gain = builder.load(gain_ptr)
+        bias = builder.load(bias_ptr)
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -2444,13 +2446,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("logistic")
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            struct_param_ty = self.get_param_struct_type()
-            func_ty = ir.FunctionType(ir.VoidType(), (struct_param_ty, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(self._variable_length)
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
-            for a in vi, vo:
+            for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
 
@@ -2461,6 +2463,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_logistic, **kwargs)
 
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "logistic")
 
             builder.ret_void()
@@ -2481,12 +2484,12 @@ class Logistic(TransferFunction):  # -------------------------------------------
         gain = self.paramsCurrent[GAIN]
         bias = self.paramsCurrent[BIAS]
 
-        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(gain, bias)
 
-        ct_vi = variable.ctypes.data_as(vi_ty)
-        ct_vo = ret.ctypes.data_as(vo_ty)
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
         bf(ct_param, ct_vi, ct_vo)
 
         return ret
