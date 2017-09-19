@@ -4339,7 +4339,6 @@ class AdaptiveIntegrator(
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("adaptiveintegrator")
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
             vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
             func_ty = ir.FunctionType(ir.VoidType(),
                 (self.get_param_struct_type().as_pointer(),
