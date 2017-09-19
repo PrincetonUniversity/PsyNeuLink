@@ -207,7 +207,7 @@ context and assigned automatically, as in the following example:</p>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.WaldDist.owner" title="Function.WaldDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
+<p>Here, <code class="xref any docutils literal"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="Function.html#Function.Reduce.owner" title="Function.Reduce.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> <code class="xref any docutils literal"><span class="pre">B</span></code>, and the scheduler <code class="xref any docutils literal"><span class="pre">my_scheduler</span></code>.</p>
 </div>
 <div class="section" id="custom-conditions">
 <span id="condition-custom"></span><h3>Custom Conditions<a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -398,7 +398,7 @@ for which it is <a class="reference internal" href="TimeScale.html#Scheduling.Ti
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#Scheduling.Condition.EveryNCalls" title="Scheduling.Condition.EveryNCalls"><code class="xref any py py-class docutils literal"><span class="pre">EveryNCalls</span></code></a>(Component, int[, TimeScale])</dt>
-<dd>satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.WaldDist.owner" title="Function.WaldDist.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</dd>
+<dd>satisfied when the specified Component has executed the specified number of times since the       last time <a class="reference internal" href="Function.html#Function.Reduce.owner" title="Function.Reduce.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> has run.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
@@ -483,7 +483,7 @@ ConditionSet using the ConditionSet’s <a class="reference internal" href="#Sch
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#module-Component" title="Component"><em>Component</em></a>) – specifies the Component with which the <strong>condition</strong> should be associated.</li>
-<li><strong>condition</strong> (<a class="reference internal" href="#Scheduling.Condition.Condition" title="Scheduling.Condition.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
+<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – specifies the Condition, associated with the <strong>owner</strong> to be added to the ConditionSet.</li>
 </ul>
 </td>
 </tr>
@@ -699,7 +699,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<a class="reference internal" href="#Scheduling.Condition.Condition" title="Scheduling.Condition.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></td>
 </tr>
 </tbody>
 </table>
@@ -719,7 +719,7 @@ specifies keyword arguments to pass to <code class="xref any docutils literal"><
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>condition</strong> (<a class="reference internal" href="#Scheduling.Condition.Condition" title="Scheduling.Condition.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
+<li><strong>condition</strong> (<a class="reference internal" href="#module-Scheduling.Condition" title="Scheduling.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></li>
 <li><strong>n</strong> (<em>int</em>) – the maximum number of times this condition will be satisfied</li>
 </ul>
 </td>
