@@ -1388,13 +1388,14 @@ class System_Base(System):
                                      and not projection.receiver.owner is self.controller)
                             # or Projection to an ObjectiveMechanism that is not for the System's controller
                             or (isinstance(projection.receiver.owner, ObjectiveMechanism)
+                                and projection.receiver.owner._role is CONTROL
                                 and (self.controller is None or (self.controller is not None
                                 and not projection.receiver.owner is self.controller.objective_mechanism)))
                                     for projection in output_state.efferents)
                         for output_state in sender_mech.output_states):
                     pass
 
-                # Otherwise, don't track TERMINAL Mechanism's projections
+                # Otherwise, don't track any of the TERMINAL Mechanism's projections
                 else:
                     return
                 # MODIFIED 9/19/17 END
@@ -1414,8 +1415,12 @@ class System_Base(System):
                         # # MODIFIED 9/18/19 OLD:
                         # continue
                         # MODIFIED 9/18/19 NEW:
-                        if receiver is self.controller:
-                           continue
+                        # Don't include receiver if it is the controller for the System,
+                        if (receiver is self.controller
+                            or isinstance(receiver, LearningMechanism)
+                            or self.controller is not None and isinstance(receiver, self.controller.objective_mechanism)
+                            or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
+                            continue
                         # MODIFIED 9/18/19 END
                     try:
                         self.graph[receiver].add(sender_mech)
