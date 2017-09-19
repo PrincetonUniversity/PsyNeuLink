@@ -26,8 +26,8 @@ my_ITC = ITCMechanism(monitored_output_states=my_mech_1,
 # my_system = system(processes=[my_main_process, my_LC_process, my_ITC_process], name='my_system')
 
 my_main_process = process(pathway=[my_mech_1], name='Main_process')
-my_LC_process = process(pathway=[my_mech_1, my_LC], name='LC_process')
 my_ITC_process = process(pathway=[my_mech_1, my_ITC], name='ITC_process')
+my_LC_process = process(pathway=[my_mech_1, my_LC], name='LC_process')
 my_system = system(processes=[my_main_process, my_LC_process, my_ITC_process], name='my_system')
 
 my_system.show()
@@ -35,7 +35,7 @@ my_system.show_graph()
 # my_system.show_graph(show_control=True)
 
 
-inputs={my_mech_1:[0]}
+inputs={my_mech_1:[[1],[1],[1]]}
 print(my_system.run(inputs=inputs))
 
 # my_mech_2 = TransferMechanism(name='mech_2')

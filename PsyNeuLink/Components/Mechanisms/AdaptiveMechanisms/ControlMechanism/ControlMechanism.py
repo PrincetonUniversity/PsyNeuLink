@@ -687,6 +687,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
+
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -839,6 +841,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
 
         # Validate control_projection (if specified) and get receiver's name
+        control_projection_name = parameter_state.name + ' ' + 'control signal'
         if control_projection:
             _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
@@ -851,8 +854,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 control_projection.init_args['sender']=control_signal
                 if control_projection.init_args['name'] is None:
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    control_projection.init_args['name'] = CONTROL_PROJECTION + \
-                                                   ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
+                    control_projection.init_args['name'] = control_projection_name
+                        # CONTROL_PROJECTION + ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
                 control_projection._deferred_init()
             else:
                 control_projection.sender = control_signal
@@ -863,7 +866,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             control_projection = ControlProjection(sender=control_signal,
                                                    receiver=parameter_state,
-                                                   name=CONTROL_PROJECTION + control_signal_name)
+                                                   # name=CONTROL_PROJECTION + control_signal_name)
+                                                   name=control_projection_name)
 
         # Add ControlProjection to list of OutputState's outgoing Projections
         # (note: if it was deferred, it just added itself, skip)

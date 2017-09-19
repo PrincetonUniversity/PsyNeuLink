@@ -1282,6 +1282,8 @@ class System_Base(System):
         # Use to recursively traverse processes
         def build_dependency_sets_by_traversing_projections(sender_mech):
 
+            # DEAL WITH LEARNING AND CONTROL MECHANISMS -----------------------------------------------------------
+
             # # MODIFIED 9/18/17 OLD:
             # # If sender is an ObjectiveMechanism being used for learning or control,
             # #     or a LearningMechanism or a ControlMechanism,
@@ -1291,7 +1293,8 @@ class System_Base(System):
             # MODIFIED 9/18/17 NEW:
             # Label Mechanisms used for Learning and System's controller, then return
             #    (i.e., don't include their dependents in the System execution_graph;
-            #     they will be added to the System's learning_graph or run as the contrller)
+            #     they will be added to the System's learning_graph or run as the controller)
+            #    EXCEPT ObjectiveMechanisms used for control but not the System's controller
             if is_monitoring_mech(sender_mech):
                 # LearningMechanisms or ObjectiveMechanism used for learning:  label as LEARNING and return
                 if (isinstance(sender_mech, LearningMechanism) or
@@ -1318,6 +1321,9 @@ class System_Base(System):
                     # FIX:  I.E., **DON'T** RETURN
             # MODIFIED 9/18/17 END
 
+
+            # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
+
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
             for input_state in sender_mech.input_states:
                 for projection in input_state.all_afferents:
@@ -1335,6 +1341,8 @@ class System_Base(System):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
+            # ASSIGN TERMINAL MECHANISM(S) -----------------------------------------------------------------------
+
             # Assign as TERMINAL (or SINGLETON) if it:
             #    - it is not a ControlMechanism and
             #    - it is not an Objective Mechanism used for Learning or Control and
@@ -1349,7 +1357,8 @@ class System_Base(System):
                 # not (isinstance(sender_mech, ControlMechanism) or
                 # MODIFIED 9/18/17 NEW:
                 # It is not the controller for the System
-                not (sender_mech is self.controller or
+                # not (sender_mech is self.controller or
+                not (isinstance(sender_mech, ControlMechanism) or
                 # MODIFIED 9/18/17 END
                 # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism or ObjectiveMechanism for one
                     # It is not an ObjectiveMechanism used for Learning or for the controller of the System
@@ -1399,6 +1408,9 @@ class System_Base(System):
                 else:
                     return
                 # MODIFIED 9/19/17 END
+
+
+            # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
             for output_state in sender_mech.output_states:
 
