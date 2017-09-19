@@ -1303,8 +1303,11 @@ class System_Base(System):
                 #                       that can be included in the System's execution_graph
                 elif (sender_mech is self.controller or
                           (isinstance(sender_mech, ObjectiveMechanism) and
-                               all(projection.receiver.owner is self.controller
-                                   for projection in sender_mech.efferents))):
+                               all(
+                                   all(projection.receiver.owner is self.controller
+                                       # FIX: GO THROUGH ALL OUTPUTSTATES
+                                       for projection in output_state.efferents)
+                                   for output_state in sender_mech.output_states))):
                     sender_mech.systems[self] = CONTROL
                     return
                 # If sender is a ControlMechanism that is not the controller for the System,
@@ -1340,6 +1343,7 @@ class System_Base(System):
             # Note:  SINGLETON is assigned if mechanism is already a TERMINAL;  indicates that it is both
             #        an ORIGIN AND A TERMINAL and thus must be the only mechanism in its process
             if (
+
                 # # MODIFIED 9/18/17 OLD:
                 # # It is not a ControlMechanism
                 # not (isinstance(sender_mech, ControlMechanism) or
@@ -1347,9 +1351,11 @@ class System_Base(System):
                 # It is not the controller for the System
                 not (sender_mech is self.controller or
                 # MODIFIED 9/18/17 END
-                # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism
-                    # It is not an ObjectiveMechanism used for Learning or Control
-                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL))) and
+                # FIX: ALLOW IT TO BE TERMINAL IF IT PROJECTS ONLY TO A ControlMechanism or ObjectiveMechanism for one
+                    # It is not an ObjectiveMechanism used for Learning or for the controller of the System
+                    (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role in (LEARNING,CONTROL)))
+
+                    and
                         # All of its projections
                         all(
                             all(
@@ -1361,7 +1367,8 @@ class System_Base(System):
                                 # or are to itself!
                                  projection.receiver.owner is sender_mech
                             for projection in output_state.efferents)
-                        for output_state in sender_mech.output_states)):
+                        for output_state in sender_mech.output_states)
+            ):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
@@ -1369,7 +1376,10 @@ class System_Base(System):
                         sender_mech.systems[self] = TERMINAL
                 except KeyError:
                     sender_mech.systems[self] = TERMINAL
-                return
+                # MODIFIED 9/19/17 OLD: [ALLOW ObjectiveMechanism(s) and/or ControlMechanisms TO WHICH IT PROJECTS
+                #                        TO BE ADDED TO THE EXECUTION_GRAPH AS DEPENDENTS]
+                # return
+                # MODIFIED 9/19/17 END
 
             for output_state in sender_mech.output_states:
 

@@ -1544,6 +1544,8 @@ class Process_Base(Process):
                         # No Projection found, so instantiate MappingProjection from preceding mech to current one;
                         # Note: if self.learning arg is specified, it has already been added to projection_params above
 
+                        # MODIFIED 9/19/17 NEW:
+                        #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
                         # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
                         if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
                             # If it already has an associated ObjectiveMechanism, make sure it has been implemented
@@ -1558,14 +1560,21 @@ class Process_Base(Process):
                                                           ObjectiveMechanism.name))
                             # Check whether ObjectiveMechanism already receives a projection
                             #     from the preceding Mechanism in the pathway
-                            if not any(XXX)
-
+                            # if not any(projection.sender.owner is preceding_item
+                            #            for projection in item.objective_mechanism.input_state.path_afferents):
+                            if not any(
+                                    any(projection.sender.owner is preceding_item
+                                        for projection in input_state.path_afferents)
+                                    for input_state in item.objective_mechanism.input_states):
+                                # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
                                 receiver = item.objective_mechanism
-                            else:
-                                GET OUT OF HERE
 
+                            else:
+                                # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                                continue
                         else:
                             receiver = item
+                        # MODIFIED 9/19/17 END
 
                         MappingProjection(sender=preceding_item,
                                           receiver=receiver,

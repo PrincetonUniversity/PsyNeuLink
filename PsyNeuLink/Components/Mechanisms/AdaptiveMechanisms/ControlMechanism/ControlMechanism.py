@@ -316,7 +316,7 @@ from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METH
                                         PARAMETER_STATE, OBJECTIVE_MECHANISM, \
                                         PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
                                         CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
-                                        CONTROL_SIGNALS
+                                        CONTROL_SIGNALS, CONTROL
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -661,7 +661,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                           function=LinearCombination(operation=PRODUCT),
                                                           name=self.name + '_ObjectiveMechanism')
-
+        # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
@@ -670,6 +670,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                                 self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+
+        # Assign ObjetiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
 
         # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
         if self.system is not None:
