@@ -943,9 +943,9 @@ class Process_Base(Process):
         determines the `learning_rate <LearningMechanism.learning_rate>` used for `MappingProjections
         <MappingProjection>` `specified for learning <Process_Learning_Sequence>` in the Process that do not have their
         `learning_rate <LearningProjection.learning_rate>` otherwise specified.   If is `None`, and the Process is
-        executed as part of a `System`, and the System has a `learning_rate <System.learning_rate>` specified, then that
-        is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the `function
-        <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
+        executed as part of a `System`, and the System has a `learning_rate <System_Base.learning_rate>` specified,
+        then that is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the
+        `function <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
         <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
         <LearningSignal_Learning_Rate>` or `LearningProjection <LearningProjection_Function_and_Learning_Rate>`
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the

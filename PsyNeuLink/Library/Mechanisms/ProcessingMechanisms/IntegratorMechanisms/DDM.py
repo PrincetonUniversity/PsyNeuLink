@@ -764,7 +764,7 @@ class DDM(ProcessingMechanism_Base):
                 fun = fun.__self__.__class__
 
             if not fun in functions:
-                function_names = [function.componentName for fun in functions]
+                function_names = [fun.componentName for fun in functions]
                 raise DDMError("{} param of {} must be one of the following functions: {}".
                                format(FUNCTION, self.name, function_names))
 

@@ -14,3 +14,4 @@ ControlMechanisms
 
    EVCMechanism
    LCMechanism
+   ITCMechanism

@@ -750,9 +750,16 @@ def _is_legal_param_value(owner, value):
 
     # LEGAL PARAMETER VALUES:
 
-    # lists, arrays numeric values or tuple
-    if is_value_spec(value) or isinstance(value, tuple):
+    # # lists, arrays or numeric values
+    if is_value_spec(value):
         return True
+
+    # tuple, first item of which is a legal parameter value
+    #     note: this excludes (param_name, Mechanism) tuples used to specify a ParameterState
+    #           (e.g., if specified for the control_signals param of ControlMechanism)
+    if isinstance(value, tuple):
+        if _is_legal_param_value(owner, value[0]):
+            return True
 
     if isinstance(value, dict) and VALUE in value:
         return True
