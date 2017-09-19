@@ -1360,15 +1360,14 @@ class System_Base(System):
                         all(
                             all(
                                 # are to ControlMechanism(s)...
-                                isinstance(projection.receiver.owner, (ControlMechanism, LearningMechanism)) or
-                                 # are to ObjectiveMechanism(s) used for Learning or Control...
-                                 (isinstance(projection.receiver.owner, ObjectiveMechanism) and
-                                             projection.receiver.owner._role in (LEARNING, CONTROL)) or
+                                isinstance(projection.receiver.owner, (ControlMechanism, LearningMechanism))
+                                    # or to ObjectiveMechanism(s) used for Learning or Control...
+                                    or (isinstance(projection.receiver.owner, ObjectiveMechanism)
+                                        and projection.receiver.owner._role in (LEARNING, CONTROL))
                                 # or are to itself!
-                                 projection.receiver.owner is sender_mech
+                                or projection.receiver.owner is sender_mech
                             for projection in output_state.efferents)
-                        for output_state in sender_mech.output_states)
-            ):
+                        for output_state in sender_mech.output_states)):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech.systems[self] = SINGLETON
@@ -1376,9 +1375,29 @@ class System_Base(System):
                         sender_mech.systems[self] = TERMINAL
                 except KeyError:
                     sender_mech.systems[self] = TERMINAL
-                # MODIFIED 9/19/17 OLD: [ALLOW ObjectiveMechanism(s) and/or ControlMechanisms TO WHICH IT PROJECTS
-                #                        TO BE ADDED TO THE EXECUTION_GRAPH AS DEPENDENTS]
+                # MODIFIED 9/19/17 OLD:
                 # return
+                # MODIFIED 9/19/17 NEW:
+                # If it has projections to ControlMechanism and/or Objective Mechanisms used for control
+                #    that are NOT the System's controller, then continue to track those projections
+                #    for dependents to add to the execution_graph;
+
+                if any(
+                        any(
+                            # Projection to a ControlMechanism that is not the System's controller
+                                    (isinstance(projection.receiver.owner, ControlMechanism)
+                                     and not projection.receiver.owner is self.controller)
+                            # or Projection to an ObjectiveMechanism that is not for the System's controller
+                            or (isinstance(projection.receiver.owner, ObjectiveMechanism)
+                                and self.controller is not None
+                                and not projection.receiver.owner is self.controller.objective_mechanism)
+                                    for projection in output_state.efferents)
+                        for output_state in sender_mech.output_states):
+                    pass
+
+                # Otherwise, don't track TERMINAL Mechanism's projections
+                else:
+                    return
                 # MODIFIED 9/19/17 END
 
             for output_state in sender_mech.output_states:
