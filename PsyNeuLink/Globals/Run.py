@@ -788,7 +788,7 @@ def _construct_from_stimulus_dict(object, stimuli, is_target):
         # Check that all of the ORIGIN mechanisms in the object are represented by entries in the inputs dict
         for mech in object.origin_mechanisms:
             if not mech in stimuli:
-                raise RunError("ORIGIN Mechanism {} is missing from the inputs dict for ".
+                raise RunError("Entry for ORIGIN Mechanism {} is missing from the inputs dict for {}".
                                format(mech.name, object.name))
 
     # Note: no need to order entries for inputs (as with targets, below) as that only matters for systems,
