@@ -1436,7 +1436,7 @@ class Mechanism_Base(Mechanism):
                     # do not pass input_states variable as default_variable, fall back to default_variable specification
                     pass
 
-        return default_variable
+        return super()._handle_default_variable(default_variable=default_variable, size=size)
 
     def _validate_variable(self, variable, context=None):
         """Convert ClassDefaults.variable and variable to 2D np.array: one 1D value for each InputState

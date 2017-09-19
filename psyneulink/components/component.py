@@ -845,7 +845,11 @@ class Component(object):
         if param_defaults is not None:
             defaults.update(param_defaults)
 
-        if default_variable is not None:
+        v = self._handle_default_variable(default_variable, size)
+        if v is None:
+            default_variable = defaults[VARIABLE]
+        else:
+            default_variable = v
             defaults[VARIABLE] = default_variable
 
         self.instance_defaults = self.InstanceDefaults(**defaults)
@@ -934,9 +938,6 @@ class Component(object):
             except TypeError:
                 pass
 
-        # If 'default_variable' was not specified, _handle_size() tries to infer 'default_variable' based on 'size'
-        default_variable = self._handle_size(size, default_variable)
-
         # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
 
         # Validate the set passed in and assign to paramInstanceDefaults
@@ -978,6 +979,36 @@ class Component(object):
         return '({0} {1})'.format(type(self).__name__, self.name)
         #return '{1}'.format(type(self).__name__, self.name)
 
+    def _handle_default_variable(self, default_variable=None, size=None):
+        '''
+            Finds whether default_variable can be determined using **default_variable** and **size**
+            arguments.
+
+            Returns
+            -------
+                a default variable if possible
+                None otherwise
+        '''
+        if self._default_variable_handled:
+            return default_variable
+
+        if default_variable is None:
+            default_variable = self._handle_size(size, default_variable)
+
+            if default_variable is None or default_variable is NotImplemented:
+                return None
+            else:
+                self._variable_not_specified = False
+        else:
+            self._variable_not_specified = False
+
+        # fixes a problem where we would have list objects within numpy arrays, and so multiplying them by a scalar
+        # wouldn't do an arithmetic operation, but rather a list-size operation
+        default_variable = convert_all_elements_to_np_array(default_variable)
+
+        self._default_variable_handled = True
+        return np.asarray(default_variable)
+
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only State.py overwrites _handle_size().
@@ -991,7 +1022,8 @@ class Component(object):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-
+            self._variable_not_specified = False
+            # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.ClassDefaults.variable
             # 6/30/17 now handled in the individual subclasses' __init__() methods because each subclass has different
@@ -2050,9 +2082,7 @@ class Component(object):
         #    - assign to (??now np-converted version of) self.ClassDefaults.variable
         #    - mark as not having been specified
         #    - return
-        self._variable_not_specified = False
         if variable is None:
-            self._variable_not_specified = True
             try:
                 return self.instance_defaults.variable
             except AttributeError:
@@ -2950,6 +2980,31 @@ class Component(object):
 
             except AttributeError:
                 owner = None
+
+    @property
+    def _variable_not_specified(self):
+        try:
+            return self.__variable_not_specified
+        except AttributeError:
+            self.__variable_not_specified = True
+            return self.__variable_not_specified
+
+    @_variable_not_specified.setter
+    def _variable_not_specified(self, value):
+        self.__variable_not_specified = value
+
+    @property
+    def _default_variable_handled(self):
+        try:
+            return self.__default_variable_handled
+        except AttributeError:
+            self.__default_variable_handled = False
+            return self.__default_variable_handled
+
+    @_default_variable_handled.setter
+    def _default_variable_handled(self, value):
+        self.__default_variable_handled = value
+
 
 COMPONENT_BASE_CLASS = Component
 
