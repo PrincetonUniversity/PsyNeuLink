@@ -582,8 +582,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute([10, 10, 10, 10])[0]
-        print(val)
-        np.testing.assert_allclose(val, [-0.15135721, -0.10321885,  0.4105985,   0.14404357])
+        np.testing.assert_allclose(val, [0.12167502, 0.44386323, 0.33367433, 1.49407907])
 
     def test_integrator_constant_noise_fn(self):
         I = IntegratorMechanism(

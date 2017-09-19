@@ -5536,7 +5536,7 @@ class AccumulatorIntegrator(
                                                   params=params)
 
         super().__init__(
-            # default_variable=default_variable,
+            default_variable=default_variable,
             params=params,
             owner=owner,
             prefs=prefs,
