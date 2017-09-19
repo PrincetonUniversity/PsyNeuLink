@@ -1378,10 +1378,9 @@ class System_Base(System):
                 # MODIFIED 9/19/17 OLD:
                 # return
                 # MODIFIED 9/19/17 NEW:
-                # If it has projections to ControlMechanism and/or Objective Mechanisms used for control
+                # If sender_mech has projections to ControlMechanism and/or Objective Mechanisms used for control
                 #    that are NOT the System's controller, then continue to track those projections
                 #    for dependents to add to the execution_graph;
-
                 if any(
                         any(
                             # Projection to a ControlMechanism that is not the System's controller
@@ -1389,8 +1388,8 @@ class System_Base(System):
                                      and not projection.receiver.owner is self.controller)
                             # or Projection to an ObjectiveMechanism that is not for the System's controller
                             or (isinstance(projection.receiver.owner, ObjectiveMechanism)
-                                and self.controller is not None
-                                and not projection.receiver.owner is self.controller.objective_mechanism)
+                                and (self.controller is None or (self.controller is not None
+                                and not projection.receiver.owner is self.controller.objective_mechanism)))
                                     for projection in output_state.efferents)
                         for output_state in sender_mech.output_states):
                     pass
