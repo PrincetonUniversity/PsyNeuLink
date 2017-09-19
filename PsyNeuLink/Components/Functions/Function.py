@@ -1924,11 +1924,12 @@ class Linear(TransferFunction):  # ---------------------------------------------
         return param_type
 
     def __gen_llvm_linear(self, builder, index, ctx, vi, vo, params):
-        ptri = builder.gep(vi, [index])
-        ptro = builder.gep(vo, [index])
-        slope = builder.extract_value(params, 0)
-        intercept = builder.extract_value(params, 1)
-
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        slope_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        intercept_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        slope = builder.load(slope_ptr)
+        intercept = builder.load(intercept_ptr)
 
         val = builder.load(ptri)
         val = builder.fmul(val, slope)
@@ -1941,13 +1942,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("linear")
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            param_struct_ty = self.get_param_struct_type()
-            func_ty = ir.FunctionType(ir.VoidType(), (param_struct_ty, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(self._variable_length)
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                 vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
-            for a in vi, vo:
+            for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
 
@@ -1958,6 +1959,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "params":params}
             inner = functools.partial(self.__gen_llvm_linear, **kwargs)
 
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "linear")
 
             builder.ret_void()
@@ -1975,15 +1977,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
         bf = self._llvmBinFunction
 
         ret = np.zeros(len(variable))
-        gain = self.paramsCurrent[SLOPE]
-        bias = self.paramsCurrent[INTERCEPT]
+        slope = self.paramsCurrent[SLOPE]
+        intercept = self.paramsCurrent[INTERCEPT]
 
-        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
-        ct_param = par_struct_ty(gain, bias)
+        ct_param = par_struct_ty(slope, intercept)
 
-        ct_vi = variable.ctypes.data_as(vi_ty)
-        ct_vo = ret.ctypes.data_as(vo_ty)
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
         bf(ct_param, ct_vi, ct_vo)
 
         return ret
