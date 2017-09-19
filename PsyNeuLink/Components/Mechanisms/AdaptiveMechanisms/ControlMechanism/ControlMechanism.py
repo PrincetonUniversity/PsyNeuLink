@@ -252,7 +252,7 @@ that specifies the OutputStates to be monitored by its `objective_mechanism <Con
                                           (GAIN, my_transfer_mech_B)])
 
 This creates an ObjectiveMechanism for the ControlMechanism that monitors the `primary OutputState
-<Primary_OutputState>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
+<OutputState_Primary>` of ``my_Transfer_mech_A`` and the *RESPONSE_TIME* OutputState of ``my_DDM``;  its function
 first multiplies the former by 2 before, then takes product of ther values and passes the result as the input to the
 ControlMechanism.  The ControlMechanism's `function <ControlMechanism.function>` uses this value to determine
 the allocation for its ControlSignals, that control the value of the `threshold <DDM.threshold>` parameter of
@@ -316,7 +316,7 @@ from PsyNeuLink.Globals.Keywords import NAME, PARAMS, OWNER, INIT__EXECUTE__METH
                                         PARAMETER_STATE, OBJECTIVE_MECHANISM, \
                                         PRODUCT, AUTO_ASSIGN_MATRIX, REFERENCE_VALUE, \
                                         CONTROLLED_PARAM, CONTROL_PROJECTION, CONTROL_PROJECTIONS, CONTROL_SIGNAL, \
-                                        CONTROL_SIGNALS
+                                        CONTROL_SIGNALS, CONTROL
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
 from PsyNeuLink.Globals.Preferences.PreferenceSet import PreferenceLevel
 from PsyNeuLink.Globals.Utilities import ContentAddressableList
@@ -661,7 +661,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
             self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
                                                           function=LinearCombination(operation=PRODUCT),
                                                           name=self.name + '_ObjectiveMechanism')
-
+        # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))
             for state in self.monitored_output_states:
@@ -670,6 +670,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 exponent = self.monitored_output_states_weights_and_exponents[
                                                                 self.monitored_output_states.index(state)][1]
                 print ("\t{0} (exp: {1}; wt: {2})".format(state.name, weight, exponent))
+
+        # Assign ObjetiveMechanism's role as CONTROL
+        self.objective_mechanism._role = CONTROL
 
         # If ControlMechanism is a System controller, name Projection from ObjectiveMechanism based on the System
         if self.system is not None:
@@ -684,6 +687,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
 
     def _instantiate_input_states(self, context=None):
         super()._instantiate_input_states(context=context)
+
+        # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
         self._instantiate_objective_mechanism(context=context)
 
     def _instantiate_output_states(self, context=None):
@@ -836,6 +841,7 @@ class ControlMechanism(AdaptiveMechanism_Base):
         # VALIDATE OR INSTANTIATE ControlProjection(s) TO ControlSignal  -------------------------------------------
 
         # Validate control_projection (if specified) and get receiver's name
+        control_projection_name = parameter_state.name + ' ' + 'control signal'
         if control_projection:
             _validate_receiver(self, control_projection, Mechanism, CONTROL_SIGNAL, context=context)
 
@@ -848,8 +854,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
                 control_projection.init_args['sender']=control_signal
                 if control_projection.init_args['name'] is None:
                     # FIX 5/23/17: CLEAN UP NAME STUFF BELOW:
-                    control_projection.init_args['name'] = CONTROL_PROJECTION + \
-                                                   ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
+                    control_projection.init_args['name'] = control_projection_name
+                        # CONTROL_PROJECTION + ' for ' + parameter_state.owner.name + ' ' + parameter_state.name
                 control_projection._deferred_init()
             else:
                 control_projection.sender = control_signal
@@ -860,7 +866,8 @@ class ControlMechanism(AdaptiveMechanism_Base):
             from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
             control_projection = ControlProjection(sender=control_signal,
                                                    receiver=parameter_state,
-                                                   name=CONTROL_PROJECTION + control_signal_name)
+                                                   # name=CONTROL_PROJECTION + control_signal_name)
+                                                   name=control_projection_name)
 
         # Add ControlProjection to list of OutputState's outgoing Projections
         # (note: if it was deferred, it just added itself, skip)
@@ -942,11 +949,13 @@ class ControlMechanism(AdaptiveMechanism_Base):
         print ("\n---------------------------------------------------------")
 
     def add_monitored_output_states(self, monitored_output_states, context=None):
-        """Instantiate OutputStates to be monitored by ControlMechanism's objective_mechanism
+        """Instantiate OutputStates to be monitored by ControlMechanism's `objective_mechanism
+        <ControlMechanism.objective_mechanism>`.
 
-        monitored_output_states can be a Mechanism, OutputState, monitored_output_state tuple, or list with any of these
-        If item is a Mechanism, its primary OutputState is used.
-        OutputStates must belong to Mechanisms in the same System as the ControlMechanism
+        **monitored_output_states** can be a `Mechanism`, `OutputState`, `monitored_output_states tuple
+        <ObjectiveMechanism_OutputState_Tuple>`, or list with any of these. If item is a Mechanism, its `primary
+        OutputState <OutputState_Primary>` is used. OutputStates must belong to Mechanisms in the same `System` as
+        the ControlMechanism.
         """
         output_states = self.objective_mechanism.add_monitored_output_states(
                                                                  monitored_output_states_specs=monitored_output_states,
