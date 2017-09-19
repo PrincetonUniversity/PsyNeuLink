@@ -2193,8 +2193,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
         return param_type
 
     def __gen_llvm_exponential(self, builder, index, ctx, vi, vo, rate, scale):
-        ptri = builder.gep(vi, [index])
-        ptro = builder.gep(vo, [index])
+        ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
         exp_f = ctx.module.declare_intrinsic("llvm.exp", [ctx.float_ty])
         val = builder.load(ptri)
@@ -2209,14 +2209,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
         llvm_func = None
         with pnlvm.LLVMBuilderContext() as ctx:
             func_name = ctx.module.get_unique_name("exponential")
-            double_ptr_ty = ctx.float_ty.as_pointer() # TODO: move this to ctx
-            param_type = self.get_param_struct_type()
-            func_ty = ir.FunctionType(ir.VoidType(), \
-                (param_type, double_ptr_ty, double_ptr_ty))
-            vector_length = ctx.int32_ty(self._variable_length)
+            vec_ty = ir.ArrayType(ctx.float_ty, self._variable_length)
+            func_ty = ir.FunctionType(ir.VoidType(),
+                (self.get_param_struct_type().as_pointer(),
+                vec_ty.as_pointer(), vec_ty.as_pointer()))
             llvm_func = ir.Function(ctx.module, func_ty, name=func_name)
             params, vi, vo = llvm_func.args
-            for a in vi, vo:
+            for a in params, vi, vo:
                 a.attributes.add('nonnull')
                 a.attributes.add('noalias')
 
@@ -2224,12 +2223,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
             block = llvm_func.append_basic_block(name="entry")
             builder = ir.IRBuilder(block)
 
-            rate = builder.extract_value(params, 0)
-            scale = builder.extract_value(params, 1)
+            rate_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            scale_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            rate = builder.load(rate_ptr)
+            scale = builder.load(scale_ptr)
 
             kwargs = {"ctx":ctx, "vi":vi, "vo":vo, "rate":rate, "scale":scale}
             inner = functools.partial(self.__gen_llvm_exponential, **kwargs)
 
+            vector_length = ctx.int32_ty(self._variable_length)
             builder = helpers.for_loop_zero_inc(builder, vector_length, inner, "exponential")
 
             builder.ret_void()
@@ -2250,11 +2252,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
         rate = self.paramsCurrent[RATE]
         scale = self.paramsCurrent[SCALE]
 
-        par_struct_ty, vi_ty, vo_ty = bf.c_func.argtypes
+        par_struct_ty, vi_ty, vo_ty = bf.byref_arg_types
 
         ct_param = par_struct_ty(rate, scale)
-        ct_vi = variable.ctypes.data_as(vi_ty)
-        ct_vo = ret.ctypes.data_as(vo_ty)
+        ct_vi = variable.ctypes.data_as(ctypes.POINTER(vi_ty))
+        ct_vo = ret.ctypes.data_as(ctypes.POINTER(vo_ty))
 
         bf(ct_param, ct_vi, ct_vo)
 
