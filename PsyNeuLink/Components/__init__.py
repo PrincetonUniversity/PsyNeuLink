@@ -37,8 +37,8 @@ from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.DefaultProcessingMechanism \
     import DefaultProcessingMechanism_Base
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism \
-    import ControlMechanism_Base
-register_category(entry=ControlMechanism_Base,
+    import ControlMechanism
+register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)

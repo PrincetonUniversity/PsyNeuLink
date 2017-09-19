@@ -455,6 +455,7 @@ from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.LearningMechanism.Learn
     import LearningMechanism
 from PsyNeuLink.Components.Mechanisms.Mechanism import MechanismList, Mechanism_Base
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
 from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection import LearningProjection, \
     _is_learning_spec
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
@@ -465,6 +466,7 @@ from PsyNeuLink.Components.States.ParameterState import ParameterState
 from PsyNeuLink.Components.States.State import _instantiate_state, _instantiate_state_list
 from PsyNeuLink.Globals.Keywords import AUTO_ASSIGN_MATRIX, COMPONENT_INIT, ENABLED, EXECUTING, FUNCTION, \
     FUNCTION_PARAMS, HARD_CLAMP, INITIALIZING, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    OBJECTIVE_MECHANISM,\
     MAPPING_PROJECTION, MATRIX, NAME, ORIGIN, PARAMETER_STATE, PATHWAY, PROCESS, PROCESS_INIT, SENDER, SEPARATOR_BAR, \
     SINGLETON, SOFT_CLAMP, TARGET, TERMINAL, TIME_SCALE, kwProcessComponentCategory, kwReceiverArg, kwSeparator
 from PsyNeuLink.Globals.Preferences.ComponentPreferenceSet import is_pref_set
@@ -943,9 +945,9 @@ class Process_Base(Process):
         determines the `learning_rate <LearningMechanism.learning_rate>` used for `MappingProjections
         <MappingProjection>` `specified for learning <Process_Learning_Sequence>` in the Process that do not have their
         `learning_rate <LearningProjection.learning_rate>` otherwise specified.   If is `None`, and the Process is
-        executed as part of a `System`, and the System has a `learning_rate <System.learning_rate>` specified, then that
-        is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the `function
-        <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
+        executed as part of a `System`, and the System has a `learning_rate <System_Base.learning_rate>` specified,
+        then that is the value used.  Otherwise, the default value of the :keyword:`learning_rate` parameter for the
+        `function <LearningMechanism.function>` of the `LearningMechanism associated with each MappingProjection
         <Process_Learning_Sequence>` is used.  If a :keyword:`learning_rate` is specified for the `LearningSignal
         <LearningSignal_Learning_Rate>` or `LearningProjection <LearningProjection_Function_and_Learning_Rate>`
         associated with a MappingProjection, that is applied in addition to any specified for the Process or the
@@ -1540,9 +1542,42 @@ class Process_Base(Process):
 
                     if not projection_found:
                         # No Projection found, so instantiate MappingProjection from preceding mech to current one;
-                        # Note:  If self.learning arg is specified, it has already been added to projection_params above
+                        # Note: if self.learning arg is specified, it has already been added to projection_params above
+
+                        # MODIFIED 9/19/17 NEW:
+                        #     [ALLOWS ControlMechanism AND ASSOCIATED ObjectiveMechanism TO BE ADDED TO PATHWAY)
+                        # If it is a ControlMechanism with an associated ObjectiveMechanism, try projecting to that
+                        if isinstance(item, ControlMechanism) and item.objective_mechanism is not None:
+                            # If it already has an associated ObjectiveMechanism, make sure it has been implemented
+                            if not isinstance(item.objective_mechanism, Mechanism):
+                                raise ProcessError("{} included in {} for {} ({})"
+                                                   "has an {} arugment, but it is not an {}".
+                                                   format(ControlMechanism.__name__,
+                                                          PATHWAY,
+                                                          self.name,
+                                                          item.objective_mechanism,
+                                                          OBJECTIVE_MECHANISM,
+                                                          ObjectiveMechanism.name))
+                            # Check whether ObjectiveMechanism already receives a projection
+                            #     from the preceding Mechanism in the pathway
+                            # if not any(projection.sender.owner is preceding_item
+                            #            for projection in item.objective_mechanism.input_state.path_afferents):
+                            if not any(
+                                    any(projection.sender.owner is preceding_item
+                                        for projection in input_state.path_afferents)
+                                    for input_state in item.objective_mechanism.input_states):
+                                # Assign projection from preceding Mechanism in pathway to ObjectiveMechanism
+                                receiver = item.objective_mechanism
+
+                            else:
+                                # Ignore (ObjectiveMechanism already as a projection from the Mechanism)
+                                continue
+                        else:
+                            receiver = item
+                        # MODIFIED 9/19/17 END
+
                         MappingProjection(sender=preceding_item,
-                                          receiver=item,
+                                          receiver=receiver,
                                           params=projection_params,
                                           name='{} from {} to {}'.
                                           format(MAPPING_PROJECTION, preceding_item.name, item.name)

@@ -18,7 +18,7 @@ from PsyNeuLink.Components.Projections.ModulatoryProjections.LearningProjection 
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import System, system
 from PsyNeuLink.Globals.Keywords import ALL, DEFAULT_MATRIX, EXPONENTS, FULL_CONNECTIVITY_MATRIX, FUNCTION, \
-    FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MAKE_DEFAULT_CONTROLLER, MATRIX, \
+    FUNCTION_PARAMS, HOLLOW_MATRIX, IDENTITY_MATRIX, INITIALIZER, INPUT_STATES, MATRIX, \
     MAX_INDICATOR, MAX_VAL, MONITOR_FOR_CONTROL, OFFSET, OPERATION, OUTPUT_STATES, PARAMETER_STATES, PROB, SCALE, \
     WEIGHTS
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms import DDM
@@ -78,7 +78,6 @@ __all__ = ['System',
            'INPUT_STATES',
            'PARAMETER_STATES',
            'OUTPUT_STATES',
-           'MAKE_DEFAULT_CONTROLLER',
            'MONITOR_FOR_CONTROL',
            'INITIALIZER',
            'WEIGHTS',

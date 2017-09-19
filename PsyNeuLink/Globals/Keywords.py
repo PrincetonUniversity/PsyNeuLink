@@ -178,7 +178,8 @@ SEPARATOR_BAR = ' | '
 kwProgressBarChar = '.'
 # kwValueSuffix = '_value'
 NO_CONTEXT = "NO_CONTEXT"
-INITIALIZING = " INITIALIZING "  # Used as context for Log
+INITIALIZING = " INITIALIZING "  # Used as status and context for Log
+INITIALIZED = " INITIALIZED "  # Used as status
 kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
 kwAssign = '| Assign' # Used in context for Log
@@ -331,7 +332,7 @@ DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
 EVC_MECHANISM = "EVCMechanism"
 
 # ObjectiveMechanisms:
-OBJECTIVE_MECHANISM = "ObjectiveMechanism"
+OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
 COMPARATOR_MECHANISM = "ComparatorMechanism"
 
 # ProcessingMechanisms:
@@ -348,6 +349,7 @@ ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
 REDUCE_FUNCTION = "Reduce Function"
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
+COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 LINEAR_FUNCTION = "Linear Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
@@ -357,6 +359,7 @@ SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
 CONSTANT_INTEGRATOR_FUNCTION = "ConstantIntegrator Function"
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FHN_INTEGRATOR_FUNCTION = "FHNIntegrator Function"
+UTILITY_INTEGRATOR_FUNCTION = "UtilityIntegrator Function"
 ACCUMULATOR_INTEGRATOR = "AccumulatorIntegrator"  # (7/19/17 CW) added for MappingProjection.py
 ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
@@ -485,7 +488,7 @@ kwInitialPoint = 'initial_point'
 MODULATION = 'modulation'
 
 # ControlMechanism / EVCMechanism
-MAKE_DEFAULT_CONTROLLER = "make_default_controller"
+OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"
 PREDICTION_MECHANISM_TYPE = "prediction_mechanism_type"

@@ -27,7 +27,7 @@ this need not be the case. There are three types of AdaptiveMechanism:
 ..
 * `ControlMechanism <ControlMechanism>`
     takes an evaluative signal (generally received from an `ObjectiveMechanism`) and generates an
-    `allocation_policy <ControlMechanism_Base.allocation_policy>`, each item of which is assigned to one of its
+    `allocation_policy <ControlMechanism.allocation_policy>`, each item of which is assigned to one of its
     `ControlSignals <ControlSignal>`;  each of those generates a `control_signal <ControlSignal.control_signal>`
     that is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter of a Component.
 ..
@@ -56,7 +56,7 @@ Creating an AdaptiveMechanism
 An AdaptiveMechanism can be created by using the standard Python method of calling the constructor for the desired type.
 AdaptiveMechanisms of the appropriate subtype are also created automatically when other Components are created that
 require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
-automatically created as part of a `System <System.System_Creation>` (for use as its `controller
+automatically created as part of a `System <System_Creation>` (for use as its `controller
 <System_Base.controller>`), or when `control is specified <ControlMechanism_Control_Signals>` for the parameter of a
 `Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
 specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for

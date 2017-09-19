@@ -1,3 +1,7 @@
 pytest
 pytest-profiling
 pytest-helpers-namespace
+jupyter
+sphinx
+sphinx_rtd_theme
+matplotlib
