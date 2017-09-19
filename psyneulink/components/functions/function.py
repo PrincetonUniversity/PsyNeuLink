@@ -4013,11 +4013,20 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                  default_variable=None,
                  rate: parameter_spec = 1.0,
                  noise=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
                  context="Integrator Init"):
+
+        if initializer is None:
+            if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
+                # This is only needed as long as a new copy of a function is created
+                # whenever assigning the function to a mechanism.
+                # The old values are compiled and passed in through params argument.
+                initializer = params[INITIALIZER]
+            else:
+                initializer = self.ClassDefaults.variable
 
         # Assign args to params and functionParams dicts (kwConstants must == arg names)
         params = self._assign_args_to_param_dicts(rate=rate,
@@ -4027,7 +4036,9 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
 
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
+        # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
+        params[INITIALIZER] = initializer
 
         super().__init__(default_variable=default_variable,
                          params=params,
@@ -4035,8 +4046,10 @@ class Integrator(IntegratorFunction):  # ---------------------------------------
                          prefs=prefs,
                          context=context)
 
+        self.initializer = initializer
+
         # Reassign to kWInitializer in case default value was overridden
-        # self.previous_value = self.initializer
+        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4332,7 +4345,7 @@ class SimpleIntegrator(
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  offset=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict)=None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4345,13 +4358,15 @@ class SimpleIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
         self.auto_dependent = True
 
     def function(self,
@@ -4539,7 +4554,7 @@ class LCAIntegrator(
                  rate: parameter_spec=1.0,
                  noise=0.0,
                  offset=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  time_step_size=0.1,
                  params: tc.optional(dict)=None,
                  owner=None,
@@ -4554,13 +4569,15 @@ class LCAIntegrator(
                                                   offset=offset,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
         self.auto_dependent = True
 
     def function(self,
@@ -4754,7 +4771,7 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                  noise=0.0,
                  offset=0.0,
                  scale = 1.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4769,16 +4786,18 @@ class ConstantIntegrator(Integrator):  # ---------------------------------------
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
         # Reassign to initializer in case default value was overridden
-        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -4958,7 +4977,7 @@ class AdaptiveIntegrator(
                  noise=0.0,
                  offset= 0.0,
                  time_step_size=0.02,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -4972,13 +4991,15 @@ class AdaptiveIntegrator(
                                                   time_step_size=time_step_size,
                                                   params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
 
         self.auto_dependent = True
 
@@ -5259,7 +5280,7 @@ class DriftDiffusionIntegrator(
                  offset: parameter_spec = 0.0,
                  time_step_size=1.0,
                  t0=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  threshold=100.0,
                  params: tc.optional(dict) = None,
                  owner=None,
@@ -5277,15 +5298,16 @@ class DriftDiffusionIntegrator(
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        self.previous_value = initializer
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
         self.previous_time = self.t0
         self.auto_dependent = True
 
@@ -5518,7 +5540,7 @@ class OrnsteinUhlenbeckIntegrator(
                  time_step_size=1.0,
                  t0=0.0,
                  decay=1.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -5535,18 +5557,18 @@ class OrnsteinUhlenbeckIntegrator(
                                                   params=params)
 
         # Assign here as default, for use in initialization of function
-        self.previous_value = self.paramClassDefaults[INITIALIZER]
+        self.previous_value = initializer
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
-        # Reassign to kWInitializer in case default value was overridden
-        self.previous_value = self.initializer
         self.previous_time = self.t0
-
         self.auto_dependent = True
 
     def _validate_noise(self, noise, var):
@@ -6079,7 +6101,8 @@ class FHNIntegrator(Integrator):  # --------------------------------------------
                                                   uncorrelated_activity=uncorrelated_activity,
                                                   integration_method=integration_method,
                                                   time_constant_w=time_constant_w,
-                                                  params=params)
+                                                  params=params,
+                                                  )
 
         self.previous_v = self.initial_v
         self.previous_w = self.initial_w
@@ -6563,7 +6586,7 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
                  rate=None,
                  noise=0.0,
                  increment=None,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
@@ -6581,10 +6604,10 @@ class AccumulatorIntegrator(Integrator):  # ------------------------------------
             params=params,
             owner=owner,
             prefs=prefs,
-            context=context)
+            context=context,
+            initializer=initializer,
+        )
 
-        self.previous_value = self.initializer
-        self.instance_defaults.variable = self.initializer
 
         self.auto_dependent = True
 
@@ -6886,7 +6909,7 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
                  rate: parameter_spec = 1.0,
                  noise=0.0,
                  offset=0.0,
-                 initializer=ClassDefaults.variable,
+                 initializer=None,
                  initial_short_term_utility=0.0,
                  initial_long_term_utility=0.0,
                  short_term_gain=1.0,
@@ -6920,11 +6943,14 @@ class AGTUtilityIntegrator(Integrator):  # -------------------------------------
         self.previous_long_term_utility = self.initial_long_term_utility
         self.previous_short_term_utility = self.initial_short_term_utility
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            initializer=initializer,
+        )
 
         self.auto_dependent = True
 
