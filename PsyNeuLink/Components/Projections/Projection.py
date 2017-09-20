@@ -830,6 +830,9 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
+    @property
+    def parameter_states(self):
+        return self._parameter_states
 
 def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification

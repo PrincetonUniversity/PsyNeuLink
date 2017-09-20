@@ -2354,3 +2354,7 @@ class MechanismList(UserList):
             for output_state in item.output_states:
                 values.append(output_state.value)
         return values
+
+    @property
+    def parameter_states(self):
+        return self._parameter_states
