@@ -3394,13 +3394,26 @@ class System_Base(System):
                         G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                 else:
                     sndrs = list(learning_graph[rcvr])
+                    # # MODIFIED 9/20/17 OLD:
+                    # for sndr in sndrs:
+                    #     projs = sndr.input_state.path_afferents
+                    #     for proj in projs:
+                    #         edge_name=proj.name
+                    #     G.node(rcvr.name, color=learning_color)
+                    #     G.node(sndr.name, color=learning_color)
+                    #     G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                    # MODIFIED 9/20/17 NEW:
                     for sndr in sndrs:
-                        projs = sndr.input_state.path_afferents
-                        for proj in projs:
-                            edge_name=proj.name
-                        G.node(rcvr.name, color=learning_color)
-                        G.node(sndr.name, color=learning_color)
-                        G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                        for input_state in sndr.input_states:
+                            projs = input_state.path_afferents
+                            for proj in projs:
+                                edge_name=proj.name
+                            G.node(rcvr.name, color=learning_color)
+                            G.node(sndr.name, color=learning_color)
+                            G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                    # MODIFIED 9/20/17 END
+
+
 
 
         # add control graph if show_control
