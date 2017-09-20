@@ -267,7 +267,7 @@ COMMENT:
             then the function should be provided as an argument but not they parameters; they should be specified
             as arguments in the specification of the function
         each parameter is instantiated as a ParameterState
-        that will be placed in <Mechanism>._parameter_states;  each parameter is also referenced in
+        that will be placed in <Mechanism_Base>._parameter_states;  each parameter is also referenced in
         the <Mechanism>.function_params dict, and assigned its own attribute (<Mechanism>.<param>).
 COMMENT
 
@@ -421,7 +421,8 @@ result to the ParameterState's `value <ParameterState.value>`.  This is the valu
 `function <Mechanism_Base.function>` when the Mechanism `executes <Mechanism_Execution>`.  Accordingly, when the value
 of a parameter is accessed (e.g., using "dot" notation, such as ``my_mech.my_param``), it is actually the
 *ParameterState's* `value <ParameterState.value>` that is returned (thereby accurately reflecting the value used
-during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).
+during the last execution of the Mechanism or its `function <Mechanism_Base.function>`).  The ParameterStates for a
+Mechanism are listed in its `parameter_states <Mechanism_Base.parameter_states>` attribute.
 
 .. _Mechanism_Parameter_Value_Specification:
 
@@ -758,7 +759,7 @@ class Mechanism_Base(Mechanism):
                 if both methods are used, they must generate the same sized variable for the mechanims
                 ?? WHERE IS THIS CHECKED?  WHICH TAKES PRECEDENCE: InputState SPECIFICATION (IN _instantiate_state)??
             - an execute method:
-                coordinates updating of input_states, _parameter_states (and params), execution of the function method
+                coordinates updating of input_states, parameter_states (and params), execution of the function method
                 implemented by the subclass, (by calling its _execute method), and updating of the OutputStates
             - one or more parameters, each of which must be (or resolve to) a reference to a ParameterState
                 these determine the operation of the function of the Mechanism subclass being instantiated
@@ -850,7 +851,7 @@ class Mechanism_Base(Mechanism):
         attribute.  The latter is a 2d np.array; the `input_values <Mechanism_Base.input_values>` attribute provides
         this information in a simpler list format.
 
-    _parameter_states : ContentAddressableList[str, ParameterState]
+    parameter_states : ContentAddressableList[str, ParameterState]
         a list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its specifiable
         parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
         arguments in their constructors).  The value of the parameters of the Mechanism are also accessible as

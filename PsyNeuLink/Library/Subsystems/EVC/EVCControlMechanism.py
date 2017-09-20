@@ -678,7 +678,7 @@ class EVCControlMechanism(ControlMechanism):
     from PsyNeuLink.Components.Functions.Function import LinearCombination
     # from Components.__init__ import DefaultSystem
     paramClassDefaults = ControlMechanism.paramClassDefaults.copy()
-    paramClassDefaults.update({PARAMETER_STATES: False})
+    paramClassDefaults.update({PARAMETER_STATES: NotImplemented}) # This suppresses parameterStates
 
     @tc.typecheck
     def __init__(self,
