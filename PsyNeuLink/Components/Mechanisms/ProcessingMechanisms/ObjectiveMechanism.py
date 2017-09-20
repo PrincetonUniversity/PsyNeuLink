@@ -329,6 +329,7 @@ from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
@@ -582,6 +583,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
+        #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
+        self.controller = False
 
     def _validate_variable(self, variable, context=None):
         """Validate that default_variable (if specified) matches in number of values the monitored_output_states

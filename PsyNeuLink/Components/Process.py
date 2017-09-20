@@ -827,7 +827,7 @@ class Process_Base(Process):
          of {argument keyword: argument values} entries and phase is an int.
          Note:  the list includes ComparatorMechanisms and LearningMechanism.
 
-    .. _allMechanisms : MechanismList
+    .. _all_mechanisms : MechanismList
          Contains all Mechanisms in the System (based on _mechs).
 
     .. _origin_mechs : List[MechanismTuple]
@@ -843,18 +843,18 @@ class Process_Base(Process):
          (Note:  the use of a list is for compatibility with the MechanismList object)
 
     .. _learning_mechs : List[MechanismTuple]
-         `MechanismTuples <Mechanism.MechanismTuples>` for all `LearningMechanism <LearningMechanism>` in the
+         `MechanismTuple
          Process (used for learning).
 
     .. mechanisms : List[Mechanism]
          List of all Mechanisms in the Process.
-         property that points to _allMechanisms.mechanisms (see below).
+         property that points to _all_mechanisms.mechanisms (see below).
     COMMENT
 
     mechanism_names : List[str]
         the names of the Mechanisms listed in the `Mechanisms <Process_Base.mechanisms>` attribute.
 
-        .. property that points to _allMechanisms.names (see below).
+        .. property that points to _all_mechanisms.names (see below).
 
     mechanisms : List[Mechanism]
         *all* of the Mechanisms in the Process, including those in the `pathway <Process_Base.pathway>`
@@ -1215,7 +1215,7 @@ class Process_Base(Process):
         else:
             self._learning_enabled = False
 
-        self._allMechanisms = MechanismList(self, self._mechs)
+        self._all_mechanisms = MechanismList(self, self._mechs)
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
@@ -2656,11 +2656,11 @@ class Process_Base(Process):
 
     @property
     def mechanisms(self):
-        return self._allMechanisms.mechanisms
+        return self._all_mechanisms.mechanisms
 
     @property
     def mechanism_names(self):
-        return self._allMechanisms.names
+        return self._all_mechanisms.names
 
     @property
     def output_state(self):
