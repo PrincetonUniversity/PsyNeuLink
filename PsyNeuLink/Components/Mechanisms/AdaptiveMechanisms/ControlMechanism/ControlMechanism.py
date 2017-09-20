@@ -659,8 +659,9 @@ class ControlMechanism(AdaptiveMechanism_Base):
             # Create specification for ObjectiveMechanism InputStates corresponding to
             #    monitored_output_states and their exponents and weights
             self._objective_mechanism = ObjectiveMechanism(monitored_output_states=monitored_output_states,
-                                                          function=LinearCombination(operation=PRODUCT),
-                                                          name=self.name + '_ObjectiveMechanism')
+                                                           function=LinearCombination(operation=PRODUCT),
+                                                           adaptive_mechanism=self,
+                                                           name=self.name + '_ObjectiveMechanism')
         # Print monitored_output_states
         if self.prefs.verbosePref:
             print ("{0} monitoring:".format(self.name))

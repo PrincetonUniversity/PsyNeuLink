@@ -307,6 +307,7 @@ class AGTControlMechanism(ControlMechanism):
 
         self.objective_mechanism.name = self.name+'_ObjectiveMechanism'
         self.objective_mechanism._role = CONTROL
+        self.objective_mechanism.adaptive_mechanism = self
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

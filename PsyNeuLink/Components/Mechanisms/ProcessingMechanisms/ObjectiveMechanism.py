@@ -329,6 +329,7 @@ from PsyNeuLink.Components.Component import InitStatus
 from PsyNeuLink.Components.Functions.Function import LinearCombination
 from PsyNeuLink.Components.Mechanisms.Mechanism import Mechanism_Base, MonitoredOutputStatesOption
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ProcessingMechanism import ProcessingMechanism_Base
+from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.AdaptiveMechanism import AdaptiveMechanism_Base
 from PsyNeuLink.Components.ShellClasses import Mechanism, State
 from PsyNeuLink.Components.States.State import _parse_state_spec
 from PsyNeuLink.Components.States.InputState import InputState
@@ -385,6 +386,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_states=None,            \
         function=LinearCombination,   \
         output_states=[OUTCOME],      \
+        adaptive_mechanism=None,      \
         params=None,                  \
         name=None,                    \
         prefs=None)
@@ -556,6 +558,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
+                 adaptive_mechanism:tc.optional(AdaptiveMechanism_Base)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -565,6 +568,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
                                                   input_states=input_states,
                                                   output_states=output_states,
+                                                  adaptive_mechanism=adaptive_mechanism,
                                                   function=function,
                                                   params=params)
         self._learning_role = None

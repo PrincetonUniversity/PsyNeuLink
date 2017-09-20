@@ -780,7 +780,7 @@ class System_Base(System):
     mechanisms : list of Mechanism objects
         contains a list of all `Mechanisms <Mechanism>` in the System.
 
-        .. property that points to _allMechanisms.mechanisms (see below)
+        .. property that points to _all_mechanisms.mechanisms (see below)
 
     mechanismsDict : Dict[Mechanism:Process]
         contains a dictionary of all Mechanisms in the System, listing the Processes to which they belong. The key of
@@ -797,7 +797,7 @@ class System_Base(System):
         .. _all_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
             Tuples for all Mechanisms in the System (serve as keys in self.graph).
 
-        .. _allMechanisms : MechanismList
+        .. _all_mechanisms : MechanismList
             Contains all Mechanisms in the System (based on _all_mechs).
 
         .. _origin_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
@@ -1091,7 +1091,7 @@ class System_Base(System):
 
         self.mechanismsDict = {}
         self._all_mechs = []
-        self._allMechanisms = MechanismList(self, self._all_mechs)
+        self._all_mechanisms = MechanismList(self, self._all_mechs)
 
         # Get list of processes specified in arg to init, possibly appended by EVCControlMechanism (with prediction processes)
         processes_spec = self.processes
@@ -1217,7 +1217,7 @@ class System_Base(System):
                 #     (this is used by Process._instantiate_pathway() to determine if Process is part of System)
                 # If the sender is already in the System's mechanisms dict
                 if sender_object_item in self.mechanismsDict:
-                    # existing_object_item = self._allMechanisms._get_tuple_for_mech(sender_mech)
+                    # existing_object_item = self._all_mechanisms._get_tuple_for_mech(sender_mech)
                     # Add to entry's list
                     self.mechanismsDict[sender_mech].append(process)
                 else:
@@ -1226,7 +1226,14 @@ class System_Base(System):
                 if not sender_object_item in self._all_mechs:
                     self._all_mechs.append(sender_object_item)
 
-            process._allMechanisms = MechanismList(process, components_list=process._mechs)
+                # Add ObjectiveMechanism for ControlMechanism if the latter is not the System's controller
+                if (isinstance(sender_object_item, ControlMechanism)
+                    and (self.controller is None or not sender_object_item is self.controller)
+                    and isinstance(sender_object_item.objective_mechanism, ObjectiveMechanism)
+                    and not sender_object_item.objective_mechanism in self._all_mechs):
+                    self._all_mechs.append(sender_object_item.objective_mechanism)
+
+            process._all_mechanisms = MechanismList(process, components_list=process._mechs)
 
         # # Instantiate processList using process_tuples, and point self.processes to it
         # # Note: this also points self.params[PROCESSES] to self.processes
@@ -1416,7 +1423,7 @@ class System_Base(System):
 
                 for projection in output_state.efferents:
                     receiver = projection.receiver.owner
-                    # receiver_tuple = self._allMechanisms._get_tuple_for_mech(receiver)
+                    # receiver_tuple = self._all_mechanisms._get_tuple_for_mech(receiver)
 
                     # If receiver is not in system's list of mechanisms, must belong to a process that has
                     #    not been included in the system, so ignore it
@@ -3202,7 +3209,7 @@ class System_Base(System):
         all mechanisms in the system : List[Mechanism]
 
         """
-        return self._allMechanisms.mechanisms
+        return self._all_mechanisms.mechanisms
 
     @property
     def numPhases(self):
@@ -3334,12 +3341,16 @@ class System_Base(System):
                         except AttributeError:
                             has_learning = None
                 edge_label = edge_name
-                #### CHANGE MADE HERE ###
+
                 # if rcvr is learning mechanism, draw arrow with learning color
-                if isinstance(rcvr, LearningMechanism) or isinstance(rcvr, ObjectiveMechanism):
+                if isinstance(rcvr, LearningMechanism):
                     break
-                else:
-                    arrow_color="black"
+                # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller, use control color
+                if (isinstance(rcvr, ObjectiveMechanism)
+                    and isinstance(rcvr.adaptive_mechanism, ControlMechanism)
+                    and rcvr.adaptive_mechanism.system is not None):
+                    break
+                arrow_color="black"
                 if show_learning and has_learning:
                     # expand
                     G.node(sndr_label, shape="oval")
