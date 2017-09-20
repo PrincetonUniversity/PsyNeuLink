@@ -3408,12 +3408,8 @@ class System_Base(System):
 
             # prediction mechanisms
             for object_item in self.execution_list:
-                # MODIFIED 7/20/17 (CW) OLD:
-                # mech = object_item[0]
-                # MODIFIED 7/20/17 (CW) NEW:
                 mech = object_item
-                # the above line was causing a bug; I simply got rid of the [0] and then it worked fine.
-                if mech._role is CONTROL:
+                if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
                     G.node(mech.name, color=control_color)
                     recvr = mech.origin_mech
                     G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
