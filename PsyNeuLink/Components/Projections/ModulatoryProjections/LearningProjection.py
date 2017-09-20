@@ -363,7 +363,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
     paramClassDefaults = Projection_Base.paramClassDefaults.copy()
     paramClassDefaults.update({PROJECTION_SENDER: LearningMechanism,
-                               PARAMETER_STATES: None, # This suppresses parameterStates
+                               PARAMETER_STATES: NotImplemented, # This suppresses parameterStates
                                FUNCTION: Linear,
                                FUNCTION_PARAMS:
                                    {SLOPE: 1,

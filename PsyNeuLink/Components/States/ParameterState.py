@@ -13,14 +13,14 @@
 Overview
 --------
 
-ParameterStates belong to either a `Mechanism <Mechanism>` or a `MappingProjection` and are used to represent, and
-possibly modify the, values of all of the configurable parameters of the `Component <Component>` or its `function
-<Component.function>`. A ParameterState can receive one or more `ControlProjections <ControlProjection>` and/or
-`LearningProjections <LearningProjection>` that modify the value of the parameter. The Projections received by a
-ParameterState are listed in its `mod_afferents <ParameterState.mod_afferents>` attribute. The ParameterState's
-`function <ParameterState.function>` combines the values of those Projections, and uses the result to
-modify the value of the parameter, that is then used by the Component or its `function <Component.function>` when
-it executes.
+ParameterStates belong to either a `Mechanism <Mechanism>` or a `Projection` and are used to represent, and possibly
+modify the, values of all of the `configurable parameters <ParameterState_Configurable_Parameters>` of the `Component
+<Component>` or those of its `function <Component_Function>`. A ParameterState can receive one or more
+`ControlProjections  <ControlProjection>` and/or `LearningProjections <LearningProjection>` that modify the value of
+the parameter. The Projections received by a ParameterState are listed in its `mod_afferents
+<ParameterState.mod_afferents>` attribute.  The ParameterState's `function <ParameterState.function>` combines the
+values of those Projections, and uses the result to modify the value of the parameter, that is then used by the
+Component or its `function <Component.function>` when it executes.
 
 
 .. _ParameterState_Creation:
@@ -29,12 +29,20 @@ Creating a ParameterState
 -------------------------
 
 ParameterStates are created automatically when the `Mechanism <Mechanism>` or `Projection <Projection>` to which they
-belong is created.  The `owner <ParamaterState.owner>` of a ParameterState must be a `Mechanism or `MappingProjection`.
+belong is created.  The `owner <ParameterState.owner>` of a ParameterState must be a `Mechanism or `MappingProjection`.
 One ParameterState is created for each configurable parameter of its owner, as well as for each configurable parameter
 of the owner's `function <Component.function>` (the `configurable parameters <ParameterState_Configurable_Parameters>`
 of a Component are listed in its `user_params <Component.user_params>` and function_params <Component.function_params>`
 dictionaries. Each ParameterState is created using the value specified for the corresponding parameter, as described
-below.
+below.  The ParameterStates for the parameters of a Mechanism or Projection are listed in its
+:keyword:`parameter_states` attribute.
+
+COMMENT:
+    FOR DEVELOPERS: The instantiation of ParameterStates for the `user_params` of a Component can be suppressed if
+                    a *PARAMETER_STATES* entry is included and set to `NotImplemented` in the paramClassDefaults
+                    dictionary of its class definition;  see LearningProjection and EVCControlMechanism for
+                    examples, and `note <ParameterStates_Suppression>` below for additional information.
+COMMENT
 
 .. _ParameterState_Specification:
 
@@ -113,9 +121,11 @@ name as the parameter, and can be referenced using standard Python attribute ("d
 of a parameter named *param* is assigned to an attribute named ``param`` that can be referenced as
 ``my_component.param``). The parameter's value is assigned as the **default value** for the ParameterState.
 
+.. _ParameterStates_Suppression:
+
 .. note::
-   If the value of a parameter is specified as `None`, `NotImplemented`, or any other non-numeric value that is not one
-   of those listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal
+   If the value of a parameter is specified as `NotImplemented`, or any non-numeric value that is not one of those
+   listed above, then no ParameterState is created and the parameter cannot be modified by a `ModulatorySignal
    <ModulatorySignal>` or in the **runtime_params** argument of a call to a Mechanism's `execute
    <Mechanism_Base.execute>` method.
 
@@ -204,7 +214,7 @@ following core attributes:
   by the ParameterState.  These specify either modify the ParameterState's `function <ParameterState.function>`, or
   directly assign the `value <ParameterState.value>` of the ParameterState itself (see `ModulatorySignals_Modulation`).
 
-* `function <ParameterState.function - takes the parameter's attribute value as its input, modifies it under the
+* `function <ParameterState.function>` - takes the parameter's attribute value as its input, modifies it under the
   influence of any `ModulatoryProjections` it receives (listed in `mod_afferents <ParameterState.mod_afferents>`,
   and assigns the result as the ParameterState's `value <ParameterState.value>` which is used as the parameter's
   "actual" value.
@@ -218,13 +228,18 @@ All of the configurable parameters of a Component -- that is, for which it has P
 `user_params <Component.user_params>` attribute, which is a read-only dictionary with an entry for each parameter.
 The parameters for a Component's `function <Component.function>` are listed both in a *FUNCTION_PARAMS* entry of the
 `user_params <Component.user_params>` dictionary, and in their own `function_params <Component.function_params>`
-attribute, which is also a read-only dictionary (with an entry for each of its function's parameters).
-In addition to being assigned an initial value in a constructor, and modified by ModulatoryProjections,
-parameter values can be modified directly by a assigning a value to the corresponding attribute, or in groups using the
-Component's `assign_params <Component.assign_params>` method. The parameters of a Component's function can be modified
-by assigning a value to the corresponding attribute of the Component's `function_object <Component.function_object>`
-attribute (e.g., ``myMechanism.function_object.my_parameter``), or in *FUNCTION_PARAMS* dict in a call to the
-Component's `assign_params <Component.assign_params>` method.
+attribute, which is also a read-only dictionary (with an entry for each of its function's parameters).  The
+ParameterStates for a Mechanism or Projection are listed in its :keyword:`parameter_states` attribute, which is also
+read-only.
+
+An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
+(see `above <ParameterState_Value_Specification>`.  Parameter values can also be modified by a assigning a value to
+the corresponding attribute, or in groups using the Component's `assign_params <Component.assign_params>` method.
+The parameters of a Component's function can be modified by assigning a value to the corresponding attribute of the
+Component's `function_object <Component.function_object>` attribute (e.g., ``myMechanism.function_object.my_parameter``)
+or in *FUNCTION_PARAMS* dict in a call to the Component's `assign_params <Component.assign_params>` method.
+See `Mechanism_ParameterStates` for additional information.
+
 
 .. _ParameterState_Execution:
 
@@ -583,11 +598,9 @@ def _instantiate_parameter_states(owner, context=None):
 
     owner._parameter_states = ContentAddressableList(ParameterState, name=owner.name+'.parameter_states')
 
-    # Check that ParameterStates for owner have not been explicitly suppressed (by assigning to None)
+    # Check that ParameterStates for owner have not been explicitly suppressed (by assigning NotImplemented)
     try:
-        no_parameter_states = not owner.params[PARAMETER_STATES]
-        # PARAMETER_STATES for owner was suppressed (set to False or None), so do not instantiate any ParameterStates
-        if no_parameter_states:
+        if owner.params[PARAMETER_STATES] is NotImplemented:
             return
     except KeyError:
         # PARAMETER_STATES not specified at all, so OK to continue and construct them
@@ -613,7 +626,7 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     Include ones in owner.user_params[FUNCTION_PARAMS] (nested iteration through that dict)
     Exclude if it is a:
         ParameterState that already exists (e.g., in case of a call from Component.assign_params)
-        non-numeric value (including None, NotImplemented, False or True)
+        non-numeric value (including NotImplemented, False or True)
             unless it is:
                 a tuple (could be on specifying ControlProjection, LearningProjection or Modulation)
                 a dict with the name FUNCTION_PARAMS (otherwise exclude)
@@ -635,6 +648,8 @@ def _instantiate_parameter_state(owner, param_name, param_value, context):
     #     return
 
     from PsyNeuLink.Components.Projections.Projection import Projection
+    if param_value is NotImplemented:
+        return
     # Allow numerics but omit booleans (which are treated by is_numeric as numerical)
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass

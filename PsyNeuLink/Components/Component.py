@@ -154,14 +154,14 @@ Core Informational Attributes
 
 .. _Component_User_Params:
 
-* **user_params** - this contains a dictionary of all of the configurable attributes for a given Component.
-  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python
-  class `UserDict <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
+* **user_params** - this contains a dictionary of all of the configurable parameters for a given Component.
+  The dictionary uses a ReadOnlyDict (a PsyNeuLink-defined subclass of the Python class `UserDict
+  <https://docs.python.org/3.6/library/collections.html?highlight=userdict#collections.UserDict>`_). The
   value of an entry can be accessed in the standard manner (e.g., ``my_component.user_params[`PARAMETER NAME`]``);
-  however, to access a full list of entries it's data attribute must be used (e.g.,
-  ``my_component.user_params.data``).  Also, because it is read-only, it cannot be used to make assignments.  Rather,
-  changes to the value of an attribute must be made by assigning a value to the attribute directly (e.g.,
-  ``my_component.my_parameter``), or using the Component's `assign_params <Component.assign_params>` method.
+  however, to access a full list of entries it's data attribute must be used (e.g., ``my_component.user_params.data``).
+  Also, because it is read-only, it cannot be used to make assignments.  Rather, changes to the value of a parameter
+  must be made by assigning a value to the attribute for that parameter directly (e.g., ``my_component.my_parameter``),
+  or using the Component's `assign_params <Component.assign_params>` method.
 
 ..
 COMMENT:

@@ -266,6 +266,14 @@ A `receiver <Projection.receiver>` can be specified as:
   ..
   * a **specification dictionary** (see subclasses for details).
 
+ParameterStates and Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`ParameterStates <ParameterState>` provide the value for each parameter of a Projection and its `function
+<Mechanism_Base.function>`.  ParameterStates and their associated parameters are handled in the same way by
+Projections as they are for Mechanisms (see `Mechanism_ParameterStates` for details).  The ParameterStates for a
+Projection are listed in its `parameter_states <Projection.parameter_states>` attribute.
+
 
 .. _Projection_Execution:
 
@@ -402,6 +410,21 @@ class Projection_Base(Projection):
 
     value : value
         Output of Projection, transmitted as variable to InputState of receiver.
+
+    parameter_states : ContentAddressableList[str, ParameterState]
+        a list of the Projection's `ParameterStates <Projection_ParameterStates>`, one for each of its specifiable
+        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
+        arguments in their constructors).  The value of the parameters of the Projection are also accessible as
+        attributes of the Projection (using the name of the parameter); the function parameters are listed in the
+        Projection's `function_params <Projection.function_params>` attribute, and as attributes of the `Function`
+        assigned to its `function_object <Component.function_object>` attribute.
+
+    parameter_states : ContentAddressableList[str, ParameterState]
+        a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
+        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+        <Projection.function>`.  The value of the parameters of the Projection and its `function
+        <Projection.function>` are also accessible as (and can be modified using) attributes of the Projection,
+        in the same manner as they can for a `Mechanism <Mechanism_ParameterStates>`).
 
     COMMENT:
         projectionSender : Mechanism, State, or Object
@@ -830,6 +853,16 @@ class Projection_Base(Projection):
     def add_to(self, receiver, state, context=None):
         _add_projection_to(receiver=receiver, state=state, projection_spec=self, context=context)
 
+    @property
+    def parameter_states(self):
+        return self._parameter_states
+
+    @parameter_states.setter
+    def parameter_states(self, value):
+        # IMPLEMENTATION NOTE:
+        # This keeps parameter_states property readonly,
+        #    but averts exception when setting paramsCurrent in Component (around line 850)
+        pass
 
 def _is_projection_spec(spec, include_matrix_keywords=True):
     """Evaluate whether spec is a valid Projection specification
