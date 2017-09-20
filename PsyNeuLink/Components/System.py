@@ -3265,10 +3265,13 @@ class System_Base(System):
         direction : keyword : default 'BT'
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
-        show_learning : bool : default False
+        show_learning : bool or ALL : default False
             specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
+            if set to `ALL`, all Projections associated with learning will be shown:  the LearningProjections
+            as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
+            that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
 
         show_control :  bool : default False
             specifies whether or not to show the control components of the system;
@@ -3320,9 +3323,11 @@ class System_Base(System):
         system_graph = self.graph
         learning_graph=self.learningGraph
 
+        default_node_color = 'black'
+
         # build graph and configure visualisation settings
         G = gv.Digraph(engine = "dot",
-                       node_attr  = {'fontsize':'12', 'fontname': 'arial', 'shape':'oval'},
+                       node_attr  = {'fontsize':'12', 'fontname':'arial', 'shape':'oval', 'color':default_node_color},
                        edge_attr  = {'arrowhead':'halfopen', 'fontsize': '10', 'fontname': 'arial'},
                        graph_attr = {"rankdir" : direction} )
 
@@ -3393,8 +3398,10 @@ class System_Base(System):
                         edge_label = rcvr._parameter_states['matrix'].mod_afferents[0].name
                         G.edge(sndr.name, rcvr.name, color=learning_color, label = edge_label)
                 else:
-                    sndrs = list(learning_graph[rcvr])
+                    # FIX THIS TO INCLUDE Projections FROM ProcessingMechanisms TO LearningMechanisms
+                    # Implement edges for Projections to each LearningMechanism from other LearningMechanisms
                     # # MODIFIED 9/20/17 OLD:
+                    # sndrs = list(learning_graph[rcvr])
                     # for sndr in sndrs:
                     #     projs = sndr.input_state.path_afferents
                     #     for proj in projs:
@@ -3403,17 +3410,19 @@ class System_Base(System):
                     #     G.node(sndr.name, color=learning_color)
                     #     G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
                     # MODIFIED 9/20/17 NEW:
-                    for sndr in sndrs:
-                        for input_state in sndr.input_states:
-                            projs = input_state.path_afferents
-                            for proj in projs:
-                                edge_name=proj.name
+                    # Show Projections to LearningComponents
+                    for input_state in rcvr.input_states:
+                        for proj in input_state.path_afferents:
+                            sndr = proj.sender.owner
                             G.node(rcvr.name, color=learning_color)
-                            G.node(sndr.name, color=learning_color)
-                            G.edge(sndr.name, rcvr.name, color=learning_color, label=edge_name)
+                            if (isinstance(sndr, LearningMechanism) or
+                                (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)):
+                                G.node(sndr.name, color=learning_color)
+                            else:
+                                if show_learning is True:
+                                    continue
+                            G.edge(sndr.name, rcvr.name, color=learning_color, label=proj.name)
                     # MODIFIED 9/20/17 END
-
-
 
 
         # add control graph if show_control
