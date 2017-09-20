@@ -3,7 +3,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 from PsyNeuLink.Components.Projections.PathwayProjections.MappingProjection import MappingProjection
 from PsyNeuLink.Components.System import *
 from PsyNeuLink.Globals.Keywords import *
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCControlMechanism import EVCControlMechanism
 
 process_prefs = {REPORT_OUTPUT_PREF: True,
                  VERBOSE_PREF: False}
@@ -66,7 +66,7 @@ word_reading_process.execute()
 
 mySystem = system(processes=[color_naming_process, word_reading_process],
                   targets=[0,0],
-                  controller=EVCMechanism,
+                  controller=EVCControlMechanism,
                   enable_controller=True,
                   name='Stroop Model',
                   prefs=system_prefs)

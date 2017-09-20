@@ -145,7 +145,7 @@ class ComponentPreferenceSet(PreferenceSet):
             - SUBTYPE: subtype-level default settings (if one exists for the type, else type-level settings are used):
                 ControlMechanism subtypes:
                     DefaultControlMechanism.classPreferences
-                    EVCMechanism.classPreferences
+                    EVCControlMechanism.classPreferences
                 ProcessingMechanism subtypes:
                     DDM.classPreferences
                     Linear.classPreferences

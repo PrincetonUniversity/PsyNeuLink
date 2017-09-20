@@ -80,7 +80,7 @@ COMMENT:
 An LCMechanism has a single (primary) `InputState <InputState_Primary>` that receives its input via a
 `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
+`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
 attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
@@ -112,7 +112,7 @@ input to the ControlMechanism's `function <ControlMechanism.function>`, that det
 `allocation_policy <ControlMechanism.allocation_policy>`. The *ERROR_SIGNAL* InputState receives its input
 via a `MappingProjection` from the *OUTCOME* `OutputState <ObjectiveMechanism_Output>` of an `ObjectiveMechanism`.
 The Objective Mechanism is specified in the **objective_mechanism** argument of its constructor, and listed in its
-`objective_mechanism <EVCMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
+`objective_mechanism <EVCControlMechanism.objective_mechanism>` attribute.  The OutputStates monitored by the
 ObjectiveMechanism (listed in its `monitored_output_states <ObjectiveMechanism.monitored_output_states>`
 attribute) are also listed in the `monitored_output_states <ControlMechanism.monitored_output_states>`
 of the ControlMechanism (see `ControlMechanism_ObjectiveMechanism` for how the ObjectiveMechanism and the
@@ -142,13 +142,13 @@ customized in a variety of ways:
     ..
     * using a list to specify the OutputStates to be monitored  (and the `tuples format
       <ObjectiveMechanism_OutputState_Tuple>` to specify weights and/or exponents for them) in the
-      **objective_mechanism** argument of the EVCMechanism's constructor;
+      **objective_mechanism** argument of the EVCControlMechanism's constructor;
     ..
     * using the  **monitored_output_states** argument of the `objective_mechanism <LCMechanism.objective_mechanism>`'s
       constructor;
     ..
     * specifying a different `ObjectiveMechanism` in the LCMechanism's **objective_mechanism** argument of the
-      EVCMechanism's constructor. The result of the `objective_mechanism <LCMechanism.objective_mechanism>`'s
+      EVCControlMechanism's constructor. The result of the `objective_mechanism <LCMechanism.objective_mechanism>`'s
       `function <ObjectiveMechanism.function>` is used as the input to the LCMechanism.
 
     .. _LCMechanism_Objective_Mechanism_Function_Note:
@@ -156,7 +156,7 @@ customized in a variety of ways:
     .. note::
        If a constructor for an `ObjectiveMechanism` is used for the **objective_mechanism** argument of the
        LCMechanism's constructor, then the default values of its attributes override any used by the LCMechanism
-       for its `objective_mechanism <EVCMechanism.objective_mechanism>`.  In particular, whereas an ObjectiveMechanism
+       for its `objective_mechanism <EVCControlMechanism.objective_mechanism>`.  In particular, whereas an ObjectiveMechanism
        uses `LinearCombination` as the default for its `function <ObjectiveMechanism.function>`, an LCMechanism
        typically uses `CombineMeans` for the `function <ObjectiveMechanism.function>` of its `objective_mechanism
        <LCMechanism.objective_mechanism>`.  As a consequence, if the constructor for an ObjectiveMechanism is used to
@@ -164,7 +164,7 @@ customized in a variety of ways:
        `LinearCombination` rather than `CombineMeans` will be used for the ObjectiveMechanism's `function
        <ObjectiveMechanism.function>`.  To insure that `CombineMeans` is used, it must be specified explicitly in the
        **function** argument of the constructor for the ObjectiveMechanism (for an example of a similar condition
-       for an EVCMechanism see 1st example under `System_Control_Examples`).
+       for an EVCControlMechanism see 1st example under `System_Control_Examples`).
 
 The OutputStates monitored by the LC's ObjectiveMechanism are listed in its `monitored_output_states
 <ObjectiveMechanism.monitored_output_states>` attribute), as well as in the `monitored_output_states
@@ -377,7 +377,7 @@ class LCMechanism(ControlMechanism):
     system : System : default None
         specifies the `System` for which the LCMechanism should serve as a `controller <System_Base.controller>`;
         the LCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism, List[OutputState or Tuple[OutputState, list or 1d np.array, list or 1d
@@ -416,7 +416,7 @@ class LCMechanism(ControlMechanism):
     system : System
         the `System` for which LCMechanism is the `controller <System_Base.controller>`;
         the LCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism : ObjectiveMechanism(function=CombinedMeans))
@@ -425,7 +425,7 @@ class LCMechanism(ControlMechanism):
 
     monitored_output_states : List[OutputState]
         list of the `OutputStates <OutputState>` that project to `objective_mechanism
-        <EVCMechanism.objective_mechanism>` (and listed in its `monitored_output_states
+        <EVCControlMechanism.objective_mechanism>` (and listed in its `monitored_output_states
         <ObjectiveMechanism.monitored_output_states>` attribute), and used to drive the
         LCMechanism's `phasic response <LCMechanism_Modes_Of_Operation>`.
 

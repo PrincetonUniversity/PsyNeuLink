@@ -167,7 +167,7 @@ class ITCMechanism(ControlMechanism):
     system : System : default None
         specifies the `System` for which the ITCMechanism should serve as a `controller <System_Base.controller>`;
         the ITCMechanism will inherit any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     monitored_output_states : List[`OutputState`, `Mechanism`, str, value, dict, `MonitoredOutputStatesOption`] or Dict
@@ -206,7 +206,7 @@ class ITCMechanism(ControlMechanism):
     system : System
         the `System` for which ITCMechanism is the `controller <System_Base.controller>`;
         the ITCMechanism inherits any `OutputStates <OutputState>` specified in the **monitor_for_control**
-        argument of the `system <EVCMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
+        argument of the `system <EVCControlMechanism.system>`'s constructor, and any `ControlSignals <ControlSignal>`
         specified in its **control_signals** argument.
 
     objective_mechanism : ObjectiveMechanism

@@ -178,7 +178,7 @@ Function
 
 The core of every Mechanism is its function, which transforms its input to generate its output.  The function is
 specified by the Mechanism's `function <Mechanism_Base.function>` attribute.  Every type of Mechanism has at least one
-(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCMechanism`).
+(primary) function, and some have additional (auxiliary) ones (for example, `TransferMechanism` and `EVCControlMechanism`).
 Mechanism functions are generally from the PsyNeuLink `Function` class.  Most Mechanisms allow their function to be
 specified, using the `function` argument of the Mechanism's constructor.  The function can be specified using the
 name of `Function <Function>` class, or its constructor (including arguments that specify its parameters).  For
@@ -280,7 +280,7 @@ Custom Functions
 A Mechanism's `function <Mechanism_Base.function>` can be customized by assigning a user-defined function (e.g.,
 a lambda function), so long as it takes arguments and returns values that are compatible with those of the
 Mechanism's default for that function.  This is also true for auxiliary functions that appear as arguments in a
-Mechanism's constructor (e.g., the `EVCMechanism`). A user-defined function can be assigned using the Mechanism's
+Mechanism's constructor (e.g., the `EVCControlMechanism`). A user-defined function can be assigned using the Mechanism's
 `assign_params` method (the safest means) or by assigning it directly to the corresponding attribute of the Mechanism
 (for its primary function, its `function <Mechanism_Base.function>` attribute). It is *strongly advised* that
 auxiliary functions that are inherent to a Mechanism (i.e., ones that do *not* appear as an argument in the
@@ -1021,7 +1021,7 @@ class Mechanism_Base(Mechanism):
         MONITOR_FOR_CONTROL: NotImplemented,  # This has to be here to "register" it as a valid param for the class
                                               # but is set to NotImplemented so that it is ignored if it is not
                                               # assigned;  setting it to None actively disallows assignment
-                                              # (see EVCMechanism_instantiate_input_states for more details)
+                                              # (see EVCControlMechanism_instantiate_input_states for more details)
         MONITOR_FOR_LEARNING: None,
         # TBI - kwMechanismExecutionSequenceTemplate: [
         #     Components.States.InputState.InputState,

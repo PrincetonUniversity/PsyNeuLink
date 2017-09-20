@@ -329,7 +329,7 @@ LEARNING_FUNCTION_TYPE = 'LEARNING FUNCTION TYPE'
 
 # ControlMechanism:
 DEFAULT_CONTROL_MECHANISM = "DefaultControlMechanism"
-EVC_MECHANISM = "EVCMechanism"
+EVC_MECHANISM = "EVCControlMechanism"
 
 # ObjectiveMechanisms:
 OBJECTIVE_MECHANISM_OBJECT = "ObjectiveMechanism"
@@ -487,7 +487,7 @@ kwInitialPoint = 'initial_point'
 
 MODULATION = 'modulation'
 
-# ControlMechanism / EVCMechanism
+# ControlMechanism / EVCControlMechanism
 OBJECTIVE_MECHANISM = "objective_mechanism"
 MONITOR_FOR_CONTROL = "monitor_for_control"
 PREDICTION_MECHANISM = "Prediction Mechanism"

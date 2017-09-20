@@ -112,7 +112,7 @@ Allocation, Function and Intensity
 
 *Allocation (variable)*. A ControlSignal is assigned an `allocation <ControlSignal>` by the ControlMechanism to
 which it belongs. Some ControlMechanisms sample different allocation values for their ControlSignals to determine
-which to use (such as the `EVCMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
+which to use (such as the `EVCControlMechanism <EVC_Default_Configuration>`);  in those cases, they use each ControlSignal's
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute reflects value assigned to it by the ControlMechanism
@@ -228,9 +228,9 @@ had been ``ModulationParam.OVERRIDE``, then the ControlSignal's value would have
 value of the *Logistic* Function's `gain <Logistic.gain>` parameter, rather than added to it.
 
 COMMENT:
-    MOVE THIS EXAMPLE TO EVCMechanism
+    MOVE THIS EXAMPLE TO EVCControlMechanism
 
-*Modulate the parameters of several Mechanisms by an EVCMechanism*.  This shows::
+*Modulate the parameters of several Mechanisms by an EVCControlMechanism*.  This shows::
 
     My_Mech_A = TransferMechanism(function=Logistic)
     My_Mech_B = TransferMechanism(function=Linear,
@@ -240,7 +240,7 @@ COMMENT:
     Process_B = process(pathway=[My_Mech_B])
     My_System = system(processes=[Process_A, Process_B])
 
-    My_EVC_Mechanism = EVCMechanism(system=My_System,
+    My_EVC_Mechanism = EVCControlMechanism(system=My_System,
                                     monitor_for_control=[My_Mech_A.output_states[RESULT],
                                                          My_Mech_B.output_states[MEAN]],
                                     control_signals=[(GAIN, My_Mech_A),
@@ -284,7 +284,7 @@ import typecheck as tc
 
 from PsyNeuLink.Components.Component import InitStatus, function_type, method_type
 # import Components
-# FIX: EVCMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCMechanism
+# FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from PsyNeuLink.Components.Functions.Function import CombinationFunction, Exponential, IntegratorFunction, Linear, \
     LinearCombination, Reduce, SimpleIntegrator, TransferFunction, _is_modulation_param, is_function_type

@@ -683,7 +683,7 @@ class TestRecurrentTransferMechanismInSystem:
 #             size=3,
 #             function=Linear)
 #         p = process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
-#         s = system(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCMechanism,
+#         s = system(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
 #            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [1, 3, 2, 5]})
 #         print('T.value: ', T.value)

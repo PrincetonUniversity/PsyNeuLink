@@ -9,7 +9,7 @@
 from PsyNeuLink.Components.System import system
 from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.ObjectiveMechanism import ObjectiveMechanism
 from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCMechanism import EVCMechanism
+from PsyNeuLink.Library.Mechanisms.AdaptiveMechanisms.ControlMechanisms.EVC.EVCControlMechanism import EVCControlMechanism
 from PsyNeuLink.Components.Functions.Function import Logistic, Linear, LinearCombination
 from PsyNeuLink.Library.Mechanisms.ProcessingMechanisms.IntegratorMechanisms.DDM import DDM, DDM_OUTPUT, \
     DECISION_VARIABLE,RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
@@ -382,7 +382,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 
 # from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism import *
 # from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.ControlMechanism import ControlMechanism
-# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCMechanism import EVCMechanism
+# from PsyNeuLink.Components.Mechanisms.AdaptiveMechanisms.ControlMechanism.EVCControlMechanism import EVCControlMechanism
 # from PsyNeuLink.Components.States.ModulatorySignals.ControlSignal import ControlSignal
 # from PsyNeuLink.Components.Projections.ModulatoryProjections.ControlProjection import ControlProjection
 # from PsyNeuLink.Components.Functions.Function import *
@@ -400,7 +400,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 # Process_B = process(pathway=[My_Mech_B])
 # My_System = system(processes=[Process_A, Process_B])
 #
-# My_EVC_Mechanism = EVCMechanism(system=My_System,
+# My_EVC_Mechanism = EVCControlMechanism(system=My_System,
 #                                 monitor_for_control=[My_Mech_A.output_states[RESULT],
 #                                                      My_Mech_B.output_states[MEAN]],
 #                                 control_signals=[(GAIN, My_Mech_A),
@@ -778,7 +778,7 @@ from PsyNeuLink.Components.Mechanisms.ProcessingMechanisms.TransferMechanism imp
 #
 # # System:
 # mySystem = system(processes=[TaskExecutionProcess, RewardProcess],
-#                   controller=EVCMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
+#                   controller=EVCControlMechanism(objective_mechanism=ObjectiveMechanism(monitored_output_states=[
 #                                                      Reward,
 #                                                      Decision.output_states[Decision.PROBABILITY_UPPER_THRESHOLD],
 #                                                      (Decision.output_states[Decision.RESPONSE_TIME], -1, 1)])))
