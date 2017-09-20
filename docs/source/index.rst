@@ -182,9 +182,7 @@ Table of Contents
    self
    BasicsAndSampler
    QuickReference
-   Components <Component>
-   Compositions <Composition>
-   Scheduling
+   Core
    Library
 
 .. _Indices_and_Tables:
