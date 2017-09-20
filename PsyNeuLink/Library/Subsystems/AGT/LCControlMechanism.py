@@ -15,12 +15,12 @@ Overview
 
 An LCControlMechanism is a `ControlMechanism <ControlMechanism>` that multiplicatively modulates the `function
 <Mechanism_Base.function>` of one or more `Mechanisms <Mechanism>` (usually `TransferMechanisms <TransferMechanism>`).
-It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that,
-by default, uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanisms.mode>`
+It implements an abstract model of the `locus coeruleus (LC)  <https://www.ncbi.nlm.nih.gov/pubmed/12371518>`_ that
+uses an `FHNIntegrator` Function to generate its output.  This is modulated by a `mode <LCControlMechanisms.mode>`
 parameter that regulates its functioning between `"tonic" and "phasic" modes of operation
 <LCControlMechanism_Modes_Of_Operation>`.  The Mechanisms modulated by an LCControlMechanism can be listed using
-its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode <FHNIntegrator.mode>`
-parameter of its `FHNIntegrator` Function, it implements a form of the `Adaptive Gain Theory
+its `show <LCControlMechanism.show>` method.  When used with an `AGTControlMechanism` to regulate the `mode
+<FHNIntegrator.mode>` parameter of its `FHNIntegrator` Function, it implements a form of the `Adaptive Gain Theory
 <http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709>`_ of the locus coeruleus-norepinephrine
 (LC-NE) system.
 
@@ -30,8 +30,8 @@ Creating an LCControlMechanism
 -----------------------
 
 An LCControlMechanism can be created in any of the ways used to `create a ControlMechanism <ControlMechanism_Creation>`.
-The following sections describe how to specify the inputs that drive the LCControlMechanism's response, and the Mechanisms
-that it controls.
+The following sections describe how to specify the inputs that drive the LCControlMechanism's response, and the
+Mechanisms that it controls.
 
 
 .. _LCControlMechanism_ObjectiveMechanism:
@@ -39,31 +39,33 @@ that it controls.
 ObjectiveMechanism and Monitored OutputStates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like all ControlMechanisms, an LCControlMechanism it receives its `input <LCControlMechanism_Input>` from an `ObjectiveMechanism`
-that, in turn, receives its input from a specified list of `OutputStates <OutputState>`.  These are used to drive
-the `phasic response <LCControlMechanism_Modes_Of_Operation>` of the LCControlMechanism.  The ObjectiveMechanism and/or
-the OutputStates from which it gets its input can be `specified in the standard way for a ControlMechanism
-<ControlMechanism_ObjectiveMechanism>`).  By default, an LCControlMechanism creates an ObjectiveMechanism that uses a
-`CombineMeans` Function to sum the means of the `value <OutputState.value>`\\s of the OutputStates from which it
-gets its input.  However, this can be customized by specifying a different ObjectiveMechanism or its `function
-<ObjectiveMechanism.function>`, so long as these generate a result that is a scalar value.
+Like all ControlMechanisms, an LCControlMechanism it receives its `input <LCControlMechanism_Input>` from an
+`ObjectiveMechanism` that, in turn, receives its input from a specified list of `OutputStates <OutputState>`.  These
+are used to drive the `phasic response <LCControlMechanism_Modes_Of_Operation>` of the LCControlMechanism.  The
+ObjectiveMechanism and/or the OutputStates from which it gets its input can be `specified in the standard way for a
+ControlMechanism <ControlMechanism_ObjectiveMechanism>`).  By default, an LCControlMechanism creates an
+ObjectiveMechanism that uses a `CombineMeans` Function to sum the means of the `value <OutputState.value>`\\s of the
+OutputStates from which it gets its input.  However, this can be customized by specifying a different
+ObjectiveMechanism or its `function <ObjectiveMechanism.function>`, so long as these generate a result that is a
+scalar value.
 
 .. _LCControlMechanism_Modulated_Mechanisms:
 
 Specifying Mechanisms to Modulate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Mechanisms to be modulated by an LCControlMechanism are specified in its **modulated_mechanisms** argument. An LCControlMechanism
-controls a `Mechanism <Mechanism>` by modifying the `multiplicative_param <Function_Modulatory_Params>` of the
-Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism specified for control by an LCControlMechanism
-must be either a `TransferMechanism`, or a Mechanism that uses a `TransferFunction` or a class of `Function <Function>`
-that implements a `multiplicative_param <Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a
-list of such Mechanisms.  The keyword *ALL* can also be used to specify all of the eligible `ProcessMechanisms
-<ProcessingMechanism>` in all of the `Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism
-specified in the **modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A
-`ControlProjection` is automatically created that projects from the LCControlMechanism to the `ParameterState` for the
-`multiplicative_param <Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms**
-argument (and listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
+The Mechanisms to be modulated by an LCControlMechanism are specified in its **modulated_mechanisms** argument. An
+LCControlMechanism controls a `Mechanism <Mechanism>` by modifying the `multiplicative_param
+<Function_Modulatory_Params>` of the Mechanism's `function <TransferMechanism.function>`.  Therefore, any Mechanism
+specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
+`TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
+<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms.  The keyword
+*ALL* can also be used to specify all of the eligible `ProcessMechanisms <ProcessingMechanism>` in all of the
+`Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism specified in the
+**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A `ControlProjection` is
+automatically created that projects from the LCControlMechanism to the `ParameterState` for the `multiplicative_param
+<Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms** argument (and listed in
+its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
 
 .. _LCControlMechanism_Structure:
 

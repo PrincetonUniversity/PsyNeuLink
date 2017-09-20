@@ -12,6 +12,6 @@ ControlMechanisms
 .. toctree::
    :maxdepth: 1
 
-   AGTControlMechanism
-   LCControlMechanism
-   EVCControlMechanism
+* `AGTControlMechanism`
+* `LCControlMechanism`
+* `EVCControlMechanism`
