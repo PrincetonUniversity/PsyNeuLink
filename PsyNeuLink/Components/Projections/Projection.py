@@ -419,6 +419,13 @@ class Projection_Base(Projection):
         Projection's `function_params <Projection.function_params>` attribute, and as attributes of the `Function`
         assigned to its `function_object <Component.function_object>` attribute.
 
+    parameter_states : ContentAddressableList[str, ParameterState]
+        a read-only list of the Projection's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
+        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+        <Projection.function>`.  The value of the parameters of the Projection and its `function
+        <Projection.function>` are also accessible as (and can be modified using) attributes of the Projection,
+        in the same manner as they can for a `Mechanism <Mechanism_ParameterStates>`).
+
     COMMENT:
         projectionSender : Mechanism, State, or Object
             This is assigned by __init__.py with the default sender state for each subclass.

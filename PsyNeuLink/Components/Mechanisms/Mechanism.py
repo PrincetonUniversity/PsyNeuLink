@@ -852,12 +852,11 @@ class Mechanism_Base(Mechanism):
         this information in a simpler list format.
 
     parameter_states : ContentAddressableList[str, ParameterState]
-        a list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its specifiable
-        parameters and those of its `function <Mechanism_Base.function>` (i.e., the ones for which there are
-        arguments in their constructors).  The value of the parameters of the Mechanism are also accessible as
-        attributes of the Mechanism (using the name of the parameter); the function parameters are listed in the
-        Mechanism's `function_params <Mechanism_Base.function_params>` attribute, and as attributes of the `Function`
-        assigned to its `function_object <Component.function_object>` attribute.
+        a read-only list of the Mechanism's `ParameterStates <Mechanism_ParameterStates>`, one for each of its
+        `configurable parameters <ParameterState_Configurable_Parameters>`, including those of its `function
+        <Mechanism_Base.function>`.  The value of the parameters of the Mechanism and its `function
+        <Mechanism_Base.function>` are also accessible as (and can be modified using) attributes of the Mechanism
+        (see `Mechanism_ParameterStates`).
 
     COMMENT:
        MOVE function and function_params (and add user_params) to Component docstring

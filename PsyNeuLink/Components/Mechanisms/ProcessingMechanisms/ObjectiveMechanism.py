@@ -386,7 +386,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_states=None,            \
         function=LinearCombination,   \
         output_states=[OUTCOME],      \
-        adaptive_mechanism=None,      \
         params=None,                  \
         name=None,                    \
         prefs=None)
@@ -558,7 +557,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  input_states=None,
                  function=LinearCombination,
                  output_states:tc.optional(tc.any(list, dict))=[OUTCOME],
-                 adaptive_mechanism:tc.optional(AdaptiveMechanism_Base)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -568,7 +566,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         params = self._assign_args_to_param_dicts(monitored_output_states=monitored_output_states,
                                                   input_states=input_states,
                                                   output_states=output_states,
-                                                  adaptive_mechanism=adaptive_mechanism,
                                                   function=function,
                                                   params=params)
         self._learning_role = None
@@ -586,6 +583,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                          name=name,
                          prefs=prefs,
                          context=self)
+
+        # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
+        #    the controller for a System;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
+        self.controller = False
 
     def _validate_variable(self, variable, context=None):
         """Validate that default_variable (if specified) matches in number of values the monitored_output_states

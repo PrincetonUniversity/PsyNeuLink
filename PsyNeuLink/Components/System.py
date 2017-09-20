@@ -1315,7 +1315,6 @@ class System_Base(System):
                           (isinstance(sender_mech, ObjectiveMechanism) and
                                all(
                                    all(projection.receiver.owner is self.controller
-                                       # FIX: GO THROUGH ALL OUTPUTSTATES
                                        for projection in output_state.efferents)
                                    for output_state in sender_mech.output_states))):
                     sender_mech.systems[self] = CONTROL
@@ -3346,9 +3345,7 @@ class System_Base(System):
                 if isinstance(rcvr, LearningMechanism):
                     break
                 # if recvr is ObjectiveMechanism for ControlMechanism that is System's controller, use control color
-                if (isinstance(rcvr, ObjectiveMechanism)
-                    and isinstance(rcvr.adaptive_mechanism, ControlMechanism)
-                    and rcvr.adaptive_mechanism.system is not None):
+                if isinstance(rcvr, ObjectiveMechanism) and rcvr.controller is True:
                     break
                 arrow_color="black"
                 if show_learning and has_learning:
