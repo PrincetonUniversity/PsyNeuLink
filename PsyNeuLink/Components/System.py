@@ -817,7 +817,7 @@ class System_Base(System):
         .. _learning_mechs : list of (Mechanism, runtime_param, phaseSpec) tuples
             Tuples for all LearningMechanisms in the System (used for learning).
 
-        .. _control_object_item : list of a single (Mechanism, runtime_param, phaseSpec) tuple
+        .. _control_mechs : list of a single (Mechanism, runtime_param, phaseSpec) tuple
             Tuple for the controller in the System.
 
     origin_mechanisms : MechanismList
@@ -1568,8 +1568,8 @@ class System_Base(System):
         #       this also ignored learning-related mechanisms (they are handled below)
         self._origin_mechs = []
         self._terminal_mechs = []
-        self.recurrent_init_mechs = []
-        self._control_object_item = []
+        self._recurrent_init_mechs = []
+        self._control_mechs = []
 
         for object_item in self.execution_graph:
 
@@ -1593,17 +1593,17 @@ class System_Base(System):
                 for process, status in mech.processes.items():
                     if process._isControllerProcess:
                         continue
-                    self.recurrent_init_mechs.append(object_item)
+                    self._recurrent_init_mechs.append(object_item)
                     break
 
             if isinstance(object_item, ControlMechanism):
-                if not object_item in self._control_object_item:
-                    self._control_object_item.append(object_item)
+                if not object_item in self._control_mechs:
+                    self._control_mechs.append(object_item)
 
         self.origin_mechanisms = MechanismList(self, self._origin_mechs)
         self.terminal_mechanisms = MechanismList(self, self._terminal_mechs)
-        self.recurrent_init_mechanisms = MechanismList(self, self.recurrent_init_mechs)
-        self.control_mechanism = MechanismList(self, self._control_object_item) # Used for inspection and in case there
+        self.recurrent_init_mechanisms = MechanismList(self, self._recurrent_init_mechs)
+        self.control_mechanisms = MechanismList(self, self._control_mechs) # Used for inspection and in case there
                                                                               # are multiple controllers in the future
 
         try:
@@ -3142,7 +3142,7 @@ class System_Base(System):
             LEARNING_MECHANISMS: self.learning_mechanisms,
             TARGET_MECHANISMS: self.target_mechanisms,
             LEARNING_PROJECTION_RECEIVERS: learning_projections,
-            CONTROL_MECHANISM: self.control_mechanism,
+            CONTROL_MECHANISM: self.control_mechanisms,
             CONTROL_PROJECTION_RECEIVERS: controlled_parameters,
         }
 
