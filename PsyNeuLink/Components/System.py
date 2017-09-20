@@ -3240,20 +3240,24 @@ class System_Base(System):
                    direction = 'BT',
                    show_learning = False,
                    show_control = False,
-                   learning_color = 'green',
+                   origin_color = 'green',
+                   terminal_color = 'red',
+                   origin_and_terminal_color = 'brown',
+                   learning_color = 'orange',
                    control_color='blue',
                    output_fmt='pdf',
                    ):
         """Generate a display of the graph structure of mechanisms and projections in the system.
 
-        By default, only the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjections <MappingProjection>`
-        in the `System's graph <System_Base.graph>` are displayed.  However, the **show_learning** and
-        **show_control** arguments can be used to also show the `learning <LearningMechanism>` and
-        `control <ControlMechanism>` components of the system, respectively.  `Mechanisms <Mechanism>` are always
-        displayed as (oval) nodes.  `Projections <Projection>` are displayed as labelled arrows, unless
-        **show_learning** is assigned **True**, in which case MappingProjections that receive a `LearningProjection`
-        are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism node indicate its
-        dimensionality.
+        Displays a graph showing the structure of the System (based on the `System's graph <System_Base.graph>`).
+        By default, only the primary processing Components are shown.  However,the **show_learning** and
+        **show_control** arguments can be used to also show the Components associated with `learning
+        <LearningMechanism>` and those associated with the System's `controller <System_Control>`. `Mechanisms
+        <Mechanism>` are always displayed as (oval) nodes. `ORIGIN` and `TERMINAL` Mechanisms of the System are
+        displayed with bold ovals in specified colors.  `Projections <Projection>` are displayed as labelled
+        arrows, unless **show_learning** is assigned **True**, in which case MappingProjections that receive a
+        `LearningProjection` are displayed as diamond-shaped nodes. The numbers in parentheses within a Mechanism
+        node indicate its dimensionality.
 
         Arguments
         ---------
@@ -3262,19 +3266,29 @@ class System_Base(System):
             'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
 
         show_learning : bool : default False
-            determines whether or not to show the learning components of the system;
+            specifies whether or not to show the learning components of the system;
             they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
 
         show_control :  bool : default False
-            determines whether or not to show the control components of the system;
+            specifies whether or not to show the control components of the system;
             they will all be displayed in the color specified for **control_color**.
 
+        origin_color : keyword : default 'green',
+            specifies the color in which the `ORIGIN` Mechanisms of the System are displayed.
+
+        terminal_color : keyword : default 'red',
+            specifies the color in which the `TERMINAL` Mechanisms of the System are displayed.
+
+        origin_and_terminal_color : keyword : default 'brown'
+            specifies the color in which Mechanisms that are both
+            an `ORIGIN` and a `TERMINAL` of the System are displayed.
+
         learning_color : keyword : default `green`
-            determines the color in which the learning components are displayed
+            specifies the color in which the learning components are displayed.
 
         control_color : keyword : default `blue`
-            determines the color in which the learning components are displayed (note: if the System's
+            specifies the color in which the learning components are displayed (note: if the System's
             `controller <System_Base.controller>`) is an `EVCControlMechanism`, then a link is shown in red from the
             `prediction Mechanisms <EVCControlMechanism_Prediction_Mechanisms>` it creates to the corresponding
             `ORIGIN` Mechanisms of the System, to indicate that although no projection are created for these,
@@ -3359,16 +3373,12 @@ class System_Base(System):
                     # render normally
                     G.edge(sndr_label, rcvr_label, label = edge_label, color=arrow_color)
 
-                # MODIFIED 9/20/17 NEW:
                 if ORIGIN in sndr.systems[self]:
-                    G.node(sndr_label, color="orange")
+                    G.node(sndr_label, color=origin_color, penwidth='3')
                 if TERMINAL in rcvr.systems[self]:
-                    G.node(rcvr_label, color="purple")
+                    G.node(rcvr_label, color=terminal_color, penwidth='3')
                 if ORIGIN in sndr.systems[self] and TERMINAL in sndr.systems[self]:
-                    G.node(sndr_label, color="brown")
-
-                # MODIFIED 9/20/17 END
-
+                    G.node(sndr_label, color=origin_and_terminal_color, penwidth='3')
 
 
         # add learning graph if show_learning
@@ -3386,7 +3396,6 @@ class System_Base(System):
                     sndrs = list(learning_graph[rcvr])
                     for sndr in sndrs:
                         projs = sndr.input_state.path_afferents
-
                         for proj in projs:
                             edge_name=proj.name
                         G.node(rcvr.name, color=learning_color)
@@ -3430,9 +3439,9 @@ class System_Base(System):
             for object_item in self.execution_list:
                 mech = object_item
                 if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
-                    G.node(mech.name, color=control_color)
+                    G.node(mech.name, color='purple')
                     recvr = mech.origin_mech
-                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='red')
+                    G.edge(mech.name, recvr.name, label=' prediction assignment', color='purple')
                     pass
 
         # return

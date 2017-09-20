@@ -5235,6 +5235,26 @@ class FHNIntegrator(
     """
 
     MODE = 'mode'
+    # offset=0.0,
+    # scale=1.0,
+    # initial_w=0.0,
+    # initial_v=0.0,
+    # time_step_size=0.1,
+    # t_0=0.0,
+    # a_v=-1/3,
+    # b_v=0.0,
+    # c_v=1.0,
+    # d_v=0.0,
+    # e_v=-1.0,
+    # f_v=1.0,
+    # time_constant_v=1.0,
+    # a_w=1.0,
+    # b_w=-0.8,
+    # c_w=0.7,
+    # threshold=-1.0,
+    # time_constant_w=12.5,
+    # mode=1.0,
+    # uncorrelated_activity=0.0,
 
     componentName = FHN_INTEGRATOR_FUNCTION
 
